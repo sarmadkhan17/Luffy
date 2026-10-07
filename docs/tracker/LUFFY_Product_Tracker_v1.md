@@ -1,3 +1,5 @@
+> Current [SOL-1][DEC-02]: **CLOSED at architecture/offline scope** on `9f36fc7` / `f1bbd7a`. Default allocator **R3** selects CASH on exact positive top ties across distinct expressions; **R2** historical replay remains exact. Explicit candidate/CASH reasons and confidence/source states; analyst evidence grants no selection authority. Production calibration absent; shadow R1 label preserved. DEC-03 still gated by STR-04 (transitively STR-03); next recommendation STR-03, unselected and not started. [Evidence](evidence/dec02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][PORT-02]: **CLOSED at architecture/offline scope** on `040b271`; 206 relevant verification passes retained. REAL CALIBRATION PRESENT: **NO**. Production forward authority remains absent, values null and expected net UNAVAILABLE; no allocation, CASH preserved. Registered-authority mechanics proven with fixtures only. Initial calibration ownership gap needs a linked future item under policy, reported but not created. DEC-02 dependency-eligible, unselected and not started. [Evidence](evidence/port02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][DEC-01]: **CLOSED at architecture/offline scope** on `dcfd2c3` / `5d66327`. Normal coherent Context, exact real UNAVAILABLE economics receipt binding, explicit blocked decision, null costs and zero allocator candidates verified. Frozen identity/reload, required/optional analysts, coherent cuts and evidence conflict preserved. PORT-02 eligible, unselected and not started; DEC-02 still gated by PORT-02. [Evidence](evidence/dec01-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2642,32 +2644,36 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: The orchestrator is not an opaque LLM or majority vote.
 - **closure_condition**: Given eligible candidates/context, deterministic comparison emits proposal/rejection and visible confidence components; no opportunity can beat cash without sufficient economics.
 - **failure_regression_proof**: No forced trades, simple vote-count authority or unexplained composite confidence.
 - **dependencies**: DEC-01, PORT-02
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Single allocator comparator and inspectable outcomes/CASH/confidence at 9f36fc7 / f1bbd7a; default R3 tie-CASH with exact R2 history replay. docs/tracker/evidence/dec02-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 195 fresh relevant tests passed; engineering reported 363 affected passes, not fully repeated here. Seven actual pre-R3/current-R2 replay cases match exactly. R3 distinct-expression positive top tie selects CASH / EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE; explicit candidate/CASH reasons, confidence states and non-authoritative analyst conflict preserved. Production calibration remains absent.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§15.1–15.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact DEC-02 architecture/offline condition. DEC-03 DEC-02 dependency satisfied; STR-04 remains open, transitively STR-03. Next critical-path recommendation STR-03 evidence mapping, then STR-04, then DEC-03; no successor selected or started.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: f1bbd7a74600ce2f8355babb337854bc6693bc35
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/dec02-canonical-sol1/closure.json
+- **evidence_validity**: Pinned architecture/offline verification at f1bbd7a; no production calibration/profitability, economic readiness or deployed/runtime claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: f1bbd7a74600ce2f8355babb337854bc6693bc35
+- **evidence_mapping**: docs/tracker/evidence/dec02-canonical-sol1/REPORT.md
+- **allocator_default**: LUFFY-PORTFOLIO-ALLOCATOR-R3
+- **historical_replay_supported**: ['LUFFY-PORTFOLIO-ALLOCATOR-R2']
 
 ### DEC-03 — Represent one account position per instrument and preserve conflicting strategies.
 
@@ -7350,3 +7356,5 @@ STR-02 canonical status counts: CLOSED 58, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAIT
 DEC-01 canonical status counts: CLOSED 59, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 PORT-02 canonical status counts: CLOSED 60, EVIDENCE_TO_MAP 79, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+DEC-02 canonical status counts: CLOSED 61, EVIDENCE_TO_MAP 78, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).

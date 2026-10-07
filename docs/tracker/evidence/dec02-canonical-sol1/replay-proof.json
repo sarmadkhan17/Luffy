@@ -1,0 +1,319 @@
+{
+  "pre_R3_source_revision": "47761eec645c199358d6c6a725ee6b30282c57e0",
+  "pre_R3_source_sha256": "573665981869d88631ea26b3ce589765647abd0e313341a8cc21e5a53d4c94d1",
+  "R2_actual_historical_bytes_preserved": {
+    "empty": {
+      "pre_R3_proposal_id": "488957c82913eacc0a75bc38dcf054c720c81f1afc5f383dfcf18f347979a962",
+      "current_R2_proposal_id": "488957c82913eacc0a75bc38dcf054c720c81f1afc5f383dfcf18f347979a962",
+      "exact_bytes_equal": true
+    },
+    "exact_tie": {
+      "pre_R3_proposal_id": "ef6b364fc6db062705ec5fbfa4374434cb91146d23a9d6f5a5a90615b1e99f2c",
+      "current_R2_proposal_id": "ef6b364fc6db062705ec5fbfa4374434cb91146d23a9d6f5a5a90615b1e99f2c",
+      "exact_bytes_equal": true
+    },
+    "tie_with_lower": {
+      "pre_R3_proposal_id": "d096ddc59e433f856ccda612f678c3beffa38c95948983786371456d12a3a678",
+      "current_R2_proposal_id": "d096ddc59e433f856ccda612f678c3beffa38c95948983786371456d12a3a678",
+      "exact_bytes_equal": true
+    },
+    "unique_positive": {
+      "pre_R3_proposal_id": "a4748aa85c323927f38c5ed00bf1fdc7c6f51a68a359f5bc4f9118fb1aa7781d",
+      "current_R2_proposal_id": "a4748aa85c323927f38c5ed00bf1fdc7c6f51a68a359f5bc4f9118fb1aa7781d",
+      "exact_bytes_equal": true
+    },
+    "non_positive": {
+      "pre_R3_proposal_id": "0d88dcbc06a4e11b9ef01f17464fc003df4beb9e46b8eb23ae958bf809eef11b",
+      "current_R2_proposal_id": "0d88dcbc06a4e11b9ef01f17464fc003df4beb9e46b8eb23ae958bf809eef11b",
+      "exact_bytes_equal": true
+    },
+    "missing_costs": {
+      "pre_R3_proposal_id": "593d474be2d50e3b495ec32beb567d4d1f5a10c8ebd4cb29bd98cb76f794421f",
+      "current_R2_proposal_id": "593d474be2d50e3b495ec32beb567d4d1f5a10c8ebd4cb29bd98cb76f794421f",
+      "exact_bytes_equal": true
+    },
+    "same_expression": {
+      "pre_R3_proposal_id": "bcb87f9a14fc563fb863f8f033a698a26108a526d31cd9236221ebf2e26bf897",
+      "current_R2_proposal_id": "bcb87f9a14fc563fb863f8f033a698a26108a526d31cd9236221ebf2e26bf897",
+      "exact_bytes_equal": true
+    }
+  },
+  "R3_exact_tie_view": {
+    "allocator_version": "LUFFY-PORTFOLIO-ALLOCATOR-R3",
+    "as_of_ms": 1500,
+    "authority": {
+      "capital": false,
+      "order": false,
+      "owner_approval": false,
+      "risk_final_gate_required": true,
+      "risk_permission": false
+    },
+    "candidates": [
+      {
+        "analyst_evidence": {
+          "status": "NO_DECISION_CONTEXT"
+        },
+        "candidate_id": "candidate:e09cc00da6ebb8446b681f4aa091d9a1e80371ed63fa44dfcc04fda8d12048fa",
+        "confidence_components": {
+          "data_quality": {
+            "gating": false,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "economics_confidence": {
+            "expected_net_value": "3.0",
+            "gating": true,
+            "horizon": "4h",
+            "score": null,
+            "source_ids": [
+              "economics:1f42ceb004541f6e961b6abdbb85ac5dcc71c12926d7c5634645cdf6d4af5556"
+            ],
+            "status": "ESTABLISHED",
+            "units": "USDT"
+          },
+          "evidence_strength": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "execution_cost_confidence": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "regime_context_fit": {
+            "gating": false,
+            "score": null,
+            "source_ids": [],
+            "status": "UNKNOWN"
+          },
+          "strategy_reliability": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          }
+        },
+        "context_id": null,
+        "direction": "LONG",
+        "economic_rank": 1,
+        "expected_net_value": "3.0",
+        "feasibility": "COMPARABLE",
+        "identity": [
+          "a",
+          "version-a"
+        ],
+        "instrument": "venue:futures:BTCUSDT",
+        "outcome": "REJECTED",
+        "reasons": [
+          "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE"
+        ]
+      },
+      {
+        "analyst_evidence": {
+          "status": "NO_DECISION_CONTEXT"
+        },
+        "candidate_id": "candidate:91f2b7025dbbd2cbed5309952eccf8d905eb07a9505cdc82226f11dad0627664",
+        "confidence_components": {
+          "data_quality": {
+            "gating": false,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "economics_confidence": {
+            "expected_net_value": "3.0",
+            "gating": true,
+            "horizon": "4h",
+            "score": null,
+            "source_ids": [
+              "economics:193f553f687b84107989676a9ca5306eadf65c3afd21931a5fa61324b4b1b903"
+            ],
+            "status": "ESTABLISHED",
+            "units": "USDT"
+          },
+          "evidence_strength": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "execution_cost_confidence": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "regime_context_fit": {
+            "gating": false,
+            "score": null,
+            "source_ids": [],
+            "status": "UNKNOWN"
+          },
+          "strategy_reliability": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          }
+        },
+        "context_id": null,
+        "direction": "LONG",
+        "economic_rank": 2,
+        "expected_net_value": "3.0",
+        "feasibility": "COMPARABLE",
+        "identity": [
+          "b",
+          "version-b"
+        ],
+        "instrument": "venue:futures:ETHUSDT",
+        "outcome": "REJECTED",
+        "reasons": [
+          "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE"
+        ]
+      },
+      {
+        "analyst_evidence": {
+          "status": "NO_DECISION_CONTEXT"
+        },
+        "candidate_id": "candidate:f621c2013b5ee410cac2dc6ad2e718c385257f718a7d56761438248828f6dece",
+        "confidence_components": {
+          "data_quality": {
+            "gating": false,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "economics_confidence": {
+            "expected_net_value": "1.0",
+            "gating": true,
+            "horizon": "4h",
+            "score": null,
+            "source_ids": [
+              "economics:3c96c431954afca13a5311164a5df7392233cf3e2e14d98502031f5fef0e7457"
+            ],
+            "status": "ESTABLISHED",
+            "units": "USDT"
+          },
+          "evidence_strength": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "execution_cost_confidence": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          },
+          "regime_context_fit": {
+            "gating": false,
+            "score": null,
+            "source_ids": [],
+            "status": "UNKNOWN"
+          },
+          "strategy_reliability": {
+            "gating": true,
+            "score": null,
+            "source_ids": [
+              "fixture-authority"
+            ],
+            "status": "ESTABLISHED"
+          }
+        },
+        "context_id": null,
+        "direction": "LONG",
+        "economic_rank": 3,
+        "expected_net_value": "1.0",
+        "feasibility": "COMPARABLE",
+        "identity": [
+          "c",
+          "version-c"
+        ],
+        "instrument": "venue:futures:SOLUSDT",
+        "outcome": "REJECTED",
+        "reasons": [
+          "CAPITAL_PRIORITY_NOT_SELECTED"
+        ]
+      }
+    ],
+    "cash": {
+      "action": "NO_TRADE",
+      "expression": "CASH",
+      "reasons": [
+        "ALL_CANDIDATES_REJECTED",
+        "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE",
+        "CAPITAL_PRIORITY_NOT_SELECTED",
+        "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE"
+      ],
+      "selected": true
+    },
+    "comparison_id": "962e067b95b18cdc17ae730a7dad6173a461e49a242dd08409afcf8aca85ef1d",
+    "confidence_policy": "COMPONENT_STATES_NO_WEIGHTS_NO_COMPOSITE",
+    "decision": "NO_ALLOCATION",
+    "proposal_id": "f8d8ceaf82b86d7e891b32f057a3b4044b2fd31a368890999248aa60021c4289",
+    "ranking": [
+      [
+        "a",
+        "version-a"
+      ],
+      [
+        "b",
+        "version-b"
+      ],
+      [
+        "c",
+        "version-c"
+      ]
+    ],
+    "schema": "portfolio-comparison.v1",
+    "side_effects": "NONE",
+    "tie": {
+      "rule": "EXACT_TIE_NO_DOMINANT_CANDIDATE_SELECTS_CASH",
+      "tied": [
+        [
+          "a",
+          "version-a"
+        ],
+        [
+          "b",
+          "version-b"
+        ]
+      ],
+      "winner": null
+    }
+  },
+  "R2_proposal_id": "d096ddc59e433f856ccda612f678c3beffa38c95948983786371456d12a3a678",
+  "R3_proposal_id": "f8d8ceaf82b86d7e891b32f057a3b4044b2fd31a368890999248aa60021c4289",
+  "cross_version_refused": true,
+  "input_permutation_stable": true,
+  "synthetic_contract_fixtures_only": true,
+  "production_calibration_claim": false,
+  "side_effects": "NONE"
+}

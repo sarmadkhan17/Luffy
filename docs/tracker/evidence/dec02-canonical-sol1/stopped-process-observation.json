@@ -1,0 +1,7 @@
+{
+  "observed_at_utc": "2026-10-07T15:44:56.553106+00:00",
+  "process_check": "ps -eo pid,args; Python module launch patterns trader.kernel/trader.dashboard.server",
+  "matching_processes": [],
+  "scope": "Read-only process snapshot; no boot/restart/live/provider action. Not deployed runtime proof or independent continuous monitoring.",
+  "user_validation_report": "Kernel/Dashboard remained stopped throughout engineering validation."
+}

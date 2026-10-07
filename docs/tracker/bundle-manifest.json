@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.50-port02-canonical-sol1",
-  "control_baseline_revision": "040b271c23ef2e2c74ddedf62e166b345d8df52a",
+  "snapshot_version": "1.51-dec02-canonical-sol1",
+  "control_baseline_revision": "f1bbd7a74600ce2f8355babb337854bc6693bc35",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 539353,
-      "sha256": "722185b4c000f5dfebe5201317b61946077d3d8b070f28d874690a6fbc502ae0",
+      "bytes": 548648,
+      "sha256": "eddd7e1f44c790c4f0b276003f4ab4b64dc09adce991ace72305eee4da7d1dbc",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 424156,
-      "sha256": "9327303c83e67310d3776da3cecf1a9ad41ff56fce5b2cf0ecb6be61f807555f",
+      "bytes": 425944,
+      "sha256": "15809bed2edc71e264f3594e5e547d71cd38ee087744ba4c973e724db5340af3",
       "synchronization_required": false
     },
     {
@@ -33,15 +33,15 @@
     {
       "path": "STATE.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 215869,
-      "sha256": "ca336f08fb8204eb61e25344b00c854407826c14681ec5b9004a5a130b715e34",
+      "bytes": 224774,
+      "sha256": "5004caaa948fc75543938264263bfaf6a441cc7a5fb5ac7df7a6b0d9550f2462",
       "synchronization_required": true
     },
     {
       "path": "NEXT.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 163001,
-      "sha256": "fdb5d71a51e19e2ba31a618395077b9866456d8277168e00ff706ec78700fc5d",
+      "bytes": 171906,
+      "sha256": "5904e23ec4b2ec6be5da3ab5d4a47f2df756571159d5dc945df07c0583254c6c",
       "synchronization_required": true
     },
     {
@@ -117,8 +117,8 @@
     {
       "path": "docs/tracker/README.md",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 13157,
-      "sha256": "f88ce2a3443c4cdb6265158be96bfc53ba162d53d9cd9e3f00139edf1eaa591a",
+      "bytes": 13755,
+      "sha256": "db9ea424b9067d5597bfd1ec021ffbdb4e667c93cfa9448dea19311dd176a6b4",
       "synchronization_required": true
     },
     {
@@ -365,6 +365,83 @@
       "synchronization_required": true,
       "bytes": 2025,
       "sha256": "5bd3dd4bbbd7e1a735d8937c6920d747b47d815842500aff4d2c385aaafc7488"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/REPORT.md",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 5706,
+      "sha256": "97028a085803686df6a3bbc4f6f4b64c076b9c5309c6643d058bd137453f12c6"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/closure.json",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8563,
+      "sha256": "9e4997c62042696370343bbf19be6ed19f3a3eaa6090bb96bb2a5131ee074cee"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/control-before.json",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1077392,
+      "sha256": "04b2159205ad3981102657732545bf915e602fa57a1316766209f18c93195e42"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/control-validation.py",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 7000,
+      "sha256": "0d027834ca0d98eae58614b66759403f62e98097d7e3159b7a58ae7473464226"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/focused.txt",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 261,
+      "sha256": "24e8f8db436733d81227e6876d8ef107845b71e8fe5632069c1372b6cc059a65"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/focused.xml",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 26260,
+      "sha256": "5364a5c1949c49c2e22447498b3db375c41c63d2b0c6c79047e9d324b0237f5c"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/reconcile.py",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 17512,
+      "sha256": "019bd6156cfd4b6b02c972bf4895b985e7be72799dff05a4f7c53c3026d01ec8"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.json",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 9855,
+      "sha256": "2a76dcdffb1a254861a2f5d53842a02cbdc963b3306ee254dc009111b77015a5"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.py",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2932,
+      "sha256": "63480011c7d042ef6ecc0b3f86e3ae58cd23d2fcab8a486ec7f3f4664b80e73a"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/stopped-process-observation.json",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 440,
+      "sha256": "5b79ed4c0e4d8054c5f904b33e13eb371e7aeb92f4f686cf833f9e15b9812e7a"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/control-checks.json",
+      "role": "DEC02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2134,
+      "sha256": "6eb1847e4f879b15669d75e57b89cda16bcde9212e91199f9420d0ffdd3592b1"
     }
   ],
   "current_release_deferral": {
@@ -441,7 +518,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "PORT-02",
+    "last_completed_item": "DEC-02",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -456,7 +533,7 @@
       "GUI-02",
       "OUT-01"
     ],
-    "next_recommended_item": null,
+    "next_recommended_item": "STR-03",
     "eligible_items": [
       "DATA-08",
       "GUI-02",
@@ -467,14 +544,14 @@
       "GUI-07",
       "GUI-08",
       "GUI-09",
-      "DEC-02"
+      "STR-03"
     ],
     "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "PORT-02 exact economics boundary reconciled CLOSED at architecture/offline scope; production forward authority absent and calibration limitation retained. DEC-02 dependencies DEC-01 and PORT-02 CLOSED; eligible but unselected and not started. Calibration ownership gap requires linked future item under policy; reported only, not created or made a dependency.",
-    "last_terminal_item": "PORT-02",
+    "selection_reason": "DEC-02 exact deterministic comparison condition CLOSED, default allocator R3 and historical R2 replay preserved. DEC-03 remains gated by STR-04, transitively STR-03. STR-03 dependencies CLOSED, recommended for evidence mapping only; unselected and not started. No activation authority.",
+    "last_terminal_item": "DEC-02",
     "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE",
     "deferred_proof_obligations": {
       "ATT-03": {
@@ -2640,6 +2717,119 @@
       "tests/test_portfolio_allocator.py": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
       "tests/test_candidate_bridge.py": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b",
       "tests/test_dec01_opportunity_context.py": "08a0b0f25366094a778e35189203cba79a364920356fd1d29ef76c52298914b2",
+      "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
+    },
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "dec02_canonical_reconciliation": {
+    "item": "DEC-02",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_commits": [
+      "9f36fc7384de6ecd53b1b3f85e45f8a8c6508a81",
+      "f1bbd7a74600ce2f8355babb337854bc6693bc35"
+    ],
+    "engineering_closure_commit": "f1bbd7a74600ce2f8355babb337854bc6693bc35",
+    "control_baseline_revision": "f1bbd7a74600ce2f8355babb337854bc6693bc35",
+    "control_plane_commit_resolution": "Enclosing Git commit containing this reconciliation; no self-referential hash.",
+    "closing_condition": "Given eligible candidates/context, deterministic comparison emits proposal/rejection and visible confidence components; no opportunity can beat cash without sufficient economics.",
+    "failure_regression_proof": "No forced trades, simple vote-count authority or unexplained composite confidence.",
+    "closing_condition_satisfied": true,
+    "closure_mapping": {
+      "single_comparator": "allocator.allocate is the sole deterministic decision comparator in this Portfolio boundary. runtime invokes it; comparison.decide calls it and comparison.compare derives a pure inspectable view of the frozen Proposal. No LLM or analyst vote/count performs independent candidate selection. This does not claim removal of unrelated legacy orchestrator logic.",
+      "cash": "CASH is explicit and selected for no candidates, unavailable economics, expected net <= 0, all candidates rejected, or an R3 exact positive top tie among distinct expressions without a registered discriminator. CASH reasons are explicit in the comparison view. Unknown cash yield remains UNAVAILABLE, not a fabricated numeric benchmark.",
+      "R3_exact_tie": "New default LUFFY-PORTFOLIO-ALLOCATOR-R3 uses exact Decimal net comparison. Positive equal top net across distinct (instrument, market_type, direction) expressions selects CASH with EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE; all top tied candidates are REJECTED with that reason. Lower/rejected candidates retain their own reasons; permutations reproduce identical proposal/view identities. Equal-net duplicates of the same expression remain evidence contributors, not rival expressions. A real net difference or a strictly better untied candidate is not blocked by a lower tie.",
+      "R2_compatibility": "LUFFY-PORTFOLIO-ALLOCATOR-R2 remains supported through explicit version dispatch and stored proposal version. It retains historical ascending opportunity/version identity-order tie selection; no R3 exact_tie field is added to R2 results. Actual pre-R3 source and current R2 produce byte-equal inputs/results/IDs in seven offline cases. R2 and R3 identities differ; cross-version verification refuses. Immutable saved proposals/history are not rewritten.",
+      "outcomes_reasons": "comparison.compare derives PROPOSED or REJECTED for every candidate from allocator accepted/refusal result; every outcome and CASH have non-empty machine-readable reasons. No second selection authority is introduced.",
+      "confidence": "Six inspectable component states/source IDs: evidence_strength, strategy_reliability, execution_cost_confidence, data_quality, regime_context_fit, economics_confidence. Each score is None; no invented weights or opaque composite. Required components gate through existing allocator contracts; unavailable descriptive components remain unavailable.",
+      "economics": "PORT-02 remains enforced: UNKNOWN/UNAVAILABLE is null, never zero or allocation; unavailable/non-positive net cannot beat CASH, stale/mismatched receipts/context refuse. Production GROSS_MODELS/RESERVE_MODELS/COST_SCOPE_MODELS remain empty; REAL CALIBRATION PRESENT: NO. Synthetic fixture registration proves mechanics only; no economic readiness/profitability claim.",
+      "analysts": "Exact DEC-01 frozen supporting/opposing/conflict evidence stays visible and marked decides_nothing. Majority, unanimity or reversed votes cannot replace economics/eligibility or authorize selection; full evidence/provenance remains in immutable context.",
+      "authority": "Output is proposal/rejection only. It grants no Risk permission, owner approval, capital or order authority; Risk remains a separate final gate. side_effects NONE. No provider/live calls or operational activation."
+    },
+    "allocator_default": "LUFFY-PORTFOLIO-ALLOCATOR-R3",
+    "historical_replay_supported": [
+      "LUFFY-PORTFOLIO-ALLOCATOR-R2"
+    ],
+    "R3_exact_tie_reason": "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE",
+    "R2_replay_status": "PASS; actual pre-R3 bytes preserved",
+    "shadow_receipt_label": "LUFFY-PORTFOLIO-ALLOCATOR-R1; independent shadow package label, preserved unchanged; not an allocate-supported dispatch version",
+    "validation": {
+      "fresh_focused_passed": 195,
+      "fresh_by_file": {
+        "tests.test_dec02_comparison": 25,
+        "tests.test_portfolio_allocator": 33,
+        "tests.test_stage6_closure": 46,
+        "tests.test_expected_net_economics": 43,
+        "tests.test_port02_economics_authority": 43,
+        "tests.test_portfolio_allocator_shadow": 5
+      },
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "runner": "/home/sarmad/.local/bin/luffy-pytest",
+      "reported_affected_passed": 363,
+      "reported_run_provenance": "User-supplied engineering validation; raw 363-test run not independently retained here or relabelled as a fresh run.",
+      "full_affected_run_repeated": false,
+      "full_suite_claim": false,
+      "independent_historical_R2_cases": 7,
+      "replay_proof": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.json",
+      "no_live_provider_calls": true,
+      "kernel_dashboard_stopped_snapshot": "docs/tracker/evidence/dec02-canonical-sol1/stopped-process-observation.json"
+    },
+    "real_calibration_present": false,
+    "real_calibration_classification": "FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION",
+    "calibration_ownership_gap_preserved": true,
+    "no_new_calibration_item_created": true,
+    "dependency_status": {
+      "DEC-01": "CLOSED",
+      "PORT-02": "CLOSED"
+    },
+    "DEC03_dependency_DEC02_satisfied": true,
+    "DEC03_remaining_dependency_blockers": [
+      "STR-04"
+    ],
+    "DEC03_transitive_remaining_blockers": [
+      "STR-03"
+    ],
+    "DEC03_own_proof_unmapped": true,
+    "next_critical_path_item": "STR-03",
+    "next_critical_path_reason": "STR-03 prerequisites STR-01/QNT-08/OWN-02 are CLOSED; STR-03 closure unlocks STR-04, the remaining direct prerequisite of DEC-03. Evidence mapping first, no first-live activation.",
+    "next_critical_path_chain": [
+      "STR-03",
+      "STR-04",
+      "DEC-03"
+    ],
+    "next_item_selected": false,
+    "next_item_started": false,
+    "original_conditions_and_edges_preserved": true,
+    "status_counts_after": {
+      "CLOSED": 61,
+      "EVIDENCE_TO_MAP": 78,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 5,
+      "OPEN": 4
+    },
+    "source_sha256": {
+      "trader/portfolio/allocator.py": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403",
+      "trader/portfolio/comparison.py": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96",
+      "trader/portfolio/runtime.py": "b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e",
+      "trader/portfolio/economics.py": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+      "trader/portfolio/opportunity_live.py": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+      "trader/portfolio/current.py": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7",
+      "scripts/portfolio_allocator_shadow.py": "bbef243dd8c79c49b8d249c9c4925a6b8238fda4a0c54ad509a94c2b72e552f9",
+      "tests/test_dec02_comparison.py": "9add7b0ea2e1438fc2cc042b70a8181af0efe2ff007515aec690bf20d6e13687",
+      "tests/test_portfolio_allocator.py": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+      "tests/test_stage6_closure.py": "2c7916cf12d66ab7656300a8f9682f0c7ce3515fa5bffa61d86b41b7409b31f2",
+      "tests/test_expected_net_economics.py": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97",
+      "tests/test_port02_economics_authority.py": "dc7e6926552dd6f5bad65edb162a896585f056c21a5f735d1a3bc710750b9127",
+      "tests/test_portfolio_allocator_shadow.py": "40f6777ed138b9d722bd360df6584108bc6d582c589200e9aed39ee1f79c63af",
+      "tests/economics_fixtures.py": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030",
       "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
     },
     "application_code_changed": false,

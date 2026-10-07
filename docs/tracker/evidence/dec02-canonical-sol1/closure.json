@@ -1,0 +1,113 @@
+{
+  "item": "DEC-02",
+  "canonical_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "engineering_commits": [
+    "9f36fc7384de6ecd53b1b3f85e45f8a8c6508a81",
+    "f1bbd7a74600ce2f8355babb337854bc6693bc35"
+  ],
+  "engineering_closure_commit": "f1bbd7a74600ce2f8355babb337854bc6693bc35",
+  "control_baseline_revision": "f1bbd7a74600ce2f8355babb337854bc6693bc35",
+  "control_plane_commit_resolution": "Enclosing Git commit containing this reconciliation; no self-referential hash.",
+  "closing_condition": "Given eligible candidates/context, deterministic comparison emits proposal/rejection and visible confidence components; no opportunity can beat cash without sufficient economics.",
+  "failure_regression_proof": "No forced trades, simple vote-count authority or unexplained composite confidence.",
+  "closing_condition_satisfied": true,
+  "closure_mapping": {
+    "single_comparator": "allocator.allocate is the sole deterministic decision comparator in this Portfolio boundary. runtime invokes it; comparison.decide calls it and comparison.compare derives a pure inspectable view of the frozen Proposal. No LLM or analyst vote/count performs independent candidate selection. This does not claim removal of unrelated legacy orchestrator logic.",
+    "cash": "CASH is explicit and selected for no candidates, unavailable economics, expected net <= 0, all candidates rejected, or an R3 exact positive top tie among distinct expressions without a registered discriminator. CASH reasons are explicit in the comparison view. Unknown cash yield remains UNAVAILABLE, not a fabricated numeric benchmark.",
+    "R3_exact_tie": "New default LUFFY-PORTFOLIO-ALLOCATOR-R3 uses exact Decimal net comparison. Positive equal top net across distinct (instrument, market_type, direction) expressions selects CASH with EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE; all top tied candidates are REJECTED with that reason. Lower/rejected candidates retain their own reasons; permutations reproduce identical proposal/view identities. Equal-net duplicates of the same expression remain evidence contributors, not rival expressions. A real net difference or a strictly better untied candidate is not blocked by a lower tie.",
+    "R2_compatibility": "LUFFY-PORTFOLIO-ALLOCATOR-R2 remains supported through explicit version dispatch and stored proposal version. It retains historical ascending opportunity/version identity-order tie selection; no R3 exact_tie field is added to R2 results. Actual pre-R3 source and current R2 produce byte-equal inputs/results/IDs in seven offline cases. R2 and R3 identities differ; cross-version verification refuses. Immutable saved proposals/history are not rewritten.",
+    "outcomes_reasons": "comparison.compare derives PROPOSED or REJECTED for every candidate from allocator accepted/refusal result; every outcome and CASH have non-empty machine-readable reasons. No second selection authority is introduced.",
+    "confidence": "Six inspectable component states/source IDs: evidence_strength, strategy_reliability, execution_cost_confidence, data_quality, regime_context_fit, economics_confidence. Each score is None; no invented weights or opaque composite. Required components gate through existing allocator contracts; unavailable descriptive components remain unavailable.",
+    "economics": "PORT-02 remains enforced: UNKNOWN/UNAVAILABLE is null, never zero or allocation; unavailable/non-positive net cannot beat CASH, stale/mismatched receipts/context refuse. Production GROSS_MODELS/RESERVE_MODELS/COST_SCOPE_MODELS remain empty; REAL CALIBRATION PRESENT: NO. Synthetic fixture registration proves mechanics only; no economic readiness/profitability claim.",
+    "analysts": "Exact DEC-01 frozen supporting/opposing/conflict evidence stays visible and marked decides_nothing. Majority, unanimity or reversed votes cannot replace economics/eligibility or authorize selection; full evidence/provenance remains in immutable context.",
+    "authority": "Output is proposal/rejection only. It grants no Risk permission, owner approval, capital or order authority; Risk remains a separate final gate. side_effects NONE. No provider/live calls or operational activation."
+  },
+  "allocator_default": "LUFFY-PORTFOLIO-ALLOCATOR-R3",
+  "historical_replay_supported": [
+    "LUFFY-PORTFOLIO-ALLOCATOR-R2"
+  ],
+  "R3_exact_tie_reason": "EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE",
+  "R2_replay_status": "PASS; actual pre-R3 bytes preserved",
+  "shadow_receipt_label": "LUFFY-PORTFOLIO-ALLOCATOR-R1; independent shadow package label, preserved unchanged; not an allocate-supported dispatch version",
+  "validation": {
+    "fresh_focused_passed": 195,
+    "fresh_by_file": {
+      "tests.test_dec02_comparison": 25,
+      "tests.test_portfolio_allocator": 33,
+      "tests.test_stage6_closure": 46,
+      "tests.test_expected_net_economics": 43,
+      "tests.test_port02_economics_authority": 43,
+      "tests.test_portfolio_allocator_shadow": 5
+    },
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "runner": "/home/sarmad/.local/bin/luffy-pytest",
+    "reported_affected_passed": 363,
+    "reported_run_provenance": "User-supplied engineering validation; raw 363-test run not independently retained here or relabelled as a fresh run.",
+    "full_affected_run_repeated": false,
+    "full_suite_claim": false,
+    "independent_historical_R2_cases": 7,
+    "replay_proof": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.json",
+    "no_live_provider_calls": true,
+    "kernel_dashboard_stopped_snapshot": "docs/tracker/evidence/dec02-canonical-sol1/stopped-process-observation.json"
+  },
+  "real_calibration_present": false,
+  "real_calibration_classification": "FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION",
+  "calibration_ownership_gap_preserved": true,
+  "no_new_calibration_item_created": true,
+  "dependency_status": {
+    "DEC-01": "CLOSED",
+    "PORT-02": "CLOSED"
+  },
+  "DEC03_dependency_DEC02_satisfied": true,
+  "DEC03_remaining_dependency_blockers": [
+    "STR-04"
+  ],
+  "DEC03_transitive_remaining_blockers": [
+    "STR-03"
+  ],
+  "DEC03_own_proof_unmapped": true,
+  "next_critical_path_item": "STR-03",
+  "next_critical_path_reason": "STR-03 prerequisites STR-01/QNT-08/OWN-02 are CLOSED; STR-03 closure unlocks STR-04, the remaining direct prerequisite of DEC-03. Evidence mapping first, no first-live activation.",
+  "next_critical_path_chain": [
+    "STR-03",
+    "STR-04",
+    "DEC-03"
+  ],
+  "next_item_selected": false,
+  "next_item_started": false,
+  "original_conditions_and_edges_preserved": true,
+  "status_counts_after": {
+    "CLOSED": 61,
+    "EVIDENCE_TO_MAP": 78,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "source_sha256": {
+    "trader/portfolio/allocator.py": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403",
+    "trader/portfolio/comparison.py": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96",
+    "trader/portfolio/runtime.py": "b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e",
+    "trader/portfolio/economics.py": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+    "trader/portfolio/opportunity_live.py": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+    "trader/portfolio/current.py": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7",
+    "scripts/portfolio_allocator_shadow.py": "bbef243dd8c79c49b8d249c9c4925a6b8238fda4a0c54ad509a94c2b72e552f9",
+    "tests/test_dec02_comparison.py": "9add7b0ea2e1438fc2cc042b70a8181af0efe2ff007515aec690bf20d6e13687",
+    "tests/test_portfolio_allocator.py": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+    "tests/test_stage6_closure.py": "2c7916cf12d66ab7656300a8f9682f0c7ce3515fa5bffa61d86b41b7409b31f2",
+    "tests/test_expected_net_economics.py": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97",
+    "tests/test_port02_economics_authority.py": "dc7e6926552dd6f5bad65edb162a896585f056c21a5f735d1a3bc710750b9127",
+    "tests/test_portfolio_allocator_shadow.py": "40f6777ed138b9d722bd360df6584108bc6d582c589200e9aed39ee1f79c63af",
+    "tests/economics_fixtures.py": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030",
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
+  },
+  "application_code_changed": false,
+  "runtime_execution_authorized": false,
+  "provider_enablement_authorized": false,
+  "trading_activation_authorized": false,
+  "successor_selected": false
+}
