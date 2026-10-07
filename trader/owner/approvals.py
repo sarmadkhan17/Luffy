@@ -169,6 +169,7 @@ def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
             try:
                 request = f._load(row)
                 v = f.load_version(journal, request['version_id'])
+                f.verify_request(journal, v, request)
                 val = f.verify_validation(journal, v)
                 if request['spec_hash'] != v['spec_hash'] or request['validation_receipt_id'] != val['receipt_id']:
                     raise ValueError('changed_version_or_evidence')

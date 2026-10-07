@@ -641,6 +641,8 @@ class Journal:
                                  lambda: int(getattr(self._local, "learning_target_write", False)))
             conn.create_function("strategy_governor_write", 0,
                                  lambda: int(getattr(self._local, "governor_write", False)))
+            conn.create_function("strategy_approval_write", 0,
+                                 lambda: int(getattr(self._local, "approval_write", False)))
             conn.execute("PRAGMA foreign_keys=ON")
             self._local.conn = conn
         return conn

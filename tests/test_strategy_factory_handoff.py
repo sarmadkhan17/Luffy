@@ -506,7 +506,14 @@ def test_approval_bound_to_another_version_is_refused(tmp_path, cfg):
              "decided_at_ms": T0 + 31 * DAY}
     rec = {**ident, "decision_id": F._jsha(ident)}
     text = F.canonical(rec)
-    with j._tx() as c:          # a forged row: inserts are not blocked
+    with pytest.raises(sqlite3.IntegrityError, match="STRATEGY_APPROVAL_AUTHORITY_REQUIRED"):
+        with j._tx() as c:      # raw decision inserts are refused outright
+            c.execute("INSERT INTO strategy_approval_decisions VALUES "
+                      "(?,?,?,?,?,?,?)",
+                      (rec["decision_id"], p["request_id"], "APPROVED",
+                       "operator", "x", text, T0))
+    j._local.approval_write = True    # privileged corruption fixture
+    with j._tx() as c:          # a forged row, past the insert guard
         c.execute("INSERT INTO strategy_approval_decisions VALUES "
                   "(?,?,?,?,?,?,?)",
                   (rec["decision_id"], p["request_id"], "APPROVED",

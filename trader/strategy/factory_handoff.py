@@ -17,7 +17,7 @@ Historical exceptions require explicit immutable grandfather authority.
 from __future__ import annotations
 
 import copy
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 import hashlib
 import json
 import math
@@ -189,6 +189,12 @@ AUTHORITY_GUARDS = """
 CREATE TRIGGER IF NOT EXISTS governor_insert_authority
 BEFORE INSERT ON strategy_governor_events WHEN strategy_governor_write() != 1
 BEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END;
+CREATE TRIGGER IF NOT EXISTS approval_request_insert_authority
+BEFORE INSERT ON strategy_approval_requests WHEN strategy_approval_write() != 1
+BEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END;
+CREATE TRIGGER IF NOT EXISTS approval_decision_insert_authority
+BEFORE INSERT ON strategy_approval_decisions WHEN strategy_approval_write() != 1
+BEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END;
 CREATE TRIGGER IF NOT EXISTS version_lifecycle_authority
 BEFORE INSERT ON strategy_version_events
 WHEN NEW.to_state IN ('ACTIVE','PAUSED','REACTIVATED','DEGRADED','RETIRED')
@@ -272,6 +278,21 @@ def _insert(c, table: str, key: str, row: dict, ignore=("recorded_at_ms",)):
 def _begin(c) -> None:
     if not c.in_transaction:
         c.execute("BEGIN IMMEDIATE")
+
+
+@contextmanager
+def _approval_write(journal):
+    """The only writer of approval requests/decisions (guarded by trigger):
+    a request is filed by probation evaluation, a decision by the owner
+    decision path. Raw SQL against those tables is refused."""
+    local = getattr(journal, "_local", None)
+    if local is not None:
+        local.approval_write = True
+    try:
+        yield
+    finally:
+        if local is not None:
+            local.approval_write = False
 
 
 def events(journal, version_id: str) -> list:
@@ -1221,7 +1242,7 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
     text = canonical(rec)
     out = {"status": a["status"], "probation_receipt_id": rec["receipt_id"],
            "request_id": None}
-    with journal._tx() as c:
+    with _approval_write(journal), journal._tx() as c:
         _begin(c)
         res, _ = _insert(c, "strategy_probation_receipts", "receipt_id",
                          {"receipt_id": rec["receipt_id"],
@@ -1232,11 +1253,8 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
         if res == "conflict":
             _refuse("probation_receipt_conflict")
         if a["status"] == P_SATISFIED:
-            q_ident = {"schema": REQUEST_SCHEMA, "version_id": version_id,
-                       "strategy_id": v["strategy_id"],
-                       "spec_hash": v["spec_hash"],
-                       "validation_receipt_id": val["receipt_id"],
-                       "probation_receipt_id": rec["receipt_id"]}
+            q_ident = _request_ident(v, val["receipt_id"], inst["install_id"],
+                                     rec["receipt_id"])
             req = {**q_ident, "request_id": _jsha(q_ident),
                    "requested_at_ms": int(at_ms), "capacity": CAPACITY,
                    "asks": "first real-money deployment of this exact "
@@ -1291,6 +1309,61 @@ def _verify_probation(journal, cfg, version: dict, receipt_id: str) -> dict:
     return rec
 
 
+SCOPE_KIND = "FIRST_LIVE_EXACT_VERSION"
+_REQUEST_KEYS = ("schema", "version_id", "strategy_id", "spec_hash",
+                 "lineage_sha256", "research_sha256", "quantitative_sha256",
+                 "install_id", "validation_receipt_id",
+                 "probation_receipt_id", "scope")
+
+
+def _request_ident(v: dict, validation_receipt_id: str, install_id: str,
+                   probation_receipt_id: str) -> dict:
+    """What an approval request binds, all re-derived from stored records:
+    the exact version, its lineage (research origin + quantitative evidence
+    + requirements), its exact paper install and validation/probation
+    receipts. The scope is explicit: this version only, never a name, the
+    latest version, a descendant or a lifecycle label."""
+    lin = v.get("lineage")
+    if not isinstance(lin, dict) or "lineage_sha256" not in v:
+        _refuse("legacy_version_lacks_lineage_contract")
+    return {"schema": REQUEST_SCHEMA, "version_id": v["version_id"],
+            "strategy_id": v["strategy_id"], "spec_hash": v["spec_hash"],
+            "lineage_sha256": v["lineage_sha256"],
+            "research_sha256": _jsha(lin.get("research")),
+            "quantitative_sha256": _jsha(lin.get("quantitative")),
+            "install_id": install_id,
+            "validation_receipt_id": validation_receipt_id,
+            "probation_receipt_id": probation_receipt_id,
+            "scope": {"kind": SCOPE_KIND, "version_id": v["version_id"],
+                      "spec_hash": v["spec_hash"],
+                      "applies_to_descendants": False,
+                      "applies_to_latest": False, "applies_by_name": False,
+                      "activates": False}}
+
+
+def verify_request(journal, version: dict, req: dict) -> dict:
+    """The stored request, re-derived: its identity is the hash of exactly
+    the evidence chain it names, and that chain is this version's today."""
+    if req.get("schema") != REQUEST_SCHEMA:
+        _refuse("approval_request_schema")
+    if any(k not in req for k in _REQUEST_KEYS):
+        _refuse("approval_request_unbound_lineage")
+    if (req["version_id"], req["strategy_id"], req["spec_hash"]) != (
+            version["version_id"], version["strategy_id"],
+            version["spec_hash"]):
+        _refuse("approval_request_wrong_version")
+    inst = verify_install(journal, version, current=False)
+    want = _request_ident(version, req["validation_receipt_id"],
+                          inst["install_id"], req["probation_receipt_id"])
+    if {k: req[k] for k in _REQUEST_KEYS} != want:
+        _refuse("approval_request_stale_lineage"
+                if req["lineage_sha256"] != want["lineage_sha256"]
+                else "approval_request_binding_mismatch")
+    if req.get("request_id") != _jsha(want):
+        _refuse("approval_request_identity_mismatch")
+    return req
+
+
 # ── 3. owner decision ────────────────────────────────────────────────────
 def approval_request(journal, version_id: str) -> dict | None:
     row = _one(journal, "SELECT * FROM strategy_approval_requests WHERE "
@@ -1316,6 +1389,7 @@ def record_owner_decision(journal, cfg: dict, request_id: str,
     v = load_version(journal, req["version_id"])
     if req["spec_hash"] != v["spec_hash"]:
         _refuse("approval_request_wrong_version")
+    verify_request(journal, v, req)
     val = verify_validation(journal, v)
     if req["validation_receipt_id"] != val["receipt_id"]:
         _refuse("approval_request_stale_validation")
@@ -1335,7 +1409,7 @@ def record_owner_decision(journal, cfg: dict, request_id: str,
                       "no activation, allocation or order")
            if decision == "APPROVED" else "nothing"}
     text = canonical(rec)
-    with journal._tx() as c:
+    with _approval_write(journal), journal._tx() as c:
         _begin(c)
         old = c.execute("SELECT decision_id FROM strategy_approval_decisions "
                         "WHERE request_id=?", (request_id,)).fetchone()
@@ -1428,6 +1502,7 @@ class FirstLiveEligibility:
 def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                             available_inputs=None, capacity_receipt_id=None,
                             now_ms: int | None = None,
+                            research_bank_path=None,
                             _governor_resume=False) -> FirstLiveEligibility:
     """True only when the immutable version, its validation evidence, its
     exact paper install (still the installed spec), its probation receipt
@@ -1436,6 +1511,10 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     and `capacity_receipt_id` names a strategy-capacity-receipt.v1 for this
     exact version that is current at `now_ms` with ESTABLISHED effective
     capacity (None = not asserted = refused).
+    A predictive-experiment version also needs `research_bank_path`: its
+    RES-08 result is re-authenticated against the bank now, so a superseded
+    or withdrawn research result makes the approval stale (None = not
+    asserted = refused).
     Read-only; grants eligibility only."""
     reasons: list[str] = []
     decision_id = None
@@ -1456,6 +1535,8 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     if v is None:
         return FirstLiveEligibility(version_id, False, tuple(reasons),
                                     CAPACITY)
+    if not isinstance(v.get("lineage"), dict):
+        reasons.append("version_lineage_absent")
     reached = [e["to_state"] for e in events(journal, version_id)]
     for bad in (DEGRADED, RETIRED, REJECTED):
         if bad in reached:
@@ -1473,6 +1554,7 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     req = check(lambda: approval_request(journal, version_id)
                 or _refuse("approval_request_missing"))
     if req is not None:
+        check(verify_request, journal, v, req)
         if (req["version_id"], req["spec_hash"]) != (version_id,
                                                      v["spec_hash"]):
             reasons.append("approval_request_wrong_version")
@@ -1506,6 +1588,24 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
             if d["actor"] not in OWNER_ACTORS:
                 reasons.append("actor_not_owner")
             decision_id = d["decision_id"]
+            bound_ev = [e for e in events(journal, version_id)
+                        if e["to_state"] == APPROVED_FIRST_LIVE]
+            if len(bound_ev) != 1 or bound_ev[0]["ref_id"] != d["decision_id"]:
+                reasons.append("owner_approval_event_unbound")
+    research = (v.get("lineage") or {}).get("research") or {}
+    if research.get("origin") == "predictive_experiment":
+        if research_bank_path is None:
+            reasons.append("research_bank_not_asserted")
+        else:
+            try:
+                ev = gate_evidence(journal, v["source"]["id"])
+                fresh = _authenticate_bank(
+                    research_bank_path,
+                    {k: research[k] for k in RESEARCH_REF_KEYS}, ev)
+                if any(research.get(k) != x for k, x in fresh.items()):
+                    reasons.append("research_revised_since_validation")
+            except HandoffRefused as e:
+                reasons.append("research_revised:" + e.code)
     need = set(v["spec"].get("data_requires") or [])
     if available_inputs is None:
         reasons.append("inputs_not_asserted")
@@ -1615,7 +1715,7 @@ def governor_events(journal, version_id):
 def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
                    capacity_receipt_id=None, risk_manager=None, risk_release=None,
-                   _connection=None, expected_target=None):
+                   _connection=None, expected_target=None, research_bank_path=None):
     """The sole lifecycle authority; no caller automatically activates.
 
     Activation/resume holds control and Risk authority through the exact
@@ -1665,12 +1765,14 @@ def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                     actor=actor, reason_code=reason_code, at_ms=at_ms,
                     allocation=allocation, available_inputs=available_inputs,
                     capacity_receipt_id=capacity_receipt_id, conn=c,
-                    risk_release=risk_release if activating else None)
+                    risk_release=risk_release if activating else None,
+                    research_bank_path=research_bank_path)
 
 
 def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
-                   capacity_receipt_id=None, conn, risk_release=None):
+                   capacity_receipt_id=None, conn, risk_release=None,
+                   research_bank_path=None):
     v = load_version(journal, version_id)
     if actor not in OWNER_ACTORS and actor != 'strategy_governor' and not (actor == 'factory' and to_state in (DEGRADED,RETIRED)):
         _refuse('governor_actor_invalid')
@@ -1696,7 +1798,7 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
             _refuse('governor_owner_boundaries_changed')
         eligibility = eligible_for_first_live(journal, version_id, cfg=cfg,
             available_inputs=available_inputs, capacity_receipt_id=capacity_receipt_id, now_ms=int(time.time() * 1000),
-            _governor_resume=True)
+            research_bank_path=research_bank_path, _governor_resume=True)
         if not eligibility.eligible:
             _refuse('governor_evidence_unavailable:' + ','.join(eligibility.reasons))
         owner_decision_id = eligibility.decision_id
