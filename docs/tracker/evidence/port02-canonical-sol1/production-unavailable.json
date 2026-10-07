@@ -1,0 +1,121 @@
+{
+  "production_registries": {
+    "GROSS_MODELS": 0,
+    "RESERVE_MODELS": 0,
+    "COST_SCOPE_MODELS": 0
+  },
+  "retrospective_cost_source_validators": [
+    "BINANCE_PUBLIC_NO_FUNDING_CROSSING_V1"
+  ],
+  "economic_status": "UNAVAILABLE",
+  "components": {
+    "COMMISSION": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING"
+      ],
+      "method": null,
+      "method_version": null,
+      "provenance": null,
+      "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": null,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    },
+    "EXPECTED_GROSS_VALUE": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "EXACT_VERSION_FORWARD_CONDITIONAL_DISTRIBUTION_AND_CALIBRATION_MISSING"
+      ],
+      "method": null,
+      "method_version": null,
+      "provenance": null,
+      "reason": "EXACT_VERSION_FORWARD_CONDITIONAL_DISTRIBUTION_AND_CALIBRATION_MISSING",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": null,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    },
+    "EXPECTED_NET_VALUE": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "EXACT_VERSION_FORWARD_CONDITIONAL_DISTRIBUTION_AND_CALIBRATION_MISSING",
+        "CALIBRATED_ECONOMIC_RESERVE_METHOD_AND_COVERAGE_MISSING",
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING"
+      ],
+      "method": "LUFFY-EXPECTED-NET-ECONOMICS-R1",
+      "method_version": "1",
+      "provenance": "GROSS_MINUS_COSTS_MINUS_CALIBRATED_RESERVE",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": 1000,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    },
+    "FUNDING/BORROW": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING"
+      ],
+      "method": null,
+      "method_version": null,
+      "provenance": null,
+      "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": null,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    },
+    "SLIPPAGE": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING"
+      ],
+      "method": null,
+      "method_version": null,
+      "provenance": null,
+      "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": null,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    },
+    "UNCERTAINTY_RESERVE": {
+      "freshness_semantics": "captured_to_authority_expiry_inclusive",
+      "limitations": [
+        "CALIBRATED_ECONOMIC_RESERVE_METHOD_AND_COVERAGE_MISSING"
+      ],
+      "method": null,
+      "method_version": null,
+      "provenance": null,
+      "reason": "CALIBRATED_ECONOMIC_RESERVE_METHOD_AND_COVERAGE_MISSING",
+      "source_hashes": [],
+      "source_ids": [],
+      "status": "UNAVAILABLE",
+      "timestamp_ms": null,
+      "units": "USDT",
+      "valid_until_ms": null,
+      "value": null
+    }
+  },
+  "receipt_id": "eeb03f41de1956536dc331c6cae3bcd65cedcec997ebedea060bba4fadf36684",
+  "proof_scope": "Fresh interpreter, empty production registries, synthetic identity only; no authority adapters, provider/live data or production calibration.",
+  "real_calibration_present": false
+}

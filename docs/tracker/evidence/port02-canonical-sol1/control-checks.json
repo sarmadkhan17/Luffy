@@ -1,0 +1,60 @@
+{
+  "row_count": 178,
+  "changed_rows": [
+    "PORT-02"
+  ],
+  "unrelated_rows_unchanged": 177,
+  "original_conditions_and_edges_preserved": true,
+  "readiness_gates_preserved": true,
+  "YAML_unique_keys_and_strict_contracts": true,
+  "manifest_hashes_match": true,
+  "source_and_committed_bytes_match": true,
+  "status_counts": {
+    "CLOSED": 60,
+    "EVIDENCE_TO_MAP": 79,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "PORT-02",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Require calibrated expected net economics rather than invented defaults.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "implementation_commit": "040b271c23ef2e2c74ddedf62e166b345d8df52a",
+    "evidence": [
+      "docs/tracker/evidence/port02-canonical-sol1/REPORT.md",
+      "docs/tracker/evidence/port02-canonical-sol1/closure.json"
+    ],
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "PORT02_canonical": "CLOSED",
+  "DEC02_dependencies_satisfied": true,
+  "DEC02_now_eligible": true,
+  "DEC02_selected": false,
+  "DEC02_started": false,
+  "real_calibration_present": false,
+  "real_calibration_classification": "FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION",
+  "calibration_ownership_gap_preserved": true,
+  "new_tracker_item_required": true,
+  "new_tracker_item_created": false,
+  "new_blocking_requirement_added": false,
+  "production_registries_empty": true,
+  "production_unavailable_null_semantics_verified": true,
+  "retained_verification_passed": 206,
+  "application_code_changed": false,
+  "runtime_state_unchanged": true,
+  "research_handoff_disabled": true,
+  "research_referee_disabled": true,
+  "provider_calls": 0
+}

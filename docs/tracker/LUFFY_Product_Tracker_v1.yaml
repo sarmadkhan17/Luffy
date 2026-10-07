@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.49-dec01-canonical-sol1
+  version: 1.50-port02-canonical-sol1
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -13,7 +13,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
     or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
     this tracker.
-  current_active_item: DEC-01
+  current_active_item: PORT-02
   current_active_result: CLOSED_ARCHITECTURE_OFFLINE
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
@@ -21,8 +21,8 @@ metadata:
     is an optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 59
-    EVIDENCE_TO_MAP: 80
+    CLOSED: 60
+    EVIDENCE_TO_MAP: 79
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -50,9 +50,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: DEC-01
+  last_terminal_item: PORT-02
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
-  last_terminal_evidence: docs/tracker/evidence/dec01-canonical-sol1/REPORT.md
+  last_terminal_evidence: docs/tracker/evidence/port02-canonical-sol1/REPORT.md
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -3586,7 +3586,7 @@ items:
   stage: '6'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Require calibrated expected net economics rather than invented defaults.
   why_needed: Costs and uncertainty can remove apparent edge.
   closure_condition: Gross, fees, slippage, funding/borrow and reserve sources bind correct units/horizon/quantity/context;
@@ -3597,31 +3597,45 @@ items:
   - DEC-01
   owner_role: Portfolio owner
   engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  implementation_evidence: Calibrated-authority economics boundary and refusal/identity/replay/CASH contract
+    verified at 040b271; fixtures only. docs/tracker/evidence/port02-canonical-sol1/closure.json
+  runtime_evidence: ARCHITECTURE_OFFLINE_ONLY; REAL_CALIBRATION_PRESENT_NO; no production economic readiness
+    claimed
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 206 relevant verification tests passed at 040b271; earlier 211-test run broader and not
+    fully repeated. Production forward gross/fee/slippage/funding-borrow/reserve authority absent, null values
+    and expected net UNAVAILABLE; no allocation, CASH preserved. Registered-authority mechanics use TEST-ONLY
+    fixtures, not calibrated production economics.
   source_ids:
   - S01
   - S02
   - S12
   - S14
   source_sections: §15.1
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for exact PORT-02 architecture/offline boundary condition. Real calibration remains a future
+    runtime/calibration evidence limitation. Initial gross/reserve/forward-cost calibration has no complete
+    current row owner; linked future item needed under new_issue_policy, reported only and not created. DEC-02
+    dependency-eligible but unselected and not started; own comparison proof remains open.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
+  resolution_at_commit: 040b271c23ef2e2c74ddedf62e166b345d8df52a
   work_authorized: false
-  updated: '2026-10-05'
+  updated: '2026-10-07'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/port02-canonical-sol1/closure.json
+  evidence_validity: Pinned architecture/offline verification at 040b271; synthetic authority mechanics only,
+    no production calibration/profitability/economic readiness or deployed/runtime claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  implementation_commit: 040b271c23ef2e2c74ddedf62e166b345d8df52a
+  evidence_mapping: docs/tracker/evidence/port02-canonical-sol1/REPORT.md
+  real_calibration_present: false
+  real_calibration_classification: FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION
+  calibration_ownership_gap: No current row completely owns initial gross/reserve/forward-cost calibration.
+  future_calibration_item_required: true
+  future_calibration_item_created: false
 - id: PORT-03
   area: Portfolio
   stage: '6'
@@ -9135,7 +9149,7 @@ current_release_deferral:
       Missing MON-05 measurements remain visible gaps, never inferred proof.
 current_build_selection:
   active_items: []
-  last_completed_item: DEC-01
+  last_completed_item: PORT-02
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -9159,17 +9173,18 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  - PORT-02
+  - DEC-02
   eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
     GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
     apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: DEC-01 exact coherent Context and production UNAVAILABLE-cost binding reconciled CLOSED.
-    PORT-02 dependencies QNT-01 and DEC-01 are CLOSED; eligible but unselected and not started. DEC-02 remains
-    gated by PORT-02 and its own comparison proof. No successor selected.
-  last_terminal_item: DEC-01
+  selection_reason: PORT-02 exact economics boundary reconciled CLOSED at architecture/offline scope; production
+    forward authority absent and calibration limitation retained. DEC-02 dependencies DEC-01 and PORT-02 CLOSED;
+    eligible but unselected and not started. Calibration ownership gap requires linked future item under policy;
+    reported only, not created or made a dependency.
+  last_terminal_item: PORT-02
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
@@ -11108,6 +11123,138 @@ dec01_canonical_reconciliation:
   DEC02_remaining_blockers:
   - PORT-02
   DEC02_own_condition_unproven: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+port02_canonical_reconciliation:
+  item: PORT-02
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_commit: 040b271c23ef2e2c74ddedf62e166b345d8df52a
+  engineering_closure_commit: 040b271c23ef2e2c74ddedf62e166b345d8df52a
+  control_baseline_revision: 040b271c23ef2e2c74ddedf62e166b345d8df52a
+  control_plane_commit_resolution: Enclosing Git commit containing this reconciliation; no self-referential
+    hash.
+  required_behavior: Require calibrated expected net economics rather than invented defaults.
+  closing_condition: Gross, fees, slippage, funding/borrow and reserve sources bind correct units/horizon/quantity/context;
+    missing authority is UNAVAILABLE.
+  failure_regression_proof: Unknown cost/capacity is not zero; unregistered gross/reserve models cannot authorize.
+  closing_condition_satisfied: true
+  exact_contract_interpretation: The exact row requires an enforced calibrated-authority boundary, not populated
+    production models now. Its explicit missing authority is UNAVAILABLE clause permits absent calibration.
+    When authority exists, registered adapters must validate calibration and exact binding before establishing
+    economics; registration alone is insufficient. Offline fixtures prove contract mechanics only.
+  closure_mapping:
+    no_authority: Production GROSS_MODELS / RESERVE_MODELS / COST_SCOPE_MODELS are empty. Gross, commission/fee,
+      slippage, forward funding/borrow, reserve and expected net are UNAVAILABLE with null values. Retrospective
+      funding evidence is separate. Missing/unknown economics and capacity never become zero/defaults or allocation;
+      CASH stays available and selected under unavailable/non-positive economics. DEC-01 normal path blocks
+      before allocator candidate admission.
+    registered_authority_mechanics: 'TEST-ONLY adapters validate mechanics: full Binding equality covers exact
+      instrument/market/direction/horizon/quantity/capital/units/context/cut/strategy-version/spec and treatment
+      semantics. Source method/version registration, evidence period, calibration fields, provenance, freshness
+      and reserve linkage are checked. Costs replay existing paper protocol and validate forward scope through
+      registered adapter; wrong/mismatched/corrupt sources or obsolete references refuse authority. Material
+      source/model revisions change content-addressed receipt identity; immutable saved receipts/restart replay
+      stable with the same registered validator contract. Revoked authority blocks revalidation without rewriting
+      stored bytes.'
+    cash_reserve: Allocator re-verifies economics receipt and context, preserves explicit CASH, rejects unavailable/unknown
+      cost/capacity, and requires strictly positive comparable net to beat CASH. Positive gross cannot conceal
+      non-positive net; omitted reserve makes net UNAVAILABLE.
+    authority_boundary: Economics receipt establishes evidence only. It grants no allocation, owner/Risk approval,
+      capital or order authority; existing independent gates remain authoritative.
+  no_authority_semantics: PASS
+  registered_authority_binding_mechanics: PASS
+  real_calibration_present: false
+  real_calibration_classification: FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION
+  real_calibration_limitation: 'REAL CALIBRATION PRESENT: NO. Future runtime/calibration evidence limitation;
+    production has no calibrated forward gross, fees, slippage, funding/borrow or reserve authority. The retrospective
+    funding adapter does not establish forward funding/borrow authority. No profitability, economic readiness
+    or production calibration claim.'
+  production_forward_authority:
+    gross: UNAVAILABLE
+    fee: UNAVAILABLE
+    slippage: UNAVAILABLE
+    funding_borrow: UNAVAILABLE
+    reserve: UNAVAILABLE
+  retrospective_funding_is_forward_authority: false
+  calibration_ownership:
+    DATA-10: Contributes prospective decision/action/outcome and actual fees/timing/resource evidence.
+    EXE-07: Contributes actual execution-quality timing, prices/spread/size/depth/fees and reject/partial evidence.
+    QNT-04: Owns held-out/prospective evaluation discipline, not automatic calibrated economics.
+    LRN-05: Owns production adaptive-policy calibration, not all initial static economics models.
+  calibration_ownership_gap: No current row completely owns initial gross/reserve/forward-cost calibration.
+  future_item_policy:
+    new_tracker_item_required: true
+    reason: PORT-02 new_issue_policy requires a linked issue with reason/reproducer rather than silently expanding
+      this row. A linked future item should assign the initial-calibration ownership gap; not a PORT-02 closure
+      or DEC-02 dependency blocker.
+    policy_exact_text: Add linked issue with reason/reproducer; do not silently expand this row.
+    policy_interpretation: Apply linked-issue policy to newly identified future ownership gap, without altering
+      the satisfied row contract.
+    new_tracker_item_created: false
+    creation_authorized: false
+    blocks_PORT02_closure: false
+    blocks_DEC02_dependency_eligibility: false
+    future_item_intake_evidence: Empty production registries and missing forward authority documented in production-unavailable.json;
+      no complete owner among DATA-10/EXE-07/QNT-04/LRN-05.
+  validation:
+    retained_independent_verification_passed: 206
+    by_file:
+      tests.test_port02_economics_authority: 43
+      tests.test_expected_net_economics: 43
+      tests.test_portfolio_allocator: 33
+      tests.test_candidate_bridge: 26
+      tests.test_dec01_opportunity_context: 61
+    failures: 0
+    errors: 0
+    skipped: 0
+    verification_timestamp: '2026-10-07T17:36:30.067322+03:00'
+    runner: /home/sarmad/.local/bin/luffy-pytest
+    provenance: Exact focused.txt/xml retained from previous closure adjudication at the same 040b271 HEAD;
+      copied unchanged, not rerun or relabelled fresh during reconciliation.
+    earlier_broader_run_reported_passed: 211
+    earlier_broader_run_fully_repeated: false
+    full_suite_claim: false
+    fresh_empty_production_registry_probe: docs/tracker/evidence/port02-canonical-sol1/production-unavailable.json
+    production_models_added: false
+    provider_live_calls: 0
+  dependency_status:
+    QNT-01: CLOSED
+    DEC-01: CLOSED
+  DEC02_dependencies_satisfied: true
+  DEC02_now_eligible: true
+  DEC02_selected: false
+  DEC02_started: false
+  DEC02_own_proof: UNMAPPED; exact deterministic comparison/CASH/reasons/confidence/economics condition remains
+    open
+  original_conditions_and_edges_preserved: true
+  status_counts_after:
+    CLOSED: 60
+    EVIDENCE_TO_MAP: 79
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 5
+    OPEN: 4
+  source_sha256:
+    trader/portfolio/economics.py: 3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113
+    trader/portfolio/allocator.py: 573665981869d88631ea26b3ce589765647abd0e313341a8cc21e5a53d4c94d1
+    trader/portfolio/current.py: c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7
+    trader/portfolio/candidate_bridge.py: 15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6
+    trader/portfolio/opportunity_live.py: 516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0
+    trader/engine/paper_cost_evidence.py: 9449a59b46dcef945a7d97b1e775cdda6df31af8dd12bb6bf25f36ecf53d8305
+    trader/observability/funding_events.py: d5ee216bde5e82111caa5aea7706b3736a9f9bcb00e7adca78e1748bd769dad8
+    tests/economics_fixtures.py: 2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030
+    tests/test_port02_economics_authority.py: dc7e6926552dd6f5bad65edb162a896585f056c21a5f735d1a3bc710750b9127
+    tests/test_expected_net_economics.py: 1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97
+    tests/test_portfolio_allocator.py: 86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9
+    tests/test_candidate_bridge.py: 37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b
+    tests/test_dec01_opportunity_context.py: 08a0b0f25366094a778e35189203cba79a364920356fd1d29ef76c52298914b2
+    config.yaml: c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532
   application_code_changed: false
   runtime_execution_authorized: false
   provider_enablement_authorized: false

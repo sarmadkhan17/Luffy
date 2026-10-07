@@ -1,3 +1,5 @@
+> Current [SOL-1][PORT-02]: **CLOSED at architecture/offline scope** on `040b271`; 206 relevant verification passes retained. REAL CALIBRATION PRESENT: **NO**. Production forward authority remains absent, values null and expected net UNAVAILABLE; no allocation, CASH preserved. Registered-authority mechanics proven with fixtures only. Initial calibration ownership gap needs a linked future item under policy, reported but not created. DEC-02 dependency-eligible, unselected and not started. [Evidence](evidence/port02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][DEC-01]: **CLOSED at architecture/offline scope** on `dcfd2c3` / `5d66327`. Normal coherent Context, exact real UNAVAILABLE economics receipt binding, explicit blocked decision, null costs and zero allocator candidates verified. Frozen identity/reload, required/optional analysts, coherent cuts and evidence conflict preserved. PORT-02 eligible, unselected and not started; DEC-02 still gated by PORT-02. [Evidence](evidence/dec01-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][STR-02]: **CLOSED at architecture/offline scope** on `d1ddc18` / `843a0a3`. Exact StrategyVersion, declared dependency refusals, identity and current/historical parity verified. A pure implementation-only feature-code change is not automatically detected without a FEATURE_VERSION bump. DEC-01 dependencies are satisfied; its own Context proof remains open, unselected and not started. [Evidence](evidence/str02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2772,32 +2774,39 @@ future_calibration:
 - **stage**: 6
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Costs and uncertainty can remove apparent edge.
 - **closure_condition**: Gross, fees, slippage, funding/borrow and reserve sources bind correct units/horizon/quantity/context; missing authority is UNAVAILABLE.
 - **failure_regression_proof**: Unknown cost/capacity is not zero; unregistered gross/reserve models cannot authorize.
 - **dependencies**: QNT-01, DEC-01
 - **owner_role**: Portfolio owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Calibrated-authority economics boundary and refusal/identity/replay/CASH contract verified at 040b271; fixtures only. docs/tracker/evidence/port02-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; REAL_CALIBRATION_PRESENT_NO; no production economic readiness claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 206 relevant verification tests passed at 040b271; earlier 211-test run broader and not fully repeated. Production forward gross/fee/slippage/funding-borrow/reserve authority absent, null values and expected net UNAVAILABLE; no allocation, CASH preserved. Registered-authority mechanics use TEST-ONLY fixtures, not calibrated production economics.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §15.1
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact PORT-02 architecture/offline boundary condition. Real calibration remains a future runtime/calibration evidence limitation. Initial gross/reserve/forward-cost calibration has no complete current row owner; linked future item needed under new_issue_policy, reported only and not created. DEC-02 dependency-eligible but unselected and not started; own comparison proof remains open.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 040b271c23ef2e2c74ddedf62e166b345d8df52a
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/port02-canonical-sol1/closure.json
+- **evidence_validity**: Pinned architecture/offline verification at 040b271; synthetic authority mechanics only, no production calibration/profitability/economic readiness or deployed/runtime claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 040b271c23ef2e2c74ddedf62e166b345d8df52a
+- **evidence_mapping**: docs/tracker/evidence/port02-canonical-sol1/REPORT.md
+- **real_calibration_present**: False
+- **real_calibration_classification**: FUTURE_RUNTIME_CALIBRATION_EVIDENCE_LIMITATION
+- **calibration_ownership_gap**: No current row completely owns initial gross/reserve/forward-cost calibration.
+- **future_calibration_item_required**: True
+- **future_calibration_item_created**: False
 
 ### PORT-03 — Expose confidence components and contextual reliability.
 
@@ -7339,3 +7348,5 @@ STR-01 canonical status counts: CLOSED 57, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAIT
 STR-02 canonical status counts: CLOSED 58, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 6, OPEN 4 (178 total).
 
 DEC-01 canonical status counts: CLOSED 59, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+PORT-02 canonical status counts: CLOSED 60, EVIDENCE_TO_MAP 79, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
