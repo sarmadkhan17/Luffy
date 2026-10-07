@@ -1,6 +1,6 @@
 /** Research — approved "Final · 3" design bound to the research ledger.
  * Everything here is DISCOVERY evidence: a ranking, never an admission. The
- * referee is OFF and no held-out look is shown or implied. */
+ * held-out registration and provider flags are reported separately. */
 import { useMemo, useState } from "react";
 import { FlaskConical, Funnel, ListChecks } from "lucide-react";
 import { usePreview } from "../context";
@@ -17,12 +17,17 @@ const fmtP = (p: number | null) => (p === null ? "n/a" : p < 0.001 ? p.toExponen
 
 /** Plain-language verdict from the ledger's own status/verdict. */
 export function verdictOf(c: Combo): string {
+  if (!c.status) return "UNAVAILABLE";
   if (c.status === "untestable") return "Untestable";
   if (c.status === "empty") return "No trades";
-  return c.verdict === "survivor" ? "Survivor" : c.verdict === "grow" ? "Growing" : "Pruned";
+  return c.verdict === "survivor" ? "Survivor" : c.verdict === "grow" ? "Growing" : c.verdict === "pruned" ? "Pruned" : "UNAVAILABLE";
+}
+export function refereeWording(enabled: unknown, registrations: number | null): string {
+  const flag = enabled === false ? "Referee disabled" : enabled === true ? "Referee enabled" : "Referee state unavailable";
+  return `${flag} · ${registrations === null ? "registered look state unavailable" : registrations > 0 ? `${registrations} registered held-out look(s) exist` : "no registered held-out look"}. Discovery evidence is not admission.`;
 }
 const VC: Record<string, [string, string]> = {
-  Survivor: ["rgb(var(--a2))", "rgb(var(--a) / .16)"], Growing: [BLUE, "#7fd3ff1f"], Pruned: [BAD, "#ff7b721f"], Untestable: [WARN, "#f2b44a1f"], "No trades": [GREY, "#ffffff12"],
+  UNAVAILABLE: [GREY, "#ffffff12"], Survivor: ["rgb(var(--a2))", "rgb(var(--a) / .16)"], Growing: [BLUE, "#7fd3ff1f"], Pruned: [BAD, "#ff7b721f"], Untestable: [WARN, "#f2b44a1f"], "No trades": [GREY, "#ffffff12"],
 };
 /** How far it got: 0 looked at … 4 candidate bank (never, while the bank is empty). */
 const stageOf = (c: Combo, banked: boolean) => (banked ? 4 : c.verdict === "survivor" ? 3 : c.verdict === "grow" ? 2 : c.status === "scored" ? 1 : 0);
@@ -39,23 +44,23 @@ const rule = (c: Combo) => {
 export default function Research() {
   const { adapter } = usePreview();
   const q = useRead(adapter.mode === "LIVE" ? "research/board" : null, 120000);
-  const b = q.data as Record<string, any> | undefined;
+  const b = (q.isError ? undefined : q.data) as Record<string, any> | undefined;
   const combos = (b?.combos ?? []) as Combo[];
   const [open, setOpen] = useState<Combo | null>(null);
   const [more, setMore] = useState(false);
   const [shownN, setShownN] = useState<number | null>(null);
 
-  const verdictN = (st: string, v?: string) => asRows(b?.verdicts).filter((r) => r.status === st && (!v || r.verdict === v)).reduce((a, r) => a + (r.n as number), 0);
+  const verdictN = (st: string, v?: string) => b?.verdicts == null ? null : asRows(b?.verdicts).filter((r) => r.status === st && (!v || r.verdict === v)).reduce((a, r) => a + (r.n as number), 0);
   const total = num(b?.total);
   const stages = useMemo(() => {
     if (!b) return [];
-    const bank = Object.values((b.candidates_by_state ?? {}) as Record<string, number>).reduce((a, n) => a + n, 0);
+    const bank = b.candidates_by_state === null || b.candidates_by_state === undefined ? null : Object.values(b.candidates_by_state as Record<string, number>).reduce((a, n) => a + n, 0);
     return [
-      { l: "Looked at", n: total ?? 0, d: "every rule part and combination in the ledger" },
+      { l: "Looked at", n: total, d: "every rule part and combination in the ledger" },
       { l: "Scored", n: verdictN("scored"), d: "had enough trades to measure" },
-      { l: "Kept", n: verdictN("scored", "survivor") + verdictN("scored", "grow"), d: "survived pruning or are being grown" },
+      { l: "Kept", n: b?.verdicts == null ? null : (verdictN("scored", "survivor")! + verdictN("scored", "grow")!), d: "survived pruning or are being grown" },
       { l: "Ablation survivors", n: verdictN("scored", "survivor"), d: "every part pulls its weight" },
-      { l: "Candidate bank", n: bank, d: "carried toward the referee — none yet" },
+      { l: "Candidate bank", n: bank, d: bank === null ? "Candidate bank state unavailable" : Object.entries(b.candidates_by_state).map(([state, n]) => `${state}: ${n}`).join(" · ") || "No candidates recorded" },
     ];
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [b]);
@@ -75,12 +80,12 @@ export default function Research() {
   const loops = b?.held_out_looks as Record<string, any> | null | undefined;
   const lastAt = last?.started ? +new Date(last.started) : 0;
   const active = !!last && !last.finished && Date.now() - lastAt < 30 * 60000; // a batch that started recently and has not finished
-  const state = !b ? "Loading…" : active ? "Searching" : last?.error ? "Idle · last batch refused" : "Idle";
+  const state = !b ? q.isError ? "UNAVAILABLE" : q.isPending ? "Loading…" : "UNAVAILABLE" : active ? "Searching" : last?.error ? "Idle · last batch refused" : "Idle";
   const dots = useMemo(() => {
     let seed = 9; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     return Array.from({ length: 36 }, (_, i) => { const k = 1 + (i % 5); return { y: 40 + rnd() * 160, to: `${k * 20 - 2}%`, du: `${1.6 * k + 1}s`, dl: `${(rnd() * 6).toFixed(2)}s` }; });
   }, []);
-  const H = stages.map((s) => 30 + 190 * (Math.log(s.n + 1) / Math.log((total ?? 1) + 1)));
+  const H = stages.map((s) => 30 + 190 * (Math.log((s.n ?? 0) + 1) / Math.log(Math.max(1, total ?? 1) + 1)));
   const NS = stages.length;
   const X = stages.map((_, i) => ((i + 0.5) * 1000) / NS);
   const top = H.length ? [[0, 130 - H[0] / 2], ...X.map((x, i) => [x, 130 - H[i] / 2]), [1000, 130 - H[NS - 1] / 2]] : [];
@@ -98,7 +103,7 @@ export default function Research() {
       <Card className="pad" label="Discovery funnel">
         <CardHead icon={<Funnel size={16} />} title="Discovery funnel" sub="every rule LUFFY has looked at · discovery evidence only">
           <span style={{ fontSize: 12, color: "var(--txt2)" }}>
-            referee {b?.referee_enabled ? "ON" : "OFF"} · handoff {b?.handoff_enabled ? "open" : "closed"} · held-out looks spent{" "}
+            referee {b?.referee_enabled === true ? "ON" : b?.referee_enabled === false ? "OFF" : "UNAVAILABLE"} · handoff {b?.handoff_enabled === true ? "open" : b?.handoff_enabled === false ? "closed" : "UNAVAILABLE"} · held-out looks spent{" "}
             <b className="m">{loops?.n ?? "unavailable"}</b>
           </span>
         </CardHead>
@@ -115,10 +120,10 @@ export default function Research() {
             <div style={{ display: "grid", gridTemplateColumns: `repeat(${NS}, minmax(0, 1fr))`, gap: 8, marginTop: 8 }}>
               {stages.map((s, i) => (
                 <div key={s.l} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span className="m" style={{ fontSize: 28 - i * 2, color: "rgb(var(--hi))" }}>{s.n.toLocaleString("en-US")}</span>
+                  <span className="m" style={{ fontSize: 28 - i * 2, color: "rgb(var(--hi))" }}>{s.n === null ? "UNAVAILABLE" : s.n.toLocaleString("en-US")}</span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{s.l}</span>
                   <span style={{ fontSize: 12, color: "var(--txt2)" }}>{s.d}</span>
-                  <span className="m" style={{ fontSize: 11, color: i ? "rgb(var(--a2))" : GREY }}>{i === 0 ? "100%" : stages[i - 1].n ? `${Math.round((s.n / stages[i - 1].n) * 100)}% of previous` : "—"}</span>
+                  <span className="m" style={{ fontSize: 11, color: i ? "rgb(var(--a2))" : GREY }}>{i === 0 ? s.n === null ? "UNAVAILABLE" : "100%" : stages[i - 1].n ? s.n === null ? "UNAVAILABLE" : `${Math.round((s.n / stages[i - 1].n!) * 100)}% of previous` : "—"}</span>
                 </div>
               ))}
             </div>
@@ -130,7 +135,7 @@ export default function Research() {
             <span className="m" style={{ fontSize: 12 }}>{last ? `${last.round} · ${last.tf}/${last.geo} · ${utc(last.started)}` : "none recorded"}</span>
             {last?.error && <span style={{ color: WARN, fontSize: 12 }}>refused: {String(last.error)}</span>}
             <span style={{ flex: 1 }} />
-            <span className="m" style={{ fontSize: 12, color: "var(--txt2)" }}>{b.batches?.n?.toLocaleString("en-US")} batches · {b.batches?.failed ?? 0} failed · controls {b.controls?.powered ?? "?"}/{b.controls?.total ?? "?"} powered</span>
+            <span className="m" style={{ fontSize: 12, color: "var(--txt2)" }}>{b.batches?.n?.toLocaleString("en-US")} batches · {b.batches?.failed ?? "UNAVAILABLE"} failed · controls {b.controls?.powered ?? "?"}/{b.controls?.total ?? "?"} powered</span>
           </div>
         )}
       </Card>
@@ -168,16 +173,17 @@ export default function Research() {
         <KV items={[
           ["Questions", b?.stores?.questions ?? null], ["Runs", b?.stores?.runs ?? null], ["Results (registered)", b?.stores?.results ?? null],
           ["Research bank objects", b?.stores?.bank_objects ?? null], ["Registrations", b?.stores?.registrations ?? null], ["Evidence records", b?.stores?.evidence ?? null],
-          ["Shadow reports", "no store is recorded"], ["Costs", "recorded per strategy — see Strategies"],
+          ["Shadow reports", "NOT REPORTED by this read model"], ["Costs", "UNAVAILABLE in this read model"],
         ].map(([k, v]) => [k as string, typeof v === "number" ? v.toLocaleString("en-US") : (v as string | null)])} />
         <p className="gl-note">Zero means the store exists and is empty; unavailable means the table is absent.</p>
       </DetailPanel>
-      <Story combo={open} onClose={() => setOpen(null)} />
+      <p className="gl-note" data-testid="referee-status">{refereeWording(b?.referee_enabled, typeof b?.held_out_looks?.n === "number" ? b.held_out_looks.n : null)}</p>
+      <Story refereeEnabled={b?.referee_enabled} combo={open} onClose={() => setOpen(null)} />
     </>
   );
 }
 
-function Story({ combo, onClose }: { combo: Combo | null; onClose: () => void }) {
+function Story({ combo, onClose, refereeEnabled }: { combo: Combo | null; onClose: () => void; refereeEnabled: unknown }) {
   const q = useRead(combo ? `research/combos/${encodeURIComponent(String(combo.hash))}` : null);
   const d = rec(q.data) as Record<string, any> | null;
   const item = rec(d?.item) as Record<string, any> | null;
@@ -193,8 +199,8 @@ function Story({ combo, onClose }: { combo: Combo | null; onClose: () => void })
     { t: "Looked at", x: `Round ${c.round}${c.parent ? ` · grown from ${String(c.parent).slice(0, 8)}` : ""} · ${utc(c.created_at)}` },
     { t: "Scored", x: c.status === "scored" ? `${c.trades} trades across ${c.scored_symbols} coins · consistency p ${fmtP(num(c.consistency_p))}` : `Status: ${c.status}` },
     { t: "Pruning", x: `${verdict}${c.reason ? ` — ${c.reason}` : ""}` },
-    { t: "Candidate bank", x: cand ? `State ${cand.state}` : "Not carried into the candidate bank." },
-    { t: "Referee", x: regs.length ? `${regs.length} registered gate look(s)` : "No registered held-out look. The referee is off." },
+    { t: "Candidate bank", x: q.isError || !d ? "Candidate state UNAVAILABLE" : cand ? `State ${cand.state}` : "No linked candidate recorded." },
+    { t: "Referee", x: refereeWording(refereeEnabled, q.isError || !Array.isArray(d?.registrations) ? null : regs.length) },
   ];
   return (
     <DetailPanel open onClose={onClose} title={`${c.tf} · ${direction(c)} · ${c.geo}`} description={`${verdict} · discovery evidence only · hash ${c.hash}`}>
@@ -237,7 +243,7 @@ function Story({ combo, onClose }: { combo: Combo | null; onClose: () => void })
               return (
                 <div key={s} style={{ display: "grid", gridTemplateColumns: "84px 1fr 56px", gap: 8, alignItems: "center", fontSize: 12 }}>
                   <span className="m">{s.split("/")[0]}</span>
-                  <span style={{ height: 6, borderRadius: 3, background: "#ffffff12", overflow: "hidden" }}><i style={{ display: "block", height: "100%", width: `${Math.min(100, ((pf ?? 0) / maxPf) * 100)}%`, background: pf !== null && pf >= 1 ? OK : BAD }} /></span>
+                  <span style={{ height: 6, borderRadius: 3, background: "#ffffff12", overflow: "hidden" }}><i style={{ display: "block", height: "100%", width: pf === null ? "0%" : `${Math.min(100, (pf / maxPf) * 100)}%`, background: pf === null ? "transparent" : pf >= 1 ? OK : BAD }} /></span>
                   <span className="m" style={{ textAlign: "right" }}>{pf === null ? "n/a" : pf.toFixed(2)}</span>
                 </div>
               );

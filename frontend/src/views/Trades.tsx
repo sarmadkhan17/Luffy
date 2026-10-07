@@ -8,6 +8,7 @@ import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DataTable, DetailPanel, KV, type Col } from "../components/glass";
 import { OwnerControls } from "../components/OwnerControls";
+import { RuntimeLabels } from "../components/RuntimeTruth";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import type { Position } from "../adapters/contracts";
@@ -90,12 +91,12 @@ export default function Trades() {
   return (
     <>
       <PageHeader title="Trades">
-        <span className="gl-state live" style={{ color: OK }}><i />{live ? "Live · Binance demo" : "Fixture"}</span>
+        <span className="gl-state" style={{ color: GREY }}><i /><RuntimeLabels kernel={String(ov.data?.live?.kernelState ?? "UNKNOWN")} control={control} /></span>
         {live && <OwnerControls control={control} positions={positions} supervisorNote={supNote} />}
       </PageHeader>
 
       <Card className="pad" label="Trade log">
-        <CardHead icon={<ArrowLeftRight size={16} />} title="Trade log" sub={shownRows && q.data ? (() => { const net = shownRows.reduce((a, t) => a + (t.status === "closed" ? (num(t.realized_pnl) ?? 0) : 0), 0); const unknown = shownRows.filter((t) => t.status === "closed" && num(t.realized_pnl) === null).length; return `${shownRows.length} of ${q.data.total} trades · net ${money(net)} journal-booked${unknown ? ` · ${unknown} unknown P&L not counted` : ""}`; })() : undefined}>
+        <CardHead icon={<ArrowLeftRight size={16} />} title="Trade log" sub={shownRows && q.data ? (() => { const booked = shownRows.filter(t => t.status === "closed" && num(t.realized_pnl) !== null); const net = booked.length ? booked.reduce((a, t) => a + num(t.realized_pnl)!, 0) : null; const unknown = shownRows.filter((t) => t.status === "closed" && num(t.realized_pnl) === null).length; return `${shownRows.length} of ${q.data.total} trades · net ${net === null ? "UNAVAILABLE" : money(net)} journal-booked${unknown ? ` · ${unknown} unknown P&L not counted` : ""}`; })() : undefined}>
           <span style={{ fontSize: 12, color: GREY }}>Click a trade to open its story</span>
         </CardHead>
         {q.error && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted. <button type="button" className="gl-btn" onClick={() => void q.refetch()}>Retry</button></div>}

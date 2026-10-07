@@ -8,6 +8,7 @@ import { Activity, Clock, Cpu, Database, FileText, HardDrive, HeartPulse, Lock, 
 import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DetailPanel, KV } from "../components/glass";
+import { StorageTruth } from "../components/StorageTruth";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 
@@ -33,7 +34,7 @@ export default function Diagnostics() {
   const [filter, setFilter] = useState<"all" | "prob" | "ok">("all");
   const [sel, setSel] = useState<string | null>(null);
 
-  const D = (dq.data ?? {}) as Record<string, any>;
+  const D = (dq.isError ? {} : dq.data ?? {}) as Record<string, any>;
   const L = ov.data?.live;
   const ev = (L?.observedEvidence ?? {}) as Record<string, any>;
   const sup = ev.protection?.supervisor as Record<string, any> | undefined;
@@ -58,15 +59,15 @@ export default function Diagnostics() {
     if (!dq.data && !ov.data) return [];
     const t: Tile[] = [];
     const hbFresh = L?.heartbeat?.freshness;
-    t.push({ id: "heart", l: "Heartbeat", g: "Is LUFFY alive and ticking?", icon: HeartPulse, lvl: !L?.heartbeat ? "none" : hbFresh === "fresh" ? "ok" : "bad", v: !L?.heartbeat ? "—" : hbFresh === "fresh" ? "Fresh" : "Stale", st: !L?.heartbeat ? "Not reported" : hbFresh === "fresh" ? "Healthy" : "Failing",
+    t.push({ id: "heart", l: "Heartbeat", g: "Is LUFFY alive and ticking?", icon: HeartPulse, lvl: !L?.heartbeat ? "none" : hbFresh === "fresh" ? "ok" : "warn", v: !L?.heartbeat ? "—" : hbFresh === "fresh" ? "Fresh" : "Stale", st: !L?.heartbeat ? "Not reported" : hbFresh === "fresh" ? "Healthy" : "Stale",
       x: hb ? `Last heartbeat ${stamp(hb.observed_at)} (${age(hb.age_s)} ago; stale after ${age(hb.stale_after_s)}).` : "No readable kernel heartbeat.",
       what: "A small signal the kernel writes each cycle. If it stops arriving on time, the Supervisor assumes something is wrong and keeps trading frozen.",
       mean: hbFresh === "fresh" ? "The kernel is reporting on time." : "Trading cannot resume while the heartbeat is stale. The process state reads " + String(hb?.process_state ?? "unknown").toLowerCase() + ".",
       facts: [["Freshness", hbFresh ?? null], ["Process", hb?.process_state ?? null], ["Reported control state", hb?.reported_state ?? null], ["Last successful work", hb?.work_observed_at ? stamp(hb.work_observed_at) : null], ["Source", hb?.source ?? null]] });
     const exceeded = reasons.some((r) => /THRESHOLD_EXCEEDED|cycle/i.test(r));
-    t.push({ id: "cycle", l: "Cycle freshness", g: "How recently a full scan succeeded", icon: Gauge, lvl: !hb ? "none" : exceeded ? "warn" : hbFresh === "fresh" ? "ok" : "warn", v: hb ? age(hb.work_age_s) : "—", st: exceeded ? "Too old" : hb ? (hbFresh === "fresh" ? "Healthy" : "Stale") : "Not reported",
+    t.push({ id: "cycle", l: "Cycle freshness", g: "How recently a full scan succeeded", icon: Gauge, lvl: typeof hb?.work_age_s !== "number" ? "none" : exceeded ? "warn" : hbFresh === "fresh" ? "ok" : "warn", v: typeof hb?.work_age_s === "number" ? age(hb.work_age_s) : "—", st: typeof hb?.work_age_s !== "number" ? "Not reported" : exceeded ? "Too old" : hbFresh === "fresh" ? "Current" : "Stale",
       x: exceeded ? "The Supervisor reports the successful-cycle threshold exceeded." : "Age of the last successful cycle recorded in the heartbeat.",
-      what: "One cycle = scan the coins, let the analysts vote, decide, and journal it. A cycle that has not succeeded recently means LUFFY is not reacting.",
+      what: "One cycle records market observation, evidence-bound candidate comparison and guarded decisions. A cycle that has not succeeded recently means LUFFY is not reacting.",
       mean: "Per-cycle durations are not recorded, so only the age of the last successful cycle is shown.",
       facts: [["Last successful cycle", hb?.work_observed_at ? stamp(hb.work_observed_at) : null], ["Age", hb ? age(hb.work_age_s) : null], ["Supervisor flag", exceeded ? "threshold exceeded" : "none"]] });
     const supLvl: Lvl = !sup ? "none" : sup.outcome === "NEEDS_OWNER" ? "bad" : sup.outcome === "SAFE" && sup.freshness === "fresh" ? "ok" : "warn";
@@ -77,8 +78,8 @@ export default function Diagnostics() {
       facts: [["Outcome", sup?.outcome ?? null], ["Stage", sup?.stage ?? null], ["Needs owner", sup ? String(sup.needs_owner) : null], ["Passes in the recent events", String(supEvents.length)], ["Reasons", reasons.length ? reasons.map(human).join("; ") : "none recorded"]],
       log: supEvents.slice(0, 8).map((e) => `${stamp(e.ts)}  ${e.detail?.outcome ?? "?"}  ${(e.detail?.reasons ?? []).map(human).join("; ")}`), logTitle: "Latest Supervisor passes" });
     t.push({ id: "gate", l: "Trading gate", g: "Can LUFFY open new trades?", icon: Lock, lvl: control === "ACTIVE" ? "ok" : control === "FROZEN" ? "warn" : control === "HALTED" ? "bad" : "none", v: control === "ACTIVE" ? "Open" : control === "UNAVAILABLE" ? "—" : "Closed", st: control === "ACTIVE" ? "Active" : control === "UNAVAILABLE" ? "Not reported" : control[0] + control.slice(1).toLowerCase(),
-      x: control === "FROZEN" ? "New entries are blocked. Existing positions keep being managed where the kernel runs." : control === "ACTIVE" ? "New entries are permitted." : `Control state ${control}.`,
-      what: "The final switch before any new order. When closed, LUFFY may still think and log decisions, but never opens a position.",
+      x: control === "FROZEN" ? "New entries are blocked. Existing positions keep being managed where the kernel runs." : control === "ACTIVE" ? "Control is ACTIVE; final Risk permission and exact strategy/economics prerequisites remain required." : `Control state ${control}.`,
+      what: "A control prerequisite before any new order. When closed, LUFFY may still think and log decisions, but never opens a position.",
       mean: "It opens when you resume LUFFY (Trades → Resume); the Supervisor must also judge it safe.",
       facts: [["State", control], ["Last control change", setBy ? `${stamp(setBy.ts)} (${setBy.actor})` : "not in the recent events"], ["Supervisor says safe to activate", sup ? "see Supervisor" : null]] });
     const prot = L?.protection?.status ?? "UNAVAILABLE";
@@ -104,20 +105,20 @@ export default function Diagnostics() {
       x: "Journal, newest decision, knowledge vault and dashboard build, each timed.", what: "Quick test reads against LUFFY's databases and files, timed in milliseconds.", mean: "A failing probe means a store the owner views depend on cannot be read.",
       dots: probes.map((p) => ({ t: String(p.probe).replaceAll("_", " "), lvl: (p.ok ? "ok" : "bad") as Lvl })), facts: probes.map((p): [string, string] => [String(p.probe), `${p.ok ? "ok" : "FAILED"} · ${p.ms} ms · ${p.detail}`]) });
     const cOk = collectors.filter((c) => c.freshness === "fresh" && c.status === "ok").length;
-    t.push({ id: "coll", l: "Collectors", g: "Background data feeds", icon: Radar, lvl: !collectors.length ? "none" : cOk === collectors.length ? "ok" : collectors.some((c) => c.status === "error") ? "bad" : "warn", v: collectors.length ? `${cOk}/${collectors.length}` : "—", st: !collectors.length ? "Not reported" : cOk === collectors.length ? "Fresh" : "Stale",
+    t.push({ id: "coll", l: "Collectors", g: "Background data feeds", icon: Radar, lvl: !collectors.length || collectors.every(c => c.freshness === "unavailable") ? "none" : cOk === collectors.length ? "ok" : collectors.some((c) => c.status === "error") ? "bad" : "warn", v: collectors.length ? `${cOk}/${collectors.length}` : "—", st: !collectors.length || collectors.every(c => c.freshness === "unavailable") ? "Not reported" : cOk === collectors.length ? "Fresh" : "Stale",
       x: "Attention, investigation and learning feeds, from their *_health.json files.", what: "Small workers that keep gathering market attention, investigations and learning data in the background.", mean: "Stale or error means that feed has not reported recently; with the kernel stopped that is expected.",
       dots: collectors.map((c) => ({ t: String(c.file).replace("_health.json", ""), lvl: (c.freshness === "fresh" && c.status === "ok" ? "ok" : c.status === "error" ? "bad" : "warn") as Lvl })),
       facts: collectors.map((c): [string, string] => [String(c.file).replace("_health.json", ""), `${c.status} · ${c.freshness} · ${age(c.age_s)} old${c.last_error ? ` · ${c.last_error}` : ""}`]) });
     const wdOff = wd?.disabled_flag === true;
-    t.push({ id: "wd", l: "Watchdog", g: "Restarts LUFFY if it dies", icon: Activity, lvl: !wd ? "none" : wdOff ? "warn" : "ok", v: !wd ? "—" : wdOff ? "Off" : "On", st: !wd ? "Not reported" : wdOff ? "Disabled by flag" : "Watching",
+    t.push({ id: "wd", l: "Watchdog", g: "Restarts LUFFY if it dies", icon: Activity, lvl: !wd ? "none" : wdOff ? "warn" : "none", v: !wd ? "—" : wdOff ? "Off" : "Unknown", st: !wd ? "Not reported" : wdOff ? "Disabled by flag" : "Process not reported",
       x: wdOff ? `A disable flag (data/watchdog.off) is present${wd?.disabled_since ? ` since ${stamp(wd.disabled_since)}` : ""}.` : "No disable flag; the watchdog may restart stopped processes.",
-      what: "An outside guard that restarts LUFFY's process if it crashes or goes stale.", mean: wdOff ? "While the flag exists nothing restarts the kernel automatically. The flag is created before an intentional stop and must be removed when restoring service." : "Nothing to do.",
+      what: "An outside guard that restarts LUFFY's process if it crashes or goes stale.", mean: wdOff ? "While the flag exists nothing restarts the kernel automatically. The flag is created before an intentional stop and must be removed when restoring service." : "The absent disable flag does not prove the watchdog process is running.",
       facts: [["Disable flag", wd ? (wdOff ? "present" : "absent") : null], ["Flag since", wd?.disabled_since ? stamp(wd.disabled_since) : null]], log: asRows(wd?.log_tail).length ? undefined : (Array.isArray(wd?.log_tail) ? (wd!.log_tail as string[]).slice(-12).map((s) => String(s).slice(0, 220)) : undefined), logTitle: "Watchdog log" });
     const free = disk ? disk.free / disk.total : null;
     t.push({ id: "disk", l: "Disk & memory", g: "Room on this machine", icon: HardDrive, lvl: free === null ? "none" : free < 0.1 ? "bad" : free < 0.2 ? "warn" : "ok", v: free === null ? "—" : `${Math.round(free * 100)}% free`, st: free === null ? "Not reported" : free < 0.2 ? "Low" : "Free", pct: free === null ? undefined : 1 - free,
-      x: disk ? `${gb(disk.free)} free of ${gb(disk.total)}; memory available ${gb(host?.mem_available)} of ${gb(host?.mem_total)}.` : "No disk reading.", what: "How much room the machine has. A full disk breaks the journal and triggers recovery mode.", mean: free !== null && free >= 0.2 ? "Plenty of room." : "Free space is getting low.",
+      x: disk ? `${gb(disk.free)} free of ${gb(disk.total)}; memory available ${gb(host?.mem_available)} of ${gb(host?.mem_total)}.` : "No disk reading.", what: "How much room the machine has. A full disk breaks the journal and triggers recovery mode.", mean: free === null ? "Capacity NOT REPORTED." : free >= 0.2 ? "Data filesystem capacity observed; root and recovery are separate." : "Data filesystem free space is low.",
       facts: [["Disk free", gb(disk?.free)], ["Disk total", gb(disk?.total)], ["Memory available", gb(host?.mem_available)], ["CPU load (1/5/15 min)", Array.isArray(host?.loadavg) ? host!.loadavg.map((x: number) => x.toFixed(2)).join(" / ") : null], ["CPUs", host?.cpus != null ? String(host.cpus) : null], ["Dashboard memory", gb(D.resources?.dashboard_process?.rss)]] });
-    t.push({ id: "store", l: "Storage", g: "LUFFY's database files", icon: Cpu, lvl: files.length ? "ok" : "none", v: String(files.length), st: files.length ? "Files" : "Not reported", x: "Size and last change of each database file in data/.", what: "Size and last-change time of each database file in data/.", mean: "Large files are normal for the journal and market stores.",
+    t.push({ id: "store", l: "Storage", g: "LUFFY's database files", icon: Cpu, lvl: "none", v: String(files.length), st: files.length ? "Files" : "Not reported", x: "Size and last change of each database file in data/.", what: "Size and last-change time of each database file in data/.", mean: "Growth baseline unavailable. Abnormal database/WAL growth and sudden change are UNKNOWN without a recorded comparison.",
       facts: files.map((f): [string, string] => [String(f.file).replace("data/", ""), `${gb(f.bytes)} · changed ${stamp(f.modified_at)}`]) });
     const lines = logQ.data?.lines ?? null;
     t.push({ id: "logs", l: "Logs & build", g: "luffy.log and dashboard version", icon: FileText, lvl: lines ? "ok" : "none", v: lines ? "Readable" : "—", st: lines ? "Readable" : "Not reported", x: "Latest log lines and the running dashboard build.", what: "The raw log LUFFY writes, plus which version of the code and dashboard is running.", mean: "Open this tile for the newest log lines.",
@@ -129,15 +130,15 @@ export default function Diagnostics() {
 
   const problems = tiles.filter((t) => t.lvl === "bad" || t.lvl === "warn");
   const shown = tiles.filter((t) => filter === "all" || (filter === "prob" ? t.lvl === "bad" || t.lvl === "warn" : t.lvl === "ok"));
-  const verdict = !sup ? ["Unknown", GREY] as const : sup.outcome === "SAFE" ? ["Healthy", G] as const : sup.outcome === "NEEDS_OWNER" ? ["Needs you", R] as const : ["Degraded", A] as const;
-  const headline = control === "FROZEN" ? "LUFFY is frozen and can't open new trades" : control === "HALTED" ? "LUFFY is halted" : control === "ACTIVE" ? (L?.heartbeat?.freshness === "fresh" ? "LUFFY is trading normally" : "LUFFY says ACTIVE but is not reporting") : "LUFFY's state can't be read";
+  const verdict = !sup ? ["Unknown", GREY] as const : sup.outcome === "SAFE" && sup.freshness === "fresh" ? ["Current safety report", G] as const : sup.outcome === "NEEDS_OWNER" ? ["Needs you", R] as const : ["Degraded", A] as const;
+  const headline = control === "FROZEN" ? "LUFFY is frozen and can't open new trades" : control === "HALTED" ? "LUFFY is halted" : control === "ACTIVE" ? (L?.heartbeat?.freshness === "fresh" ? "Control is ACTIVE; current order permission is not established here" : "LUFFY says ACTIVE but is not reporting") : "LUFFY's state can't be read";
   const checks: { l: string; ok: boolean | null }[] = [
     { l: "Exchange positions readable", ok: sup?.checks_are_current ? sup.venue_positions : null },
     { l: "Positions match the journal", ok: sup?.checks_are_current ? sup.reconciliation : null },
     { l: "Every position has its stop", ok: sup?.checks_are_current ? sup.venue_protection : null },
     { l: "Heartbeat is fresh", ok: L?.heartbeat ? L.heartbeat.freshness === "fresh" : null },
-    { l: "Kernel process running", ok: ev.kernel_process?.state ? ev.kernel_process.state === "RUNNING" : L?.kernelState && L.kernelState !== "UNKNOWN" ? L.kernelState === "RUNNING" : null },
-    { l: "Safe to open new trades", ok: sup ? supEvents[0]?.detail?.safe_to_activate === true : null },
+    { l: "Kernel process running", ok: (ev.kernel_process?.state ?? L?.kernelState) === "RUNNING" ? true : (ev.kernel_process?.state ?? L?.kernelState) === "STOPPED" ? false : null },
+    { l: "Safe to open new trades", ok: sup?.checks_are_current && typeof supEvents[0]?.detail?.safe_to_activate === "boolean" ? supEvents[0].detail.safe_to_activate : null },
   ];
   const passN = checks.filter((c) => c.ok === true).length;
 
@@ -158,7 +159,7 @@ export default function Diagnostics() {
   const popTile = tiles.find((t) => t.id === sel) ?? null;
   const open = (id: string) => setSel(id);
   const reasonChips: [string, Lvl, string][] = [
-    ...(L?.heartbeat && L.heartbeat.freshness !== "fresh" ? [["Heartbeat stale", "bad", "heart"] as [string, Lvl, string]] : []),
+    ...(L?.heartbeat && L.heartbeat.freshness !== "fresh" ? [["Heartbeat stale", "warn", "heart"] as [string, Lvl, string]] : []),
     ...reasons.filter((r) => !/heartbeat/i.test(r)).map((r): [string, Lvl, string] => [human(r), "warn", /cycle/i.test(r) ? "cycle" : /recovery/i.test(r) ? "recov" : "sup"]),
     ...(control === "FROZEN" || control === "HALTED" ? [[`${control[0] + control.slice(1).toLowerCase()} · ${setBy?.actor && setBy.actor !== "supervisor" ? `set by ${setBy.actor}` : "the Supervisor did not set it"}`, "bad", "gate"] as [string, Lvl, string]] : []),
     ...(wd?.disabled_flag ? [["Watchdog disabled by flag", "warn", "wd"] as [string, Lvl, string]] : []),
@@ -179,7 +180,7 @@ export default function Diagnostics() {
             <Card need className="gl-verdict" label="Verdict">
               <div className="vring" aria-hidden="true" style={{ ["--vc" as string]: verdict[1] }}>
                 <span className="vr1" /><span className="vr2" /><span className="vr3" />
-                <span className="vcore">{verdict[0] === "Healthy" ? <Check size={34} color="#04140c" strokeWidth={2.4} /> : <TriangleAlert size={34} color="#1a1204" strokeWidth={2.2} />}</span>
+                <span className="vcore">{verdict[0] === "Current safety report" ? <Check size={34} color="#04140c" strokeWidth={2.4} /> : <TriangleAlert size={34} color="#1a1204" strokeWidth={2.2} />}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0, flex: 1 }}>
                 <span style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -209,6 +210,7 @@ export default function Diagnostics() {
             </Card>
           </div>
 
+          <StorageTruth storage={D.storage} unavailable={dq.isError} />
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
             <div role="group" aria-label="Show" className="gl-seg">
               {([["all", "All", tiles.length], ["prob", "Problems", problems.length], ["ok", "Healthy", tiles.filter((t) => t.lvl === "ok").length]] as const).map(([k, l, n]) => (

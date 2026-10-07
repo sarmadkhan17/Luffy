@@ -1038,20 +1038,27 @@ def diagnostics(journal, root: Path) -> dict:
     started = time.perf_counter()
     now = time.time()
     data = root / "data"
+    from .glacier_truth import filesystems
     storage = []
-    for name in ("luffy.db", "luffy.db-wal", "candles.db", "derivs.db", "attention.db",
-                 "investigation.db", "attention_learning.db"):
+    names = {"luffy.db", "candles.db", "derivs.db", "attention.db", "investigation.db",
+             "attention_learning.db", "runtime-portfolio.db", "execution-evidence.db"}
+    # Inventory file metadata only, including retained backups and WALs;
+    # absent expected stores remain explicitly NOT REPORTED.
+    names.update(p.name for pattern in ("*.db", "*.sqlite", "*.db-wal", "*.sqlite-wal")
+                 for p in data.glob(pattern))
+    names.update(name + "-wal" for name in list(names) if name.endswith((".db", ".sqlite")))
+    for name in sorted(names):
         p = data / name
         try:
             st = p.stat()
             storage.append({"file": f"data/{name}", "bytes": st.st_size,
-                            "modified_at": _iso(datetime.fromtimestamp(st.st_mtime,
+                            "growth_bytes": None, "modified_at": _iso(datetime.fromtimestamp(st.st_mtime,
                                                                        timezone.utc))})
         except OSError:
-            storage.append({"file": f"data/{name}", "bytes": None, "modified_at": None})
+            storage.append({"file": f"data/{name}", "bytes": None, "growth_bytes": None, "modified_at": None})
     try:
-        du = shutil.disk_usage(data if data.exists() else root)
-        disk = {"total": du.total, "used": du.used, "free": du.free}
+        du = shutil.disk_usage(data) if data.exists() else None
+        disk = {"total": du.total, "used": du.used, "free": du.free} if du else None
     except OSError:
         disk = None
     try:
@@ -1098,7 +1105,9 @@ def diagnostics(journal, root: Path) -> dict:
     collectors = [_health_file(data / n, now) for n in (
         "attention_health.json", "investigation_health.json",
         "attention_learning_health.json")]
-    return {"generated_at": _iso(_now()), "storage": {"files": storage, "disk": disk},
+    return {"generated_at": _iso(_now()), "storage": {"files": storage, "disk": disk,
+                    "filesystems": filesystems(data),
+                    "growth_baseline": None, "growth_status": "Growth baseline unavailable"},
             "resources": resources, "watchdog": watchdog, "collectors": collectors,
             "incidents": incidents, "owner_audit": audit, "execution_recovery": recovery,
             "api": {"diagnostics_read_ms": round((time.perf_counter() - started) * 1000, 1)},

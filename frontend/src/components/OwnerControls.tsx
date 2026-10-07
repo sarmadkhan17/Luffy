@@ -58,7 +58,7 @@ type Outcome =
   | { kind: "unknown"; key: Key; request: PendingRequest };
 
 export function OwnerControls({ control, positions, supervisorNote }: { control: string; positions: Position[] | null; supervisorNote?: string }) {
-  const { adapter } = usePreview();
+  const { adapter, session } = usePreview();
   const qc = useQueryClient();
   const health = useQuery({
     queryKey: ["owner-interface"],
@@ -76,8 +76,10 @@ export function OwnerControls({ control, positions, supervisorNote }: { control:
   const [, rerender] = useState(0);
 
   const op = (k: Key): ControlOperation => (k === "resume" && control === "HALTED" ? "unhalt" : k);
-  const available = !!adapter.control && health.data?.availability === "AVAILABLE" && !health.isFetching;
-  const why = !adapter.control
+  const available = (adapter.mode === "DEMO" || session?.dashboard_mode === "LIVE") && !!adapter.control && health.data?.availability === "AVAILABLE" && !health.isFetching;
+  const why = adapter.mode === "LIVE" && session?.dashboard_mode !== "LIVE"
+    ? "Controls are disabled: dashboard authority is read-only or unknown."
+    : !adapter.control
     ? "Controls are unavailable: this GUI is read-only."
     : health.error
       ? `Owner Interface health read failed: ${(health.error as Error).message}`
@@ -89,6 +91,7 @@ export function OwnerControls({ control, positions, supervisorNote }: { control:
     (k === "resume" && control === "ACTIVE") || (k === "freeze" && control === "FROZEN") || (k === "halt" && control === "HALTED");
 
   async function send(k: Key, request: PendingRequest) {
+    if (!available) return;
     setInFlight(k);
     try {
       const result = await adapter.control!(op(k), request);

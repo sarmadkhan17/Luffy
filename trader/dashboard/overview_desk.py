@@ -141,7 +141,7 @@ def _describe(spec: dict | None, kind: str) -> str:
     return "; ".join(bits) + "."
 
 
-def strategy_board(journal, now_ts: float) -> dict:
+def strategy_board(journal, now_ts: float, cfg: dict | None = None) -> dict:
     from . import owner_reads
     registry = owner_reads.strategies(journal)
     trades: dict[str, list] = {}
@@ -190,7 +190,9 @@ def strategy_board(journal, now_ts: float) -> dict:
             "curve": curve[-120:], "recent": list(reversed(closed[-5:])),
             "registry_stats": s.get("registry_stats"),
         })
-    return {"strategies": out, "source": "journal strategies registry + journal-booked trades per strategy id; "
+    from .glacier_truth import versioned_strategies
+    authority = versioned_strategies(journal, cfg or {}, now_ts)
+    return {**authority, "strategies": out, "source": "journal strategies registry + journal-booked trades per strategy id; "
             "not venue-verified, not an admission"}
 
 
@@ -239,7 +241,7 @@ def operations_log(journal, now_ts: float, days: int = LOG_DAYS) -> dict:
         blocked = sorted({r["skip_reason"] for r in flat if r["skip_reason"]})
         events.append({
             "id": f"scan:{hk}", "at": last[-1]["ts"], "type": "Scan", "n": len(scans),
-            "what": f"{len(scans)} scan pass{'es' if len(scans) != 1 else ''} · {len(last)} coins each · "
+            "what": f"{len(scans)} scan pass{'es' if len(scans) != 1 else ''} · latest pass {len(last)} coins · "
                     f"{directional} directional · {executed} traded",
             "who": "Attention + analysts",
             "result": "Traded" if executed else ("Blocked" if blocked and directional else "All HOLD"),
@@ -266,7 +268,7 @@ def operations_log(journal, now_ts: float, days: int = LOG_DAYS) -> dict:
             pnl = t["realized_pnl"]
             events.append({"id": f"close:{t['id']}", "at": t["closed_at"], "type": "Order", "n": 1,
                            "what": f"Closed {str(t['side']).upper()} {base}-USDT @ {t['exit_price']} · {t['close_reason'] or 'reason not recorded'}",
-                           "who": who, "result": "Won" if (pnl or 0) > 0 else "Lost" if (pnl or 0) < 0 else "Flat",
+                           "who": who, "result": "UNKNOWN" if pnl is None else "Won" if pnl > 0 else "Lost" if pnl < 0 else "Flat",
                            "tone": "ok" if (pnl or 0) > 0 else "bad" if (pnl or 0) < 0 else "grey",
                            "facts": {**facts, "exit_price": t["exit_price"], "close_reason": t["close_reason"],
                                      "realized_pnl_journal": pnl}})
@@ -313,7 +315,9 @@ def operations_log(journal, now_ts: float, days: int = LOG_DAYS) -> dict:
                        "facts": {"kind": b["kind"], "subject": b["subject"]}, "detail": _load_json(b["detail"])})
 
     events.sort(key=lambda e: e["at"] or "", reverse=True)
-    return {"events": events, "window_days": days, "signal_cooldowns_not_listed": cooldowns,
+    return {"events": events, "window_days": days, "window_start": cutoff,
+            "window_end": datetime.fromtimestamp(now_ts, timezone.utc).isoformat(),
+            "truncated": False, "scan_decision_records_aggregated": len(rows), "rolled_up_records": sum(max(0, e["n"] - 1) for e in events), "signal_cooldowns_not_listed": cooldowns,
             "newest": events[0]["at"] if events else None,
             "source": f"journal decisions (rolled up per UTC hour), trades, control_events (same-hour repeats merged), "
                       f"strategy lifecycle and learning brain_events over the last {days} days; "

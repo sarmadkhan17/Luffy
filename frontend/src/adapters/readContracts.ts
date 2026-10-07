@@ -253,8 +253,20 @@ const noteRecords: Check = (v, at) => {
   return null;
 };
 
+const runtimeTruth = shape({
+  account: shape({ venue: nullable(str), environment: nullable(str), observed_at_ms: nullable(num), snapshot_id: nullable(str), freshness: str, source: str }),
+  brain: shape({ provider_state: str, external_llm: str, response_mode: str, source: str }),
+});
+const versionAuthority = shape({
+  strategy_id: id, version_id: id, created_at_ms: num,
+  version: nullable(record), validation: nullable(record), install: nullable(record), probation: nullable(record),
+  approval: nullable(record), governor: nullable(record), lifecycle: nullable(str), economics: nullable(record), errors: record,
+});
+const strategyBoard = shape({ strategies: list(record), versions: nullable(list(versionAuthority)), authority_errors: record });
+const researchBoard = shape({ combos: nullable(list(record)), total: nullable(num), verdicts: nullable(list(record)), candidates_by_state: nullable(record), stores: record, referee_enabled: optional(nullable(bool)) });
+const operationLog = shape({ events: list(record), window_days: num, window_start: str, window_end: str, truncated: bool, rolled_up_records: num, scan_decision_records_aggregated: num, signal_cooldowns_not_listed: num });
 const diagnostics = shape({
-  storage: shape({ files: list(shape({ file: str })) }),
+  storage: shape({ files: list(shape({ file: str })), filesystems: optional(list(shape({ label: str, path: str, total: nullable(num), used: nullable(num), free: nullable(num), percent_free: nullable(num), mount: nullable(str), source: nullable(str), status: str }))) }),
   collectors: list(record),
   incidents: list(record),
   owner_audit: list(record),
@@ -270,7 +282,11 @@ const controlEvents = shape({
 /** The first contract violation of an owner read, or null when valid. */
 export function readContractIssue(path: string, d: unknown): string | null {
   const p = path.split("?")[0];
-  const check: Check | null = /^trades\/[^/]+\/lineage$/.test(p)
+  const check: Check | null = p === "bootstrap" ? shape({ runtime_truth: runtimeTruth, dashboard_mode: str })
+    : p === "strategies/board" ? strategyBoard
+    : p === "research/board" ? researchBoard
+    : p === "operations/log" ? operationLog
+    : /^trades\/[^/]+\/lineage$/.test(p)
     ? lineage
     : p.startsWith("decisions/")
       ? decision

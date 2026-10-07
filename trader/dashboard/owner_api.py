@@ -802,6 +802,7 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
 
     @app.get(PREFIX + "/bootstrap")
     def bootstrap(request: Request):
+        from .glacier_truth import runtime_truth
         method, expires = auth.session_info(request.scope)
         dist_index = dist / "index.html"
         try:
@@ -812,9 +813,11 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
         if read_only and process['state'] == 'UNKNOWN':
             process = {**process, 'state': 'UNAVAILABLE'}
         return _json({
+            "generated_at": _iso(_now()),
             "mode": "LIVE",  # connected transport; separate explicit authority phase
             "dashboard_mode": "READ_ONLY_GUI" if read_only else "LIVE",
             "kernel_process": process,
+            "runtime_truth": runtime_truth(journal, cfg, _now()),
             "principal": principal,
             "session": {"authenticated": True, "method": method,
                         "expires_at": _iso(_parse(expires)) if expires else None},
@@ -850,7 +853,7 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     @app.get(PREFIX + "/strategies/board")
     def owner_strategy_board():
         from .overview_desk import strategy_board
-        return _json({"generated_at": _iso(_now()), **strategy_board(journal, _now().timestamp())})
+        return _json({"generated_at": _iso(_now()), **strategy_board(journal, _now().timestamp(), cfg)})
 
     @app.get(PREFIX + "/operations/log")
     def owner_operations_log(days: int = 7):

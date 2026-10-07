@@ -1,4 +1,4 @@
-/** Operations — approved "Final · 6" design: everything LUFFY recorded doing,
+/** Operations — approved "Final · 6" design: Recorded activity summary,
  * in order, with its evidence. Read-only; owner controls live in the Trades
  * header. Scans are rolled up per UTC hour; nothing is estimated. */
 import { useMemo, useState } from "react";
@@ -69,12 +69,13 @@ export default function OperationsLog() {
   return (
     <>
       <PageHeader title="Operations">
-        <span style={{ fontSize: 13, color: "var(--txt2)" }}>everything LUFFY recorded doing, in order, with its evidence</span>
+        <span style={{ fontSize: 13, color: "var(--txt2)" }}>Recorded activity summary, in order, with its evidence</span>
         <span className="gl-state blink" style={{ color: cc }}><i />{control} · kernel {kernel.toLowerCase()}{sup?.outcome ? ` · supervisor ${String(sup.outcome).toLowerCase()}` : ""}</span>
       </PageHeader>
       {q.isError && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted.</div>}
       {decision && <div className="gl-legacy"><DecisionDetail key={decision} id={decision} /></div>}
 
+      <p className="gl-note" data-testid="operations-disclosure">Window: {q.data?.window_start ? utc(String(q.data.window_start)) : "UNAVAILABLE"} to {q.data?.window_end ? utc(String(q.data.window_end)) : "UNAVAILABLE"}. Scans are aggregated per UTC hour; repeated safety events are merged. Rolled-up occurrences (extra scan passes / safety repeats): {String(q.data?.rolled_up_records ?? "UNAVAILABLE")}. Decision records in scan summaries: {String(q.data?.scan_decision_records_aggregated ?? "UNAVAILABLE")}. Cooldown records counted, not listed: {String(q.data?.signal_cooldowns_not_listed ?? "UNAVAILABLE")}. Truncation: {q.data?.truncated === true ? "YES" : q.data?.truncated === false ? "NO" : "NOT REPORTED"}. This is a summary of selected activity sources.</p>
       <Card className="pad" label="Activity chart">
         <CardHead icon={<BarChart3 size={16} />} title={`Activity · ${day ? dayLabel(day) : "—"} (UTC)`}>
           <button type="button" className="gl-tf" disabled={dayIdx >= days.length - 1} onClick={() => setDayIdx(dayIdx + 1)} aria-label="Previous day"><ChevronLeft size={14} aria-hidden="true" /></button>
@@ -152,7 +153,8 @@ function EventPanel({ e, onClose }: { e: Ev | null; onClose: () => void }) {
           <div className="gl-allc" style={{ border: 0, padding: 0, background: "none" }}>
             <div className="grid">
               {coins.map(([sym, score, th, action, executed, skip]) => {
-                const t = th ?? 0.3, v = score ?? 0, p = sc(v, t), crossed = Math.abs(v) >= t;
+                if (th === null || th <= 0 || score === null) return <div key={sym}>{sym} · score/threshold UNAVAILABLE</div>;
+                const t = th, v = score, p = sc(v, t), crossed = Math.abs(v) >= t;
                 const col = crossed ? OK : v >= 0 ? "#7fd3ff" : "#ff9d95";
                 return (
                   <div key={sym} title={`${action}${skip ? ` · ${skip}` : ""}${executed ? " · traded" : ""}`} style={{ display: "grid", gridTemplateColumns: "46px minmax(0,1fr) 58px", gap: 8, alignItems: "center", fontSize: 12 }}>
@@ -164,7 +166,7 @@ function EventPanel({ e, onClose }: { e: Ev | null; onClose: () => void }) {
               })}
             </div>
           </div>
-          <p className="gl-note">Amber lines = the threshold a score had to cross to trade.</p>
+          <p className="gl-note">Amber lines show recorded thresholds. These legacy score fields do not establish current order permission.</p>
         </>
       )}
       <KV items={[...flat, ...extra]} />

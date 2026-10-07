@@ -33,6 +33,7 @@ export interface Bootstrap {
   mode: "LIVE";
   dashboard_mode?: "READ_ONLY_GUI" | "LIVE";
   kernel_process?: { state: string };
+  runtime_truth?: { account: { venue: string | null; environment: string | null; observed_at_ms: number | null; snapshot_id: string | null; freshness: string; source: string }; brain: { provider_state: string; external_llm: string; response_mode: string; source: string } };
   principal: string | null;
   session: {
     authenticated: boolean;

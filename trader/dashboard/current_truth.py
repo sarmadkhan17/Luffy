@@ -64,7 +64,7 @@ def _pos(v) -> bool:
 
 # ── account ─────────────────────────────────────────────────────────────────
 ACCOUNT_SOURCE = ("journal state_kv.account_observation (kernel Risk-step equity input; "
-                  "BINANCE_DEMO account)")
+                  "account environment is not implied by this equity record)")
 
 
 def _account_problems(rec: dict) -> list[str]:

@@ -6,6 +6,7 @@ import { Badge, EvidenceButton } from "../components/ui";
 import type { RequestState } from "../components/Avatar";
 import { NeedsYou, OwnerEvidence } from "../components/OwnerEvidence";
 import { Card, CardHead } from "../components/glass";
+import { ProviderTruth } from "../components/RuntimeTruth";
 import { PageHeader } from "../components/PageHeader";
 export default function Luffy() {
   const { adapter, scenario, messages, setMessages, session } = usePreview();
@@ -175,6 +176,7 @@ export default function Luffy() {
               <span data-testid="core-state-label">{stateLabel}</span>
             </span>
             <span style={{ fontSize: 13, color: "var(--txt2)", maxWidth: 360, lineHeight: 1.5 }}>{stateNote} The core reflects this request's state.</span>
+            <ProviderTruth />
             <ol className="core-states" aria-label="Core request states" style={{ display: "none" }}>
               {CORE_STATES.map(([st, l]) => (<li key={st} data-on={coreState === st} aria-current={coreState === st ? "step" : undefined}>{l}</li>))}
             </ol>

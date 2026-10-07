@@ -9,6 +9,7 @@ import { applyProtectionExpiry } from "../protectionExpiry";
 import { expireOverviewTelemetry } from "../telemetryExpiry";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DataTable, DetailPanel, KV, type Col } from "../components/glass";
+import { RuntimeLabels } from "../components/RuntimeTruth";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import type { Marks, Position, ProtectionStatus } from "../adapters/contracts";
@@ -148,8 +149,8 @@ export default function Overview() {
 
   // ── exposure donut ──
   const exposure = useMemo(() => {
-    const ps = (positions ?? []).filter((p) => p.notional !== null);
-    const total = ps.reduce((a, p) => a + (p.notional ?? 0), 0);
+    const ps = positions ?? [];
+    const total = positions === null || ps.some(p => p.notional === null || p.notional === undefined) ? null : ps.reduce((a, p) => a + p.notional!, 0);
     return { ps, total };
   }, [positions]);
 
@@ -195,7 +196,7 @@ export default function Overview() {
       <PageHeader title="Overview">
         <span className={`gl-state ${control === "ACTIVE" ? "live" : "blink"}`} style={{ color: COLOR[control === "ACTIVE" ? "ok" : control === "FROZEN" ? "frozen" : control === "HALTED" ? "bad" : "warn"] }} data-testid="control-state">
           <i />
-          {control} · Binance {live ? "demo" : "fixture"} · data to {L?.account?.observedAt ? `${day(L.account.observedAt)} ${hhmm(L.account.observedAt)}` : "UNAVAILABLE"}
+          <RuntimeLabels kernel={kernelState} control={control} /> · data to {L?.account?.observedAt ? `${day(L.account.observedAt)} ${hhmm(L.account.observedAt)}` : "UNAVAILABLE"}
         </span>
       </PageHeader>
 
@@ -315,11 +316,11 @@ function LastCloses({ desk }: { desk?: Desk }) {
   );
 }
 
-function Donut({ ps, total }: { ps: Position[]; total: number }) {
+function Donut({ ps, total }: { ps: Position[]; total: number | null }) {
   const C = 2 * Math.PI * 42;
   let acc = 0;
   return (
-    <svg width="104" height="104" viewBox="0 0 104 104" role="img" aria-label={`Deployed notional ${usd(total, 0)} split between ${ps.length} open positions`} style={{ flex: "0 0 104px" }}>
+    <svg width="104" height="104" viewBox="0 0 104 104" role="img" aria-label={`Deployed notional ${usd(total, 0)} across ${ps.length} open positions`} style={{ flex: "0 0 104px" }}>
       <circle cx="52" cy="52" r="42" fill="none" stroke="#1d3042" strokeWidth="9" />
       {ps.map((p) => {
         const len = total ? ((p.notional ?? 0) / total) * C : 0;
@@ -327,7 +328,7 @@ function Donut({ ps, total }: { ps: Position[]; total: number }) {
         acc += len;
         return el;
       })}
-      <text x="52" y="50" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fill="rgb(228 244 252)">{ps.length ? usd(total, 0) : "—"}</text>
+      <text x="52" y="50" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fill="rgb(228 244 252)">{total === null ? "UNKNOWN" : ps.length ? usd(total, 0) : "—"}</text>
       <text x="52" y="66" textAnchor="middle" fontFamily="Manrope" fontSize="10" fill="#a9b8c8">deployed</text>
     </svg>
   );
@@ -408,7 +409,7 @@ function SignalsCard({ desk, loading }: { desk?: Desk; loading: boolean }) {
                   <span style={{ display: "flex", flexDirection: "column" }}><b style={{ fontWeight: 600 }}>{base(c.symbol)}-USDT</b><span className="m" style={{ fontSize: 11, color: GREY }}>cycle {hhmm(scan.observed_at)}</span></span>
                 </span>
                 <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 12, color: "#c9d4df" }}>{c.score === null ? "score UNAVAILABLE" : `score ${c.score >= 0 ? "+" : "−"}${Math.abs(c.score).toFixed(3)} · needed ±${(c.threshold ?? NaN).toFixed(3)}`}</span>
+                  <span style={{ fontSize: 12, color: "#c9d4df" }}>{c.score === null ? "score UNAVAILABLE" : `score ${c.score >= 0 ? "+" : "−"}${Math.abs(c.score).toFixed(3)} · recorded threshold ${c.threshold === null ? "UNAVAILABLE" : `±${c.threshold.toFixed(3)}`}`}</span>
                   <span className="gl-meter"><i style={{ width: `${Math.min(100, Math.round(ratio(c) * 100))}%` }} /></span>
                 </span>
                 <span style={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "flex-start" }}>
@@ -424,12 +425,13 @@ function SignalsCard({ desk, loading }: { desk?: Desk; loading: boolean }) {
           </div>
           <div className="gl-allc">
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px", alignItems: "baseline" }}>
-              <span className="cz" style={{ fontSize: 12, color: "rgb(var(--hi))" }}>All {coins.length} coins · score vs the bar to trade</span>
-              <span style={{ fontSize: 12, color: "var(--txt2)" }}>amber lines = threshold · {scan.traded === 0 ? "nothing crossed it, so no coin was traded" : `${scan.traded} traded`}</span>
+              <span className="cz" style={{ fontSize: 12, color: "rgb(var(--hi))" }}>All {coins.length} coins · recorded score / threshold</span>
+              <span style={{ fontSize: 12, color: "var(--txt2)" }}>amber lines = threshold · {scan.traded === 0 ? "no trade recorded" : `${scan.traded} traded`}</span>
             </div>
             <div className="grid">
               {coins.map((c) => {
-                const th = c.threshold ?? 0.3, v = c.score ?? 0, p = sc(v, th);
+                if (c.threshold === null || c.threshold <= 0 || c.score === null) return <button key={c.decision_id} type="button" onClick={() => setOpen(c)}>{base(c.symbol)} · score/threshold UNAVAILABLE</button>;
+                const th = c.threshold, v = c.score, p = sc(v, th);
                 const crossed = Math.abs(v) >= th;
                 const col = crossed ? OK : v >= 0 ? "#7fd3ff" : "#ff9d95";
                 return (
@@ -441,7 +443,7 @@ function SignalsCard({ desk, loading }: { desk?: Desk; loading: boolean }) {
                 );
               })}
             </div>
-            <span style={{ fontSize: 12, color: GREY }}>Select a coin for its analyst votes and the recorded reasoning.</span>
+            <span style={{ fontSize: 12, color: GREY }}>Select a coin for recorded analyst evidence and reasoning. Scores and thresholds do not establish order permission.</span>
           </div>
         </>
       )}
@@ -562,7 +564,7 @@ function ResearchCard({ desk, sys, loading }: { desk?: Desk; sys?: Record<string
   const node = asRows(sys?.nodes).find((n) => n.id === "research");
   const tele = rec(node?.telemetry) as Record<string, any> | null;
   const active = tele?.freshness === "fresh" && tele?.health === "active";
-  const total = r ? Object.values(r.counts).reduce<number>((a, b) => a + (b ?? 0), 0) : null;
+  const total = r && Object.values(r.counts).every(n => typeof n === "number") ? Object.values(r.counts).reduce<number>((a, b) => a + b!, 0) : null;
   const line = (n: string, v: number | null | undefined) => ({ n, v: v === null || v === undefined ? "unavailable" : String(v), c: v === null || v === undefined ? GREY : v > 0 ? OK : GREY });
   return (
     <Card className="pad" label="Research">
@@ -570,9 +572,9 @@ function ResearchCard({ desk, sys, loading }: { desk?: Desk; sys?: Record<string
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <span className={active ? "gl-scan" : ""} style={active ? undefined : { width: 30, height: 30, borderRadius: "50%", border: "3px solid #1d3042" }} aria-hidden="true" />
         <span style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ color: active ? "#3fd5c8" : "var(--txt2)", fontWeight: 600 }}>{active ? "Research active" : loading ? "Loading…" : "Research idle"}</span>
+          <span style={{ color: active ? "#3fd5c8" : "var(--txt2)", fontWeight: 600 }}>{active ? "Research active" : loading ? "Loading…" : tele?.freshness !== "fresh" ? "Research state unavailable" : tele.health === "idle" ? "Research idle" : "Research state unknown"}</span>
           <span style={{ fontSize: 12, color: "var(--txt2)" }}>
-            {r ? `${total} ledger record${total === 1 ? "" : "s"} · discovery only · referee ${r.referee_enabled ? "ON" : "OFF"} · handoff ${r.handoff_enabled ? "open" : "closed"}` : "ledger unavailable"}
+            {r ? `${total ?? "UNAVAILABLE"} ledger record${total === 1 ? "" : "s"} · discovery only · referee ${r.referee_enabled === true ? "ON" : r.referee_enabled === false ? "OFF" : "UNAVAILABLE"} · handoff ${r.handoff_enabled === true ? "open" : r.handoff_enabled === false ? "closed" : "UNAVAILABLE"}` : "ledger unavailable"}
             {!active && tele ? ` · telemetry ${tele.freshness}` : ""}
           </span>
         </span>
@@ -604,7 +606,7 @@ function SystemCard({ sys, control, hbFresh, naked, loading }: { sys?: Record<st
         {nodes.map((n, i) => (<span key={String(n.id)} title={`${n.label}: ${(rec(n.telemetry) as any)?.freshness ?? "no telemetry"}`} style={{ background: `${COLOR[tones[i]]}26`, borderColor: COLOR[tones[i]] }}><i style={{ background: COLOR[tones[i]] }} /></span>))}
       </div>
       <div className="gl-triple">
-        <span><b style={{ color: control === "FROZEN" ? FROZEN : control === "ACTIVE" ? OK : WARN }}>{control}</b><small>trading</small></span>
+        <span><b style={{ color: control === "FROZEN" ? FROZEN : control === "ACTIVE" ? OK : WARN }}>{control}</b><small>control state</small></span>
         <span><b style={{ color: hbFresh === "fresh" ? OK : BAD }}>{hbFresh ?? "unknown"}</b><small>heartbeat</small></span>
         <span><b style={{ color: naked?.value === 0 ? OK : naked?.value > 0 ? BAD : GREY }}>{naked?.value ?? "unknown"}</b><small>unprotected</small></span>
       </div>

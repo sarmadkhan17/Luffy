@@ -1,19 +1,18 @@
 /** Live System — approved "Final · 7" design (pipeline layout, glow icons).
- * The 30 parts and their connections are the DECLARED architecture; what is
- * observed comes from /system and /system/observed. Counts of records written
- * prove data moved, not rate or health, so nothing here animates from them:
+ * The parts and their connections are the DECLARED architecture; what is
+ * component telemetry comes from /system. Aggregate counts do not prove
+ * an architecture edge or current authority, so nothing animates from them:
  * only the explanatory walkthrough animates, and it says so. */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Activity, BookOpen, CheckCheck, ChartCandlestick, Dices, Globe, HeartPulse, Landmark, Layers, Lightbulb, LogOut, MessageSquare,
-  Network, Newspaper, Radar, Scale, ShieldCheck, ScanEye, Sparkles, Vault, Waves, Zap, FlaskConical, ArrowDownUp, Users, Rows3, Layers2, Tag, Telescope, type LucideIcon,
+  BookOpen, CheckCheck, ChartCandlestick, Globe, Layers, MessageSquare,
+  Network, Radar, Scale, ShieldCheck, ScanEye, Sparkles, Vault, Zap, FlaskConical, Layers2, type LucideIcon,
 } from "lucide-react";
 import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, DetailPanel, KV } from "../components/glass";
 import { PageHeader } from "../components/PageHeader";
-import { timestamp as utc } from "../time";
 
 type Group = "Market" | "Perception" | "Analyst" | "Decision" | "Safety" | "Execution" | "Memory" | "Partner";
 const GC: Record<Group, string> = { Market: "#4aa8ff", Perception: "#3fd5c8", Analyst: "rgb(86 204 242)", Decision: "rgb(86 204 242)", Safety: "#ff7b72", Execution: "#f2b44a", Memory: "#a78bfa", Partner: "#f472b6" };
@@ -22,74 +21,57 @@ const OK = "#3ddc97", WARN = "#f2b44a", BAD = "#ff7b72", GREY = "#8d9fb2";
 
 // id: [label, group, x, y, size, icon, code, description, telemetry component]
 type Def = [string, Group, number, number, number, LucideIcon, string, string, string | null];
-const AN = ["structure", "flow", "momentum", "value", "rotation", "positioning", "depth"];
 const N: Record<string, Def> = {
-  binIn: ["Binance · market", "Market", 85, 160, 64, Landmark, "exchange", "The exchange LUFFY trades on. Every cycle it supplies prices, order books, funding rates and open interest.", null],
-  feed: ["Market feed", "Market", 85, 400, 62, ChartCandlestick, "trader/data/feed.py", "Collects candles, order books and derivatives data for the watched coins, plus Bitcoin context, and stores them so every other part reads the same numbers.", "market-data"],
-  wm: ["World Model", "Perception", 265, 120, 56, Globe, "trader/world", "Keeps a running picture of the whole market — regime, volatility, liquidity and funding — that other agents can ask about.", "attention"],
-  att: ["Attention", "Perception", 265, 270, 58, Radar, "trader/cognition/attention.py", "Scans every coin and flags the ones behaving unusually (volume, volatility, divergence), so the analysts spend their effort where something is happening.", "attention"],
-  reg: ["Regime", "Perception", 265, 420, 56, Waves, "trader/agents/regime.py", "Decides what kind of market this is — trending, ranging or violent — and tells the orchestrator which analysts are worth listening to right now.", "attention"],
-  grd: ["News & macro guards", "Perception", 265, 570, 56, Newspaper, "agents/news_guard.py · macro_guard.py", "Watches headlines and the economic calendar. Around big news they raise the bar to trade or block entries entirely.", "attention"],
-  structure: ["Structure", "Analyst", 470, 90, 48, Rows3, "agents/structure.py", "Analyst: reads price structure — ranges, breakouts, support and resistance — and votes long, short or flat.", "orchestrator"],
-  flow: ["Flow", "Analyst", 470, 178, 48, ArrowDownUp, "agents/flow.py", "Analyst: reads who is aggressive — buyers lifting offers or sellers hitting bids — and votes.", "orchestrator"],
-  momentum: ["Momentum", "Analyst", 470, 266, 48, Activity, "agents/momentum.py", "Analyst: measures how strong and persistent the move is across timeframes, and votes.", "orchestrator"],
-  value: ["Value", "Analyst", 470, 354, 48, Tag, "orchestrator weight \"value\"", "Analyst: asks whether price is stretched far from fair value, and votes.", "orchestrator"],
-  rotation: ["Rotation", "Analyst", 470, 442, 48, Layers2, "orchestrator weight \"rotation\"", "Analyst: watches money moving between Bitcoin and altcoins, and votes.", "orchestrator"],
-  positioning: ["Positioning", "Analyst", 470, 530, 48, Users, "agents/positioning.py", "Analyst: reads funding and open interest to see if traders are crowded on one side, and votes.", "orchestrator"],
-  depth: ["Depth", "Analyst", 470, 618, 48, Telescope, "agents/orderbook_depth.py", "Analyst: reads the order book to see where real liquidity sits, and votes.", "orchestrator"],
-  ewa: ["Weights & calibration", "Decision", 700, 150, 56, Scale, "agents/weights_online.py · calibration.py", "Learns how much to trust each analyst from past results, and corrects over- or under-confident votes.", "orchestrator"],
-  strat: ["Strategy registry", "Decision", 700, 400, 58, Layers, "trader/strategy", "The list of strategies LUFFY is allowed to trade. Each live strategy adds its own buy or sell signal on top of the analyst votes.", "orchestrator"],
-  meta: ["Meta-label", "Decision", 700, 560, 56, Dices, "brain/meta_label.py", "A second opinion: estimates the chance a trade wins and can shrink its size — never grow it.", "orchestrator"],
-  orch: ["Orchestrator", "Decision", 865, 350, 84, Network, "trader/engine/orchestrator.py", "The decision maker. It combines every analyst vote and strategy signal into one score, compares it with a threshold, and decides BUY, SELL or HOLD — always with a written reason.", "orchestrator"],
-  wd: ["Watchdog", "Safety", 1060, 110, 54, HeartPulse, "trader/engine/watchdog.py", "Listens for LUFFY's heartbeat. If it goes quiet, trading must not continue.", "kernel"],
-  sup: ["Supervisor", "Safety", 1060, 250, 56, ScanEye, "trader/engine/supervisor.py", "Checks every few minutes whether it is safe to trade: positions readable, stops in place, heartbeat fresh. It can freeze LUFFY and lift freezes it set itself.", "supervisor"],
-  risk: ["Risk gate", "Safety", 1060, 430, 64, ShieldCheck, "trader/engine/risk.py", "The only door to a real order. Checks the control state, position limits, exposure, margin and daily loss before anything is sent.", "risk"],
-  exe: ["Executor", "Execution", 1240, 350, 60, Zap, "trader/engine/executor.py", "Sends approved orders to Binance together with a stop-loss that lives on the exchange, so protection holds even if LUFFY stops.", "execution"],
-  binOut: ["Binance · orders", "Market", 1330, 170, 56, Landmark, "exchange", "Where orders and their stops actually live and get filled.", null],
-  exits: ["Exits & reconcile", "Execution", 1240, 540, 58, LogOut, "engine/exits.py · reconcile.py", "Trails stops, notices stop-loss fills, and regularly checks that the exchange and the journal agree on every position.", "execution"],
-  jr: ["Journal", "Memory", 1110, 750, 60, BookOpen, "trader/core/journal.py", "The single source of truth: every decision, vote, order, fill and control event is written here.", "journal"],
-  out: ["Outcomes", "Memory", 1280, 750, 54, CheckCheck, "engine/outcomes.py", "Turns each closed trade into a result: profit, R multiple and how far it went for and against.", "journal"],
-  learn: ["Learning", "Memory", 890, 750, 56, Sparkles, "trader/learning", "Feeds results back so analyst weights and calibration improve over time.", null],
-  rs: ["Research", "Memory", 670, 750, 56, FlaskConical, "trader/research", "Background search for new trading rules, with strict tests on unseen coins and dates before anything can graduate.", "research"],
-  brain: ["Strategist", "Memory", 450, 750, 54, Lightbulb, "trader/brain", "Writes, promotes and retires strategies based on research findings and post-mortems.", "research"],
-  vault: ["Knowledge vault", "Memory", 230, 750, 54, Vault, "knowledge/", "Every lesson, risk rule and strategy note, linked together — LUFFY's long-term memory.", null],
-  chat: ["LUFFY (partner)", "Partner", 1320, 650, 52, MessageSquare, "trader/chat", "The voice you talk to. Answers from the journal and the vault, and suggests actions — anything that changes trading still needs your approval.", "dashboard"],
+  market: ["Acquisition", "Market", 85, 160, 64, ChartCandlestick, "Market / Data", "Market acquisition retains point-in-time source and availability provenance. Missing inputs remain unavailable.", null],
+  registry: ["Registry / universe", "Market", 85, 420, 62, Layers, "Registry", "Registry and universe eligibility bind instruments and point-in-time market provenance. Membership is not trading permission.", null],
+  att: ["Attention", "Perception", 265, 150, 58, Radar, "Attention", "Cheap broad observation feeds a deterministic deep-selection budget. Held, protected and execution-required work bypasses discretionary selection. Investigation candidates are not admitted strategies.", null],
+  wm: ["World Model", "Perception", 265, 400, 58, Globe, "World Model", "Typed world state retains point-in-time relationships and context; a written relation is not verified causality.", null],
+  research: ["Research", "Analyst", 470, 130, 58, FlaskConical, "Research", "Typed research questions use governed sources, search, filter, deduplication and extraction. Research Bank retains competing hypotheses and a governed experiment bridge. Discovery evidence is not admission.", null],
+  quant: ["Quant / Referee", "Analyst", 470, 370, 62, Scale, "Quant", "Reproducible evaluation requires nulls and controls, dependence-aware evidence, purged holdout and persistent error budget. Insufficient evidence remains UNTESTED; Referee admission is an explicit evidence boundary.", null],
+  strat: ["StrategyVersion", "Decision", 680, 145, 62, Layers, "Strategy Factory", "Immutable StrategySpec and StrategyVersion bind spec and lineage hashes, compiler parity, validation, exact install, probation and exact owner approval. A registry active/live label grants no first-live or order permission.", null],
+  governor: ["Strategy Governor", "Decision", 680, 390, 62, ShieldCheck, "Strategy Governor", "Governor records versioned lifecycle transitions with reasons and evidence. ACTIVE lifecycle alone does not authorize an order. Owner approval has exact-version scope and freshness checks.", null],
+  orch: ["Opportunity Context", "Decision", 865, 220, 80, Network, "Decision", "Coherent Opportunity Context binds required and optional analyst evidence, supporting and opposing evidence, exact cuts and economics. Deterministic candidate comparison includes CASH. Analyst majority and an opaque score are not trading authority.", null],
+  portfolio: ["Portfolio", "Decision", 865, 480, 62, Layers2, "Portfolio", "Whole-book comparison applies economics, capacity and concentration constraints where authority exists. Unavailable economics never becomes zero.", null],
+  risk: ["Risk", "Safety", 1060, 300, 64, ShieldCheck, "Risk", "Risk has final entry authority. Permission fails closed on missing or invalid prerequisites. Control state and strategy lifecycle alone do not establish entry permission.", "risk"],
+  sup: ["Safety / control", "Safety", 1060, 115, 56, ScanEye, "Supervisor", "Supervisor and owner control boundaries constrain work. Fresh heartbeat, protection and reconciliation evidence retain separate stale, missing and failing states.", "supervisor"],
+  exe: ["Execution", "Execution", 1240, 220, 62, Zap, "Execution", "Idempotent entry and recovery preserve exact execution evidence and partial-exit identity. Execution follows final Risk permission.", null],
+  accounting: ["Accounting", "Execution", 1240, 470, 62, BookOpen, "Accounting", "Accounting distinguishes authoritative, unknown and estimated economics. Journal-booked performance and current venue economics are separate evidence.", null],
+  out: ["Outcome capture", "Memory", 1280, 750, 54, CheckCheck, "Memory / Learning", "Outcome capture retains trade and non-trade results with exact evidence identities and limitations.", null],
+  memory: ["Assessed memory", "Memory", 960, 750, 56, Vault, "Memory", "Assessed memory retains evidence-linked observations; written relations are not verified causality. Unresolved links stay explicit.", null],
+  learning: ["Governed learning", "Memory", 640, 750, 56, Sparkles, "Learning / replay", "Governed learning and replay assess outcomes. Discovery or conversational claims cannot mutate Strategy, Risk or Execution authority.", null],
+  chat: ["Owner / LUFFY", "Partner", 300, 750, 60, MessageSquare, "Owner", "Owner interaction uses exact evidence links and explicit approval boundaries. Typed/local evidence queries remain available with providers disabled; external chat availability is separate. Conversation has no trading authority.", null],
 };
 type Edge = [string, string, keyof typeof KC, string];
 const E: Edge[] = [
-  ["binIn", "feed", "data", "prices, books, funding"], ["feed", "wm", "data", "market snapshot"], ["feed", "att", "data", "candles for every coin"], ["feed", "reg", "data", "Bitcoin trend, ADX"],
-  ["wm", "att", "sense", "regime & volume context"],
-  ...AN.map((a): Edge => ["att", a, "sense", "coins worth a look"]),
-  ["reg", "orch", "sense", "which analysts fit this market"], ["grd", "orch", "guard", "raise the bar near news"],
-  ...AN.map((a): Edge => [a, "orch", "vote", "vote + confidence + reason"]),
-  ["strat", "orch", "vote", "strategy signals"], ["ewa", "orch", "dec", "learned trust per analyst"], ["meta", "orch", "dec", "chance to win, size cap"],
-  ["orch", "jr", "mem", "every decision, traded or not"], ["orch", "risk", "dec", "BUY / SELL intent"],
-  ["wd", "sup", "safe", "heartbeat"], ["sup", "risk", "safe", "ACTIVE / FROZEN"],
-  ["risk", "exe", "order", "approved order"], ["exe", "binOut", "order", "order + exchange stop"],
-  ["binOut", "exits", "order", "fills, stop hits"], ["exits", "jr", "mem", "exits & reconcile results"], ["exits", "sup", "safe", "position safety evidence"],
-  ["jr", "out", "mem", "closed trades"], ["out", "learn", "mem", "results"], ["learn", "ewa", "mem", "updated weights"],
-  ["out", "rs", "mem", "evidence"], ["rs", "brain", "mem", "findings"], ["brain", "strat", "mem", "new & retired strategies"], ["rs", "vault", "mem", "lessons"],
-  ["vault", "chat", "mem", "knowledge"], ["jr", "chat", "mem", "records"],
+  ["market", "registry", "data", "point-in-time provenance and eligible universe"],
+  ["registry", "att", "data", "cheap broad observation"], ["att", "wm", "sense", "deep-selection budget; required-work bypass"],
+  ["wm", "research", "sense", "typed context and investigation candidates"], ["research", "quant", "sense", "governed experiment bridge"],
+  ["quant", "strat", "dec", "Referee evidence; UNTESTED is not admitted"], ["strat", "governor", "dec", "validation / install / probation / exact owner approval"],
+  ["wm", "orch", "sense", "coherent point-in-time context"], ["governor", "orch", "dec", "versioned lifecycle; no standalone order permission"],
+  ["orch", "portfolio", "dec", "exact cuts; economics; candidate comparison against CASH"], ["portfolio", "risk", "safe", "whole-book constraints where authoritative"],
+  ["sup", "risk", "safe", "control and safety prerequisites"], ["risk", "exe", "order", "final fail-closed entry permission"],
+  ["exe", "accounting", "order", "idempotent execution / recovery / partial-exit evidence"], ["accounting", "out", "mem", "authoritative / unknown / estimated outcome economics"],
+  ["out", "memory", "mem", "evidence-linked assessed outcomes"], ["memory", "learning", "mem", "governed learning and replay"],
+  ["learning", "research", "mem", "governed investigation questions"], ["memory", "chat", "mem", "exact evidence queries"],
+  ["chat", "governor", "guard", "explicit exact-version approval boundary; no conversational authority"],
 ];
 const STEPS: [string, string, number[]][] = [
-  ["Market data comes in", "Every cycle starts at the exchange. The market feed pulls candles, order books, funding and open interest for the watched coins, plus Bitcoin's trend as context.", [0, 1, 2, 3]],
-  ["Attention picks what to look at", "The World Model adds context and Attention flags the coins behaving unusually — so the seven analysts focus where something is actually happening.", [4, 5, 6, 7, 8, 9, 10, 11]],
-  ["Context sets the rules", "Regime decides which kinds of edge pay in this market. The news and macro guards raise the bar — or block entries — around big events.", [12, 13]],
-  ["Seven analysts vote", "Structure, Flow, Momentum, Value, Rotation, Positioning and Depth each vote long, short or flat, with a confidence and a written reason.", [14, 15, 16, 17, 18, 19, 20]],
-  ["Strategies add their signals", "Each strategy in the registry checks its own rule and adds a buy or sell signal. Strategies speak louder than any single analyst.", [21]],
-  ["The orchestrator decides", "Votes are weighted by how much each analyst has earned trust, corrected for over-confidence, and checked by the meta-label. One score against one threshold: BUY, SELL or HOLD — written to the journal either way.", [22, 23, 24]],
-  ["The risk gate", "An intent to trade must pass the risk gate: control state, limits, exposure, margin, daily loss. The Supervisor — fed by the Watchdog's heartbeat — decides whether trading is ACTIVE or FROZEN.", [25, 26, 27]],
-  ["The order goes out", "Approved orders go to Binance with a stop-loss that lives on the exchange — so the position stays protected even if LUFFY stops.", [28, 29]],
-  ["Exits and reconcile", "Exits trail stops and catch stop-loss fills. Reconcile checks that the exchange and the journal agree on every position and feeds that evidence to the Supervisor.", [30, 31, 32]],
-  ["LUFFY learns", "Closed trades become outcomes. Learning updates how much each analyst is trusted; Research tests new rules; the Strategist promotes or retires strategies; lessons go into the vault.", [33, 34, 35, 36, 37, 38, 39]],
-  ["You talk to LUFFY", "The partner reads the journal and the knowledge vault to answer you in plain words, and suggests actions — anything that changes trading still needs your approval.", [40, 41]],
+  ["Market / Data", N.market[7] + " " + N.registry[7], [0,1]],
+  ["Attention / World Model", N.att[7] + " " + N.wm[7], [2,3]],
+  ["Research / Quant", N.research[7] + " " + N.quant[7], [4,5]],
+  ["Strategy / Governor", N.strat[7] + " " + N.governor[7], [6,8]],
+  ["Decision / Portfolio", N.orch[7] + " " + N.portfolio[7], [7,9,10]],
+  ["Risk / Execution", N.risk[7] + " " + N.exe[7], [11,12,13]],
+  ["Accounting / Memory / Learning", N.accounting[7] + " " + N.learning[7], [14,15,16,17]],
+  ["Owner / LUFFY", N.chat[7], [18,19]],
 ];
 const ZONES: [string, string, number, number, number, number][] = [
-  ["MARKET", "#4aa8ff", 20, 40, 130, 610], ["PERCEPTION", "#3fd5c8", 200, 40, 130, 610], ["ANALYSTS", "#e2c88a", 405, 40, 130, 610], ["DECISION", "#e2c88a", 620, 40, 330, 610],
-  ["SAFETY", "#ff7b72", 995, 40, 130, 610], ["EXECUTION", "#f2b44a", 1170, 40, 210, 610],
+  ["MARKET / DATA", "#4aa8ff", 20, 40, 130, 610], ["ATTENTION / WORLD", "#3fd5c8", 190, 40, 150, 610],
+  ["RESEARCH / QUANT", "#e2c88a", 390, 40, 160, 610], ["STRATEGY / DECISION", "#e2c88a", 610, 40, 340, 610],
+  ["RISK", "#ff7b72", 995, 40, 130, 610], ["EXECUTION", "#f2b44a", 1170, 40, 210, 610],
 ];
 const geo = (a: string, b: string) => { const [x1, y1, x2, y2] = [N[a][2], N[a][3], N[b][2], N[b][3]]; const dx = (x2 - x1) * 0.5; return `M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}`; };
-const LEGEND: [string, string][] = [["Market data", "#4aa8ff"], ["Perception", "#3fd5c8"], ["Votes & decisions", "rgb(86 204 242)"], ["Orders", "#f2b44a"], ["Memory & learning", "#a78bfa"], ["Safety", "#ff7b72"]];
+const LEGEND: [string, string][] = [["Market data", "#4aa8ff"], ["Perception", "#3fd5c8"], ["Evidence & decisions", "rgb(86 204 242)"], ["Orders", "#f2b44a"], ["Memory & learning", "#a78bfa"], ["Safety", "#ff7b72"]];
 
 type Tele = { freshness?: string; health?: string | null; status_label?: string | null; observed_at?: string | null; summary?: string; source?: string };
 
@@ -97,8 +79,6 @@ export default function LiveSystem() {
   const { adapter } = usePreview();
   const live = adapter.mode === "LIVE";
   const sysQ = useRead(live ? "system" : null, 60000);
-  const obsQ = useRead(live ? "system/observed" : null, 60000);
-  const deskQ = useRead(live ? "desk" : null, 60000);
   const ov = useQuery({ queryKey: ["overview", "normal"], queryFn: ({ signal }) => adapter.overview("normal", signal), staleTime: 10000, refetchInterval: 30000, refetchIntervalInBackground: false, enabled: live });
   const [mode, setMode] = useState<"all" | "cycle">("all");
   const [step, setStep] = useState(0);
@@ -119,10 +99,10 @@ export default function LiveSystem() {
     return m;
   }, [sysQ.data]);
   const compOf = (id: string) => N[id][8];
-  // an edge is "observed" only if a flow between its components wrote records in its window
-  const flows = asRows(obsQ.data?.flows) as Record<string, any>[];
-  const observed = (e: Edge) => flows.some((f) => (f.count ?? 0) > 0 && f.source === compOf(e[0]) && f.target === compOf(e[1]));
-  const obsEdges = new Set(E.map((e, i) => (observed(e) ? i : -1)).filter((i) => i >= 0));
+  // Aggregate component counts do not establish a specific architecture
+  // edge or exact version/cut. Keep every edge DECLARED until exact causal
+  // evidence can be bound to that edge.
+  const obsEdges = new Set<number>();
 
   const cycle = mode === "cycle";
   const s = step % STEPS.length;
@@ -144,23 +124,12 @@ export default function LiveSystem() {
   const L = ov.data?.live;
   const ev = (L?.observedEvidence ?? {}) as Record<string, any>;
   const sup = ev.protection?.supervisor as Record<string, any> | undefined;
-  const scan = (deskQ.data as any)?.scan as { observed_at: string; coins: any[]; traded: number } | null | undefined;
   const tags: Record<string, [string, string, string]> = {};
-  if (control !== "UNAVAILABLE") tags.risk = [control, control === "ACTIVE" ? "#3ddc9722" : "#56ccf233", control === "ACTIVE" ? OK : "#56ccf2"];
+  if (control !== "UNAVAILABLE") tags.risk = [`Control ${control}`, control === "ACTIVE" ? "#3ddc9722" : "#56ccf233", control === "ACTIVE" ? OK : "#56ccf2"];
   if (L?.heartbeat && L.heartbeat.freshness !== "fresh") tags.wd = [String(L.heartbeat.freshness).toUpperCase(), "#ff7b7233", "#ff9d95"];
-  if (sup?.outcome) tags.sup = [String(sup.outcome), sup.outcome === "SAFE" ? "#3ddc9722" : "#f2b44a33", sup.outcome === "SAFE" ? OK : WARN];
-  if (ov.data?.positions) tags.exits = [`${ov.data.positions.length} POSITION${ov.data.positions.length === 1 ? "" : "S"}`, "#3ddc9722", OK];
-
-  // "Right now" lines come only from records already read; steps without one say nothing
+  if (sup?.outcome) tags.sup = [`Last ${sup.outcome} · ${sup.freshness ?? "freshness unknown"}`, sup.outcome === "SAFE" && sup.freshness === "fresh" ? "#3ddc9722" : "#f2b44a33", sup.outcome === "SAFE" && sup.freshness === "fresh" ? OK : WARN];
   const now: Record<number, string> = {};
-  if (scan) {
-    const top = [...scan.coins].sort((a, b) => Math.abs(b.score ?? 0) / (b.threshold || 1) - Math.abs(a.score ?? 0) / (a.threshold || 1))[0];
-    now[1] = `Latest recorded scan (${utc(scan.observed_at)}) scored ${scan.coins.length} coins; ${scan.traded} traded.`;
-    if (top) now[5] = `In that scan the strongest was ${String(top.symbol).split("/")[0]} at ${(top.score ?? 0) >= 0 ? "+" : "−"}${Math.abs(top.score ?? 0).toFixed(3)} against a bar of ±${(top.threshold ?? 0).toFixed(3)}.`;
-  }
-  now[6] = `Control state is ${control}${L?.heartbeat ? `; heartbeat is ${L.heartbeat.freshness}` : ""}${sup?.outcome ? `; the Supervisor's last pass reported ${String(sup.outcome).toLowerCase()}` : ""}.`;
-  if (ov.data?.positions) now[8] = `${ov.data.positions.length} position${ov.data.positions.length === 1 ? "" : "s"} open in the journal; protection is ${(L?.protection?.status ?? "UNAVAILABLE").toLowerCase()}.`;
-  const allNow = `Control state is ${control}${tele.kernel?.status_label ? `; the kernel is ${String(tele.kernel.status_label).toLowerCase()}` : ""}. Lit connections below have records written in their window; ${obsEdges.size === 0 ? "none do right now." : `${obsEdges.size} do.`}`;
+  const allNow = `OBSERVED control: ${control}; Kernel: ${L?.kernelState ?? "UNKNOWN"}. All diagram nodes and edges are DECLARED ARCHITECTURE. Exact flow evidence is UNAVAILABLE; aggregate record counts do not prove a path.`;
 
   const popDef = pop ? N[pop] : null;
   const popTele = pop && compOf(pop) ? tele[compOf(pop)!] : undefined;
@@ -170,9 +139,9 @@ export default function LiveSystem() {
   return (
     <>
       <PageHeader title="Live System">
-        <span style={{ fontSize: 13, color: "var(--txt2)" }}>how LUFFY thinks and trades · every agent and how they talk to each other</span>
+        <span style={{ fontSize: 13, color: "var(--txt2)" }}>current architecture and authority boundaries · declared architecture with separate observed evidence</span>
       </PageHeader>
-      {(sysQ.isError || obsQ.isError) && <div className="gl-err" role="alert">System telemetry unavailable: {((sysQ.error ?? obsQ.error) as Error).message} The diagram shows the declared architecture only.</div>}
+      {sysQ.isError && <div className="gl-err" role="alert">System telemetry unavailable: {(sysQ.error as Error).message} The diagram shows the declared architecture only.</div>}
 
       <Card className="pad" label="System diagram">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
@@ -224,7 +193,7 @@ export default function LiveSystem() {
               const tag = tags[id];
               const t = d[8] ? tele[d[8]] : undefined;
               return (
-                <button key={id} type="button" className={`gl-node ${on ? "on" : ""}`} aria-label={`${label}${t?.freshness ? ` — telemetry ${t.freshness}` : ""}`}
+                <button key={id} type="button" className={`gl-node ${on ? "on" : ""}`} aria-label={`${label} — DECLARED ARCHITECTURE${t?.freshness ? ` — telemetry ${t.freshness}` : ""}`}
                   style={{ left: `${(x / 1400) * 100}%`, top: `${(y / 820) * 100}%`, width: sz, height: sz, ["--nc" as string]: c, opacity: dim ? 0.32 : 1 }}
                   onClick={() => { setPop(id); setPlaying(false); }} onMouseEnter={() => setHover(id)} onFocus={() => setHover(id)} onBlur={() => setHover(null)}>
                   <span className="shape" />
@@ -243,7 +212,7 @@ export default function LiveSystem() {
             <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span className="cz" style={{ fontSize: 11, color: "rgb(var(--mut))" }}>{cycle ? `Step ${s + 1} of ${STEPS.length} · walkthrough of the declared architecture, not live traffic` : "Everything at once"}</span>
               <span className="cg" style={{ fontSize: 22, color: "rgb(var(--hi))" }}>{cycle ? STEPS[s][0] : `All ${Object.keys(N).length} parts and ${E.length} connections`}</span>
-              <span style={{ fontSize: 14, color: "#b9c5d1", lineHeight: 1.5, maxWidth: 820 }}>{cycle ? STEPS[s][1] : "Hover or focus any part to light up who it listens to and who it talks to. Click it for the full story. Lit solid lines have records written in their window; dashed lines are declared only."}</span>
+              <span style={{ fontSize: 14, color: "#b9c5d1", lineHeight: 1.5, maxWidth: 820 }}>{cycle ? STEPS[s][1] : "Hover or focus any part to light up who it listens to and who it talks to. Click it for the full story. Every node and edge is DECLARED ARCHITECTURE. Highlighting is explanatory; exact observed flow evidence is UNAVAILABLE."}</span>
             </span>
           </div>
           {(cycle ? now[s] : allNow) && (
@@ -252,7 +221,7 @@ export default function LiveSystem() {
         </div>
       </Card>
 
-      <DetailPanel open={!!popDef} onClose={() => setPop(null)} title={popDef ? popDef[0] : ""} description={popDef ? `${popDef[1] === "Analyst" ? "Analyst · one of seven voters" : popDef[1]} · ${popDef[6]}` : undefined}>
+      <DetailPanel open={!!popDef} onClose={() => setPop(null)} title={popDef ? popDef[0] : ""} description={popDef ? `DECLARED ARCHITECTURE · ${popDef[6]}` : undefined}>
         {popDef && (
           <>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#c9d4df" }}>{popDef[7]}</p>
@@ -261,17 +230,17 @@ export default function LiveSystem() {
                 <div key={String(title)} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <span className="cz" style={{ fontSize: 11, color: "rgb(var(--mut))" }}>{String(title)}</span>
                   {(list as typeof ins).length === 0 ? <span style={{ fontSize: 13, color: GREY }}>{title === "Listens to" ? "Nothing — it starts the chain" : "You — it answers you"}</span>
-                    : (list as typeof ins).map((x, i) => (<span key={i} style={{ display: "flex", gap: 8, fontSize: 13 }}><span style={{ color: x.c }}>{String(arrow)}</span><span><b>{x.n}</b> <span style={{ color: "var(--txt2)" }}>{x.w}</span></span></span>))}
+                    : (list as typeof ins).map((x, i) => (<span key={i} style={{ display: "flex", gap: 8, fontSize: 13 }}><span style={{ color: x.c }}>{String(arrow)}</span><span><b>{x.n}</b> <span style={{ color: "var(--txt2)" }}>{x.w} · DECLARED ARCHITECTURE</span></span></span>))}
                 </div>
               ))}
             </div>
-            <h3 className="cz" style={{ margin: 0, fontSize: 11, color: "rgb(var(--mut))" }}>Observed now</h3>
+            <h3 className="cz" style={{ margin: 0, fontSize: 11, color: "rgb(var(--mut))" }}>OBSERVED component telemetry / flow UNAVAILABLE</h3>
             {compOf(pop!) ? (
               popTele && Object.keys(popTele).length ? (
                 <KV items={[
                   ["Telemetry component", compOf(pop!)],
                   ["Freshness", popTele.freshness ?? null], ["Health", popTele.health ?? "unknown"], ["Status", popTele.status_label ?? "not reported"],
-                  ["Observed at", popTele.observed_at ? utc(popTele.observed_at) : null], ["Source", popTele.source ?? null],
+                  ["Observed at", popTele.observed_at ?? null], ["Source", popTele.source ?? null],
                 ]} />
               ) : <p className="gl-note">No telemetry was returned for “{compOf(pop!)}”. Nothing is inferred.</p>
             ) : <p className="gl-note">This part has no telemetry component of its own, so nothing is observed for it here.</p>}
