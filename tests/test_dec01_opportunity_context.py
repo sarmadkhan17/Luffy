@@ -582,7 +582,6 @@ def test_normal_path_freezes_votes_as_supporting_and_opposing_evidence(publicati
     from tests.test_stage6_normal_sources import NOW, SYMBOL as SYM
     votes = [('structure', packet('structure', .8, SYM, NOW)), ('momentum', packet('momentum', -.8, SYM, NOW))]
     inputs, detail = normal_checkpoint(publications, tmp_path, votes=votes, required=('structure',))
-    assert detail['candidate_count'] == 1
     p = frozen_context(inputs)
     assert p['decision_grade'] is True and p['authority'] == 'NONE'
     a = p['decision_inputs']['analysts']
@@ -593,18 +592,23 @@ def test_normal_path_freezes_votes_as_supporting_and_opposing_evidence(publicati
     assert p['decision_inputs']['cuts']['analyst_cut_ms'] == NOW
     assert p['decision_inputs']['book']['sha256'] == DA.sha256(json.loads(
         next(s.payload_json for s in inputs.sources if s.source_id == 'venue_position_snapshot')))
+    # the context is complete and analyst-valid; only the (real, empty-registry) cost state blocks
+    assert [d['block_reason'] for d in detail['blocked_decisions']] == ['REQUIRED_COST_EVIDENCE_UNAVAILABLE']
+    assert detail['blocked_decisions'][0]['live_receipt_id'] == next(
+        s.source_id for s in inputs.sources if s.source_id.startswith('live-context:')).split(':', 1)[1]
 
 
-def test_normal_path_missing_optional_analysts_still_yields_a_candidate(publications, tmp_path):
+def test_normal_path_missing_optional_analysts_does_not_block_the_context(publications, tmp_path):
     inputs, detail = normal_checkpoint(publications, tmp_path)
-    assert detail['candidate_count'] == 1 and not [m for m in detail['missing_sources'] if 'BLOCKED' in m]
+    assert not [m for m in detail['missing_sources'] if 'ANALYST' in m]
     a = frozen_context(inputs)['decision_inputs']['analysts']
     assert a['evidence']['supporting'] == [] and len(a['absence']['absent']) == len(DA.ENABLED)
+    assert [d['block_reason'] for d in detail['blocked_decisions']] == ['REQUIRED_COST_EVIDENCE_UNAVAILABLE']
 
 
 def test_normal_path_missing_required_analyst_blocks_that_candidate_explicitly(publications, tmp_path):
     inputs, detail = normal_checkpoint(publications, tmp_path, required=('structure',))
-    assert detail['candidate_count'] == 0
+    assert detail['candidate_count'] == 0 and 'blocked_decisions' not in detail   # blocked before economics
     assert any(m.startswith('CONTEXT_BLOCKED:normal-decision:') and 'REQUIRED_ANALYST_UNAVAILABLE:structure' in m
                for m in detail['missing_sources'])
     assert not [s for s in inputs.sources if s.source_id.startswith('live-context:')]
@@ -615,3 +619,86 @@ def test_normal_path_mixed_analyst_cut_refuses_the_checkpoint(publications, tmp_
     votes = [('structure', packet('structure', .8, SYM, NOW - 1000))]
     with pytest.raises(DA.ContextRefused, match='ANALYST_MIXED_CUTS:structure'):
         normal_checkpoint(publications, tmp_path, votes=votes)
+
+
+# ── cost state bound to the decision context (DEC-01), production empty registry ──
+
+def production_economics(receipt):
+    """The REAL economics path: registries are code-owned and empty, no fixture models."""
+    assert E.GROSS_MODELS == {} and E.RESERVE_MODELS == {} and E.COST_SCOPE_MODELS == {}
+    from tests.test_opportunity_live_integration import economics
+    return E.build(economics(receipt))
+
+
+def test_empty_registry_yields_real_unavailable_receipt_bound_and_blocked(ctx):
+    r = ctx.produce()
+    er = production_economics(r)
+    result = json.loads(er.result_json)
+    assert result['economic_status'] == 'UNAVAILABLE' and result['context_id'] == r.context.context_id
+    d = L.finalize_decision(r, er, ctx.D + 10)
+    p = json.loads(d.payload_json)
+    assert d.status == L.BLOCKED and d.block_reason == 'REQUIRED_COST_EVIDENCE_UNAVAILABLE'
+    assert (p['live_receipt_id'], p['context_id'], p['economics_receipt_id'], p['economics_status']) == (
+        r.receipt_id, r.context.context_id, er.receipt_id, 'UNAVAILABLE')
+    assert p['decision_cut_ms'] == ctx.D and p['book'] == json.loads(r.payload_json)['decision_inputs']['book']
+    assert p['cost_binding'] is None and p['authority'] == 'NONE'
+    # UNKNOWN is never converted to zero: no component carries any value
+    assert set(p['cost_components']) == set(L.COST_COMPONENTS)
+    assert all(c['value'] is None and c['status'] == 'UNAVAILABLE' for c in p['cost_components'].values())
+    assert '"0"' not in json.dumps(p['cost_components']) and ': 0' not in json.dumps(p['cost_components'])
+    assert L.verify_decision(d, r, er, ctx.D + 10) == d                    # replay identical
+
+
+def test_decision_envelope_does_not_mutate_the_core_and_changes_with_economics(ctx):
+    r = ctx.produce()
+    before = r.payload_json
+    er = production_economics(r)
+    d = L.finalize_decision(r, er, ctx.D + 10)
+    assert r.payload_json == before and d.receipt_id != r.receipt_id
+    with pytest.raises(FrozenInstanceError):
+        d.payload_json = '{}'
+    assert L.finalize_decision(r, er, ctx.D + 10) == d
+    assert L.finalize_decision(r, er, ctx.D + 11).receipt_id != d.receipt_id   # now_ms is part of what was bound
+    forged = json.loads(d.payload_json)
+    forged['status'] = L.BOUND
+    with pytest.raises(ValueError, match='DECISION_CONTEXT_INTEGRITY_REFUSED'):
+        L.verify_decision(L.DecisionReceipt(d.receipt_id, A.canonical(forged)), r, er, ctx.D + 10)
+    with pytest.raises(ValueError, match='DECISION_CONTEXT_REPLAY_DIFFERS'):
+        L.verify_decision(L.DecisionReceipt(A.digest(forged), A.canonical(forged)), r, er, ctx.D + 10)
+
+
+def test_available_cost_same_cut_binds_and_replays(ctx, costed):
+    receipt, build = costed
+    _, er = build()
+    d = L.finalize_decision(receipt, er, ctx.D + 10)
+    p = json.loads(d.payload_json)
+    assert d.status == L.BOUND and d.block_reason is None
+    assert p['cost_binding'] == L.decision_cost_binding(receipt, er, ctx.D + 10)
+    assert all(c['status'] in ('ESTABLISHED', 'NOT_APPLICABLE') for c in p['cost_components'].values())
+    assert L.verify_decision(d, receipt, er, ctx.D + 10) == d
+
+
+def test_stale_wrong_cut_or_late_cost_receipts(ctx, costed):
+    receipt, build = costed
+    _, stale = build(valid_for=100)
+    assert L.finalize_decision(receipt, stale, ctx.D + 101).status == L.BLOCKED
+    _, late = build(captured=ctx.D + 1)
+    with refused('COST_CAPTURED_AFTER_DECISION_CUT', DA.ContextRefused):
+        L.finalize_decision(receipt, late, ctx.D)
+    other = ctx.produce(as_of_ms=ctx.D + 1000)
+    _, foreign = build(other_receipt=other)
+    with refused('COST_BINDING_CUT_OR_IDENTITY_DIFFERS', DA.ContextRefused):
+        L.finalize_decision(receipt, foreign, ctx.D)
+    plain = L.produce(**{**ctx.kwargs(), 'decision_grade': False})
+    with refused('DECISION_GRADE_RECEIPT_REQUIRED', DA.ContextRefused):
+        L.finalize_decision(plain, build()[1], ctx.D)
+
+
+def test_only_a_bound_decision_reaches_the_allocator_inputs(publications, tmp_path):
+    """Stage-6 fixture models (mechanics only): BOUND envelope + candidate; none under the real registry."""
+    from tests.test_stage6_normal_sources import read
+    inputs, detail = read(publications)
+    envelopes = [json.loads(s.payload_json) for s in inputs.sources if s.source_id.startswith('decision-context:')]
+    assert [e['status'] for e in envelopes] == ['BOUND'] and len(inputs.candidates) == 1
+    assert envelopes[0]['opportunity_id'] == inputs.candidates[0].opportunity_id
+    assert 'blocked_decisions' not in detail

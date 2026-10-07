@@ -202,7 +202,9 @@ def capture(journal, attention, investigation, config, max_contexts=4):
                                    if isinstance(m.get('measurement'), dict)]
                         analysts = [live.source('analysts', DA.bundle(
                             decision_id=d['id'], cycle_id=d['cycle_id'], symbol=d['symbol'],
-                            cut_ts=cycle_ts[ts_key], roster=DA.roster(config), packets=packets), cut)]
+                            cut_ts=cycle_ts[ts_key], roster=DA.roster(config), packets=packets), cut,
+                            # decision-grade evidence shares the Attention scan's freshness window
+                            scan['as_of_ms'] + int(config.get('attention', {}).get('stale_seconds', 300) * 1000))]
                     requests.append(dict(as_of_ms=cut, symbol=symbol, instrument_id=iid,
                         cycle_id=d['cycle_id'], candidate_id=d['id'] + ':' + v['version_id'],
                         sources=tuple(bound + [live.source('signals', [sig], cut),

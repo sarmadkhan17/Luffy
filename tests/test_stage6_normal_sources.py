@@ -54,10 +54,33 @@ def publications(tmp_path, cfg, monkeypatch):
     sig = dict(symbol=SYMBOL, action='BUY', params=dict(spec_id=v['strategy_id'],
         spec_fingerprint=spec_fingerprint(StrategySpec.from_dict(v['spec'])),
         signal_timeframe='4h',signal_bar_close_ms=close,**compiled_params(v['spec'])))
-    args = dict(as_of_ms=cut,symbol=SYMBOL,instrument_id=IID,cycle_id='normal-cycle',candidate_id='normal-setup',
-        sources=(L.source('strategy_version',row,row['recorded_at_ms'],cut+1000),
-                 L.source('signals',[sig],cut,cut+1000),L.source('portfolio',book,cut,cut+1000)),
-        required_roles=('strategy_version','signals','portfolio'))
+    # Decision-grade (DEC-01): Attention scan at the cut and the decision cycle's analyst bundle.
+    from contextlib import ExitStack
+    import time
+    from tests.test_attention_telemetry import frames, event
+    from trader.cognition import decision_analysts as DA
+    from trader.observability.attention import settings
+    from trader.observability.scan_source import latest
+    from trader.observability.store import Store
+    ident = dict(schema='attention-scan-identity.v1', instance_id='2'*32, seq=cut)
+    store = Store(tmp_path/'fixture-attention.db', settings())
+    store.write(dict(event('fixture-scan', cut, {SYMBOL: next(iter(frames(1, cut).values()))}), identity=ident))
+    store.write(dict(kind='causes', scan_id='fixture-scan', as_of_ms=cut, identity=ident,
+                     items=[dict(symbol=SYMBOL, decision_id='normal-setup')]))
+    store.close()
+    with ExitStack() as stack:
+        scan = latest(shadow._read(stack, tmp_path/'fixture-attention.db', time.monotonic()+5),
+                      time.monotonic()+5, max_bytes=settings()['max_bytes']//2)
+    analysts = DA.bundle(decision_id='normal-setup', cycle_id='normal-cycle', symbol=SYMBOL,
+                         cut_ts=datetime.fromtimestamp(cut/1000, timezone.utc).isoformat(),
+                         roster=DA.roster({}), packets=[])
+    args = dict(as_of_ms=cut,symbol=SYMBOL,instrument_id=IID,cycle_id='normal-cycle',
+        candidate_id='normal-setup:'+v['version_id'],
+        sources=(L.source('attention_scan',scan,scan['persisted_at_ms'],cut+1000),
+                 L.source('strategy_version',row,row['recorded_at_ms'],cut+1000),
+                 L.source('signals',[sig],cut,cut+1000),L.source('portfolio',book,cut,cut+1000),
+                 L.source('analysts',analysts,cut,cut+1000)),
+        required_roles=('strategy_version','signals','portfolio'),decision_grade=True)
     receipt = L.produce(**args)
     authority = B.freeze_authority(j,receipt,cfg,{'ohlcv'})
     raw = dict(schema=B.ALLOCATION_SCHEMA,method='TEST-ONLY-normal-ready',version='1',test_only=True,
@@ -103,6 +126,9 @@ def test_complete_normal_path_to_risk_and_restart(publications,tmp_path):
     c=inputs.candidates[0]
     assert c.capacity.status==A.Status.ESTABLISHED
     assert c.economics.evidence.status==A.Status.ESTABLISHED
+    decision=[json.loads(x.payload_json) for x in inputs.sources if x.source_id.startswith('decision-context:')]
+    assert len(decision)==1 and decision[0]['status']=='BOUND' and decision[0]['authority']=='NONE'
+    assert decision[0]['economics_receipt_id']==publications[4].receipt_id
     assert c.valid_until_ms==NOW+1000
     assert any(s.source_id.startswith('strategy-lineage:') for s in inputs.sources)
     before=publications[0].query('SELECT * FROM state_kv')
@@ -123,8 +149,16 @@ def test_complete_normal_path_to_risk_and_restart(publications,tmp_path):
 
 def test_missing_economics_normal_reader(publications,tmp_path):
     for p in (tmp_path/'economics').glob('*.json'):p.unlink()
-    inputs,_=read(publications)
-    assert inputs.candidates[0].economics.evidence.status==A.Status.UNAVAILABLE
+    inputs,detail=read(publications)
+    # Real (empty-registry) economics: bound to this context, explicitly blocked, never defaulted.
+    assert inputs.candidates==()
+    assert any(m.startswith('CONTEXT_BLOCKED:normal-setup:') and 'REQUIRED_COST_EVIDENCE_UNAVAILABLE' in m
+               for m in detail['missing_sources'])
+    blocked,=detail['blocked_decisions']
+    assert blocked['status']=='BLOCKED' and blocked['economics_status']=='UNAVAILABLE'
+    assert blocked['cost_binding'] is None and blocked['authority']=='NONE'
+    assert all(c['value'] is None and c['status']=='UNAVAILABLE' for c in blocked['cost_components'].values())
+    assert not any(x.source_id.startswith('decision-context:') for x in inputs.sources)
     result=runtime.Consumer(tmp_path/'ledger.db').consume(inputs,processed_at=NOW+100)
     assert result['proposal']['result']['decision']=='NO_ALLOCATION'
     assert result['real_order_submissions']==0
@@ -139,15 +173,13 @@ def test_unknown_expiry_incomplete_not_checkpoint_crash(publications,tmp_path,mo
         if s.source_id in ('signals','strategy_version'):body['valid_until_ms']=None
         sources.append(A.Source.freeze(s.source_id,body))
     request={k:args[k] for k in ('as_of_ms','symbol','instrument_id','cycle_id','candidate_id','required_roles')}
-    request['sources']=sources
+    request.update(sources=sources,decision_grade=True)
     for p in (tmp_path/'contexts').glob('*.json'):p.unlink()
     unknown=L.produce(**request)
     L.persist(unknown,tmp_path/'contexts')
     for p in (tmp_path/'economics').glob('*.json'):p.unlink()
     inputs,detail=read(publications)
-    c=inputs.candidates[0]
-    assert c.freshness.status==A.Status.UNKNOWN and c.valid_until_ms is None
-    assert c.economics.evidence.status==A.Status.UNAVAILABLE
+    assert inputs.candidates==() and detail['blocked_decisions']
     assert not any(s.source_id.startswith('strategy-lineage:') for s in inputs.sources)
     result=runtime.Consumer(tmp_path/'incomplete.db').consume(inputs,processed_at=NOW+100)
     assert result['proposal']['result']['decision']=='NO_ALLOCATION'
@@ -189,12 +221,12 @@ def test_journal_decision_without_expiry_normal_checkpoint(publications,tmp_path
     admission_receipt=bind_market(market,cfg,NOW)
     result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'checkpoint.db',
                                     market_snapshots={'normal-decision':market},admission_receipt=admission_receipt)
-    assert detail['normal_persisted_contexts']==0 and detail['candidate_count']==1
-    assert result['proposal']['result']['decision']=='NO_ALLOCATION'
-    c=result['proposal']['inputs']['candidates'][0]
-    assert c['freshness']['status']=='UNKNOWN' and c['valid_until_ms'] is None
-    assert c['economics']['evidence']['status']=='UNAVAILABLE'
+    assert detail['normal_persisted_contexts']==0 and detail['candidate_count']==0
+    blocked,=detail['blocked_decisions']
+    assert blocked['status']=='BLOCKED' and blocked['economics_status']=='UNAVAILABLE'
+    assert blocked['candidate_id'].startswith('normal-decision:')
     assert result['real_order_submissions']==0
+    assert result['proposal']['result']['decision']=='NO_ALLOCATION'
 
 
 def test_lineage_refuses_mixed_cut_and_source_identity(publications):

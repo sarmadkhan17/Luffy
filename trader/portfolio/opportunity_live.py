@@ -329,7 +329,7 @@ def replay(receipt, current_sources, now_ms=None):
         for s in current_sources:
             raw = json.loads(s.payload_json)
             if s.source_id in p['required_roles'] and raw['valid_until_ms'] is not None and now_ms > raw['valid_until_ms']:
-                raise ValueError('REQUIRED_CONTEXT_EVIDENCE_STALE')
+                raise ContextBlocked('REQUIRED_CONTEXT_EVIDENCE_STALE')
     return again
 
 
@@ -477,3 +477,65 @@ def decision_book_binding(receipt, snapshot):
     if DA.sha256(snapshot) != book['sha256']:
         raise ContextRefused('BOOK_DIFFERS_FROM_FROZEN_CONTEXT_BOOK')
     return book
+
+
+DECISION_SCHEMA = 'decision-context.v1'
+BOUND, BLOCKED = 'BOUND', 'BLOCKED'
+
+
+@dataclass(frozen=True)
+class DecisionReceipt:
+    """The DEC-01 decision-grade identity: an outer envelope over the already
+    frozen core context. It binds the exact economics receipt/status, the cut and
+    the book; the core context is never mutated and economics never becomes an
+    input to it."""
+    receipt_id: str
+    payload_json: str
+
+    @property
+    def status(self):
+        return json.loads(self.payload_json)['status']
+
+    @property
+    def block_reason(self):
+        return json.loads(self.payload_json)['block_reason']
+
+    def as_source(self):
+        return Source.freeze('decision-context:' + self.receipt_id, json.loads(self.payload_json))
+
+
+def finalize_decision(receipt, economics_receipt, now_ms):
+    """Bind the economics receipt the normal path actually produced to this
+    context. Missing/unavailable/stale costs yield an explicit BLOCKED envelope
+    carrying the real receipt id, status and per-component reasons; values stay
+    None (UNKNOWN is never zero). A receipt for another cut/identity, or a cost
+    captured after the decision cut, REFUSES (ContextRefused)."""
+    p = json.loads(receipt.payload_json)
+    if not p.get('decision_grade'):
+        raise ContextRefused('DECISION_GRADE_RECEIPT_REQUIRED')
+    result = json.loads(economics_receipt.result_json)
+    components = {n: dict(status=result['components'][n]['status'],
+                          reason=result['components'][n]['reason'],
+                          value=result['components'][n]['value'] if result['components'][n]['status'] == 'ESTABLISHED' else None)
+                  for n in COST_COMPONENTS}
+    try:
+        cost, status, reason = decision_cost_binding(receipt, economics_receipt, now_ms), BOUND, None
+    except ContextBlocked as exc:
+        cost, status, reason = None, BLOCKED, str(exc)
+    payload = dict(schema=DECISION_SCHEMA, live_receipt_id=receipt.receipt_id, context_id=p['context_id'],
+                   opportunity_id=p['opportunity_id'], candidate_id=p['candidate_id'], as_of_ms=p['as_of_ms'],
+                   decision_cut_ms=p['decision_inputs']['cuts']['decision_cut_ms'],
+                   economics_receipt_id=economics_receipt.receipt_id, economics_status=result['economic_status'],
+                   cost_components=components, cost_binding=cost, status=status, block_reason=reason,
+                   book=p['decision_inputs']['book'], now_ms=now_ms, authority='NONE')
+    return DecisionReceipt(digest(payload), canonical(payload))
+
+
+def verify_decision(decision, receipt, economics_receipt, now_ms):
+    """Replay: the envelope is exactly what these frozen receipts bind at `now_ms`."""
+    p = json.loads(decision.payload_json)
+    if p['schema'] != DECISION_SCHEMA or digest(p) != decision.receipt_id:
+        raise ValueError('DECISION_CONTEXT_INTEGRITY_REFUSED')
+    if finalize_decision(receipt, economics_receipt, now_ms) != decision:
+        raise ValueError('DECISION_CONTEXT_REPLAY_DIFFERS')
+    return decision

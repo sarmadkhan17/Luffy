@@ -89,6 +89,17 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
                     observed_inputs = ['ohlcv'] if any(v is not None and len(v) for v in market.dfs.values()) else []
                 candidate, economics, frozen = bridge.build(Reader(),receipt,config,
                     available_inputs=observed_inputs,dimensions=DIMENSIONS)
+                if not raw.get('decision_grade'):
+                    detail['missing_sources'].append('CONTEXT_BLOCKED:' + request['candidate_id'] + ':DECISION_GRADE_CONTEXT_REQUIRED')
+                    continue
+                decision = live.finalize_decision(receipt, economics, Reader.current_time_ms)
+                if decision.status != live.BOUND:
+                    # Real economics receipt bound to this exact context; costs are not
+                    # established, so the decision-grade candidate is blocked, never defaulted.
+                    detail['missing_sources'].append('CONTEXT_BLOCKED:' + request['candidate_id'] + ':' + decision.block_reason)
+                    detail.setdefault('blocked_decisions', []).append(json.loads(decision.payload_json))
+                    continue
+                sources.append(decision.as_source())
                 if market is not None:
                     binding_text = getattr(market, 'instrument_binding_json', None)
                     if binding_text:

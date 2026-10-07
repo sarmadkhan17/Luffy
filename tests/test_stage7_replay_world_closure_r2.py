@@ -39,14 +39,10 @@ def prepare(publications, tmp_path, monkeypatch, value, blocked=False):
     raw = json.loads(old.payload_json)
     sources=[]
     for entry in raw['sources']:
-        source=AL.Source(**entry)
-        if source.source_id=='signals':
-            body=json.loads(source.payload_json)
-            body['data'][0]['params']['spec_sha256']=v['spec_hash']
-            source=AL.Source.freeze(source.source_id,body)
+        source=AL.Source(**entry)   # decision-grade signal already carries the exact compiler identity
         sources.append(source)
     sources=(*sources,OL.source('world_model',receipt['record_json'],cut,cut+1000))
-    live = OL.produce(**{k:raw[k] for k in ('as_of_ms','symbol','instrument_id','cycle_id','candidate_id','required_roles')},sources=sources)
+    live = OL.produce(**{k:raw[k] for k in ('as_of_ms','symbol','instrument_id','cycle_id','candidate_id','required_roles')},sources=sources,decision_grade=True)
     authority = B.freeze_authority(j,live,cfg,{'ohlcv'})
     # Rebind the fixture's TEST-ONLY calibration to this exact prospective context.
     from tests.economics_fixtures import frozen
