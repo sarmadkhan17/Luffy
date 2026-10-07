@@ -568,3 +568,30 @@ def test_restart_and_replay_preserve_the_approval(tmp_path, cfg):
                                 actor="operator", decided_at_ms=T0 + 31 * DAY)
     assert e.value.code == "decision_already_recorded"
     assert _snapshot(again) == before
+
+
+# ── approved risk/owner scope ────────────────────────────────────────────
+def test_approval_binds_risk_and_owner_scope_but_grants_no_allocation(
+        tmp_path, cfg, monkeypatch):
+    from tests.test_universal_strategy_authority import (
+        activate, approved_world, established_capacity)
+    from tests.authority_capacity_fixtures import NOW
+    j, v, risk, _ = approved_world(tmp_path, cfg, monkeypatch)
+    dec = json.loads(_val(j, "SELECT canonical_json FROM "
+                             "strategy_approval_decisions"))
+    # the decision names the exact configuration (risk + owner limits) ...
+    assert dec["config_sha256"] == F._jsha(cfg)
+    # ... and carries no allocation: capital is only chosen at activation,
+    # by an owner actor, inside a ceiling the Governor then records
+    assert "allocation" not in dec and "allocation" not in F.approval_request(
+        j, v["version_id"])
+    assert dec["grants"].startswith("first-live eligibility of this exact")
+    assert F.state_of(j, v["version_id"]) == F.APPROVED_FIRST_LIVE
+    assert not j.query("SELECT * FROM strategy_governor_events")
+    rid = established_capacity(j, cfg, v, monkeypatch)
+    ev = activate(j, cfg, v["version_id"], available_inputs=INPUTS,
+                  capacity_receipt_id=rid, risk_manager=risk,
+                  risk_release=risk.release_check(10000))["event"]
+    assert ev["risk_sha256"] == F._jsha(cfg["risk"])
+    assert ev["allocation_ceiling"] == ev["allocation"] == .1
+    assert ev["owner_decision_id"] == dec["decision_id"]
