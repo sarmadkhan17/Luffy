@@ -1,0 +1,104 @@
+{
+  "decision_receipt_id": "23fa74e9d37bc842e8a0325f359b22036861f12f41f62791d0216c93b535f973",
+  "core_receipt_id": "2855f257b2b19e325159640aa2dae5b71fd573bccd35534f5126ce0af984a4e7",
+  "economics_receipt_id": "971aa3085ec6a2a30f5408a01de253b3a6cd82bfaa8c86c82abe06b813c4739f",
+  "decision": {
+    "as_of_ms": 1793998800100,
+    "authority": "NONE",
+    "block_reason": "REQUIRED_COST_EVIDENCE_UNAVAILABLE",
+    "book": {
+      "completeness": "COMPLETE",
+      "observed_at_ms": 1793998800000,
+      "sha256": "9f7230c6a4ad2397cdc366ca5c9c25d8359d9d5bc66b47c708f8234b195ab2b3",
+      "snapshot_id": "5de1afb7778901738a67e56245bc299e1463ab88f85d502eda51de34b4eaf745"
+    },
+    "candidate_id": "normal-decision:c6baef9bd7551f41c90643d4dcb82f65cb8dcdf17fc3fe72d3dbc7e576ba7934",
+    "context_id": "opportunity-context.v1:214572e22ff617a17452835f1b6fcf627717de6250e2c2807ad503117b06f30d",
+    "cost_binding": null,
+    "cost_components": {
+      "COMMISSION": {
+        "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+        "status": "UNAVAILABLE",
+        "value": null
+      },
+      "FUNDING/BORROW": {
+        "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+        "status": "UNAVAILABLE",
+        "value": null
+      },
+      "SLIPPAGE": {
+        "reason": "CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING",
+        "status": "UNAVAILABLE",
+        "value": null
+      }
+    },
+    "decision_cut_ms": 1793998800100,
+    "economics_receipt_id": "971aa3085ec6a2a30f5408a01de253b3a6cd82bfaa8c86c82abe06b813c4739f",
+    "economics_status": "UNAVAILABLE",
+    "live_receipt_id": "2855f257b2b19e325159640aa2dae5b71fd573bccd35534f5126ce0af984a4e7",
+    "now_ms": 1793998800100,
+    "opportunity_id": "opportunity:64f9a9cf69c725559d8d4f3e9735331cca080da85f87ecadf2ef9c88a507fee0",
+    "schema": "decision-context.v1",
+    "status": "BLOCKED"
+  },
+  "zero_allocator_candidates": true,
+  "exact_real_receipt_bound": true,
+  "reload_identical": true,
+  "core_unchanged": true,
+  "production_registries_empty": true,
+  "supporting_and_opposing": {
+    "conflict": true,
+    "neutral": [],
+    "opposing": [
+      {
+        "analyst": "momentum",
+        "confidence": 0.6,
+        "horizon": "4h",
+        "inputs": [
+          {
+            "name": "ohlcv",
+            "quality": "UNKNOWN",
+            "reason": "fixture",
+            "required": true,
+            "source": "snapshot.dfs.4h",
+            "source_ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "limitations": [
+          "fixture limitation"
+        ],
+        "quality": "SUSPECT",
+        "record_id": "0c0e4763473af7d95c203964cac9389866c6773b233a7f4a44a09dd7084a52b0",
+        "role": "optional",
+        "strength": -0.8,
+        "uncertainty_basis": "heuristic reliability; not calibrated probability"
+      }
+    ],
+    "supporting": [
+      {
+        "analyst": "structure",
+        "confidence": 0.6,
+        "horizon": "4h",
+        "inputs": [
+          {
+            "name": "ohlcv",
+            "quality": "UNKNOWN",
+            "reason": "fixture",
+            "required": true,
+            "source": "snapshot.dfs.4h",
+            "source_ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "limitations": [
+          "fixture limitation"
+        ],
+        "quality": "SUSPECT",
+        "record_id": "10cbc6631795f023164a6018a3df8982a3f9502efd43b01ebe0f9a368bfde1df",
+        "role": "required",
+        "strength": 0.8,
+        "uncertainty_basis": "heuristic reliability; not calibrated probability"
+      }
+    ],
+    "unclassified": []
+  }
+}

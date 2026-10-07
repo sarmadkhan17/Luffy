@@ -1,3 +1,5 @@
+> Current [SOL-1][DEC-01]: **CLOSED at architecture/offline scope** on `dcfd2c3` / `5d66327`. Normal coherent Context, exact real UNAVAILABLE economics receipt binding, explicit blocked decision, null costs and zero allocator candidates verified. Frozen identity/reload, required/optional analysts, coherent cuts and evidence conflict preserved. PORT-02 eligible, unselected and not started; DEC-02 still gated by PORT-02. [Evidence](evidence/dec01-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][STR-02]: **CLOSED at architecture/offline scope** on `d1ddc18` / `843a0a3`. Exact StrategyVersion, declared dependency refusals, identity and current/historical parity verified. A pure implementation-only feature-code change is not automatically detected without a FEATURE_VERSION bump. DEC-01 dependencies are satisfied; its own Context proof remains open, unselected and not started. [Evidence](evidence/str02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][STR-01]: **CLOSED at architecture/offline scope** on `1508509`. 137 final affected tests plus 1 independent persisted-Bank proof passed. Creation authenticates genuine exact Bank/quantitative lineage; load/verify do not reopen Bank, caller-supplied Bank path requires content authentication, and Kernel handoff remains disabled. STR-02 is dependency-eligible, unselected, with its own proof still open. DEC-01 remains BLOCKED. [Evidence](evidence/str01-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2603,33 +2605,34 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: BLOCKED
+- **status**: CLOSED
 - **why_needed**: Avoids mixing source cuts and required/optional evidence.
 - **closure_condition**: Normal source path binds canonical identity, exact spec, required/optional analysts, clocks, costs, book and supporting/opposing evidence.
 - **failure_regression_proof**: Missing required input blocks; optional absent input does not block by default; mixed cuts refuse.
 - **dependencies**: STR-02, WRLD-05, DATA-05
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: SOL-1
-- **implementation_evidence**: Retained Opportunity Context identity/version/source-clock/book/cut/freshness controls mapped; required/optional analyst and supporting/opposing binding still needs proof. STR-02, WRLD-05 and DATA-05 are CLOSED.
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Decision-grade coherent normal Opportunity Context and exact real economics envelope on dcfd2c3 / 5d66327; docs/tracker/evidence/dec01-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: STR-02 canonical compiler/dependency closure removes the last direct dependency gate. DEC-01 remains BLOCKED on its own full normal source-path coherent Context proof. Dependency-eligible, unselected and not started by this reconciliation.
+- **latest_evidence**: 61 dedicated passes; fresh affected normal-source and corrected Stage-7 tests passed. Independent normal-path exact UNAVAILABLE receipt binding and reload proof passed; BLOCKED / REQUIRED_COST_EVIDENCE_UNAVAILABLE, null cost values and no allocator candidate. Retained affected report: 476 passed / 3 Stage-7 fixture incompatibilities; corrected file rerun 14 passed. Production registries remain empty.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §15
-- **next_proof**: Complete normal source-path canonical identity, exact spec, required/optional analysts, clocks, costs, book and supporting/opposing evidence binding; missing required blocks, optional absent does not block by default, mixed cuts refuse. DEC-01 is eligible but not selected or started.
+- **next_proof**: None for exact DEC-01 architecture/offline condition. PORT-02 calibrated production economics is dependency-eligible but unselected and not started. DEC-02 remains gated by PORT-02 and its own unmapped deterministic-comparison proof.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 5d66327b3a0e31a0177feb6d46b8b67fcaa4559e
 - **work_authorized**: True
 - **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/dec01-canonical-sol1/closure.json
+- **evidence_validity**: Pinned architecture/offline verification at 5d66327; no deployment, economics calibration or later runtime revalidation claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-- **evidence_mapping**: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+- **evidence_mapping**: docs/tracker/evidence/dec01-canonical-sol1/REPORT.md
+- **implementation_commit**: 5d66327b3a0e31a0177feb6d46b8b67fcaa4559e
 
 ### DEC-02 — Make deterministic candidate comparison, with explicit CASH and reasons.
 
@@ -7334,3 +7337,5 @@ RES-08 canonical status counts: CLOSED 56, EVIDENCE_TO_MAP 81, DEFERRED 7, AWAIT
 STR-01 canonical status counts: CLOSED 57, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4. Total 178; all other rows unchanged.
 
 STR-02 canonical status counts: CLOSED 58, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 6, OPEN 4 (178 total).
+
+DEC-01 canonical status counts: CLOSED 59, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).

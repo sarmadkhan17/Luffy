@@ -1,0 +1,90 @@
+{
+  "item": "DEC-01",
+  "canonical_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "engineering_commits": [
+    "dcfd2c3f9a036993e5ba96d2aa2136130c04c374",
+    "5d66327b3a0e31a0177feb6d46b8b67fcaa4559e"
+  ],
+  "engineering_closure_commit": "5d66327b3a0e31a0177feb6d46b8b67fcaa4559e",
+  "control_baseline_revision": "5d66327b3a0e31a0177feb6d46b8b67fcaa4559e",
+  "control_plane_commit_resolution": "Enclosing Git commit containing this reconciliation; no self-referential hash.",
+  "closing_condition": "Normal source path binds canonical identity, exact spec, required/optional analysts, clocks, costs, book and supporting/opposing evidence.",
+  "failure_regression_proof": "Missing required input blocks; optional absent input does not block by default; mixed cuts refuse.",
+  "closing_condition_satisfied": true,
+  "closure_mapping": {
+    "normal_coherent_context": "scripts.opportunity_context_shadow.capture reads persisted decision/cycle/vote measurement packets, exact StrategyVersion and compiled signal identity, Attention/WorldModel cut and complete venue book. produce(decision_grade=True) verifies these and freezes canonical candidate/opportunity identity, required roles, clocks, book digest and analyst provenance. current.freeze calls the actual bridge.build and finalize_decision before candidate admission.",
+    "required_optional": "DECISION_REQUIRED is enforced even if callers omit roles. DA.roster declares required analysts; all other enabled analysts are optional by default. Missing/unavailable required analyst or missing/stale required source blocks. Optional absence/unavailability remains individually explicit and does not block the context by default.",
+    "cut_coherence": "All analyst packets share the cycle cut, never future; source availability/event/freshness checks enforce the decision cut. Normal analyst expiry shares Attention freshness. WorldModel equals market/scan cut; market/world/signal/version inputs cannot be newer than analyst cut. Book provenance/completeness/freshness are checked and decision_book_binding rejects substitutions. Exact economic Binding/core source is required; costs captured after decision cut refuse, stale costs block, wrong context/cost cut refuses.",
+    "production_unavailable_cost": "Production GROSS_MODELS, RESERVE_MODELS and COST_SCOPE_MODELS remain empty. bridge.build produces the real UNAVAILABLE receipt; finalize_decision binds its exact ID/status to the outer envelope, retains null cost values/status/reasons, and marks BLOCKED / REQUIRED_COST_EVIDENCE_UNAVAILABLE. current.freeze continues before candidates.append, so this candidate never reaches allocator inputs. UNKNOWN/UNAVAILABLE never becomes zero. Calibrated production economics is PORT-02, not a DEC-01 closing prerequisite.",
+    "decision_identity": "Frozen core LiveReceipt/OpportunityContext is immutable and unchanged by economics. decision-context.v1 binds core receipt/context/opportunity/candidate IDs, exact economics receipt/status, decision cut, frozen book and evaluation clock. Its receipt_id is the decision-grade identity, content-derived and replay checked. Identical saved clocks/receipts reload identically; later revisions create new identities and cannot overwrite earlier core bytes. This is not a promise of identity equality at different evaluation clocks.",
+    "evidence_conflict": "DA.analyze retains supporting, opposing, neutral and absent/unavailable records with record IDs, strengths, confidence, input provenance and bundle digest. Conflict flag preserves both sides. Frozen source replay recomputes the partition and refuses forged support-only summaries.",
+    "authority_boundary": "Core and outer envelope state authority NONE; context creation/compilation grants no install, Governor/owner, capital or order authority. Existing independent admissions and research/activation fences remain unchanged."
+  },
+  "evidence": "docs/tracker/evidence/dec01-canonical-sol1/closure.json",
+  "dependency_status": {
+    "STR-02": "CLOSED",
+    "WRLD-05": "CLOSED",
+    "DATA-05": "CLOSED"
+  },
+  "validation": {
+    "fresh_focused_passes": 82,
+    "fresh_by_file": {
+      "tests.test_dec01_opportunity_context": 61,
+      "tests.test_stage6_normal_sources": 7,
+      "tests.test_stage7_replay_world_closure_r2": 14
+    },
+    "fresh_failures": 0,
+    "fresh_normal_exact_receipt_and_reload_passes": 1,
+    "runner": "/home/sarmad/.local/bin/luffy-pytest",
+    "retained_user_report": {
+      "dedicated_passed": 61,
+      "affected_passed": 476,
+      "stage7_fixture_failures": 3,
+      "corrected_stage7_file_passed": 14,
+      "attribution": "User-supplied engineering validation; raw 476/3 log not independently retained here. Committed fixture diff and fresh full corrected file corroborate contract incompatibility correction. No combined affected-suite green claim."
+    },
+    "production_models_added": false,
+    "live_provider_calls": 0,
+    "full_suite_claim": false
+  },
+  "production_unavailable_cost_semantics": "VERIFIED: exact real UNAVAILABLE receipt -> decision-context.v1 BLOCKED / REQUIRED_COST_EVIDENCE_UNAVAILABLE; null costs; zero allocator candidates",
+  "normal_receipt_proof": "docs/tracker/evidence/dec01-canonical-sol1/normal-receipt-proof.json",
+  "original_conditions_and_edges_preserved": true,
+  "status_counts_after": {
+    "CLOSED": 59,
+    "EVIDENCE_TO_MAP": 80,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "source_sha256": {
+    "trader/portfolio/opportunity_live.py": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+    "trader/portfolio/current.py": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7",
+    "trader/cognition/decision_analysts.py": "501256da830fce80c8e14ff4c0ee46d0d0c66f6250079c48f68cb195944c34ac",
+    "scripts/opportunity_context_shadow.py": "3789dc2ae44f95345c773c504cf20491091afb3e2e078e158fd5de0cbc24011c",
+    "trader/portfolio/source_adapter.py": "bc4b31cbc64ac7c48bf3e7971dd3c3015b9d41f24ae4dba979c65c44cf9f8d7b",
+    "trader/portfolio/candidate_bridge.py": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+    "trader/portfolio/economics.py": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+    "trader/cognition/opportunity_context.py": "98b83d54f6fc97f4e66d0acd241cec6d3a82c6f0bebb12fbe224a50fc2d20c9d",
+    "tests/test_dec01_opportunity_context.py": "08a0b0f25366094a778e35189203cba79a364920356fd1d29ef76c52298914b2",
+    "tests/test_stage6_normal_sources.py": "ea140f1411a14672e808875550ab4d94e11c3b29d9e605be362c5100ca3a6ae0",
+    "tests/test_stage7_replay_world_closure_r2.py": "e867586375f02eeb0a5984b79be89174d093e86d80bf8174fbd22bd75c816049",
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
+  },
+  "PORT02_now_eligible": true,
+  "PORT02_selected": false,
+  "PORT02_started": false,
+  "DEC02_now_eligible": false,
+  "DEC02_remaining_blockers": [
+    "PORT-02"
+  ],
+  "DEC02_own_condition_unproven": true,
+  "application_code_changed": false,
+  "runtime_execution_authorized": false,
+  "provider_enablement_authorized": false,
+  "trading_activation_authorized": false,
+  "successor_selected": false
+}
