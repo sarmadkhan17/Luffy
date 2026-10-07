@@ -105,13 +105,85 @@ def test_opposing_strategy_directions_conflict_is_rejection_not_collapsed():
     assert all('OPPOSING_STRATEGY_DIRECTIONS' in r['reasons'] for r in v['candidates'])
 
 
-def test_exact_tie_uses_registered_rule_and_is_visible():
+TIE = 'EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE'
+
+
+def test_two_candidate_exact_positive_tie_selects_cash():
     a = candidate('a', 'venue:futures:BTCUSDT', value='3')
     b = candidate('b', 'venue:futures:ETHUSDT', value='3')
-    v = cmp(inputs(a, b))
-    assert v['tie'] == dict(rule=C.TIE_RULE, tied=[['a', 'version-a'], ['b', 'version-b']], winner=['a', 'version-a'])
-    assert row(v, 'a')['outcome'] == 'PROPOSED'
-    assert 'EXACT_ECONOMIC_TIE_LOST_TO_REGISTERED_ORDER' in row(v, 'b')['reasons']
+    i = inputs(a, b)
+    r = json.loads(allocate(i).result_json)
+    assert r['decision'] == 'NO_ALLOCATION' and r['selected'] == [] and r['reason'] == TIE
+    assert r['cash_candidate']['selected'] and r['cash_candidate']['action'] == 'NO_TRADE'
+    v = cmp(i)
+    assert v['tie'] == dict(rule=C.TIE_CASH_RULE, tied=[['a', 'version-a'], ['b', 'version-b']], winner=None)
+    assert all(x['outcome'] == 'REJECTED' and TIE in x['reasons'] for x in v['candidates'])
+    assert v['cash']['selected'] and TIE in v['cash']['reasons']
+    assert not any('score' in k for k in v)
+
+
+def test_three_way_top_tie_cash_and_lower_candidates_do_not_matter():
+    tied = [candidate(n, f'venue:futures:{s}USDT', value='5') for n, s in (('a', 'BTC'), ('b', 'ETH'), ('c', 'SOL'))]
+    base = cmp(inputs(*tied))
+    assert base['cash']['selected'] and base['tie']['tied'] == [[n, 'version-' + n] for n in 'abc']
+    with_lower = cmp(inputs(*tied, candidate('d', 'venue:futures:XRPUSDT', value='1'),
+                            candidate('e', 'venue:futures:ADAUSDT', value='-2')))
+    assert with_lower['cash']['selected'] and with_lower['tie'] == base['tie']
+    assert row(with_lower, 'd')['reasons'] == ['CAPITAL_PRIORITY_NOT_SELECTED']
+    assert all(row(with_lower, n)['reasons'] == [TIE] for n in 'abc')
+
+
+def test_tie_below_a_strictly_better_candidate_does_not_block_it():
+    v = cmp(inputs(candidate('a', 'venue:futures:BTCUSDT', value='3'), candidate('b', 'venue:futures:ETHUSDT', value='3'),
+                   candidate('c', 'venue:futures:SOLUSDT', value='4')))
+    assert row(v, 'c')['outcome'] == 'PROPOSED' and v['tie'] is None and not v['cash']['selected']
+
+
+def test_slight_real_difference_beats_tie():
+    v = cmp(inputs(candidate('a', 'venue:futures:BTCUSDT', value='3.000001'),
+                   candidate('b', 'venue:futures:ETHUSDT', value='3')))
+    assert row(v, 'a')['outcome'] == 'PROPOSED' and row(v, 'b')['reasons'] == ['CAPITAL_PRIORITY_NOT_SELECTED']
+
+
+def test_non_positive_tie_keeps_existing_cash_semantics():
+    r = json.loads(allocate(inputs(candidate('a', value='-1'), candidate('b', 'venue:futures:ETHUSDT', value='-1'))).result_json)
+    assert r['reason'] == 'NO_POSITIVE_COMPARABLE_ECONOMIC_VALUE' and r['exact_tie'] == []
+
+
+def test_same_expression_duplicates_are_not_a_tie():
+    a = candidate('a', value='3')
+    b = candidate('b', value='3')       # same instrument + direction: evidence merge, not rivalry
+    r = json.loads(allocate(inputs(a, b)).result_json)
+    assert r['exact_tie'] == [] and r['decision'] == 'ALLOCATION_PROPOSAL'
+
+
+def test_r2_history_replays_with_identity_order_winner_and_r3_is_distinct():
+    from trader.portfolio import allocator as A
+    a = candidate('a', 'venue:futures:BTCUSDT', value='3')
+    b = candidate('b', 'venue:futures:ETHUSDT', value='3')
+    i = inputs(b, a)
+    old = A.allocate(i, A.VERSION_R2)
+    new = allocate(i)
+    assert old.allocator_version == A.VERSION_R2 != new.allocator_version == A.VERSION
+    assert json.loads(old.result_json)['selected'][0]['primary_candidate'] == ['a', 'version-a']
+    assert 'exact_tie' not in json.loads(old.result_json)
+    assert old.proposal_id != new.proposal_id
+    assert A.verify(old, i) and A.verify(new, i)
+    assert not A.verify(replace(old, allocator_version=A.VERSION), i)       # versions are not interchangeable
+    assert not A.verify(replace(new, allocator_version=A.VERSION_R2), i)
+    # replay of a stored R2 proposal through its persisted inputs reproduces it exactly
+    assert A.allocate(inputs_from_payload(json.loads(old.inputs_json)), A.VERSION_R2) == old
+    assert C.compare(old)['tie']['rule'] == C.TIE_RULE and C.compare(old)['decision'] == 'ALLOCATION_PROPOSAL'
+    assert C.compare(new)['decision'] == 'NO_ALLOCATION'
+    with pytest.raises(ValueError, match='ALLOCATOR_VERSION_UNSUPPORTED'):
+        A.allocate(i, 'LUFFY-PORTFOLIO-ALLOCATOR-R1')
+
+
+def test_r3_tie_replays_identically_and_is_permutation_independent():
+    cs = [candidate(n, f'venue:futures:{s}USDT', value='3') for n, s in (('a', 'BTC'), ('b', 'ETH'), ('c', 'SOL'))]
+    first = allocate(inputs(*cs))
+    assert allocate(inputs_from_payload(json.loads(first.inputs_json))) == first
+    assert {allocate(inputs(*p)).proposal_id for p in itertools.permutations(cs)} == {first.proposal_id}
 
 
 def test_candidate_input_permutation_never_changes_result():

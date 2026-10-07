@@ -13,9 +13,10 @@ import json
 from .allocator import Proposal, allocate, canonical, digest, number
 
 SCHEMA = 'portfolio-comparison.v1'
-# Exact economic ties: the allocator's registered order is ascending
+# R2 history only: exact ties were broken by ascending
 # (opportunity_id, version_id). Deterministic and independent of input order.
 TIE_RULE = 'ASCENDING_OPPORTUNITY_ID_VERSION_ID'
+TIE_CASH_RULE = 'EXACT_TIE_NO_DOMINANT_CANDIDATE_SELECTS_CASH'
 # component -> (candidate field, whether the allocator gates on it)
 COMPONENTS = (('evidence_strength', 'validation', True),
               ('strategy_reliability', 'probation', True),
@@ -68,7 +69,11 @@ def compare(proposal: Proposal) -> dict:
     top = [i for i in order if nets[i] == nets[order[0]]] if order else []
     winners = [tuple(s['primary_candidate']) for s in result['selected']]
     tie = None
-    if winners and len({(by_identity[i]['instrument'], by_identity[i]['direction']) for i in top}) > 1:
+    if result.get('exact_tie'):
+        # R3: no registered discriminator separates the tied candidates; CASH.
+        tie = dict(rule=TIE_CASH_RULE, tied=result['exact_tie'], winner=None)
+    elif winners and len({(by_identity[i]['instrument'], by_identity[i]['direction']) for i in top}) > 1:
+        # R2 history only: identity order picked the winner.
         tie = dict(rule=TIE_RULE, tied=[list(i) for i in top], winner=list(winners[0]))
     rows = []
     for r in sorted(result['candidates'], key=lambda r: tuple(r['identity'])):
@@ -79,7 +84,7 @@ def compare(proposal: Proposal) -> dict:
         else:
             outcome = 'REJECTED'
             reasons = list(r['refusal_reasons']) or ['REJECTED_NO_RECORDED_REASON']
-            if tie and list(ident) in tie['tied']:
+            if tie and tie['winner'] and list(ident) in tie['tied']:
                 reasons.append('EXACT_ECONOMIC_TIE_LOST_TO_REGISTERED_ORDER')
         rows.append(dict(identity=list(ident), candidate_id=r['candidate_id'], context_id=r['context_id'],
                          instrument=r['instrument'], direction=r['direction'], outcome=outcome,

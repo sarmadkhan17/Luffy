@@ -22,7 +22,13 @@ from pathlib import Path
 
 from ..core.instrument_registry import is_canonical_instrument_id
 
-VERSION = 'LUFFY-PORTFOLIO-ALLOCATOR-R2'
+# R2 broke exact top-economics ties by ascending (opportunity_id, version_id);
+# retained only so historical proposals replay byte-identically. R3 selects CASH
+# on an exact tie between distinct expressions: identity order is not evidence.
+VERSION_R2 = 'LUFFY-PORTFOLIO-ALLOCATOR-R2'
+VERSION = 'LUFFY-PORTFOLIO-ALLOCATOR-R3'
+SUPPORTED_VERSIONS = (VERSION_R2, VERSION)
+TIE_REASON = 'EXACT_ECONOMIC_TIE_NO_DOMINANT_CANDIDATE'
 UNAVAILABLE = 'UNAVAILABLE'
 
 
@@ -455,7 +461,9 @@ def _portfolio_context_reasons(c, inputs):
     return []
 
 
-def allocate(inputs: Inputs) -> Proposal:
+def allocate(inputs: Inputs, version: str = VERSION) -> Proposal:
+    if version not in SUPPORTED_VERSIONS:
+        raise ValueError('ALLOCATOR_VERSION_UNSUPPORTED')
     _references(inputs)
     frozen = _ordered(inputs)
     now, portfolio = inputs.as_of_ms, inputs.portfolio
@@ -568,7 +576,15 @@ def allocate(inputs: Inputs) -> Proposal:
         ordered.sort(key=lambda item: number(item[0].economics.expected_net_value), reverse=True)
         reason = 'NO_POSITIVE_COMPARABLE_ECONOMIC_VALUE'
     selected = []
-    if ordered and number(ordered[0][0].economics.expected_net_value) > 0:
+    tied = []
+    if ordered and version != VERSION_R2 and number(ordered[0][0].economics.expected_net_value) > 0:
+        top = number(ordered[0][0].economics.expected_net_value)
+        group = [x for x in ordered if number(x[0].economics.expected_net_value) == top]
+        # Same-expression duplicates merge as evidence; distinct expressions tie.
+        if len({(x[0].instrument, x[0].market_type, x[0].direction) for x in group}) > 1:
+            tied = group
+            reason = TIE_REASON
+    if ordered and not tied and number(ordered[0][0].economics.expected_net_value) > 0:
         c, row, size = ordered[0]
         if number(size) > 0:
             contributors = [x.identity for x, _, _ in ordered if
@@ -588,9 +604,11 @@ def allocate(inputs: Inputs) -> Proposal:
                                  proposed_size=size, size_unit=c.bounds[0].unit,
                                  duplicate_confidence=confidence_context, risk_final_gate_required=True))
             reason = 'POSITIVE_COMPARABLE_ECONOMIC_PRIORITY'
+    tied_ids = {x[0].identity for x in tied}
     for c, row, _ in comparable:
         if not row['accepted']:
             row['refusal_reasons'].append('ECONOMICS_INCOMPARABLE' if len(keys) > 1
+                                         else TIE_REASON if c.identity in tied_ids
                                          else 'CAPITAL_PRIORITY_NOT_SELECTED')
     from .opportunity_cost import compare
     observations = [compare(inputs, c, held, row) for c, row in zip(
@@ -603,7 +621,7 @@ def allocate(inputs: Inputs) -> Proposal:
         global_blockers.append('RISK_POLICY_UNAVAILABLE')
     if inputs.control_state != 'ACTIVE':
         global_blockers.append('CONTROL_STATE_DISALLOWS_NEW_ALLOCATION')
-    result = dict(allocator_version=VERSION, as_of_ms=now, global_blockers=global_blockers,
+    result = dict(allocator_version=version, as_of_ms=now, global_blockers=global_blockers,
                   decision='ALLOCATION_PROPOSAL' if selected else 'NO_ALLOCATION', reason=reason,
                   cash_candidate=dict(expression='CASH', action='NO_TRADE', always_available=True,
                                       selected=not selected, expected_yield=UNAVAILABLE),
@@ -615,8 +633,10 @@ def allocate(inputs: Inputs) -> Proposal:
                   relationship_policy='DESCRIPTIVE_ONLY_NO_CALIBRATED_PENALTY',
                   opportunity_cost=observations,
                   risk_final_authority=True, side_effects='NONE')
-    pid = digest(dict(allocator_version=VERSION, inputs=frozen, result=result))
-    return Proposal(pid, canonical(frozen), canonical(result))
+    if version != VERSION_R2:
+        result['exact_tie'] = sorted(list(x[0].identity) for x in tied)
+    pid = digest(dict(allocator_version=version, inputs=frozen, result=result))
+    return Proposal(pid, canonical(frozen), canonical(result), version)
 
 
 def attach_learning(inputs, journal):
@@ -632,7 +652,7 @@ def verify(proposal: Proposal, current_inputs: Inputs) -> bool:
     """Trusted caller must reread all current authorities; never verify against
     the proposal's embedded inputs alone. Changed inputs require recompute."""
     try:
-        return proposal == allocate(current_inputs)
+        return proposal == allocate(current_inputs, proposal.allocator_version)
     except (ValueError, TypeError, KeyError):
         return False
 

@@ -345,7 +345,7 @@ def test_stage6_shadow_read_only_sources(tmp_path, monkeypatch):
 def test_previous_allocator_revision_cannot_be_current_authority():
     i = inputs(candidate())
     p = A.allocate(i)
-    assert p.allocator_version == 'LUFFY-PORTFOLIO-ALLOCATOR-R2'
+    assert p.allocator_version == 'LUFFY-PORTFOLIO-ALLOCATOR-R3'
     assert not A.verify(replace(p, allocator_version='LUFFY-PORTFOLIO-ALLOCATOR-R1'), i)
 
 
