@@ -1,0 +1,32 @@
+{
+  "DEC03_canonical": "CLOSED",
+  "status_counts": {
+    "CLOSED": 64,
+    "EVIDENCE_TO_MAP": 75,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "row_count": 178,
+  "changed_rows": [
+    "DEC-03"
+  ],
+  "other_177_rows_unchanged": true,
+  "original_conditions_edges_and_readiness_gates_preserved": true,
+  "strict_YAML_contracts": true,
+  "manifest_counts_bytes_hashes_valid": true,
+  "dashboard_read": "AVAILABLE",
+  "engineering_commit": "1ec9870a09868d108293b10c3417ffd14368ed2e",
+  "DEC02_unchanged_CLOSED": true,
+  "STR04_unchanged_CLOSED": true,
+  "PORT01_unchanged": true,
+  "EXE04_dependency_satisfied": true,
+  "EXE04_now_eligible": true,
+  "EXE04_selected": false,
+  "EXE04_started": false,
+  "next_critical_path_item": "EXE-04",
+  "application_code_changed": false,
+  "runtime_execution_authorized": false
+}

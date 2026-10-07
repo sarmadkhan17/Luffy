@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="24" skipped="0" tests="97" time="40.125" timestamp="2026-10-08T02:38:29.670392+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_dec02_comparison" name="test_zero_candidates_is_explicit_cash" time="0.002" /><testcase classname="tests.test_dec02_comparison" name="test_unavailable_economics_rejected_cash_wins_and_is_not_zero" time="0.046" /><testcase classname="tests.test_dec02_comparison" name="test_non_positive_net_cannot_beat_cash[0]" time="0.026" /><testcase classname="tests.test_dec02_comparison" name="test_non_positive_net_cannot_beat_cash[-1]" time="0.023" /><testcase classname="tests.test_dec02_comparison" name="test_positive_gross_with_missing_costs_or_negative_net_is_cash" time="0.044" /><testcase classname="tests.test_dec02_comparison" name="test_missing_required_confidence_component_rejects_and_is_exposed[validation]" time="0.021" /><testcase classname="tests.test_dec02_comparison" name="test_missing_required_confidence_component_rejects_and_is_exposed[probation]" time="0.022" /><testcase classname="tests.test_dec02_comparison" name="test_missing_required_confidence_component_rejects_and_is_exposed[costs]" time="0.021" /><testcase classname="tests.test_dec02_comparison" name="test_confidence_components_are_states_never_a_score_or_neutral_default" time="0.019" /><testcase classname="tests.test_dec02_comparison" name="test_proposed_winner_inferior_loser_and_cash_not_selected" time="0.034" /><testcase classname="tests.test_dec02_comparison" name="test_stale_or_mismatched_receipt_refuses_candidate" time="0.038" /><testcase classname="tests.test_dec02_comparison" name="test_opposing_strategy_directions_conflict_is_rejection_not_collapsed" time="0.057" /><testcase classname="tests.test_dec02_comparison" name="test_two_candidate_exact_positive_tie_selects_cash" time="0.047" /><testcase classname="tests.test_dec02_comparison" name="test_three_way_top_tie_cash_and_lower_candidates_do_not_matter" time="0.146" /><testcase classname="tests.test_dec02_comparison" name="test_tie_below_a_strictly_better_candidate_does_not_block_it" time="0.065" /><testcase classname="tests.test_dec02_comparison" name="test_slight_real_difference_beats_tie" time="0.040" /><testcase classname="tests.test_dec02_comparison" name="test_non_positive_tie_keeps_existing_cash_semantics" time="0.038" /><testcase classname="tests.test_dec02_comparison" name="test_same_expression_duplicates_are_not_a_tie" time="0.039" /><testcase classname="tests.test_dec02_comparison" name="test_r2_history_replays_with_identity_order_winner_and_r3_is_distinct" time="0.127" /><testcase classname="tests.test_dec02_comparison" name="test_r3_tie_replays_identically_and_is_permutation_independent" time="0.211" /><testcase classname="tests.test_dec02_comparison" name="test_candidate_input_permutation_never_changes_result" time="0.893" /><testcase classname="tests.test_dec02_comparison" name="test_comparison_is_replayable_after_restart_and_later_revision_does_not_rewrite" time="0.831" /><testcase classname="tests.test_dec02_comparison" name="test_comparison_grants_no_authority_and_reads_no_votes" time="0.019" /><testcase classname="tests.test_dec02_comparison" name="test_analyst_majority_cannot_win_and_conflict_stays_visible" time="1.063" /><testcase classname="tests.test_dec02_comparison" name="test_unanimous_or_reversed_votes_give_the_same_decision" time="1.424" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_every_nonfactory_state_writer_is_legacy_only_and_guarded" time="0.208" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_database_refuses_every_ungoverned_write_to_a_versioned_strategy" time="0.706" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_each_event_binds_the_exact_artifact" time="0.554" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_replay_refuses_a_rebound_or_rewritten_event" time="0.461" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_sibling_by_name_stale_and_copied_approval_cannot_activate" time="0.518" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_grandfather_and_label_cannot_activate_or_authorise" time="0.207" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_registered_state_machine_bounds" time="0.001" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_retired_is_terminal[ACTIVE]" time="0.630" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_retired_is_terminal[REACTIVATED]" time="0.616" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_retired_is_terminal[PAUSED]" time="0.766" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_unapproved_states_cannot_become_active" time="0.269" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_reactivation_needs_fresh_exact_evidence" time="0.692" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_pause_degrade_retire_need_reason_clock_and_valid_actor" time="0.526" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_failure_at_a_transition_boundary_leaves_nothing_partial[strategies_update]" time="0.573" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_failure_at_a_transition_boundary_leaves_nothing_partial[governor_insert]" time="0.604" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_row_always_projects_the_governor_state" time="0.952" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_divergent_row_is_not_authority" time="0.465" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_retry_of_the_same_transition_is_a_duplicate" time="0.543" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_same_key_different_transition_is_refused_and_same_key_replays" time="0.544" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_restart_replays_the_same_history_and_outcome" time="0.585" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_activation_stays_inside_the_owner_ceiling_and_risk" time="0.450" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_governor_never_rewrites_the_version_or_its_evidence" time="0.669" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_changed_semantics_need_a_new_version_not_a_state_edit" time="0.394" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_loss_streaks_no_trades_and_noise_do_not_move_lifecycle" time="1.833" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_active_state_grants_no_order_permission" time="0.644" /><testcase classname="tests.test_str04_governor_lifecycle" name="test_history_is_append_only_and_reconstructable" time="0.803" /><testcase classname="tests.test_trade_provenance" name="test_entry_binds_exact_strategy_version" time="0.173"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0876e960&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0876d760&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0796a7b0&gt;)
+
+    def test_entry_binds_exact_strategy_version(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0876e960&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0876d760&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0796a7b0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:53.862067+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_compiled_evaluator_stamps_the_hash_of_what_it_runs" time="0.003" /><testcase classname="tests.test_trade_provenance" name="test_later_strategy_mutation_does_not_change_entry_identity" time="0.303"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794d100&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0870eae0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0b83d070&gt;)
+
+    def test_later_strategy_mutation_does_not_change_entry_identity(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794d100&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0870eae0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0b83d070&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:54.357681+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_signal_hash_disagreeing_with_loaded_spec_is_not_verified" time="0.175" /><testcase classname="tests.test_trade_provenance" name="test_historical_trade_without_version_stays_unknown_and_cannot_be_backfilled" time="0.203" /><testcase classname="tests.test_trade_provenance" name="test_entry_order_identity_and_reference_recorded" time="0.195"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f07992240&gt;, &lt;trader.core.journal.Journal object at 0x7b9f07991280&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1a415490&gt;)
+
+    def test_entry_order_identity_and_reference_recorded(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f07992240&gt;, &lt;trader.core.journal.Journal object at 0x7b9f07991280&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1a415490&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:55.004930+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_multiple_fills_partial_and_final_exit_attributed_by_order" time="0.273"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794dee0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0794cd10&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087ad0a0&gt;)
+
+    def test_multiple_fills_partial_and_final_exit_attributed_by_order(env):
+        ex, j, e = env
+        ex.split = 2
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794dee0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0794cd10&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087ad0a0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:55.377734+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_two_sequential_trades_same_symbol_keep_their_own_fills" time="0.234"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0858a120&gt;, &lt;trader.core.journal.Journal object at 0x7b9f085892b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f085efb30&gt;)
+
+    def test_two_sequential_trades_same_symbol_keep_their_own_fills(env):
+        ex, j, e = env
+&gt;       a = open_trade(env, "d1")
+            ^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0858a120&gt;, &lt;trader.core.journal.Journal object at 0x7b9f085892b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f085efb30&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:55.792547+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_sibling_on_same_symbol_makes_exit_attribution_ambiguous" time="0.161"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f087516a0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f087529f0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1b5601a0&gt;)
+
+    def test_sibling_on_same_symbol_makes_exit_attribution_ambiguous(env):
+        ex, j, e = env
+&gt;       a = open_trade(env)
+            ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:274: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f087516a0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f087529f0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1b5601a0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:56.040905+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_unmatched_fill_same_symbol_and_side_is_never_guessed" time="0.235"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0870f890&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0870c890&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f085541a0&gt;)
+
+    def test_unmatched_fill_same_symbol_and_side_is_never_guessed(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0870f890&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0870c890&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f085541a0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:56.349369+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_ambiguous_fills" time="1.150"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08733b60&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08733b30&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0870d7c0&gt;)
+
+    def test_ambiguous_fills(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08733b60&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08733b30&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0870d7c0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:57.575045+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_missing_venue_ids_are_not_invented" time="0.766"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08555be0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08715c40&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087afd70&gt;)
+
+    def test_missing_venue_ids_are_not_invented(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08555be0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08715c40&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087afd70&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:58.432648+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_opaque_venue_ids_are_stored_and_matched_exactly" time="0.563"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0864bc50&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0864b740&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07992bd0&gt;)
+
+    def test_opaque_venue_ids_are_stored_and_matched_exactly(env):
+        """Venue ids are opaque strings: whitespace and leading zeros are part of
+        the identity. Only None or "" is unknown."""
+        ex, j, e = env
+        ex.oid_format, ex.fill_format = " 00{} ", "\t0{oid}/{k} "
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:357: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0864bc50&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0864b740&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07992bd0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:58.897875+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_exact_and_missing_commission" time="0.310"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f087dca10&gt;, &lt;trader.core.journal.Journal object at 0x7b9f087df7a0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08752780&gt;)
+
+    def test_exact_and_missing_commission(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:381: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f087dca10&gt;, &lt;trader.core.journal.Journal object at 0x7b9f087df7a0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08752780&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:38:59.474429+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_duplicate_and_replayed_receipts_are_idempotent" time="1.445"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08588b60&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08588980&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07993230&gt;)
+
+    def test_duplicate_and_replayed_receipts_are_idempotent(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:397: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08588b60&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08588980&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07993230&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:00.974770+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_reconciliation_alignment_preserves_provenance" time="0.199"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0865dfa0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0865c920&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08648200&gt;)
+
+    def test_reconciliation_alignment_preserves_provenance(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:424: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0865dfa0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0865c920&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08648200&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:01.274147+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_recovered_entry_keeps_identity_and_order_identity" time="0.189"><failure message="IndexError: list index out of range">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-ESWQS7fZ7LaY/base/test_recovered_entry_keeps_ide0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f0796ad50&gt;
+
+    def test_recovered_entry_keeps_identity_and_order_identity(tmp_path, monkeypatch):
+        from tests.test_entry_recovery import Venue as RecoveryVenue
+        monkeypatch.setattr("trader.engine.executor.time.sleep", lambda _: None)
+        j = Journal(tmp_path / "j.db")
+        from tests.authority_legacy_fixtures import grant
+        j.upsert_spec(_valid())
+        grant(j, "seed_test")
+        d = decision(j)
+        ex = RecoveryVenue()
+        e = Executor(ex, j, load_config(), MarketType.FUTURES)
+        ident, _ = spec_identity(d)
+        ex.entry_error = RequestTimeout("accepted, response lost")
+        assert e.open(d, 2., 2., 95., 110., "seed_test", "s", entry_identity=ident) is None
+        e.recover_entries()
+        e.recover_entries()
+&gt;       t = j.open_trades()[0]
+            ^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/test_trade_provenance.py:467: IndexError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_provenance_does_not_change_what_is_sent" time="0.268"><failure message="AttributeError: 'NoneType' object has no attribute 'id'">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-ESWQS7fZ7LaY/base/test_provenance_does_not_chang0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f08644470&gt;
+
+    def test_provenance_does_not_change_what_is_sent(tmp_path, monkeypatch):
+        monkeypatch.setattr("trader.engine.executor.time.sleep", lambda _: None)
+        sent = []
+        for n, kwargs in enumerate([{}, {"entry_identity": {"status": "VERIFIED"},
+                                         "reference": REF}]):
+            j = Journal(tmp_path / f"j{n}.db")
+            from tests.authority_legacy_fixtures import seed
+            seed(j, "s")
+            ex = Venue()
+            e = Executor(ex, j, load_config(), MarketType.FUTURES)
+            e.fill_retry_s = 0
+            d = decision(j)
+            pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "s", "s", **kwargs)
+&gt;           e.close_partial(row(j, pos.id), 1.0, 104.0)
+                                   ^^^^^^
+E           AttributeError: 'NoneType' object has no attribute 'id'
+
+tests/test_trade_provenance.py:489: AttributeError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_provenance_failure_never_fails_the_booking" time="0.265"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08554ec0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f085576b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0870cb60&gt;)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f085551f0&gt;
+
+    def test_provenance_failure_never_fails_the_booking(env, monkeypatch):
+        ex, j, e = env
+    
+        def boom(*a, **k):
+            raise RuntimeError("provenance down")
+        monkeypatch.setattr(TP, "record_booking", boom)
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:502: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f08554ec0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f085576b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0870cb60&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:02.235630+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_owner_read_exposes_statuses" time="0.154"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f07990230&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0866a690&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087536b0&gt;)
+
+    def test_owner_read_exposes_statuses(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f07990230&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0866a690&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f087536b0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:02.458201+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_backfill_links_only_replayable_receipts" time="0.329"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f086699a0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0866a4b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08662810&gt;)
+
+    def test_backfill_links_only_replayable_receipts(env):
+        from scripts.backfill_trade_provenance import backfill
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:537: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f086699a0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0866a4b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08662810&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:02.755301+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_kernel_population_identity_matches_the_evaluator_that_signalled" time="0.469"><failure message="AssertionError: assert {'price': 101...0+00:00', ...} == {'price': 101...0+00:00', ...}&#10;  &#10;  Omitting 5 identical items, use -vv to show&#10;  Right contains 1 more item:&#10;  {'observed_at': '2026-09-30T00:00:00+00:00'}&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-ESWQS7fZ7LaY/base/test_kernel_population_identit0')
+
+    def test_kernel_population_identity_matches_the_evaluator_that_signalled(tmp_path):
+        from types import SimpleNamespace
+        import pandas as pd
+        from trader.kernel import Kernel
+        j = Journal(tmp_path / "k.db")
+        j.upsert_spec(_valid(), state="paper")
+        kernel = Kernel.__new__(Kernel)
+        kernel.journal = j
+        kernel._load_population()
+        loaded = kernel._entry_identities["seed_test"]
+        stamped = compile_spec(_valid()).spec_sha256
+        assert loaded["spec_sha256"] == stamped and loaded["registry_state_at_load"] == "paper"
+        d = decision(j)
+        d.strategy_signals = [{"strategy_id": "seed_test", "action": "BUY",
+                               "params": {"spec_id": "seed_test", "spec_sha256": stamped}}]
+        snap = SimpleNamespace(price=101.0, ts="2026-09-30T00:00:00+00:00",
+                               df=lambda tf: pd.DataFrame({"ts": ["2026-09-29T23:45:00"],
+                                                           "close": [101.0]}))
+        identity, reference = kernel._entry_provenance(d, snap, "seed_test", "15m")
+        assert identity["status"] == "VERIFIED"
+&gt;       assert reference == {"price": 101.0, "basis": "decision_snapshot_price",
+                             "definition": reference["definition"],
+                             "snapshot_at": "2026-09-30T00:00:00+00:00",
+                             "observed_at": "2026-09-30T00:00:00+00:00",
+                             "bar_ts": "2026-09-29T23:45:00"}
+E       AssertionError: assert {'price': 101...0+00:00', ...} == {'price': 101...0+00:00', ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'observed_at': '2026-09-30T00:00:00+00:00'}
+E         Use -v to get more diff
+
+tests/test_trade_provenance.py:582: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_complete_entry_then_failed_terminal_write_is_not_verified" time="0.160"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0882b5f0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f088283e0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07990230&gt;)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f0882a0c0&gt;
+
+    def test_complete_entry_then_failed_terminal_write_is_not_verified(env, monkeypatch):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:621: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0882b5f0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f088283e0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f07990230&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:03.681181+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_failed_entry_write_then_complete_terminal_close_is_not_verified" time="0.158"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0840a870&gt;, &lt;trader.core.journal.Journal object at 0x7b9f07990290&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0796b410&gt;)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f0840a3f0&gt;
+
+    def test_failed_entry_write_then_complete_terminal_close_is_not_verified(env, monkeypatch):
+        ex, j, e = env
+        orig = TP.record_booking
+    
+        def flaky(db, tid, kind, *a, **k):
+            if not kind.startswith("close:"):
+                raise RuntimeError("provenance write failed")
+            return orig(db, tid, kind, *a, **k)
+        monkeypatch.setattr(TP, "record_booking", flaky)
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:649: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0840a870&gt;, &lt;trader.core.journal.Journal object at 0x7b9f07990290&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0796b410&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:03.913972+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_partial_exit_cannot_substitute_for_terminal_close" time="0.157"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f084281d0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f084295b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0840bbc0&gt;)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7b9f0842ac00&gt;
+
+    def test_partial_exit_cannot_substitute_for_terminal_close(env, monkeypatch):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:667: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f084281d0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f084295b0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f0840bbc0&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:04.148265+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_terminal_marker_is_the_open_to_closed_transition" time="0.220"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794c260&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0794fef0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08872b70&gt;)
+
+    def test_terminal_marker_is_the_open_to_closed_transition(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:686: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f0794c260&gt;, &lt;trader.core.journal.Journal object at 0x7b9f0794fef0&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f08872b70&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:04.440147+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_spot_and_futures_identical_ids_do_not_collide" time="0.166" /><testcase classname="tests.test_trade_provenance" name="test_no_cross_market_order_attribution" time="0.162" /><testcase classname="tests.test_trade_provenance" name="test_same_order_recorded_for_two_trades_is_ambiguous" time="0.292" /><testcase classname="tests.test_trade_provenance" name="test_unknown_market_type_fails_closed[None]" time="0.427" /><testcase classname="tests.test_trade_provenance" name="test_unknown_market_type_fails_closed[margin]" time="0.381" /><testcase classname="tests.test_trade_provenance" name="test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity" time="0.333"><failure message="assert None is not None">env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f1a6b9ac0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08669e80&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1a7ebc50&gt;)
+
+    def test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity(env):
+        ex, j, e = env
+&gt;       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:801: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (&lt;tests.test_trade_provenance.Venue object at 0x7b9f1a6b9ac0&gt;, &lt;trader.core.journal.Journal object at 0x7b9f08669e80&gt;, &lt;trader.engine.executor.Executor object at 0x7b9f1a7ebc50&gt;)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T23:39:06.287273+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+&gt;       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError</failure></testcase><testcase classname="tests.test_trade_provenance" name="test_r1_draft_schema_migrates_additively_without_guessing_scope" time="0.220" /><testcase classname="tests.test_trade_provenance" name="test_cli_dry_run_leaves_legacy_source_untouched[delete]" time="0.163" /><testcase classname="tests.test_trade_provenance" name="test_cli_dry_run_leaves_legacy_source_untouched[wal]" time="0.480" /><testcase classname="tests.test_trade_provenance" name="test_cli_dry_run_leaves_legacy_source_untouched[wal_no_shm]" time="0.239" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[backfill-RuntimeError-delete]" time="0.174" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[backfill-RuntimeError-wal]" time="0.363" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[backfill-RuntimeError-wal_no_shm]" time="0.222" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[Journal-KeyboardInterrupt-delete]" time="0.189" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[Journal-KeyboardInterrupt-wal]" time="0.193" /><testcase classname="tests.test_trade_provenance" name="test_failed_or_interrupted_dry_run_leaves_source_untouched[Journal-KeyboardInterrupt-wal_no_shm]" time="0.185" /><testcase classname="tests.test_trade_provenance" name="test_dry_run_refuses_a_source_that_changes_during_the_copy[delete]" time="0.210" /><testcase classname="tests.test_trade_provenance" name="test_dry_run_refuses_a_source_that_changes_during_the_copy[wal_no_shm]" time="0.303" /><testcase classname="tests.test_trade_provenance" name="test_dry_run_refuses_an_unreadable_source[delete]" time="0.161" /><testcase classname="tests.test_trade_provenance" name="test_cli_apply_migrates_and_backfills[delete]" time="0.287" /></testsuite></testsuites>

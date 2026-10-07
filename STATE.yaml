@@ -1358,27 +1358,28 @@ perf03_capture_r1:
   trading_activated: false
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
-  id: STR-04
+  id: DEC-03
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
   mode: ENGINEERING_ONLY
+  reconciliation_mode: CONTROL_PLANE_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Use Strategy Governor as sole lifecycle authority.
-  implementation_commit: 9814fddce8f655ce73bd79050b536e6668dba55d
-  verification_revision: 9814fddce8f655ce73bd79050b536e6668dba55d
-  evidence:
-  - docs/tracker/evidence/str04-binding01-canonical-sol1/closure.json
-  - docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json
-  - docs/superpowers/evidence/str04-binding01-engineering/report.json
+  objective: Represent one account position per instrument and preserve conflicting strategies.
+  implementation_commit: 1ec9870a09868d108293b10c3417ffd14368ed2e
+  verification_revision: 1ec9870a09868d108293b10c3417ffd14368ed2e
   implementation_complete: true
   canonical_reconciliation_pending: false
   closing_condition_satisfied: true
+  evidence:
+  - docs/tracker/evidence/dec03-canonical-sol1/closure.json
+  - docs/tracker/evidence/dec03-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/dec03-canonical-sol1/fresh.xml
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   successor_selected: false
-  next_action: DEC-03 is dependency-eligible and recommended, but unselected/unstarted. No implementation or runtime
-    authority granted.
+  next_action: EXE-04 dependency satisfied and eligible; recommended for evidence mapping only, unselected/unstarted.
+    No execution or exit mutation authority.
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -1613,7 +1614,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: STR-04
+  last_completed_item: DEC-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -1626,7 +1627,7 @@ current_build_selection:
   - OUT-03
   - GUI-02
   - OUT-01
-  next_recommended_item: DEC-03
+  next_recommended_item: EXE-04
   eligible_items:
   - DATA-08
   - GUI-02
@@ -1637,16 +1638,18 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  - DEC-03
-  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07
-    are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.
+  - EXE-04
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
+    GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
+    apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: STR-04 exact lifecycle contract reconciled CLOSED at architecture/offline scope after STR04-BINDING-01
-    verification. DEC-02/STR-04 satisfy DEC-03 dependencies; DEC-03 recommended, unselected and unstarted. This
-    control-plane task authorizes no implementation, runtime, provider or trading activation.
-  last_terminal_item: STR-04
+  selection_reason: DEC-03 exact account-position/strategy-evidence/approved-entry-plan boundary CLOSED at
+    architecture/offline scope. EXE-04 dependencies STR-01/DEC-03 CLOSED; recommended for its own evidence
+    mapping, unselected/unstarted. PORT-01 unchanged; no execution, Risk, capital, Governor, owner, venue or
+    exit-mutation authority.
+  last_terminal_item: DEC-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
@@ -4891,3 +4894,180 @@ str04_binding01_prior_canonical_reconciliation:
   provider_enablement_authorized: false
   trading_activation_authorized: false
   control_plane_commit_resolution: Enclosing Git commit containing this record; no self-referential hash.
+
+dec03_previous_selection:
+  id: STR-04
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  mode: ENGINEERING_ONLY
+  scope: ARCHITECTURE_OFFLINE
+  objective: Use Strategy Governor as sole lifecycle authority.
+  implementation_commit: 9814fddce8f655ce73bd79050b536e6668dba55d
+  verification_revision: 9814fddce8f655ce73bd79050b536e6668dba55d
+  evidence:
+  - docs/tracker/evidence/str04-binding01-canonical-sol1/closure.json
+  - docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json
+  - docs/superpowers/evidence/str04-binding01-engineering/report.json
+  implementation_complete: true
+  canonical_reconciliation_pending: false
+  closing_condition_satisfied: true
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+  next_action: DEC-03 is dependency-eligible and recommended, but unselected/unstarted. No implementation or
+    runtime authority granted.
+dec03_canonical_reconciliation:
+  item: DEC-03
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_commit: 1ec9870a09868d108293b10c3417ffd14368ed2e
+  control_baseline_revision: 37d210787c448053c563c92436d9ac17ab672e12
+  control_plane_commit_resolution: Enclosing Git commit; no self-referential hash.
+  closing_condition: Agreeing strategies support one position/approved exit plan; opposing evidence is retained;
+    strategy lineage does not multiply independence.
+  failure_regression_proof: Changing analyst confidence cannot continuously resize/rewrite the live plan.
+  closing_condition_satisfied: true
+  closure_mapping:
+    position_identity: Coherent journal account scope + environment + full canonical instrument + market form
+      one stable account_position_id. Original booked trades.id is retained separately as the episode reference;
+      candidates/cycles/confidence cannot regenerate it. Distinct account/instrument/environment scopes remain
+      distinct. The existing account scope is the resolved journal path; relocation is not registered account-migration
+      authority.
+    agreeing_strategies: Existing Portfolio selects one same-instrument expression with bounded size, not summed
+      candidate exposure. Every exact strategy/version remains inspectable. Existing holdings bind their original
+      approved entry plan, not an incoming candidate version. No additional comparator, weighting or vote-count
+      authority.
+    opposing_strategies: Opposing version identities, directions, candidate evidence, lineage and proposal
+      refusal reasons persist. Existing Portfolio conflict/CASH/KEEP policy remains authoritative; no consensus
+      is fabricated and no opposite position is created.
+    lineage_independence: Exact duplicates contribute once. Existing common-factor root groups retain parent/child
+      and siblings; full ancestor Research/QNT records remain visible, including shared upstream evidence across
+      roots. Distinct registered roots/strategies remain distinct evidence. independent_evidence_count is null
+      and confidence_aggregation is NONE.
+    position_stability: Confidence/evidence_quality changes do not change the held side/quantity, original
+      booked identity or approved entry-plan receipt. Existing Portfolio admits no new size for SUPPORTS_EXISTING
+      and TradeIntent KEEP has no requested size. The evidence module has no journal/position write API. Stops,
+      targets, trails, partial and scale-in geometry cannot be rewritten by it; detailed execution authority
+      remains EXE-04.
+    exit_plan_binding: Frozen entry identity re-verifies exact StrategyVersion, strategy/spec hash, historical
+      install, validation, exit semantics and exact entry exit_state. Existing pure exit initialize/decode
+      checks the frozen policy against that exact version; wrong identity/geometry refuses. No geometry redesign.
+      Legacy/adopted positions stay UNKNOWN.
+    cash_risk_unreconciled: Only independent venue truth supplies position rows. CASH, invalid/rejected candidates,
+      missing economics and Risk refusal never create holdings. Unreconciled observed holdings stay visible
+      with REFUSED_UNRECONCILED attribution and no fabricated booked id/plan. UNKNOWN remains UNKNOWN.
+    replay: Reorder and a new-process replay preserve exact representation; immutable evaluations retain earlier
+      supporting/opposing truth while later cuts append. Missing current validated lineage or corrupt/mismatched
+      supplied lineage refuses. Historical v1 checkpoint receipts replay unchanged; v2 mandates the position
+      receipt and verifies exact recomputation.
+    authority: Observation-only binding; no execution/Risk/Portfolio expansion/Governor/owner/venue/exit mutation
+      authority. No runtime launch, provider/venue calls or live activation. Control documents reference the
+      engineering commit; implementation has not been deployed or merged by this reconciliation.
+  validation:
+    fresh_passed: 79
+    fresh_by_file:
+      tests.test_dec03_position_evidence: 21
+      tests.test_dec02_comparison: 25
+      tests.test_str04_governor_lifecycle: 26
+      tests.test_stage6_normal_sources: 7
+    retained_core_passed: 208
+    retained_latest_lineage_passed: 28
+    expanded_passed: 73
+    expanded_failed: 24
+    baseline_passed: 22
+    baseline_failed: 24
+    identical_failure_names:
+    - tests.test_trade_provenance::test_ambiguous_fills
+    - tests.test_trade_provenance::test_backfill_links_only_replayable_receipts
+    - tests.test_trade_provenance::test_complete_entry_then_failed_terminal_write_is_not_verified
+    - tests.test_trade_provenance::test_duplicate_and_replayed_receipts_are_idempotent
+    - tests.test_trade_provenance::test_entry_binds_exact_strategy_version
+    - tests.test_trade_provenance::test_entry_order_identity_and_reference_recorded
+    - tests.test_trade_provenance::test_exact_and_missing_commission
+    - tests.test_trade_provenance::test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity
+    - tests.test_trade_provenance::test_failed_entry_write_then_complete_terminal_close_is_not_verified
+    - tests.test_trade_provenance::test_kernel_population_identity_matches_the_evaluator_that_signalled
+    - tests.test_trade_provenance::test_later_strategy_mutation_does_not_change_entry_identity
+    - tests.test_trade_provenance::test_missing_venue_ids_are_not_invented
+    - tests.test_trade_provenance::test_multiple_fills_partial_and_final_exit_attributed_by_order
+    - tests.test_trade_provenance::test_opaque_venue_ids_are_stored_and_matched_exactly
+    - tests.test_trade_provenance::test_owner_read_exposes_statuses
+    - tests.test_trade_provenance::test_partial_exit_cannot_substitute_for_terminal_close
+    - tests.test_trade_provenance::test_provenance_does_not_change_what_is_sent
+    - tests.test_trade_provenance::test_provenance_failure_never_fails_the_booking
+    - tests.test_trade_provenance::test_reconciliation_alignment_preserves_provenance
+    - tests.test_trade_provenance::test_recovered_entry_keeps_identity_and_order_identity
+    - tests.test_trade_provenance::test_sibling_on_same_symbol_makes_exit_attribution_ambiguous
+    - tests.test_trade_provenance::test_terminal_marker_is_the_open_to_closed_transition
+    - tests.test_trade_provenance::test_two_sequential_trades_same_symbol_keep_their_own_fills
+    - tests.test_trade_provenance::test_unmatched_fill_same_symbol_and_side_is_never_guessed
+    baseline_failure_categories:
+      legacy_entry_fixture_refusal: 23
+      reference_observed_at_shape: 1
+    unrelated_files_unchanged:
+    - tests/test_trade_provenance.py
+    - trader/engine/trade_provenance.py
+    - trader/engine/executor.py
+    - trader/engine/entry_authority.py
+    - trader/kernel.py
+    - trader/portfolio/allocator.py
+    - trader/portfolio/common_factor.py
+    - trader/portfolio/trade_intent.py
+    - trader/engine/risk.py
+    - trader/engine/risk_intent.py
+    - trader/strategy/factory_handoff.py
+    - trader/engine/versioned_exits.py
+    - config.yaml
+    - SDD.md
+    counts_overlap_do_not_sum: true
+    full_suite_green_claim: false
+    runner: /home/sarmad/.local/bin/luffy-pytest
+    temp_root: /mnt/luffy-data/test-tmp
+  receipt_contract_versions:
+    runtime_checkpoint: runtime-portfolio-checkpoint.v2
+    historical_runtime_checkpoint: runtime-portfolio-checkpoint.v1
+    position_evidence: account-position-evidence.v1
+    position_bindings: account-position-bindings.v1
+    strategy_lineage: strategy-lineage-context.v1
+    event: portfolio-reoptimization.v1
+    allocator: LUFFY-PORTFOLIO-ALLOCATOR-R3
+    historical_allocator: LUFFY-PORTFOLIO-ALLOCATOR-R2
+    intent: portfolio-trade-intent.v1
+    risk: portfolio-risk-decision.v1
+    governor: strategy-governor-event.v2
+  source_sha256:
+    trader/portfolio/position_evidence.py: a3452d6074ca2ebce2e58c9ea5ecc0a1cac81d230d6707ab6ce12d0aed371ff4
+    trader/portfolio/current.py: 13a0a83a4f0377548d831823177f5e74a7f79ef678182b0a9463061aff7b5912
+    trader/portfolio/runtime.py: fb20c63fdfbd8090aa6cd4e5602bce0c4dd42fb8e5db63edbd94712f2da066d3
+    tests/test_dec03_position_evidence.py: d6ac8bbb3989b85a1a2911a4779ff7edb02ef97386d08a22040e5eb34b423e8c
+  targeted_impact:
+    DEC-02: Unchanged CLOSED; R3 exact ties choose CASH and R2 replay stays exact.
+    STR-04: Unchanged CLOSED; Governor implementation/events/owner binding untouched.
+    PORT-01: Row unchanged; no expansion or comparator authority granted. Dirty parallel allocator/shared tests
+      were avoided; retest the position receipt when integrating PORT-01.
+    Risk_order: Unchanged isolated Risk handoff; no order/execution route added.
+    EXE-04: 'STR-01 and DEC-03 CLOSED: dependency satisfied and eligible for its own evidence mapping. Row
+      remains EVIDENCE_TO_MAP; unselected, unstarted, not auto-closed.'
+  EXE04_dependency_satisfied: true
+  EXE04_now_eligible: true
+  EXE04_selected: false
+  EXE04_started: false
+  PORT01_auto_closed: false
+  next_critical_path_item: EXE-04
+  next_item_selected: false
+  application_code_changed: false
+  implementation_deployed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  exit_plan_mutation_authorized: false
+  original_conditions_and_edges_preserved: true
+  status_counts_after:
+    CLOSED: 64
+    EVIDENCE_TO_MAP: 75
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 5
+    OPEN: 4

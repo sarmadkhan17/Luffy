@@ -1,3 +1,5 @@
+> Current [SOL-1][DEC-03]: **CLOSED at architecture/offline scope** on `1ec9870`. One canonical account/instrument holding; exact supporting/opposing strategy evidence and approved entry-plan binding retained; ancestry creates no independence authority. 79 fresh targeted passes; retained counts overlap. Same 24 unrelated provenance failures on base; no full-suite green claim. EXE-04 dependency satisfied and eligible, recommended but unselected/unstarted. PORT-01 unchanged. No activation or exit-mutation authority. [Evidence](evidence/dec03-canonical-sol1/closure.json). Earlier summaries below are historical.
+
 > Current [SOL-1][STR-04]: **CLOSED at architecture/offline scope** on `9814fdd`. Exact v2 historical owner binding verified across ACTIVE/REACTIVATED/PAUSED/DEGRADED/RETIRED; stale containment remains available and stale activation refuses. 109 fresh canonical checks passed; retained counts overlap and the unrelated Glacier static-guard baseline failure remains separate. DEC-03 dependencies satisfied; recommended, unselected and unstarted. GUI-04/REL-01 retain their own gates. No activation authority. [Evidence](evidence/str04-binding01-canonical-sol1/closure.json). Earlier summaries below are historical.
 
 > Current [SOL-1][STR-04]: **BLOCKED at architecture/offline scope**. Initial approved PAUSED/DEGRADED/RETIRED events omit the existing owner decision identity and replay accepts them. 26 STR-04 + 44 STR-03 dedicated tests pass, but required binding proof fails. STR-03 remains CLOSED; DEC-03 remains gated, unselected and unstarted. [Evidence](evidence/str04-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -64,7 +66,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.55-str04-binding01-canonical-closed-sol1
+Version: 1.56-dec03-canonical-closed-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -2695,32 +2697,34 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Avoids accidental stacked exposure and duplicated confidence.
 - **closure_condition**: Agreeing strategies support one position/approved exit plan; opposing evidence is retained; strategy lineage does not multiply independence.
 - **failure_regression_proof**: Changing analyst confidence cannot continuously resize/rewrite the live plan.
 - **dependencies**: DEC-02, STR-04
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Existing one-expression/KEEP/lineage semantics plus read-only account-position evidence binding at 1ec9870a09868d108293b10c3417ffd14368ed2e. docs/tracker/evidence/dec03-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 79 fresh targeted passes: 21 DEC03, 25 DEC02, 26 STR04 Governor, 7 normal sources. Retained 208 core and latest 28 passes overlap. Expanded 73/24 failures match 22/24 base provenance results: 23 entry fixture refusals and one observed_at shape mismatch; unrelated files unchanged. No full-suite green claim.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§14.6,15.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact DEC-03 architecture/offline closure. EXE-04 dependency satisfied and eligible for its own approved exit-execution mapping; recommended, unselected/unstarted. PORT-01 and Risk/order authority unchanged.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 1ec9870a09868d108293b10c3417ffd14368ed2e
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-08
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/dec03-canonical-sol1/closure.json
+- **evidence_validity**: Pinned exact engineering commit and synthetic offline verification; no deployment, production calibration or live execution claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 1ec9870a09868d108293b10c3417ffd14368ed2e
+- **evidence_mapping**: docs/tracker/evidence/dec03-canonical-sol1/REPORT.md
 
 ### DEC-04 — Track evolving opportunities by reference to canonical lineage.
 
@@ -7376,3 +7380,5 @@ DEC-02 canonical status counts: CLOSED 61, EVIDENCE_TO_MAP 78, DEFERRED 7, AWAIT
 STR-03 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 77, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 STR-04 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 76, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 6, OPEN 4 (178 total).
+
+DEC-03 canonical status counts: CLOSED 64, EVIDENCE_TO_MAP 75, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
