@@ -24,7 +24,9 @@ def predictive_extensions(bridge_path, bank_object_id):
                 r=json.loads(payload)
                 expected=(r['hypothesis']['hypothesis_id'] if table=='bridge_hypotheses' else
                           r['experiment_id'] if table=='bridge_experiments' else
-                          r['question_id'] if table=='bridge_questions' else P.digest(r))
+                          r['question_id'] if table=='bridge_questions' else
+                          r['translation_id'] if table=='bridge_translations' else
+                          r['result_id'] if r.get('schema')=='predictive-research-bank-result.v2' else P.digest(r))
                 if identity!=expected:
                     raise ValueError('predictive_bank_attachment_integrity')
                 records.append(r)
@@ -36,6 +38,12 @@ def predictive_extensions(bridge_path, bank_object_id):
         experiments=[r for r in read('bridge_experiments') if r['source_hypothesis_id'] in ids]
         for ex in experiments:
             validate_experiment(ex)
+        questions=read('bridge_questions')
+        names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        translations=read('bridge_translations') if 'bridge_translations' in names else []
+        for translation in translations:
+            if translation['translation_id']!=P.digest({k:v for k,v in translation.items() if k!='translation_id'}):
+                raise ValueError('predictive_translation_integrity')
         results=[r for r in read('bridge_bank_results') if r['bank_id']==bank_object_id]
         for result in results:
             h=next(h for h in hyps if h['hypothesis_id']==result['hypothesis_id'])
@@ -43,6 +51,9 @@ def predictive_extensions(bridge_path, bank_object_id):
             chain=dict(question=dict(hypothesis_id=h['hypothesis_id']),plan=ex,
                 evidence=h,result=result,receipt=dict(measured=result['measured_result'],referee=result['referee_disposition']))
             replay_feedback(chain,result)
+            if result.get('schema')=='predictive-research-bank-result.v2' and any(q not in questions for q in result['next_questions']):
+                raise ValueError('predictive_result_next_question_missing')
         return dict(source_bank_id=bank_object_id,authority='RESEARCH_ONLY',
             hypotheses=hyps,experiments=experiments,results=results,
-            next_questions=[r for r in read('bridge_questions') if r['source_bank_id']==bank_object_id])
+            next_questions=[r for r in questions if r['source_bank_id']==bank_object_id],
+            translations=[r for r in translations if r['hypothesis_id'] in ids])

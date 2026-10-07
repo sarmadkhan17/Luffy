@@ -24,11 +24,12 @@ from trader.core.journal import Journal
 from trader.core.child import run_child
 from . import predictive_experiment as E
 from .runner import ResearchRunner
+from . import predictive_receipt as M
 
 MAX_SOURCES, MAX_EXPERIMENTS, MAX_RECORDS = 16, 4, 4096
 TABLES = ('bridge_sources', 'bridge_hypotheses', 'bridge_experiments',
           'bridge_bank_results', 'bridge_questions', 'bridge_tests', 'bridge_snapshots',
-          'bridge_runtime_bindings', 'bridge_measurements', 'bridge_registration_checks')
+          'bridge_runtime_bindings', 'bridge_measurements', 'bridge_registration_checks', 'bridge_translations')
 
 
 def store(path):
@@ -116,7 +117,8 @@ def read_sources(path, known, limit, now_ms):
 def prior_classification(db, h):
     prior = [r for r in records(db, 'bridge_hypotheses')
              if r['hypothesis']['transformation'] == h.transformation]
-    exact = next((r for r in prior if r['hypothesis']['semantic_hash'] == h.semantic_hash), None)
+    exact = next((r for r in prior if r['hypothesis']['semantic_hash'] == h.semantic_hash
+                  and r['hypothesis']['source_hash'] == h.source_hash), None)
     if exact:
         return 'EXACT_DUPLICATE', [exact['hypothesis']['hypothesis_id']]
     outcomes = records(db, 'bridge_bank_results')
@@ -131,18 +133,12 @@ def prior_classification(db, h):
 def feedback(db, h, experiment_id, classification, measured, referee, now_ms):
     if classification not in P.CLASSIFICATIONS:
         raise ValueError('feedback_classification')
-    body = dict(schema='predictive-research-bank-result.v1', bank_kind='predictive_experiment', bank_id=h.bank_id,
-        hypothesis_id=h.hypothesis_id, experiment_id=experiment_id,
-        classification=classification, measured_result=measured, referee_disposition=referee,
-        stage=P.SUPPORTED_RESULT if classification == 'SUPPORTED' else 'MEASURED_RESULT',
-        authority='RESEARCH_ONLY', predictive_strategy_validation=classification == 'SUPPORTED')
-    key = P.digest(body)
+    body = M.build(db,h,experiment_id,classification,measured,referee)
+    key = body['result_id']
     # An unchanged pending result is idempotent, regardless of wall clock.
     if append(db, 'bridge_bank_results', key, body):
         source = P.source_from_dict(json.loads(h.provenance_json)['source'])
-        prior = [dict(hypothesis_id=o['hypothesis_id'], classification=o['classification'])
-                 for o in records(db, 'bridge_bank_results')[-8:]]
-        for q in P.next_questions(source, classification, prior):
+        for q in body['next_questions']:
             append(db, 'bridge_questions', q['question_id'], q)
         # Reuse Stage7 RESEARCH profile. No learned priority enters any truth gate.
         from trader.learning import capture as C, capture_runtime as Lr, foundation as L
@@ -152,7 +148,7 @@ def feedback(db, h, experiment_id, classification, measured, referee, now_ms):
         ex=db.execute('SELECT payload FROM bridge_experiments WHERE id=?',(experiment_id,)).fetchone()
         plan=json.loads(ex[0]) if ex else dict(status=classification,experiment_id=None)
         chain=dict(question=question,plan=plan,evidence=asdict(h),result=body,
-                   receipt=dict(measured=measured,referee=referee))
+                   receipt=dict(measured=body['measured_result'],referee=body['referee_disposition']))
         deps = [Lr.freeze(db, role, value, now_ms, 'predictive research bridge') for role, value in (
             ('question', question),
             ('plan', plan),
@@ -170,7 +166,7 @@ def feedback(db, h, experiment_id, classification, measured, referee, now_ms):
 def replay_feedback(chain, bank):
     """Stage7 replays existing receipts, never assigns new statistical gates."""
     h=P.hypothesis_from_dict(chain['evidence'])
-    if (bank['schema']!='predictive-research-bank-result.v1' or bank['bank_kind']!='predictive_experiment'
+    if (bank['schema'] not in ('predictive-research-bank-result.v1',M.SCHEMA) or bank['bank_kind']!='predictive_experiment'
             or bank['bank_id']!=h.bank_id or bank['hypothesis_id']!=h.hypothesis_id
             or bank['classification'] not in P.CLASSIFICATIONS or bank['authority']!='RESEARCH_ONLY'
             or chain['result']!=bank or chain['question']['hypothesis_id']!=h.hypothesis_id
@@ -180,6 +176,8 @@ def replay_feedback(chain, bank):
         E.validate(chain['plan'])
         if chain['plan']['experiment_id']!=bank['experiment_id'] or chain['plan']['source_hypothesis_id']!=h.hypothesis_id:
             raise ValueError('predictive_feedback_experiment')
+    if bank['schema']==M.SCHEMA:
+        M.validate(h,chain['plan'] if bank['experiment_id'] else None,bank)
     supported=bank['classification']=='SUPPORTED'
     if bank['predictive_strategy_validation']!=supported or bank['stage']!=(P.SUPPORTED_RESULT if supported else 'MEASURED_RESULT'):
         raise ValueError('predictive_feedback_stage')
@@ -209,6 +207,8 @@ def classify(runner, h, experiment):
     except ValueError:
         return 'DATA_INSUFFICIENT', None, dict(state='NOT_SUBMITTED')
     result = runner.ledger.result(c.hash)
+    if result and (result.get('outcome')=='UNTESTED' or result.get('verdict') in ('untested','untestable','empty') or not result.get('testable')):
+        return 'DATA_INSUFFICIENT', result, dict(state='POWER_UNAVAILABLE')
     cand = runner.ledger.candidate(c.hash)
     if cand:
         disposition = dict(cand)
@@ -266,9 +266,12 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
             with closing(E.readonly(quantitative_source_path)) as quantitative:
                 quantitative.row_factory=sqlite3.Row
                 base_tests=[dict(r) for r in quantitative.execute('SELECT * FROM research_tests ORDER BY seq')]
+                base_budget=[dict(r) for r in quantitative.execute('SELECT * FROM research_budget ORDER BY id')]
             with db:
                 append(db,'bridge_runtime_bindings','source',binding)
                 append(db,'bridge_runtime_bindings','initial-protected-budget',dict(tests=base_tests))
+                if base_budget:
+                    append(db,'bridge_runtime_bindings','registered-error-budget',base_budget)
                 for test in base_tests:
                     append(db,'bridge_tests',str(test['seq']),test)
             # Recover spent looks before offering ANY new experiment. A crash
@@ -280,7 +283,10 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     with closing(E.readonly(path)) as journal:
                         journal.row_factory=sqlite3.Row
                         tests=journal.execute('SELECT * FROM research_tests ORDER BY seq').fetchall()
+                        budget=[dict(r) for r in journal.execute('SELECT * FROM research_budget ORDER BY id')]
                     with db:
+                        if budget:
+                            append(db,'bridge_runtime_bindings','registered-error-budget',budget)
                         for test in tests:
                             append(db,'bridge_tests',str(test['seq']),dict(test))
             counts = dict(eligible_research_results=0, hypotheses_proposed=0, exact_duplicates=0,
@@ -312,7 +318,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                 h = P.hypothesis_from_dict(saved['hypothesis'])
                 finished = [o for o in records(db,'bridge_bank_results') if o['hypothesis_id']==h.hypothesis_id
                             and (o['classification'] in ('SUPPORTED','UNSUPPORTED','NOT_TESTABLE')
-                                 or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT'))]
+                                 or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE'))]
                 if finished:
                     continue
                 if P.TRANSFORMS[h.transformation]['shape']=='combination':
@@ -321,6 +327,9 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     translated+=1
                 existing = [e for e in records(db,'bridge_experiments') if e['source_hypothesis_id']==h.hypothesis_id]
                 ex = existing[0] if existing else E.translate(h, candles_path, cfg, now_ms)
+                with db:
+                    translation=E.retain_translation(h,ex,now_ms if not existing else ex['split']['end_ms']+14_400_000)
+                    append(db,'bridge_translations',translation['translation_id'],translation)
                 if existing and ex['minimum_evidence']['registered_policy_hash'] != P.digest(cfg.get('research') or {}):
                     raise ValueError('stale_or_incompatible_policy')
                 if ex['status'] == 'UNSUPPORTED_EXPERIMENT_SHAPE':
@@ -353,6 +362,8 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     with sqlite3.connect(numerical_path) as check:
                         check.execute('CREATE TABLE predictive_experiment_binding(id TEXT PRIMARY KEY)')
                         check.execute('INSERT INTO predictive_experiment_binding VALUES (?)',(ex['experiment_id'],))
+                if ex.get('evaluation_version') and ex['evaluation_version'] != E.evaluation_version():
+                    raise ValueError('stale_evaluation_version')
                 E.freeze_candles(candles_path,candle_copy,ex)
                 snapshot = dict(experiment_id=ex['experiment_id'], candle_sha256=hashlib.sha256(candle_copy.read_bytes()).hexdigest())
                 with db:
@@ -364,23 +375,54 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                 measurement=[]
                 def measured_run(fn,payload,**kwargs):
                     res=run(fn,payload,**kwargs)
-                    receipt=dict(schema='predictive-quantitative-step.v1',experiment_id=ex['experiment_id'],
-                        hypothesis_id=h.hypothesis_id,job=fn.__name__,payload_hash=P.digest(payload),
-                        ok=res.ok,value=res.value,error=res.error)
+                    receipt=M.step(ex,fn,payload,res)
+                    try:
+                        M.validate_step(ex,receipt)
+                    except (ValueError,KeyError,TypeError) as exc:
+                        receipt['acceptance']='REFUSED'
+                        receipt['refusal_reason']=str(exc)
+                        receipt['measurement_id']=P.digest({k:v for k,v in receipt.items() if k!='measurement_id'})
+                        from trader.core.child import ChildResult
+                        if fn.__name__=='referee_job' and res.ok:
+                            # The worker already looked. Charge the registered
+                            # look as untestable; refuse its returned evidence.
+                            from . import referee as registered
+                            from .combo import Combination
+                            value=dict(hash=Combination.from_dict(payload['combo']).hash,
+                                       cut_ms=ex['split']['cut_ms'],looked=True,
+                                       a={},b={},rotation={},gate1=registered.gate1({}, {}, {}),
+                                       gate3=dict(passed=False,reason='refused quantitative receipt'))
+                            res=ChildResult(ok=True,value=value,elapsed_s=res.elapsed_s)
+                        else:
+                            res=ChildResult(ok=False,value=None,error='quantitative_receipt_refused:'+str(exc),elapsed_s=res.elapsed_s)
                     measurement.append(receipt)
                     with db:
-                        append(db,'bridge_measurements',P.digest(receipt),receipt)
+                        append(db,'bridge_measurements',receipt['measurement_id'],receipt)
                     return res
                 runner = ResearchRunner(Journal(numerical_path),local_cfg,run=measured_run,predictive_experiment=ex)
                 # Import all previously spent tests into this pipeline's existing
                 # LORD ledger. There is one budget, never a fresh alpha per source.
                 with runner.journal._tx() as tx:
+                    reg=db.execute("SELECT payload FROM bridge_runtime_bindings WHERE id='registered-error-budget'").fetchone()
+                    if reg:
+                        b=json.loads(reg[0])[0]
+                        tx.execute('INSERT OR IGNORE INTO research_budget VALUES (1,?,?,?)',(b['alpha'],b['w0'],b['registered_at']))
                     for old in records(db,'bridge_tests'):
                         keys=list(old)
                         tx.execute('INSERT OR IGNORE INTO research_tests('+','.join(keys)+') VALUES ('+','.join('?' for _ in keys)+')',tuple(old[k] for k in keys))
                 counts['planner_submissions'] += 1
+                spent_cut=runner.ledger.spent_cut('4h')
+                if spent_cut is not None and spent_cut!=ex['split']['cut_ms']:
+                    with db:
+                        feedback(db,h,ex['experiment_id'],'DATA_INSUFFICIENT',None,
+                                 dict(state='PROTECTED_CUT_INCOMPATIBLE'),now_ms)
+                    counts['data_insufficient']+=1
+                    continue
                 result = runner.step()
                 with db:
+                    budget=runner.journal.query('SELECT * FROM research_budget ORDER BY id')
+                    if budget:
+                        append(db,'bridge_runtime_bindings','registered-error-budget',budget)
                     for test in runner.ledger.tests():
                         append(db,'bridge_tests',str(test['seq']),test)
                     classification, measured, disposition = classify(runner,h,ex)

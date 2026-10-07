@@ -91,7 +91,7 @@ class NumericalFixture:
             gate=referee.gate1(a,b,rotation)
             fills=[Fill(i*2,i*2+1,1 if i%3 else -.5,'BTC/USDT') for i in range(60)]
             g3=referee.gate3(fills,[],2000,.5,8)
-            out=dict(hash=Combination.from_dict(payload['combo']).hash,looked=True,
+            out=dict(hash=Combination.from_dict(payload['combo']).hash,looked=True,cut_ms=payload['cut_ms'],
                      a=a,b=b,rotation=rotation,gate1=gate,gate3=g3)
         else:
             pytest.fail('unexpected quantitative job')
@@ -173,7 +173,9 @@ def test_exact_duplicates_related_and_contradicted_prior(population):
         changed=P.replace_source_prior(s,P.canonical([dict(classification='UNSUPPORTED')]))
         next_h=P.propose(changed,'volume_breakout_context.v1',s.available_ms+1)
         assert B.prior_classification(db,next_h)[0]=='RELATED_PRIOR'
-        B.feedback(db,h,None,'UNSUPPORTED',{},dict(state='gate1_fail'),s.available_ms+2)
+        # Synthetic prior classification exercises recall only, not new quantitative feedback.
+        prior=dict(hypothesis_id=h.hypothesis_id,classification='UNSUPPORTED')
+        B.append(db,'bridge_bank_results',P.digest(prior),prior)
         assert B.prior_classification(db,next_h)[0]=='CONTRADICTED_BY_PRIOR'
         # Prior contradiction is context, not suppression.
         assert P.next_questions(s,'UNSUPPORTED',[dict(classification='UNSUPPORTED')])

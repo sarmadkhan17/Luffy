@@ -1,6 +1,6 @@
 """Exact translation into existing planner/runner jobs and registered policy.
 
-The metadata scan reads timestamps/counts only. The numerical worker sees a
+Translation reads metadata and opaque content fingerprints. The numerical worker sees a
 frozen local copy and uses the same controls, nulls, ablations and referee.
 """
 from dataclasses import asdict
@@ -8,6 +8,7 @@ from contextlib import closing
 from pathlib import Path
 import sqlite3
 import json
+import hashlib
 
 from trader.cognition import predictive as P
 from . import slices, evaluate, referee, thresholds
@@ -30,6 +31,70 @@ def readonly(path):
     db = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True, timeout=1)
     db.execute('PRAGMA query_only=ON')
     return db
+
+
+EXPERIMENT_SCHEMA = 'predictive-experiment.v2'
+
+
+def evaluation_version():
+    names = ('evaluate', 'job', 'referee', 'runner', 'control', 'dependence',
+             'thresholds', 'slices', 'portfolio_null', 'combo', 'vocab',
+             'growth', 'planner', 'ledger', 'fdr',
+             'predictive_experiment', 'predictive_receipt')
+    paths={name:Path(__file__).with_name(name+'.py') for name in names}
+    for name in ('features', 'dsl', 'vector_backtest', 'portfolio_evidence', 'exit_policy', 'null_baseline'):
+        paths['strategy.'+name]=Path(__file__).parent.parent/'strategy'/(name+'.py')
+    return {name:hashlib.sha256(path.read_bytes()).hexdigest() for name,path in paths.items()}
+
+
+def data_provenance(db, split):
+    """Content fingerprints of exact source/protected rows and retained revisions.
+
+    This reads no provider and grants no right to reuse inspected prices. A
+    different fingerprint versions the experiment; it never resets spent looks.
+    """
+    from ..data.feed import DataFeed
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='market_revisions'").fetchone():
+        raise ValueError('retained_data_provenance_unavailable')
+    result = {}
+    for label, lo, hi in (('discovery', split['start_ms'], split['cut_ms']-1),
+                          ('protected_b', split['cut_ms'], split['end_ms'])):
+        hashes = {key: hashlib.sha256() for key in ('candles', 'revisions')}
+        counts = {key: 0 for key in hashes}
+        for sym in DISCOVERY + HELDOUT:
+            queries = dict(
+                candles=("SELECT * FROM candles WHERE symbol=? AND tf='4h' AND ts>=? AND ts<=? ORDER BY ts",
+                         (sym, lo, hi)),
+                revisions=("SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? AND available_ms<=? AND observed_ms<=? ORDER BY event_ms,revision_id",
+                           (DataFeed._series_key(sym, '4h'), lo, hi,
+                            split['end_ms']+14_400_000, split['end_ms']+14_400_000)))
+            for key, (query, args) in queries.items():
+                for row in db.execute(query, args):
+                    counts[key] += 1
+                    hashes[key].update((P.canonical(tuple(row))+'\n').encode())
+        result[label] = dict(counts=counts, sha256={k:v.hexdigest() for k,v in hashes.items()})
+    if not all(v['counts']['revisions'] for v in result.values()):
+        raise ValueError('retained_data_provenance_unavailable')
+    return dict(schema='predictive-data-cut.v1', as_of_ms=split['end_ms']+14_400_000,
+                slices=result, content_id=P.digest(result))
+
+
+def translation_contract(h):
+    return dict(hypothesis_schema=h.schema, scope=list(h.asset_scope),
+                regime_context=h.regime_context_scope, observables=list(h.predictor_definition),
+                falsification=h.falsification_criteria, required_measurements=list(h.required_data),
+                proposal_contract=json.loads(h.proposal_contract_json) if h.schema==P.SCHEMA else None,
+                limitations=['Causality UNKNOWN; source description is not predictive evidence.',
+                             'Existing combination/ablation gates only; paired-null comparison is unsupported.',
+                             'Insufficient power is UNTESTED; no strategy admission from this record.'])
+
+
+def retain_translation(h, translated, as_of_ms):
+    body = dict(schema='predictive-translation.v1', hypothesis_id=h.hypothesis_id,
+                hypothesis_schema=h.schema, translation=translated,
+                contract=translation_contract(h), as_of_ms=as_of_ms,
+                quantitative_outcome='UNTESTED', authority='TRANSLATION_ONLY')
+    return dict(body, translation_id=P.digest(body))
 
 
 def translate(h, candles_path, cfg, as_of_ms):
@@ -70,7 +135,7 @@ def translate(h, candles_path, cfg, as_of_ms):
     if len(disc) < minimum or len(held) < null_baseline.MIN_SYMBOLS or len(later) < null_baseline.MIN_SYMBOLS:
         return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
                     reason='existing_slice_or_universe_floor', counts=counts)
-    body = dict(schema='predictive-experiment.v1', source_hypothesis_id=h.hypothesis_id,
+    body = dict(schema=EXPERIMENT_SCHEMA, source_hypothesis_id=h.hypothesis_id,
         hypothesis=asdict(h), predictor=list(h.predictor_definition), target=h.target_definition,
         horizon=h.horizon, direction=h.direction, timeframe='4h', geometry='fixed',
         split=dict(schema='post-generation-calendar-split.v1', start_ms=start, cut_ms=cut,
@@ -84,6 +149,15 @@ def translate(h, candles_path, cfg, as_of_ms):
         evaluation_config_json=P.canonical(dict(research=r,risk=cfg.get('risk') or {})),
         falsification_outcome='UNSUPPORTED only for powered measured failure; missing power remains INCONCLUSIVE/DATA_INSUFFICIENT',
         status='READY', authority='EXPERIMENT_ONLY')
+    try:
+        with closing(readonly(candles_path)) as db:
+            db.execute('BEGIN')
+            body['data_provenance'] = data_provenance(db, body['split'])
+    except (sqlite3.Error, OSError, ValueError) as exc:
+        return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
+                    reason=str(exc)[:120])
+    body['evaluation_version'] = evaluation_version()
+    body['translation_contract'] = translation_contract(h)
     return dict(body, experiment_id=P.digest(body))
 
 
@@ -104,7 +178,7 @@ def validate(experiment):
             or experiment['predictor'] != list(h.predictor_definition)
             or experiment['target'] != h.target_definition or experiment['horizon'] != h.horizon
             or P.TRANSFORMS[h.transformation]['shape'] != 'combination'
-            or experiment['schema'] != 'predictive-experiment.v1'
+            or experiment['schema'] not in ('predictive-experiment.v1', EXPERIMENT_SCHEMA)
             or experiment['direction'] != h.direction or experiment['timeframe'] != '4h'
             or experiment['leakage_guard'] != h.forbidden_leakage_boundary
             or s['policy'] != 'research.slices.DISCOVERY_FRAC'
@@ -114,6 +188,15 @@ def validate(experiment):
             or experiment['falsification_outcome'] != 'UNSUPPORTED only for powered measured failure; missing power remains INCONCLUSIVE/DATA_INSUFFICIENT'
             or experiment['geometry'] != 'fixed' or experiment['authority'] != 'EXPERIMENT_ONLY'):
         raise ValueError('leakage_or_experiment_contract')
+    if experiment['schema'] == EXPERIMENT_SCHEMA:
+        provenance = experiment['data_provenance']
+        if (experiment['translation_contract'] != translation_contract(h)
+                or provenance['schema'] != 'predictive-data-cut.v1'
+                or provenance['as_of_ms'] != s['end_ms']+14_400_000
+                or provenance['content_id'] != P.digest(provenance['slices'])
+                or not experiment['evaluation_version']
+                or any(len(v)!=64 for v in experiment['evaluation_version'].values())):
+            raise ValueError('experiment_version_provenance')
     return h
 
 
@@ -126,12 +209,16 @@ def freeze_candles(source, dest, experiment):
             required={'candles','candle_floor','market_revisions','market_raw_sources','market_revision_cut'}
             if not required <= {r[0] for r in old.execute('SELECT name FROM sqlite_master')}:
                 raise ValueError('frozen_candle_provenance_unavailable')
+            if experiment['schema'] == EXPERIMENT_SCHEMA and data_provenance(old, s) != experiment['data_provenance']:
+                raise ValueError('frozen_data_revision_conflict')
         return
     temporary = Path(str(dest) + '.tmp')
     if temporary.exists():
         temporary.unlink()
     with closing(readonly(source)) as src, sqlite3.connect(temporary) as dst:
         src.execute('BEGIN')
+        if experiment['schema'] == EXPERIMENT_SCHEMA and data_provenance(src, s) != experiment['data_provenance']:
+            raise ValueError('source_data_revision_changed')
         columns = src.execute('PRAGMA table_info(candles)').fetchall()
         if [c[1] for c in columns] != ['symbol','tf','ts','open','high','low','close','volume','taker_buy']:
             raise ValueError('unsupported_candle_schema')
@@ -146,10 +233,16 @@ def freeze_candles(source, dest, experiment):
                                (sym,s['start_ms'],s['end_ms'])).fetchall()
             dst.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)', rows)
             if retained:
-                revisions = src.execute("SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? AND available_ms<=? AND observed_ms<=? ORDER BY rowid",
+                revisions = src.execute("SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? AND available_ms<=? AND observed_ms<=? ORDER BY event_ms,revision_id",
                     (DataFeed._series_key(sym,'4h'),s['start_ms'],s['end_ms'],
                      s['end_ms']+14_400_000,s['end_ms']+14_400_000)).fetchall()
                 dst.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)', revisions)
+                for row in revisions:
+                    record = json.loads(row[-1])
+                    raw = src.execute('SELECT * FROM market_raw_sources WHERE content_hash=?',
+                                      (record['content_hash'],)).fetchone()
+                    if raw:
+                        dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', raw)
     temporary.replace(dest)
 
 
