@@ -47,7 +47,8 @@ def contexts(config, root, cut, snapshot):
             raise ValueError('NORMAL_CONTEXT_PORTFOLIO_CUT_DIFFERS')
         live.replay(receipt, sources, cut)
         requests.append(dict(**{k: raw[k] for k in ('as_of_ms', 'symbol', 'instrument_id',
-            'cycle_id', 'candidate_id', 'required_roles')}, sources=sources))
+            'cycle_id', 'candidate_id', 'required_roles')}, sources=sources,
+            **({'decision_grade': True} if raw.get('decision_grade') else {})))
     latest = max((r['as_of_ms'] for r in requests), default=None)
     return [r for r in requests if r['as_of_ms'] == latest]
 

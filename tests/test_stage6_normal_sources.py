@@ -24,6 +24,16 @@ from scripts import opportunity_context_shadow as shadow
 from scripts.opportunity_context_shadow import DIMENSIONS
 
 
+def compiled_params(spec):
+    """The exact compiler identity a StrategyVersion's live signal carries (STR-02)."""
+    from trader.engine.trade_provenance import spec_version
+    from trader.strategy import compile as C
+    sha = spec_version(StrategySpec.from_dict(spec))['spec_sha256']
+    return dict(spec_sha256=sha, compiler_version=C.COMPILER_VERSION, feature_version=C.FEATURE_VERSION,
+                compile_identity=C.compile_identity(sha, C.COMPILER_VERSION, C.FEATURE_VERSION,
+                                                    C.feature_contract_sha256()))
+
+
 @pytest.fixture
 def publications(tmp_path, cfg, monkeypatch):
     j, v, _, _ = approved_world(tmp_path, cfg, monkeypatch)
@@ -43,7 +53,7 @@ def publications(tmp_path, cfg, monkeypatch):
     close = cut - cut % H4
     sig = dict(symbol=SYMBOL, action='BUY', params=dict(spec_id=v['strategy_id'],
         spec_fingerprint=spec_fingerprint(StrategySpec.from_dict(v['spec'])),
-        signal_timeframe='4h',signal_bar_close_ms=close))
+        signal_timeframe='4h',signal_bar_close_ms=close,**compiled_params(v['spec'])))
     args = dict(as_of_ms=cut,symbol=SYMBOL,instrument_id=IID,cycle_id='normal-cycle',candidate_id='normal-setup',
         sources=(L.source('strategy_version',row,row['recorded_at_ms'],cut+1000),
                  L.source('signals',[sig],cut,cut+1000),L.source('portfolio',book,cut,cut+1000)),

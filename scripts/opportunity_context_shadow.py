@@ -76,6 +76,16 @@ def capture(journal, attention, investigation, config, max_contexts=4):
         # decisions/PF into current opportunities or synthesize signals.
         columns = set(json.loads(db.execute("SELECT json_group_array(name) FROM pragma_table_info('decisions')").fetchone()[0]))
         decisions = [dict(r) for r in db.execute('SELECT id,cycle_id,ts,symbol,signals_json FROM decisions ORDER BY ts DESC LIMIT 32')] if versions and 'signals_json' in columns else []
+        # The decision cycle's persisted analyst measurement packets and its
+        # single analyst cut (cycles.ts == the snapshot ts every packet carries).
+        cycle_ts, cycle_votes = {}, {}
+        if decisions and {'cycles', 'votes'} <= names:
+            ids = json.dumps(sorted({d['cycle_id'] for d in decisions}))
+            for r in db.execute('SELECT id,symbol,ts FROM cycles WHERE id IN (SELECT value FROM json_each(?)) LIMIT 64', (ids,)):
+                cycle_ts[(r['id'], r['symbol'])] = r['ts']
+            for r in db.execute('SELECT cycle_id,symbol,meta FROM votes WHERE cycle_id IN '
+                                '(SELECT value FROM json_each(?)) ORDER BY id LIMIT 512', (ids,)):
+                cycle_votes.setdefault((r['cycle_id'], r['symbol']), []).append(_json(r['meta']) if r['meta'] else {})
         selections = [dict(r) for r in db.execute('SELECT * FROM attention_selections ORDER BY cycle_as_of_ms DESC LIMIT 16')] if 'attention_selections' in names else []
         scan = None
         if attention.exists():
@@ -112,7 +122,9 @@ def capture(journal, attention, investigation, config, max_contexts=4):
         source_set = Source.freeze('current-shadow-inventory', dict(versions=versions, decisions=decisions,
                                     selections=selections, scan=scan, cases=cases, allocations=allocations, updates=updates,
                                     strategy_authority_inventory=authority_inventory,
-                                    venue_snapshot=snapshot, control_state=kv.get('control_state', 'UNKNOWN')))
+                                    venue_snapshot=snapshot, control_state=kv.get('control_state', 'UNKNOWN'),
+                                    cycles=sorted(map(list, cycle_ts.items())),
+                                    votes=sorted([list(k), v] for k, v in cycle_votes.items())))
     sources = []
     if scan:
         sources.append(live.source('attention_scan', scan, scan['persisted_at_ms'],
@@ -178,13 +190,27 @@ def capture(journal, attention, investigation, config, max_contexts=4):
                     if v['strategy_id'] == occurrence[0] and v['recorded_at_ms'] <= cut:
                         exact.append((d, sig, v))
             if exact:
+                from trader.cognition import decision_analysts as DA
                 for d, sig, v in exact[:max_contexts - len(requests)]:
+                    # Decision-grade: the analyst roster/packets for THIS decision cycle are
+                    # frozen with it. A cycle with no recorded cut supplies no analysts source,
+                    # so the required role blocks instead of fabricating one.
+                    ts_key = (d['cycle_id'], d['symbol'])
+                    analysts = []
+                    if ts_key in cycle_ts:
+                        packets = [m['measurement'] for m in cycle_votes.get(ts_key, [])
+                                   if isinstance(m.get('measurement'), dict)]
+                        analysts = [live.source('analysts', DA.bundle(
+                            decision_id=d['id'], cycle_id=d['cycle_id'], symbol=d['symbol'],
+                            cut_ts=cycle_ts[ts_key], roster=DA.roster(config), packets=packets), cut)]
                     requests.append(dict(as_of_ms=cut, symbol=symbol, instrument_id=iid,
                         cycle_id=d['cycle_id'], candidate_id=d['id'] + ':' + v['version_id'],
                         sources=tuple(bound + [live.source('signals', [sig], cut),
                                                live.source('strategy_version', v, v['recorded_at_ms']),
-                                               live.source('strategy_authority_inventory', authority_inventory[v['version_id']], cut)]),
-                        required_roles=('attention_scan', 'signals', 'strategy_version')))
+                                               live.source('strategy_authority_inventory', authority_inventory[v['version_id']], cut),
+                                               *analysts]),
+                        required_roles=('attention_scan', 'signals', 'strategy_version', 'portfolio', 'analysts'),
+                        decision_grade=True))
             else:
                 requests.append(dict(as_of_ms=cut, symbol=symbol, instrument_id=iid,
                     cycle_id=scan['scan_id'], candidate_id=scan['scan_id'] + ':' + key,

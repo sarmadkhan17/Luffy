@@ -9,7 +9,8 @@ from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
 
-from trader.cognition import opportunity_context as oc
+from trader.cognition import decision_analysts as DA, opportunity_context as oc
+from trader.cognition.decision_analysts import ContextBlocked, ContextRefused
 from trader.world.replay import WorldModelRecord
 from trader.strategy.signal_occurrence import signal_occurrence
 from .allocator import Source, canonical, digest, Evidence, Status, Candidate
@@ -19,7 +20,11 @@ SCHEMA = 'opportunity-live-inputs.v1'
 ROLES = frozenset(('attention_scan', 'allocation', 'registry_selection', 'signals',
                    'investigation', 'investigation_update', 'world_model', 'portfolio',
                    'strategy_version', 'strategy_authority_inventory', 'economics_receipts',
-                   'cost_status', 'capacity_status'))
+                   'cost_status', 'capacity_status', 'analysts'))
+#: A decision-grade context cannot be frozen without these (DEC-01). Missing or
+#: stale -> ContextBlocked. Costs are bound downstream by an exact-cut economics
+#: receipt (`decision_cost_binding`); they cannot be inputs to their own context.
+DECISION_REQUIRED = frozenset(('attention_scan', 'signals', 'strategy_version', 'portfolio', 'analysts'))
 
 
 def source(role, data, known_at_ms, valid_until_ms=None):
@@ -51,11 +56,15 @@ def _selection(raw):
 
 
 def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
-            sources=(), required_roles=()):
+            sources=(), required_roles=(), decision_grade=False):
     if type(as_of_ms) is not int or as_of_ms < 0:
         raise ValueError('CONTEXT_CUT_INVALID')
     if not set(required_roles) <= ROLES:
         raise ValueError('UNKNOWN_REQUIRED_ROLE')
+    if decision_grade is not False and decision_grade is not True:
+        raise ValueError('DECISION_GRADE_INVALID')
+    if decision_grade:
+        required_roles = tuple(sorted(set(required_roles) | DECISION_REQUIRED))
     frozen, available, statuses = {}, {}, {}
     for s in sources:
         s = Source(**asdict(s))  # refuse object.__setattr__ and changed bytes
@@ -84,7 +93,7 @@ def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
         statuses[role] = dict(status='UNKNOWN', reason='NOT_SUPPLIED')
     for role in required_roles:
         if statuses[role]['status'] != 'AVAILABLE':
-            raise ValueError('REQUIRED_CONTEXT_EVIDENCE_' + role.upper() + '_UNAVAILABLE')
+            raise ContextBlocked('REQUIRED_CONTEXT_EVIDENCE_' + role.upper() + '_UNAVAILABLE')
 
     world = WorldModelRecord.from_json(available['world_model']) if 'world_model' in available else None
     scan = available.get('attention_scan')
@@ -171,6 +180,8 @@ def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
                 if ei.binding.instrument != instrument_id or not econ.verify(receipt, ei, as_of_ms):
                     raise ValueError('ECONOMICS_REFERENCE_REFUSED')
                 times.append(ei.binding.as_of_ms)
+        elif role == 'analysts':
+            times = [data.get('cut_ms') if isinstance(data, dict) else None]
         elif role == 'signals':
             for sig in data:
                 key, _ = signal_occurrence(sig)
@@ -215,6 +226,10 @@ def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
         exclude = {oc.venue_key(s) for s in universe.get('exclude', ())}
         if (include and oc.venue_key(symbol) not in include) or oc.venue_key(symbol) in exclude:
             raise ValueError('VERSION_INSTRUMENT_UNIVERSE_DIFFERS')
+    decision_inputs = None
+    if decision_grade:
+        decision_inputs = _decision_inputs(as_of_ms, symbol, cycle_id, candidate_id, usable, ctx,
+                                           version, world)
     oid, lineage = identity(ctx, cycle_id, candidate_id, version['version_id'] if version else None)
     portfolio = usable.get('portfolio')
     direction = {'BUY': 'LONG', 'SELL': 'SHORT'}.get((lineage['occurrence'] or {}).get('action'))
@@ -231,7 +246,71 @@ def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
                    strategy_version_id=version['version_id'] if version else None,
                    strategy_eligibility='UNKNOWN', existing_position_interaction=interaction,
                    portfolio_status=statuses['portfolio']['status'], authority='NONE')
+    if decision_grade:
+        # Present only on decision-grade receipts; earlier receipts keep their bytes.
+        payload.update(decision_grade=True, decision_inputs=decision_inputs)
     return LiveReceipt(digest(payload), canonical(payload))
+
+
+def _decision_inputs(as_of_ms, symbol, cycle_id, candidate_id, usable, ctx, version, world):
+    """DEC-01: one coherent cut across market, world, analysts, strategy
+    evaluation and book, plus the exact compiled identity. Any mixed cut,
+    foreign identity or stale compiled identity REFUSES; nothing falls back to
+    a latest/uncut value."""
+    from trader.strategy import compile as C
+    from trader.strategy.spec import StrategySpec
+    from trader.engine.trade_provenance import spec_version
+    if version is None:
+        raise ContextRefused('EXACT_STRATEGY_VERSION_REQUIRED')
+    occurrence = ctx.to_dict()['signal_occurrences']['items'][0]['key']
+    if len(usable['signals']) != 1:
+        raise ContextRefused('EXACTLY_ONE_SIGNAL_REQUIRED')
+    signal = usable['signals'][0]
+    params = signal.get('params') or {}
+    # Exact STR-01/STR-02 identity: the signal must come from the compiler and
+    # feature contract this build would use for the stored StrategyVersion.
+    spec = StrategySpec.from_dict(version['spec'])
+    sha = spec_version(spec)['spec_sha256']
+    expected = C.compile_identity(sha, C.COMPILER_VERSION, C.FEATURE_VERSION, C.feature_contract_sha256())
+    for name in ('spec_sha256', 'compile_identity', 'compiler_version', 'feature_version'):
+        if params.get(name) is None:
+            raise ContextRefused('COMPILED_IDENTITY_UNPROVEN:' + name)
+    if (params['spec_sha256'], params['compiler_version'], params['feature_version'],
+            params['compile_identity']) != (sha, C.COMPILER_VERSION, C.FEATURE_VERSION, expected):
+        raise ContextRefused('COMPILED_IDENTITY_STALE_OR_MISMATCHED')
+    direction = {'BUY': 1, 'SELL': -1}[occurrence['action']]
+    analysis = DA.analyze(usable['analysts'], symbol=symbol, as_of_ms=as_of_ms, direction=direction)
+    if (candidate_id != analysis['decision_id'] + ':' + version['version_id']
+            or cycle_id != analysis['cycle_id']):
+        raise ContextRefused('DECISION_IDENTITY_MISMATCH')
+    analyst_cut = analysis['cut_ms']
+    scan = usable['attention_scan']
+    book = usable['portfolio']
+    cuts = dict(decision_cut_ms=as_of_ms, market_cut_ms=scan['as_of_ms'],
+                world_cut_ms=world.reconstruct().as_of_ms if world else None,
+                analyst_cut_ms=analyst_cut, strategy_eval_cut_ms=occurrence['signal_bar_close_ms'],
+                strategy_version_recorded_ms=usable['strategy_version']['recorded_at_ms'],
+                book_observed_ms=book['observed_at_ms'])
+    market_provenance = params.get('market_provenance')
+    if market_provenance is not None:
+        cuts['signal_market_cut_ms'] = market_provenance['as_of_ms']
+    # Evidence cannot post-date the decision (existing source checks) and the
+    # analysts must have evaluated no earlier than the market/world/signal/version they use.
+    for name, ms in cuts.items():
+        if ms is None:
+            continue
+        if ms > as_of_ms:
+            raise ContextRefused('CUT_AFTER_DECISION_CUT:' + name)
+        if name in ('market_cut_ms', 'world_cut_ms', 'strategy_eval_cut_ms',
+                    'strategy_version_recorded_ms', 'signal_market_cut_ms') and ms > analyst_cut:
+            raise ContextRefused('MIXED_CUTS_EVIDENCE_AFTER_ANALYST_CUT:' + name)
+    return dict(cuts=cuts, analysts=analysis,
+                compiled=dict(spec_sha256=sha, compile_identity=expected,
+                              compiler_version=C.COMPILER_VERSION, feature_version=C.FEATURE_VERSION),
+                book=dict(snapshot_id=book.get('snapshot_id'), observed_at_ms=book['observed_at_ms'],
+                          completeness=book['completeness'], sha256=DA.sha256(book)),
+                costs=dict(status='UNKNOWN', reason='BOUND_DOWNSTREAM_BY_EXACT_CUT_ECONOMICS_RECEIPT'),
+                authority_boundary='NO_ACTIVATION_GOVERNOR_OWNER_CAPITAL_OR_ORDER_AUTHORITY')
 
 
 def replay(receipt, current_sources, now_ms=None):
@@ -239,6 +318,8 @@ def replay(receipt, current_sources, now_ms=None):
     if p['schema'] != SCHEMA or digest(p) != receipt.receipt_id:
         raise ValueError('LIVE_CONTEXT_INTEGRITY_REFUSED')
     kwargs = {k: p[k] for k in ('as_of_ms', 'symbol', 'instrument_id', 'cycle_id', 'candidate_id', 'required_roles')}
+    if p.get('decision_grade'):
+        kwargs['decision_grade'] = True
     again = produce(**kwargs, sources=current_sources)
     if again != receipt:
         raise ValueError('LIVE_CONTEXT_SOURCE_SET_DIFFERS')
@@ -346,3 +427,53 @@ def load(path):
         raise ValueError('PERSISTED_CONTEXT_ID_OR_BYTES_DIFFERS')
     receipt = LiveReceipt(path.stem, canonical(payload))
     return replay(receipt, tuple(Source(**s) for s in payload['sources']))
+
+
+COST_COMPONENTS = ('COMMISSION', 'SLIPPAGE', 'FUNDING/BORROW')
+
+
+def decision_cost_binding(receipt, economics_receipt, now_ms):
+    """The exact costs a decision may use: an economics receipt whose binding
+    is this context's own cut/identity and whose cost source was captured by
+    that cut. Missing/unavailable required costs BLOCK; another cut, identity
+    or a stale/unverifiable receipt REFUSES/BLOCKS. Reads only frozen bytes."""
+    from . import economics as econ
+    p = json.loads(receipt.payload_json)
+    if not p.get('decision_grade'):
+        raise ContextRefused('DECISION_GRADE_RECEIPT_REQUIRED')
+    replay(receipt, tuple(Source(**s) for s in p['sources']), now_ms)
+    ei = econ.from_inputs(json.loads(economics_receipt.inputs_json))
+    dims = {k: getattr(ei.binding, k) for k in ('units', 'quantity_basis', 'capital_basis',
+            'horizon_interpretation', 'cost_treatment', 'uncertainty_treatment', 'freshness_semantics')}
+    if ei.binding != economic_binding(receipt, **dims):
+        raise ContextRefused('COST_BINDING_CUT_OR_IDENTITY_DIFFERS')
+    if receipt.as_source() not in ei.context:
+        raise ContextRefused('COST_CONTEXT_SOURCE_MISSING')
+    if ei.costs is None:
+        raise ContextBlocked('REQUIRED_COST_EVIDENCE_UNAVAILABLE')
+    raw = json.loads(ei.costs.payload_json)
+    if type(raw.get('captured_ms')) is not int or raw['captured_ms'] > p['as_of_ms']:
+        raise ContextRefused('COST_CAPTURED_AFTER_DECISION_CUT')
+    if not econ.verify(economics_receipt, ei, now_ms):
+        raise ContextBlocked('COST_RECEIPT_STALE_OR_UNVERIFIABLE')
+    components = json.loads(economics_receipt.result_json)['components']
+    missing = [n for n in COST_COMPONENTS if components[n]['status'] not in ('ESTABLISHED', 'NOT_APPLICABLE')]
+    if missing:
+        raise ContextBlocked('REQUIRED_COST_COMPONENT_UNAVAILABLE:' + ','.join(missing))
+    return dict(economics_receipt_id=economics_receipt.receipt_id, as_of_ms=ei.binding.as_of_ms,
+                costs_source_sha256=ei.costs.sha256, captured_ms=raw['captured_ms'],
+                valid_until_ms=raw.get('valid_until_ms'),
+                components={n: dict(status=components[n]['status'], value=components[n]['value'])
+                            for n in COST_COMPONENTS})
+
+
+def decision_book_binding(receipt, snapshot):
+    """The book the decision used is the one frozen in the context; a different
+    (e.g. later/refreshed) snapshot REFUSES instead of being substituted."""
+    p = json.loads(receipt.payload_json)
+    if not p.get('decision_grade'):
+        raise ContextRefused('DECISION_GRADE_RECEIPT_REQUIRED')
+    book = p['decision_inputs']['book']
+    if DA.sha256(snapshot) != book['sha256']:
+        raise ContextRefused('BOOK_DIFFERS_FROM_FROZEN_CONTEXT_BOOK')
+    return book

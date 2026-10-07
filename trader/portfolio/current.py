@@ -72,7 +72,13 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
         if 'strategy_versions' not in names:
             raise ValueError('FACTORY_VERSION_SCHEMA_UNAVAILABLE')
         for request in requests:
-            receipt = live.produce(**request)
+            try:
+                receipt = live.produce(**request)
+            except live.ContextBlocked as exc:
+                # A missing/stale REQUIRED input blocks this candidate only, explicitly;
+                # integrity/cut refusals are not ContextBlocked and still abort.
+                detail['missing_sources'].append('CONTEXT_BLOCKED:' + request['candidate_id'] + ':' + str(exc))
+                continue
             raw = json.loads(receipt.payload_json)
             contexts.append(receipt.as_source())
             if raw['strategy_version_id'] and raw['instrument_id']:
