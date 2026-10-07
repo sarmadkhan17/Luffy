@@ -42,15 +42,14 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: RES-07
+  id: QNT-08
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
   mode: ENGINEERING_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Generate competing typed hypotheses without claiming untested predictive edge.
+  objective: Keep Referee admission distinct from execution/owner approval.
   evidence:
-  - docs/superpowers/reports/res07-competing-hypotheses-sol2/REPORT.md
-  - docs/tracker/evidence/res07-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/qnt08-canonical-sol1/REPORT.md
   implementation_complete: true
   canonical_reconciliation_pending: false
   runtime_execution_authorized: false
@@ -2369,3 +2368,89 @@ res07_canonical_reconciliation:
     trader/cognition/predictive.py: 7153fd9a955686ee2ff5764a5dd5abe9a7d1f746094176f39631441d50b19458
     tests/test_predictive_research_bridge.py: baeda2aac8b6abdf3dced47d97edce850d2e3033b25a0044a3421f4fafe21298
     tests/test_res07_competing_hypotheses.py: f1e818f55c53e76d499dfbd079ab912357c70304304a799aa20d27d83edb5824
+
+qnt08_canonical_reconciliation:
+  item: QNT-08
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 6681931dfc766397624d4edef3808bbb3a783803
+  control_baseline_revision: 6681931dfc766397624d4edef3808bbb3a783803
+  evidence: docs/tracker/evidence/qnt08-canonical-sol1/closure.json
+  closing_condition_satisfied: true
+  closure_mapping:
+    registered_quantitative_evidence: gate_evidence re-reads eligible candidate, exactly one rejected gate1
+      look, matching candidate p/alpha, passed gate3, matching combo and evaluated frozen rule; labels alone
+      do not admit.
+    registered_error_budget: LORD++ ceiling reconstructed from registered research_budget and prior ordered
+      rejection steps; loose/directly forged alpha and missing budget refuse.
+    frozen_cut_look_metadata: Look detail must carry cut_ms matching first recorded cut on its timeframe and
+      draw count resolving alpha; evaluated expression/spec/exit identities checked. Initial cut has no independent
+      external recorder.
+    QNT03_dependence: Recorded p must equal worst finite a/b consistency_p_dep and rotation p; missing/raw/inconsistent
+      evidence refuses.
+    QNT06_UNTESTED: p=1/non-rejected and underresolved evidence cannot admit.
+    fake_malformed_evidence: Missing/ambiguous look, inconsistent/malformed candidate gates, unknown candidate,
+      altered evaluated rule or missing lineage refuses; direct loose-alpha insertion refused. No claim of
+      independently authenticating a coherently forged entire ledger.
+    no_bypass: LLM/spec_writer/investigation/unknown/parked scheme_d inputs cannot create an admitted version;
+      normal research handoff remains gated and single creation path verified.
+    downstream_authority: Immutable exact version and validation receipt transition only to VALIDATED; no installs,
+      strategy population writes, approval decisions or order/capital authority from create_version. Builder/Governor/owner/execution
+      controls remain downstream.
+    replay_restart: Version identity/receipt retry is duplicate; ledger re-read after restart preserves admission
+      and wrong-cut refusal.
+  first_look_cut_limitation: The first look cut_ms has no independent external recorder. Its authority is the
+    registered local research ledger; later looks and replay are checked against that recorded anchor. Independent
+    attestation of the initial cut, or protection against coherent privileged rewriting of ledger history,
+    is not proven. This is a future provenance-hardening/evidence limitation, not a violation of the exact
+    QNT-08 registered-admission/downstream-authority condition.
+  first_look_cut_assessment: NON_BLOCKING_FUTURE_HARDENING_EVIDENCE_LIMITATION
+  verification:
+    mandatory_runner: /home/sarmad/.local/bin/luffy-pytest
+    fresh_admission_and_affected_file: 26 passed in 4.48s; tests/test_qnt08_admission_boundary.py + tests/test_single_creation_path.py
+    fresh_boundary: 13 passed, 40 deselected in 3.99s; selected tests/test_strategy_factory_handoff.py negatives
+      and replay
+    engineering_validation_authority: 'Owner-supplied engineering validation: 15 dedicated tests; broad 428
+      passed / 1 fixture failure; corrected fixture; affected file + QNT-08 rerun 26 passed. No full suite
+      claim.'
+    committed_source_bytes_verified: true
+  limitations:
+  - The first look cut_ms has no independent external recorder. Its authority is the registered local research
+    ledger; later looks and replay are checked against that recorded anchor. Independent attestation of the
+    initial cut, or protection against coherent privileged rewriting of ledger history, is not proven. This
+    is a future provenance-hardening/evidence limitation, not a violation of the exact QNT-08 registered-admission/downstream-authority
+    condition.
+  - Synthetic architecture/offline proof; no real-market quantitative edge, live/deployment verification or
+    trading authorization.
+  - Broad engineering run retained as 428 passed / 1 fixture failure followed by corrected targeted 26 passes;
+    no full-suite green claim.
+  - Parked/unauthorized Scheme-D work gains no authority.
+  dependency_status:
+    QNT-03: CLOSED
+    QNT-05: CLOSED
+    QNT-06: CLOSED
+  STR01_quant_dependency_satisfied: true
+  remaining_STR01_blockers:
+  - RES-08
+  STR01_own_condition_still_open: Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world
+    requirements and hashes; material change creates a new version.
+  original_condition_and_edges_preserved: true
+  active_RES08_untouched: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_calls: 0
+  successor_selected: false
+  status_counts_after:
+    CLOSED: 55
+    EVIDENCE_TO_MAP: 82
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+  source_sha256:
+    tests/authority_factory_fixtures.py: dd1cf808f6114a4d427adce959307db7eb0fe4fca86a7e2ce22d1f967243b94d
+    tests/test_qnt08_admission_boundary.py: c037975a33cc8537a0568947095507ee74232efc8fab9df275ff1584e769be6d
+    tests/test_single_creation_path.py: 2bb6fcb02ee8e1cdcc75cb6da329c2c039390931ea2f40ce9f91e4cc1a7cd9ec
+    tests/test_strategy_factory_handoff.py: c7cfa009e6c3ce2e9f2e568a7c61c2f292badf47a0743a4b64db5b071004acf9
+    trader/strategy/factory_handoff.py: 25fa388f91fc8a777b94e1d6abc0164a2355062daf4fc9fba59ba393996fb470

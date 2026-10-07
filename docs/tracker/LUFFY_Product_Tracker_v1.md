@@ -1,3 +1,5 @@
+> Current [SOL-1][QNT-08]: CLOSED at architecture/offline scope. Registered quantitative admission verified; downstream authority remains gated. First-look cut_ms has no independent external recorder; this evidence limitation is retained. STR-01 still awaits RES-08. Active RES-08 work unchanged. [Evidence](evidence/qnt08-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][RES-07]: CLOSED at architecture/offline scope. Immutable competing proposals verified; causality UNKNOWN, predictive edge UNTESTED. RES-08 now dependency-eligible; paired-null translation remains unsupported under RES-08. Active QNT-08 work unchanged. [Evidence](evidence/res07-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][RES-05]: CLOSED at architecture/offline scope; canonical linked persistence verified. RES-06/RES-07 dependency-eligible; RES-08 awaits RES-07. Active RES-07/QNT-08 work unchanged. [Evidence](evidence/res05-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2395,29 +2397,29 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Statistical support is not permission to place orders.
 - **closure_condition**: Only actual registered quantitative evidence yields an admitted candidate; Builder/Governor/owner gates remain downstream.
 - **failure_regression_proof**: No research/LLM bypass or fake candidate admission; parked Scheme-D work remains unauthorized.
 - **dependencies**: QNT-03, QNT-05, QNT-06
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1
+- **implementation_evidence**: MAPPED_REGISTERED_QUANTITATIVE_ADMISSION_BOUNDARY
+- **runtime_evidence**: OFFLINE_SYNTHETIC_ONLY
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Registered quantitative look, LORD++ budget ceiling, frozen-cut metadata, resolvable draws, QNT-03 corrected p, gate3 and exact evaluated-spec lineage required; UNTESTED/fake/malformed/bypass sources refused. Admission creates VALIDATED version/receipt only, without live/execution/owner authority. Fresh 26 admission/creation-path and 13 boundary checks passed. First-look cut_ms has no independent external recorder. Evidence: docs/tracker/evidence/qnt08-canonical-sol1/REPORT.md.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §§14.2,30 Stage 4,33.4
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for architecture/offline QNT-08 closure. Preserve first-look cut provenance limitation: no independent external recorder. Builder/Governor/owner/execution gates remain downstream.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 6681931dfc766397624d4edef3808bbb3a783803
+- **work_authorized**: True
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/qnt08-canonical-sol1/closure.json
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7317,3 +7319,5 @@ historical_records: att03_warmup_terminal and att03_calibration_terminal are imm
 RES-05 canonical status counts: CLOSED 53, EVIDENCE_TO_MAP 84, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
 
 RES-07 canonical status counts: CLOSED 54, EVIDENCE_TO_MAP 83, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
+
+QNT-08 canonical status counts: CLOSED 55, EVIDENCE_TO_MAP 82, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
