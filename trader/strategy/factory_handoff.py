@@ -1662,6 +1662,8 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
             return "version_install_unbound"
         vid = rows[0]["version_id"]
         st = state_of(journal, vid)
+        if projection_gap(journal, vid):
+            return "version_projection_diverged"
         if st in ("ACTIVE", "REACTIVATED"):
             return "version_first_live_execution_not_enabled"
         if st != APPROVED_FIRST_LIVE:
@@ -1695,6 +1697,37 @@ GOVERNOR_ALLOWED = {
 }
 
 
+# The strategies row is only a projection of the Governor's state, written in
+# the same transaction as the Governor event.
+PROJECTION = {"ACTIVE": "active", "REACTIVATED": "active", "PAUSED": "paper",
+              DEGRADED: "paper", RETIRED: "retired"}
+
+
+def _binding(journal, v: dict) -> dict:
+    """The exact artifact a lifecycle event is about, re-read from the
+    immutable records (never from the caller)."""
+    inst = _install_record(journal, v["version_id"])
+    req = approval_request(journal, v["version_id"])
+    return {"strategy_id": v["strategy_id"],
+            "lineage_sha256": v.get("lineage_sha256"),
+            "install_id": inst["install_id"] if inst else None,
+            "approval_request_id": req["request_id"] if req else None}
+
+
+def projection_gap(journal, version_id: str) -> str | None:
+    """None when the strategies row agrees with the Governor's state (or the
+    Governor has not acted yet), else a reason code."""
+    if not governor_events(journal, version_id):
+        return None
+    v = load_version(journal, version_id)
+    rows = journal.query("SELECT state FROM strategies WHERE id=?",
+                         (v["strategy_id"],))
+    want = PROJECTION[state_of(journal, version_id)]
+    if len(rows) != 1 or rows[0]["state"] != want:
+        return "version_projection_diverged"
+    return None
+
+
 def governor_events(journal, version_id):
     if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_governor_events'"):
         return []
@@ -1707,6 +1740,18 @@ def governor_events(journal, version_id):
                 or canonical(event) != row['canonical_json']
                 or event['previous_sha256'] != previous):
             _refuse('governor_replay_differs')
+        if 'binding' in event:
+            now = _binding(journal, load_version(journal, version_id))
+            was = event['binding']
+            if any(was.get(k) != now[k] for k in ('strategy_id', 'lineage_sha256')) \
+                    or any(was.get(k) not in (None, now[k])
+                           for k in ('install_id', 'approval_request_id')):
+                _refuse('governor_binding_differs')
+        if 'transition_id' in event and event['transition_id'] != _jsha(dict(
+                version_id=version_id, to_state=event['to_state'],
+                actor=event['actor'], reason_code=event['reason_code'],
+                at_ms=event['at_ms'], requested_allocation=event['requested_allocation'])):
+            _refuse('governor_transition_identity_differs')
         previous = row['canonical_sha256']
         result.append(event)
     return result
@@ -1715,7 +1760,8 @@ def governor_events(journal, version_id):
 def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
                    capacity_receipt_id=None, risk_manager=None, risk_release=None,
-                   _connection=None, expected_target=None, research_bank_path=None):
+                   _connection=None, expected_target=None, research_bank_path=None,
+                   transition_key=None):
     """The sole lifecycle authority; no caller automatically activates.
 
     Activation/resume holds control and Risk authority through the exact
@@ -1733,7 +1779,8 @@ def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
         if expected_target is None or lifecycle_target(journal, version_id) != expected_target:
             _refuse('governor_state_changed')
         return _govern_version_locked(journal, cfg, version_id, to_state,
-            actor=actor, reason_code=reason_code, at_ms=at_ms, conn=_connection)
+            actor=actor, reason_code=reason_code, at_ms=at_ms, conn=_connection,
+            transition_key=transition_key)
     ensure(journal)
     load_version(journal, version_id)
     activating = to_state in ('ACTIVE', 'REACTIVATED')
@@ -1766,19 +1813,35 @@ def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                     allocation=allocation, available_inputs=available_inputs,
                     capacity_receipt_id=capacity_receipt_id, conn=c,
                     risk_release=risk_release if activating else None,
-                    research_bank_path=research_bank_path)
+                    research_bank_path=research_bank_path,
+                    transition_key=transition_key)
 
 
 def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
                    capacity_receipt_id=None, conn, risk_release=None,
-                   research_bank_path=None):
+                   research_bank_path=None, transition_key=None):
     v = load_version(journal, version_id)
     if actor not in OWNER_ACTORS and actor != 'strategy_governor' and not (actor == 'factory' and to_state in (DEGRADED,RETIRED)):
         _refuse('governor_actor_invalid')
     if not reason_code or type(at_ms) is not int:
         _refuse('governor_reason_or_clock_missing')
     history = governor_events(journal, version_id)
+    tid = _jsha(dict(version_id=version_id, to_state=to_state, actor=actor,
+                     reason_code=reason_code, at_ms=at_ms,
+                     requested_allocation=allocation if to_state in (
+                         'ACTIVE', 'REACTIVATED') else 0))
+    # A retry is the same logical transition as the latest event (or, with an
+    # explicit key, as any earlier one); a different transition under a used
+    # key is a conflict. A later legitimate repeat is a new, sequenced event.
+    for i, old in enumerate(history):
+        if transition_key is not None and old.get('transition_key') == transition_key:
+            if old.get('transition_id') != tid:
+                _refuse('governor_replay_key_conflict')
+            return dict(status='duplicate', version_id=version_id, event=old)
+    if history and history[-1].get('transition_id') == tid \
+            and history[-1].get('transition_key') == transition_key:
+        return dict(status='duplicate', version_id=version_id, event=history[-1])
     cur = state_of(journal, version_id)
     if to_state not in GOVERNOR_ALLOWED.get(cur, set()):
         _refuse('governor_transition_not_allowed')
@@ -1805,6 +1868,8 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
     else:
         allocation = 0
     body = dict(schema=GOVERNOR_SCHEMA, version_id=version_id,
+        binding=_binding(journal, v), transition_id=tid, transition_key=transition_key,
+        requested_allocation=allocation if to_state in ('ACTIVE', 'REACTIVATED') else 0,
         spec_hash=v['spec_hash'], from_state=cur, to_state=to_state, actor=actor,
         reason_code=reason_code, at_ms=at_ms, allocation=allocation,
         allocation_ceiling=ceiling, risk_sha256=risk_sha,
@@ -1822,9 +1887,12 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
     try:
         conn.execute('INSERT INTO strategy_governor_events(version_id,to_state,canonical_json,canonical_sha256) VALUES(?,?,?,?)',
                      (version_id,to_state,text,_sha(text)))
-        if to_state == RETIRED and journal.query("SELECT 1 FROM sqlite_master WHERE name='strategies'"):
-            conn.execute("UPDATE strategies SET state='retired', retire_reason=?, state_changed_at=? WHERE id=?",
-                         (reason_code, datetime.fromtimestamp(at_ms/1000, timezone.utc).isoformat(), v['strategy_id']))
+        if journal.query("SELECT 1 FROM sqlite_master WHERE name='strategies'"):
+            conn.execute("UPDATE strategies SET state=?, state_changed_at=?, "
+                         "retire_reason=CASE WHEN ?='retired' THEN ? ELSE retire_reason END "
+                         "WHERE id=?",
+                         (PROJECTION[to_state], datetime.fromtimestamp(at_ms/1000, timezone.utc).isoformat(),
+                          PROJECTION[to_state], reason_code, v['strategy_id']))
     finally:
         if local is not None:
             local.governor_write = False
