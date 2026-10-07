@@ -1,3 +1,5 @@
+> Current [SOL-1][STR-03]: **CLOSED at architecture/offline scope** on `2b119a3`. Exact first-live approval binding, staleness and Governor handoff verified; 43 dedicated passes, retained 642 related passes / 1 unrelated baseline failure. Bank path is asserted by caller; privileged internal write-flag bypass and stored-chain replay limitations remain explicit. STR-04 dependency satisfied and eligible, unselected and not started. [Evidence](evidence/str03-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][DEC-02]: **CLOSED at architecture/offline scope** on `9f36fc7` / `f1bbd7a`. Default allocator **R3** selects CASH on exact positive top ties across distinct expressions; **R2** historical replay remains exact. Explicit candidate/CASH reasons and confidence/source states; analyst evidence grants no selection authority. Production calibration absent; shadow R1 label preserved. DEC-03 still gated by STR-04 (transitively STR-03); next recommendation STR-03, unselected and not started. [Evidence](evidence/dec02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][PORT-02]: **CLOSED at architecture/offline scope** on `040b271`; 206 relevant verification passes retained. REAL CALIBRATION PRESENT: **NO**. Production forward authority remains absent, values null and expected net UNAVAILABLE; no allocation, CASH preserved. Registered-authority mechanics proven with fixtures only. Initial calibration ownership gap needs a linked future item under policy, reported but not created. DEC-02 dependency-eligible, unselected and not started. [Evidence](evidence/port02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2510,32 +2512,34 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Owner approval is narrow and must become stale after material changes.
 - **closure_condition**: Research→validation→probation→approval→Governor path loads exact approved artifact; approval refuses mismatch/stale context.
 - **failure_regression_proof**: ACTIVE label or grandfather/legacy path cannot replace missing authority.
 - **dependencies**: STR-01, QNT-08, OWN-02
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Exact-version approval request/decision and Research Bank re-authentication at 2b119a3; docs/tracker/evidence/str03-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 43 fresh dedicated passes; retained related run 642 passes / 1 unrelated baseline failure (overlapping counts). Exact chain/scope, raw-SQL refusal, stale/forged refusal, Governor no-write mismatch and stored-chain restart/retry verified. research_bank_path is asserted at the eligibility/governor call boundary rather than stored as a permanent path authority. SQLite writer guard can theoretically be bypassed by code deliberately enabling the internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation from malicious trusted Python or direct database administration. Fresh fixture rebuild IDs vary because a research look contains wall-clock data; replay is proven against the same stored chain.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§2.4,14.2,25.4
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact STR-03 architecture/offline condition. Preserve documented bank-path, privileged writer and replay limitations. STR-04 dependency satisfied and eligible, unselected and not started; its own lifecycle proof remains open.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **evidence_validity**: Pinned architecture/offline verification at 2b119a3; no later deployed/runtime revalidation claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **resolution_at_commit**: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e
+- **closure_evidence**: docs/tracker/evidence/str03-canonical-sol1/closure.json
+- **implementation_commit**: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e
+- **evidence_mapping**: docs/tracker/evidence/str03-canonical-sol1/REPORT.md
 
 ### STR-04 — Use Strategy Governor as sole lifecycle authority.
 
@@ -7358,3 +7362,5 @@ DEC-01 canonical status counts: CLOSED 59, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAIT
 PORT-02 canonical status counts: CLOSED 60, EVIDENCE_TO_MAP 79, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 DEC-02 canonical status counts: CLOSED 61, EVIDENCE_TO_MAP 78, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+STR-03 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 77, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).

@@ -42,16 +42,16 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: DEC-02
+  id: STR-03
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
   mode: ENGINEERING_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Make deterministic candidate comparison, with explicit CASH and reasons.
-  implementation_commit: f1bbd7a74600ce2f8355babb337854bc6693bc35
+  objective: Bind first real-money approval to exact version and evidence.
+  implementation_commit: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e
   evidence:
-  - docs/tracker/evidence/dec02-canonical-sol1/REPORT.md
-  - docs/tracker/evidence/dec02-canonical-sol1/closure.json
+  - docs/tracker/evidence/str03-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/str03-canonical-sol1/closure.json
   implementation_complete: true
   canonical_reconciliation_pending: false
   runtime_execution_authorized: false
@@ -552,7 +552,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: DEC-02
+  last_completed_item: STR-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -565,7 +565,7 @@ current_build_selection:
   - OUT-03
   - GUI-02
   - OUT-01
-  next_recommended_item: STR-03
+  next_recommended_item: STR-04
   eligible_items:
   - DATA-08
   - GUI-02
@@ -576,17 +576,17 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  - STR-03
+  - STR-04
   eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
     GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
     apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: DEC-02 exact deterministic comparison condition CLOSED, default allocator R3 and historical
-    R2 replay preserved. DEC-03 remains gated by STR-04, transitively STR-03. STR-03 dependencies CLOSED, recommended
-    for evidence mapping only; unselected and not started. No activation authority.
-  last_terminal_item: DEC-02
+  selection_reason: STR-03 exact first-live artifact approval condition CLOSED at architecture/offline scope.
+    STR-04 dependency satisfied, eligible for its own lifecycle evidence mapping; unselected and not started.
+    DEC-03 remains gated by STR-04. No activation authority.
+  last_terminal_item: STR-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
@@ -3283,3 +3283,125 @@ dec02_canonical_reconciliation:
   provider_enablement_authorized: false
   trading_activation_authorized: false
   successor_selected: false
+
+str03_previous_selection:
+  id: DEC-02
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  mode: ENGINEERING_ONLY
+  scope: ARCHITECTURE_OFFLINE
+  objective: Make deterministic candidate comparison, with explicit CASH and reasons.
+  implementation_commit: f1bbd7a74600ce2f8355babb337854bc6693bc35
+  evidence:
+  - docs/tracker/evidence/dec02-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/dec02-canonical-sol1/closure.json
+  implementation_complete: true
+  canonical_reconciliation_pending: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+str03_canonical_reconciliation:
+  item: STR-03
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e
+  control_baseline_revision: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e
+  control_plane_commit_resolution: Enclosing Git commit containing this reconciliation; no self-referential
+    hash.
+  closing_condition: Research→validation→probation→approval→Governor path loads exact approved artifact; approval
+    refuses mismatch/stale context.
+  failure_regression_proof: ACTIVE label or grandfather/legacy path cannot replace missing authority.
+  closing_condition_satisfied: true
+  closure_mapping:
+    exact_binding: Request binds strategy_id, version_id, spec hash, STR-01 lineage hash, research/quantitative
+      hashes, exact install and validation/probation receipts. Request ID is re-derived from these bindings
+      including FIRST_LIVE_EXACT_VERSION scope. Owner decision binds request identity, exact version/evidence,
+      owner actor/decision identity and configuration hash.
+    narrow_scope: Scope explicitly excludes by-name, latest and descendants; sibling/derived versions do not
+      inherit receipts or approval. ACTIVE, grandfather receipts and unversioned/legacy authority cannot replace
+      exact first-live approval.
+    integrity: Factory writer triggers refuse ordinary raw-SQL request/decision inserts. Requests are re-derived,
+      decisions re-hashed and rebound; APPROVED_FIRST_LIVE must name the exact owner decision. Changed/copy-forged
+      bindings refuse even in the test that deliberately enables the internal flag.
+    staleness: Material spec/version, research status/revision, quantitative, installed logic, probation trades,
+      risk/config/approval limits or required data changes refuse use. Frozen rows cannot be updated/deleted;
+      old owner artifacts remain inspectable with STALE validity/reasons. Approval scope alteration fails exact
+      request verification.
+    predictive_research: Eligibility re-authenticates predictive lineage against the Research Bank; a superseding
+      result refuses, and absent research_bank_path gives research_bank_not_asserted. Governor forwards this
+      required call-boundary assertion.
+    governor: Governor loads/authenticates the exact approved version, install and evidence; event names exact
+      spec hash/version and owner decision. Unapproved sibling, changed probation/install/research/config refuse
+      before any Governor event is written. Successful offline activation still preserves the live execution
+      fence.
+    authority: Owner approval alone changes no strategy live state, control state, trade count or Governor
+      allocation. It grants no capital, orders, Risk bypass or Kernel start. Capacity, Risk and live/deployment/security
+      gates remain downstream/deferred.
+    replay: Same stored chain re-derives request identity, survives byte-copy restore/restart and identical
+      retry; conflicting decision refuses. Derived versions have new identity and no inherited authority.
+  research_bank_path_limitation: research_bank_path is asserted at the eligibility/governor call boundary rather
+    than stored as a permanent path authority.
+  write_guard_limitation: SQLite writer guard can theoretically be bypassed by code deliberately enabling the
+    internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation
+    from malicious trusted Python or direct database administration.
+  replay_limitation: Fresh fixture rebuild IDs vary because a research look contains wall-clock data; replay
+    is proven against the same stored chain.
+  write_guard_classification: NON_BLOCKING_FOR_EXACT_STR03_ARCHITECTURE_OFFLINE_CONDITION
+  write_guard_reasoning: The exact row requires authenticated artifact handoff and refusal of mismatch/stale
+    context. Ordinary SQL insertion is refused and copied/forged identities are reverified. Deliberately privileged
+    in-process code can enable the guard and fabricate self-consistent records; cryptographic owner attestation
+    or isolation from hostile trusted code is not proven. This remains a downstream security limitation, not
+    a claim of tamper-proof owner authority.
+  validation:
+    fresh_dedicated_passed: 43
+    runner: /home/sarmad/.local/bin/luffy-pytest
+    retained_related_passed: 642
+    retained_related_failed: 1
+    retained_related_seconds: 1385.72
+    retained_related_includes_dedicated: true
+    counts_overlap_do_not_sum: true
+    baseline_failure: tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk
+    baseline_error: 'json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)'
+    baseline_classification: Unrelated baseline failure per user-supplied engineering validation; retained
+      final log confirms failure ID/error. Before-change baseline log is not independently retained here.
+    retained_log: docs/tracker/evidence/str03-canonical-sol1/related-engineering.txt
+    retained_suite_list: docs/tracker/evidence/str03-canonical-sol1/related-suite-list.txt
+    full_related_run_repeated: false
+    full_suite_green_claim: false
+    provider_calls: 0
+    independent_immutable_restart_proof: docs/tracker/evidence/str03-canonical-sol1/offline-proof.json
+  dependency_status:
+    STR-01: CLOSED
+    QNT-08: CLOSED
+    OWN-02: CLOSED
+  STR04_dependency_satisfied: true
+  STR04_now_eligible: true
+  STR04_selected: false
+  STR04_started: false
+  STR04_status: EVIDENCE_TO_MAP
+  DEC03_remaining_dependency_blockers:
+  - STR-04
+  original_conditions_and_edges_preserved: true
+  unrelated_rows_unchanged: 177
+  status_counts_after:
+    CLOSED: 62
+    EVIDENCE_TO_MAP: 77
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 5
+    OPEN: 4
+  source_sha256:
+    trader/strategy/factory_handoff.py: 487f65421a6392f56fbbe3c59ace8f9384467a408fff977bb3d8d2f634c95e1c
+    trader/core/journal.py: 7d9b001cfd73d712a8fc623ec8181f5d33521abadb081a13d90f8234f82ad1e3
+    trader/owner/approvals.py: 4a9830cbab6859d193f63856db143fcfad028568b506e04155fc02b5a651e05c
+    tests/test_str03_approval_binding.py: 2a05b1fff6117e4f31d2a15f882e06598736a2cc3ed24a010168089ad159a464
+    tests/test_strategy_factory_handoff.py: 0d445c291811d8319215d8a66055cc1b1f4cbf99d387acd97e9ea11fbb0be444
+    trader/strategy/compile.py: 67d01814cc08cbe1b4cc6eb4225e50e10272e117f1bb484fdec7b6638aaaa6ff
+    tests/authority_factory_fixtures.py: dd1cf808f6114a4d427adce959307db7eb0fe4fca86a7e2ce22d1f967243b94d
+    config.yaml: c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false

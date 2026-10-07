@@ -1,0 +1,31 @@
+{
+  "approval_row_update_delete_refusals": [
+    {
+      "sql": "UPDATE strategy_approval_requests SET canonical_sha256=canonical_sha256",
+      "reason": "strategy_approval_requests is immutable"
+    },
+    {
+      "sql": "DELETE FROM strategy_approval_requests",
+      "reason": "strategy_approval_requests is immutable"
+    },
+    {
+      "sql": "UPDATE strategy_approval_decisions SET canonical_sha256=canonical_sha256",
+      "reason": "strategy_approval_decisions is immutable"
+    },
+    {
+      "sql": "DELETE FROM strategy_approval_decisions",
+      "reason": "strategy_approval_decisions is immutable"
+    }
+  ],
+  "actual_row_values_equal_after_restart_retry": true,
+  "request_identity_rederived": true,
+  "retry_status": "duplicate",
+  "exact_decision_identity_equal": true,
+  "eligibility_retains_capacity_gate": true,
+  "no_activation_performed": true,
+  "temporary_journal_only": true,
+  "provider_calls": 0,
+  "observed_at_utc": "2026-10-07T17:10:37.535586+00:00",
+  "kernel_dashboard_processes": [],
+  "watchdog_off_present": true
+}

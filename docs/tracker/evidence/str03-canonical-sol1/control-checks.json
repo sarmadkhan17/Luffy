@@ -1,0 +1,59 @@
+{
+  "row_count": 178,
+  "changed_rows": [
+    "STR-03"
+  ],
+  "unrelated_rows_unchanged": 177,
+  "original_conditions_and_edges_preserved": true,
+  "strict_YAML_contracts": true,
+  "source_committed_bytes_and_manifest_hashes_match": true,
+  "status_counts": {
+    "CLOSED": 62,
+    "EVIDENCE_TO_MAP": 77,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "STR-03",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Bind first real-money approval to exact version and evidence.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "implementation_commit": "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+    "evidence": [
+      "docs/tracker/evidence/str03-canonical-sol1/REPORT.md",
+      "docs/tracker/evidence/str03-canonical-sol1/closure.json"
+    ],
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "STR03_canonical": "CLOSED",
+  "STR04_dependency_satisfied": true,
+  "STR04_now_eligible": true,
+  "STR04_row_unchanged": true,
+  "STR04_selected": false,
+  "STR04_started": false,
+  "DEC03_remaining_blockers": [
+    "STR-04"
+  ],
+  "runtime_state_unchanged": true,
+  "research_handoff_disabled": true,
+  "research_referee_disabled": true,
+  "application_code_changed": false,
+  "provider_calls": 0,
+  "fresh_dedicated_passed": 43,
+  "independent_approval_immutability_restart_retry": true,
+  "kernel_dashboard_stopped": true,
+  "retained_related_passed": 642,
+  "retained_related_failed": 1,
+  "write_guard_classification": "NON_BLOCKING_FOR_EXACT_STR03_ARCHITECTURE_OFFLINE_CONDITION"
+}
