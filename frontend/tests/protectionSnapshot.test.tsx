@@ -191,7 +191,7 @@ function renderOverview(adapter: OwnerAdapter) {
   );
 }
 const statusBadge = () =>
-  screen.getByText("Protection verification").parentElement!.textContent ?? "";
+  screen.getByText("Protection").closest(".gl-tile")!.textContent ?? "";
 
 describe("Overview: polling failure never keeps VERIFIED current", () => {
   it("VERIFIED → API failures → browser clock passes expiry → STALE", async () => {
@@ -220,7 +220,7 @@ describe("Overview: polling failure never keeps VERIFIED current", () => {
     });
     await waitFor(() => expect(statusBadge()).toContain("STALE"));
     expect(statusBadge()).not.toContain("VERIFIED");
-    expect(screen.getAllByText("STALE").length).toBeGreaterThan(1); // positions too
+    // per-position protection now lives in the position detail panel, not the table
   });
   it("VERIFIED → UNREADABLE on the next successful poll", async () => {
     vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });

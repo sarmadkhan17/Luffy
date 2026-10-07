@@ -36,6 +36,10 @@ export interface Position {
   symbol: string;
   side: string;
   notional: number | null;
+  amount?: number | null;
+  entryPrice?: number | null;
+  leverage?: number | null;
+  strategyName?: string | null;
   pnl: number | null;
   protection: string;
   protectionDetail?: Protection;

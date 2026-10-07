@@ -1,0 +1,34 @@
+/* Glacier styling for the few shared widgets that still appear inside the redesigned tabs
+   (badges, evidence drawer, empty states, linked records). Dialog parts are portaled to <body>,
+   so those selectors are unscoped; the theme variables live on :root. */
+.badge { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 2px 9px; border-radius: 999px; font: 700 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #c9d4df; background: #ffffff12; border: 1px solid #ffffff1f; }
+.badge.mint { color: var(--ok); background: #3ddc9722; border-color: #3ddc9744; }
+.badge.amber { color: var(--warn); background: #f2b44a22; border-color: #f2b44a44; }
+.badge.rose, .badge.red { color: var(--bad); background: #ff7b7222; border-color: #ff7b7244; }
+.badge.blue { color: #56ccf2; background: #56ccf222; border-color: #56ccf244; }
+.quiet { color: var(--txt2); font-size: 13px; }
+.empty { padding: 18px; border-radius: 12px; border: 1px solid rgb(var(--a) / .25); background: #ffffff08; color: var(--txt2); font: 14px var(--sans); text-align: center; }
+.empty h2 { font: 600 14px var(--serif-d); letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--hi)); margin: 0 0 8px; }
+.empty.error, .inline-error { border-color: #ff7b7255; background: #ff7b7212; color: #ffb4ab; }
+.inline-error { padding: 10px 14px; border-radius: 10px; border: 1px solid #ff7b7255; font-size: 13px; }
+.panel { padding: 18px; border-radius: 12px; border: 1px solid rgb(var(--a) / .3); background: #ffffff08; }
+.panel-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.panel-heading h2, .panel-heading h3 { margin: 0; font: 600 13px var(--serif-d); letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--hi)); }
+.freshness { display: inline-flex; gap: 6px; align-items: center; font: 11px var(--mono); padding: 2px 8px; border-radius: 6px; background: #ffffff10; color: var(--txt2); }
+.freshness.fresh { color: var(--ok); } .freshness.stale { color: var(--warn); } .freshness.unavailable { color: var(--bad); }
+.button, .gl-app button.button { min-height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 8px; border: 1px solid #3a4b5c; background: transparent; color: var(--txt); font: 13px var(--sans); cursor: pointer; text-decoration: none; }
+.icon-button { width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: 8px; border: 1px solid #3a4b5c; background: transparent; color: var(--txt); cursor: pointer; }
+.text-link { color: rgb(var(--a)); text-decoration: none; }
+.dialog-overlay { position: fixed; inset: 0; background: #000000b8; backdrop-filter: blur(3px); z-index: 90; }
+.evidence-drawer { position: fixed; z-index: 91; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 22px 24px; border-radius: 14px; color: var(--txt); font-family: var(--sans); background: linear-gradient(150deg, #0d1c2bf2, #060c14f7); border: 1px solid rgb(var(--a) / .55); box-shadow: 0 0 22px rgb(var(--a) / .35), 0 0 60px rgb(var(--a) / .15), 0 30px 80px #000; display: flex; flex-direction: column; gap: 12px; }
+.evidence-drawer h2 { margin: 0; font: 600 16px var(--serif-d); letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--hi)); }
+.evidence-details { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #b9c5d1; }
+.record-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 16px; }
+.record-fields dt { font: 10px var(--serif-d); letter-spacing: .2em; text-transform: uppercase; color: var(--txt3); }
+.record-fields dd { margin: 0 0 4px; font: 13px var(--mono); overflow-wrap: anywhere; }
+.record-link, .linked-record a { color: rgb(var(--a)); text-decoration: none; }
+.table-scroll { overflow-x: auto; }
+.unavailable-list, .unavailable-fields { font-size: 12px; color: var(--warn); }
+.side-note { padding: 10px 12px; border-radius: 10px; background: #ffffff08; border: 1px solid rgb(var(--a) / .2); }
+.linked-wrap, .linked-record { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 12px; border: 1px solid rgb(var(--a) / .3); background: #ffffff08; }
+.connections { font-size: 13px; color: var(--txt2); }

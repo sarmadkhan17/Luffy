@@ -6,10 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PreviewProvider } from "./context";
 import { fixtureAdapter } from "./adapters/fixture";
 import Shell from "./Shell";
-import "./styles.css";
-import "./live.css";
-import "./product.css";
-import "./m4.css";
+import "./glacier.css";
+import "./widgets.css";
 const client = new QueryClient({
   defaultOptions: {
     queries: {

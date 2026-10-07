@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import legacyCss from "../legacy.css?inline";
 import { useQuery } from "@tanstack/react-query";
 import { usePreview } from "../context";
 import { Badge, Panel, QueryState } from "../components/ui";
@@ -11,6 +12,14 @@ const show = (v: unknown) => Array.isArray(v) ? v.join(", ") || "None" :
   typeof v === "object" && v !== null ? JSON.stringify(v, null, 2) : String(v ?? "Not recorded");
 
 export default function Tracker() {
+  // Tracker keeps its original look: the previous theme's stylesheets apply only while it is open.
+  useEffect(() => {
+    const el = document.createElement("style");
+    el.dataset.legacy = "tracker";
+    el.textContent = legacyCss;
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, []);
   const { adapter } = usePreview();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");

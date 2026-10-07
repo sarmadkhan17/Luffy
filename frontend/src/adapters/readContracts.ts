@@ -278,7 +278,7 @@ export function readContractIssue(path: string, d: unknown): string | null {
         ? researchItem
         : p === "research"
           ? researchList
-          : p.startsWith("strategies/")
+          : p.startsWith("strategies/") && p !== "strategies/board"
             ? strategy
             : p === "operations/activity"
               ? operations

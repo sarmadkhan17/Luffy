@@ -221,6 +221,10 @@ export function mapOverview(o: Json): OverviewData {
           side: String(p.side),
           notional:
             typeof p.notional_usdt === "number" ? p.notional_usdt : null,
+          amount: typeof p.amount === "number" ? p.amount : null,
+          entryPrice: typeof p.entry_price === "number" ? p.entry_price : null,
+          leverage: typeof p.leverage === "number" ? p.leverage : null,
+          strategyName: typeof p.strategy_name === "string" ? p.strategy_name : null,
           pnl: null,
           protection: detail.status,
           protectionDetail: detail,
@@ -271,7 +275,7 @@ export function mapOverview(o: Json): OverviewData {
       : null,
     live: {
       generatedAt: String(o.generated_at),
-      observedEvidence: Object.fromEntries(["account", "realized_today", "exposure", "control", "kernel_process", "heartbeat", "equity_series", "positions", "news_guard", "risk", "needs_you"].map(k => [k, o[k] ?? null])),
+      observedEvidence: Object.fromEntries(["account", "realized_today", "exposure", "control", "kernel_process", "heartbeat", "equity_series", "positions", "protection", "news_guard", "risk", "needs_you"].map(k => [k, o[k] ?? null])),
       kernelState: heartbeat?.runtime_state ?? o.kernel_process?.state ?? "UNKNOWN",
       control: obj(o.control)
         ? {

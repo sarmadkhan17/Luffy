@@ -1,17 +1,12 @@
-import { lazyChunk } from "../lazyChunk";
 import { Suspense, useEffect, useRef, useState, useCallback } from "react";
-import { Send, MicOff, Square, ArrowUpRight } from "lucide-react";
+import { Send, MicOff, Square, FileText } from "lucide-react";
 import { recordHref, type RecordKind } from "../links";
 import { usePreview, type Message } from "../context";
-import {
-  Badge,
-  EvidenceButton,
-  VisualBoundary,
-  useMedia,
-} from "../components/ui";
+import { Badge, EvidenceButton } from "../components/ui";
 import type { RequestState } from "../components/Avatar";
 import { NeedsYou, OwnerEvidence } from "../components/OwnerEvidence";
-const Avatar = lazyChunk(() => import("../components/Avatar"));
+import { Card, CardHead } from "../components/glass";
+import { PageHeader } from "../components/PageHeader";
 export default function Luffy() {
   const { adapter, scenario, messages, setMessages, session } = usePreview();
   const readOnly = session?.dashboard_mode === "READ_ONLY_GUI";
@@ -23,7 +18,6 @@ export default function Luffy() {
   const request = useRef<{ controller: AbortController; id: number } | null>(
     null,
   );
-  const mobile = useMedia("(max-width: 759px)");
   const nearBottom = useRef(true);
   const [unread, setUnread] = useState(false);
   const transcript = useRef<HTMLDivElement>(null);
@@ -66,15 +60,6 @@ export default function Luffy() {
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
     setUnread(false);
   }
-  const avatar = (
-    <VisualBoundary fallback={<span>Core unavailable</span>}>
-      <Suspense
-        fallback={<span className="avatar-placeholder">Core loading</span>}
-      >
-        <Avatar state={coreState} />
-      </Suspense>
-    </VisualBoundary>
-  );
   async function send() {
     const text = input.trim();
     if (readOnly || !text || request.current || messages.length >= 100) return;
@@ -159,225 +144,155 @@ export default function Luffy() {
     setError("Request cancelled. No action was taken.");
     composer.current?.focus();
   }
+
+  const label: Record<string, [string, string, string]> = {
+    idle: ["Ready", "#3ddc97", "Waiting for you. Rings turn slowly while the core rests."],
+    pending: ["Reading the journal…", "rgb(var(--a2))", "Rings speed up while LUFFY gathers evidence."],
+    responding: ["Replying", "#3ddc97", "Steady glow while the answer arrives."],
+    error: ["No reply", "#ff7b72", "The request failed; the core turns red and stops."],
+  };
+  const [stateLabel, stateColor, stateNote] = label[coreState] ?? label.idle;
+  const orbCls = { idle: "idle", pending: "thinking", responding: "replying", error: "failed", cancelled: "idle" }[coreState as string] ?? "idle";
+  const cited = collectEvidence(messages);
+  const quick = live
+    ? ["How am I doing today?", "What positions are open?", "Which strategy is weakest?", "What is research testing?"]
+    : ["Ask about the sample research receipt"];
+  const timeOf = (id: number) => (id > 1e12 ? new Date(id).toISOString().slice(11, 16) + " UTC" : "");
   return (
-    <div
-      className="conversation-layout luffy-bridge"
-      data-core-state={coreState}
-    >
-      <section
-        className="panel conversation luffy-console"
-        aria-label="Conversation"
-      >
-        <div className="panel-heading conversation-header">
-          {mobile && <div className="mobile-core">{avatar}</div>}
-          <div className="conversation-title">
-            <span className="status-dot" />
-            <h2>LUFFY</h2>
-            <Badge>
-              {live
-                ? "Text conversation · no controls"
-                : "Fixture conversation"}
-            </Badge>
-          </div>
-          <span className="quiet">Text only</span>
-        </div>
-        <div
-          className="transcript"
-          role="log"
-          aria-label="Message transcript"
-          tabIndex={0}
-          ref={transcript}
-          onScroll={() => {
-            const el = transcript.current;
-            if (el) {
-              nearBottom.current =
-                el.scrollHeight - el.scrollTop - el.clientHeight < 64;
-              if (nearBottom.current) setUnread(false);
-            }
-          }}
-        >
-          {messages.map((m) => (
-            <article className={`message ${m.role}`} key={m.id}>
-              <div className="message-role">
-                {m.role === "owner" ? "YOU" : "LUFFY"}{" "}
-                <span>
-                  {live
-                    ? m.requestId
-                      ? `REPLY ${m.requestId.slice(0, 8)}`
-                      : "LIVE"
-                    : "DEMO"}
-                </span>
-              </div>
-              <p>{m.text}</p>
-              {m.outcome === "cancelled" && (
-                <p className="message-outcome">
-                  Cancelled — no reply · {m.cancellationReason}
-                </p>
-              )}
-              {m.outcome === "failed" && (
-                <p className="message-outcome">Failed — no reply</p>
-              )}
-              {m.evidence.map((e) => (
-                <EvidenceButton key={e.id} value={e} />
-              ))}
-              {m.mentions && <ReplyEvidence m={m.mentions} />}
-            </article>
-          ))}
-          {busy && (
-            <article className="message luffy">
-              <div className="message-role">
-                LUFFY{" "}
-                <span>
-                  {state === "pending" ? "REQUEST PENDING" : "RESPONDING"}
-                </span>
-              </div>
-              <p>
-                {partial ||
-                  (live
-                    ? "Waiting for the Luffy backend…"
-                    : "Waiting for the fixture adapter…")}
-              </p>
-            </article>
-          )}
-          {error && (
-            <p
-              className={state === "error" ? "inline-error" : "quiet"}
-              role={state === "error" ? "alert" : "status"}
-            >
-              {error}{" "}
-              {state === "error" &&
-                "Your message remains in the transcript. Send a new message to retry."}
-            </p>
-          )}
-        </div>
-        {unread && (
-          <button className="jump-latest" type="button" onClick={jumpToLatest}>
-            Jump to latest ↓
-          </button>
-        )}
-        <form
-          className="composer"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void send();
-          }}
-        >
-          <label htmlFor="message">Message LUFFY</label>
-          <textarea
-            ref={composer}
-            id="message"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            maxLength={2000}
-            placeholder={
-              live
-                ? "Ask about positions, P&L, decisions…"
-                : "Ask about the sample evidence…"
-            }
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                !e.shiftKey &&
-                !e.nativeEvent.isComposing
-              ) {
-                e.preventDefault();
-                void send();
-              }
-            }}
-          />
-          <div className="composer-actions">
-            <span className="quiet">
-              <MicOff size={14} /> {readOnly ? "Chat disabled in read-only GUI mode" : "Voice unavailable · Enter to send"}
+    <>
+      <PageHeader title="LUFFY">
+        <span style={{ fontSize: 13, color: "var(--txt2)" }}>your trading partner · answers from recorded evidence</span>
+      </PageHeader>
+      <div className="gl-row" style={{ flex: 1, minHeight: 0 }} data-core-state={coreState}>
+        <Card className="gl-chat" label="Conversation">
+          <div className="gl-orbwrap">
+            <div className={`orb ${orbCls}`} role="img" aria-label={`LUFFY core: ${stateLabel}`}>
+              <span className="ring r1" /><span className="ring r2" /><span className="ring r3" /><span className="ring r4" /><span className="ring r5" /><span className="ring r6" /><span className="core" />
+            </div>
+            <span className="cz" style={{ fontSize: 28, color: "rgb(var(--hi))", letterSpacing: ".2em", paddingLeft: ".2em" }}>LUFFY</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: stateColor }}>
+              <i style={{ width: 9, height: 9, borderRadius: "50%", background: stateColor, boxShadow: `0 0 10px ${stateColor}` }} />
+              <span data-testid="core-state-label">{stateLabel}</span>
             </span>
-            {busy ? (
-              <button
-                key="cancel"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  cancel();
-                }}
-              >
-                <Square size={15} /> Cancel request
-              </button>
-            ) : (
-              <button
-                key="send"
-                className="primary"
-                disabled={readOnly || !input.trim() || messages.length >= 100}
-                type="submit"
-              >
-                Send <Send size={15} />
-              </button>
-            )}
+            <span style={{ fontSize: 13, color: "var(--txt2)", maxWidth: 360, lineHeight: 1.5 }}>{stateNote} The core reflects this request's state.</span>
+            <ol className="core-states" aria-label="Core request states" style={{ display: "none" }}>
+              {CORE_STATES.map(([st, l]) => (<li key={st} data-on={coreState === st} aria-current={coreState === st ? "step" : undefined}>{l}</li>))}
+            </ol>
           </div>
-          {messages.length >= 100 && (
-            <p role="status">
-              Preview transcript limit reached (100 messages). Reload to start a
-              new session.
-            </p>
-          )}
-        </form>
-      </section>
-      <aside className="conversation-side luffy-chamber">
-        <div className="chamber-sky" aria-hidden="true" />
-        <div className="chamber-mark" aria-hidden="true">
-          <span className="chamber-wordmark">LUFFY</span>
-          <span className="chamber-sub">
-            MECHANICAL CORE · TEXT CONVERSATION
-          </span>
-        </div>
-        {!mobile && <div className="core-mount">{avatar}</div>}
-        <div className="avatar-description">
-          <Badge tone={state === "error" ? "rose" : "neutral"}>
-            {state === "idle" ? "Ready" : state}
-          </Badge>
-          <p>The core reflects this request’s state.</p>
-          <ol className="core-states" aria-label="Core request states">
-            {CORE_STATES.map(([s, label]) => (
-              <li
-                key={s}
-                data-on={coreState === s}
-                aria-current={coreState === s ? "step" : undefined}
-              >
-                {label}
-              </li>
+
+          <div className="gl-log" role="log" aria-label="Message transcript" tabIndex={0} ref={transcript}
+            onScroll={() => {
+              const el = transcript.current;
+              if (el) { nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 64; if (nearBottom.current) setUnread(false); }
+            }}>
+            {messages.map((m) => (
+              <article className={`msgin ${m.role}`} key={m.id} style={{ alignItems: m.role === "owner" ? "flex-end" : "flex-start" }}>
+                <span style={{ fontSize: 12, color: "var(--txt3)" }}>
+                  <b style={{ color: m.role === "owner" ? "#c9d4df" : "rgb(var(--a2))" }}>{m.role === "owner" ? "You" : "LUFFY"}</b>
+                  {timeOf(m.id) ? ` · ${timeOf(m.id)}` : ""}{live && m.requestId ? ` · reply ${m.requestId.slice(0, 8)}` : ""}
+                </span>
+                <div className="bubble" style={{ borderRadius: m.role === "owner" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "owner" ? "#ffffff0d" : "rgb(var(--a) / .08)", borderColor: m.role === "owner" ? "#ffffff1a" : "rgb(var(--a) / .3)" }}>
+                  <p>{m.text}</p>
+                </div>
+                {m.outcome === "cancelled" && <p className="gl-note">Cancelled — no reply · {m.cancellationReason}</p>}
+                {m.outcome === "failed" && <p className="gl-note" style={{ color: "#ff7b72" }}>Failed — no reply</p>}
+                {m.mentions?.links && m.mentions.links.length > 0 && (
+                  <div className="gl-cards">{m.mentions.links.map((l) => <RecCard key={`${l.kind}:${l.id}`} l={l} />)}</div>
+                )}
+                {m.evidence.length > 0 && <div className="gl-cards">{m.evidence.map((e) => <EvidenceButton key={e.id} value={e} />)}</div>}
+                {m.mentions && <ReplyEvidence m={m.mentions} />}
+              </article>
             ))}
-          </ol>
-        </div>
-        <div className="chamber-notes">
-          <NeedsYou />
-          <OwnerEvidence />
-          <div className="side-note">
-            <div className="eyebrow">EVIDENCE, NOT ASSUMPTIONS</div>
-            <h2>Keep the source in view.</h2>
-            <p>
-              {live
-                ? "Replies expose exact consulted records and hashes from typed read-only tools. Mention links are separate from sources. Missing evidence stays unavailable."
-                : "Responses link to their supporting records. Inspect freshness and limitations before interpreting a claim."}
-            </p>
-            <a className="text-link" href="#knowledge">
-              Explore Knowledge <ArrowUpRight size={15} />
-            </a>
-          </div>
-          <div className="side-note">
-            <h3>{live ? "Owner controls" : "Isolated conversation"}</h3>
-            <p>
-              {live
-                ? "Conversation uses typed internal queries. It cannot approve, spend, activate or trade. Needs You records exact owner decisions through the existing control gateway; recovery uses Operations. Voice is not connected."
-                : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
-            </p>
-            {live && (
-              <a className="button secondary" href="#operations">
-                Open Operations ↗
-              </a>
+            {busy && (
+              <div className="msgin" style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--txt2)", fontSize: 13 }}>
+                {state === "responding" && partial ? <div className="bubble" style={{ background: "rgb(var(--a) / .08)", borderColor: "rgb(var(--a) / .3)" }}><p>{partial}</p></div> : (
+                  <><span className="typing"><span /><span /><span /></span>{state === "pending" ? (live ? "LUFFY is reading the journal…" : "Waiting for the fixture adapter…") : "Responding…"}</>
+                )}
+              </div>
             )}
+            {error && <p className={state === "error" ? "gl-err" : "gl-note"} role={state === "error" ? "alert" : "status"}>{error} {state === "error" && "Your message remains in the transcript. Send a new message to retry."}</p>}
           </div>
-        </div>
-      </aside>
-    </div>
+          {unread && <button className="gl-btn" type="button" onClick={jumpToLatest} style={{ alignSelf: "center" }}>Jump to latest ↓</button>}
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {quick.map((q) => (
+              <button key={q} type="button" className="gl-chip2" disabled={readOnly || busy} onClick={() => { setInput(q); composer.current?.focus(); }}>{q}</button>
+            ))}
+          </div>
+          <form className="gl-composer" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+            <button type="button" className="mic" disabled aria-label="Voice unavailable" title="Voice is not connected"><MicOff size={20} aria-hidden="true" /></button>
+            <label htmlFor="message" className="gl-sr">Message LUFFY</label>
+            <textarea ref={composer} id="message" rows={1} value={input} onChange={(e) => setInput(e.target.value)} maxLength={2000} disabled={readOnly}
+              placeholder={readOnly ? "Chat is disabled in read-only GUI mode" : live ? "Ask LUFFY about trades, strategies, risk…" : "Ask about the sample evidence…"}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} />
+            {busy ? (
+              <button key="cancel" type="button" className="gl-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancel(); }}><Square size={15} aria-hidden="true" /> Cancel request</button>
+            ) : (
+              <button key="send" type="submit" className="gl-btn primary" aria-label="Send" disabled={readOnly || !input.trim() || messages.length >= 100}><Send size={16} aria-hidden="true" /> Send</button>
+            )}
+          </form>
+          <p className="gl-note">{readOnly ? "Chat disabled in read-only GUI mode" : "Voice unavailable · Enter to send · Shift+Enter for a new line"}{messages.length >= 100 ? " · transcript limit reached (100 messages); reload to start a new session" : ""}</p>
+        </Card>
+
+        <aside className="gl-side" style={{ maxWidth: 440 }}>
+          <Card className="pad" label="Evidence used">
+            <CardHead icon={<FileText size={16} />} title="Evidence used" />
+            <span style={{ fontSize: 13, color: "var(--txt2)" }}>Every record LUFFY cited in this conversation. Click one to jump to it.</span>
+            {cited.length === 0 ? <p className="gl-note">Nothing cited yet. Records appear here when a reply names one by exact id.</p>
+              : cited.map((l) => <RecCard key={`${l.kind}:${l.id}`} l={l} />)}
+            <div className="gl-callout">
+              LUFFY can explain and suggest. It cannot approve, spend, activate or trade from this conversation. Anything that changes trading needs your approval under <a className="gl-link" href="#overview">Needs you</a> on the Overview.
+            </div>
+          </Card>
+          {live && (
+            <Card className="pad gl-legacy" label="Needs you">
+              <CardHead icon={<FileText size={16} />} title="Needs you" />
+              <NeedsYou />
+            </Card>
+          )}
+          {live && (
+            <Card className="pad gl-legacy" label="Evidence query">
+              <CardHead icon={<FileText size={16} />} title="Evidence query" />
+              <OwnerEvidence />
+            </Card>
+          )}
+          <Card className="pad" label="Owner controls">
+            <CardHead icon={<FileText size={16} />} title="Owner controls" />
+            <p style={{ margin: 0, fontSize: 13, color: "var(--txt2)", lineHeight: 1.5 }}>
+              {live ? "Conversation uses typed internal queries. Needs You records exact owner decisions through the existing control gateway; recovery uses Operations. Voice is not connected." : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
+            </p>
+            {live && <a className="gl-btn" href="#operations">Open Operations ↗</a>}
+          </Card>
+        </aside>
+      </div>
+    </>
   );
+}
+
+const KIND_GLYPH: Record<string, string> = { strategy: "S", trade: "T", decision: "D", research: "R" };
+type Link = NonNullable<NonNullable<Message["mentions"]>["links"]>[number];
+/** One record named by exact id; the link goes to the record. */
+function RecCard({ l }: { l: Link }) {
+  return (
+    <a className="rcard" href={recordHref(MENTION_KIND[l.kind], l.id)} data-record={`${l.kind}:${l.id}`}>
+      <span className="m glyph">{KIND_GLYPH[l.kind] ?? "·"}</span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: 11, color: "var(--txt3)", textTransform: "uppercase", letterSpacing: ".1em" }}>{l.kind}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, overflowWrap: "anywhere" }}>{l.label}</span>
+        <span style={{ fontSize: 12, color: "var(--txt2)" }}>exact id · {l.id}</span>
+      </span>
+      <span style={{ marginLeft: "auto" }} aria-hidden="true">→</span>
+    </a>
+  );
+}
+/** Records named in the transcript, newest first, one card per record. */
+function collectEvidence(messages: Message[]): Link[] {
+  const seen = new Set<string>();
+  const out: Link[] = [];
+  for (const m of [...messages].reverse())
+    for (const l of m.mentions?.links ?? [])
+      if (!seen.has(`${l.kind}:${l.id}`)) { seen.add(`${l.kind}:${l.id}`); out.push(l); }
+  return out;
 }
 
 /** The request states the core can show; only the current one is lit. */

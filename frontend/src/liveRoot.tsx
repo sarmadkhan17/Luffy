@@ -21,10 +21,9 @@ import {
   logout,
   type Bootstrap,
 } from "./adapters/live";
-import "./styles.css";
-import "./live.css";
-import "./product.css";
-import "./m4.css";
+import "./fonts";
+import "./glacier.css";
+import "./widgets.css";
 
 type State =
   | { kind: "loading" }
