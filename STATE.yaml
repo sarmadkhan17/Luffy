@@ -3546,3 +3546,122 @@ qnt08_canonical_reconciliation:
     tests/test_single_creation_path.py: 2bb6fcb02ee8e1cdcc75cb6da329c2c039390931ea2f40ce9f91e4cc1a7cd9ec
     tests/test_strategy_factory_handoff.py: c7cfa009e6c3ce2e9f2e568a7c61c2f292badf47a0743a4b64db5b071004acf9
     trader/strategy/factory_handoff.py: 25fa388f91fc8a777b94e1d6abc0164a2355062daf4fc9fba59ba393996fb470
+
+res08_canonical_reconciliation:
+  item: RES-08
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 6f00d8c205e298cf7394328a45a8f19b6eeb9b1e
+  control_baseline_revision: 6f00d8c205e298cf7394328a45a8f19b6eeb9b1e
+  evidence: docs/tracker/evidence/res08-canonical-sol1/closure.json
+  engineering_evidence: docs/superpowers/reports/res08-governed-bridge-sol2/REPORT.md
+  engineering_proof: docs/superpowers/reports/res08-governed-bridge-sol2/proof.json
+  closing_condition_satisfied: true
+  closure_mapping:
+    exact_lineage: hypothesis_id/schema -> experiment_id/schema -> worker measurement_id/canonical measured
+      result -> registered quantitative evidence ID -> Bank result_id -> conclusion_id -> exact next questions;
+      all bound and verified.
+    source_revision_cut: Source provenance hash, selected candle and protected revision fingerprints, discovery/protected
+      split/cut and evaluation code versions bound into experiment and feedback identity.
+    no_self_certification: Successful measured worker receipts must match retained numerical output and own-ledger
+      registered evidence; bare SUPPORTED/UNSUPPORTED label and rehashed missing/mismatched evidence refuse.
+    quantitative_boundaries: QNT-03 corrected gate/common rotation; QNT-04 protected/spent cut; QNT-05 transferred
+      registered budget/sequence and LORD ceiling; QNT-06 sufficient power/UNTESTED; QNT-08 factory admission
+      remains separate and authoritative. RES-08 creates no StrategyVersion.
+    insufficient_unsupported: Unavailable/insufficient output remains quantitative UNTESTED; paired-null/exact-volume-path
+      translation explicitly unsupported with no fabricated numerical result.
+    retry_restart: Immutable payload and IDs survive duplicate/retry/fresh-interpreter restart; rejected evidence
+      is retained and already consumed look stays spent/charged untestable.
+    changed_revision: Changed candle/protected/source revisions create new content-bound experiment or related
+      proposal lineage; frozen-source conflicts refuse; legacy v1 readonly replay retains exact identity without
+      certifying a new unbound result.
+  verification:
+    source_and_test_hashes_match: true
+    committed_bytes_match: true
+    retained_final_checks:
+      command: /home/sarmad/.local/bin/luffy-pytest -q tests/test_res08_governed_bridge.py tests/test_res07_competing_hypotheses.py
+        tests/test_qnt03_dependence_lineage.py tests/test_qnt04_holdout_separation.py tests/test_qnt05_error_budget.py
+        tests/test_qnt06_untested_power.py
+      passed: 65
+      elapsed_seconds: 130.3
+      revision: final; includes expanded evaluation-version fingerprint
+    retained_bridge_Bank_regressions:
+      command: /home/sarmad/.local/bin/luffy-pytest -q tests/test_predictive_research_bridge.py tests/test_res05_next_question_link.py
+        tests/test_research_evidence_source_binding.py
+      passed: 93
+      elapsed_seconds: 363.63
+      revision: final admission/receipt guards before evaluation fingerprint expanded to additional implementation
+        modules
+    retained_quantitative_regressions:
+      command: /home/sarmad/.local/bin/luffy-pytest -q tests/test_qnt03_dependence_lineage.py tests/test_qnt04_holdout_separation.py
+        tests/test_qnt05_error_budget.py tests/test_qnt06_untested_power.py tests/test_research_referee.py
+        tests/test_research_runner.py tests/test_research_fdr.py
+      passed: 86
+      elapsed_seconds: 60.96
+      revision: unchanged quantitative machinery; before final receipt/version refinements
+    counts_overlap: true
+    counts_summed: false
+    fresh_tests_run: false
+    engineering_diagnostics_preserved:
+    - stage: baseline before code edits
+      failures: 2
+      elapsed_seconds: 13.27
+      reasons:
+      - changed candle content kept same experiment ID
+      - bare SUPPORTED label persisted without quantitative evidence
+    - stage: initial new test fixture
+      passed: 4
+      setup_errors: 12
+      elapsed_seconds: 31.94
+      reason: SQLite file copy omitted WAL schema; fixed with SQLite backup
+    - stage: source-version proof refinement
+      passed: 29
+      failed: 1
+      elapsed_seconds: 119.3
+      reason: different measured source also changed semantic context; corrected test covers changed evidence
+        and same-semantics re-observation
+  limitations:
+  - Paired-null experiment translation remains UNSUPPORTED_EXPERIMENT_SHAPE / UNTESTED; no numerical result
+    or support invented.
+  - Exact-volume-path experiment translation also remains explicitly unsupported.
+  - Architecture/offline synthetic proof only; no live provider calls, real-market edge, deployment or trading
+    proof.
+  - 93 bridge/Bank passes preceded final fingerprint module-list expansion; 86 quantitative passes preceded
+    final receipt/version refinements. Final expanded-fingerprint combined run passed 65. Counts overlap and
+    are not summed; no full-suite claim.
+  - 'Existing QNT-08 first-look cut limitation remains: no independent external recorder; this reconciliation
+    adds no external attestation or authority.'
+  dependency_status:
+    RES-07: CLOSED
+    QNT-01: CLOSED
+    QNT-03: CLOSED
+    QNT-04: CLOSED
+    QNT-05: CLOSED
+    QNT-06: CLOSED
+    QNT-08: CLOSED
+  paired_null_shape: UNSUPPORTED_EXPERIMENT_SHAPE / UNTESTED
+  STR01_dependencies_satisfied: true
+  STR01_now_eligible: true
+  STR01_own_condition_still_open: Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world
+    requirements and hashes; material change creates a new version.
+  original_condition_and_edges_preserved: true
+  QNT_rows_unchanged: true
+  application_code_changed: false
+  provider_calls: 0
+  runtime_execution_authorized: false
+  successor_selected: false
+  status_counts_after:
+    CLOSED: 56
+    EVIDENCE_TO_MAP: 81
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+  source_sha256:
+    trader/research/predictive_experiment.py: de0e53da4f62512d6711fbc0e549663906dde5d62fb525d28a0a98f7988e6df8
+    trader/research/predictive_bridge.py: b0204a80a12773cffca34935f775be857093569b34daff6fbee7eafc9c9a1819
+    trader/research/predictive_receipt.py: 1b8971dfeffe1eb7e5ad348ac40ea165635d53632399aa966ac1294a11c0ad5b
+    trader/cognition/predictive_bank.py: 092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554
+    tests/test_res08_governed_bridge.py: 10ea511509b8017ab54fef7aacd365a89e81c3c6cebaa37529759113e86a92e5
+    tests/test_predictive_research_bridge.py: 1eea69c78a35aaf2f0aaf73734d8057be8fbfcef6f9e22374e29f04c22933130

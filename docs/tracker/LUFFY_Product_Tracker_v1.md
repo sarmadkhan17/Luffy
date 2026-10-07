@@ -1,3 +1,5 @@
+> Current [SOL-1][RES-08]: CLOSED at architecture/offline scope. Exact governed experiment/quantitative/Bank lineage verified. Paired-null translation remains unsupported/UNTESTED. STR-01 dependencies are satisfied and it is now eligible, with its own closure proof still open. QNT rows unchanged. [Evidence](evidence/res08-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][QNT-08]: CLOSED at architecture/offline scope. Registered quantitative admission verified; downstream authority remains gated. First-look cut_ms has no independent external recorder; this evidence limitation is retained. STR-01 still awaits RES-08. Active RES-08 work unchanged. [Evidence](evidence/qnt08-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][RES-07]: CLOSED at architecture/offline scope. Immutable competing proposals verified; causality UNKNOWN, predictive edge UNTESTED. RES-08 now dependency-eligible; paired-null translation remains unsupported under RES-08. Active QNT-08 work unchanged. [Evidence](evidence/res07-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2094,29 +2096,29 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Closes the research-to-test-to-next-question cycle.
 - **closure_condition**: Normal bridge binds hypothesis/experiment/measurement/referee/Bank IDs; unsupported shapes and insufficient data stay explicit.
 - **failure_regression_proof**: Later inspected data cannot be relabelled untouched; duplicate submission/restart preserves identity.
 - **dependencies**: RES-07, QNT-01
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: MAPPED_GOVERNED_EXPERIMENT_REGISTERED_QUANTITATIVE_LINEAGE
+- **runtime_evidence**: OFFLINE_SYNTHETIC_ONLY
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Normal bridge binds exact hypothesis/experiment/measurement/registered referee/Bank lineage, source/data revisions, cut and evaluation version. Feedback cannot self-certify; insufficient evidence stays UNTESTED. Duplicate/restart preserves identity; changed revisions yield new immutable lineage. Retained 65 final checks, 93 bridge/Bank and 86 quantitative regressions (overlapping revision-scoped counts). Paired-null remains unsupported/UNTESTED. Evidence: docs/tracker/evidence/res08-canonical-sol1/REPORT.md.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§12.1,13,14.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-08 architecture/offline closure. Paired-null and exact-volume-path translations remain explicitly unsupported/UNTESTED; no numerical support is invented. Preserve quantitative admission and downstream authority gates.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 6f00d8c205e298cf7394328a45a8f19b6eeb9b1e
+- **work_authorized**: True
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/res08-canonical-sol1/closure.json
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7321,3 +7323,5 @@ RES-05 canonical status counts: CLOSED 53, EVIDENCE_TO_MAP 84, DEFERRED 7, AWAIT
 RES-07 canonical status counts: CLOSED 54, EVIDENCE_TO_MAP 83, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
 
 QNT-08 canonical status counts: CLOSED 55, EVIDENCE_TO_MAP 82, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
+
+RES-08 canonical status counts: CLOSED 56, EVIDENCE_TO_MAP 81, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.

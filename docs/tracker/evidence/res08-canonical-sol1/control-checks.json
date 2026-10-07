@@ -1,0 +1,37 @@
+{
+  "row_count": 178,
+  "unchanged_unrelated_rows": 177,
+  "original_condition_and_edges_preserved": true,
+  "all_QNT_rows_unchanged": true,
+  "STR01_row_unchanged": true,
+  "source_test_hashes_and_committed_bytes_match": true,
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "RES-08",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Connect hypotheses to protected experiments and exact result feedback.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "evidence": [
+      "docs/superpowers/reports/res08-governed-bridge-sol2/REPORT.md",
+      "docs/tracker/evidence/res08-canonical-sol1/REPORT.md"
+    ],
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "manifest_hashes_match": true,
+  "status_counts": {
+    "CLOSED": 56,
+    "EVIDENCE_TO_MAP": 81,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 7,
+    "OPEN": 4
+  }
+}
