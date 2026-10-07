@@ -1,0 +1,49 @@
+{
+  "row_count": 178,
+  "unchanged_unrelated_rows": 177,
+  "changed_rows": [
+    "STR-01"
+  ],
+  "original_condition_and_edges_preserved": true,
+  "readiness_gates_preserved": true,
+  "STR02_and_DEC01_rows_unchanged": true,
+  "STR02_dependencies_satisfied": true,
+  "STR02_unselected": true,
+  "DEC01_status": "BLOCKED",
+  "status_counts": {
+    "CLOSED": 57,
+    "EVIDENCE_TO_MAP": 80,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 7,
+    "OPEN": 4
+  },
+  "source_and_committed_bytes_match": true,
+  "manifest_hashes_match": true,
+  "YAML_unique_keys_and_strict_contracts": true,
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "STR-01",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Create one immutable typed StrategySpec/StrategyVersion lineage.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "implementation_commit": "150850970ace68348850d439a333b57acb374c85",
+    "evidence": [
+      "docs/tracker/evidence/str01-canonical-sol1/REPORT.md",
+      "docs/tracker/evidence/str01-canonical-sol1/closure.json"
+    ],
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "runtime_status_unchanged": true,
+  "research_handoff_disabled": true,
+  "research_referee_disabled": true,
+  "application_code_changed": false
+}

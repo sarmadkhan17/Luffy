@@ -1,3 +1,5 @@
+> Current [SOL-1][STR-01]: **CLOSED at architecture/offline scope** on `1508509`. 137 final affected tests plus 1 independent persisted-Bank proof passed. Creation authenticates genuine exact Bank/quantitative lineage; load/verify do not reopen Bank, caller-supplied Bank path requires content authentication, and Kernel handoff remains disabled. STR-02 is dependency-eligible, unselected, with its own proof still open. DEC-01 remains BLOCKED. [Evidence](evidence/str01-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][RES-08]: CLOSED at architecture/offline scope. Exact governed experiment/quantitative/Bank lineage verified. Paired-null translation remains unsupported/UNTESTED. STR-01 dependencies are satisfied and it is now eligible, with its own closure proof still open. QNT rows unchanged. [Evidence](evidence/res08-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][QNT-08]: CLOSED at architecture/offline scope. Registered quantitative admission verified; downstream authority remains gated. First-look cut_ms has no independent external recorder; this evidence limitation is retained. STR-01 still awaits RES-08. Active RES-08 work unchanged. [Evidence](evidence/qnt08-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2432,30 +2434,30 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Prevents silent strategy mutation and competing creation authorities.
 - **closure_condition**: Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world requirements and hashes; material change creates a new version.
 - **failure_regression_proof**: Scraper/legacy/LLM/UI cannot inject an unvalidated live version.
 - **dependencies**: RES-08, QNT-08
 - **owner_role**: Strategies & decisions owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1
+- **implementation_evidence**: Canonical immutable typed version lineage and creation-time RES-08 Bank authentication verified at 1508509; docs/tracker/evidence/str01-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; deployed/runtime proof not claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Final six-file affected run: 137 passed; independent genuine persisted-Bank revision/adversarial check: 1 passed. All required attacks refuse before VALIDATED; creation/restart identity and immutable material Bank revisions verified. Bank authentication is creation-time; load/verify do not reopen Bank; caller-supplied path is authenticated by content and registered quantitative evidence; Kernel handoff remains disabled.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §14.1–14.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: No remaining STR-01 architecture/offline proof. STR-02 is dependency-eligible but unselected; its own compiler/data/world parity proof and later Kernel integration remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 150850970ace68348850d439a333b57acb374c85
+- **work_authorized**: True
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/str01-canonical-sol1/closure.json
+- **evidence_validity**: Pinned synthetic architecture/offline verification at 1508509; creation-time Bank authentication, immutable load and registered-ledger validation; no later runtime revalidation claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
@@ -7325,3 +7327,6 @@ RES-07 canonical status counts: CLOSED 54, EVIDENCE_TO_MAP 83, DEFERRED 7, AWAIT
 QNT-08 canonical status counts: CLOSED 55, EVIDENCE_TO_MAP 82, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
 
 RES-08 canonical status counts: CLOSED 56, EVIDENCE_TO_MAP 81, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
+
+
+STR-01 canonical status counts: CLOSED 57, EVIDENCE_TO_MAP 80, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4. Total 178; all other rows unchanged.

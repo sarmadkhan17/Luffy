@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.46-res08-canonical-sol1",
-  "control_baseline_revision": "283d581421d18f18fff1834f7cbd1b6fd922737f",
+  "snapshot_version": "1.47-str01-canonical-sol1",
+  "control_baseline_revision": "150850970ace68348850d439a333b57acb374c85",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 506056,
-      "sha256": "8453876c21c9a12a53b5f0b0121d1bd50f531f38fed9fc339e8b90c6a53e4c3d",
+      "bytes": 513656,
+      "sha256": "73cfaa43eed1072f5ba75267b4d92ee71880c68fba6a7662943ca2e560638f3c",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 418577,
-      "sha256": "8de53b0fb5a14a2932869829d9c64855dfd00f94c7c675cdc2e35de6db002c20",
+      "bytes": 420021,
+      "sha256": "2b38d5cec00ce10c8a1ba7e5216a5d6424424d001551a81d9d63af2a4de96e26",
       "synchronization_required": false
     },
     {
@@ -29,6 +29,97 @@
       "bytes": 94341,
       "sha256": "0a0d0cadfe730e8fff6e92b3b9181d250780b37bdde4e14c508ec7201b4b5284",
       "synchronization_required": false
+    },
+    {
+      "path": "STATE.yaml",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 190363,
+      "sha256": "1f7361efeb6b4e38f3e5f7aae386a94ed94653b9e47640b6ccff68494568a445",
+      "synchronization_required": true
+    },
+    {
+      "path": "NEXT.yaml",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 137495,
+      "sha256": "512fca74df98be045e56bf10739072737c88ec05ff72836dfd1f7de007695791",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/closure.json",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 7174,
+      "sha256": "2c211a969b8b35fbae77798196da646d2a97bc2cb1571205bd6a7f8c9ef70551",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/REPORT.md",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 5392,
+      "sha256": "ccd951480c9d666f9b8bb745ce16569943bf1c5ab985e27213e1eb5f78b89aec",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/final-focused.xml",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 18976,
+      "sha256": "8b0f1f8888a9c0c27049cec7ff3f2c1915c0e2aee5135ddf5e98d132daab144d",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/final-independent.xml",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 402,
+      "sha256": "a3390a2256a781b122d6a6606cd4745356357935bd81bca2aa33e9667ba35f6a",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/independent-results.json",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 1317,
+      "sha256": "bac5b265920f45ee2f91b9d6363efd6c3e70039bb1a8bfaf8ef77d0c24b60700",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/independent-proof.py",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 6211,
+      "sha256": "ecd084c85bacbec44ec46492fa23064372583af3cf576c3d8dd53832df12eda1",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/environment-retry.json",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 682,
+      "sha256": "0f3d12c499449419ca11afecc544bd7bb3563e9a7bb3ca72341db9754bb09332",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/control-before.json",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 969457,
+      "sha256": "7a87b270a4842183bf6823e6c27f3a7151a15a9c54e9ccfdd3fbd9272a467c14",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/control-checks.json",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 1550,
+      "sha256": "f5247dd8a802753b75ea80c985af999733582ed514cf96e47634e65d30a4d317",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/control-validation.py",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 4800,
+      "sha256": "7cbcb60d99793e9415fa20b9447c739f683ec3b260e2f89fa487f97612fa0294",
+      "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/README.md",
+      "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
+      "bytes": 11554,
+      "sha256": "c6dcd325931bda390f3fbb23ceddcca3abcb40250e6aff68804751fece821aaa",
+      "synchronization_required": true
     }
   ],
   "current_release_deferral": {
@@ -105,7 +196,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "ATT-03",
+    "last_completed_item": "STR-01",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -132,15 +223,16 @@
       "GUI-06",
       "GUI-07",
       "GUI-08",
-      "GUI-09"
+      "GUI-09",
+      "STR-02"
     ],
     "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "Explicit owner scope closes ATT-03 for current architecture/offline investigation-only use. Calibration remains unproven and mandatory before validated quality/profitability claims; no successor selected.",
-    "last_terminal_item": "ATT-03",
-    "last_terminal_result": "CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY",
+    "selection_reason": "STR-01 exact immutable lineage and creation-time Bank authentication verified offline and reconciled CLOSED. STR-02 now dependency-eligible; own row proof remains open. No successor selected.",
+    "last_terminal_item": "STR-01",
+    "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE",
     "deferred_proof_obligations": {
       "ATT-03": {
         "status": "DEFERRED",
@@ -1890,6 +1982,105 @@
       "trader/cognition/predictive_bank.py": "092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554",
       "tests/test_res08_governed_bridge.py": "10ea511509b8017ab54fef7aacd365a89e81c3c6cebaa37529759113e86a92e5",
       "tests/test_predictive_research_bridge.py": "1eea69c78a35aaf2f0aaf73734d8057be8fbfcef6f9e22374e29f04c22933130"
+    }
+  },
+  "str01_canonical_reconciliation": {
+    "item": "STR-01",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_closure_commit": "150850970ace68348850d439a333b57acb374c85",
+    "control_baseline_revision": "150850970ace68348850d439a333b57acb374c85",
+    "control_plane_commit_resolution": "The enclosing Git commit containing this reconciliation; no self-referential hash.",
+    "evidence": "docs/tracker/evidence/str01-canonical-sol1/closure.json",
+    "closing_condition": "Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world requirements and hashes; material change creates a new version.",
+    "closing_condition_satisfied": true,
+    "closure_mapping": {
+      "typed_lineage": "StrategySpec/StrategyVersion binds authentic immutable hypothesis/experiment/measurement/quantitative-evidence/Bank-result references and hashes, universe/horizon, entry/exit/risk/data/world requirements.",
+      "creation_authentication": "Canonical Bank replay validates content-bound RES-08 result/experiment identities and measured/registered evidence. Factory matches exact current SUPPORTED/PASS result, candidate, registered look/gates/evaluated rule and cut before VALIDATED.",
+      "refusals": "Forged well-formed IDs; cross-result IDs; mismatched measurement/result lineage; stale experiment/result revision; tampered/missing Bank; unsupported/inconclusive/UNTESTED result refuse before a new StrategyVersion is VALIDATED.",
+      "immutable_revision": "Creation/restart duplicates exact version identity. Genuine later persisted Bank experiment/result revision changes version identity while old version remains unchanged. Spec/risk/data/world material-change tests retain new-version semantics.",
+      "authority": "Factory is the single version writer; scraper/legacy/LLM/UI cannot bypass registered validation. Creation grants no install, owner approval, activation, capital or orders."
+    },
+    "verification": {
+      "mandatory_runner": "/home/sarmad/.local/bin/luffy-pytest",
+      "focused": {
+        "tests": 137,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 606.17
+      },
+      "focused_files": [
+        "tests/test_str01_bank_lineage.py",
+        "tests/test_str01_version_lineage.py",
+        "tests/test_predictive_research_bridge.py",
+        "tests/test_strategy_factory_handoff.py",
+        "tests/test_qnt08_admission_boundary.py",
+        "tests/test_single_creation_path.py"
+      ],
+      "independent": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 69.323
+      },
+      "independent_proof": "docs/tracker/evidence/str01-canonical-sol1/independent-results.json",
+      "source_and_committed_bytes_match": true,
+      "full_suite_claim": false,
+      "command": "/home/sarmad/.local/bin/luffy-pytest tests/test_str01_bank_lineage.py tests/test_str01_version_lineage.py tests/test_predictive_research_bridge.py tests/test_strategy_factory_handoff.py tests/test_qnt08_admission_boundary.py tests/test_single_creation_path.py -q -o tmp_path_retention_policy=failed --junitxml=/mnt/luffy-data/str01-closure-adjudication/final-focused-1508509.xml",
+      "environment_retry": "docs/tracker/evidence/str01-canonical-sol1/environment-retry.json"
+    },
+    "limitations": [
+      "Bank authentication occurs at creation. load_version and verify_validation do not reopen the Bank or continuously reassess its latest revision; verify_validation still rechecks the registered candidate ledger.",
+      "bank_path is caller supplied. Authentication uses the canonical predictive_extensions content replay, content-bound RES-08 receipts and exact factory registered quantitative evidence; no fixed-path allowlist, external attestation or protection against coherent privileged rewriting of all stores is claimed.",
+      "Kernel research.handoff and research.referee remain false. Predictive Kernel handoff omits RES IDs and refuses research_lineage_missing if exercised; normal-path integration remains later work outside the exact STR-01 row.",
+      "Synthetic architecture/offline evidence only; no real-market edge, deployed/runtime freshness, provider enablement, approval, capital or order authority.",
+      "QNT-08 retained first-look cut has no independent external recorder. Its existing limitation remains unchanged."
+    ],
+    "bank_auth_limitation_classification": "NON_BLOCKING_CREATION_TIME_AUTHENTICATION_AND_FUTURE_HARDENING_LIMITS",
+    "limitation_reasoning": "Exact row requires authentic research references bound into immutable spec/version hashes and material-change new-version semantics. It does not require Bank reopening on load/validation, a fixed Bank filesystem path, continuously current Bank support, or enabled Kernel handoff. Creation verifies authentic exact content and quantitative evidence; frozen history remains reproducible. These limits do not defeat the closing condition.",
+    "kernel_handoff_classification": "LATER_NORMAL_PATH_INTEGRATION; disabled and outside exact STR-01 closure",
+    "dependency_status": {
+      "RES-08": "CLOSED",
+      "QNT-08": "CLOSED"
+    },
+    "STR02_now_eligible": true,
+    "STR02_dependency_status": {
+      "STR-01": "CLOSED",
+      "WRLD-05": "CLOSED"
+    },
+    "STR02_status": "BLOCKED; unchanged own-proof status, now dependency-eligible and unselected",
+    "DEC01_impact": "STR-01 prerequisite removed transitively. DEC-01 remains BLOCKED on STR-02 and its own required/optional analyst and supporting/opposing coherent Context proof. No DEC-01 closure.",
+    "original_condition_and_edges_preserved": true,
+    "unrelated_rows_unchanged": 177,
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "provider_calls": 0,
+    "successor_selected": false,
+    "status_counts_after": {
+      "CLOSED": 57,
+      "EVIDENCE_TO_MAP": 80,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 7,
+      "OPEN": 4
+    },
+    "source_sha256": {
+      "tests/test_str01_bank_lineage.py": "2d7fd0fd5e0a5a6af88533db13589663f90fbd76638790ca4a431a6a605a466f",
+      "tests/test_str01_version_lineage.py": "5b79736cf619bbac12181dc0bbec59d282971a5d9464645ecfa7dc91d454f0c2",
+      "tests/test_predictive_research_bridge.py": "7d9322c1c68d110bde157be9ba543d2caadbe6d2b9fce5c032ddb4dfe5f30175",
+      "tests/test_strategy_factory_handoff.py": "a6eabca3ac152478b29f5a0c5f052e3400b78a2aa4d1b7cb2ad0897cfcd271b3",
+      "tests/test_qnt08_admission_boundary.py": "c037975a33cc8537a0568947095507ee74232efc8fab9df275ff1584e769be6d",
+      "tests/test_single_creation_path.py": "2bb6fcb02ee8e1cdcc75cb6da329c2c039390931ea2f40ce9f91e4cc1a7cd9ec",
+      "trader/strategy/factory_handoff.py": "2e225dc64e5985b9f33ba49199097e7be6b51df212b36d32ac26dfdbce4f1637",
+      "trader/research/predictive_bridge.py": "d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524",
+      "trader/research/predictive_receipt.py": "1b8971dfeffe1eb7e5ad348ac40ea165635d53632399aa966ac1294a11c0ad5b",
+      "trader/cognition/predictive_bank.py": "092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554",
+      "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
     }
   }
 }

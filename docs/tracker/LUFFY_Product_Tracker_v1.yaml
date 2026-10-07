@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.46-res08-canonical-sol1
+  version: 1.47-str01-canonical-sol1
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,7 +11,7 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: RES-08
+  current_active_item: STR-01
   current_active_result: CLOSED_ARCHITECTURE_OFFLINE
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 56
-    EVIDENCE_TO_MAP: 81
+    CLOSED: 57
+    EVIDENCE_TO_MAP: 80
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -48,9 +48,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
       owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
       is silently reopened or added.
-  last_terminal_item: ATT-03
-  last_terminal_result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
-  last_terminal_evidence: docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+  last_terminal_item: STR-01
+  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+  last_terminal_evidence: docs/tracker/evidence/str01-canonical-sol1/REPORT.md
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -105,6 +105,7 @@ metadata:
     item: QNT-03,QNT-04,QNT-05
     evidence: docs/tracker/evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json
     engineering_closure_commit: a801cfdf9417d894c724e98ceb619d044d76a45a,26a26d3d80ac9da053aac15333d5bd9783b16035,093187b2b613e0dbf2792d19118a251f195309a2,ceba1bde92133ae978b24b5398403016c35a648e
+
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -3153,7 +3154,7 @@ items:
   stage: '5'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Create one immutable typed StrategySpec/StrategyVersion lineage.
   why_needed: Prevents silent strategy mutation and competing creation authorities.
   closure_condition: Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world requirements
@@ -3163,30 +3164,34 @@ items:
   - RES-08
   - QNT-08
   owner_role: Strategies & decisions owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-1
+  implementation_evidence: Canonical immutable typed version lineage and creation-time RES-08 Bank authentication
+    verified at 1508509; docs/tracker/evidence/str01-canonical-sol1/closure.json
+  runtime_evidence: ARCHITECTURE_OFFLINE_ONLY; deployed/runtime proof not claimed
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Final six-file affected run: 137 passed; independent genuine persisted-Bank revision/adversarial
+    check: 1 passed. All required attacks refuse before VALIDATED; creation/restart identity and immutable material
+    Bank revisions verified. Bank authentication is creation-time; load/verify do not reopen Bank; caller-supplied
+    path is authenticated by content and registered quantitative evidence; Kernel handoff remains disabled.'
   source_ids:
   - S01
   - S02
   - S12
   - S14
-  source_sections: §14.1–14.2
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA714.1\u201314.2"
+  next_proof: No remaining STR-01 architecture/offline proof. STR-02 is dependency-eligible but unselected; its
+    own compiler/data/world parity proof and later Kernel integration remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 150850970ace68348850d439a333b57acb374c85
+  work_authorized: true
+  updated: '2026-10-07'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/str01-canonical-sol1/closure.json
+  evidence_validity: Pinned synthetic architecture/offline verification at 1508509; creation-time Bank authentication,
+    immutable load and registered-ledger validation; no later runtime revalidation claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: STR-02
@@ -9114,7 +9119,7 @@ current_release_deferral:
       Missing MON-05 measurements remain visible gaps, never inferred proof.
 current_build_selection:
   active_items: []
-  last_completed_item: ATT-03
+  last_completed_item: STR-01
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -9140,15 +9145,16 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
+  - STR-02
   eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07
     are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: Explicit owner scope closes ATT-03 for current architecture/offline investigation-only use.
-    Calibration remains unproven and mandatory before validated quality/profitability claims; no successor selected.
-  last_terminal_item: ATT-03
-  last_terminal_result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+  selection_reason: STR-01 exact immutable lineage and creation-time Bank authentication verified offline and reconciled
+    CLOSED. STR-02 now dependency-eligible; own row proof remains open. No successor selected.
+  last_terminal_item: STR-01
+  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
       status: DEFERRED
@@ -10734,3 +10740,114 @@ res08_canonical_reconciliation:
     trader/cognition/predictive_bank.py: 092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554
     tests/test_res08_governed_bridge.py: 10ea511509b8017ab54fef7aacd365a89e81c3c6cebaa37529759113e86a92e5
     tests/test_predictive_research_bridge.py: 1eea69c78a35aaf2f0aaf73734d8057be8fbfcef6f9e22374e29f04c22933130
+
+str01_canonical_reconciliation:
+  item: STR-01
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 150850970ace68348850d439a333b57acb374c85
+  control_baseline_revision: 150850970ace68348850d439a333b57acb374c85
+  control_plane_commit_resolution: The enclosing Git commit containing this reconciliation; no self-referential
+    hash.
+  evidence: docs/tracker/evidence/str01-canonical-sol1/closure.json
+  closing_condition: Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world requirements
+    and hashes; material change creates a new version.
+  closing_condition_satisfied: true
+  closure_mapping:
+    typed_lineage: StrategySpec/StrategyVersion binds authentic immutable hypothesis/experiment/measurement/quantitative-evidence/Bank-result
+      references and hashes, universe/horizon, entry/exit/risk/data/world requirements.
+    creation_authentication: Canonical Bank replay validates content-bound RES-08 result/experiment identities and
+      measured/registered evidence. Factory matches exact current SUPPORTED/PASS result, candidate, registered look/gates/evaluated
+      rule and cut before VALIDATED.
+    refusals: Forged well-formed IDs; cross-result IDs; mismatched measurement/result lineage; stale experiment/result
+      revision; tampered/missing Bank; unsupported/inconclusive/UNTESTED result refuse before a new StrategyVersion
+      is VALIDATED.
+    immutable_revision: Creation/restart duplicates exact version identity. Genuine later persisted Bank experiment/result
+      revision changes version identity while old version remains unchanged. Spec/risk/data/world material-change
+      tests retain new-version semantics.
+    authority: Factory is the single version writer; scraper/legacy/LLM/UI cannot bypass registered validation.
+      Creation grants no install, owner approval, activation, capital or orders.
+  verification:
+    mandatory_runner: /home/sarmad/.local/bin/luffy-pytest
+    focused:
+      tests: 137
+      failures: 0
+      errors: 0
+      skipped: 0
+      seconds: 606.17
+    focused_files:
+    - tests/test_str01_bank_lineage.py
+    - tests/test_str01_version_lineage.py
+    - tests/test_predictive_research_bridge.py
+    - tests/test_strategy_factory_handoff.py
+    - tests/test_qnt08_admission_boundary.py
+    - tests/test_single_creation_path.py
+    independent:
+      tests: 1
+      failures: 0
+      errors: 0
+      skipped: 0
+      seconds: 69.323
+    independent_proof: docs/tracker/evidence/str01-canonical-sol1/independent-results.json
+    source_and_committed_bytes_match: true
+    full_suite_claim: false
+    command: /home/sarmad/.local/bin/luffy-pytest tests/test_str01_bank_lineage.py tests/test_str01_version_lineage.py
+      tests/test_predictive_research_bridge.py tests/test_strategy_factory_handoff.py tests/test_qnt08_admission_boundary.py
+      tests/test_single_creation_path.py -q -o tmp_path_retention_policy=failed --junitxml=/mnt/luffy-data/str01-closure-adjudication/final-focused-1508509.xml
+    environment_retry: docs/tracker/evidence/str01-canonical-sol1/environment-retry.json
+  limitations:
+  - Bank authentication occurs at creation. load_version and verify_validation do not reopen the Bank or continuously
+    reassess its latest revision; verify_validation still rechecks the registered candidate ledger.
+  - bank_path is caller supplied. Authentication uses the canonical predictive_extensions content replay, content-bound
+    RES-08 receipts and exact factory registered quantitative evidence; no fixed-path allowlist, external attestation
+    or protection against coherent privileged rewriting of all stores is claimed.
+  - Kernel research.handoff and research.referee remain false. Predictive Kernel handoff omits RES IDs and refuses
+    research_lineage_missing if exercised; normal-path integration remains later work outside the exact STR-01 row.
+  - Synthetic architecture/offline evidence only; no real-market edge, deployed/runtime freshness, provider enablement,
+    approval, capital or order authority.
+  - QNT-08 retained first-look cut has no independent external recorder. Its existing limitation remains unchanged.
+  bank_auth_limitation_classification: NON_BLOCKING_CREATION_TIME_AUTHENTICATION_AND_FUTURE_HARDENING_LIMITS
+  limitation_reasoning: Exact row requires authentic research references bound into immutable spec/version hashes
+    and material-change new-version semantics. It does not require Bank reopening on load/validation, a fixed Bank
+    filesystem path, continuously current Bank support, or enabled Kernel handoff. Creation verifies authentic exact
+    content and quantitative evidence; frozen history remains reproducible. These limits do not defeat the closing
+    condition.
+  kernel_handoff_classification: LATER_NORMAL_PATH_INTEGRATION; disabled and outside exact STR-01 closure
+  dependency_status:
+    RES-08: CLOSED
+    QNT-08: CLOSED
+  STR02_now_eligible: true
+  STR02_dependency_status:
+    STR-01: CLOSED
+    WRLD-05: CLOSED
+  STR02_status: BLOCKED; unchanged own-proof status, now dependency-eligible and unselected
+  DEC01_impact: STR-01 prerequisite removed transitively. DEC-01 remains BLOCKED on STR-02 and its own required/optional
+    analyst and supporting/opposing coherent Context proof. No DEC-01 closure.
+  original_condition_and_edges_preserved: true
+  unrelated_rows_unchanged: 177
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  provider_calls: 0
+  successor_selected: false
+  status_counts_after:
+    CLOSED: 57
+    EVIDENCE_TO_MAP: 80
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+  source_sha256:
+    tests/test_str01_bank_lineage.py: 2d7fd0fd5e0a5a6af88533db13589663f90fbd76638790ca4a431a6a605a466f
+    tests/test_str01_version_lineage.py: 5b79736cf619bbac12181dc0bbec59d282971a5d9464645ecfa7dc91d454f0c2
+    tests/test_predictive_research_bridge.py: 7d9322c1c68d110bde157be9ba543d2caadbe6d2b9fce5c032ddb4dfe5f30175
+    tests/test_strategy_factory_handoff.py: a6eabca3ac152478b29f5a0c5f052e3400b78a2aa4d1b7cb2ad0897cfcd271b3
+    tests/test_qnt08_admission_boundary.py: c037975a33cc8537a0568947095507ee74232efc8fab9df275ff1584e769be6d
+    tests/test_single_creation_path.py: 2bb6fcb02ee8e1cdcc75cb6da329c2c039390931ea2f40ce9f91e4cc1a7cd9ec
+    trader/strategy/factory_handoff.py: 2e225dc64e5985b9f33ba49199097e7be6b51df212b36d32ac26dfdbce4f1637
+    trader/research/predictive_bridge.py: d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524
+    trader/research/predictive_receipt.py: 1b8971dfeffe1eb7e5ad348ac40ea165635d53632399aa966ac1294a11c0ad5b
+    trader/cognition/predictive_bank.py: 092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554
+    config.yaml: c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532

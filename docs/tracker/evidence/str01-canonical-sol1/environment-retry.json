@@ -1,0 +1,9 @@
+{
+  "initial_required_run": "Interrupted; not counted as passing verification",
+  "cause": "/mnt/luffy-data reached zero available space; fixture setup errors and JUnit write OSError Errno 28",
+  "implementation_defect_demonstrated": false,
+  "recovery": "Preserved only this adjudication's temporary synthetic databases by moving four known test runs to /tmp/str01-adjudication-retained; no unrelated workspace or production database touched",
+  "retry_runner": "/home/sarmad/.local/bin/luffy-pytest",
+  "retry_option": "-o tmp_path_retention_policy=failed (remove successful fixture directories, retain failures)",
+  "initial_empty_JUnit": "final-focused-interrupted-empty.xml"
+}

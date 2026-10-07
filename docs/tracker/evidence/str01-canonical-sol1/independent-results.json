@@ -1,0 +1,38 @@
+{
+  "commit": "1508509",
+  "synthetic_protocol_fixture": true,
+  "attacks": {
+    "forged_well_formed_ids": {
+      "verdict": "REFUSED",
+      "reason": "research_bank_result_not_found"
+    },
+    "cross_result_id": {
+      "verdict": "REFUSED",
+      "reason": "research_bank_lineage_mismatch"
+    },
+    "measurement_result_mismatch": {
+      "verdict": "REFUSED",
+      "reason": "research_bank_lineage_mismatch"
+    },
+    "stale_ids_against_current_experiment": {
+      "verdict": "REFUSED",
+      "reason": "research_bank_lineage_mismatch"
+    },
+    "genuine_old_result_after_new_revision": {
+      "verdict": "REFUSED",
+      "reason": "research_result_stale"
+    }
+  },
+  "old_version": "dc83db1f26afa95dd52c67f8207d524e23767ccda124b4cf7ac8c1384feca505",
+  "new_version": "e5fb7f599366d805335fe9b6c24f54994f2d0a67fcdc1cf432da524ecc39b843",
+  "old_experiment": "9c6162db53de68807cdc8b87ebd34ebfab3af0f5ae3fdd0ea00bf44ee2941a99",
+  "new_experiment": "20f4abb0306470ac5260e1f50931c5aa061228e95c76686786d78542faf48241",
+  "old_end": 1817337600000,
+  "new_end": 1817352000000,
+  "exact_current_validated": true,
+  "restart_identity": true,
+  "material_bank_revision_changes_identity": true,
+  "old_version_immutable": true,
+  "load_and_verify_do_not_reopen_bank": true,
+  "no_install_or_order_authority": true
+}
