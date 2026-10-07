@@ -1,4 +1,4 @@
-> Current [SOL-1][STR-03]: **CLOSED at architecture/offline scope** on `2b119a3`. Exact first-live approval binding, staleness and Governor handoff verified; 43 dedicated passes, retained 642 related passes / 1 unrelated baseline failure. Bank path is asserted by caller; privileged internal write-flag bypass and stored-chain replay limitations remain explicit. STR-04 dependency satisfied and eligible, unselected and not started. [Evidence](evidence/str03-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+> Current [SOL-1][STR-03]: **CLOSED at architecture/offline scope**. Engineering `2b119a3` + `e8ad274`; 44 dedicated passes and the same 44 on clean STR-03 implementation without STR-04. Full configuration binds downstream risk/owner limits; allocation remains a later Governor action within the owner ceiling. Stored replay is stable; wall-clock reconstruction and privileged writer-flag limitations remain explicit. STR-04 dependency satisfied; engineering `872131f` exists, canonical lifecycle reconciliation remains separate. [Evidence](evidence/str03-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][DEC-02]: **CLOSED at architecture/offline scope** on `9f36fc7` / `f1bbd7a`. Default allocator **R3** selects CASH on exact positive top ties across distinct expressions; **R2** historical replay remains exact. Explicit candidate/CASH reasons and confidence/source states; analyst evidence grants no selection authority. Production calibration absent; shadow R1 label preserved. DEC-03 still gated by STR-04 (transitively STR-03); next recommendation STR-03, unselected and not started. [Evidence](evidence/dec02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
@@ -2519,13 +2519,13 @@ future_calibration:
 - **dependencies**: STR-01, QNT-08, OWN-02
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: Exact-version approval request/decision and Research Bank re-authentication at 2b119a3; docs/tracker/evidence/str03-canonical-sol1/closure.json
+- **implementation_evidence**: Exact approval binding at 2b119a3; risk/owner-scope test supplement e8ad274. docs/tracker/evidence/str03-canonical-sol1/closure.json
 - **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: 43 fresh dedicated passes; retained related run 642 passes / 1 unrelated baseline failure (overlapping counts). Exact chain/scope, raw-SQL refusal, stale/forged refusal, Governor no-write mismatch and stored-chain restart/retry verified. research_bank_path is asserted at the eligibility/governor call boundary rather than stored as a permanent path authority. SQLite writer guard can theoretically be bypassed by code deliberately enabling the internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation from malicious trusted Python or direct database administration. Fresh fixture rebuild IDs vary because a research look contains wall-clock data; replay is proven against the same stored chain.
+- **latest_evidence**: 44 dedicated passes at e8ad274 and the same 44 on clean 2b119a3 implementation with only the e8ad274 STR-03 test supplement, without STR-04. Retained broader regression: 642 passed / 1 pre-existing unrelated failure (overlapping counts). Exact binding, all staleness cases, narrow authority, Governor handoff and immutable stored/restart replay verified. Full config digest binds downstream risk/owner limits; allocation is a later Governor action within the owner ceiling. No live/provider calls. research_bank_path is asserted at the eligibility/governor call boundary rather than stored as a permanent path authority. SQLite writer guard can theoretically be bypassed by code deliberately enabling the internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation from malicious trusted Python or direct database administration. Fresh fixture rebuild IDs vary because a research look contains wall-clock data; replay is proven against the same stored chain.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§2.4,14.2,25.4
-- **next_proof**: None for exact STR-03 architecture/offline condition. Preserve documented bank-path, privileged writer and replay limitations. STR-04 dependency satisfied and eligible, unselected and not started; its own lifecycle proof remains open.
+- **next_proof**: None for exact STR-03 architecture/offline condition. STR-04 dependency satisfied; engineering commit 872131f exists, but its lifecycle acceptance and canonical reconciliation remain a separate task. No runtime activation authority.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
@@ -2533,7 +2533,7 @@ future_calibration:
 - **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **evidence_validity**: Pinned architecture/offline verification at 2b119a3; no later deployed/runtime revalidation claim.
+- **evidence_validity**: Pinned verification at e8ad274, independently passing on 2b119a3 implementation without STR-04; no deployed/live claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - **resolution_at_commit**: 2b119a318bdca34599eb8620c9f1f1cc62a78f7e

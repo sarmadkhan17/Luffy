@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.52-str03-canonical-sol1",
+  "snapshot_version": "1.53-str03-canonical-risk-sol1",
   "control_baseline_revision": "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 556604,
-      "sha256": "92c3ce876b66baa77b412a7da60abcd57930e4fdc5a91349661a60705ca4183f",
+      "bytes": 559191,
+      "sha256": "f05e4a7efa4aeb570acca612eb80e5d05c09fb7eef79fbdd53618681e671a4ce",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 427777,
-      "sha256": "584ac11791dd18c00ba7daf43755947d91f33aaa2578becb1d87d71bf67f238e",
+      "bytes": 428142,
+      "sha256": "dc943074638350b63f03201a601e22f76ca09c02eedd0eed3fcb6de1353a705d",
       "synchronization_required": false
     },
     {
@@ -33,15 +33,15 @@
     {
       "path": "STATE.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 232187,
-      "sha256": "8056bce56ea780f5b578480212b7826f9c8c35c09124fccab62db5f06a4dcb2e",
+      "bytes": 234674,
+      "sha256": "bf8509660427fa53302f6bf33912d90bed351365b3446502316466240c9bc3d5",
       "synchronization_required": true
     },
     {
       "path": "NEXT.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 179319,
-      "sha256": "7ee318748e2ffc3fa1fba4bd80ef787442b7b137afcec36faf1a484c91f0cdd1",
+      "bytes": 181806,
+      "sha256": "51b867d9d77317e8476dd047165a313c6b714ee3952c39c32747316c91a92c9b",
       "synchronization_required": true
     },
     {
@@ -117,8 +117,8 @@
     {
       "path": "docs/tracker/README.md",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 14282,
-      "sha256": "3d0e4a9b5fc339cbb33763c33884793e7bc4c86b65e2f77b518e26b3b05a467e",
+      "bytes": 14379,
+      "sha256": "0d533092b2add4f6bf1c0e86face382ec2d58fd933d5e615fdca4f9844dad087",
       "synchronization_required": true
     },
     {
@@ -447,15 +447,15 @@
       "path": "docs/tracker/evidence/str03-canonical-sol1/REPORT.md",
       "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
       "synchronization_required": true,
-      "bytes": 5071,
-      "sha256": "2369209d995010bce7753a765582950c9377c6b738fe5bd12bec29c4d2b80e9b"
+      "bytes": 5952,
+      "sha256": "403d2e463913dd0e2555a704878a9b0aa95613312e01ccf0426acca5f62fbc0b"
     },
     {
       "path": "docs/tracker/evidence/str03-canonical-sol1/closure.json",
       "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
       "synchronization_required": true,
-      "bytes": 6966,
-      "sha256": "70de08a294f187142c8382356ac834bcebd2d4286a43c50b9769f84dcd55af06"
+      "bytes": 9357,
+      "sha256": "85544ce6ac6ca88bdc9aacfa45f58af369c18d6af429156ad450626983458b3f"
     },
     {
       "path": "docs/tracker/evidence/str03-canonical-sol1/control-before.json",
@@ -468,22 +468,22 @@
       "path": "docs/tracker/evidence/str03-canonical-sol1/control-validation.py",
       "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
       "synchronization_required": true,
-      "bytes": 7104,
-      "sha256": "f62e20272f5cdabaeb2003ec14ee01e0835ae7668ca92e712f8e5f2fb073039f"
+      "bytes": 8344,
+      "sha256": "509fcd69dc6ee43bbfe4e7919c605459cece230fc5b2ea1d58a9358b91cfdbe3"
     },
     {
       "path": "docs/tracker/evidence/str03-canonical-sol1/dedicated.txt",
       "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
       "synchronization_required": true,
-      "bytes": 100,
-      "sha256": "2f89915ed8eb9aef247434784e5a5a05955e693a192578a2f19acb7419ad5ea5"
+      "bytes": 110,
+      "sha256": "c3a71d57be3376c04daef8c077284b8c52081586a3a05e2ee6d96e6660529b72"
     },
     {
       "path": "docs/tracker/evidence/str03-canonical-sol1/dedicated.xml",
       "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
       "synchronization_required": true,
-      "bytes": 7369,
-      "sha256": "c61c630d3fd424c7e6d66bb1721cb1fb0c2b97a5d268a55fe9c5d56d2921ae78"
+      "bytes": 7513,
+      "sha256": "5c5b2e74e1c0367afffbcc1b730a1a75a4b8bc5a52db1b42c8d9845e30ae60fc"
     },
     {
       "path": "docs/tracker/evidence/str03-canonical-sol1/reconcile.py",
@@ -519,6 +519,27 @@
       "synchronization_required": true,
       "bytes": 3080,
       "sha256": "574f8cf0475055028983a13f9222dd54183b0fc20c97795ac6a50a3430c43b2c"
+    },
+    {
+      "path": "docs/tracker/evidence/str03-canonical-sol1/clean-source-proof.json",
+      "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 73561,
+      "sha256": "62ddc0f4eacebbe2365ce22e2ce6577dff9cd17879829098381c0d8f957ad196"
+    },
+    {
+      "path": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.xml",
+      "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 7513,
+      "sha256": "dfba22f69889fe64fd8243bd06deeba33fea058997e8716f8356c305972178ca"
+    },
+    {
+      "path": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.txt",
+      "role": "STR03_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 110,
+      "sha256": "6d1e0063ec7f159fbef441e52471a498fef41ba61ce0ac31abc982e95feb7dde"
     }
   ],
   "current_release_deferral": {
@@ -2933,7 +2954,8 @@
       "predictive_research": "Eligibility re-authenticates predictive lineage against the Research Bank; a superseding result refuses, and absent research_bank_path gives research_bank_not_asserted. Governor forwards this required call-boundary assertion.",
       "governor": "Governor loads/authenticates the exact approved version, install and evidence; event names exact spec hash/version and owner decision. Unapproved sibling, changed probation/install/research/config refuse before any Governor event is written. Successful offline activation still preserves the live execution fence.",
       "authority": "Owner approval alone changes no strategy live state, control state, trade count or Governor allocation. It grants no capital, orders, Risk bypass or Kernel start. Capacity, Risk and live/deployment/security gates remain downstream/deferred.",
-      "replay": "Same stored chain re-derives request identity, survives byte-copy restore/restart and identical retry; conflicting decision refuses. Derived versions have new identity and no inherited authority."
+      "replay": "Same stored chain re-derives request identity, survives byte-copy restore/restart and identical retry; conflicting decision refuses. Derived versions have new identity and no inherited authority.",
+      "scope_risk_limitation": "Decision config_sha256 hashes the complete cfg, including risk and owner/strategy limits. verify_owner_configuration compares that digest with the cfg consumed by downstream Governor eligibility; Governor also verifies RiskManager policy against policy_from_config(cfg). Any changed risk or owner-limit configuration refuses. Approval/request carry no allocation amount. A later owner Governor action establishes the allocation ceiling; subsequent allocations remain within that ceiling with the same risk hash. Approval alone grants no allocation."
     },
     "research_bank_path_limitation": "research_bank_path is asserted at the eligibility/governor call boundary rather than stored as a permanent path authority.",
     "write_guard_limitation": "SQLite writer guard can theoretically be bypassed by code deliberately enabling the internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation from malicious trusted Python or direct database administration.",
@@ -2941,7 +2963,7 @@
     "write_guard_classification": "NON_BLOCKING_FOR_EXACT_STR03_ARCHITECTURE_OFFLINE_CONDITION",
     "write_guard_reasoning": "The exact row requires authenticated artifact handoff and refusal of mismatch/stale context. Ordinary SQL insertion is refused and copied/forged identities are reverified. Deliberately privileged in-process code can enable the guard and fabricate self-consistent records; cryptographic owner attestation or isolation from hostile trusted code is not proven. This remains a downstream security limitation, not a claim of tamper-proof owner authority.",
     "validation": {
-      "fresh_dedicated_passed": 43,
+      "fresh_dedicated_passed": 44,
       "runner": "/home/sarmad/.local/bin/luffy-pytest",
       "retained_related_passed": 642,
       "retained_related_failed": 1,
@@ -2956,7 +2978,13 @@
       "full_related_run_repeated": false,
       "full_suite_green_claim": false,
       "provider_calls": 0,
-      "independent_immutable_restart_proof": "docs/tracker/evidence/str03-canonical-sol1/offline-proof.json"
+      "independent_immutable_restart_proof": "docs/tracker/evidence/str03-canonical-sol1/offline-proof.json",
+      "clean_2b119a3_passed": 44,
+      "clean_implementation_revision": "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+      "clean_test_supplement_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "clean_without_STR04": true,
+      "clean_log": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.txt",
+      "clean_junit": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.xml"
     },
     "dependency_status": {
       "STR-01": "CLOSED",
@@ -2983,10 +3011,10 @@
       "OPEN": 4
     },
     "source_sha256": {
-      "trader/strategy/factory_handoff.py": "487f65421a6392f56fbbe3c59ace8f9384467a408fff977bb3d8d2f634c95e1c",
+      "trader/strategy/factory_handoff.py": "c3c21ab3c821e390c7ef823ed853ef91420aa4450ecb45bf4770ef332c8821f3",
       "trader/core/journal.py": "7d9b001cfd73d712a8fc623ec8181f5d33521abadb081a13d90f8234f82ad1e3",
       "trader/owner/approvals.py": "4a9830cbab6859d193f63856db143fcfad028568b506e04155fc02b5a651e05c",
-      "tests/test_str03_approval_binding.py": "2a05b1fff6117e4f31d2a15f882e06598736a2cc3ed24a010168089ad159a464",
+      "tests/test_str03_approval_binding.py": "2b600d0fe4f991d11b441a5cc520b4adea4d92a0630df358ef7752abb6433a28",
       "tests/test_strategy_factory_handoff.py": "0d445c291811d8319215d8a66055cc1b1f4cbf99d387acd97e9ea11fbb0be444",
       "trader/strategy/compile.py": "67d01814cc08cbe1b4cc6eb4225e50e10272e117f1bb484fdec7b6638aaaa6ff",
       "tests/authority_factory_fixtures.py": "dd1cf808f6114a4d427adce959307db7eb0fe4fca86a7e2ce22d1f967243b94d",
@@ -2995,6 +3023,26 @@
     "application_code_changed": false,
     "runtime_execution_authorized": false,
     "provider_enablement_authorized": false,
-    "trading_activation_authorized": false
+    "trading_activation_authorized": false,
+    "engineering_commits": [
+      "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+      "e8ad27481172f0663b9ffada4ffe3d1d365f9568"
+    ],
+    "verification_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "control_refresh_baseline_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "source_revisions": {
+      "trader/strategy/factory_handoff.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "trader/core/journal.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "trader/owner/approvals.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "tests/test_str03_approval_binding.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "tests/test_strategy_factory_handoff.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "trader/strategy/compile.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "tests/authority_factory_fixtures.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+      "config.yaml": "e8ad27481172f0663b9ffada4ffe3d1d365f9568"
+    },
+    "STR04_engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+    "STR04_engineering_commit_valid": true,
+    "STR04_engineering_validation_scope": "Commit exists, is an ancestor of verification revision, and has the stated engineering files; lifecycle acceptance and canonical reconciliation are excluded.",
+    "STR04_started_interpretation": "Canonical successor selection/start only; STR-04 engineering already exists and is not reconciled by this task."
   }
 }

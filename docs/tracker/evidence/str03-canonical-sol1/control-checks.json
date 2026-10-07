@@ -34,12 +34,18 @@
     "runtime_execution_authorized": false,
     "provider_enablement_authorized": false,
     "trading_activation_authorized": false,
-    "successor_selected": false
+    "successor_selected": false,
+    "verification_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "engineering_commits": [
+      "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+      "e8ad27481172f0663b9ffada4ffe3d1d365f9568"
+    ]
   },
   "STR03_canonical": "CLOSED",
   "STR04_dependency_satisfied": true,
   "STR04_now_eligible": true,
   "STR04_row_unchanged": true,
+  "STR04_engineering_commit_valid": true,
   "STR04_selected": false,
   "STR04_started": false,
   "DEC03_remaining_blockers": [
@@ -50,7 +56,8 @@
   "research_referee_disabled": true,
   "application_code_changed": false,
   "provider_calls": 0,
-  "fresh_dedicated_passed": 43,
+  "fresh_dedicated_passed": 44,
+  "clean_2b119a3_passed": 44,
   "independent_approval_immutability_restart_retry": true,
   "kernel_dashboard_stopped": true,
   "retained_related_passed": 642,

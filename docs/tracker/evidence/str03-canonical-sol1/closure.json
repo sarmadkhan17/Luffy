@@ -16,7 +16,8 @@
     "predictive_research": "Eligibility re-authenticates predictive lineage against the Research Bank; a superseding result refuses, and absent research_bank_path gives research_bank_not_asserted. Governor forwards this required call-boundary assertion.",
     "governor": "Governor loads/authenticates the exact approved version, install and evidence; event names exact spec hash/version and owner decision. Unapproved sibling, changed probation/install/research/config refuse before any Governor event is written. Successful offline activation still preserves the live execution fence.",
     "authority": "Owner approval alone changes no strategy live state, control state, trade count or Governor allocation. It grants no capital, orders, Risk bypass or Kernel start. Capacity, Risk and live/deployment/security gates remain downstream/deferred.",
-    "replay": "Same stored chain re-derives request identity, survives byte-copy restore/restart and identical retry; conflicting decision refuses. Derived versions have new identity and no inherited authority."
+    "replay": "Same stored chain re-derives request identity, survives byte-copy restore/restart and identical retry; conflicting decision refuses. Derived versions have new identity and no inherited authority.",
+    "scope_risk_limitation": "Decision config_sha256 hashes the complete cfg, including risk and owner/strategy limits. verify_owner_configuration compares that digest with the cfg consumed by downstream Governor eligibility; Governor also verifies RiskManager policy against policy_from_config(cfg). Any changed risk or owner-limit configuration refuses. Approval/request carry no allocation amount. A later owner Governor action establishes the allocation ceiling; subsequent allocations remain within that ceiling with the same risk hash. Approval alone grants no allocation."
   },
   "research_bank_path_limitation": "research_bank_path is asserted at the eligibility/governor call boundary rather than stored as a permanent path authority.",
   "write_guard_limitation": "SQLite writer guard can theoretically be bypassed by code deliberately enabling the internal write flag (journal._local.approval_write); it is an application writer boundary, not isolation from malicious trusted Python or direct database administration.",
@@ -24,7 +25,7 @@
   "write_guard_classification": "NON_BLOCKING_FOR_EXACT_STR03_ARCHITECTURE_OFFLINE_CONDITION",
   "write_guard_reasoning": "The exact row requires authenticated artifact handoff and refusal of mismatch/stale context. Ordinary SQL insertion is refused and copied/forged identities are reverified. Deliberately privileged in-process code can enable the guard and fabricate self-consistent records; cryptographic owner attestation or isolation from hostile trusted code is not proven. This remains a downstream security limitation, not a claim of tamper-proof owner authority.",
   "validation": {
-    "fresh_dedicated_passed": 43,
+    "fresh_dedicated_passed": 44,
     "runner": "/home/sarmad/.local/bin/luffy-pytest",
     "retained_related_passed": 642,
     "retained_related_failed": 1,
@@ -39,7 +40,13 @@
     "full_related_run_repeated": false,
     "full_suite_green_claim": false,
     "provider_calls": 0,
-    "independent_immutable_restart_proof": "docs/tracker/evidence/str03-canonical-sol1/offline-proof.json"
+    "independent_immutable_restart_proof": "docs/tracker/evidence/str03-canonical-sol1/offline-proof.json",
+    "clean_2b119a3_passed": 44,
+    "clean_implementation_revision": "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+    "clean_test_supplement_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "clean_without_STR04": true,
+    "clean_log": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.txt",
+    "clean_junit": "docs/tracker/evidence/str03-canonical-sol1/clean-2b119a3.xml"
   },
   "dependency_status": {
     "STR-01": "CLOSED",
@@ -66,10 +73,10 @@
     "OPEN": 4
   },
   "source_sha256": {
-    "trader/strategy/factory_handoff.py": "487f65421a6392f56fbbe3c59ace8f9384467a408fff977bb3d8d2f634c95e1c",
+    "trader/strategy/factory_handoff.py": "c3c21ab3c821e390c7ef823ed853ef91420aa4450ecb45bf4770ef332c8821f3",
     "trader/core/journal.py": "7d9b001cfd73d712a8fc623ec8181f5d33521abadb081a13d90f8234f82ad1e3",
     "trader/owner/approvals.py": "4a9830cbab6859d193f63856db143fcfad028568b506e04155fc02b5a651e05c",
-    "tests/test_str03_approval_binding.py": "2a05b1fff6117e4f31d2a15f882e06598736a2cc3ed24a010168089ad159a464",
+    "tests/test_str03_approval_binding.py": "2b600d0fe4f991d11b441a5cc520b4adea4d92a0630df358ef7752abb6433a28",
     "tests/test_strategy_factory_handoff.py": "0d445c291811d8319215d8a66055cc1b1f4cbf99d387acd97e9ea11fbb0be444",
     "trader/strategy/compile.py": "67d01814cc08cbe1b4cc6eb4225e50e10272e117f1bb484fdec7b6638aaaa6ff",
     "tests/authority_factory_fixtures.py": "dd1cf808f6114a4d427adce959307db7eb0fe4fca86a7e2ce22d1f967243b94d",
@@ -78,5 +85,25 @@
   "application_code_changed": false,
   "runtime_execution_authorized": false,
   "provider_enablement_authorized": false,
-  "trading_activation_authorized": false
+  "trading_activation_authorized": false,
+  "engineering_commits": [
+    "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+    "e8ad27481172f0663b9ffada4ffe3d1d365f9568"
+  ],
+  "verification_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+  "control_refresh_baseline_revision": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+  "source_revisions": {
+    "trader/strategy/factory_handoff.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "trader/core/journal.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "trader/owner/approvals.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "tests/test_str03_approval_binding.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "tests/test_strategy_factory_handoff.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "trader/strategy/compile.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "tests/authority_factory_fixtures.py": "e8ad27481172f0663b9ffada4ffe3d1d365f9568",
+    "config.yaml": "e8ad27481172f0663b9ffada4ffe3d1d365f9568"
+  },
+  "STR04_engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+  "STR04_engineering_commit_valid": true,
+  "STR04_engineering_validation_scope": "Commit exists, is an ancestor of verification revision, and has the stated engineering files; lifecycle acceptance and canonical reconciliation are excluded.",
+  "STR04_started_interpretation": "Canonical successor selection/start only; STR-04 engineering already exists and is not reconciled by this task."
 }

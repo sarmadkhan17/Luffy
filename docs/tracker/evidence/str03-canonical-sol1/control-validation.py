@@ -52,12 +52,24 @@ assert s['current_runtime_status'] == before['state']['current_runtime_status']
 for path, sha in record['source_sha256'].items():
     raw = (ROOT / path).read_bytes()
     assert hashlib.sha256(raw).hexdigest() == sha, path
-    assert raw == subprocess.check_output(['git', 'show', record['engineering_closure_commit'] + ':' + path], cwd=ROOT), path
+    assert raw == subprocess.check_output(['git', 'show', record['source_revisions'][path] + ':' + path], cwd=ROOT), path
 cfg = load('config.yaml')
 assert not cfg['research']['handoff'] and not cfg['research']['referee']
 suite = ET.parse(EP / 'dedicated.xml').getroot().find('testsuite')
-assert int(suite.get('tests')) == 43
+assert int(suite.get('tests')) == 44
 assert all(int(suite.get(k)) == 0 for k in ['errors', 'failures', 'skipped'])
+clean = ET.parse(EP / 'clean-2b119a3.xml').getroot().find('testsuite')
+assert int(clean.get('tests')) == 44
+assert all(int(clean.get(k)) == 0 for k in ['errors', 'failures', 'skipped'])
+assert record['validation']['clean_without_STR04']
+clean_proof = json.loads((EP / 'clean-source-proof.json').read_text())
+assert clean_proof['passed'] == 44 and not clean_proof['STR04_present']
+assert clean_proof['verified_file_count'] == len(clean_proof['file_hashes'])
+for path, sha in clean_proof['file_hashes'].items():
+    revision = clean_proof['test_supplement_revision'] if path == clean_proof['only_supplement'] else clean_proof['implementation_revision']
+    assert hashlib.sha256(subprocess.check_output(['git', 'show', revision + ':' + path], cwd=ROOT)).hexdigest() == sha, path
+subprocess.run(['git', 'merge-base', '--is-ancestor', record['STR04_engineering_commit'], record['verification_revision']], cwd=ROOT, check=True)
+assert set(subprocess.check_output(['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', record['STR04_engineering_commit']], cwd=ROOT, text=True).splitlines()) == {'trader/strategy/factory_handoff.py', 'tests/test_str04_governor_lifecycle.py'}
 assert '1 failed, 642 passed' in (EP / 'related-engineering.txt').read_text()
 assert record['validation']['baseline_failure'] in (EP / 'related-engineering.txt').read_text()
 assert 'wall-clock' in record['replay_limitation']
@@ -92,16 +104,16 @@ assert m['current_build_selection'] == t['current_build_selection'] and m['str03
 for entry in m['files']:
     raw = (ROOT / entry['path']).read_bytes()
     assert len(raw) == entry['bytes'] and hashlib.sha256(raw).hexdigest() == entry['sha256'], entry['path']
-paths = subprocess.check_output(['git', 'diff', '--name-only', record['control_baseline_revision']], cwd=ROOT, text=True).splitlines()
+paths = subprocess.check_output(['git', 'diff', '--name-only', record['control_refresh_baseline_revision']], cwd=ROOT, text=True).splitlines()
 assert not any(p.startswith(('trader/', 'tests/', 'scripts/')) or p == 'config.yaml' for p in paths), paths
 checks = dict(row_count=178, changed_rows=['STR-03'], unrelated_rows_unchanged=177,
     original_conditions_and_edges_preserved=True, strict_YAML_contracts=True,
     source_committed_bytes_and_manifest_hashes_match=True, status_counts=counts,
     dashboard_read='AVAILABLE', dashboard_selected=res['selected'], STR03_canonical='CLOSED',
-    STR04_dependency_satisfied=True, STR04_now_eligible=True, STR04_row_unchanged=True,
+    STR04_dependency_satisfied=True, STR04_now_eligible=True, STR04_row_unchanged=True, STR04_engineering_commit_valid=True,
     STR04_selected=False, STR04_started=False, DEC03_remaining_blockers=['STR-04'],
     runtime_state_unchanged=True, research_handoff_disabled=True, research_referee_disabled=True,
-    application_code_changed=False, provider_calls=0, fresh_dedicated_passed=43,
+    application_code_changed=False, provider_calls=0, fresh_dedicated_passed=44, clean_2b119a3_passed=44,
     independent_approval_immutability_restart_retry=True, kernel_dashboard_stopped=True,
     retained_related_passed=642, retained_related_failed=1,
     write_guard_classification=record['write_guard_classification'])
