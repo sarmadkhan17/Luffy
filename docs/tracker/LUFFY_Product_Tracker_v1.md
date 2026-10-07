@@ -1,3 +1,5 @@
+> Current [SOL-1][RES-07]: CLOSED at architecture/offline scope. Immutable competing proposals verified; causality UNKNOWN, predictive edge UNTESTED. RES-08 now dependency-eligible; paired-null translation remains unsupported under RES-08. Active QNT-08 work unchanged. [Evidence](evidence/res07-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][RES-05]: CLOSED at architecture/offline scope; canonical linked persistence verified. RES-06/RES-07 dependency-eligible; RES-08 awaits RES-07. Active RES-07/QNT-08 work unchanged. [Evidence](evidence/res05-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: QNT-03, QNT-04 and QNT-05 CLOSED at architecture/offline scope (a801cfd/26a26d3; 093187b; ceba1bd). Dependence-aware admission with lineage, frozen held-out cut with spent-look guard, and a persistent registered error budget; synthetic offline proof, no real-data calibration. QNT-08 is dependency-eligible (QNT-03/05/06 CLOSED), row unchanged and unselected. [Evidence](evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -2057,29 +2059,29 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Descriptive observations are not validated strategies.
 - **closure_condition**: Supported source chain yields immutable proposal-only hypotheses with scope, observables, support/opposition and measurable test translation.
 - **failure_regression_proof**: Narrative causality, descriptive evidence or research priority cannot bypass quantitative gates.
 - **dependencies**: RES-05, WRLD-05
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: MAPPED_IMMUTABLE_COMPETING_PROPOSAL_ONLY_HYPOTHESES
+- **runtime_evidence**: OFFLINE_SYNTHETIC_ONLY
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Verified source chain yields immutable v2 proposal-only complementary benefit/no-benefit hypotheses with scope, observables, descriptive support/opposition and measurable tests; causality UNKNOWN and predictive edge UNTESTED. Exact v1/v2 replay retained. Final offline proof: 10 RES-07 and 4 bridge checks passed; paired-null translation remains unsupported under RES-08. Evidence: docs/tracker/evidence/res07-canonical-sol1/REPORT.md.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§10–11
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-07 architecture/offline closure. Paired-null experiment translation remains unsupported and belongs to RES-08; exact-volume-path translation also remains explicitly unsupported.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 38e9949155893f7a5bf09a7d0b2332ab9fd97bea
+- **work_authorized**: True
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/res07-canonical-sol1/closure.json
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7313,3 +7315,5 @@ historical_records: att03_warmup_terminal and att03_calibration_terminal are imm
 ```
 
 RES-05 canonical status counts: CLOSED 53, EVIDENCE_TO_MAP 84, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.
+
+RES-07 canonical status counts: CLOSED 54, EVIDENCE_TO_MAP 83, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.

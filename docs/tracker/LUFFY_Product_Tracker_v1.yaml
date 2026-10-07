@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.43-res05-canonical-sol1
+  version: 1.44-res07-canonical-sol1
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,7 +11,7 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: RES-05
+  current_active_item: RES-07
   current_active_result: CLOSED_ARCHITECTURE_OFFLINE
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 53
-    EVIDENCE_TO_MAP: 84
+    CLOSED: 54
+    EVIDENCE_TO_MAP: 83
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -2680,40 +2680,42 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Generate competing typed hypotheses without claiming untested predictive edge.
   why_needed: Descriptive observations are not validated strategies.
-  closure_condition: Supported source chain yields immutable proposal-only hypotheses with scope, observables, support/opposition
-    and measurable test translation.
+  closure_condition: Supported source chain yields immutable proposal-only hypotheses with scope, observables,
+    support/opposition and measurable test translation.
   failure_regression_proof: Narrative causality, descriptive evidence or research priority cannot bypass quantitative
     gates.
   dependencies:
   - RES-05
   - WRLD-05
   owner_role: Attention & research owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2
+  implementation_evidence: MAPPED_IMMUTABLE_COMPETING_PROPOSAL_ONLY_HYPOTHESES
+  runtime_evidence: OFFLINE_SYNTHETIC_ONLY
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Verified source chain yields immutable v2 proposal-only complementary benefit/no-benefit
+    hypotheses with scope, observables, descriptive support/opposition and measurable tests; causality UNKNOWN
+    and predictive edge UNTESTED. Exact v1/v2 replay retained. Final offline proof: 10 RES-07 and 4 bridge
+    checks passed; paired-null translation remains unsupported under RES-08. Evidence: docs/tracker/evidence/res07-canonical-sol1/REPORT.md.'
   source_ids:
   - S01
   - S02
   - S06
   - S14
   source_sections: §§10–11
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for RES-07 architecture/offline closure. Paired-null experiment translation remains unsupported
+    and belongs to RES-08; exact-volume-path translation also remains explicitly unsupported.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 38e9949155893f7a5bf09a7d0b2332ab9fd97bea
+  work_authorized: true
+  updated: '2026-10-07'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/res07-canonical-sol1/closure.json
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -10447,3 +10449,75 @@ res05_canonical_reconciliation:
     AWAITING_OWNER: 14
     BLOCKED: 7
     OPEN: 4
+
+res07_canonical_reconciliation:
+  item: RES-07
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 38e9949155893f7a5bf09a7d0b2332ab9fd97bea
+  control_baseline_revision: 38e9949155893f7a5bf09a7d0b2332ab9fd97bea
+  evidence: docs/tracker/evidence/res07-canonical-sol1/closure.json
+  engineering_evidence: docs/superpowers/reports/res07-competing-hypotheses-sol2/REPORT.md
+  engineering_proof: docs/superpowers/reports/res07-competing-hypotheses-sol2/proof.json
+  closing_condition_satisfied: true
+  closure_mapping:
+    supported_source_chain: Normal Bank read_sources verifies retained ResearchSource projection before propose;
+      forged/rehashed source context refused.
+    immutable_competition: Existing bridge_hypotheses append-only store retains complementary benefit/no-benefit
+      proposals with shared predictor/target/universe/horizon/metric/baseline and >0 versus <=0 tests.
+    scope_observables: Frozen asset/horizon/context scopes, explicit predictors, original result/investigation/Bank
+      IDs and source hashes bound into identity.
+    support_opposition: DESCRIPTIVE_SOURCE_ONLY support; retained context contradictions, supported/refuted
+      paths and unavailable causality explicit.
+    measurable_translation: Registered metric, comparator, baseline, data/horizon, controls/ablations/power/dependence/protected-referee
+      admission; paired-null remains UNSUPPORTED_EXPERIMENT_SHAPE.
+    authority: HYPOTHESIS/PROPOSAL_ONLY; causality UNKNOWN; predictive_edge_status UNTESTED; priority SCHEDULING_ONLY.
+      Rehashed narrative/authority laundering refused.
+    replay: v1 original fields/hashes preserved without upgrade; v2 canonical payload/identity, retry, fresh-interpreter
+      restart and immutable triggers verified.
+  verification:
+    final_RES07_passed: 10
+    final_bridge_passed: 4
+    final_bridge_deselected: 17
+    source_hashes_match: true
+    fresh_tests_run: false
+    retained_tests_reused: true
+    earlier_runs: 21 bridge and 116 dependency passes preceded final metadata refinements; not a final full-suite
+      claim. Nonexistent-filename invocation ran zero tests and is not counted.
+  limitations:
+  - Architecture/offline synthetic proof only; no real-market edge, live provider, deployment or trading proof.
+  - Paired-null experiment translation remains unsupported and belongs to RES-08.
+  - Exact-volume-path experiment translation remains explicitly unsupported.
+  - Descriptive source support/refutation does not establish causal or predictive evidence; quantitative validation
+    and admission gates remain mandatory.
+  - Legacy v1 records are not upgraded; historical identity and bytes preserved.
+  dependency_status:
+    RES-05: CLOSED
+    WRLD-05: CLOSED
+    QNT-01: CLOSED
+  RES08_now_eligible: true
+  RES08_remaining_conditions:
+  - Normal bridge binds hypothesis/experiment/measurement/referee/Bank IDs; unsupported shapes and insufficient
+    data stay explicit.
+  - Later inspected data cannot be relabelled untouched; duplicate submission/restart preserves identity.
+  - Map exact existing bridge evidence first; any new paired-null translation requires a registered comparison
+    experiment and protected-data/quantitative-admission boundaries. Unsupported exact-volume-path shapes and
+    insufficient data must remain explicit.
+  original_condition_and_edges_preserved: true
+  active_QNT08_untouched: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_calls: 0
+  successor_selected: false
+  status_counts_after:
+    CLOSED: 54
+    EVIDENCE_TO_MAP: 83
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+  source_sha256:
+    trader/cognition/predictive.py: 7153fd9a955686ee2ff5764a5dd5abe9a7d1f746094176f39631441d50b19458
+    tests/test_predictive_research_bridge.py: baeda2aac8b6abdf3dced47d97edce850d2e3033b25a0044a3421f4fafe21298
+    tests/test_res07_competing_hypotheses.py: f1e818f55c53e76d499dfbd079ab912357c70304304a799aa20d27d83edb5824
