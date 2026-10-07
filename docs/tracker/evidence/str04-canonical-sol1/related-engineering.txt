@@ -1,0 +1,33 @@
+....................................................................F... [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 31%]
+........................................................................ [ 42%]
+........................................................................ [ 52%]
+........................................................................ [ 63%]
+........................................................................ [ 73%]
+........................................................................ [ 84%]
+........................................................................ [ 94%]
+.....................F.F.............                                    [100%]
+=================================== FAILURES ===================================
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+/usr/lib/python3.12/json/decoder.py:355: json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+E   AssertionError: []
+    assert False
+     +  where False = any(<generator object test_genome_rows_still_evaluate_normally.<locals>.<genexpr> at 0x7c4ef4cddd80>)
+------------------------------ Captured log call -------------------------------
+WARNING  trader.strategy.promotion:promotion.py:95 replay_complete_learning_authority_required:legacy_population_transition
+/home/sarmad/trader/tests/test_lifecycle_kind_routing.py:58: AssertionError: []
+E   AssertionError: []
+    assert set() == {'g_paper'}
+
+      Extra items in the right set:
+      'g_paper'
+      Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.strategy.promotion:promotion.py:95 replay_complete_learning_authority_required:legacy_population_transition
+/home/sarmad/trader/tests/test_lifecycle_kind_routing.py:95: AssertionError: []
+=========================== short test summary info ============================
+FAILED tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk
+FAILED tests/test_lifecycle_kind_routing.py::test_genome_rows_still_evaluate_normally
+FAILED tests/test_lifecycle_kind_routing.py::test_spec_and_genome_coexist_in_one_sweep
+3 failed, 682 passed in 1656.66s (0:27:36)

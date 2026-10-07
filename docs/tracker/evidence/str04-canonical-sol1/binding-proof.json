@@ -1,0 +1,117 @@
+{
+  "required_proof_satisfied": false,
+  "blocker": "Approved first Governor PAUSED/DEGRADED/RETIRED events omit the existing owner decision identity; replay accepts them.",
+  "ordinary_canonical_writer_only": true,
+  "privileged_flag_or_corruption_used": false,
+  "provider_calls": 0,
+  "cases": [
+    {
+      "from_state": "APPROVED_FIRST_LIVE",
+      "to_state": "PAUSED",
+      "status": "inserted",
+      "actual_owner_decision_id": "3a3b39e529a321124534bb370d8dedd2e3b7b6e6643d63953a1e9125515c58e4",
+      "event_owner_decision_id": null,
+      "replay_accepted": true,
+      "event": {
+        "schema": "strategy-governor-event.v1",
+        "version_id": "401d38881055a39c47c1b9445d1fc533d53a592c49eb4471a75a8abdbf29c47e",
+        "binding": {
+          "strategy_id": "research_1adbb00aa6a71334",
+          "lineage_sha256": "9b7b0bc0ea3586f7321ccec983f1628316bdd182fe32fcf306ea9f4ae11f0355",
+          "install_id": "d43ddb01ea3b53fdcd63a2195a18fb9f20e07084332eb53a6a1b8aba199cad99",
+          "approval_request_id": "218687e56ee1d8dd38c3bfe8d3c4188625a635e4c0f7786cbc3d14b1565321c1"
+        },
+        "transition_id": "65b4a99318e89cc53996b50dc2e3d2fc405009f23daf677544e0d3db59080d23",
+        "transition_key": null,
+        "requested_allocation": 0,
+        "spec_hash": "19d1ca4682b9f4824b28e15696337a572ac345ca77eb1a385ff3b4a1d6cdf3c5",
+        "from_state": "APPROVED_FIRST_LIVE",
+        "to_state": "PAUSED",
+        "actor": "strategy_governor",
+        "reason_code": "TEST-ONLY audit before first activation",
+        "at_ms": 1793998800000,
+        "allocation": 0,
+        "allocation_ceiling": null,
+        "risk_sha256": null,
+        "capacity_receipt_id": null,
+        "owner_decision_id": null,
+        "previous_sha256": null,
+        "risk_release": null,
+        "available_inputs": null,
+        "grants": "LIFECYCLE_ALLOCATION_ONLY; LIVE_EXECUTION_FENCE_PRESERVED"
+      }
+    },
+    {
+      "from_state": "APPROVED_FIRST_LIVE",
+      "to_state": "DEGRADED",
+      "status": "inserted",
+      "actual_owner_decision_id": "28882b333e6174312bb7b3cfd9dbe5f6242b6eb66ab0b12e6030a2006a33cbf3",
+      "event_owner_decision_id": null,
+      "replay_accepted": true,
+      "event": {
+        "schema": "strategy-governor-event.v1",
+        "version_id": "0631443c95e8efb936e09f39cde29c32c4be8c5825cfba6734a95a6f05d1c498",
+        "binding": {
+          "strategy_id": "research_1adbb00aa6a71334",
+          "lineage_sha256": "9352d391b743244aa1afd68e1918883136761c84a6e4f047f90a6dcf5fa0f94c",
+          "install_id": "2a48ce90560d7bb4866c4bba5834143bcf722608b15c699be24aa2c6302734dc",
+          "approval_request_id": "6be8f097abbb78e68740aca934da08da8813eeed4eb436629bd45a96607789a3"
+        },
+        "transition_id": "fbe3baf85129ee3dda9990e49ebff8e22aa3100bcc2570d8ff83d38240a8cb49",
+        "transition_key": null,
+        "requested_allocation": 0,
+        "spec_hash": "19d1ca4682b9f4824b28e15696337a572ac345ca77eb1a385ff3b4a1d6cdf3c5",
+        "from_state": "APPROVED_FIRST_LIVE",
+        "to_state": "DEGRADED",
+        "actor": "strategy_governor",
+        "reason_code": "TEST-ONLY audit before first activation",
+        "at_ms": 1793998800000,
+        "allocation": 0,
+        "allocation_ceiling": null,
+        "risk_sha256": null,
+        "capacity_receipt_id": null,
+        "owner_decision_id": null,
+        "previous_sha256": null,
+        "risk_release": null,
+        "available_inputs": null,
+        "grants": "LIFECYCLE_ALLOCATION_ONLY; LIVE_EXECUTION_FENCE_PRESERVED"
+      }
+    },
+    {
+      "from_state": "APPROVED_FIRST_LIVE",
+      "to_state": "RETIRED",
+      "status": "inserted",
+      "actual_owner_decision_id": "559cd8962debb59b18f4e6c2ffb5f604652f1927f2b8dd7a4d253ebf2191af9b",
+      "event_owner_decision_id": null,
+      "replay_accepted": true,
+      "event": {
+        "schema": "strategy-governor-event.v1",
+        "version_id": "1f0df0dfa050c1021cd456ab303a843c1669ba73a223f3b82f1d9fb206fca57a",
+        "binding": {
+          "strategy_id": "research_1adbb00aa6a71334",
+          "lineage_sha256": "452b626fb8e3b91070f257e917b7889c64abd23c7c3f4bdaefe141ace3455dbe",
+          "install_id": "52d834c73a459de81febd23506967b23a288fae908a4bf334277ba98a80e8850",
+          "approval_request_id": "ecbab9987dd2d7686de0d975bab32ece8becb3ada28254bf40dc9a0699b3a89c"
+        },
+        "transition_id": "73634a3e0d991fd187b30f1880179856b18948513fec34eb378bdad6d58a9911",
+        "transition_key": null,
+        "requested_allocation": 0,
+        "spec_hash": "19d1ca4682b9f4824b28e15696337a572ac345ca77eb1a385ff3b4a1d6cdf3c5",
+        "from_state": "APPROVED_FIRST_LIVE",
+        "to_state": "RETIRED",
+        "actor": "strategy_governor",
+        "reason_code": "TEST-ONLY audit before first activation",
+        "at_ms": 1793998800000,
+        "allocation": 0,
+        "allocation_ceiling": null,
+        "risk_sha256": null,
+        "capacity_receipt_id": null,
+        "owner_decision_id": null,
+        "previous_sha256": null,
+        "risk_release": null,
+        "available_inputs": null,
+        "grants": "LIFECYCLE_ALLOCATION_ONLY; LIVE_EXECUTION_FENCE_PRESERVED"
+      }
+    }
+  ]
+}

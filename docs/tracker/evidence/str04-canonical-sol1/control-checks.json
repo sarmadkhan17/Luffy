@@ -1,0 +1,39 @@
+{
+  "STR04_canonical": "BLOCKED",
+  "blocker": "STR04-BINDING-01",
+  "required_owner_decision_binding_failed": true,
+  "ordinary_canonical_path_reproduced": true,
+  "row_count": 178,
+  "status_counts": {
+    "CLOSED": 62,
+    "EVIDENCE_TO_MAP": 76,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 6,
+    "OPEN": 4
+  },
+  "changed_rows": [
+    "STR-04"
+  ],
+  "unrelated_rows_unchanged": 177,
+  "STR03_unchanged_CLOSED": true,
+  "DEC03_dependencies_satisfied": false,
+  "DEC03_now_eligible": false,
+  "DEC03_selected": false,
+  "DEC03_started": false,
+  "original_conditions_and_edges_preserved": true,
+  "strict_YAML_contracts": true,
+  "manifest_hashes_and_source_bytes_match": true,
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": "STR-04 BLOCKED",
+  "fresh_STR04_passed": 26,
+  "fresh_STR03_passed": 44,
+  "retained_broader_passed": 682,
+  "retained_broader_failed": 3,
+  "baseline_reproduction_user_supplied": true,
+  "runtime_state_unchanged": true,
+  "application_code_changed_by_this_task": false,
+  "provider_calls": 0,
+  "concurrent_workspace_changes_preserved": true
+}

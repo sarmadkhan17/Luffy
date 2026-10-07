@@ -1,3 +1,5 @@
+> Current [SOL-1][STR-04]: **BLOCKED at architecture/offline scope**. Initial approved PAUSED/DEGRADED/RETIRED events omit the existing owner decision identity and replay accepts them. 26 STR-04 + 44 STR-03 dedicated tests pass, but required binding proof fails. STR-03 remains CLOSED; DEC-03 remains gated, unselected and unstarted. [Evidence](evidence/str04-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current [SOL-1][STR-03]: **CLOSED at architecture/offline scope**. Engineering `2b119a3` + `e8ad274`; 44 dedicated passes and the same 44 on clean STR-03 implementation without STR-04. Full configuration binds downstream risk/owner limits; allocation remains a later Governor action within the owner ceiling. Stored replay is stable; wall-clock reconstruction and privileged writer-flag limitations remain explicit. STR-04 dependency satisfied; engineering `872131f` exists, canonical lifecycle reconciliation remains separate. [Evidence](evidence/str03-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][DEC-02]: **CLOSED at architecture/offline scope** on `9f36fc7` / `f1bbd7a`. Default allocator **R3** selects CASH on exact positive top ties across distinct expressions; **R2** historical replay remains exact. Explicit candidate/CASH reasons and confidence/source states; analyst evidence grants no selection authority. Production calibration absent; shadow R1 label preserved. DEC-03 still gated by STR-04 (transitively STR-03); next recommendation STR-03, unselected and not started. [Evidence](evidence/dec02-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -2547,32 +2549,35 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Maintains controlled pause, reactivation, degradation and retirement.
 - **closure_condition**: Existing approved version lifecycle changes are bounded, atomic, idempotent and linked to evidence/owner limits.
 - **failure_regression_proof**: No separate legacy writer bypass; no spec rewrite or first-live approval bypass.
 - **dependencies**: STR-03
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Governor lifecycle implementation at 872131f; verified source bytes pinned to 516638e53b410ca7244f232c896ce4176a35a861. docs/tracker/evidence/str04-canonical-sol1/reconciliation.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; synthetic journals, no deployed/live/provider claim
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 26 STR-04 + 44 STR-03 tests passed. Required owner-decision binding fails for APPROVED_FIRST_LIVE -> PAUSED/DEGRADED/RETIRED as the first Governor action: owner_decision_id is null despite an existing decision, and replay accepts it. Ordinary canonical writer, no privileged corruption. Retained broader run 682 passed / 3 identical clean-baseline failures per supplied evidence. docs/tracker/evidence/str04-canonical-sol1/binding-proof.json
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §14.5–14.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: In a separate authorized engineering task, bind the existing exact owner decision for approved versions even before the first activation, verify the binding on replay, and add regression evidence for these paths. DEC-03 remains gated, unselected and unstarted.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 516638e53b410ca7244f232c896ce4176a35a861
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/str04-canonical-sol1/reconciliation.json
+- **evidence_validity**: Pinned offline verification at 516638e53b410ca7244f232c896ce4176a35a861; required event owner binding remains unsatisfied; no later runtime claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 872131f3755ab2d156e9cce73f0deae3b7630df2
+- **evidence_mapping**: docs/tracker/evidence/str04-canonical-sol1/REPORT.md
+- **blocker_evidence**: docs/tracker/evidence/str04-canonical-sol1/binding-proof.json
 
 ### STR-05 — Distinguish decay from no opportunity, regime absence and data failure.
 
@@ -7364,3 +7369,5 @@ PORT-02 canonical status counts: CLOSED 60, EVIDENCE_TO_MAP 79, DEFERRED 7, AWAI
 DEC-02 canonical status counts: CLOSED 61, EVIDENCE_TO_MAP 78, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 STR-03 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 77, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+STR-04 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 76, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 6, OPEN 4 (178 total).

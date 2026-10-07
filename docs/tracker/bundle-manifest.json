@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.53-str03-canonical-risk-sol1",
-  "control_baseline_revision": "2b119a318bdca34599eb8620c9f1f1cc62a78f7e",
+  "snapshot_version": "1.54-str04-canonical-blocked-sol1",
+  "control_baseline_revision": "516638e53b410ca7244f232c896ce4176a35a861",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 559191,
-      "sha256": "f05e4a7efa4aeb570acca612eb80e5d05c09fb7eef79fbdd53618681e671a4ce",
+      "bytes": 567909,
+      "sha256": "b7d9358727d3b7741631d95dc3003ac742786ce5885cdf61d889a54fbadd9ece",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 428142,
-      "sha256": "dc943074638350b63f03201a601e22f76ca09c02eedd0eed3fcb6de1353a705d",
+      "bytes": 429793,
+      "sha256": "7ca6a637d3ca28c3d59d9007b96acd4b530f126e913751bff8783a6a157080e8",
       "synchronization_required": false
     },
     {
@@ -33,15 +33,15 @@
     {
       "path": "STATE.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 234674,
-      "sha256": "bf8509660427fa53302f6bf33912d90bed351365b3446502316466240c9bc3d5",
+      "bytes": 243349,
+      "sha256": "ab5c37b128acb673d5deb0acc40491e5c7b8b1e5c5ed66b9af79b5c6f5ffed47",
       "synchronization_required": true
     },
     {
       "path": "NEXT.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 181806,
-      "sha256": "51b867d9d77317e8476dd047165a313c6b714ee3952c39c32747316c91a92c9b",
+      "bytes": 190481,
+      "sha256": "21d348750f33bf0d628fa8d2e933c68d7ac03b7509eb1560a957054e312fdae4",
       "synchronization_required": true
     },
     {
@@ -117,8 +117,8 @@
     {
       "path": "docs/tracker/README.md",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 14379,
-      "sha256": "0d533092b2add4f6bf1c0e86face382ec2d58fd933d5e615fdca4f9844dad087",
+      "bytes": 14807,
+      "sha256": "07fd70d188706c10e50686c5b1246445dba9d128fabd1a9acc42833dc2177740",
       "synchronization_required": true
     },
     {
@@ -540,6 +540,76 @@
       "synchronization_required": true,
       "bytes": 110,
       "sha256": "6d1e0063ec7f159fbef441e52471a498fef41ba61ce0ac31abc982e95feb7dde"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/REPORT.md",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 5152,
+      "sha256": "9d943b9c0ae64427b72dbb932dbe5687d332777e851dff6827f92054f4979647"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.json",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 5164,
+      "sha256": "25ea55feb11bcce3372ba34773847e72cddfe090b420e5a260d9a53ea9012262"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.py",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1877,
+      "sha256": "bfd539a4a218c3fda0e0cf036f0016c17590ee98e5fd6673dbb1677a005d1d26"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/dedicated.txt",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 110,
+      "sha256": "40e37c29eeec60177231206d34fcbbfc095656db1f33fb1626f5d4ee11ab6012"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/dedicated.xml",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 10952,
+      "sha256": "1aedc802743aadb9f53692dd8e7fde0b8685dc6562d41057532ed6538cf64db0"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/reconcile.py",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 15422,
+      "sha256": "ed763cbbc31852f07c5490c1304e9cb7ffa3d3264074c19549dca25d534d5dc9"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/reconciliation.json",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8001,
+      "sha256": "16fa4308af97709173960d435d70964bccef5cf11f4704179a1c2ae58fa701f9"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/related-engineering.txt",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2335,
+      "sha256": "7ac78106890481c7fa246db685191045700be6340b4be83a4ab1932a3b78b74d"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/control-validation.py",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8357,
+      "sha256": "b28c221f0ad87e156df9f297a5b174872abe2b275db626a740f6d7734273c4a4"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-canonical-sol1/control-checks.json",
+      "role": "STR04_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1128,
+      "sha256": "9669819dc11a0766414eef39d94388e58e2fd7f38eb9fad187590c628668c774"
     }
   ],
   "current_release_deferral": {
@@ -629,7 +699,8 @@
       "PERF-03",
       "OUT-03",
       "GUI-02",
-      "OUT-01"
+      "OUT-01",
+      "STR-04"
     ],
     "next_recommended_item": "STR-04",
     "eligible_items": [
@@ -641,16 +712,15 @@
       "GUI-06",
       "GUI-07",
       "GUI-08",
-      "GUI-09",
-      "STR-04"
+      "GUI-09"
     ],
     "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "STR-03 exact first-live artifact approval condition CLOSED at architecture/offline scope. STR-04 dependency satisfied, eligible for its own lifecycle evidence mapping; unselected and not started. DEC-03 remains gated by STR-04. No activation authority.",
-    "last_terminal_item": "STR-03",
-    "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "selection_reason": "STR-04 canonical reconciliation BLOCKED on STR04-BINDING-01: initial approved non-activation events omit owner decision identity. STR-03 remains CLOSED. DEC-03 dependencies are not satisfied; DEC-03 is not eligible, selected or started. Next action is a separate STR-04 engineering fix; this reconciliation authorizes no implementation or runtime work.",
+    "last_terminal_item": "STR-04",
+    "last_terminal_result": "BLOCKED_ARCHITECTURE_OFFLINE",
     "deferred_proof_obligations": {
       "ATT-03": {
         "status": "DEFERRED",
@@ -3044,5 +3114,162 @@
     "STR04_engineering_commit_valid": true,
     "STR04_engineering_validation_scope": "Commit exists, is an ancestor of verification revision, and has the stated engineering files; lifecycle acceptance and canonical reconciliation are excluded.",
     "STR04_started_interpretation": "Canonical successor selection/start only; STR-04 engineering already exists and is not reconciled by this task."
+  },
+  "str04_canonical_reconciliation": {
+    "item": "STR-04",
+    "canonical_status": "BLOCKED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+    "control_baseline_revision": "516638e53b410ca7244f232c896ce4176a35a861",
+    "dependency_STR03_canonical_commit": "516638e53b410ca7244f232c896ce4176a35a861",
+    "closing_condition": "Existing approved version lifecycle changes are bounded, atomic, idempotent and linked to evidence/owner limits.",
+    "failure_regression_proof": "No separate legacy writer bypass; no spec rewrite or first-live approval bypass.",
+    "closing_condition_satisfied": false,
+    "blocker": {
+      "id": "STR04-BINDING-01",
+      "required_proof": "2. Every new Governor event binds owner decision identity; replay verifies bindings.",
+      "finding": "Approved first Governor PAUSED/DEGRADED/RETIRED events omit the existing owner decision identity; replay accepts them.",
+      "ordinary_canonical_path": true,
+      "privileged_corruption_required": false,
+      "from_state": "APPROVED_FIRST_LIVE",
+      "targets": [
+        "PAUSED",
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "reproducer": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.py",
+      "evidence": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.json",
+      "cause": "The writer initializes owner_decision_id from Governor history or None and only resolves eligibility.decision_id for ACTIVE/REACTIVATED. With no earlier activation, a non-activating event omits the already-existing decision.",
+      "required_fix": "In a separate authorized engineering task, bind the existing exact owner decision for approved versions even before the first activation, verify the binding on replay, and add regression evidence for these paths."
+    },
+    "verified_mapping": {
+      "sole_authority": "govern_version writes Governor events and projects versioned strategies.state. DB triggers refuse lifecycle version events, raw Governor inserts and ungoverned versioned row state edits/deletes/replacements. Other state writers remain legacy-only for versioned ids.",
+      "exact_binding": "New events carry version/spec, strategy/lineage/install/request binding, transition_id/key and requested allocation. Post-ACTIVE lifecycle events inherit owner decision. First approved non-activation events have the blocking omission.",
+      "state_machine": "GOVERNOR_ALLOWED below is exact. Dedicated tests verify retired terminality, unapproved activation refusal and stale probation reactivation refusal.",
+      "atomicity": "Both injected strategies-row UPDATE failure and Governor-event INSERT failure roll back event and projection; retry succeeds after fault removal.",
+      "idempotency": "Latest duplicate returns identical event; explicit earlier transition key replays prior event, conflicting key refuses; restart retains exact history/state.",
+      "projection": "ACTIVE/REACTIVATED active; PAUSED/DEGRADED paper; RETIRED retired. Divergence is detected and live_entry_block refuses.",
+      "activation": "ACTIVE/REACTIVATED consume eligible_for_first_live with exact approval/install/available inputs/current capacity, authoritative same-journal Risk release, matching Risk policy and owner ceiling/risk hash. Full approval config_sha256 is rechecked through STR-03.",
+      "immutability": "Dedicated snapshot covers versions, validation, install, probation, approval request and decision across full lifecycle. Lifecycle API accepts no spec/lineage/evidence rewrite; same-id spec rewrite blocks live entry; changed semantics derive a new version.",
+      "bypass": "Dedicated refusal evidence includes raw writes, version-event lifecycle insert, label/grandfather, sibling and stale approval; rewritten installed semantics cannot authorize entry.",
+      "execution_boundary": "ACTIVE alone preserves version_first_live_execution_not_enabled; Kernel consumes live_entry_block."
+    },
+    "allowed_transitions": {
+      "PROPOSED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "VALIDATED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "SHADOW": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "APPROVAL_REQUIRED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "APPROVED_FIRST_LIVE": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "ACTIVE": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "REACTIVATED": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "PAUSED": [
+        "DEGRADED",
+        "REACTIVATED",
+        "RETIRED"
+      ],
+      "DEGRADED": [
+        "PAUSED",
+        "REACTIVATED",
+        "RETIRED"
+      ],
+      "RETIRED": []
+    },
+    "projection": {
+      "ACTIVE": "active",
+      "REACTIVATED": "active",
+      "PAUSED": "paper",
+      "DEGRADED": "paper",
+      "RETIRED": "retired"
+    },
+    "limitations": [
+      "Pause/degrade/retire reason strings are bound but not registry-validated.",
+      "DB guard is flag-based, not cryptographic protection against privileged code deliberately setting governor_write.",
+      "STR-05 owns what evidence may trigger degradation, retirement or recovery."
+    ],
+    "validation": {
+      "fresh_STR04_passed": 26,
+      "fresh_STR03_passed": 44,
+      "fresh_combined_passed": 70,
+      "retained_broader_passed": 682,
+      "retained_broader_failed": 3,
+      "retained_log": "docs/tracker/evidence/str04-canonical-sol1/related-engineering.txt",
+      "baseline_reproduction": "All three failures reproduced identically on clean baseline per user-supplied engineering evidence; clean-baseline log is not independently retained in this package.",
+      "failure_ids": [
+        "tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk",
+        "tests/test_lifecycle_kind_routing.py::test_genome_rows_still_evaluate_normally",
+        "tests/test_lifecycle_kind_routing.py::test_spec_and_genome_coexist_in_one_sweep"
+      ],
+      "full_suite_green_claim": false,
+      "counts_overlap_do_not_sum": true,
+      "provider_calls": 0,
+      "full_broader_run_repeated": false
+    },
+    "dependency_status": {
+      "STR-03": "CLOSED"
+    },
+    "DEC03_dependencies_satisfied": false,
+    "DEC03_now_eligible": false,
+    "DEC03_selected": false,
+    "DEC03_started": false,
+    "DEC03_remaining_blockers": [
+      "STR-04"
+    ],
+    "status_counts_after": {
+      "CLOSED": 62,
+      "EVIDENCE_TO_MAP": 76,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 6,
+      "OPEN": 4
+    },
+    "original_conditions_and_edges_preserved": true,
+    "unrelated_rows_unchanged": 177,
+    "source_sha256": {
+      "trader/strategy/factory_handoff.py": "c3c21ab3c821e390c7ef823ed853ef91420aa4450ecb45bf4770ef332c8821f3",
+      "trader/core/journal.py": "7d9b001cfd73d712a8fc623ec8181f5d33521abadb081a13d90f8234f82ad1e3",
+      "trader/kernel.py": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f",
+      "trader/strategy/promotion.py": "b39912c5c60e3daad020dc95ae1465a55777e7f278cfca76cfd8e29a1420edb1",
+      "trader/brain/strategist.py": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df",
+      "trader/brain/tv.py": "dbaf82abec7c05004a4cdf1dc01e91e4df4aefae02926a21ed8fc7d35e8e0ff1",
+      "trader/engine/risk.py": "d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132",
+      "trader/strategy/capacity.py": "5e34e4904e7169433d2e4f4589411dcac86dea6f921cb821a013ea8d81b73a13",
+      "tests/test_str04_governor_lifecycle.py": "870609359fb8300090c01bd37d0b4f8716786f44de717f828a85abb3bf8d7ee2",
+      "tests/test_str03_approval_binding.py": "2b600d0fe4f991d11b441a5cc520b4adea4d92a0630df358ef7752abb6433a28",
+      "tests/test_universal_strategy_authority.py": "2ce30d4b2bb2fdac5cd9cd706be7d130e386c3bae6724a710dfc376858a234ae",
+      "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
+    },
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "control_plane_commit_resolution": "Enclosing Git commit containing this record; no self-referential hash."
   }
 }
