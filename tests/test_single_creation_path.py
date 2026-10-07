@@ -140,7 +140,11 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True):
                       "survivor", "r", {})
     # TEST-ONLY registered referee evidence; an Analyst result cannot replace it.
     led.record_test(c.hash, "4h", "fixed", "gate1", .001, .0025, False,
-                    {"t": 1, "evaluated": evaluated_record(c)})
+                    {"t": 1, "evaluated": evaluated_record(c),
+                     "cut_ms": 1_780_000_000_000, "draws": 1999,
+                     "a": {"consistency_p_dep": .0005},
+                     "b": {"consistency_p_dep": .0005},
+                     "rotation": {"p": .001}})
     led.set_candidate(c.hash, "4h", "fixed", "reason_passed", rank=40.0,
                       gate1={"p": .001, "alpha": .0025, "t": 1},
                       gate3={"passed": True, "reason": "TEST-ONLY book"})

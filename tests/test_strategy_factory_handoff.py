@@ -60,7 +60,11 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
     # can never be in those states (ledger refuses to restore it)
     if look and state not in ("queued", "deferred"):
         led.record_test(c.hash, "4h", "fixed", "gate1", p, alpha, False,
-                        {"t": 1, "evaluated": evaluated_record(c)})
+                        {"t": 1, "evaluated": evaluated_record(c),
+                         "cut_ms": 1_780_000_000_000, "draws": 1999,
+                         "a": {"consistency_p_dep": p / 2},
+                         "b": {"consistency_p_dep": p / 2},
+                         "rotation": {"p": p}})
     led.set_candidate(
         c.hash, "4h", "fixed", state, rank=40.0,
         gate1={"p": p if g1_p is None else g1_p, "alpha": alpha, "t": 1,

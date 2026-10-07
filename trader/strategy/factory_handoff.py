@@ -383,6 +383,7 @@ def gate_evidence(journal, h: str) -> dict:
         _refuse("candidate_gate1_does_not_match_look")
     if not isinstance(g3, dict) or g3.get("passed") is not True:
         _refuse("gate3_not_passed")
+    _check_registered_look(journal, t, g1, h)
     combo = _one(journal, "SELECT hash, tf, geo, parts FROM research_combos "
                  "WHERE hash=?", (h,))
     if combo is None or (combo["tf"], combo["geo"]) != (cand["tf"],
@@ -399,6 +400,63 @@ def gate_evidence(journal, h: str) -> dict:
             "candidate_gates_sha256": _jsha({"gate1": g1, "gate3": g3}),
             "combo_sha256": _jsha(dict(combo)),
             "evaluated": evaluated, "evaluated_sha256": _jsha(evaluated)}
+
+
+def _check_registered_look(journal, t: dict, g1: dict, h: str) -> None:
+    """The look must be a real step of the registered error budget on the
+    frozen cut, scored by the dependence-corrected p it recorded. Rows a
+    caller could insert directly (a loose alpha, a raw p, another cut) are
+    refused here, not trusted because `rejected` is set."""
+    from ..research import fdr, portfolio_null as pn
+    reg = journal.query("SELECT alpha, w0 FROM research_budget WHERE id=1")
+    if not reg:
+        _refuse("error_budget_unregistered")
+    rows = journal.query("SELECT seq, tf, rejected, detail FROM research_tests "
+                         "ORDER BY seq")
+    seqs = [r["seq"] for r in rows]
+    if t["seq"] not in seqs:
+        _refuse("gate1_look_missing")
+    pos = seqs.index(t["seq"]) + 1
+    rej = [i for i, r in enumerate(rows, start=1) if r["rejected"] and i < pos]
+    try:
+        ceiling = fdr.alpha_at(pos, rej, float(reg[0]["alpha"]),
+                               float(reg[0]["w0"]))
+    except ValueError:
+        _refuse("error_budget_unregistered")
+    if float(t["alpha_t"]) > ceiling + 1e-12:
+        _refuse("gate1_alpha_not_registered")
+    try:
+        d = json.loads(t["detail"] or "null")
+    except (TypeError, ValueError):
+        d = None
+    if not isinstance(d, dict):
+        _refuse("gate1_look_detail_missing")
+    # frozen cut: the first held-out look on this tf fixed it for every later one
+    cuts = []
+    for r in rows:
+        if r["tf"] != t["tf"]:
+            continue
+        try:
+            c = (json.loads(r["detail"] or "{}") or {}).get("cut_ms")
+        except (TypeError, ValueError):
+            c = None
+        if c:
+            cuts.append(int(c))
+    if not d.get("cut_ms") or not cuts or int(d["cut_ms"]) != cuts[0]:
+        _refuse("gate1_look_wrong_cut")
+    # the budget priced a look that could resolve its own alpha
+    if not isinstance(d.get("draws"), int) \
+            or pn.draws_for(float(t["alpha_t"]), int(d["draws"])) is None:
+        _refuse("gate1_look_underresolved")
+    # QNT-03: p is the worst dependence-corrected reading, never a raw one
+    try:
+        deps = [float(d["a"]["consistency_p_dep"]),
+                float(d["b"]["consistency_p_dep"]), float(d["rotation"]["p"])]
+    except (KeyError, TypeError, ValueError):
+        _refuse("gate1_dependence_evidence_missing")
+    if not all(math.isfinite(x) for x in deps) \
+            or abs(max(deps) - float(t["p"])) > 1e-12:
+        _refuse("gate1_p_not_dependence_corrected")
 
 
 def _evaluated(look: dict, h: str, tf: str, geo: str) -> dict:
