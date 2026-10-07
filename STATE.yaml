@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.3'
-updated_at: '2026-10-06'
+updated_at: '2026-10-07'
 status: EVIDENCE_BASED
 
 authority:
@@ -3140,12 +3140,12 @@ res04_preprocessing_closure:
 
 res05_persistence_result:
   item: RES-05
-  status: BLOCKED
+  status: CLOSED
   scope: ARCHITECTURE_OFFLINE
-  evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md
-  actual_gap: 'External worker persists structured INCONCLUSIVE records; seven forged semantics/outcome/cost cases
-    corrected. Investigation Bank retains refuted alternatives but has no own next question; standalone REFUTED
-    result chain not demonstrated. Evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md.'
+  evidence: docs/tracker/evidence/res05-canonical-sol1/closure.json
+  actual_gap: Resolved by typed result-to-next-question persistence; prior BLOCKED report retained as historical
+    provenance.
+  historical_evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md
   real_provider_calls: 0
   successor_selected: false
 
@@ -3317,4 +3317,74 @@ qnt03_04_05_canonical_reconciliation:
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
     BLOCKED: 8
+    OPEN: 4
+
+res05_canonical_reconciliation:
+  item: RES-05
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  control_baseline_revision: 2a866b9fb3be541770d69d62b5273962c061a1c8
+  implementation_provenance:
+    2e3c43e: 2e3c43ea931893a44835f409572c200a3d31dc1f
+    0780290: 0780290c650ac6ae2d938cab6fcac7765da8ac01
+    f8cb1a2: f8cb1a2b262729af59a9d78e45cfda2cd121d159
+    2c8cf97: 2c8cf975fe00d146b3c8d67afd33dc9594ec1514
+  evidence: docs/tracker/evidence/res05-canonical-sol1/closure.json
+  engineering_evidence:
+  - docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md
+  - docs/tracker/evidence/res05-next-question-sol2/REPORT.md
+  closing_condition_satisfied: true
+  closure_mapping:
+    question: Original typed question and exact source/context/trace retained.
+    sources: Frozen measurement/update/source hashes replayed; unavailable participant source explicit.
+    claims: Explicit NOT_AVAILABLE/no extraction contract; collector forgery refused.
+    support_contradiction: Measured registered paths preserve SUPPORTED and REFUTED alternatives; missing measurements
+      NOT_ASSESSED.
+    experiment: Frozen registered predicate protocol, measured OutcomeEvidence and structural run steps linked.
+    conclusion: Immutable result IDs/hashes and distinct INCONCLUSIVE/completed runs.
+    limitations: Retained descriptive-only and missing-source meaning.
+    cost: Honest NOT_MEASURED family cost; external current-pass telemetry reconciled with receipts.
+    next_question: Normal producer stores same-schema QUESTION_ONLY follow-ups atomically with result/Bank;
+      replay rederives exact links.
+  verification:
+    retained_focused_passed: 52
+    retained_consumer_passed: 21
+    fresh_strategy_decay_passed: 3
+    fresh_strategy_decay_log: docs/tracker/evidence/res05-canonical-sol1/strategy-decay-recheck.txt
+    prior_refusal: environment_not_sanitized:TEMP,TMP,TMPDIR caused by luffy-pytest environment pollution;
+      wrapper correction leaves production implementation unchanged.
+    engineering_hashes_verified: true
+    historical_failures_preserved: true
+  limitations:
+  - Architecture/offline synthetic proof only; no deployed/runtime freshness, market edge or calibration claim.
+  - REFUTED alternatives are first-class registered findings inside the measured result; no standalone external-collector
+    terminal REFUTED result invented.
+  - Claims NOT_AVAILABLE and family cost NOT_MEASURED remain explicit; collector cost is self-reported operational
+    telemetry, not an independent cost audit.
+  - Follow-ups add no support, causal/predictive evidence, scheduling, original-test retry or trading authority.
+  - Legacy v1 records remain byte-identical; no historical follow-ups backfilled.
+  - Earlier broad run 34 passed, 1 failed, 37 setup errors and interrupted run remain historical; no full-suite
+    green claim.
+  dependency_status:
+    RES-04: CLOSED
+    WRLD-05: CLOSED
+    QNT-01: CLOSED
+  downstream:
+    RES-06: 'ELIGIBLE: RES-05 CLOSED; row unchanged.'
+    RES-07: 'ELIGIBLE: RES-05 and WRLD-05 CLOSED; active work and row unchanged.'
+    RES-08_blockers:
+    - RES-07
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  active_RES07_QNT08_untouched: true
+  successor_selected: false
+  provider_calls: 0
+  runtime_execution_authorized: false
+  status_counts_after:
+    CLOSED: 53
+    EVIDENCE_TO_MAP: 84
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
     OPEN: 4

@@ -1,3 +1,5 @@
+> Current [SOL-1][RES-05]: CLOSED at architecture/offline scope; canonical linked persistence verified. RES-06/RES-07 dependency-eligible; RES-08 awaits RES-07. Active RES-07/QNT-08 work unchanged. [Evidence](evidence/res05-canonical-sol1/REPORT.md). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-03, QNT-04 and QNT-05 CLOSED at architecture/offline scope (a801cfd/26a26d3; 093187b; ceba1bd). Dependence-aware admission with lineage, frozen held-out cut with spent-look guard, and a persistent registered error budget; synthetic offline proof, no real-data calibration. QNT-08 is dependency-eligible (QNT-03/05/06 CLOSED), row unchanged and unselected. [Evidence](evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current [SOL-2][RES-05]: BLOCKED. Collector result semantics corrected; complete refuted-result/next-question proof remains open. [Evidence](evidence/res05-bank-persistence-sol2/REPORT.md). RES-06/RES-07 unchanged. Earlier summaries below are historical.
@@ -1989,29 +1991,29 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: BLOCKED
+- **status**: CLOSED
 - **why_needed**: Bookmarks and logs alone cannot close the research loop.
 - **closure_condition**: Question, sources, claims, support/contradiction, experiment, conclusion, limitations, cost and next question are linked in normal persistence.
 - **failure_regression_proof**: Refuted/inconclusive results are first-class; missing source is not fabricated support.
 - **dependencies**: RES-04
 - **owner_role**: Attention & research owner
 - **engineering_assignee**: SOL-2
-- **implementation_evidence**: MAPPED_COLLECTOR_RESULT_SEMANTICS_CORRECTED
+- **implementation_evidence**: MAPPED_TYPED_RESULT_NEXT_QUESTION_PERSISTENCE
 - **runtime_evidence**: OFFLINE_SYNTHETIC_ONLY
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: External worker persists structured INCONCLUSIVE records; seven forged semantics/outcome/cost cases corrected. Investigation Bank retains refuted alternatives but has no own next question; standalone REFUTED result chain not demonstrated. Evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md.
+- **latest_evidence**: Normal producer atomically persists verified result/Bank and typed QUESTION_ONLY follow-ups in the existing question ledger; inconclusive results and refuted alternatives retain exact lineage across restart. Missing sources remain unavailable, never support. 52 focused + 21 consumers passed; 3 wrapper-pollution refusals now pass 3/3. Architecture/offline only. Evidence: docs/tracker/evidence/res05-canonical-sol1/REPORT.md.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §12.6
-- **next_proof**: Complete a registered first-class refuted-result persistence path with a linked next question; preserve original immutable records and source/evaluation authority.
+- **next_proof**: None for architecture/offline closure. Retain unavailable claims/cost and descriptive-only scope; no live or predictive validation claimed.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 2c8cf975fe00d146b3c8d67afd33dc9594ec1514
 - **work_authorized**: True
-- **updated**: 2026-10-06
+- **updated**: 2026-10-07
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/res05-canonical-sol1/closure.json
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7309,3 +7311,5 @@ historical_records: att03_warmup_terminal and att03_calibration_terminal are imm
   prior checkpoints, superseded only for current-build scope by this owner decision.
   Their calibration findings remain true.
 ```
+
+RES-05 canonical status counts: CLOSED 53, EVIDENCE_TO_MAP 84, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 7, OPEN 4.

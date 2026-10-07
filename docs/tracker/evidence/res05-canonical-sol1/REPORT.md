@@ -1,0 +1,11 @@
+# [SOL-1][RES-05] canonical CLOSED
+
+The exact tracker condition is satisfied at architecture/offline scope. The normal investigation producer retains the original question, source chain, explicit claim availability, measured support/refuted alternatives, registered evaluation/run, conclusion, limitations, honest cost availability and typed next questions. They share the existing immutable ledger and atomic result/Bank transaction. Replay rederives links; conflicts roll back; restart preserves IDs and bytes. INCONCLUSIVE results and REFUTED alternatives remain first-class. Missing sources stay unavailable and cannot fabricate support.
+
+Implementation provenance is preserved: semantic/replay fixes `2e3c43e`, `0780290`; typed follow-up implementation `f8cb1a2`; engineering closure `2c8cf97`. All source and evidence hashes in the engineering proof match. Retained verification is 52 focused plus 21 consumer passes. A fresh run through the corrected luffy-pytest wrapper passes the previously refused strategy-decay checks 3/3; prior TEMP/TMP/TMPDIR pollution was a wrapper issue, and production implementation was unchanged by that correction. No live provider calls occurred.
+
+Limitations remain: synthetic offline evidence, descriptive-only measured findings, no independent cost audit, claims NOT_AVAILABLE and family cost NOT_MEASURED, no scheduling/retry/predictive/trading authority from follow-ups, and immutable legacy v1 records without backfilled questions. Refuted alternatives are registered findings inside completed results; no standalone external-collector REFUTED conclusion is invented. Earlier resource failures and the interrupted suite remain preserved in the engineering report; this is not a full-suite green claim.
+
+Only RES-05 and its control summaries are reconciled. RES-06 is dependency-eligible through RES-05; RES-07 is dependency-eligible through RES-05 and WRLD-05. RES-08 remains blocked on RES-07 (QNT-01 is CLOSED). RES-07/QNT-08 rows and active work are untouched. No successor is selected by this reconciliation.
+
+See [closure.json](closure.json) for the field mapping and counts, [strategy-decay-recheck.txt](strategy-decay-recheck.txt) for fresh verification, and [engineering proof](../res05-next-question-sol2/proof.json) for pinned provenance and historical outcomes.

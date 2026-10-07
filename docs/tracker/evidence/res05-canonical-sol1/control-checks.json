@@ -1,0 +1,37 @@
+{
+  "rows": 178,
+  "unchanged_unrelated_rows": 177,
+  "original_condition_and_edges_preserved": true,
+  "RES07_QNT08_rows_unchanged": true,
+  "status_counts": {
+    "CLOSED": 53,
+    "EVIDENCE_TO_MAP": 84,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 7,
+    "OPEN": 4
+  },
+  "manifest_hashes_match": true,
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "RES-05",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Retain structured Research Bank results and linked next questions; preserve source and evaluation authority.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "evidence": [
+      "docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md",
+      "docs/tracker/evidence/res05-next-question-sol2/REPORT.md",
+      "docs/tracker/evidence/res05-canonical-sol1/REPORT.md"
+    ],
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false,
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false
+  },
+  "selection_note": "RES-05 retained as the completed selected package to satisfy existing read-only Tracker/NEXT contract; no successor or change to external active work."
+}
