@@ -1,0 +1,54 @@
+{
+  "row_count": 178,
+  "changed_rows": [
+    "STR-02",
+    "DEC-01"
+  ],
+  "unrelated_rows_unchanged": 176,
+  "original_conditions_and_edges_preserved": true,
+  "readiness_gates_preserved": true,
+  "source_and_committed_bytes_match": true,
+  "manifest_hashes_match": true,
+  "YAML_unique_keys_and_strict_contracts": true,
+  "status_counts": {
+    "CLOSED": 58,
+    "EVIDENCE_TO_MAP": 80,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 6,
+    "OPEN": 4
+  },
+  "dashboard_read": "AVAILABLE",
+  "dashboard_selected": {
+    "id": "STR-02",
+    "status": "CLOSED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Compile exact strategy logic with current/historical feature parity.",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "implementation_commit": "843a0a3b9a6bd52059267355f39f4be8deaef671",
+    "evidence": [
+      "docs/tracker/evidence/str02-canonical-sol1/REPORT.md",
+      "docs/tracker/evidence/str02-canonical-sol1/closure.json"
+    ],
+    "implementation_complete": true,
+    "canonical_reconciliation_pending": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "STR02_canonical": "CLOSED",
+  "DEC01_status": "BLOCKED",
+  "DEC01_dependencies_satisfied": true,
+  "DEC01_now_eligible": true,
+  "DEC01_selected": false,
+  "DEC01_started": false,
+  "baseline_final_31_failure_ids_equal": true,
+  "application_code_changed": false,
+  "runtime_state_unchanged": true,
+  "research_handoff_disabled": true,
+  "research_referee_disabled": true,
+  "feature_version_limitation_preserved": true
+}

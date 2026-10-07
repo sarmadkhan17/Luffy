@@ -1,0 +1,1006 @@
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+...................F.F..FFFFFFFFFFFFFFFFFFFFF.....F..................... [ 36%]
+.................................F...................................... [ 48%]
+........................................................................ [ 60%]
+........................................................................ [ 72%]
+..........................................FFF........................... [ 84%]
+...........FFF.......................................................... [ 96%]
+....................                                                     [100%]
+=================================== FAILURES ===================================
+___________________ test_entry_binds_exact_strategy_version ____________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c544d5b0>, <trader.core.journal.Journal object at 0x7622c3b63950>, <trader.engine.executor.Executor object at 0x7622c6de3d40>)
+
+    def test_entry_binds_exact_strategy_version(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c544d5b0>, <trader.core.journal.Journal object at 0x7622c3b63950>, <trader.engine.executor.Executor object at 0x7622c6de3d40>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:35.545668+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_________ test_later_strategy_mutation_does_not_change_entry_identity __________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53b86e0>, <trader.core.journal.Journal object at 0x7622c53ba7e0>, <trader.engine.executor.Executor object at 0x7622c6f38c80>)
+
+    def test_later_strategy_mutation_does_not_change_entry_identity(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53b86e0>, <trader.core.journal.Journal object at 0x7622c53ba7e0>, <trader.engine.executor.Executor object at 0x7622c6f38c80>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:36.041942+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_______________ test_entry_order_identity_and_reference_recorded _______________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6c22e10>, <trader.core.journal.Journal object at 0x7622c6c22540>, <trader.engine.executor.Executor object at 0x7622c6ebcd40>)
+
+    def test_entry_order_identity_and_reference_recorded(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6c22e10>, <trader.core.journal.Journal object at 0x7622c6c22540>, <trader.engine.executor.Executor object at 0x7622c6ebcd40>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:36.794620+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+________ test_multiple_fills_partial_and_final_exit_attributed_by_order ________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6f38b30>, <trader.core.journal.Journal object at 0x7622c6f59310>, <trader.engine.executor.Executor object at 0x7622c6b9f530>)
+
+    def test_multiple_fills_partial_and_final_exit_attributed_by_order(env):
+        ex, j, e = env
+        ex.split = 2
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6f38b30>, <trader.core.journal.Journal object at 0x7622c6f59310>, <trader.engine.executor.Executor object at 0x7622c6b9f530>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:37.116138+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_________ test_two_sequential_trades_same_symbol_keep_their_own_fills __________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539c740>, <trader.core.journal.Journal object at 0x7622c539f080>, <trader.engine.executor.Executor object at 0x7622c6e94680>)
+
+    def test_two_sequential_trades_same_symbol_keep_their_own_fills(env):
+        ex, j, e = env
+>       a = open_trade(env, "d1")
+            ^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539c740>, <trader.core.journal.Journal object at 0x7622c539f080>, <trader.engine.executor.Executor object at 0x7622c6e94680>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:37.448329+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_________ test_sibling_on_same_symbol_makes_exit_attribution_ambiguous _________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53b9dc0>, <trader.core.journal.Journal object at 0x7622c705be00>, <trader.engine.executor.Executor object at 0x7622c3b8db50>)
+
+    def test_sibling_on_same_symbol_makes_exit_attribution_ambiguous(env):
+        ex, j, e = env
+>       a = open_trade(env)
+            ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:274: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53b9dc0>, <trader.core.journal.Journal object at 0x7622c705be00>, <trader.engine.executor.Executor object at 0x7622c3b8db50>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:37.760053+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+__________ test_unmatched_fill_same_symbol_and_side_is_never_guessed ___________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c81b2450>, <trader.core.journal.Journal object at 0x7622c3b8e630>, <trader.engine.executor.Executor object at 0x7622c6f39880>)
+
+    def test_unmatched_fill_same_symbol_and_side_is_never_guessed(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c81b2450>, <trader.core.journal.Journal object at 0x7622c3b8e630>, <trader.engine.executor.Executor object at 0x7622c6f39880>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:38.075339+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_____________________________ test_ambiguous_fills _____________________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c520ad20>, <trader.core.journal.Journal object at 0x7622c5208500>, <trader.engine.executor.Executor object at 0x7622c846a2d0>)
+
+    def test_ambiguous_fills(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c520ad20>, <trader.core.journal.Journal object at 0x7622c5208500>, <trader.engine.executor.Executor object at 0x7622c846a2d0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:38.413668+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+___________________ test_missing_venue_ids_are_not_invented ____________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6c9b080>, <trader.core.journal.Journal object at 0x7622c6d94620>, <trader.engine.executor.Executor object at 0x7622c7139580>)
+
+    def test_missing_venue_ids_are_not_invented(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6c9b080>, <trader.core.journal.Journal object at 0x7622c6d94620>, <trader.engine.executor.Executor object at 0x7622c7139580>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:38.718903+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_____________ test_opaque_venue_ids_are_stored_and_matched_exactly _____________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c51ed190>, <trader.core.journal.Journal object at 0x7622c51ef980>, <trader.engine.executor.Executor object at 0x7622c6b5a5d0>)
+
+    def test_opaque_venue_ids_are_stored_and_matched_exactly(env):
+        """Venue ids are opaque strings: whitespace and leading zeros are part of
+        the identity. Only None or "" is unknown."""
+        ex, j, e = env
+        ex.oid_format, ex.fill_format = " 00{} ", "\t0{oid}/{k} "
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:357: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c51ed190>, <trader.core.journal.Journal object at 0x7622c51ef980>, <trader.engine.executor.Executor object at 0x7622c6b5a5d0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:39.015634+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+______________________ test_exact_and_missing_commission _______________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539ec90>, <trader.core.journal.Journal object at 0x7622c539c890>, <trader.engine.executor.Executor object at 0x7622c6d979e0>)
+
+    def test_exact_and_missing_commission(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:381: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539ec90>, <trader.core.journal.Journal object at 0x7622c539c890>, <trader.engine.executor.Executor object at 0x7622c6d979e0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:39.317608+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_____________ test_duplicate_and_replayed_receipts_are_idempotent ______________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6b59b50>, <trader.core.journal.Journal object at 0x7622c520b020>, <trader.engine.executor.Executor object at 0x7622c51ec2c0>)
+
+    def test_duplicate_and_replayed_receipts_are_idempotent(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:397: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c6b59b50>, <trader.core.journal.Journal object at 0x7622c520b020>, <trader.engine.executor.Executor object at 0x7622c51ec2c0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:39.621958+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+______________ test_reconciliation_alignment_preserves_provenance ______________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b4bc20>, <trader.core.journal.Journal object at 0x7622c6f58f20>, <trader.engine.executor.Executor object at 0x7622c6de2090>)
+
+    def test_reconciliation_alignment_preserves_provenance(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:424: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b4bc20>, <trader.core.journal.Journal object at 0x7622c6f58f20>, <trader.engine.executor.Executor object at 0x7622c6de2090>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:39.867866+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+____________ test_recovered_entry_keeps_identity_and_order_identity ____________
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-mOAEupOB4DiE/base/test_recovered_entry_keeps_ide0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c3b4a780>
+
+    def test_recovered_entry_keeps_identity_and_order_identity(tmp_path, monkeypatch):
+        from tests.test_entry_recovery import Venue as RecoveryVenue
+        monkeypatch.setattr("trader.engine.executor.time.sleep", lambda _: None)
+        j = Journal(tmp_path / "j.db")
+        from tests.authority_legacy_fixtures import grant
+        j.upsert_spec(_valid())
+        grant(j, "seed_test")
+        d = decision(j)
+        ex = RecoveryVenue()
+        e = Executor(ex, j, load_config(), MarketType.FUTURES)
+        ident, _ = spec_identity(d)
+        ex.entry_error = RequestTimeout("accepted, response lost")
+        assert e.open(d, 2., 2., 95., 110., "seed_test", "s", entry_identity=ident) is None
+        e.recover_entries()
+        e.recover_entries()
+>       t = j.open_trades()[0]
+            ^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/test_trade_provenance.py:467: IndexError
+_________________ test_provenance_does_not_change_what_is_sent _________________
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-mOAEupOB4DiE/base/test_provenance_does_not_chang0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c51eff80>
+
+    def test_provenance_does_not_change_what_is_sent(tmp_path, monkeypatch):
+        monkeypatch.setattr("trader.engine.executor.time.sleep", lambda _: None)
+        sent = []
+        for n, kwargs in enumerate([{}, {"entry_identity": {"status": "VERIFIED"},
+                                         "reference": REF}]):
+            j = Journal(tmp_path / f"j{n}.db")
+            from tests.authority_legacy_fixtures import seed
+            seed(j, "s")
+            ex = Venue()
+            e = Executor(ex, j, load_config(), MarketType.FUTURES)
+            e.fill_retry_s = 0
+            d = decision(j)
+            pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "s", "s", **kwargs)
+>           e.close_partial(row(j, pos.id), 1.0, 104.0)
+                                   ^^^^^^
+E           AttributeError: 'NoneType' object has no attribute 'id'
+
+tests/test_trade_provenance.py:489: AttributeError
+_______________ test_provenance_failure_never_fails_the_booking ________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b4ae40>, <trader.core.journal.Journal object at 0x7622c3b49dc0>, <trader.engine.executor.Executor object at 0x7622c6d975f0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c3b4a5a0>
+
+    def test_provenance_failure_never_fails_the_booking(env, monkeypatch):
+        ex, j, e = env
+    
+        def boom(*a, **k):
+            raise RuntimeError("provenance down")
+        monkeypatch.setattr(TP, "record_booking", boom)
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:502: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b4ae40>, <trader.core.journal.Journal object at 0x7622c3b49dc0>, <trader.engine.executor.Executor object at 0x7622c6d975f0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:40.495467+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_______________________ test_owner_read_exposes_statuses _______________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53a5b50>, <trader.core.journal.Journal object at 0x7622c53a4b30>, <trader.engine.executor.Executor object at 0x7622c539f170>)
+
+    def test_owner_read_exposes_statuses(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53a5b50>, <trader.core.journal.Journal object at 0x7622c53a4b30>, <trader.engine.executor.Executor object at 0x7622c539f170>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:40.730435+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_________________ test_backfill_links_only_replayable_receipts _________________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b8e3c0>, <trader.core.journal.Journal object at 0x7622c53b80b0>, <trader.engine.executor.Executor object at 0x7622d95b0800>)
+
+    def test_backfill_links_only_replayable_receipts(env):
+        from scripts.backfill_trade_provenance import backfill
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:537: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b8e3c0>, <trader.core.journal.Journal object at 0x7622c53b80b0>, <trader.engine.executor.Executor object at 0x7622d95b0800>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:41.112542+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_____ test_kernel_population_identity_matches_the_evaluator_that_signalled _____
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-mOAEupOB4DiE/base/test_kernel_population_identit0')
+
+    def test_kernel_population_identity_matches_the_evaluator_that_signalled(tmp_path):
+        from types import SimpleNamespace
+        import pandas as pd
+        from trader.kernel import Kernel
+        j = Journal(tmp_path / "k.db")
+        j.upsert_spec(_valid(), state="paper")
+        kernel = Kernel.__new__(Kernel)
+        kernel.journal = j
+        kernel._load_population()
+        loaded = kernel._entry_identities["seed_test"]
+        stamped = compile_spec(_valid()).spec_sha256
+        assert loaded["spec_sha256"] == stamped and loaded["registry_state_at_load"] == "paper"
+        d = decision(j)
+        d.strategy_signals = [{"strategy_id": "seed_test", "action": "BUY",
+                               "params": {"spec_id": "seed_test", "spec_sha256": stamped}}]
+        snap = SimpleNamespace(price=101.0, ts="2026-09-30T00:00:00+00:00",
+                               df=lambda tf: pd.DataFrame({"ts": ["2026-09-29T23:45:00"],
+                                                           "close": [101.0]}))
+        identity, reference = kernel._entry_provenance(d, snap, "seed_test", "15m")
+        assert identity["status"] == "VERIFIED"
+>       assert reference == {"price": 101.0, "basis": "decision_snapshot_price",
+                             "definition": reference["definition"],
+                             "snapshot_at": "2026-09-30T00:00:00+00:00",
+                             "observed_at": "2026-09-30T00:00:00+00:00",
+                             "bar_ts": "2026-09-29T23:45:00"}
+E       AssertionError: assert {'price': 101...0+00:00', ...} == {'price': 101...0+00:00', ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'observed_at': '2026-09-30T00:00:00+00:00'}
+E         Use -v to get more diff
+
+tests/test_trade_provenance.py:582: AssertionError
+________ test_complete_entry_then_failed_terminal_write_is_not_verified ________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53a5a60>, <trader.core.journal.Journal object at 0x7622c53a6840>, <trader.engine.executor.Executor object at 0x7622c6c9a480>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c53a6540>
+
+    def test_complete_entry_then_failed_terminal_write_is_not_verified(env, monkeypatch):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:621: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c53a5a60>, <trader.core.journal.Journal object at 0x7622c53a6840>, <trader.engine.executor.Executor object at 0x7622c6c9a480>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:41.460911+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_____ test_failed_entry_write_then_complete_terminal_close_is_not_verified _____
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b62a80>, <trader.core.journal.Journal object at 0x7622c6c9b5c0>, <trader.engine.executor.Executor object at 0x7622c3af3b60>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c6c99e80>
+
+    def test_failed_entry_write_then_complete_terminal_close_is_not_verified(env, monkeypatch):
+        ex, j, e = env
+        orig = TP.record_booking
+    
+        def flaky(db, tid, kind, *a, **k):
+            if not kind.startswith("close:"):
+                raise RuntimeError("provenance write failed")
+            return orig(db, tid, kind, *a, **k)
+        monkeypatch.setattr(TP, "record_booking", flaky)
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:649: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b62a80>, <trader.core.journal.Journal object at 0x7622c6c9b5c0>, <trader.engine.executor.Executor object at 0x7622c3af3b60>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:41.689916+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+____________ test_partial_exit_cannot_substitute_for_terminal_close ____________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539c740>, <trader.core.journal.Journal object at 0x7622c539d010>, <trader.engine.executor.Executor object at 0x7622c9ba1fa0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c539f020>
+
+    def test_partial_exit_cannot_substitute_for_terminal_close(env, monkeypatch):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:667: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539c740>, <trader.core.journal.Journal object at 0x7622c539d010>, <trader.engine.executor.Executor object at 0x7622c9ba1fa0>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:41.918341+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+____________ test_terminal_marker_is_the_open_to_closed_transition _____________
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539daf0>, <trader.core.journal.Journal object at 0x7622c544f5c0>, <trader.engine.executor.Executor object at 0x7622c51ef860>)
+
+    def test_terminal_marker_is_the_open_to_closed_transition(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:686: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c539daf0>, <trader.core.journal.Journal object at 0x7622c544f5c0>, <trader.engine.executor.Executor object at 0x7622c51ef860>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:42.109426+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_______ test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity _______
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b685c0>, <trader.core.journal.Journal object at 0x7622c3b6a840>, <trader.engine.executor.Executor object at 0x7622c7138980>)
+
+    def test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity(env):
+        ex, j, e = env
+>       pos = open_trade(env)
+              ^^^^^^^^^^^^^^^
+
+tests/test_trade_provenance.py:801: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+env = (<tests.test_trade_provenance.Venue object at 0x7622c3b685c0>, <trader.core.journal.Journal object at 0x7622c3b6a840>, <trader.engine.executor.Executor object at 0x7622c7138980>)
+did = 'd1'
+identity = {'captured_at': '2026-09-30T00:00:01+00:00', 'decision': {'action': 'BUY', 'confidence': 0.8, 'cycle_id': 'cd1', 'decided_at': '2026-10-07T12:24:43.127924+00:00', ...}, 'evaluator_family': 'spec:seed_test', 'generation': 0, ...}
+reference = {'price': 99.5, 'basis': 'decision_snapshot_price', 'snapshot_at': 't0', 'bar_ts': 'b0'}
+
+    def open_trade(env, did="d1", identity=None, reference=REF):
+        ex, j, e = env
+        d = decision(j, did)
+        if identity is None:
+            identity, _ = spec_identity(d)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
+                     entry_identity=identity, reference=reference)
+>       assert pos is not None
+E       assert None is not None
+
+tests/test_trade_provenance.py:122: AssertionError
+_______ test_unknown_flow_and_leader_never_become_neutral_market_values ________
+
+    def test_unknown_flow_and_leader_never_become_neutral_market_values():
+        from trader.agents.flow import FlowAnalyst
+        from trader.agents.regime import btc_context,classify
+        from trader.core.types import Snapshot
+        df=frame(n=40);df['taker_buy']=np.nan
+        snap=Snapshot(symbol='BTC/USDT',ts=pd.Timestamp(T,unit='ms',tz='UTC').isoformat(),price=10,dfs={'15m':df})
+        vote=FlowAnalyst().evaluate(snap)
+>       assert vote.conviction==0 and vote.meta['quality']=='UNKNOWN'
+                                      ^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'quality'
+
+tests/test_stage1_data_provenance_pit.py:490: KeyError
+____________________ test_review_retires_a_decayed_strategy ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7622c3be2c30>
+
+    def test_review_retires_a_decayed_strategy(monkeypatch):
+        a = Analyst(_Journal(), CFG)
+        down = _frame(4000, drift=-0.004, seed=9)
+        monkeypatch.setattr(a, "frames", lambda tf, extra=(): {"BTC/USDT": down,
+                                                     "_btc_1h": down})
+>       actions = a.review_deployed([_spec()])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/home/sarmad/trader/tests/test_analyst.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.brain.analyst.Analyst object at 0x7622c3be3170>
+specs = [StrategySpec(id='a1', name='Analyst Probe', thesis='A hypothesis of sufficient length for the validator, naming a pla...nal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv'])]
+
+    def review_deployed(self, specs: list) -> list:
+        """Sweep live specs for decay. Returns the retirement actions."""
+        s = self._scfg()
+        days = float(s.get("decay_recent_days", 30))
+        floor = float(s.get("decay_floor_pf", 0.85))
+        min_trades = int(s.get("decay_min_trades", 10))
+        actions = []
+        # health observation is telemetry: open_sweep never raises, the
+        # loop only appends raw facts to memory, and records are written by
+        # flush_health_observations() once the caller has applied retirement
+        sweep = health_observation.open_sweep(
+            self.journal, specs, {"decay_recent_days": days,
+                                  "decay_min_trades": min_trades,
+                                  "decay_floor_pf": floor})
+        try:
+            self.__dict__.setdefault("_health_sweeps", []).append(sweep)
+        except Exception:
+            pass
+        for spec in specs:
+            sweep.attempt(spec)
+            tf = spec.timeframe
+            try:
+                frames, btc, derivs_for, risk = self._ctx(tf, spec)
+            except Exception as e:
+                sweep.evaluation_raised(spec, "context", e)
+                self.flush_health_observations()
+                raise
+            try:
+                compiled = compile_spec(spec)
+            except Exception as e:
+                log.warning(f"analyst: {spec.id} will not compile: {e}")
+                sweep.compile_failed(spec, e)
+                continue
+            try:
+                from ..learning.runtime import recent_decay
+                from ..strategy.factory_handoff import _jsha
+>               versions = self.journal.query(
+                           ^^^^^^^^^^^^^^^^^^
+                    'SELECT version_id FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+                    (spec.id, _jsha(compiled.spec.to_dict())))
+E                   AttributeError: '_Journal' object has no attribute 'query'
+
+trader/brain/analyst.py:567: AttributeError
+_____________________ test_review_keeps_a_working_strategy _____________________
+
+analyst = <trader.brain.analyst.Analyst object at 0x7622c52673b0>
+
+    def test_review_keeps_a_working_strategy(analyst):
+>       assert analyst.review_deployed([_spec()]) == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/home/sarmad/trader/tests/test_analyst.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.brain.analyst.Analyst object at 0x7622c52673b0>
+specs = [StrategySpec(id='a1', name='Analyst Probe', thesis='A hypothesis of sufficient length for the validator, naming a pla...nal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv'])]
+
+    def review_deployed(self, specs: list) -> list:
+        """Sweep live specs for decay. Returns the retirement actions."""
+        s = self._scfg()
+        days = float(s.get("decay_recent_days", 30))
+        floor = float(s.get("decay_floor_pf", 0.85))
+        min_trades = int(s.get("decay_min_trades", 10))
+        actions = []
+        # health observation is telemetry: open_sweep never raises, the
+        # loop only appends raw facts to memory, and records are written by
+        # flush_health_observations() once the caller has applied retirement
+        sweep = health_observation.open_sweep(
+            self.journal, specs, {"decay_recent_days": days,
+                                  "decay_min_trades": min_trades,
+                                  "decay_floor_pf": floor})
+        try:
+            self.__dict__.setdefault("_health_sweeps", []).append(sweep)
+        except Exception:
+            pass
+        for spec in specs:
+            sweep.attempt(spec)
+            tf = spec.timeframe
+            try:
+                frames, btc, derivs_for, risk = self._ctx(tf, spec)
+            except Exception as e:
+                sweep.evaluation_raised(spec, "context", e)
+                self.flush_health_observations()
+                raise
+            try:
+                compiled = compile_spec(spec)
+            except Exception as e:
+                log.warning(f"analyst: {spec.id} will not compile: {e}")
+                sweep.compile_failed(spec, e)
+                continue
+            try:
+                from ..learning.runtime import recent_decay
+                from ..strategy.factory_handoff import _jsha
+>               versions = self.journal.query(
+                           ^^^^^^^^^^^^^^^^^^
+                    'SELECT version_id FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+                    (spec.id, _jsha(compiled.spec.to_dict())))
+E                   AttributeError: '_Journal' object has no attribute 'query'
+
+trader/brain/analyst.py:567: AttributeError
+______________________ test_idle_strategy_is_not_retired _______________________
+
+analyst = <trader.brain.analyst.Analyst object at 0x7622c5266300>
+
+    def test_idle_strategy_is_not_retired(analyst):
+        """Silence means the regime has not come back, not that the edge broke."""
+>       assert analyst.review_deployed(
+            [_spec(entry="close > ema(200) and rsi(2) < 1")]) == []
+
+/home/sarmad/trader/tests/test_analyst.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.brain.analyst.Analyst object at 0x7622c5266300>
+specs = [StrategySpec(id='a1', name='Analyst Probe', thesis='A hypothesis of sufficient length for the validator, naming a pla...nal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv'])]
+
+    def review_deployed(self, specs: list) -> list:
+        """Sweep live specs for decay. Returns the retirement actions."""
+        s = self._scfg()
+        days = float(s.get("decay_recent_days", 30))
+        floor = float(s.get("decay_floor_pf", 0.85))
+        min_trades = int(s.get("decay_min_trades", 10))
+        actions = []
+        # health observation is telemetry: open_sweep never raises, the
+        # loop only appends raw facts to memory, and records are written by
+        # flush_health_observations() once the caller has applied retirement
+        sweep = health_observation.open_sweep(
+            self.journal, specs, {"decay_recent_days": days,
+                                  "decay_min_trades": min_trades,
+                                  "decay_floor_pf": floor})
+        try:
+            self.__dict__.setdefault("_health_sweeps", []).append(sweep)
+        except Exception:
+            pass
+        for spec in specs:
+            sweep.attempt(spec)
+            tf = spec.timeframe
+            try:
+                frames, btc, derivs_for, risk = self._ctx(tf, spec)
+            except Exception as e:
+                sweep.evaluation_raised(spec, "context", e)
+                self.flush_health_observations()
+                raise
+            try:
+                compiled = compile_spec(spec)
+            except Exception as e:
+                log.warning(f"analyst: {spec.id} will not compile: {e}")
+                sweep.compile_failed(spec, e)
+                continue
+            try:
+                from ..learning.runtime import recent_decay
+                from ..strategy.factory_handoff import _jsha
+>               versions = self.journal.query(
+                           ^^^^^^^^^^^^^^^^^^
+                    'SELECT version_id FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+                    (spec.id, _jsha(compiled.spec.to_dict())))
+E                   AttributeError: '_Journal' object has no attribute 'query'
+
+trader/brain/analyst.py:567: AttributeError
+____________ test_every_required_series_in_the_registry_is_loadable ____________
+
+    def test_every_required_series_in_the_registry_is_loadable():
+        needed = {r for f in FEATURES.values() for r in f.requires if r != "ohlcv"}
+        unmapped = sorted(needed - set(spec_evidence._SERIES_FOR))
+>       assert not unmapped, (
+            f"features require {unmapped} but load_derivs cannot load them — "
+            f"every spec using them evaluates to NaN and takes zero trades")
+E       AssertionError: features require ['world'] but load_derivs cannot load them — every spec using them evaluates to NaN and takes zero trades
+E       assert not ['world']
+
+/home/sarmad/trader/tests/test_series_map_covers_registry.py:27: AssertionError
+_________________________ test_the_account_ratio_loads _________________________
+
+    def test_the_account_ratio_loads():
+>       out = spec_evidence.load_derivs("BTC/USDT", ["ohlcv", "ls_account_ratio"],
+                                        _Feed({"ls_account_ratio"}))
+
+/home/sarmad/trader/tests/test_series_map_covers_registry.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+symbol = 'BTC/USDT', requires = ['ohlcv', 'ls_account_ratio']
+feed = <tests.test_series_map_covers_registry._Feed object at 0x7622c532fcb0>
+as_of_ms = None, window_start_ms = None
+
+    def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None) -> dict:
+        """{feature-series-name: raw observation frame} for one symbol."""
+        feed = feed or DerivFeed()
+        out = {}
+        for req in requires:
+            series = _SERIES_FOR.get(req)
+            if series is None:                      # "ohlcv" and anything unknown
+                continue
+>           df = feed.load(symbol, series, as_of_ms=as_of_ms,
+                           **({'window_start_ms':window_start_ms} if window_start_ms is not None else {}))
+E           TypeError: _Feed.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:41: TypeError
+_____________ test_an_absent_account_ratio_is_untested_not_scored ______________
+
+    def test_an_absent_account_ratio_is_untested_not_scored():
+        spec = SimpleNamespace(data_requires=["ohlcv", "ls_account_ratio"])
+>       gaps = spec_evidence.missing_data(spec, ["BTC/USDT"], _Feed(set()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/home/sarmad/trader/tests/test_series_map_covers_registry.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/strategy/spec_evidence.py:155: in missing_data
+    have = load_derivs(sym, spec.data_requires, feed) if needed else {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+symbol = 'BTC/USDT', requires = ['ohlcv', 'ls_account_ratio']
+feed = <tests.test_series_map_covers_registry._Feed object at 0x7622c71e2330>
+as_of_ms = None, window_start_ms = None
+
+    def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None) -> dict:
+        """{feature-series-name: raw observation frame} for one symbol."""
+        feed = feed or DerivFeed()
+        out = {}
+        for req in requires:
+            series = _SERIES_FOR.get(req)
+            if series is None:                      # "ohlcv" and anything unknown
+                continue
+>           df = feed.load(symbol, series, as_of_ms=as_of_ms,
+                           **({'window_start_ms':window_start_ms} if window_start_ms is not None else {}))
+E           TypeError: _Feed.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:41: TypeError
+=============================== warnings summary ===============================
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:137: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    return next(self.gen)
+
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:144: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_trade_provenance.py::test_entry_binds_exact_strategy_version
+FAILED tests/test_trade_provenance.py::test_later_strategy_mutation_does_not_change_entry_identity
+FAILED tests/test_trade_provenance.py::test_entry_order_identity_and_reference_recorded
+FAILED tests/test_trade_provenance.py::test_multiple_fills_partial_and_final_exit_attributed_by_order
+FAILED tests/test_trade_provenance.py::test_two_sequential_trades_same_symbol_keep_their_own_fills
+FAILED tests/test_trade_provenance.py::test_sibling_on_same_symbol_makes_exit_attribution_ambiguous
+FAILED tests/test_trade_provenance.py::test_unmatched_fill_same_symbol_and_side_is_never_guessed
+FAILED tests/test_trade_provenance.py::test_ambiguous_fills - assert None is ...
+FAILED tests/test_trade_provenance.py::test_missing_venue_ids_are_not_invented
+FAILED tests/test_trade_provenance.py::test_opaque_venue_ids_are_stored_and_matched_exactly
+FAILED tests/test_trade_provenance.py::test_exact_and_missing_commission - as...
+FAILED tests/test_trade_provenance.py::test_duplicate_and_replayed_receipts_are_idempotent
+FAILED tests/test_trade_provenance.py::test_reconciliation_alignment_preserves_provenance
+FAILED tests/test_trade_provenance.py::test_recovered_entry_keeps_identity_and_order_identity
+FAILED tests/test_trade_provenance.py::test_provenance_does_not_change_what_is_sent
+FAILED tests/test_trade_provenance.py::test_provenance_failure_never_fails_the_booking
+FAILED tests/test_trade_provenance.py::test_owner_read_exposes_statuses - ass...
+FAILED tests/test_trade_provenance.py::test_backfill_links_only_replayable_receipts
+FAILED tests/test_trade_provenance.py::test_kernel_population_identity_matches_the_evaluator_that_signalled
+FAILED tests/test_trade_provenance.py::test_complete_entry_then_failed_terminal_write_is_not_verified
+FAILED tests/test_trade_provenance.py::test_failed_entry_write_then_complete_terminal_close_is_not_verified
+FAILED tests/test_trade_provenance.py::test_partial_exit_cannot_substitute_for_terminal_close
+FAILED tests/test_trade_provenance.py::test_terminal_marker_is_the_open_to_closed_transition
+FAILED tests/test_trade_provenance.py::test_exit_vocabulary_is_narrowed_and_claims_no_venue_exclusivity
+FAILED tests/test_stage1_data_provenance_pit.py::test_unknown_flow_and_leader_never_become_neutral_market_values
+FAILED tests/test_analyst.py::test_review_retires_a_decayed_strategy - Attrib...
+FAILED tests/test_analyst.py::test_review_keeps_a_working_strategy - Attribut...
+FAILED tests/test_analyst.py::test_idle_strategy_is_not_retired - AttributeEr...
+FAILED tests/test_series_map_covers_registry.py::test_every_required_series_in_the_registry_is_loadable
+FAILED tests/test_series_map_covers_registry.py::test_the_account_ratio_loads
+FAILED tests/test_series_map_covers_registry.py::test_an_absent_account_ratio_is_untested_not_scored
+31 failed, 565 passed, 3 warnings in 536.92s (0:08:56)

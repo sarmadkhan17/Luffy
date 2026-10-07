@@ -1,0 +1,27 @@
+{
+  "origin": "Retained engineering session command/result excerpts; baseline was pre-STR-02 HEAD a3dfd82 with changes stashed. Existing 23 suites plus dedicated STR-02 suite in final affected command.",
+  "records": [
+    {
+      "timestamp": "2026-10-07T11:47:19.754Z",
+      "tool_id": "toolu_016iyo6sAJFPeWapNegnFH8j",
+      "command": "cd /mnt/luffy-data/luffy/production; T=\"tests/test_strategy_factory_handoff.py tests/test_compile.py tests/test_wrld05_normal_context.py tests/test_str01_version_lineage.py tests/test_str01_bank_lineage.py tests/test_single_creation_path.py tests/test_spec_exits_are_honoured.py tests/test_trade_provenance.py tests/test_stage1_data_provenance_pit.py tests/test_data04_htf_availability.py tests/test_dsl.py tests/test_dsl_ref.py tests/test_rolling.py tests/test_strategy_health_observation.py tests/test_learning_foundation.py tests/test_learning_application.py tests/test_spec_evidence.py tests/test_analyst.py tests/test_universal_strategy_authority.py tests/test_evaluation_context.py tests/test_orchestrator_abstention.py tests/test_series_map_covers_registry.py tests/test_data03_consumer_cuts.py\"\n/home/sarmad/.local/bin/luffy-pytest -q -p no:cacheprovider $T 2>&1 | grep ^FAILED | sed 's/ - .*//' | sort > $TMPDIR_NONE 2>/dev/null; \nS=/tmp/claude-1000/-mnt-luffy-data-luffy-production/bdc4bbe8-8ff5-4909-82ba-52ac8fcf4308/scratchpad; mkdir -p $S\n/home/sarmad/.local/bin/luffy-pytest -q -p no:cacheprovider $T 2>&1 | grep ^FAILED | sed 's/ - .*//' | sort > $S/after.txt\ngit stash -q; /home/sarmad/.local/bin/luffy-pytest -q -p no:cacheprovider $T 2>&1 | grep ^FAILED | sed 's/ - .*//' | sort > $S/before.txt; git stash pop -q\nwc -l $S/before.txt $S/after.txt; diff $S/before.txt $S/after.txt"
+    },
+    {
+      "timestamp": "2026-10-07T11:47:21.178Z",
+      "tool_id": "toolu_016iyo6sAJFPeWapNegnFH8j",
+      "result": "Command running in background with ID: bf023jsol. Output is being written to: /tmp/claude-1000/-mnt-luffy-data-luffy-production/762c7983-d852-425b-a0c1-d9dc66652a9d/tasks/bf023jsol.output. You will be notified when it completes. To check interim output, use Read on that file path.\nSession cwd remains /mnt/luffy-data/luffy/production; directory changes made by the backgrounded command do not apply to subsequent commands."
+    },
+    {
+      "timestamp": "2026-10-07T12:19:39.843Z",
+      "tool_id": "toolu_013taBP6ERerxrcs4PMGzk89",
+      "command": "cd /mnt/luffy-data/luffy/production; S=/tmp/claude-1000/-mnt-luffy-data-luffy-production/bdc4bbe8-8ff5-4909-82ba-52ac8fcf4308/scratchpad; df -h / /mnt/luffy-data | cat\nT=\"tests/test_strategy_factory_handoff.py tests/test_compile.py tests/test_wrld05_normal_context.py tests/test_str01_version_lineage.py tests/test_str01_bank_lineage.py tests/test_single_creation_path.py tests/test_spec_exits_are_honoured.py tests/test_trade_provenance.py tests/test_stage1_data_provenance_pit.py tests/test_data04_htf_availability.py tests/test_dsl.py tests/test_dsl_ref.py tests/test_rolling.py tests/test_strategy_health_observation.py tests/test_learning_foundation.py tests/test_learning_application.py tests/test_spec_evidence.py tests/test_analyst.py tests/test_universal_strategy_authority.py tests/test_evaluation_context.py tests/test_orchestrator_abstention.py tests/test_series_map_covers_registry.py tests/test_data03_consumer_cuts.py tests/test_str02_compile_binding.py\"\n/home/sarmad/.local/bin/luffy-pytest -q -p no:cacheprovider $T 2>&1 | tee $S/final.log | grep ^FAILED | sed 's/ - .*//' | sort > $S/final.txt; tail -1 $S/final.log; diff $S/before.txt $S/final.txt && echo SAME-FAILURES-AS-BASELINE; ls /tmp | grep -i pytest | head -2"
+    },
+    {
+      "timestamp": "2026-10-07T12:28:39.493Z",
+      "tool_id": "toolu_013taBP6ERerxrcs4PMGzk89",
+      "result": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda2        49G   34G   13G  73% /\n/dev/sdb1        98G   51G   43G  54% /mnt/luffy-data\n31 failed, 565 passed, 3 warnings in 536.92s (0:08:56)\nSAME-FAILURES-AS-BASELINE\npytest-of-sarmad"
+    }
+  ],
+  "baseline_final_failure_lists_equal": true,
+  "failure_count": 31
+}

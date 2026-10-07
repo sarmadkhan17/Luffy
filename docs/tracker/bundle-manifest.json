@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.47-str01-canonical-sol1",
-  "control_baseline_revision": "150850970ace68348850d439a333b57acb374c85",
+  "snapshot_version": "1.48-str02-canonical-sol1",
+  "control_baseline_revision": "843a0a3b9a6bd52059267355f39f4be8deaef671",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 513656,
-      "sha256": "73cfaa43eed1072f5ba75267b4d92ee71880c68fba6a7662943ca2e560638f3c",
+      "bytes": 521952,
+      "sha256": "6da517a42a699e305dacef30fe16670d0865e9f13dbbbeb5a66611a4702c8616",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 420021,
-      "sha256": "2b38d5cec00ce10c8a1ba7e5216a5d6424424d001551a81d9d63af2a4de96e26",
+      "bytes": 421006,
+      "sha256": "9c60f8d8eee2a4f76e2ad33cf95448b7ce90a6360a1371b21d08bc2741673536",
       "synchronization_required": false
     },
     {
@@ -33,15 +33,15 @@
     {
       "path": "STATE.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 190363,
-      "sha256": "1f7361efeb6b4e38f3e5f7aae386a94ed94653b9e47640b6ccff68494568a445",
+      "bytes": 198922,
+      "sha256": "07d859043d2061aac3bfc926d73e02e8164fa5e57b62d6e3e21af9a4fdcd30c0",
       "synchronization_required": true
     },
     {
       "path": "NEXT.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 137495,
-      "sha256": "512fca74df98be045e56bf10739072737c88ec05ff72836dfd1f7de007695791",
+      "bytes": 146054,
+      "sha256": "1afaa2e505d00d6dcbdfe62abea8f437b4e3e1de94860ffbc70302c4ba3ffe1a",
       "synchronization_required": true
     },
     {
@@ -117,9 +117,107 @@
     {
       "path": "docs/tracker/README.md",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 11554,
-      "sha256": "c6dcd325931bda390f3fbb23ceddcca3abcb40250e6aff68804751fece821aaa",
+      "bytes": 12052,
+      "sha256": "8c7d7658130af24562eca0e7a84b8b807d86cc38f9f5ef8447b99bb0c8d0ecf2",
       "synchronization_required": true
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/REPORT.md",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 4393,
+      "sha256": "4e5463559ce541a20803f9cd21cc748c0244d396f76842abc628a801c06abafd"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/affected-final.txt",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 55618,
+      "sha256": "6aa14b25bfa2ba009f836876dd56907ec2cb04430a303f984bbc949377b7a273"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/baseline-failures.txt",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2775,
+      "sha256": "3e57c5f28ddf9919ebbb498e04c5d96466b389b88125a647773f1701be882f1a"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/closure.json",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8225,
+      "sha256": "d66484bba3d5428d75d4127cc18d3e56b50b286d816b99d6ee87f28bc8acca13"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/control-before.json",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 993561,
+      "sha256": "e844c3a7792aa31f25aa9d59b6008dc4ded970e1a1fbe1de459d9401bc59cfaf"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/dedicated.txt",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 100,
+      "sha256": "6452f7d62b2812358aac4246789e5bfe2ffc5e24c298a72f8f5fa59c041038c5"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/dedicated.xml",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 6050,
+      "sha256": "eb48aa0f2eaa69e8a3b24bf16cff3cc931234541764e4b339c5e1e8c437916a0"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/engineering-validation.json",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 4128,
+      "sha256": "065207d6b09469a30ded6f8e48dc4f544c9ee257746ca2d1f4baaff89c9997b1"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/final-failures.txt",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2775,
+      "sha256": "3e57c5f28ddf9919ebbb498e04c5d96466b389b88125a647773f1701be882f1a"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/reconcile.py",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 19848,
+      "sha256": "d60c2b4be0b8e23d05c6267ecaf89d4fed89a8d53b1037ce220d25e15412f33f"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/scope-world.txt",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 100,
+      "sha256": "2d4445fe61487ac82289695eecd082861cac2986ab53bd8401f41cfc022c52d5"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/scope-world.xml",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 5893,
+      "sha256": "f2995f5fa1116f139d60cb0d65a8aaeff9e2f580e51cd732bf9a3b97ce5c6a38"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/control-validation.py",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 5692,
+      "sha256": "e486222f528a3f3f5de472e6a908566314ab31565fa91aa750886aed7df8a5c4"
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/control-checks.json",
+      "role": "STR02_CANONICAL_CONTROL_OR_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1707,
+      "sha256": "4738b3f1369080afcb32e5c1d3e1a2e69b59e1b25f55418b19fadd209beb919d"
     }
   ],
   "current_release_deferral": {
@@ -196,7 +294,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "STR-01",
+    "last_completed_item": "STR-02",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -210,7 +308,6 @@
       "OUT-03",
       "GUI-02",
       "OUT-01",
-      "STR-02",
       "DEC-01"
     ],
     "next_recommended_item": null,
@@ -224,14 +321,14 @@
       "GUI-07",
       "GUI-08",
       "GUI-09",
-      "STR-02"
+      "DEC-01"
     ],
     "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "STR-01 exact immutable lineage and creation-time Bank authentication verified offline and reconciled CLOSED. STR-02 now dependency-eligible; own row proof remains open. No successor selected.",
-    "last_terminal_item": "STR-01",
+    "selection_reason": "STR-02 exact compiler/dependency and parity condition reconciled CLOSED. DEC-01 direct dependencies satisfied; own Context proof remains open. No successor selected or started.",
+    "last_terminal_item": "STR-02",
     "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE",
     "deferred_proof_obligations": {
       "ATT-03": {
@@ -2080,6 +2177,125 @@
       "trader/research/predictive_bridge.py": "d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524",
       "trader/research/predictive_receipt.py": "1b8971dfeffe1eb7e5ad348ac40ea165635d53632399aa966ac1294a11c0ad5b",
       "trader/cognition/predictive_bank.py": "092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554",
+      "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
+    }
+  },
+  "str02_canonical_reconciliation": {
+    "item": "STR-02",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_commits": [
+      "d1ddc1826587b8accb4c36049d78743766056e5f",
+      "843a0a3b9a6bd52059267355f39f4be8deaef671"
+    ],
+    "engineering_closure_commit": "843a0a3b9a6bd52059267355f39f4be8deaef671",
+    "control_baseline_revision": "843a0a3b9a6bd52059267355f39f4be8deaef671",
+    "control_plane_commit_resolution": "The enclosing Git commit containing this reconciliation; no self-referential hash.",
+    "evidence": "docs/tracker/evidence/str02-canonical-sol1/closure.json",
+    "closing_condition": "Compiler executes declared data/world dependencies and scope with reproducible parity and explicit unsupported/missing errors.",
+    "closing_condition_satisfied": true,
+    "closure_mapping": {
+      "exact_version": "compile_version re-authenticates stored version/schema/typed lineage, exact spec hash, compiler/feature versions, validation and current install; absent/legacy/uninstalled/drifted/retired/rejected versions refuse. Kernel versioned population uses this path. Bare legacy research compile_spec remains supported without version provenance or authority.",
+      "scope_logic": "Frozen universe/include scope is bound into identity and normal Kernel genome; orchestrator symbol_allows enforces membership. Declared timeframe, long/short/filter/exit AST and derived data requirements execute in FeatureCtx. Exact kind/horizon/instrument queries use WorldContext. Dedicated and retained scope/WorldModel tests cover execution and cut refusals.",
+      "exact_dependencies": "AST-derived concrete derivative keys, ref keys and WorldModel kind/horizon are checked by shared missing_inputs. funding with OI only, OI with funding only, partial multi-derivative, absent required ref with unrelated refs, and absent exact world kind/horizon each yield named required_input_missing diagnostics.",
+      "quality_availability": "Closed eligible frames, point-in-time provenance/alignment, VALID quality and finite exact WorldModel dependencies gate evaluation. Missing timeframe and unsupported DSL/timeframe/horizon raise or diagnose explicitly; no fabricated zero inputs.",
+      "current_historical": "Live/replay/truncated history share FeatureCtx, entries_detail and missing_inputs. No future-cut WorldModel fallback; implicit WorldModel loading requires as_of_ms and calls load_context(as_of_ms=cut). Current latest row uses decision cut, replay rows their bar closes. Equal-cut parity and restart identity/output tests pass.",
+      "identity": "Compiled object binds version_id, spec_sha256, COMPILER_VERSION, FEATURE_VERSION, feature contract SHA and compile_identity (identity field; signal compile_identity). Material spec/dependency changes alter identity; spec/compiler/feature/registry drift refuses reuse.",
+      "authority": "Compilation is read-only; no install, lifecycle/Governor, owner approval, capital or order grant. Signals carry provenance only. Existing first-live fence and research controls remain authoritative."
+    },
+    "verification": {
+      "mandatory_runner": "/home/sarmad/.local/bin/luffy-pytest",
+      "fresh_dedicated": {
+        "tests": 42,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "fresh_scope_world": {
+        "tests": 37,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "fresh_commands": [
+        "/home/sarmad/.local/bin/luffy-pytest tests/test_str02_compile_binding.py -q --junitxml=docs/tracker/evidence/str02-canonical-sol1/dedicated.xml",
+        "/home/sarmad/.local/bin/luffy-pytest tests/test_declared_universe_is_traded.py tests/test_wrld05_normal_context.py -q --junitxml=docs/tracker/evidence/str02-canonical-sol1/scope-world.xml"
+      ],
+      "retained_affected_run": {
+        "passed": 565,
+        "failed": 31,
+        "existing_suites": 23,
+        "dedicated_suite_also_included": true,
+        "seconds": 536.92
+      },
+      "baseline_revision": "a3dfd82",
+      "baseline_final_failure_ids_equal": true,
+      "new_failures_attributed_to_STR02": 0,
+      "retained_validation_provenance": "docs/tracker/evidence/str02-canonical-sol1/engineering-validation.json",
+      "retained_failure_evidence": [
+        "docs/tracker/evidence/str02-canonical-sol1/baseline-failures.txt",
+        "docs/tracker/evidence/str02-canonical-sol1/final-failures.txt",
+        "docs/tracker/evidence/str02-canonical-sol1/affected-final.txt"
+      ],
+      "all_pytest_runs_used_luffy_pytest": true,
+      "pytest_temp_route": "/mnt/luffy-data/test-tmp/sarmad/pytest-run-*/base",
+      "new_root_tmp_pytest_writes": false,
+      "temp_proof_basis": "Required runner creates unique /mnt basetemp and unsets temp env vars; retained engineering report/user evidence states no new root /tmp pytest writes. Existing historical /tmp pytest directory is not new STR-02 output.",
+      "source_and_committed_bytes_match": true,
+      "full_suite_claim": false
+    },
+    "feature_version_limitation": "A pure implementation-only feature-code change is not automatically detected without a FEATURE_VERSION bump.",
+    "limitation_classification": "NON_BLOCKING_FOR_EXACT_STR02_CONDITION",
+    "limitation_reasoning": "The row requires reproducible feature/dependency semantics and explicit errors, fulfilled by exact frozen spec plus versioned compiler/feature contract identity. It does not require source/bytecode hashing or automatic detection of unversioned implementation changes. FEATURE_VERSION must be bumped when feature code changes; no hashing redesign authorized or performed.",
+    "dependency_status": {
+      "STR-01": "CLOSED",
+      "WRLD-05": "CLOSED"
+    },
+    "DEC01_dependencies_satisfied": true,
+    "DEC01_now_eligible": true,
+    "DEC01_dependency_status": {
+      "STR-02": "CLOSED",
+      "WRLD-05": "CLOSED",
+      "DATA-05": "CLOSED"
+    },
+    "DEC01_status": "BLOCKED; own coherent Context proof remains open, eligible but unselected and not started",
+    "remaining_DEC01_conditions": [
+      "Normal source path binds canonical identity, exact spec, required/optional analysts, clocks, costs, book and supporting/opposing evidence.",
+      "Missing required input blocks; optional absent input does not block by default; mixed cuts refuse.",
+      "Complete normal required/optional analyst and supporting/opposing coherent Context binding; retained partial evidence is not full acceptance."
+    ],
+    "original_condition_and_edges_preserved": true,
+    "unrelated_rows_unchanged": 176,
+    "DEC01_status_unchanged": true,
+    "application_code_changed": false,
+    "DEC01_started": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "provider_calls": 0,
+    "successor_selected": false,
+    "status_counts_after": {
+      "CLOSED": 58,
+      "EVIDENCE_TO_MAP": 80,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 6,
+      "OPEN": 4
+    },
+    "source_sha256": {
+      "trader/strategy/compile.py": "67d01814cc08cbe1b4cc6eb4225e50e10272e117f1bb484fdec7b6638aaaa6ff",
+      "trader/kernel.py": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f",
+      "trader/strategy/features.py": "c9dbca41468505800c6077bf4cbac72f098779b0aeddda9f32c1c83a37e293c6",
+      "trader/strategy/features_deriv.py": "45555f295f30c7d2706419faec95f5809a0b119a20c4f683de43673acb810b94",
+      "trader/strategy/dsl.py": "f2a9bbd62186b5a25b2f514a5b5dc503d3c15d012e2ba9473b1d722b5569367c",
+      "trader/strategy/factory_handoff.py": "2e225dc64e5985b9f33ba49199097e7be6b51df212b36d32ac26dfdbce4f1637",
+      "trader/engine/orchestrator.py": "71a9256ca3011ad8b6c6aab533c7dfd139452c5d58ead6973c6786ad5669cd41",
+      "trader/world/context.py": "b489d43d7ff637e479f691454bb6529055cf83584435ebe1a275a85611694c32",
+      "tests/test_str02_compile_binding.py": "9892d2e37f63b91aecb8dd2182f6e5d57cb80b3f67b9a59ee7e1999bb5572e7c",
+      "tests/test_strategy_factory_handoff.py": "9b58f4706c51bf6737a1eda740c5157d99ba49eff204d77d7ccddac9703f2b26",
+      "tests/test_declared_universe_is_traded.py": "7c8c168243054a7777b1bf7323b99a33d12b4f3b71341ce66648eee3b2ae5ebb",
+      "tests/test_wrld05_normal_context.py": "5554592ad87b63af7a6253af6b6d4dbce2d82503c2ee0ea82fd10f67ba901816",
       "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532"
     }
   }
