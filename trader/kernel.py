@@ -223,6 +223,25 @@ class Kernel:
         self._entry_identities = identities
         return pop
 
+    def _compile_population_spec(self, spec):
+        """A factory StrategyVersion's strategy compiles only from its exact
+        installed, re-authenticated version, and the stored row must equal it;
+        an unreadable or ambiguous version fails closed (never the bare row).
+        Other (legacy research) specs keep the plain compile."""
+        from .strategy import factory_handoff as fh
+        from .strategy.compile import compile_spec, compile_version
+        if not fh.versioned(self.journal, spec.id):
+            return compile_spec(spec)
+        rows = self.journal.query(
+            "SELECT version_id FROM strategy_version_installs WHERE strategy_id=?",
+            (spec.id,))
+        if len(rows) != 1:
+            raise ValueError("install_missing_or_ambiguous")
+        compiled = compile_version(self.journal, rows[0]["version_id"])
+        if spec.to_dict() != compiled.spec.to_dict():
+            raise ValueError("installed_row_differs_from_version")
+        return compiled
+
     def _load_spec_population(self) -> list[tuple]:
         """Compile stored StrategySpecs into the same (strategy, genome)
         shape the orchestrator already consumes.
@@ -249,7 +268,7 @@ class Kernel:
         self._spec_rows = rows
         for row, spec in rows:
             try:
-                compiled = compile_spec(spec)
+                compiled = self._compile_population_spec(spec)
             except Exception as e:
                 log.warning(f"spec {spec.id} will not compile: {e}")
                 continue

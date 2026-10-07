@@ -23,6 +23,35 @@ log = logging.getLogger(__name__)
 #: context frames the snapshot keys by name rather than by timeframe
 _CTX_TF = {"BTC_1h": "1h"}
 
+#: Bump COMPILER_VERSION when compile/evaluate semantics change and
+#: FEATURE_VERSION when any feature implementation changes. The feature
+#: *contract* (names, arg specs, domains, data requirements) is hashed
+#: automatically, so a contract change alters identity even if a bump is
+#: forgotten; a pure implementation change cannot be detected and needs the bump.
+COMPILER_VERSION = "strategy-compiler.v1"
+FEATURE_VERSION = "strategy-features.v1"
+
+
+def feature_contract_sha256() -> str:
+    import hashlib
+    import json
+    from .features import FEATURES
+    body = [[n, repr(f.arg_specs), repr(f.domain), list(f.requires)]
+            for n, f in sorted(FEATURES.items())]
+    return hashlib.sha256(json.dumps(
+        [FEATURE_VERSION, body], sort_keys=True).encode()).hexdigest()
+
+
+def compile_identity(spec_sha256: str | None, compiler_version: str,
+                     feature_version: str, feature_sha256: str) -> str:
+    """The evaluation identity: any material change to the spec, compiler or
+    feature contract yields a different value."""
+    import hashlib
+    import json
+    return hashlib.sha256(json.dumps(
+        [spec_sha256, compiler_version, feature_version, feature_sha256],
+        sort_keys=True).encode()).hexdigest()
+
 
 @dataclass
 class CompiledStrategy:
@@ -35,15 +64,32 @@ class CompiledStrategy:
     #: sha256 of the exact compiled spec this evaluator runs; stamped on every
     #: signal so a trade can name the version that proposed it (provenance only)
     spec_sha256: str | None = None
+    #: stamped when compiled from an exact StrategyVersion (`compile_version`);
+    #: None for a bare spec (research / admission probes). Provenance only —
+    #: compiling grants no install, approval, capital or execution authority.
+    version_id: str | None = None
+    compiler_version: str = COMPILER_VERSION
+    feature_version: str = FEATURE_VERSION
+    feature_sha256: str | None = None
+    identity: str | None = None
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
                 derivs: dict | None = None, universe: dict | None = None,
                 market: dict | None = None, symbol: str | None = None, world=None):
+        lo, sh, _ = self.entries_detail(frames, btc, derivs, universe, market, symbol, world)
+        return lo, sh
+
+    def entries_detail(self, frames: dict, btc=None, derivs=None, universe=None,
+                       market=None, symbol=None, world=None):
+        """`entries` plus the per-bar conditions that suppressed signals, so a
+        caller can tell "no signal" from "rejected / unavailable"."""
         ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world)
         n = len(ctx.index)
         # This accumulator is mutated below; pandas can expose a read-only view.
-        keep = ctx.df['quality'].eq('VALID').to_numpy(copy=True) if 'quality' in ctx.df else np.ones(n, dtype=bool)
+        quality_ok = (ctx.df['quality'].eq('VALID').to_numpy(copy=True)
+                      if 'quality' in ctx.df else np.ones(n, dtype=bool))
+        keep = quality_ok.copy()
         for f in self._filters:
             keep &= dsl.evaluate_bool(f, ctx)
         lo = (dsl.evaluate_bool(self._long, ctx) & keep) \
@@ -52,10 +98,11 @@ class CompiledStrategy:
             if self._short is not None else np.zeros(n, dtype=bool)
         # a bar cannot be both; a direction conflict resolves to no trade
         both = lo & sh
-        if ctx._world_valid is not None:
-            lo &= ctx._world_valid
-            sh &= ctx._world_valid
-        return lo & ~both, sh & ~both
+        world_ok = ctx._world_valid
+        if world_ok is not None:
+            lo &= world_ok
+            sh &= world_ok
+        return lo & ~both, sh & ~both, {"quality_ok": quality_ok, "world_ok": world_ok}
 
     def exit_signal(self, frames: dict, btc=None, derivs=None,
                     universe=None, market=None, symbol: str | None = None, world=None):
@@ -73,8 +120,13 @@ class CompiledStrategy:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
         if world is None and "world" in self.data_requires:
+            # No latest/unbounded fallback: an uncut load would answer a
+            # historical evaluation from a different world than a current one.
+            cut = frames[tf].attrs.get('as_of_ms')
+            if cut is None:
+                raise dsl.SpecError("world_context_cut_required")
             from ..world.context import load_context
-            world = load_context(as_of_ms=frames[tf].attrs.get('as_of_ms'))
+            world = load_context(as_of_ms=cut)
         return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
                           universe=universe, market=market, symbol=symbol, world=world)
 
@@ -82,6 +134,10 @@ class CompiledStrategy:
         from ..engine.trade_provenance import spec_version
         if spec_version(self.spec)["spec_sha256"] != self.spec_sha256:
             raise dsl.SpecError("compiled_spec_version_mismatch")
+        if (self.compiler_version != COMPILER_VERSION
+                or self.feature_version != FEATURE_VERSION
+                or self.feature_sha256 != feature_contract_sha256()):
+            raise dsl.SpecError("compiled_feature_version_mismatch")
 
     # ── live path (Trader) ───────────────────────────────────────────────
     def to_evaluator(self):
@@ -97,10 +153,11 @@ class CompiledStrategy:
             from ..data.market_provenance import cut as valid_cut
             try:
                 self._verify_spec()
-            except dsl.SpecError:
+            except dsl.SpecError as e:
+                code = str(e) or "compiled_spec_version_mismatch"
                 if diagnostic:
-                    diagnostic("compiled_spec_version_mismatch")
-                log.warning("spec %s refused: compiled_spec_version_mismatch", self.spec.id)
+                    diagnostic(code)
+                log.warning("spec %s refused: %s", self.spec.id, code)
                 return None
             try:
                 if not snap.ts or snap.ts in ('now','today'):
@@ -140,12 +197,17 @@ class CompiledStrategy:
                 return None
             btc = ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
+            missing = self._missing_inputs(snap)
+            if missing:
+                if diagnostic:
+                    diagnostic("required_input_missing:" + missing)
+                return None
             try:
                 world = getattr(snap, "world", None)
                 if world is None and "world" in self.data_requires:
                     from ..world.context import load_context
                     world = load_context(as_of_ms=cut)
-                lo, sh = self.entries(frames, btc=btc,
+                lo, sh, detail = self.entries_detail(frames, btc=btc,
                                       derivs=getattr(snap, "derivs", None),
                                       universe=getattr(snap, "universe", None),
                                       market=getattr(snap, "market", None),
@@ -161,6 +223,15 @@ class CompiledStrategy:
             if not len(lo):
                 if diagnostic:
                     diagnostic("empty_entry_series")
+                return None
+            if not detail["quality_ok"][-1]:
+                if diagnostic:
+                    diagnostic("quality_condition_failed")
+                return None
+            if detail["world_ok"] is not None and not detail["world_ok"][-1]:
+                if diagnostic:
+                    diagnostic("world_dependency_unavailable" + (
+                        ":" + str(world.source_status) if world is not None else ""))
                 return None
             if lo[-1]:
                 action, why = Action.BUY, self.spec.entry_long
@@ -199,6 +270,9 @@ class CompiledStrategy:
                     close_ms = int(open_ms + TF_MS[tf])
             params = {"spec_id": self.spec.id,
                       "spec_sha256": self.spec_sha256,
+                      "compile_identity": self.identity,
+                      "compiler_version": self.compiler_version,
+                      "feature_version": self.feature_version,
                       "signal_bar_age_min": bar_age_min,
                       "spec_fingerprint": (getattr(self, "fingerprint", "")
                                            or spec_fingerprint(self.spec)),
@@ -218,6 +292,8 @@ class CompiledStrategy:
                         revision_ids=source_frame['revision_id'].tolist(),
                         content_hashes=source_frame['content_hash'].tolist()))
             params['market_provenance'] = dict(schema_version='market.receipt.v1',as_of_ms=cut,sources=sources)
+            if self.version_id:
+                params["version_id"] = self.version_id
             if unavailable:
                 params["signal_occurrence_unavailable"] = unavailable
             return StrategySignal(
@@ -228,6 +304,20 @@ class CompiledStrategy:
                 params=params)
         _evaluate._diagnostic_capable = True
         return _evaluate
+
+    def _missing_inputs(self, snap) -> str | None:
+        """Declared non-OHLCV dependencies the snapshot does not carry at all.
+        Absent is surfaced, never evaluated as NaN/zero and left to read as
+        "no signal". (Present-but-NaN stays NaN in the feature layer.)"""
+        for req in self.data_requires:
+            if req == "ohlcv" or req == "world":
+                continue
+            if req.startswith("ref:"):
+                if (getattr(snap, "market", None) or {}).get(req[4:]) is None:
+                    return req
+            elif not getattr(snap, "derivs", None):
+                return req
+        return None
 
     # ── tradingview path ─────────────────────────────────────────────────
     def to_pine(self, fee_pct: float = 0.05) -> tuple[str, bool, list]:
@@ -299,6 +389,49 @@ def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrat
     req = dsl.data_requires(*trees)
     spec.data_requires = list(req)
     from ..engine.trade_provenance import spec_version
+    sha = spec_version(spec)["spec_sha256"]
+    fsha = feature_contract_sha256()
     return CompiledStrategy(spec=deepcopy(spec), _long=long_t, _short=short_t,
                             _filters=filters, _exit=exit_t, data_requires=req,
-                            spec_sha256=spec_version(spec)["spec_sha256"])
+                            spec_sha256=sha, feature_sha256=fsha,
+                            identity=compile_identity(sha, COMPILER_VERSION,
+                                                      FEATURE_VERSION, fsha))
+
+
+def compile_version(journal, version_id: str, *, spec_hash: str | None = None,
+                    compiler_version: str = COMPILER_VERSION,
+                    feature_version: str = FEATURE_VERSION,
+                    require_installed: bool = True) -> CompiledStrategy:
+    """Compile the EXACT stored StrategyVersion; refuse anything else.
+
+    The version is re-authenticated (`load_version` re-derives every identity
+    and lineage), must carry typed lineage (legacy versions are unsupported),
+    must be in a live lifecycle state, and — for the normal install path —
+    must be the currently installed spec. The result is bound to the version
+    and grants no authority: nothing is written, installed or approved here.
+    Raises `factory_handoff.HandoffRefused` (stable `.code`) or SpecError."""
+    from . import factory_handoff as fh
+    v = fh.load_version(journal, version_id)
+    if v.get("schema") != fh.VERSION_SCHEMA:
+        fh._refuse("version_schema_unsupported")
+    if v.get("lineage") is None:
+        fh._refuse("legacy_version_unsupported")
+    if spec_hash is not None and spec_hash != v["spec_hash"]:
+        fh._refuse("spec_hash_mismatch")
+    if compiler_version != COMPILER_VERSION:
+        fh._refuse("compiler_version_mismatch")
+    if feature_version != FEATURE_VERSION:
+        fh._refuse("feature_version_mismatch")
+    if fh.state_of(journal, version_id) in (None, fh.RETIRED, fh.REJECTED):
+        fh._refuse("version_not_live")
+    if require_installed:
+        fh.verify_validation(journal, v)
+        fh.verify_install(journal, v, current=True)
+    spec = StrategySpec.from_dict(v["spec"])
+    declared = list(spec.data_requires)
+    compiled = compile_spec(spec)
+    # the frozen declaration must equal what the expressions actually need
+    if sorted(declared) != sorted(compiled.data_requires):
+        fh._refuse("dependency_mismatch")
+    compiled.version_id = version_id
+    return compiled
