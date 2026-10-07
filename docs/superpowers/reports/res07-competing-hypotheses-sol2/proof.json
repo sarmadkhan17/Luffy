@@ -1,0 +1,54 @@
+{
+  "requirement": "[SOL-2][RES-07]",
+  "status": "CLOSED",
+  "scope": "architecture/offline engineering",
+  "control_plane_reconciliation_pending": true,
+  "live_provider_calls": 0,
+  "llm_calls": 0,
+  "real_market_predictive_edge_claim": false,
+  "final_sha256": {
+    "trader/cognition/predictive.py": "7153fd9a955686ee2ff5764a5dd5abe9a7d1f746094176f39631441d50b19458",
+    "tests/test_predictive_research_bridge.py": "baeda2aac8b6abdf3dced47d97edce850d2e3033b25a0044a3421f4fafe21298",
+    "tests/test_res07_competing_hypotheses.py": "f1e818f55c53e76d499dfbd079ab912357c70304304a799aa20d27d83edb5824"
+  },
+  "tests": [
+    {
+      "command": "/home/sarmad/.local/bin/luffy-pytest -q tests/test_res07_competing_hypotheses.py",
+      "passed": 10,
+      "elapsed_seconds": 22.09,
+      "revision": "final"
+    },
+    {
+      "command": "/home/sarmad/.local/bin/luffy-pytest -q tests/test_predictive_research_bridge.py -k \"hypothesis_immutable or exact_duplicates or feedback_retains_stage7 or shape_leakage\"",
+      "passed": 4,
+      "deselected": 17,
+      "elapsed_seconds": 41.57,
+      "revision": "final"
+    },
+    {
+      "command": "/home/sarmad/.local/bin/luffy-pytest -q tests/test_predictive_research_bridge.py",
+      "passed": 21,
+      "elapsed_seconds": 405.36,
+      "revision": "before final support/refutation metadata and generator version refinements"
+    },
+    {
+      "command": "/home/sarmad/.local/bin/luffy-pytest -q tests/test_wrld05_normal_context.py tests/test_research_evidence_source_binding.py tests/test_investigation_research_family.py tests/test_res05_next_question_link.py",
+      "passed": 116,
+      "elapsed_seconds": 100.65,
+      "revision": "dependency regression before final metadata refinements"
+    }
+  ],
+  "prior_res07_run": {
+    "passed": 10,
+    "elapsed_seconds": 205.75,
+    "superseded_by_final": true
+  },
+  "failed_invocation": {
+    "reason": "nonexistent test_res05_next_question_linkage.py",
+    "exit_code": 4,
+    "tests_run": 0
+  },
+  "graph_refresh": "deferred: graphify update writes manifest; explicit user freeze takes precedence",
+  "root_free_bytes": 13894651904,
+  "res08_impact": "RES-07 engineering dependency satisfied; new paired-ablation-null experiment shape explicitly unsupported pending RES-08; no RES-08 closure"
+}

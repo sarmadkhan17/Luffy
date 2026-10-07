@@ -12,7 +12,8 @@ from trader.observability import investigation_research as R
 from trader.research import vocab
 from trader.research.universe import DISCOVERY, HELDOUT
 
-SCHEMA = 'predictive-hypothesis.v1'
+LEGACY_SCHEMA = 'predictive-hypothesis.v1'
+SCHEMA = 'predictive-hypothesis.v2'
 QUESTION, HYPOTHESIS, SUPPORTED_RESULT, STRATEGY_CANDIDATE = (
     'QUESTION', 'HYPOTHESIS', 'SUPPORTED_RESULT', 'STRATEGY_CANDIDATE')
 CLASSIFICATIONS = ('SUPPORTED', 'UNSUPPORTED', 'INCONCLUSIVE', 'NOT_TESTABLE', 'DATA_INSUFFICIENT')
@@ -20,6 +21,8 @@ MAX_HYPOTHESES = 2
 # The first template tests a NEW proposed price relationship, not the source's
 # volume-persistence outcome. The second retains that exact non-price question
 # and explicitly cannot be expressed by the current trading-rule planner.
+# The third competes with the first on the same incremental-benefit metric;
+# its paired null comparison requires a separately registered experiment shape.
 TRANSFORMS = {
     'volume_breakout_context.v1': {
         'mechanism': 'QUESTION: does unusually high registered volume context improve the registered breakout expression? Participant cause is unknown.',
@@ -32,6 +35,12 @@ TRANSFORMS = {
         'predictor': ('investigation:volume_anomaly:N20',),
         'target': 'registered volume path at five exact forward bars',
         'horizon': '4h:5', 'shape': 'volume_forward_path',
+    },
+    'volume_breakout_no_benefit.v1': {
+        'mechanism': 'QUESTION: does unusually high registered volume context provide no incremental benefit to the same registered breakout expression? Participant cause is unknown.',
+        'predictor': ('volz96>p90', 'ev:donch100'),
+        'target': 'net trade returns under registered fixed exit geometry',
+        'horizon': 'fixed:max_bars=96', 'shape': 'paired_ablation_null',
     },
 }
 
@@ -119,10 +128,54 @@ class PredictiveHypothesis:
     semantic_hash: str
     provenance_hash: str
     stage: str = HYPOTHESIS
+    schema: str = LEGACY_SCHEMA
+
+
+@dataclass(frozen=True)
+class TypedPredictiveHypothesis(PredictiveHypothesis):
+    # Strings contain canonical immutable snapshots, never mutable dictionaries.
+    proposal_contract_json: str = ''
     schema: str = SCHEMA
 
 
+def proposal_contract(source, transformation):
+    retained = json.loads(source.retained_chain_json)
+    state = json.loads(retained['evidence']['frozen']['case_payload'])['state']
+    paired = transformation != 'exact_volume_path.v1'
+    no_benefit = transformation == 'volume_breakout_no_benefit.v1'
+    test = dict(
+        metric='paired net return difference: volume-conditioned breakout minus breakout-only'
+            if paired else 'five-bar registered volume path frequency minus unconditional frequency',
+        comparator='<= 0' if no_benefit else '> 0',
+        baseline='same breakout expression without volume context' if paired else 'unconditional volume path',
+        horizon=TRANSFORMS[transformation]['horizon'],
+        data='new point-in-time closed 4h OHLCV after generation',
+        admission='registered controls, ablations, power, dependence-corrected null and protected referee',
+        translation_shape=TRANSFORMS[transformation]['shape'])
+    return canonical(dict(
+        authority='PROPOSAL_ONLY', predictive_edge_status='UNTESTED', causal_status='UNKNOWN',
+        observables=list(TRANSFORMS[transformation]['predictor']),
+        support=dict(role='DESCRIPTIVE_SOURCE_ONLY', evidence_ids=list(source.registration_evidence),
+                     result_id=source.result_id, classification=source.classification,
+                     measured_paths=[p for p in retained['result']['paths'] if p['status'] == 'SUPPORTED']),
+        opposition=dict(role='RETAINED_CONTEXT_CONTRADICTIONS', reasons=state['contradictions'],
+                        evidence_ids=state['evidence_ids'] if state['contradictions'] else [],
+                        measured_refuted_paths=[p for p in retained['result']['paths'] if p['status'] == 'REFUTED'],
+                        prior_research=json.loads(source.prior_research_json)),
+        unavailable_causality=retained['result']['unavailable'],
+        competition_group=digest([source.bank_id, 'volume-breakout-incremental-benefit']) if paired else None,
+        competing_transformation=('volume_breakout_context.v1' if no_benefit else
+                                  'volume_breakout_no_benefit.v1') if paired else None,
+        test=test, priority_authority='SCHEDULING_ONLY'))
+
+
 def propose(source, transformation, now_ms):
+    # Generation accepts only a verified retained source projection.
+    source_from_dict(asdict(source))
+    return _propose(source, transformation, now_ms, SCHEMA)
+
+
+def _propose(source, transformation, now_ms, schema):
     if transformation not in TRANSFORMS:
         raise ValueError('unregistered_transformation')
     if type(now_ms) is not int or now_ms < source.available_ms:
@@ -141,14 +194,21 @@ def propose(source, transformation, now_ms):
         falsification_criteria='Existing discovery control, ablation, power, rotation-null and protected referee gates must support the registered expression; unavailable power is inconclusive.',
         required_data=('ohlcv',), forbidden_leakage_boundary='Generation bars and every value known at creation are excluded from tuning and protected scores. Thresholds use discovery only. Protected A/B are referee-only. No source result is a validation observation.',
         generation_end_ms=now_ms, created_at=now_ms, source_hash=source.provenance_hash,
-        provenance_json=canonical(dict(generator='deterministic-registered-templates.v1',
+        provenance_json=canonical(dict(generator=('deterministic-registered-templates.v2' if schema == SCHEMA
+                                                 else 'deterministic-registered-templates.v1'),
             template_hash=digest(t), source=asdict(source), authority='PROPOSAL_ONLY', llm=None)),
         semantic_hash=digest(semantic))
+    if schema == SCHEMA:
+        fields['proposal_contract_json'] = proposal_contract(source, transformation)
+        fields['semantic_hash'] = digest(dict(semantic, prior_research=json.loads(source.prior_research_json)))
+        return TypedPredictiveHypothesis(hypothesis_id=digest(fields), provenance_hash=digest(fields), **fields)
+    if transformation == 'volume_breakout_no_benefit.v1':
+        raise ValueError('unregistered_legacy_transformation')
     return PredictiveHypothesis(hypothesis_id=digest(fields), provenance_hash=digest(fields), **fields)
 
 
 def validate(h):
-    if h.stage != HYPOTHESIS or h.schema != SCHEMA:
+    if h.stage != HYPOTHESIS or h.schema not in (LEGACY_SCHEMA, SCHEMA):
         raise ValueError('proposal_stage_required')
     if h.transformation not in TRANSFORMS:
         raise ValueError('unregistered_transformation')
@@ -157,7 +217,7 @@ def validate(h):
         raise ValueError('hypothesis_integrity')
     raw = json.loads(h.provenance_json)
     s = source_from_dict(raw['source'])
-    if propose(s, h.transformation, h.created_at) != h:
+    if _propose(s, h.transformation, h.created_at, h.schema) != h:
         raise ValueError('hypothesis_template_mismatch')
 
 
@@ -197,7 +257,8 @@ def hypothesis_from_dict(raw):
     d = dict(raw)
     for k in ('source_research_ids', 'predictor_definition', 'asset_scope', 'required_data'):
         d[k] = tuple(d[k])
-    h = PredictiveHypothesis(**d)
+    cls = TypedPredictiveHypothesis if d.get('schema') == SCHEMA else PredictiveHypothesis
+    h = cls(**d)
     validate(h)
     return h
 

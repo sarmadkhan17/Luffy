@@ -115,9 +115,9 @@ def test_normal_bank_consumer_to_planner_referee_feedback(population, dispositio
     original=source.read_bytes()
     first=consume(population,fake,created)
     assert first['counts']['eligible_research_results']==1
-    assert first['counts']['hypotheses_proposed']==2
+    assert first['counts']['hypotheses_proposed']==3
     assert first['counts']['data_insufficient']==1
-    assert first['counts']['not_testable']==1
+    assert first['counts']['not_testable']==2
     assert fake.calls==[] # descriptive support did not create predictive evidence
     assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
     for _ in range(6):
@@ -167,6 +167,10 @@ def test_exact_duplicates_related_and_contradicted_prior(population):
         B.append(db,'bridge_hypotheses',h.hypothesis_id,dict(hypothesis=asdict(h),novelty='NEW',related_prior=[]))
         assert B.prior_classification(db,h)[0]=='EXACT_DUPLICATE'
         changed=replace(s,context_json=P.canonical({'world_model':{'status':'OTHER'},'attention':{}}))
+        # A modified source projection is not a supported retained chain.
+        with pytest.raises(ValueError, match='source_integrity'):
+            P.propose(changed,'volume_breakout_context.v1',s.available_ms+1)
+        changed=P.replace_source_prior(s,P.canonical([dict(classification='UNSUPPORTED')]))
         next_h=P.propose(changed,'volume_breakout_context.v1',s.available_ms+1)
         assert B.prior_classification(db,next_h)[0]=='RELATED_PRIOR'
         B.feedback(db,h,None,'UNSUPPORTED',{},dict(state='gate1_fail'),s.available_ms+2)
@@ -221,7 +225,7 @@ def test_feedback_retains_stage7_replay_and_no_truth_from_priority(population):
     consume(population,NumericalFixture(),created)
     with sqlite3.connect(bank) as db:
         ids=[r[0] for r in db.execute('SELECT outcome_id FROM learning_outcome_captures')]
-        assert len(ids)==2
+        assert len(ids)==3
         for oid in ids:
             outcome,retained=Lc.learning_outcome(db,oid)
             assert outcome.kind==L.Kind.RESEARCH
@@ -298,7 +302,7 @@ def test_source_alias_budget_and_immutable_checkpoint_refused(population):
         with pytest.raises(sqlite3.IntegrityError,match='immutable'): db.execute("UPDATE bridge_hypotheses SET payload='{}'")
     second=consume(population,NumericalFixture(),created+1)
     assert second['counts']['eligible_research_results']==0 and second['counts']['hypotheses_proposed']==0
-    assert len(saved(bank,'bridge_hypotheses'))==2
+    assert len(saved(bank,'bridge_hypotheses'))==3
 
 
 def test_global_existing_error_budget_is_inherited(population):
