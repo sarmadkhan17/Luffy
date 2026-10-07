@@ -364,6 +364,10 @@ def semantic(role, value, reg):
         if value['version_id'] != reg['lineage'].get('version_id') or _jsha(value['spec']) != value['spec_hash'] or value['spec_hash'] != reg['lineage'].get('spec_hash'):
             raise ValueError('historical_strategy_differs')
         ident={k:value[k] for k in ('schema','strategy_id','spec_hash','parent_version_id','source')}
+        if 'lineage' in value or 'lineage_sha256' in value:
+            if _jsha(value.get('lineage'))!=value.get('lineage_sha256'):
+                raise ValueError('strategy_version_identity_differs')
+            ident['lineage_sha256']=value['lineage_sha256']
         if _jsha(ident)!=value['version_id']:
             raise ValueError('strategy_version_identity_differs')
     elif role == 'exit_semantics':

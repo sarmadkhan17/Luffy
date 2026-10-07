@@ -34,6 +34,12 @@ from .promotion import stats_of
 from .spec import StrategySpec
 
 VERSION_SCHEMA = "strategy-version.v1"
+# A version carrying a `lineage` block (and hashing it into its identity) meets
+# the STR-01 contract; a record without one is legacy: replayable byte for byte
+# but never promotable (no lineage is fabricated for it).
+LINEAGE_SCHEMA = "strategy-lineage.v1"
+RESEARCH_REF_KEYS = ("hypothesis_id", "experiment_id", "measurement_id",
+                     "quantitative_evidence_id", "result_id")
 RECEIPT_SCHEMA = "strategy-validation-receipt.v1"
 PROBATION_SCHEMA = "strategy-probation-receipt.v1"
 REQUEST_SCHEMA = "strategy-first-live-approval-request.v1"
@@ -504,16 +510,72 @@ def _receipt_evidence(ev: dict) -> dict:
 
 
 # ── 1. candidate -> immutable version + validation receipt ──────────────
+def _requirements(spec_d: dict, risk_sha256) -> dict:
+    """What the spec itself requires, derived only from the frozen spec (and
+    the risk configuration it was validated under): universe, horizon,
+    entry/exit rules, risk, data and world/context requirements, and the
+    compiled-spec identity. Re-derived on every load, never trusted."""
+    from ..engine.trade_provenance import spec_version
+    from .exit_policy import EXIT_SEMANTICS_ID
+    keys = ("universe", "timeframe", "direction", "entry_long", "entry_short",
+            "filters", "exit", "regime_filter", "markets", "data_requires")
+    return {"rules": {k: spec_d.get(k) for k in keys},
+            "world": {"regime_filter": spec_d.get("regime_filter"),
+                      "markets": spec_d.get("markets"),
+                      "data_requires": spec_d.get("data_requires")},
+            "risk": {"config_sha256": risk_sha256,
+                     "exit_semantics_id": EXIT_SEMANTICS_ID},
+            "compiled_spec_sha256": spec_version(
+                StrategySpec.from_dict(spec_d))["spec_sha256"],
+            "spec_schema": "StrategySpec", "spec_hash": _jsha(spec_d)}
+
+
+def _research_ref(ev: dict, source: dict) -> dict:
+    """The research origin the version binds. A predictive-experiment
+    candidate (its combination carries hypothesis and experiment ids) needs
+    the exact RES-08 ids, cross-checked to the evaluated rule; a discovery
+    search candidate claims none and may not carry any."""
+    combo = ev["evaluated"]["combo"]
+    hyp, exp = combo.get("trigger") or "", combo.get("evaluation_scope") or ""
+    given = source.get("research")
+    if not exp:
+        if given is not None:
+            _refuse("research_lineage_not_applicable")
+        return {"origin": "discovery_search", "round": combo.get("round"),
+                "candidate_hash": ev["candidate"]["hash"]}
+    if not isinstance(given, dict):
+        _refuse("research_lineage_missing")
+    if set(given) != set(RESEARCH_REF_KEYS) or not all(
+            isinstance(given[k], str) and given[k] for k in RESEARCH_REF_KEYS):
+        _refuse("research_lineage_malformed")
+    if given["hypothesis_id"] != hyp or given["experiment_id"] != exp:
+        _refuse("research_lineage_mismatch")
+    return {"origin": "predictive_experiment", "round": combo.get("round"),
+            "candidate_hash": ev["candidate"]["hash"], **given}
+
+
+def _lineage(spec_d: dict, risk_sha256, research: dict | None,
+             quantitative: dict | None, parent: str | None) -> dict:
+    return {"schema": LINEAGE_SCHEMA, "research": research,
+            "quantitative": quantitative, "parent_version_id": parent,
+            "requirements": _requirements(spec_d, risk_sha256)}
+
+
 def _version_record(strategy_id, spec_d, spec_hash, parent, source,
-                    evidence_ids) -> dict:
+                    evidence_ids, lineage=None) -> dict:
     ident = {"schema": VERSION_SCHEMA, "strategy_id": strategy_id,
              "spec_hash": spec_hash, "parent_version_id": parent,
              "source": source}
+    if lineage is not None:
+        ident["lineage_sha256"] = _jsha(lineage)
     # no capacity here: the version is the strategy itself; capacity is
     # evaluated at use against its own receipts (records written before
     # this carried a capacity reference and still load and dedupe)
-    return {**ident, "version_id": _jsha(ident), "spec": spec_d,
-            "evidence_ids": evidence_ids}
+    rec = {**ident, "version_id": _jsha(ident), "spec": spec_d,
+           "evidence_ids": evidence_ids}
+    if lineage is not None:
+        rec["lineage"] = lineage
+    return rec
 
 
 def _insert_version(c, rec: dict, at_ms: int) -> str:
@@ -578,8 +640,13 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
     if now_hash != spec_hash or canonical(now_d) != canonical(spec_d):
         _refuse("validation_reconstruction_drift")
     ids = _receipt_evidence(ev)
-    rec = _version_record(spec_d["id"], spec_d, spec_hash, None,
-                          {"kind": "research_candidate", "id": h}, ids)
+    quant = {**ids, "gate1_alpha_t": ev["gate1_look"]["alpha_t"],
+             "cut_ms": json.loads(ev["gate1_look"]["detail"])["cut_ms"]}
+    rec = _version_record(
+        spec_d["id"], spec_d, spec_hash, None,
+        {"kind": "research_candidate", "id": h}, ids,
+        _lineage(spec_d, _jsha(cfg.get("risk")), _research_ref(ev, source), quant,
+                 None))
     vid = rec["version_id"]
     r_ident = {"schema": RECEIPT_SCHEMA, "version_id": vid,
                "strategy_id": rec["strategy_id"], "spec_hash": spec_hash,
@@ -615,7 +682,7 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
 
 
 def derive_version(journal, parent_version_id: str, spec: StrategySpec, *,
-                   at_ms: int) -> dict:
+                   at_ms: int, cfg: dict | None = None) -> dict:
     """A materially edited spec is a NEW version with parent lineage. It
     inherits no validation receipt, probation or approval (SDD §14.6)."""
     ensure(journal)
@@ -625,9 +692,17 @@ def derive_version(journal, parent_version_id: str, spec: StrategySpec, *,
         _refuse("spec_unchanged")
     if spec_d["id"] != parent["strategy_id"]:
         _refuse("strategy_id_changed")
+    plin = parent.get("lineage")
+    # a derived version inherits no research or quantitative validation; its
+    # risk requirement is the stated configuration, else the parent's
+    risk_sha = _jsha(cfg.get("risk")) if cfg is not None else (
+        plin["requirements"]["risk"]["config_sha256"] if plin else None)
+    lineage = _lineage(spec_d, risk_sha, None, None, parent_version_id) \
+        if plin is not None else None
     rec = _version_record(parent["strategy_id"], spec_d, spec_hash,
                           parent_version_id,
-                          {"kind": "derived", "id": parent_version_id}, {})
+                          {"kind": "derived", "id": parent_version_id}, {},
+                          lineage)
     with journal._tx() as c:
         _begin(c)
         out = _insert_version(c, rec, at_ms)
@@ -648,6 +723,11 @@ def load_version(journal, version_id: str) -> dict:
     rec = _load(row)
     ident = {k: rec[k] for k in ("schema", "strategy_id", "spec_hash",
                                  "parent_version_id", "source")}
+    if "lineage" in rec or "lineage_sha256" in rec:
+        lin = rec.get("lineage")
+        if not isinstance(lin, dict) or rec.get("lineage_sha256") != _jsha(lin):
+            _refuse("version_lineage_mismatch")
+        ident["lineage_sha256"] = rec["lineage_sha256"]
     if rec.get("version_id") != version_id or _jsha(ident) != version_id:
         _refuse("version_id_mismatch")
     if _jsha(rec["spec"]) != rec["spec_hash"] \
@@ -657,6 +737,23 @@ def load_version(journal, version_id: str) -> dict:
     spec_d, spec_hash = _frozen_spec(StrategySpec.from_dict(rec["spec"]))
     if spec_hash != rec["spec_hash"]:
         _refuse("spec_recompile_drift")
+    lin = rec.get("lineage")
+    if lin is not None:
+        want = _requirements(rec["spec"], None)
+        got = lin.get("requirements") or {}
+        # everything but the risk-config hash is a pure function of the spec
+        if lin.get("schema") != LINEAGE_SCHEMA or lin.get(
+                "parent_version_id") != rec["parent_version_id"] or {
+                k: v for k, v in got.items() if k != "risk"} != {
+                k: v for k, v in want.items() if k != "risk"} or (
+                got.get("risk") or {}).get("exit_semantics_id") != \
+                want["risk"]["exit_semantics_id"]:
+            _refuse("version_lineage_requirements_mismatch")
+        q = lin.get("quantitative")
+        if rec["parent_version_id"] is None and (
+                not isinstance(q, dict) or any(
+                    q.get(k) != v for k, v in rec["evidence_ids"].items())):
+            _refuse("version_lineage_evidence_mismatch")
     return rec
 
 
@@ -757,6 +854,8 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
     if mode not in INSTALL_MODES:
         _refuse("unknown_install_mode")
     v = load_version(journal, version_id)
+    if "lineage" not in v:
+        _refuse("legacy_version_lacks_lineage_contract")
     val = verify_validation(journal, v)
     old = _install_record(journal, version_id)
     if old is not None:

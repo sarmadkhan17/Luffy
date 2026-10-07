@@ -39,7 +39,7 @@ def cfg(monkeypatch):
 
 
 def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
-               look=True, gate3=True, g1_p=None):
+               look=True, gate3=True, g1_p=None, trigger="", scope=""):
     from trader.research import vocab
     from trader.research.combo import Combination, evaluated_record
     from trader.research.ledger import Ledger
@@ -50,11 +50,13 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
                                  "usable": True}
                              for e in vocab.expressions("4h")})
     part = vocab.parts_for("4h", led.gauges("4h"))[0]
-    c = Combination((part,), "4h", "fixed")
+    c = Combination((part,), "4h", "fixed", trigger=trigger,
+                    evaluation_scope=scope)
     led.record_result({"hash": c.hash, "tf": "4h", "geo": "fixed", "k": 1,
                        "parts": list(c.keys), "trades": 300,
                        "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
-                       "testable": True, "verdict": "scored"},
+                       "testable": True, "verdict": "scored",
+                       **({"predictive_combo": c.as_dict()} if scope else {})},
                       "survivor", "r", {})
     # a queued/deferred candidate has not been looked at: a spent held-out
     # can never be in those states (ledger refuses to restore it)
@@ -1105,7 +1107,10 @@ def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
     k2._research_handoff(_Admitting(), [])
     v2 = F.load_version(j2, _row(j2, "SELECT * FROM strategy_versions")
                         ["version_id"])
-    assert v2["version_id"] == v["version_id"]
+    # the kernel's own risk configuration is part of the version identity
+    # (STR-01): the same spec under it is the same strategy, not the same version
+    assert v2["spec_hash"] == v["spec_hash"]
+    v = v2
     j, k = j2, k2
     k._load_population()
     t0 = F.verify_install(j, v2)["installed_at_ms"]
