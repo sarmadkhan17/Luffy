@@ -837,6 +837,26 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     def owner_overview():
         return _json(overview(journal, root, cfg))
 
+    @app.get(PREFIX + "/desk")
+    def owner_desk():
+        from .overview_desk import desk
+        return _json(desk(journal, cfg, _iso(_now())))
+
+    @app.get(PREFIX + "/research/board")
+    def owner_research_board():
+        from .overview_desk import research_board
+        return _json({"generated_at": _iso(_now()), **research_board(journal, cfg)})
+
+    @app.get(PREFIX + "/strategies/board")
+    def owner_strategy_board():
+        from .overview_desk import strategy_board
+        return _json({"generated_at": _iso(_now()), **strategy_board(journal, _now().timestamp())})
+
+    @app.get(PREFIX + "/operations/log")
+    def owner_operations_log(days: int = 7):
+        from .overview_desk import operations_log
+        return _json({"generated_at": _iso(_now()), **operations_log(journal, _now().timestamp(), max(1, min(int(days), 30)))})
+
     @app.get(PREFIX + "/risk")
     def owner_risk():
         # configured limits vs the kernel's latest recorded assessment; a
