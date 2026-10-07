@@ -19,6 +19,7 @@ from trader.strategy import compile as C
 from trader.strategy import dsl
 from trader.strategy import factory_handoff as F
 from trader.strategy.compile import compile_spec, compile_version
+from tests.test_wrld05_normal_context import retained  # noqa: F401  (fixture)
 from trader.strategy.spec import ExitSpec, StrategySpec
 
 
@@ -267,7 +268,7 @@ def test_world_dependency_unavailable_is_surfaced_and_never_loads_latest():
     snap.world = WorldContext(WorldHistory(()), "SOURCE_UNAVAILABLE", 2_000_000_000_000)
     seen, diag = _diag()
     assert c.to_evaluator()(None, snap, diagnostic=diag) is None
-    assert seen == ["world_dependency_unavailable:SOURCE_UNAVAILABLE"]
+    assert seen == ["required_input_missing:world:volume_anomaly:intraday"]
 
 
 def test_failed_quality_condition_is_surfaced_not_a_silent_disappearance():
@@ -400,3 +401,128 @@ def test_filters_and_universe_are_part_of_what_runs():
     on = compile_spec(_spec(entry_long="close > ema(2)", filters=[])).entries({"15m": f})[0]
     off = compile_spec(_spec(entry_long="close > ema(2)", filters=["close < 0"])).entries({"15m": f})[0]
     assert on.any() and not off.any()
+
+
+# ── 6. exact dependency validation (no "derivs is non-empty" proxy) ──────
+from tests.test_compile import _funding_obs  # noqa: E402
+
+
+def _obs(frame, value):
+    return _funding_obs(frame, value)
+
+
+def _oi_spec(**kw):
+    return _spec(id="oz", direction="long", filters=[], entry_long="oi > 0",
+                 entry_short="", **kw)
+
+
+def _run(c, f, derivs=None, market=None, world=None):
+    seen, diag = _diag()
+    snap = _snap(f, "15m", **({"derivs": derivs} if derivs is not None else {}),
+                 **({"market": market} if market is not None else {}))
+    if world is not None:
+        snap.world = world
+    return c.to_evaluator()(None, snap, diagnostic=diag), seen
+
+
+def test_concrete_dependencies_are_derived_from_the_expressions():
+    c = compile_spec(_spec(entry_long='funding > 0 and oi > 0 and ref("spx", close) > 0 '
+                                      'and ' + WORLD, filters=[]))
+    assert c.deps == {"derivs": ("funding", "oi"), "refs": ("spx",),
+                      "world": (("volume_anomaly", "intraday"),)}
+
+
+def test_funding_required_oi_only_is_refused_explicitly():
+    f = _frame("15m")
+    sig, seen = _run(compile_spec(_funding_spec()), f, derivs={"oi": _obs(f, 1.0)})
+    assert sig is None and seen == ["required_input_missing:funding"]
+
+
+def test_oi_required_funding_only_is_refused_explicitly():
+    f = _frame("15m")
+    sig, seen = _run(compile_spec(_oi_spec()), f, derivs={"funding": _obs(f, 0.01)})
+    assert sig is None and seen == ["required_input_missing:oi"]
+
+
+def test_partial_multi_dependency_is_refused_and_names_the_absent_one():
+    f = _frame("15m")
+    c = compile_spec(_spec(direction="long", filters=[], entry_short="",
+                           entry_long="funding > 0.005 and oi > 0"))
+    assert c.deps["derivs"] == ("funding", "oi")
+    sig, seen = _run(c, f, derivs={"funding": _obs(f, 0.01)})
+    assert sig is None and seen == ["required_input_missing:oi"]
+    sig, seen = _run(c, f, derivs={"oi": _obs(f, 5.0)})
+    assert sig is None and seen == ["required_input_missing:funding"]
+
+
+def test_exact_dependencies_present_evaluate_normally():
+    f = _frame("15m")
+    c = compile_spec(_spec(direction="long", filters=[], entry_short="",
+                           entry_long="funding > 0.005 and oi > 0"))
+    sig, seen = _run(c, f, derivs={"funding": _obs(f, 0.01), "oi": _obs(f, 5.0)})
+    assert seen == [] and sig is not None and sig.action.value == "BUY"
+    # an extra, unrelated derivative never substitutes for a required one
+    sig, seen = _run(compile_spec(_funding_spec()), f,
+                     derivs={"funding": _obs(f, 0.01), "oi": _obs(f, 1.0)})
+    assert seen == [] and sig is not None
+
+
+def test_derivative_with_no_observation_at_the_cut_is_refused_not_nan_silent():
+    f = _frame("15m")
+    late = _obs(f, 0.01)
+    late["ts"] = late["ts"] + pd.Timedelta(days=365)       # all observations are after the cut
+    sig, seen = _run(compile_spec(_funding_spec()), f, derivs={"funding": late})
+    assert sig is None and seen == ["required_input_missing:funding"]
+    empty = _obs(f, 0.01).iloc[:0]
+    sig, seen = _run(compile_spec(_funding_spec()), f, derivs={"funding": empty})
+    assert sig is None and seen == ["required_input_missing:funding"]
+
+
+def test_required_ref_absent_while_other_refs_exist_is_refused():
+    f = _frame("15m")
+    c = compile_spec(_spec(entry_long='ref("spx", close) > 0', filters=[]))
+    other = pd.DataFrame({"ts": f["ts"], "open": 1.0, "high": 1.0, "low": 1.0,
+                          "close": 1.0, "volume": 1.0})
+    sig, seen = _run(c, f, market={"vix": other})
+    assert sig is None and seen == ["required_input_missing:ref:spx"]
+
+
+def test_exact_world_dependency_absent_while_other_world_data_exists_is_refused(retained):
+    from tests.test_wrld05_normal_context import EXPR, NOW, SYMBOL, query
+    from trader.world.context import load_context
+    path, df = retained
+    context = load_context(path)
+    assert query(context).quality.value == "VALID"      # world data DOES exist
+    ok = compile_spec(_spec(timeframe="4h", entry_long=EXPR + " > 1", entry_short="", filters=[]))
+    assert ok.entries_detail({"4h": df}, symbol=SYMBOL, world=context)[2]["missing"] == []
+    for expr, code in ((EXPR.replace("volume_anomaly", "no_such_kind") + " > 1",
+                        "world:no_such_kind:intraday"),
+                       (EXPR.replace("intraday", "swing") + " > 1",
+                        "world:volume_anomaly:swing")):
+        c = compile_spec(_spec(timeframe="4h", entry_long=expr, entry_short="", filters=[]))
+        assert c.entries_detail({"4h": df}, symbol=SYMBOL, world=context)[2]["missing"] == [code]
+        snap = Snapshot(symbol=SYMBOL, ts=pd.Timestamp(NOW, unit="ms", tz="UTC").isoformat(),
+                        price=float(df.close.iloc[-1]), dfs={"4h": df})
+        snap.world = context
+        seen, diag = _diag()
+        assert c.to_evaluator()(None, snap, diagnostic=diag) is None
+        assert seen == ["required_input_missing:" + code]
+
+
+def test_dependency_check_is_the_same_for_live_replay_and_vectorized_paths():
+    f = _frame("15m")
+    c = compile_spec(_spec(direction="long", filters=[], entry_short="",
+                           entry_long="funding > 0.005 and oi > 0"))
+    derivs = {"funding": _obs(f, 0.01)}
+    replay = f.copy(deep=True)
+    replay.attrs["read_mode"] = "replay"
+    codes = []
+    for frame in (f, replay):
+        _, _, detail = c.entries_detail({"15m": frame}, derivs=derivs)
+        codes.append(detail["missing"])
+    sig, seen = _run(c, f, derivs=derivs)
+    assert codes[0] == codes[1] == ["oi"]
+    assert seen == ["required_input_missing:oi"] and sig is None
+    # a historical cut gives the same answer as the full series
+    _, _, early = c.entries_detail({"15m": f.iloc[:300].reset_index(drop=True)}, derivs=derivs)
+    assert early["missing"] == ["oi"]

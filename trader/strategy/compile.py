@@ -72,6 +72,9 @@ class CompiledStrategy:
     feature_version: str = FEATURE_VERSION
     feature_sha256: str | None = None
     identity: str | None = None
+    #: the concrete inputs the expressions read, derived from the parsed
+    #: trees: {"derivs": [...], "refs": [...], "world": [(kind, horizon), ...]}
+    deps: dict = field(default_factory=lambda: {"derivs": (), "refs": (), "world": ()})
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
@@ -102,7 +105,8 @@ class CompiledStrategy:
         if world_ok is not None:
             lo &= world_ok
             sh &= world_ok
-        return lo & ~both, sh & ~both, {"quality_ok": quality_ok, "world_ok": world_ok}
+        return lo & ~both, sh & ~both, {"quality_ok": quality_ok, "world_ok": world_ok,
+                                        "missing": self.missing_inputs(ctx)}
 
     def exit_signal(self, frames: dict, btc=None, derivs=None,
                     universe=None, market=None, symbol: str | None = None, world=None):
@@ -197,11 +201,6 @@ class CompiledStrategy:
                 return None
             btc = ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
-            missing = self._missing_inputs(snap)
-            if missing:
-                if diagnostic:
-                    diagnostic("required_input_missing:" + missing)
-                return None
             try:
                 world = getattr(snap, "world", None)
                 if world is None and "world" in self.data_requires:
@@ -223,6 +222,10 @@ class CompiledStrategy:
             if not len(lo):
                 if diagnostic:
                     diagnostic("empty_entry_series")
+                return None
+            if detail["missing"]:
+                if diagnostic:
+                    diagnostic("required_input_missing:" + detail["missing"][0])
                 return None
             if not detail["quality_ok"][-1]:
                 if diagnostic:
@@ -305,19 +308,31 @@ class CompiledStrategy:
         _evaluate._diagnostic_capable = True
         return _evaluate
 
-    def _missing_inputs(self, snap) -> str | None:
-        """Declared non-OHLCV dependencies the snapshot does not carry at all.
-        Absent is surfaced, never evaluated as NaN/zero and left to read as
-        "no signal". (Present-but-NaN stays NaN in the feature layer.)"""
-        for req in self.data_requires:
-            if req == "ohlcv" or req == "world":
-                continue
-            if req.startswith("ref:"):
-                if (getattr(snap, "market", None) or {}).get(req[4:]) is None:
-                    return req
-            elif not getattr(snap, "derivs", None):
-                return req
-        return None
+    def missing_inputs(self, ctx: FeatureCtx) -> list[str]:
+        """Each concrete input the expressions read that is absent or has no
+        observation at the evaluation cut, as stable codes. One implementation
+        for the live evaluator, replay and the vectorized path: the same ctx
+        (same cuts, same point-in-time alignment) answers all of them. The
+        check is on the exact key (`funding`, `oi`, `ref:spx`, a world
+        kind/horizon), never on "some derivs/world data exists"."""
+        n = len(ctx.index)
+        if not n:
+            return []
+        from .features_deriv import _deriv
+        out = []
+        for key in self.deps["derivs"]:
+            src = (ctx.derivs or {}).get(key)
+            if src is None or not len(src) or not np.isfinite(
+                    _deriv(ctx, key).to_numpy(dtype=float)[-1]):
+                out.append(key)
+        for key in self.deps["refs"]:
+            src = (ctx.market or {}).get(key)
+            if src is None or not len(src):
+                out.append("ref:" + key)
+        for kind, horizon in self.deps["world"]:
+            if not np.isfinite(ctx.get("world_observation", (kind, horizon)).to_numpy(dtype=float)[-1]):
+                out.append(f"world:{kind}:{horizon}")
+        return out
 
     # ── tradingview path ─────────────────────────────────────────────────
     def to_pine(self, fee_pct: float = 0.05) -> tuple[str, bool, list]:
@@ -367,6 +382,31 @@ class CompiledStrategy:
         return "\n".join(lines)
 
 
+_DERIV_KEY = {"open_interest": "oi"}      # declared requirement -> derivs key
+
+
+def _dependencies(trees) -> dict:
+    """Concrete derivative keys, reference keys and (kind, horizon) world
+    queries the parsed expressions actually read."""
+    import ast
+    from .features import FEATURES
+    derivs, refs, world = set(), set(), set()
+    for tree in trees:
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)):
+                continue
+            if node.func.id == "ref":
+                refs.add(node.args[0].value)
+            elif node.func.id == "world_observation":
+                world.add((node.args[0].value, node.args[1].value))
+        for name in dsl.features_used(tree):
+            for r in FEATURES[name].requires if name in FEATURES else ():
+                if r not in ("ohlcv", "world") and not r.startswith("ref:"):
+                    derivs.add(_DERIV_KEY.get(r, r))
+    return {"derivs": tuple(sorted(derivs)), "refs": tuple(sorted(refs)),
+            "world": tuple(sorted(world))}
+
+
 def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrategy:
     """Parse every expression up front. A spec that cannot compile must never
     reach the gauntlet, let alone the book."""
@@ -393,6 +433,7 @@ def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrat
     fsha = feature_contract_sha256()
     return CompiledStrategy(spec=deepcopy(spec), _long=long_t, _short=short_t,
                             _filters=filters, _exit=exit_t, data_requires=req,
+                            deps=_dependencies(trees),
                             spec_sha256=sha, feature_sha256=fsha,
                             identity=compile_identity(sha, COMPILER_VERSION,
                                                       FEATURE_VERSION, fsha))
