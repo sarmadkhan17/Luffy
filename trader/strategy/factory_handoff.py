@@ -1682,7 +1682,8 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
 
 # One post-validation lifecycle authority. These receipts govern lifecycle and
 # allocation only; they do NOT change the separate live execution fence.
-GOVERNOR_SCHEMA = "strategy-governor-event.v1"
+LEGACY_GOVERNOR_SCHEMA = "strategy-governor-event.v1"
+GOVERNOR_SCHEMA = "strategy-governor-event.v2"
 GOVERNOR_ALLOWED = {
     PROPOSED: {DEGRADED, RETIRED},
     VALIDATED: {DEGRADED, RETIRED},
@@ -1714,6 +1715,83 @@ def _binding(journal, v: dict) -> dict:
             "approval_request_id": req["request_id"] if req else None}
 
 
+def _historical_owner_binding(journal, v):
+    """Authenticate immutable approval lineage, never current eligibility.
+
+    Containment must survive research withdrawal, changed configuration,
+    expired capacity and changed probation trades. Do not call the current
+    validation/probation/eligibility predicates here.
+    """
+    binding = _binding(journal, v)
+    req = approval_request(journal, v['version_id'])
+    approved = [e for e in events(journal, v['version_id'])
+                if e['to_state'] == APPROVED_FIRST_LIVE]
+    if req is None:
+        if approved:
+            _refuse('governor_historical_request_missing')
+        return binding, None
+    verify_request(journal, v, req)
+    request_row = _one(journal, 'SELECT request_id FROM strategy_approval_requests WHERE version_id=?',
+                       (v['version_id'],))
+    if request_row['request_id'] != req['request_id']:
+        _refuse('governor_historical_request_differs')
+    val = verify_exit_binding(journal, v)
+    if req['validation_receipt_id'] != val['receipt_id']:
+        _refuse('governor_historical_validation_differs')
+    row = _one(journal, 'SELECT * FROM strategy_probation_receipts WHERE receipt_id=?',
+               (req['probation_receipt_id'],))
+    if row is None:
+        _refuse('governor_historical_probation_missing')
+    p = _load(row)
+    keys = ('schema', 'version_id', 'spec_hash', 'validation_receipt_id',
+            'install_id', 'since_ms', 'evaluated_at_ms', 'exit_semantics_id')
+    inst = verify_install(journal, v, current=False)
+    if (any(k not in p for k in keys) or _jsha({k: p[k] for k in keys}) != req['probation_receipt_id']
+            or p.get('receipt_id') != req['probation_receipt_id']
+            or any(p.get(k) != req[k] for k in ('version_id', 'spec_hash', 'validation_receipt_id', 'install_id'))
+            or p.get('since_ms') != inst['installed_at_ms']
+            or p.get('status') != P_SATISFIED):
+        _refuse('governor_historical_probation_differs')
+    row = _one(journal, 'SELECT * FROM strategy_approval_decisions WHERE request_id=?',
+               (req['request_id'],))
+    if row is None:
+        if approved:
+            _refuse('governor_historical_decision_missing')
+        return binding, None
+    d = _load(row)
+    keys = ('schema', 'request_id', 'version_id', 'spec_hash',
+            'validation_receipt_id', 'probation_receipt_id', 'requested_at_ms',
+            'decision', 'actor', 'decided_at_ms')
+    ident = {k: d.get(k) for k in keys}
+    if 'config_sha256' in d:
+        ident['config_sha256'] = d['config_sha256']
+    if (any(k not in d for k in keys) or d.get('schema') != DECISION_SCHEMA
+            or _jsha(ident) != d.get('decision_id')
+            or row['decision_id'] != d.get('decision_id')
+            or row['request_id'] != req['request_id']
+            or row['decision'] != d['decision'] or row['actor'] != d['actor']
+            or any(d[k] != req[k] for k in ('request_id', 'version_id', 'spec_hash',
+                                           'validation_receipt_id', 'probation_receipt_id', 'requested_at_ms'))
+            or d['actor'] not in OWNER_ACTORS
+            or d['decided_at_ms'] < req['requested_at_ms']):
+        _refuse('governor_historical_decision_differs')
+    decision_events = [e for e in events(journal, v['version_id'])
+                       if e['to_state'] == (APPROVED_FIRST_LIVE if d['decision'] == 'APPROVED' else REJECTED)]
+    if (d['decision'] not in ('APPROVED', 'REJECTED') or len(decision_events) != 1
+            or decision_events[0]['ref_id'] != d['decision_id']
+            or decision_events[0]['at_ms'] != d['decided_at_ms']):
+        _refuse('governor_historical_decision_event_unbound')
+    return binding, d
+
+
+def _governor_transition_id(event):
+    ident = {k: event[k] for k in ('version_id', 'to_state', 'actor',
+                                  'reason_code', 'at_ms', 'requested_allocation')}
+    if event['schema'] == GOVERNOR_SCHEMA:
+        ident.update(binding=event['binding'], owner_decision_id=event['owner_decision_id'])
+    return _jsha(ident)
+
+
 def projection_gap(journal, version_id: str) -> str | None:
     """None when the strategies row agrees with the Governor's state (or the
     Governor has not acted yet), else a reason code."""
@@ -1735,22 +1813,44 @@ def governor_events(journal, version_id):
     result, previous = [], None
     for row in rows:
         event = json.loads(row['canonical_json'])
+        if event.get('schema') not in (GOVERNOR_SCHEMA, LEGACY_GOVERNOR_SCHEMA):
+            _refuse('governor_event_schema_invalid')
         if (event['version_id'] != version_id or event['spec_hash'] != load_version(journal,version_id)['spec_hash']
                 or _sha(row['canonical_json']) != row['canonical_sha256']
                 or canonical(event) != row['canonical_json']
                 or event['previous_sha256'] != previous):
             _refuse('governor_replay_differs')
-        if 'binding' in event:
+        if event['schema'] == GOVERNOR_SCHEMA:
+            now, decision = _historical_owner_binding(journal, load_version(journal, version_id))
+            if not isinstance(event.get('binding'), dict):
+                _refuse('governor_binding_missing')
+            if set(now) - event['binding'].keys():
+                _refuse('governor_binding_missing')
+            if event['binding'] != now:
+                _refuse('governor_binding_differs')
+            # An immutable predecision receipt stays predecision even if the
+            # owner subsequently records a decision. Approved lifecycle states
+            # cannot use a backdated clock to claim no decision lineage.
+            if (decision and event['at_ms'] < decision['decided_at_ms']
+                    and event['from_state'] in (PROPOSED, VALIDATED, SHADOW, APPROVAL_REQUIRED)
+                    and event.get('owner_decision_id') is None):
+                decision = None
+            if 'owner_decision_id' not in event or (decision and not event['owner_decision_id']):
+                _refuse('governor_owner_decision_missing')
+            if event['owner_decision_id'] != (decision['decision_id'] if decision else None):
+                _refuse('governor_owner_decision_differs')
+            if decision and event['at_ms'] < decision['decided_at_ms']:
+                _refuse('governor_decision_clock_differs')
+            if 'transition_id' not in event:
+                _refuse('governor_transition_identity_missing')
+        elif 'binding' in event:
             now = _binding(journal, load_version(journal, version_id))
             was = event['binding']
             if any(was.get(k) != now[k] for k in ('strategy_id', 'lineage_sha256')) \
                     or any(was.get(k) not in (None, now[k])
                            for k in ('install_id', 'approval_request_id')):
                 _refuse('governor_binding_differs')
-        if 'transition_id' in event and event['transition_id'] != _jsha(dict(
-                version_id=version_id, to_state=event['to_state'],
-                actor=event['actor'], reason_code=event['reason_code'],
-                at_ms=event['at_ms'], requested_allocation=event['requested_allocation'])):
+        if 'transition_id' in event and event['transition_id'] != _governor_transition_id(event):
             _refuse('governor_transition_identity_differs')
         previous = row['canonical_sha256']
         result.append(event)
@@ -1827,7 +1927,18 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
     if not reason_code or type(at_ms) is not int:
         _refuse('governor_reason_or_clock_missing')
     history = governor_events(journal, version_id)
-    tid = _jsha(dict(version_id=version_id, to_state=to_state, actor=actor,
+    # Legacy receipts remain historical observations, never activation or
+    # owner-limit authority. Containment is independently authenticated below
+    # and must not be disabled merely because earlier receipts are legacy.
+    if to_state in ('ACTIVE', 'REACTIVATED') and any(e['schema'] != GOVERNOR_SCHEMA for e in history):
+        _refuse('governor_legacy_history_requires_reconciliation')
+    binding, decision = _historical_owner_binding(journal, v)
+    owner_decision_id = decision['decision_id'] if decision else None
+    if decision and at_ms < decision['decided_at_ms']:
+        _refuse('governor_decision_clock_differs')
+    tid = _governor_transition_id(dict(schema=GOVERNOR_SCHEMA,
+                     binding=binding, owner_decision_id=owner_decision_id,
+                     version_id=version_id, to_state=to_state, actor=actor,
                      reason_code=reason_code, at_ms=at_ms,
                      requested_allocation=allocation if to_state in (
                          'ACTIVE', 'REACTIVATED') else 0))
@@ -1847,9 +1958,9 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
         _refuse('governor_transition_not_allowed')
     if history and at_ms < history[-1]['at_ms']:
         _refuse('governor_clock_regressed')
-    ceiling = history[-1]['allocation_ceiling'] if history else None
-    risk_sha = history[-1]['risk_sha256'] if history else None
-    owner_decision_id = history[-1].get('owner_decision_id') if history else None
+    current_history = [e for e in history if e['schema'] == GOVERNOR_SCHEMA]
+    ceiling = current_history[-1]['allocation_ceiling'] if current_history else None
+    risk_sha = current_history[-1]['risk_sha256'] if current_history else None
     if to_state in ('ACTIVE', 'REACTIVATED'):
         if ceiling is None and actor not in OWNER_ACTORS:
             _refuse('governor_owner_boundaries_required')
@@ -1864,11 +1975,12 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
             research_bank_path=research_bank_path, _governor_resume=True)
         if not eligibility.eligible:
             _refuse('governor_evidence_unavailable:' + ','.join(eligibility.reasons))
-        owner_decision_id = eligibility.decision_id
+        if owner_decision_id != eligibility.decision_id:
+            _refuse('governor_owner_decision_differs')
     else:
         allocation = 0
     body = dict(schema=GOVERNOR_SCHEMA, version_id=version_id,
-        binding=_binding(journal, v), transition_id=tid, transition_key=transition_key,
+        binding=binding, transition_id=tid, transition_key=transition_key,
         requested_allocation=allocation if to_state in ('ACTIVE', 'REACTIVATED') else 0,
         spec_hash=v['spec_hash'], from_state=cur, to_state=to_state, actor=actor,
         reason_code=reason_code, at_ms=at_ms, allocation=allocation,

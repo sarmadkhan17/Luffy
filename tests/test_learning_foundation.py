@@ -68,7 +68,9 @@ def chain():
     ref=L.Source('decision_manifest',wrapper['manifest']['manifest_id'],D.SCHEMA,L.digest(wrapper),cutoff)
     retained[(ref.source_id,ref.version)]=wrapper
     o=replace(o,sources=o.sources+(ref,))
-    current = dict(version_id=version['version_id'], spec_hash=version['spec_hash'], state=F.APPROVED_FIRST_LIVE)
+    # This fixture owns no first-live approval chain. Exercise legitimate
+    # preapproval retirement rather than manufacturing an approved label.
+    current = dict(version_id=version['version_id'], spec_hash=version['spec_hash'], state=F.SHADOW)
     return o, retained, current, version
 
 
@@ -88,8 +90,6 @@ def test_registered_proposal_deterministic_and_existing_authority_changes_future
         F._insert_version(c, version, o.decision_ms-1)
         F._transition(c, version['version_id'], F.VALIDATED, 'TEST_ONLY', None, 'factory', o.decision_ms-1)
         F._transition(c, version['version_id'], F.SHADOW, 'TEST_ONLY', None, 'factory', o.decision_ms)
-        F._transition(c, version['version_id'], F.APPROVAL_REQUIRED, 'TEST_ONLY', None, 'factory', o.decision_ms)
-        F._transition(c, version['version_id'], F.APPROVED_FIRST_LIVE, 'TEST_ONLY', None, 'factory', o.decision_ms)
     before = F.load_version(j, version['version_id'])
     assert L.apply_to_isolated_journal(j, o, sources, p, at_ms=o.observed_ms) == 'APPLIED'
     assert F.state_of(j, version['version_id']) == F.RETIRED

@@ -27,7 +27,7 @@ def isolated(chain,tmp_path):
     F.ensure(journal)
     with journal._tx() as db:
         F._insert_version(db,version,outcome.decision_ms-1)
-        for state in (F.VALIDATED,F.SHADOW,F.APPROVAL_REQUIRED,F.APPROVED_FIRST_LIVE):
+        for state in (F.VALIDATED,F.SHADOW):
             F._transition(db,version['version_id'],state,'TEST_ONLY',None,'factory',outcome.decision_ms)
     ev=get_evidence(outcome,retained)
     cfg=json.loads(ev.historical_json)['risk_config']

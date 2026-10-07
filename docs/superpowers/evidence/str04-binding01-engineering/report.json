@@ -1,0 +1,144 @@
+{
+  "schema": "str04-binding01-engineering.v1",
+  "item": "STR-04",
+  "blocker": "STR04-BINDING-01",
+  "engineering_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "canonical_status": "BLOCKED_UNCHANGED_PENDING_SOL1_RECONCILIATION",
+  "canonical_baseline": "1426c2a70a3ee72b1e8cfc2ac7d19c505eee0c5c",
+  "existing_engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+  "parent_revision": "fcd03155884255729a06466d5e7671f4d608035d",
+  "recorded_at_utc": "2026-10-07T23:12:57.771127+00:00",
+  "commit_resolution": "Enclosing commit; no self-referential hash",
+  "root_cause": "First protective transition inherited decision only from Governor history. Exact decision was resolved only on activation. Replay permitted missing install/request bindings and did not authenticate owner decision.",
+  "normal_path": [
+    "load_version",
+    "approval_request / verify_request",
+    "immutable install / validation / probation identity",
+    "strategy_approval_decisions + bound APPROVED_FIRST_LIVE factory event",
+    "govern_version -> _govern_version_locked",
+    "atomic strategy_governor_events insert + strategies projection",
+    "governor_events -> state_of / lifecycle_target / live_entry_block"
+  ],
+  "sole_writer": "factory_handoff.govern_version",
+  "event_contract": "strategy-governor-event.v2",
+  "binding_fields": [
+    "strategy_id",
+    "version_id",
+    "lineage_sha256",
+    "install_id",
+    "approval_request_id",
+    "owner_decision_id"
+  ],
+  "protective_semantics": "Historical immutable-chain authentication only. No current research, probation re-assessment, configuration, capacity, input or Risk eligibility requirement for PAUSED/DEGRADED/RETIRED.",
+  "activation_semantics": "ACTIVE/REACTIVATED retain current eligibility, Risk/control/owner-limit checks; historical decision must match eligible decision.",
+  "never_approved_semantics": "Explicit null decision is valid only with no historical decision at the event cut. Pending request without decision is valid. Approved state with missing request/decision refuses. Predecision history remains immutable after later owner decision; new events bind the existing decision.",
+  "legacy_semantics": "Explicit v1 retains forensic replay with original bytes/hash/transition semantics. Legacy history cannot authorize activation or supply owner limits. New protective v2 events independently authenticate immutable historical chain, preserving stale containment. Legacy events do not establish current STR-04 binding proof.",
+  "transition_identity": "v2 transition_id includes exact artifact binding and owner decision. Duplicate/key-conflict/restart/earlier-event immutability covered.",
+  "atomicity": "First transition event-insert and projection failures roll back together; retry creates exactly one event. Shared learning-transaction rollback and stale approved retirement covered.",
+  "projection": "Existing PROJECTION and live execution fence unchanged; projection divergence still refuses live entry.",
+  "immutability": "Immutable version/spec/lineage/validation/install/probation/request/decision snapshots unchanged by transitions.",
+  "learning_fixture_correction": "Three fixture modules used an APPROVED_FIRST_LIVE label with no owner request/decision. They now exercise legitimate SHADOW preapproval retirement. Stale-target test uses permitted DEGRADED containment. No production learning/STR-05 policy change.",
+  "tests": {
+    "core": {
+      "tests": 182,
+      "passed": 181,
+      "failed": 1,
+      "failure_ids": [
+        "tests.test_strategy_factory_handoff::test_factory_writes_no_trading_state_and_has_no_trading_caller"
+      ],
+      "by_module": {
+        "tests.test_str03_approval_binding": 44,
+        "tests.test_str04_governor_lifecycle": 26,
+        "tests.test_str04_historical_binding": 37,
+        "tests.test_strategy_factory_handoff": 53,
+        "tests.test_universal_strategy_authority": 22
+      }
+    },
+    "impact": {
+      "tests": 153,
+      "passed": 153,
+      "failed": 0,
+      "failure_ids": [],
+      "by_module": {
+        "tests.test_entry_control_fence": 10,
+        "tests.test_learning_application": 31,
+        "tests.test_learning_foundation": 20,
+        "tests.test_normal_learning_loop_closure": 37,
+        "tests.test_real_learning_integration": 17,
+        "tests.test_str04_historical_binding": 38
+      }
+    },
+    "baseline_static": {
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "failure_ids": [
+        "test-tmp.test_str04_baseline_static_guard::test_unchanged_head_static_guard"
+      ],
+      "by_module": {
+        "test-tmp.test_str04_baseline_static_guard": 1
+      }
+    }
+  },
+  "counts_overlap_do_not_sum": true,
+  "baseline_failure_classification": "Existing static consumer whitelist rejects trader/dashboard/glacier_truth.py. Same failure reproduced using unchanged parent HEAD writer bytes and original static check; exact-source baseline check, not a full clean-checkout suite.",
+  "baseline_writer_sha256": "c3c21ab3c821e390c7ef823ed853ef91420aa4450ecb45bf4770ef332c8821f3",
+  "full_suite_green_claim": false,
+  "test_runner": "/home/sarmad/.local/bin/luffy-pytest",
+  "pytest_temp_root": "/mnt/luffy-data/test-tmp",
+  "source_sha256": {
+    "trader/strategy/factory_handoff.py": "85f2b36a1b4ae6c5165ad326a5934d603c73f7c45200c3be4b728472bea447e7",
+    "tests/test_str04_historical_binding.py": "a62214cb87c63179260673bef63a02fcacdb5d71d79794427ce0801199d119a6",
+    "tests/test_learning_application.py": "8b463e8b8afdba61f440361980f2b76302b83246e3e3293cc051014baad2101b",
+    "tests/test_learning_foundation.py": "c0b9b82fbac6d9fd2c990a947b545a998aaf42734d9efc350810f500f7b9b960",
+    "tests/test_real_learning_integration.py": "55d4a1fa5c9941c0f22ff67707850c9a0c3595f76280fda5567b9a30421b792e"
+  },
+  "protected_files": {
+    "docs/tracker/LUFFY_Product_Tracker_v1.yaml": {
+      "sha256": "b7d9358727d3b7741631d95dc3003ac742786ce5885cdf61d889a54fbadd9ece",
+      "unchanged_from_parent": true
+    },
+    "STATE.yaml": {
+      "sha256": "ab5c37b128acb673d5deb0acc40491e5c7b8b1e5c5ed66b9af79b5c6f5ffed47",
+      "unchanged_from_parent": true
+    },
+    "NEXT.yaml": {
+      "sha256": "21d348750f33bf0d628fa8d2e933c68d7ac03b7509eb1560a957054e312fdae4",
+      "unchanged_from_parent": true
+    },
+    "docs/tracker/bundle-manifest.json": {
+      "sha256": "1e13ce3d147c4bac20d6f1b0595865767772094295d6bb601b19d1fabb21378a",
+      "unchanged_from_parent": true
+    },
+    "config.yaml": {
+      "sha256": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+      "unchanged_from_parent": true
+    },
+    "SDD.md": {
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+      "unchanged_from_parent": true
+    }
+  },
+  "operational_actions": {
+    "kernel_started": false,
+    "dashboard_started_or_restarted": false,
+    "venue_api_calls": false,
+    "luffy_provider_api_calls": false,
+    "trading_activation": false,
+    "venue_writes": false,
+    "orders": false,
+    "tracker_edited": false,
+    "state_edited": false,
+    "next_edited": false,
+    "bundle_manifest_edited": false,
+    "DEC03_started": false
+  },
+  "ready_for_STR04_canonical_reconciliation": true,
+  "graphify": "AST-only graphify update completed; pre-existing dirty graph artifacts excluded from commit",
+  "preferred_claude_cli": "Availability probe refused: Not logged in. No Claude implementation execution.",
+  "disk_free_observed_bytes": {
+    "root": 11955945472,
+    "data": 36601987072
+  }
+}

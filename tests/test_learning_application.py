@@ -16,7 +16,7 @@ def prepared(chain):
     F.ensure(j)
     with j._tx() as c:
         F._insert_version(c, version, o.decision_ms-1)
-        for state in (F.VALIDATED, F.SHADOW, F.APPROVAL_REQUIRED, F.APPROVED_FIRST_LIVE):
+        for state in (F.VALIDATED, F.SHADOW):
             F._transition(c, version['version_id'], state, 'TEST_ONLY', None, 'factory', o.decision_ms)
     ev = get_evidence(o, retained)
     cfg = json.loads(ev.historical_json)['risk_config']
@@ -77,9 +77,9 @@ def test_unregistered_targets_and_rules_no_mutation(prepared,target):
 def test_stale_target_no_overwrite(prepared):
     j,cfg,e,p,r,ms = prepared
     vid = json.loads(p.current_json)['version_id']
-    F.govern_version(j,cfg,vid,'PAUSED',actor='strategy_governor',reason_code='newer',at_ms=ms)
+    F.govern_version(j,cfg,vid,F.DEGRADED,actor='strategy_governor',reason_code='newer',at_ms=ms)
     receipt=execute(prepared)
-    assert receipt['result']=='STALE' and F.state_of(j,vid)=='PAUSED'
+    assert receipt['result']=='STALE' and F.state_of(j,vid)==F.DEGRADED
     assert len(F.governor_events(j,vid))==1
 
 
