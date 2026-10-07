@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.54-str04-canonical-blocked-sol1",
-  "control_baseline_revision": "516638e53b410ca7244f232c896ce4176a35a861",
+  "snapshot_version": "1.55-str04-binding01-canonical-closed-sol1",
+  "control_baseline_revision": "9814fddce8f655ce73bd79050b536e6668dba55d",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 567909,
-      "sha256": "b7d9358727d3b7741631d95dc3003ac742786ce5885cdf61d889a54fbadd9ece",
+      "bytes": 575982,
+      "sha256": "270e37373c6d90d3d3ba3e74dbfbf14db60a023a02178070a7a2086aa02f9141",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 429793,
-      "sha256": "7ca6a637d3ca28c3d59d9007b96acd4b530f126e913751bff8783a6a157080e8",
+      "bytes": 430739,
+      "sha256": "fb05878715a4d5b292a0a31519be83e09dabda5a721455e8b38f19b629bd9a94",
       "synchronization_required": false
     },
     {
@@ -33,15 +33,15 @@
     {
       "path": "STATE.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 243349,
-      "sha256": "ab5c37b128acb673d5deb0acc40491e5c7b8b1e5c5ed66b9af79b5c6f5ffed47",
+      "bytes": 252164,
+      "sha256": "9fac8d0a0e1aa66acc41c32b32e14d9fca3ce7398938e5459aaeac206a1b66b8",
       "synchronization_required": true
     },
     {
       "path": "NEXT.yaml",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 190481,
-      "sha256": "21d348750f33bf0d628fa8d2e933c68d7ac03b7509eb1560a957054e312fdae4",
+      "bytes": 199296,
+      "sha256": "d934b191d5751464a8fd4861ccd40cc0af3cdbec9fad8f9d2c799b4d280eb720",
       "synchronization_required": true
     },
     {
@@ -117,8 +117,8 @@
     {
       "path": "docs/tracker/README.md",
       "role": "STR01_CANONICAL_CONTROL_OR_EVIDENCE",
-      "bytes": 14807,
-      "sha256": "07fd70d188706c10e50686c5b1246445dba9d128fabd1a9acc42833dc2177740",
+      "bytes": 15422,
+      "sha256": "c071be7db204b8d121a0ee2d6d64678636a334323b5cff9716c5846487bd1fa3",
       "synchronization_required": true
     },
     {
@@ -610,6 +610,132 @@
       "synchronization_required": true,
       "bytes": 1128,
       "sha256": "9669819dc11a0766414eef39d94388e58e2fd7f38eb9fad187590c628668c774"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/control-validation.py",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8483,
+      "sha256": "6daec48fb5f9adb9e2e5ea337918a1b982d7da9da2eb4c98bd170657f510b4d8"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.xml",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 16572,
+      "sha256": "3b6e31d426b40f8c0abf56dd3d880aea02d5424aad2d50f1303527333ee80c47"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/glacier-baseline.xml",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 7065,
+      "sha256": "096c14928ce122bef3460a28df5fe03221ff2afe8b8540d19b82dfe53a6411aa"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/glacier-baseline.txt",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 6021,
+      "sha256": "4a281e10340387e02ef14417f69050ed267db0ab7b7f21ba723e5f8e7c13d126"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 9136,
+      "sha256": "9005eca42444b60174269cd1a9ecc8031f5b432a367bfce207b281f61e532f00"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.txt",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 192,
+      "sha256": "f9f462745fe8608b92c63b9ad384be858ea55f830df70b14b79a7f47017b72fb"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/closure.json",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 8391,
+      "sha256": "331a3e2e6a5ea11d8809946fde5d8108bd2bc53cbd05cc3025a34cf6c85841fd"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/control-before.json",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1169718,
+      "sha256": "44e627cfa7b64035bb56014597a21e1e8cc9a86da0ff3cb4b73ab577862c15ff"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/verification_test.py",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 1754,
+      "sha256": "aad32e78c21f56580d71533afb5da7f7dc282f6205496f1656a2d28c2724eb1e"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/impact.xml",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 22207,
+      "sha256": "08452dd01019313f3798d93f2f8a9b04a77755423471b44cc53b6c08f9ccc633"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.xml",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 4030,
+      "sha256": "ff9c6d8124c0cac9e06013e127ec9511bfeb51df2f5beb04f96d64b2963dd150"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/core.xml",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 29961,
+      "sha256": "7fe0a8592772be9d2664130fbbdf90e5a56762e005366860686e72b7d7454c77"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/report.json",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 7517,
+      "sha256": "72b558c0a328732f4bdaac9311347702b72a378b6d1a43befc727ba1c0467aea"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/baseline-static-test.py",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 871,
+      "sha256": "c0a1a574debb12bc14f352fe2e9ba79fe11a2bbe9485bc9f8fd4075586544c7e"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/impact.txt",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 272,
+      "sha256": "aac218b9786ada80a7d11a17c8498eaecdf5033703bb8821a8a0990037d6f385"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/core.txt",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 2955,
+      "sha256": "3033b19ce2c416026a7e6f06fdc5051bfdcf73861f3e771122e48556e20105d6"
+    },
+    {
+      "path": "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.txt",
+      "role": "STR04_BINDING01_CANONICAL_EVIDENCE",
+      "synchronization_required": true,
+      "bytes": 3510,
+      "sha256": "c38891d0c713b68c270b83046534805e0e1a34b5e78accd23c2a3364c0ccd4d1"
+    },
+    {
+      "path": "docs/tracker/evidence/str04-binding01-canonical-sol1/control-checks.json",
+      "role": "STR04_BINDING01_CANONICAL_VALIDATION",
+      "synchronization_required": true,
+      "bytes": 1166,
+      "sha256": "79d0e4b3af3ae454325176550849808740611c7a5b19a93b6141011149847810"
     }
   ],
   "current_release_deferral": {
@@ -686,7 +812,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "STR-03",
+    "last_completed_item": "STR-04",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -699,10 +825,9 @@
       "PERF-03",
       "OUT-03",
       "GUI-02",
-      "OUT-01",
-      "STR-04"
+      "OUT-01"
     ],
-    "next_recommended_item": "STR-04",
+    "next_recommended_item": "DEC-03",
     "eligible_items": [
       "DATA-08",
       "GUI-02",
@@ -712,15 +837,16 @@
       "GUI-06",
       "GUI-07",
       "GUI-08",
-      "GUI-09"
+      "GUI-09",
+      "DEC-03"
     ],
     "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "STR-04 canonical reconciliation BLOCKED on STR04-BINDING-01: initial approved non-activation events omit owner decision identity. STR-03 remains CLOSED. DEC-03 dependencies are not satisfied; DEC-03 is not eligible, selected or started. Next action is a separate STR-04 engineering fix; this reconciliation authorizes no implementation or runtime work.",
+    "selection_reason": "STR-04 exact lifecycle contract reconciled CLOSED at architecture/offline scope after STR04-BINDING-01 verification. DEC-02/STR-04 satisfy DEC-03 dependencies; DEC-03 recommended, unselected and unstarted. This control-plane task authorizes no implementation, runtime, provider or trading activation.",
     "last_terminal_item": "STR-04",
-    "last_terminal_result": "BLOCKED_ARCHITECTURE_OFFLINE",
+    "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE",
     "deferred_proof_obligations": {
       "ATT-03": {
         "status": "DEFERRED",
@@ -1566,12 +1692,12 @@
     }
   },
   "status_counts": {
-    "CLOSED": 52,
-    "EVIDENCE_TO_MAP": 84,
+    "CLOSED": 63,
+    "EVIDENCE_TO_MAP": 76,
     "DEFERRED": 7,
     "AWAITING_EVIDENCE": 9,
     "AWAITING_OWNER": 14,
-    "BLOCKED": 8,
+    "BLOCKED": 5,
     "OPEN": 4
   },
   "qnt01_canonical_reconciliation": {
@@ -3116,6 +3242,169 @@
     "STR04_started_interpretation": "Canonical successor selection/start only; STR-04 engineering already exists and is not reconciled by this task."
   },
   "str04_canonical_reconciliation": {
+    "item": "STR-04",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_commit": "9814fddce8f655ce73bd79050b536e6668dba55d",
+    "prior_engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+    "control_baseline_revision": "9814fddce8f655ce73bd79050b536e6668dba55d",
+    "closing_condition": "Existing approved version lifecycle changes are bounded, atomic, idempotent and linked to evidence/owner limits.",
+    "failure_regression_proof": "No separate legacy writer bypass; no spec rewrite or first-live approval bypass.",
+    "closing_condition_satisfied": true,
+    "resolved_blocker": {
+      "id": "STR04-BINDING-01",
+      "prior_evidence": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.json",
+      "closure_proof": "docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json"
+    },
+    "event_contract": "strategy-governor-event.v2",
+    "verified_mapping": {
+      "sole_authority": "factory_handoff.govern_version remains sole lifecycle writer; no new writer or implementation change.",
+      "owner_binding": "All five transition types bind exact strategy_id/version_id/lineage_sha256/install_id/approval_request_id/owner_decision_id. Immutable approval chain is authenticated independently of activation eligibility.",
+      "protective_stale_approval": "PAUSED/DEGRADED/RETIRED remain available after research withdrawal and probation/config/capacity staleness; no current trading approval prerequisite.",
+      "activation_stale_approval": "ACTIVE/REACTIVATED retain current eligibility and Risk/control/config/capacity/owner-limit checks.",
+      "never_approved": "Explicit null decision only for genuinely predecision lineage under registered topology; pending request without decision does not fabricate approval. Approved missing historical identity refuses.",
+      "replay": "Explicit missing/wrong binding refusals, including copied sibling decision/request, changed install/lineage and copied probation chain; rehashed tampering does not bypass semantic checks.",
+      "legacy": "Explicit v1 remains inspectable/replayable without byte rewriting. Legacy history supplies neither new activation authority nor owner limits. New protective v2 events independently authenticate historical chain.",
+      "idempotency": "Owner/artifact binding participates in v2 transition identity; identical retries replay identical events; key conflicts and changed binding refuse; restart and earlier-event bytes remain stable.",
+      "atomicity": "Event insert/projection failure injection fully rolls back; retry exactly once. Shared learning retirement transaction preserves rollback and stale containment.",
+      "projection": "ACTIVE/REACTIVATED active, PAUSED/DEGRADED paper, RETIRED retired; divergence still blocks live entry.",
+      "immutability": "Version/spec/lineage/validation/install/probation/request/decision snapshots unchanged; changed semantics require a new version.",
+      "execution_boundary": "ACTIVE grants lifecycle/allocation only; separate live execution fence unchanged."
+    },
+    "allowed_transitions": {
+      "PROPOSED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "VALIDATED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "SHADOW": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "APPROVAL_REQUIRED": [
+        "DEGRADED",
+        "RETIRED"
+      ],
+      "APPROVED_FIRST_LIVE": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "ACTIVE": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "REACTIVATED": [
+        "ACTIVE",
+        "DEGRADED",
+        "PAUSED",
+        "RETIRED"
+      ],
+      "PAUSED": [
+        "DEGRADED",
+        "REACTIVATED",
+        "RETIRED"
+      ],
+      "DEGRADED": [
+        "PAUSED",
+        "REACTIVATED",
+        "RETIRED"
+      ],
+      "RETIRED": []
+    },
+    "projection": {
+      "ACTIVE": "active",
+      "REACTIVATED": "active",
+      "PAUSED": "paper",
+      "DEGRADED": "paper",
+      "RETIRED": "retired"
+    },
+    "limitations": [
+      "Pause/degrade/retire reason strings are bound but not registry-validated.",
+      "DB guard is flag-based, not cryptographic protection against privileged code deliberately setting governor_write.",
+      "STR-05 owns what evidence may trigger degradation, retirement or recovery."
+    ],
+    "validation": {
+      "fresh_binding_passed": 38,
+      "fresh_lifecycle_passed": 26,
+      "fresh_STR03_passed": 44,
+      "fresh_independent_five_state_proof_passed": 1,
+      "fresh_total_passed": 109,
+      "fresh_log": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.txt",
+      "fresh_junit": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.xml",
+      "retained_core_passed": 181,
+      "retained_core_failed": 1,
+      "retained_final_consumer_passed": 153,
+      "retained_final_consumer_failed": 0,
+      "retained_engineering_report": "docs/superpowers/evidence/str04-binding01-engineering/report.json",
+      "Glacier_baseline": "Current and unchanged pre-fix writer bytes reproduce the same existing static-guard failure on unchanged trader/dashboard/glacier_truth.py. Exact-source baseline, not a full clean-checkout suite; unrelated to STR-04 binding. Kept separate from closure proof.",
+      "Glacier_failure_id": "tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller",
+      "Glacier_fresh_comparison_junit": "docs/tracker/evidence/str04-binding01-canonical-sol1/glacier-baseline.xml",
+      "counts_overlap_do_not_sum": true,
+      "full_suite_green_claim": false,
+      "broader_suites_repeated": false,
+      "runner": "/home/sarmad/.local/bin/luffy-pytest",
+      "pytest_temp_root": "/mnt/luffy-data/test-tmp",
+      "provider_calls": 0,
+      "venue_calls": 0
+    },
+    "dependency_status": {
+      "STR-03": "CLOSED"
+    },
+    "targeted_impact": {
+      "STR03": "Unchanged CLOSED; 44 fresh exact approval regressions passed.",
+      "DEC03": "DEC-02 and STR-04 CLOSED; dependencies satisfied and eligible; row unchanged, no selection/start/closure.",
+      "GUI04": "STR-03/STR-04/PORT-02 CLOSED. Row remains AWAITING_EVIDENCE; functional/runtime closure not established; no visual work or owner approval inferred.",
+      "REL01": "Row remains AWAITING_OWNER. Direct remaining prerequisites RISK-03/EXE-06/LRN-06; execution chain is only dependency-unblocked through DEC-03. Actual account/venue/probation/economics/capacity/security/deployment/runtime/owner first-live gates remain required. No activation."
+    },
+    "DEC03_dependencies_satisfied": true,
+    "DEC03_now_eligible": true,
+    "DEC03_selected": false,
+    "DEC03_started": false,
+    "DEC03_remaining_blockers": [],
+    "original_conditions_and_edges_preserved": true,
+    "unrelated_rows_unchanged": 177,
+    "status_counts_after": {
+      "CLOSED": 63,
+      "EVIDENCE_TO_MAP": 76,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 5,
+      "OPEN": 4
+    },
+    "source_sha256": {
+      "trader/strategy/factory_handoff.py": "85f2b36a1b4ae6c5165ad326a5934d603c73f7c45200c3be4b728472bea447e7",
+      "tests/test_str04_historical_binding.py": "a62214cb87c63179260673bef63a02fcacdb5d71d79794427ce0801199d119a6",
+      "tests/test_learning_application.py": "8b463e8b8afdba61f440361980f2b76302b83246e3e3293cc051014baad2101b",
+      "tests/test_learning_foundation.py": "c0b9b82fbac6d9fd2c990a947b545a998aaf42734d9efc350810f500f7b9b960",
+      "tests/test_real_learning_integration.py": "55d4a1fa5c9941c0f22ff67707850c9a0c3595f76280fda5567b9a30421b792e"
+    },
+    "engineering_evidence_paths": [
+      "docs/superpowers/evidence/str04-binding01-engineering/impact.xml",
+      "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.xml",
+      "docs/superpowers/evidence/str04-binding01-engineering/core.xml",
+      "docs/superpowers/evidence/str04-binding01-engineering/report.json",
+      "docs/superpowers/evidence/str04-binding01-engineering/baseline-static-test.py",
+      "docs/superpowers/evidence/str04-binding01-engineering/impact.txt",
+      "docs/superpowers/evidence/str04-binding01-engineering/core.txt",
+      "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.txt"
+    ],
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "next_critical_path_item": "DEC-03",
+    "next_critical_path_item_selected": false,
+    "control_plane_commit_resolution": "Enclosing Git commit; no self-referential hash."
+  },
+  "str04_binding01_prior_canonical_reconciliation": {
     "item": "STR-04",
     "canonical_status": "BLOCKED",
     "scope": "ARCHITECTURE_OFFLINE",

@@ -1,3 +1,5 @@
+> Current [SOL-1][STR-04]: **CLOSED at architecture/offline scope** on `9814fdd`. Exact v2 historical owner binding verified across ACTIVE/REACTIVATED/PAUSED/DEGRADED/RETIRED; stale containment remains available and stale activation refuses. 109 fresh canonical checks passed; retained counts overlap and the unrelated Glacier static-guard baseline failure remains separate. DEC-03 dependencies satisfied; recommended, unselected and unstarted. GUI-04/REL-01 retain their own gates. No activation authority. [Evidence](evidence/str04-binding01-canonical-sol1/closure.json). Earlier summaries below are historical.
+
 > Current [SOL-1][STR-04]: **BLOCKED at architecture/offline scope**. Initial approved PAUSED/DEGRADED/RETIRED events omit the existing owner decision identity and replay accepts them. 26 STR-04 + 44 STR-03 dedicated tests pass, but required binding proof fails. STR-03 remains CLOSED; DEC-03 remains gated, unselected and unstarted. [Evidence](evidence/str04-canonical-sol1/REPORT.md). Earlier summaries below are historical.
 
 > Current [SOL-1][STR-03]: **CLOSED at architecture/offline scope**. Engineering `2b119a3` + `e8ad274`; 44 dedicated passes and the same 44 on clean STR-03 implementation without STR-04. Full configuration binds downstream risk/owner limits; allocation remains a later Governor action within the owner ceiling. Stored replay is stable; wall-clock reconstruction and privileged writer-flag limitations remain explicit. STR-04 dependency satisfied; engineering `872131f` exists, canonical lifecycle reconciliation remains separate. [Evidence](evidence/str03-canonical-sol1/REPORT.md). Earlier summaries below are historical.
@@ -62,7 +64,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.31-att03-owner-scope-sol2
+Version: 1.55-str04-binding01-canonical-closed-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -2549,35 +2551,38 @@ future_calibration:
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: BLOCKED
+- **status**: CLOSED
 - **why_needed**: Maintains controlled pause, reactivation, degradation and retirement.
 - **closure_condition**: Existing approved version lifecycle changes are bounded, atomic, idempotent and linked to evidence/owner limits.
 - **failure_regression_proof**: No separate legacy writer bypass; no spec rewrite or first-live approval bypass.
 - **dependencies**: STR-03
 - **owner_role**: Strategies & decisions owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: Governor lifecycle implementation at 872131f; verified source bytes pinned to 516638e53b410ca7244f232c896ce4176a35a861. docs/tracker/evidence/str04-canonical-sol1/reconciliation.json
+- **implementation_evidence**: Governor lifecycle 872131f plus historical owner-binding fix 9814fddce8f655ce73bd79050b536e6668dba55d; exact committed source hashes verified. docs/superpowers/evidence/str04-binding01-engineering/report.json
 - **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; synthetic journals, no deployed/live/provider claim
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: 26 STR-04 + 44 STR-03 tests passed. Required owner-decision binding fails for APPROVED_FIRST_LIVE -> PAUSED/DEGRADED/RETIRED as the first Governor action: owner_decision_id is null despite an existing decision, and replay accepts it. Ordinary canonical writer, no privileged corruption. Retained broader run 682 passed / 3 identical clean-baseline failures per supplied evidence. docs/tracker/evidence/str04-canonical-sol1/binding-proof.json
+- **latest_evidence**: 109 fresh canonical offline checks passed: 38 binding, 26 lifecycle, 44 STR-03, and one independent all-five-state exact-binding proof. v2 authenticates historical owner lineage; stale protective transitions succeed, stale activation refuses; null decision only for genuine predecision lineage. Key/restart/atomicity/projection/immutability verified. Retained core 181 passed / one independently reproduced unrelated Glacier static-guard baseline failure; retained final consumers 153 passed. Counts overlap; no full-suite or deployed/live claim.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §14.5–14.6
-- **next_proof**: In a separate authorized engineering task, bind the existing exact owner decision for approved versions even before the first activation, verify the binding on replay, and add regression evidence for these paths. DEC-03 remains gated, unselected and unstarted.
+- **next_proof**: None for exact STR-04 architecture/offline condition. DEC-03 dependencies satisfied; recommended but unselected/unstarted, with its own exact proof remaining. No runtime/provider/trading activation authority.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**: 516638e53b410ca7244f232c896ce4176a35a861
+- **resolution_at_commit**: 9814fddce8f655ce73bd79050b536e6668dba55d
 - **work_authorized**: False
-- **updated**: 2026-10-07
+- **updated**: 2026-10-08
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**: docs/tracker/evidence/str04-canonical-sol1/reconciliation.json
-- **evidence_validity**: Pinned offline verification at 516638e53b410ca7244f232c896ce4176a35a861; required event owner binding remains unsatisfied; no later runtime claim.
+- **closure_evidence**: docs/tracker/evidence/str04-binding01-canonical-sol1/closure.json
+- **evidence_validity**: Pinned to 9814fddce8f655ce73bd79050b536e6668dba55d; fresh synthetic offline canonical verification only; no deployed/live claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-- **implementation_commit**: 872131f3755ab2d156e9cce73f0deae3b7630df2
-- **evidence_mapping**: docs/tracker/evidence/str04-canonical-sol1/REPORT.md
+- **implementation_commit**: 9814fddce8f655ce73bd79050b536e6668dba55d
+- **evidence_mapping**: docs/tracker/evidence/str04-binding01-canonical-sol1/closure.json
 - **blocker_evidence**: docs/tracker/evidence/str04-canonical-sol1/binding-proof.json
+- **required_behavior**: Use Strategy Governor as sole lifecycle authority.
+- **blocker_status**: RESOLVED_STR04_BINDING_01
+- **resolved_blocker_evidence**: docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json
 
 ### STR-05 — Distinguish decay from no opportunity, regime absence and data failure.
 

@@ -1,0 +1,163 @@
+{
+  "item": "STR-04",
+  "canonical_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "engineering_commit": "9814fddce8f655ce73bd79050b536e6668dba55d",
+  "prior_engineering_commit": "872131f3755ab2d156e9cce73f0deae3b7630df2",
+  "control_baseline_revision": "9814fddce8f655ce73bd79050b536e6668dba55d",
+  "closing_condition": "Existing approved version lifecycle changes are bounded, atomic, idempotent and linked to evidence/owner limits.",
+  "failure_regression_proof": "No separate legacy writer bypass; no spec rewrite or first-live approval bypass.",
+  "closing_condition_satisfied": true,
+  "resolved_blocker": {
+    "id": "STR04-BINDING-01",
+    "prior_evidence": "docs/tracker/evidence/str04-canonical-sol1/binding-proof.json",
+    "closure_proof": "docs/tracker/evidence/str04-binding01-canonical-sol1/five-state-binding-proof.json"
+  },
+  "event_contract": "strategy-governor-event.v2",
+  "verified_mapping": {
+    "sole_authority": "factory_handoff.govern_version remains sole lifecycle writer; no new writer or implementation change.",
+    "owner_binding": "All five transition types bind exact strategy_id/version_id/lineage_sha256/install_id/approval_request_id/owner_decision_id. Immutable approval chain is authenticated independently of activation eligibility.",
+    "protective_stale_approval": "PAUSED/DEGRADED/RETIRED remain available after research withdrawal and probation/config/capacity staleness; no current trading approval prerequisite.",
+    "activation_stale_approval": "ACTIVE/REACTIVATED retain current eligibility and Risk/control/config/capacity/owner-limit checks.",
+    "never_approved": "Explicit null decision only for genuinely predecision lineage under registered topology; pending request without decision does not fabricate approval. Approved missing historical identity refuses.",
+    "replay": "Explicit missing/wrong binding refusals, including copied sibling decision/request, changed install/lineage and copied probation chain; rehashed tampering does not bypass semantic checks.",
+    "legacy": "Explicit v1 remains inspectable/replayable without byte rewriting. Legacy history supplies neither new activation authority nor owner limits. New protective v2 events independently authenticate historical chain.",
+    "idempotency": "Owner/artifact binding participates in v2 transition identity; identical retries replay identical events; key conflicts and changed binding refuse; restart and earlier-event bytes remain stable.",
+    "atomicity": "Event insert/projection failure injection fully rolls back; retry exactly once. Shared learning retirement transaction preserves rollback and stale containment.",
+    "projection": "ACTIVE/REACTIVATED active, PAUSED/DEGRADED paper, RETIRED retired; divergence still blocks live entry.",
+    "immutability": "Version/spec/lineage/validation/install/probation/request/decision snapshots unchanged; changed semantics require a new version.",
+    "execution_boundary": "ACTIVE grants lifecycle/allocation only; separate live execution fence unchanged."
+  },
+  "allowed_transitions": {
+    "PROPOSED": [
+      "DEGRADED",
+      "RETIRED"
+    ],
+    "VALIDATED": [
+      "DEGRADED",
+      "RETIRED"
+    ],
+    "SHADOW": [
+      "DEGRADED",
+      "RETIRED"
+    ],
+    "APPROVAL_REQUIRED": [
+      "DEGRADED",
+      "RETIRED"
+    ],
+    "APPROVED_FIRST_LIVE": [
+      "ACTIVE",
+      "DEGRADED",
+      "PAUSED",
+      "RETIRED"
+    ],
+    "ACTIVE": [
+      "ACTIVE",
+      "DEGRADED",
+      "PAUSED",
+      "RETIRED"
+    ],
+    "REACTIVATED": [
+      "ACTIVE",
+      "DEGRADED",
+      "PAUSED",
+      "RETIRED"
+    ],
+    "PAUSED": [
+      "DEGRADED",
+      "REACTIVATED",
+      "RETIRED"
+    ],
+    "DEGRADED": [
+      "PAUSED",
+      "REACTIVATED",
+      "RETIRED"
+    ],
+    "RETIRED": []
+  },
+  "projection": {
+    "ACTIVE": "active",
+    "REACTIVATED": "active",
+    "PAUSED": "paper",
+    "DEGRADED": "paper",
+    "RETIRED": "retired"
+  },
+  "limitations": [
+    "Pause/degrade/retire reason strings are bound but not registry-validated.",
+    "DB guard is flag-based, not cryptographic protection against privileged code deliberately setting governor_write.",
+    "STR-05 owns what evidence may trigger degradation, retirement or recovery."
+  ],
+  "validation": {
+    "fresh_binding_passed": 38,
+    "fresh_lifecycle_passed": 26,
+    "fresh_STR03_passed": 44,
+    "fresh_independent_five_state_proof_passed": 1,
+    "fresh_total_passed": 109,
+    "fresh_log": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.txt",
+    "fresh_junit": "docs/tracker/evidence/str04-binding01-canonical-sol1/dedicated.xml",
+    "retained_core_passed": 181,
+    "retained_core_failed": 1,
+    "retained_final_consumer_passed": 153,
+    "retained_final_consumer_failed": 0,
+    "retained_engineering_report": "docs/superpowers/evidence/str04-binding01-engineering/report.json",
+    "Glacier_baseline": "Current and unchanged pre-fix writer bytes reproduce the same existing static-guard failure on unchanged trader/dashboard/glacier_truth.py. Exact-source baseline, not a full clean-checkout suite; unrelated to STR-04 binding. Kept separate from closure proof.",
+    "Glacier_failure_id": "tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller",
+    "Glacier_fresh_comparison_junit": "docs/tracker/evidence/str04-binding01-canonical-sol1/glacier-baseline.xml",
+    "counts_overlap_do_not_sum": true,
+    "full_suite_green_claim": false,
+    "broader_suites_repeated": false,
+    "runner": "/home/sarmad/.local/bin/luffy-pytest",
+    "pytest_temp_root": "/mnt/luffy-data/test-tmp",
+    "provider_calls": 0,
+    "venue_calls": 0
+  },
+  "dependency_status": {
+    "STR-03": "CLOSED"
+  },
+  "targeted_impact": {
+    "STR03": "Unchanged CLOSED; 44 fresh exact approval regressions passed.",
+    "DEC03": "DEC-02 and STR-04 CLOSED; dependencies satisfied and eligible; row unchanged, no selection/start/closure.",
+    "GUI04": "STR-03/STR-04/PORT-02 CLOSED. Row remains AWAITING_EVIDENCE; functional/runtime closure not established; no visual work or owner approval inferred.",
+    "REL01": "Row remains AWAITING_OWNER. Direct remaining prerequisites RISK-03/EXE-06/LRN-06; execution chain is only dependency-unblocked through DEC-03. Actual account/venue/probation/economics/capacity/security/deployment/runtime/owner first-live gates remain required. No activation."
+  },
+  "DEC03_dependencies_satisfied": true,
+  "DEC03_now_eligible": true,
+  "DEC03_selected": false,
+  "DEC03_started": false,
+  "DEC03_remaining_blockers": [],
+  "original_conditions_and_edges_preserved": true,
+  "unrelated_rows_unchanged": 177,
+  "status_counts_after": {
+    "CLOSED": 63,
+    "EVIDENCE_TO_MAP": 76,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "source_sha256": {
+    "trader/strategy/factory_handoff.py": "85f2b36a1b4ae6c5165ad326a5934d603c73f7c45200c3be4b728472bea447e7",
+    "tests/test_str04_historical_binding.py": "a62214cb87c63179260673bef63a02fcacdb5d71d79794427ce0801199d119a6",
+    "tests/test_learning_application.py": "8b463e8b8afdba61f440361980f2b76302b83246e3e3293cc051014baad2101b",
+    "tests/test_learning_foundation.py": "c0b9b82fbac6d9fd2c990a947b545a998aaf42734d9efc350810f500f7b9b960",
+    "tests/test_real_learning_integration.py": "55d4a1fa5c9941c0f22ff67707850c9a0c3595f76280fda5567b9a30421b792e"
+  },
+  "engineering_evidence_paths": [
+    "docs/superpowers/evidence/str04-binding01-engineering/impact.xml",
+    "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.xml",
+    "docs/superpowers/evidence/str04-binding01-engineering/core.xml",
+    "docs/superpowers/evidence/str04-binding01-engineering/report.json",
+    "docs/superpowers/evidence/str04-binding01-engineering/baseline-static-test.py",
+    "docs/superpowers/evidence/str04-binding01-engineering/impact.txt",
+    "docs/superpowers/evidence/str04-binding01-engineering/core.txt",
+    "docs/superpowers/evidence/str04-binding01-engineering/baseline_static.txt"
+  ],
+  "application_code_changed": false,
+  "runtime_execution_authorized": false,
+  "provider_enablement_authorized": false,
+  "trading_activation_authorized": false,
+  "next_critical_path_item": "DEC-03",
+  "next_critical_path_item_selected": false,
+  "control_plane_commit_resolution": "Enclosing Git commit; no self-referential hash."
+}

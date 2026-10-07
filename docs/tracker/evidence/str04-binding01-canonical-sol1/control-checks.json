@@ -1,0 +1,42 @@
+{
+  "STR04_canonical": "CLOSED",
+  "row_count": 178,
+  "status_counts": {
+    "CLOSED": 63,
+    "EVIDENCE_TO_MAP": 76,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "changed_rows": [
+    "STR-04"
+  ],
+  "unrelated_rows_unchanged": 177,
+  "original_conditions_and_edges_preserved": true,
+  "strict_YAML_contracts": true,
+  "source_committed_bytes_and_manifest_hashes_match": true,
+  "dashboard_read": "AVAILABLE",
+  "fresh_dedicated_passed": 109,
+  "all_five_event_bindings_verified": true,
+  "STR03_unchanged_CLOSED": true,
+  "DEC03_dependencies_satisfied": true,
+  "DEC03_now_eligible": true,
+  "DEC03_selected": false,
+  "DEC03_started": false,
+  "GUI04_row_unchanged": true,
+  "GUI04_dependencies_satisfied": true,
+  "GUI04_functional_runtime_closure": false,
+  "REL01_row_unchanged": true,
+  "REL01_remaining_direct_dependencies": [
+    "RISK-03",
+    "EXE-06",
+    "LRN-06"
+  ],
+  "Glacier_static_guard_unchanged_unrelated": true,
+  "application_code_changed": false,
+  "runtime_execution_authorized": false,
+  "provider_enablement_authorized": false,
+  "trading_activation_authorized": false
+}
