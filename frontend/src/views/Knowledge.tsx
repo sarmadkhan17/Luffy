@@ -46,6 +46,7 @@ export default function Knowledge() {
   const [view, setView] = useState<"map" | "list">("map");
   const [text, setText] = useState("");
   const [types, setTypes] = useState<string[]>([]);
+  const [relation, setRelation] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [trail, setTrail] = useState<string[]>([]);
   const [sel, setSel] = useState<string | null>(null);
@@ -80,17 +81,18 @@ export default function Knowledge() {
   const nbs = useMemo(() => {
     if (!f0) return [];
     const seen = new Set<string>();
-    return (g.adj.get(f0) ?? []).filter(([j]) => j !== f0 && !seen.has(j) && seen.add(j)).filter(([j]) => typeOk(g.byId.get(j)!));
+    return (g.adj.get(f0) ?? []).filter(([j, rel]) => j !== f0 && typeOk(g.byId.get(j)!) && (!relation || rel === relation)).filter(([j]) => !seen.has(j) && seen.add(j));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f0, g, types]);
-  const nbo = useMemo(() => [...nbs].sort((a, b) => (a[1] > b[1] ? 1 : a[1] < b[1] ? -1 : 0) || (g.byId.get(a[0])!.kind > g.byId.get(b[0])!.kind ? 1 : -1)), [nbs, g]);
+  }, [f0, g, types, relation]);
+  const nbo = useMemo(() => [...nbs].sort((a, b) => (a[1] > b[1] ? 1 : a[1] < b[1] ? -1 : 0) || g.byId.get(a[0])!.kind.localeCompare(g.byId.get(b[0])!.kind) || a[0].localeCompare(b[0])), [nbs, g]);
   const two = nbo.length > 18;
   const CX = 700, CY = 380, FX = 1.55, R1 = two ? 190 : 230, R2 = 300;
-  const ring = useMemo(() => nbo.map(([j, rel], idx) => {
-    const a = -Math.PI / 2 + (idx / nbo.length) * Math.PI * 2, r = two ? (idx % 2 ? R2 : R1) : R1;
-    return { j, rel, a, x: CX + Math.cos(a) * r * FX, y: CY + Math.sin(a) * r };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [nbo, two]);
+  // Fixed slots prevent label collision and simulation drift. A bounded map
+  // shows up to twelve neighbors; the accessible list retains every result.
+  const ring = useMemo(() => nbo.slice(0, 12).map(([j, rel], idx) => {
+    const x = idx % 2 ? 1080 : 320, y = 90 + Math.floor(idx / 2) * 110;
+    return { j, rel, a: Math.atan2(y - CY, (x - CX) / FX), x, y };
+  }), [nbo]);
   const far = useMemo(() => {
     const placed = new Map(ring.map((r) => [r.j, r]));
     const out = new Map<string, string>();
@@ -153,6 +155,10 @@ export default function Knowledge() {
             ))}
           </div>
 
+          <div className="gl-kbar" role="group" aria-label="Written relationship filter">
+            <button type="button" className="gl-tf" aria-pressed={!relation} onClick={() => setRelation(null)}>All relationships</button>
+            {[...new Set([...g.adj.values()].flatMap(list => list.map(([, rel]) => rel)))].sort().map(rel => <button key={rel} type="button" className="gl-tf" aria-pressed={relation === rel} onClick={() => { setRelation(relation === rel ? null : rel); setView("map"); }}>{KL[rel] ?? rel}</button>)}
+          </div>
           {view === "map" && fn && (
             <Card className="pad" label="Focus map">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
@@ -171,14 +177,18 @@ export default function Knowledge() {
                     {(["link", "bad", "flow"] as const).map((k) => <path key={k} d={paths[k] || "M0 0"} fill="none" stroke={RCOL[k]} strokeOpacity=".55" strokeWidth="1.3" className="flowd" />)}
                     {(["der", "sup"] as const).map((k) => <path key={k} d={paths[k] || "M0 0"} fill="none" stroke={RCOL[k]} strokeOpacity=".85" strokeWidth="1.5" />)}
                   </svg>
-                  {far.map((f) => { const n = g.byId.get(f.z)!; return <button key={f.z} type="button" className="gl-gd" title={n.label} aria-label={n.label} style={{ left: `${(f.x / 1400) * 100}%`, top: `${(f.y / 760) * 100}%`, background: col(n.kind) }} onClick={() => go(f.z)} />; })}
+                  {far.map((f) => { const n = g.byId.get(f.z)!; return <span key={f.z} className="gl-gd" aria-hidden="true" style={{ left: `${(f.x / 1400) * 100}%`, top: `${(f.y / 760) * 100}%`, background: col(n.kind), pointerEvents: "none" }} />; })}
                   <div className="gl-fctr"><span className="o" style={{ background: `radial-gradient(circle, ${col(fn.kind)}55, transparent 70%)`, borderColor: col(fn.kind) }}><i style={{ background: col(fn.kind), boxShadow: `0 0 24px ${col(fn.kind)}` }} /></span><span className="cg" style={{ fontSize: 20, color: "rgb(var(--hi))", textAlign: "center", maxWidth: 220 }}>{cut(fn.label, 40)}</span></div>
-                  {ring.map((r) => { const n = g.byId.get(r.j)!; const s = Math.round(12 + Math.sqrt(n.deg) * 2.4); return (
+                  {ring.map((r) => { const n = g.byId.get(r.j)!; const s = Math.min(28, Math.round(12 + Math.sqrt(n.deg) * 2.4)); return (
                     <button key={r.j} type="button" className="gl-fn" aria-label={`${n.label} · ${label(n.kind)} · ${KL[r.rel] ?? r.rel}`} title={`${n.label} · ${label(n.kind)} · ${KL[r.rel] ?? r.rel}`} style={{ left: `${(r.x / 1400) * 100}%`, top: `${(r.y / 760) * 100}%` }} onClick={() => go(r.j)}>
                       <span className="d" style={{ width: s, height: s, background: col(n.kind), boxShadow: `0 0 ${s}px ${col(n.kind)}99` }} /><span className="t">{cut(n.label, nbo.length > 30 ? 17 : 24)}</span>
                     </button>); })}
                   {ring.length === 0 && <p className="gl-empty" style={{ position: "absolute", left: "50%", top: "62%", transform: "translateX(-50%)" }}>No connected notes{types.length ? " of the selected types" : ""}.</p>}
                 </div>
+              </div>
+              <p className="gl-note" data-testid="map-coverage">Map shows {ring.length} of {nbs.length} matching direct neighbors. All matching neighbors are listed below. Faint dots are second-degree context; relationships are written, not proven causality.</p>
+              <div className="gl-neighbors" role="group" aria-label="Connected notes">
+                {nbo.map(([id, rel]) => <button type="button" key={id} className="gl-tf" onClick={() => go(id)}>{g.byId.get(id)!.label} <small>· {KL[rel] ?? rel}</small></button>)}
               </div>
               <FocusStrip id={fn.id} node={fn} groups={groups} total={nbs.length} onOpen={() => setSel(fn.id)} />
               <p className="gl-note">Relations are as written in the notes — not verified evidence or causality. {g.resolved} of {g.resolved + Number(q.data.unresolved_edges ?? 0)} links resolve to a note{q.data.truncated ? " (the vault read is truncated)" : ""}.</p>

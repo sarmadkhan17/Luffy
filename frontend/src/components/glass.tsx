@@ -1,6 +1,6 @@
 /** Glacier design primitives shared by every tab: glass card, centred detail
  * panel (opens on click only) and a table with header sort/filter + pagination. */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
 
@@ -62,12 +62,29 @@ export function DetailPanel({
   description?: ReactNode;
   children: ReactNode;
 }) {
+  const origin = useRef<HTMLElement | null>(null);
+  const scroll = useRef(0);
+  const panel = useRef<HTMLDivElement>(null);
+  const lastTitle = useRef(title);
+  // Preserve scroll for a refreshed record; a newly selected record starts at top.
+  useLayoutEffect(() => { if (lastTitle.current !== title) { scroll.current = 0; if (panel.current) panel.current.scrollTop = 0; lastTitle.current = title; } }, [title]);
   const container = typeof document === "undefined" ? undefined : (document.querySelector(".gl-app") as HTMLElement | null) ?? undefined;
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal container={container}>
         <Dialog.Overlay className="gl-overlay" />
-        <Dialog.Content className="gl-panel" aria-describedby={description ? undefined : undefined}>
+        <Dialog.Content className="gl-panel" onOpenAutoFocus={e => {
+            origin.current = document.activeElement as HTMLElement;
+            e.preventDefault();
+            panel.current?.querySelector<HTMLButtonElement>(".x")?.focus({ preventScroll: true });
+            if (panel.current) panel.current.scrollTop = scroll.current;
+          }} onScroll={e => { scroll.current = e.currentTarget.scrollTop; }}
+          ref={panel}
+          onCloseAutoFocus={e => {
+            e.preventDefault();
+            const target = origin.current?.isConnected ? origin.current : document.getElementById("content");
+            target?.focus({ preventScroll: true });
+          }}>
           <Dialog.Title asChild>
             <h2>{title}</h2>
           </Dialog.Title>
@@ -149,6 +166,8 @@ export function DataTable<T>({
   /** called with the filtered rows whenever they change (for an inline note in the card header) */
   onShown?: (rows: T[]) => void;
 }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const choose = (r: T) => { setSelected(rowId(r)); onOpen?.(r); };
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(defaultSort ?? null);
   const [text, setText] = useState<Record<string, string>>({});
   const [picked, setPicked] = useState<Record<string, string[]>>({});
@@ -256,13 +275,18 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {slice.map((r) => (
-              <tr key={rowId(r)} className={onOpen ? "click" : ""} style={rowTone?.(r) ? { background: rowTone(r) } : undefined} onClick={onOpen ? () => onOpen(r) : undefined}>
+              <tr key={rowId(r)} className={`${onOpen ? "click" : ""} ${selected === rowId(r) ? "selected" : ""}`} data-selected={selected === rowId(r) || undefined} style={rowTone?.(r) ? { background: rowTone(r) } : undefined} onClick={onOpen ? () => choose(r) : undefined}>
                 {cols.map((c) => {
                   const content = c.cell ? c.cell(r) : (c.value(r) ?? "UNAVAILABLE");
                   return (
                     <td key={c.key} className={c.align === "r" ? "r m" : ""}>
                       {c.primary && onOpen ? (
-                        <button type="button" className="gl-rowbtn" onClick={(e) => { e.stopPropagation(); onOpen(r); }}>
+                        <button type="button" className="gl-rowbtn" onKeyDown={e => {
+                          if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+                          e.preventDefault();
+                          const buttons = Array.from(e.currentTarget.closest("tbody")?.querySelectorAll<HTMLButtonElement>(".gl-rowbtn") ?? []);
+                          buttons[buttons.indexOf(e.currentTarget) + (e.key === "ArrowDown" ? 1 : -1)]?.focus();
+                        }} onClick={(e) => { e.stopPropagation(); choose(r); }}>
                           {content}
                         </button>
                       ) : (
@@ -288,7 +312,7 @@ export function DataTable<T>({
             ))}
           </span>
         ) : <span />}
-        <span>
+        <span role="status" aria-live="polite">
           {first}–{Math.min(shown.length, at * size + size)} of {shown.length}
           {shown.length !== rows.length ? ` (filtered from ${rows.length})` : ""}
         </span>

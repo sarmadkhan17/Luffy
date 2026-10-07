@@ -12,6 +12,7 @@ import {
 import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, DetailPanel, KV } from "../components/glass";
+import { useMotionPreference } from "../components/ui";
 import { PageHeader } from "../components/PageHeader";
 
 type Group = "Market" | "Perception" | "Analyst" | "Decision" | "Safety" | "Execution" | "Memory" | "Partner";
@@ -85,7 +86,9 @@ export default function LiveSystem() {
   const [playing, setPlaying] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
   const [pop, setPop] = useState<string | null>(null);
-  const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = useMotionPreference();
+  const [subsystem, setSubsystem] = useState<Group | null>(null);
+  useEffect(() => { if (reduced) setPlaying(false); }, [reduced]);
 
   useEffect(() => {
     if (!(playing && mode === "cycle" && pop === null && !reduced)) return;
@@ -108,9 +111,11 @@ export default function LiveSystem() {
   const s = step % STEPS.length;
   const activeE = new Set<number>(cycle ? STEPS[s][2] : []);
   if (hover) { activeE.clear(); E.forEach((e, i) => { if (e[0] === hover || e[1] === hover) activeE.add(i); }); }
+  if (subsystem && !hover && !cycle) E.forEach((e, i) => { if (N[e[0]][1] === subsystem || N[e[1]][1] === subsystem) activeE.add(i); });
   const activeN = new Set<string>();
   activeE.forEach((i) => { activeN.add(E[i][0]); activeN.add(E[i][1]); });
-  const focus = cycle || !!hover;
+  if (subsystem) Object.entries(N).forEach(([id, d]) => { if (d[1] === subsystem) activeN.add(id); });
+  const focus = cycle || !!hover || !!subsystem;
 
   const edgePaths: Record<string, { dim: string; on: string; obs: string }> = {};
   for (const k of Object.keys(KC)) edgePaths[k] = { dim: "", on: "", obs: "" };
@@ -118,7 +123,6 @@ export default function LiveSystem() {
     const slot = activeE.has(i) ? "on" : obsEdges.has(i) && !focus ? "obs" : "dim";
     edgePaths[e[2]][slot] += `${geo(e[0], e[1])} `;
   });
-  const packets = (cycle ? [...activeE] : []).slice(0, 10);
 
   const control = ov.data?.control ?? "UNAVAILABLE";
   const L = ov.data?.live;
@@ -147,7 +151,7 @@ export default function LiveSystem() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
           <div role="group" aria-label="View" className="gl-seg">
             {([["cycle", "Follow a trading cycle"], ["all", "Show everything"]] as const).map(([k, l]) => (
-              <button key={k} type="button" aria-pressed={mode === k} className="gl-segb" onClick={() => { setMode(k); setHover(null); }}>{l}</button>
+              <button key={k} type="button" aria-pressed={mode === k} className="gl-segb" onClick={() => { setMode(k); setHover(null); setSubsystem(null); setPlaying(false); }}>{l}</button>
             ))}
           </div>
           {cycle && (
@@ -157,8 +161,8 @@ export default function LiveSystem() {
                 {!reduced && <button type="button" className="gl-tf" aria-pressed={playing} onClick={() => setPlaying(!playing)}>{playing ? "❚❚ Pause" : "▶ Play"}</button>}
                 <button type="button" className="gl-tf" aria-label="Next step" onClick={() => { setStep((s + 1) % STEPS.length); setPlaying(false); }}>›</button>
               </span>
-              <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
-                {STEPS.map((_, i) => (<button key={i} type="button" aria-label={`Step ${i + 1}`} aria-current={i === s} onClick={() => { setStep(i); setPlaying(false); }} style={{ width: i === s ? 26 : 10, height: 10, minHeight: 10, padding: 0, borderRadius: 5, border: 0, background: i === s ? "rgb(var(--a))" : i < s ? "rgb(var(--a) / .45)" : "#ffffff26", cursor: "pointer" }} />))}
+              <span className="gl-step-list" style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
+                {STEPS.map((_, i) => (<button key={i} type="button" className="gl-step-dot" aria-label={`Step ${i + 1}`} aria-current={i === s} onClick={() => { setStep(i); setPlaying(false); }} style={{ width: i === s ? 26 : 10, height: 10, minHeight: 10, padding: 0, borderRadius: 5, border: 0, ["--step-tone" as string]: i === s ? "rgb(var(--a))" : i < s ? "rgb(var(--a) / .45)" : "#ffffff26", cursor: "pointer" }} />))}
               </span>
             </>
           )}
@@ -166,6 +170,11 @@ export default function LiveSystem() {
           {LEGEND.map(([l, c]) => (<span key={l} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#c9d4df" }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: c, boxShadow: `0 0 8px ${c}` }} />{l}</span>))}
         </div>
 
+        <div className="gl-kbar" role="group" aria-label="Isolate subsystem">
+          <button type="button" className="gl-tf" aria-pressed={!subsystem} onClick={() => { setSubsystem(null); setMode("all"); setPlaying(false); }}>All subsystems</button>
+          {(Object.keys(GC) as Group[]).map(g => <button key={g} type="button" className="gl-tf" aria-pressed={subsystem === g} onClick={() => { setSubsystem(subsystem === g ? null : g); setMode("all"); setPlaying(false); }}>{g}</button>)}
+        </div>
+        <p className="gl-note" data-testid="path-legend">DECLARED — static architecture. Highlight — selected connections only. OBSERVED — exact edge evidence unavailable. STALE / UNKNOWN telemetry never animates a path.</p>
         <div style={{ overflowX: "auto" }}>
           <div className="gl-diagram" onMouseLeave={() => setHover(null)}>
             <svg viewBox="0 0 1400 820" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden="true">
@@ -178,12 +187,12 @@ export default function LiveSystem() {
               <text x="40" y="700" fontFamily="Cinzel, serif" fontSize="12" letterSpacing="2" fill="#a78bfa">MEMORY &amp; LEARNING  ←  feedback lane</text>
               {Object.entries(edgePaths).map(([k, p]) => (
                 <g key={k}>
-                  <path d={p.dim || "M0 0"} fill="none" stroke={KC[k]} strokeWidth="1.1" strokeOpacity={focus ? 0.12 : 0.35} className="flowd" />
+                  <path d={p.dim || "M0 0"} fill="none" stroke={KC[k]} strokeWidth="1.1" strokeOpacity={focus ? 0.12 : 0.35} data-path-kind="declared" className="flowd" />
                   <path d={p.obs || "M0 0"} fill="none" stroke={KC[k]} strokeWidth="2.2" strokeOpacity=".9" />
-                  <path d={p.on || "M0 0"} fill="none" stroke={KC[k]} strokeWidth="2.4" strokeOpacity=".95" className={cycle && !reduced ? "flowp" : ""} />
+                  <path d={p.on || "M0 0"} fill="none" stroke={KC[k]} strokeWidth="2.4" strokeOpacity=".95" data-path-kind="declared" className="gl-declared-highlight" />
                 </g>
               ))}
-              {cycle && !reduced && packets.map((i, j) => (<circle key={`${s}-${i}`} r="6" className="pk" style={{ offsetPath: `path('${geo(E[i][0], E[i][1])}')`, fill: KC[E[i][2]], animationDelay: `${(j * 0.13).toFixed(2)}s`, filter: `drop-shadow(0 0 6px ${KC[E[i][2]]})` }} />))}
+
             </svg>
             {Object.entries(N).map(([id, d]) => {
               const [label, g, x, y, sz, Icon] = d;
@@ -193,7 +202,7 @@ export default function LiveSystem() {
               const tag = tags[id];
               const t = d[8] ? tele[d[8]] : undefined;
               return (
-                <button key={id} type="button" className={`gl-node ${on ? "on" : ""}`} aria-label={`${label} — DECLARED ARCHITECTURE${t?.freshness ? ` — telemetry ${t.freshness}` : ""}`}
+                <button key={id} type="button" className={`gl-node ${on ? "on" : ""}`} aria-pressed={pop === id} data-telemetry={t?.freshness ?? "unknown"} aria-label={`${label} — DECLARED ARCHITECTURE${t?.freshness ? ` — telemetry ${t.freshness}` : ""}`}
                   style={{ left: `${(x / 1400) * 100}%`, top: `${(y / 820) * 100}%`, width: sz, height: sz, ["--nc" as string]: c, opacity: dim ? 0.32 : 1 }}
                   onClick={() => { setPop(id); setPlaying(false); }} onMouseEnter={() => setHover(id)} onFocus={() => setHover(id)} onBlur={() => setHover(null)}>
                   <span className="shape" />

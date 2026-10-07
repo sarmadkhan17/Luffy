@@ -1,0 +1,2436 @@
+{
+  "/owner-api/v1/bootstrap": {
+    "generated_at": "2026-10-07T20:48:34.267055+00:00",
+    "mode": "LIVE",
+    "dashboard_mode": "READ_ONLY_GUI",
+    "kernel_process": {
+      "state": "UNAVAILABLE",
+      "heartbeat_instance_id": null,
+      "source": "data/kernel.lock, data/kernel_instance.json and /proc start ticks"
+    },
+    "runtime_truth": {
+      "account": {
+        "venue": null,
+        "environment": null,
+        "observed_at_ms": null,
+        "snapshot_id": null,
+        "freshness": "unavailable",
+        "source": "state_kv.venue_position_snapshot; verified snapshot and observation identities"
+      },
+      "brain": {
+        "provider_state": "DISABLED",
+        "external_llm": "UNAVAILABLE",
+        "response_mode": "EXTERNAL_CHAT_UNAVAILABLE",
+        "source": "config.brain.enabled; configuration only, no provider health call"
+      }
+    },
+    "principal": "owner",
+    "session": {
+      "authenticated": true,
+      "method": "header",
+      "expires_at": null
+    },
+    "backend": {
+      "commit": null,
+      "started_at": "2026-10-07T20:48:34.232143+00:00",
+      "process_id": 2717562,
+      "source_time": "2026-10-07T20:48:34.268530+00:00",
+      "frontend_build": "520f524a88d4"
+    },
+    "owner_interface": {
+      "configured": false,
+      "check": "/owner-api/v1/owner-interface",
+      "note": "Availability is established by a live health read, not by configuration"
+    },
+    "providers": {
+      "telegram": "NOT_CONFIGURED",
+      "openclaw": "NOT_CONFIGURED",
+      "whatsapp": "NOT_CONFIGURED"
+    },
+    "capabilities": {
+      "voice": false,
+      "chat": "disabled",
+      "controls": []
+    }
+  },
+  "/owner-api/v1/overview": {
+    "mode": "LIVE",
+    "generated_at": "2026-10-07T20:48:34.272302+00:00",
+    "control": {
+      "state": "FROZEN",
+      "source": "journal state_kv.control_state",
+      "observed_at": "2026-10-07T20:48:34.272302+00:00",
+      "time_basis": "read_time",
+      "classification": "stored control permission, not process/work evidence",
+      "last_event": {
+        "id": 1,
+        "ts": "2026-10-07T17:48:34+00:00",
+        "event": "state_change",
+        "from_state": "ACTIVE",
+        "to_state": "FROZEN",
+        "actor": "operator"
+      }
+    },
+    "kernel_process": {
+      "state": "UNKNOWN",
+      "heartbeat_instance_id": null,
+      "source": "data/kernel.lock, data/kernel_instance.json and /proc start ticks"
+    },
+    "heartbeat": {
+      "observed_at": "2026-10-07T20:48:14.172842+00:00",
+      "age_s": 20.1,
+      "freshness": "fresh",
+      "runtime_state": "UNKNOWN",
+      "process_state": "UNKNOWN",
+      "process_source": "data/kernel.lock, data/kernel_instance.json and /proc start ticks",
+      "work_observed_at": null,
+      "work_age_s": null,
+      "heartbeat_valid": false,
+      "instance_bound": false,
+      "stale_after_s": 240.0,
+      "reported_state": "FROZEN",
+      "source": "data/heartbeat_luffy.json (kernel cycle heartbeat)"
+    },
+    "account": {
+      "equity": 5164.5,
+      "balance": 5164.5,
+      "currency": "USDT",
+      "status": "FRESH",
+      "basis": "venue_total_margin_balance",
+      "authoritative": true,
+      "observed_at": "2026-10-07T20:48:14.163373+00:00",
+      "age_s": 20.1,
+      "freshness": "fresh",
+      "stale_after_s": 300.0,
+      "attempted_at": "2026-10-07T20:48:14.163373+00:00",
+      "recorded_at": "2026-10-07T20:48:14.163373+00:00",
+      "recorded_age_s": 20.1,
+      "successful_read_at": "2026-10-07T20:48:14.163373+00:00",
+      "successful_value": 5164.5,
+      "consecutive_failures": 0,
+      "fallback": null,
+      "attempt_errors": [],
+      "reasons": [],
+      "source": "journal state_kv.account_observation (kernel Risk-step equity input; account environment is not implied by this equity record)",
+      "source_status": "FRESH",
+      "last_reported": null,
+      "source_authoritative": true
+    },
+    "equity_series": {
+      "points": [
+        {
+          "time": 1791236854,
+          "value": 5000.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791240454,
+          "value": 5003.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791244054,
+          "value": 5007.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791247654,
+          "value": 5010.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791251254,
+          "value": 5014.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791254854,
+          "value": 5017.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791258454,
+          "value": 5021.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791262054,
+          "value": 5024.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791265654,
+          "value": 5028.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791269254,
+          "value": 5031.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791272854,
+          "value": 5035.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791276454,
+          "value": 5038.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791280054,
+          "value": 5042.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791283654,
+          "value": 5045.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791287254,
+          "value": 5049.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791290854,
+          "value": 5052.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791294454,
+          "value": 5056.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791298054,
+          "value": 5059.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791301654,
+          "value": 5063.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791305254,
+          "value": 5066.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791308854,
+          "value": 5070.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791312454,
+          "value": 5073.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791316054,
+          "value": 5077.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791319654,
+          "value": 5080.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791323254,
+          "value": 5084.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791326854,
+          "value": 5087.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791330454,
+          "value": 5091.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791334054,
+          "value": 5094.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791337654,
+          "value": 5098.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791341254,
+          "value": 5101.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791344854,
+          "value": 5105.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791348454,
+          "value": 5108.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791352054,
+          "value": 5112.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791355654,
+          "value": 5115.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791359254,
+          "value": 5119.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791362854,
+          "value": 5122.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791366454,
+          "value": 5126.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791370054,
+          "value": 5129.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791373654,
+          "value": 5133.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791377254,
+          "value": 5136.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791380854,
+          "value": 5140.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791384454,
+          "value": 5143.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791388054,
+          "value": 5147.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791391654,
+          "value": 5150.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791395254,
+          "value": 5154.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791398854,
+          "value": 5157.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791402454,
+          "value": 5161.0,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        },
+        {
+          "time": 1791406054,
+          "value": 5164.5,
+          "row_kind": "unknown",
+          "basis": null,
+          "source_observed_at": null,
+          "source_status": null
+        }
+      ],
+      "window_hours": 168,
+      "bucket": "last journal equity record per UTC hour (time = row write time)",
+      "raw_records": 48,
+      "source": "journal equity table"
+    },
+    "realized_today": {
+      "value": 2.0,
+      "closed_trades": 1,
+      "day_utc": "2026-10-07",
+      "observed_at": "2026-10-07T20:48:34.272302+00:00",
+      "freshness": "fresh",
+      "quality": "JOURNAL_BOOKED_COMPLETE",
+      "version": "overview-journal-realized.v2",
+      "trade_classifications": [
+        {
+          "value": 2.0,
+          "status": "JOURNAL_BOOKED",
+          "evidence": [
+            {}
+          ],
+          "pnl_value_class": "JOURNAL_BOOKED",
+          "coverage": {
+            "whole_trade_complete": false,
+            "funding_attributed": false,
+            "booking_receipts": 0,
+            "source_classification": "JOURNAL_BOOKED",
+            "price_evidence": [
+              {}
+            ],
+            "reason": "journal booking; not venue net accounting"
+          }
+        }
+      ],
+      "coverage": {
+        "known": 1,
+        "total": 1,
+        "complete": true,
+        "scope": "journal closed trades today; venue net coverage unproven"
+      },
+      "source": "journal trades closed today (UTC), journal-booked realized P&L"
+    },
+    "exposure": {
+      "gross_entry_notional": 2100.0,
+      "pct_of_equity": 40.66,
+      "source": "journal open-trade entry notional \u00f7 journal equity",
+      "observed_at": "2026-10-07T20:48:34.272302+00:00",
+      "freshness": "fresh",
+      "quality": "DERIVED_JOURNAL_ENTRY_NOTIONAL",
+      "version": "overview-entry-exposure.v1",
+      "account_observed_at": "2026-10-07T20:48:14.163373+00:00",
+      "coverage": {
+        "positions": 2,
+        "complete": true,
+        "scope": "journal-open trades; current venue exposure unproven"
+      }
+    },
+    "positions": [
+      {
+        "id": "t-btc",
+        "symbol": "BTC/USDT",
+        "side": "long",
+        "amount": 0.01,
+        "entry_price": 60000.0,
+        "notional_usdt": 600.0,
+        "leverage": 3,
+        "opened_at": "2026-10-07T14:48:34+00:00",
+        "strategy_name": "spec:donchian",
+        "exec_mode": "live",
+        "journal_stop": {
+          "price": 58200.0,
+          "order_ref_recorded": true,
+          "source": "journal trades row (not venue verification)"
+        },
+        "protection": {
+          "status": "VERIFIED",
+          "observed_at": "2026-10-07T20:48:04.163373+00:00",
+          "last_reported": null,
+          "reasons": [],
+          "venue": {
+            "symbol": "BTC/USDT",
+            "venue_symbol": "BTC/USDT:USDT",
+            "side": "long",
+            "quantity": 0.01,
+            "entry_price": 60000.0,
+            "journal_trade_id": "t-btc",
+            "journal_side": "long",
+            "journal_amount": 0.01,
+            "quantity_agrees": true,
+            "journal_stop_id": "algo-1",
+            "expected_stop": 58200.0,
+            "stop_present": true,
+            "stop_ids": [
+              "algo-1"
+            ],
+            "stop_id": "algo-1",
+            "stop_side": "sell",
+            "reduce_only": true,
+            "order_type": "STOP_MARKET",
+            "stop_kind": "algo",
+            "covered_quantity": 0.01,
+            "trigger_price": 58200.0,
+            "tick_size": "0.01",
+            "precision_status": "VALID",
+            "precision_valid": true,
+            "stop_id_matches_journal": true,
+            "match_reason": "matched",
+            "rearm_evidence": "NONE",
+            "verified": true,
+            "reasons": []
+          }
+        }
+      },
+      {
+        "id": "t-eth",
+        "symbol": "ETH/USDT",
+        "side": "short",
+        "amount": 0.5,
+        "entry_price": 3000.0,
+        "notional_usdt": 1500.0,
+        "leverage": 3,
+        "opened_at": "2026-10-07T15:48:34+00:00",
+        "strategy_name": "spec:donchian",
+        "exec_mode": "live",
+        "journal_stop": {
+          "price": 2910.0,
+          "order_ref_recorded": true,
+          "source": "journal trades row (not venue verification)"
+        },
+        "protection": {
+          "status": "VERIFIED",
+          "observed_at": "2026-10-07T20:48:04.163373+00:00",
+          "last_reported": null,
+          "reasons": [],
+          "venue": {
+            "symbol": "ETH/USDT",
+            "venue_symbol": "ETH/USDT:USDT",
+            "side": "short",
+            "quantity": 0.5,
+            "entry_price": 3000.0,
+            "journal_trade_id": "t-eth",
+            "journal_side": "short",
+            "journal_amount": 0.5,
+            "quantity_agrees": true,
+            "journal_stop_id": "algo-1",
+            "expected_stop": 2910.0,
+            "stop_present": true,
+            "stop_ids": [
+              "algo-1"
+            ],
+            "stop_id": "algo-1",
+            "stop_side": "buy",
+            "reduce_only": true,
+            "order_type": "STOP_MARKET",
+            "stop_kind": "algo",
+            "covered_quantity": 0.5,
+            "trigger_price": 2910.0,
+            "tick_size": "0.01",
+            "precision_status": "VALID",
+            "precision_valid": true,
+            "stop_id_matches_journal": true,
+            "match_reason": "matched",
+            "rearm_evidence": "NONE",
+            "verified": true,
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "protection": {
+      "status": "VERIFIED",
+      "snapshot": {
+        "observed_at": "2026-10-07T20:48:04.163373+00:00",
+        "age_s": 30.1,
+        "freshness": "fresh",
+        "stale_after_s": 120.0,
+        "status": "VERIFIED",
+        "generation": {
+          "boot": 1,
+          "seq": 1
+        },
+        "completed_at": "2026-10-07T20:48:04.163373+00:00",
+        "control_state_observed": "FROZEN",
+        "venue_positions": true,
+        "observation_consistent": true,
+        "reconciliation": true,
+        "venue_protection": true,
+        "precision_known": true,
+        "complete_listing": true,
+        "position_count": 2,
+        "symbols": [
+          {
+            "symbol": "BTC/USDT",
+            "venue_symbol": "BTC/USDT:USDT",
+            "side": "long",
+            "quantity": 0.01,
+            "entry_price": 60000.0,
+            "journal_trade_id": "t-btc",
+            "journal_side": "long",
+            "journal_amount": 0.01,
+            "quantity_agrees": true,
+            "journal_stop_id": "algo-1",
+            "expected_stop": 58200.0,
+            "stop_present": true,
+            "stop_ids": [
+              "algo-1"
+            ],
+            "stop_id": "algo-1",
+            "stop_side": "sell",
+            "reduce_only": true,
+            "order_type": "STOP_MARKET",
+            "stop_kind": "algo",
+            "covered_quantity": 0.01,
+            "trigger_price": 58200.0,
+            "tick_size": "0.01",
+            "precision_status": "VALID",
+            "precision_valid": true,
+            "stop_id_matches_journal": true,
+            "match_reason": "matched",
+            "rearm_evidence": "NONE",
+            "verified": true,
+            "reasons": []
+          },
+          {
+            "symbol": "ETH/USDT",
+            "venue_symbol": "ETH/USDT:USDT",
+            "side": "short",
+            "quantity": 0.5,
+            "entry_price": 3000.0,
+            "journal_trade_id": "t-eth",
+            "journal_side": "short",
+            "journal_amount": 0.5,
+            "quantity_agrees": true,
+            "journal_stop_id": "algo-1",
+            "expected_stop": 2910.0,
+            "stop_present": true,
+            "stop_ids": [
+              "algo-1"
+            ],
+            "stop_id": "algo-1",
+            "stop_side": "buy",
+            "reduce_only": true,
+            "order_type": "STOP_MARKET",
+            "stop_kind": "algo",
+            "covered_quantity": 0.5,
+            "trigger_price": 2910.0,
+            "tick_size": "0.01",
+            "precision_status": "VALID",
+            "precision_valid": true,
+            "stop_id_matches_journal": true,
+            "match_reason": "matched",
+            "rearm_evidence": "NONE",
+            "verified": true,
+            "reasons": []
+          }
+        ],
+        "cleanliness": {
+          "status": "CLEAN",
+          "coverage": "position_symbols",
+          "items": [],
+          "items_truncated": false,
+          "unread_symbols": []
+        },
+        "reasons": [],
+        "duration_ms": 412.0,
+        "venue_requests": 5,
+        "source": "journal protection_evidence (kernel read-only venue protection check; never triggered by this server)"
+      },
+      "supervisor": {
+        "observed_at": "2026-10-07T20:48:04.163373+00:00",
+        "age_s": 30.1,
+        "freshness": "fresh",
+        "stale_after_s": 180.0,
+        "outcome": "SAFE",
+        "stage": "COMPLETE",
+        "control_state_observed": "FROZEN",
+        "venue_positions": true,
+        "reconciliation": true,
+        "venue_protection": true,
+        "checks_are_current": true,
+        "last_reported_checks": {
+          "venue_positions": true,
+          "reconciliation": true,
+          "venue_protection": true
+        },
+        "needs_owner": false,
+        "needs_owner_since_control_event_id": null,
+        "reasons": [],
+        "source": "journal state_kv.supervisor_status (Supervisor venue reconciliation pass)"
+      },
+      "naked_exposure": {
+        "value": 0,
+        "status": "OBSERVED",
+        "reasons": [],
+        "observed_at": "2026-10-07T20:48:04.163373+00:00",
+        "source": "journal protection_evidence (kernel read-only venue protection check; never triggered by this server)"
+      }
+    },
+    "needs_you": {
+      "needs_owner": false,
+      "reasons": [],
+      "since_control_event_id": null,
+      "observed_at": "2026-10-07T20:48:04.163373+00:00",
+      "freshness": "fresh",
+      "stale_after_s": 180.0,
+      "source": "journal state_kv.supervisor_status (Supervisor venue reconciliation pass)"
+    },
+    "news_guard": {
+      "clear": true,
+      "source": "journal state_kv.news_guard_state (NewsGuard check record, published by the kernel each cycle; times are the check's own)",
+      "truth": "QUIET",
+      "active": false,
+      "why": "feed quiet",
+      "assessed_at": "2026-10-07T20:48:14.163373+00:00",
+      "age_s": 20.1,
+      "freshness": "fresh",
+      "stale_after_s": 1260.0,
+      "attempted_at": "2026-10-07T20:48:14.163373+00:00",
+      "fetched_at": "2026-10-07T20:48:14.163373+00:00",
+      "succeeded_at": "2026-10-07T20:48:14.163373+00:00",
+      "published_at": "2026-10-07T20:48:14.163373+00:00",
+      "newest_publication_at": "2026-10-07T20:48:14.163373+00:00",
+      "oldest_publication_at": "2026-10-07T20:48:14.163373+00:00",
+      "hits": 0,
+      "severe": 0,
+      "dated_hits": 0,
+      "dated_severe": 0,
+      "items_total": 5,
+      "items_considered": 5,
+      "dated_in_window": 5,
+      "undated_items": 0,
+      "malformed_dates": 0,
+      "future_dated_items": 0,
+      "headlines": [],
+      "failure_codes": [],
+      "dampening": {
+        "applied": false,
+        "threshold_add": 0.08,
+        "score_mult": 0.75,
+        "enforcement": "dampen_only"
+      },
+      "status": "QUIET",
+      "last_reported": null,
+      "reasons": []
+    },
+    "risk": {
+      "configured": null,
+      "configured_error": "risk_config_unreadable:KeyError",
+      "baseline": {
+        "value": null,
+        "error": "risk_state_missing",
+        "note": "Risk baseline (high-water mark and day start); not a current assessment",
+        "source": "state_kv.risk_state"
+      },
+      "source": "journal state_kv.risk_assessment (kernel cycle Risk observation)",
+      "current": {
+        "assessed_at": "2026-10-07T20:48:14.163373+00:00",
+        "age_s": 20.1,
+        "freshness": "fresh",
+        "stale_after_s": 300.0,
+        "reasons": [],
+        "constraints": [
+          {
+            "name": "risk_baseline",
+            "limit": "ok",
+            "observed": "ok",
+            "result": "pass",
+            "unit": "state",
+            "basis": "fixture"
+          },
+          {
+            "name": "halt_drawdown",
+            "limit": 20.0,
+            "observed": 1.2,
+            "result": "pass",
+            "unit": "pct",
+            "basis": "fixture"
+          },
+          {
+            "name": "daily_loss_breaker",
+            "limit": -6.0,
+            "observed": -0.4,
+            "result": "pass",
+            "unit": "pct",
+            "basis": "fixture"
+          },
+          {
+            "name": "max_open_positions",
+            "limit": 8,
+            "observed": 2,
+            "result": "pass",
+            "unit": "count",
+            "basis": "fixture"
+          },
+          {
+            "name": "portfolio_heat",
+            "limit": 15.0,
+            "observed": 1.5,
+            "result": "pass",
+            "unit": "pct",
+            "basis": "fixture"
+          },
+          {
+            "name": "total_margin",
+            "limit": 70.0,
+            "observed": 9.0,
+            "result": "pass",
+            "unit": "pct",
+            "basis": "fixture"
+          },
+          {
+            "name": "per_symbol_risk_cap",
+            "limit": 8.0,
+            "observed": null,
+            "result": "applies_at_entry",
+            "unit": "pct",
+            "basis": "fixture"
+          },
+          {
+            "name": "per_position_margin",
+            "limit": 20.0,
+            "observed": null,
+            "result": "applies_at_entry",
+            "unit": "pct",
+            "basis": "fixture"
+          }
+        ],
+        "risk_state": "ok",
+        "drawdown_pct": 1.2,
+        "daily_pnl_pct": -0.4,
+        "halt_breached": false,
+        "baseline": {
+          "peak_equity": 5227.2,
+          "day_start_equity": 5185.2,
+          "day_key": "d"
+        },
+        "equity": {
+          "value": 5164.5,
+          "status": "FRESH",
+          "basis": "venue_total_margin_balance",
+          "observed_at": "2026-10-07T20:48:14.163373+00:00",
+          "age_at_assessment_s": 0.0,
+          "fresh_at_assessment": true,
+          "authoritative": true,
+          "source_freshness_now": "fresh",
+          "source_age_s": 20.1
+        },
+        "book": {
+          "source": "journal open trades",
+          "read_at": "2026-10-07T20:48:14.163373+00:00",
+          "positions": 2,
+          "malformed": []
+        },
+        "control": {
+          "state": "FROZEN",
+          "entries_permitted_by_control": false,
+          "applicability": "fixture"
+        },
+        "entry_gate": {
+          "allowed": false,
+          "blocked_reason": "state=FROZEN",
+          "basis": "fixture"
+        },
+        "running_policy": {
+          "digest": "30099052f9c98edcddd3ee892a3c34dd59e3dfaca008d61a17e15e5464da6796",
+          "effective": {
+            "risk_pct": 0.01,
+            "heat_cap": 0.15,
+            "symbol_cap": 0.08,
+            "max_positions": 8,
+            "daily_loss_block": 0.06,
+            "derisk_steps": [],
+            "halt_dd": 0.2,
+            "leverage": 5,
+            "sl_atr_mult": 2.0,
+            "min_notional": 5.0,
+            "max_pos_margin": 0.2,
+            "max_total_margin": 0.7,
+            "proving_trades": 30,
+            "proving_mult": 0.5,
+            "taker_fee": 0.0005
+          },
+          "limits": {
+            "risk_per_trade_pct": 1.0,
+            "portfolio_heat_cap_pct": 15.0,
+            "per_symbol_risk_cap_pct": 8.0,
+            "max_open_positions": 8,
+            "max_daily_loss_pct": 6.0,
+            "drawdown_derisk_steps": [],
+            "halt_drawdown_pct": 20.0,
+            "leverage": 5,
+            "stop_loss_atr_mult": 2.0,
+            "min_notional_usdt": 5.0,
+            "max_position_margin_pct": 20.0,
+            "max_total_margin_pct": 70.0,
+            "proving_period_trades": 30,
+            "proving_size_mult": 0.5,
+            "taker_fee_pct": 0.05
+          },
+          "risk_manager_identity": "fixture"
+        },
+        "status": "PASS",
+        "last_reported": null
+      },
+      "policy_match": "UNKNOWN"
+    },
+    "errors": {}
+  },
+  "/owner-api/v1/desk": {
+    "generated_at": "2026-10-07T20:48:34.282179+00:00",
+    "errors": {},
+    "realized": {
+      "points": [
+        {
+          "trade_id": "t-old",
+          "closed_at": "2026-10-07T19:48:34+00:00",
+          "symbol": "SOL/USDT",
+          "side": "long",
+          "pnl": 2.0,
+          "cumulative": 2.0,
+          "status": "JOURNAL_BOOKED",
+          "close_reason": "trail",
+          "strategy_name": "spec:donchian"
+        }
+      ],
+      "closed_trades": 1,
+      "unknown_pnl_trades": 0,
+      "estimated_pnl_trades": 0,
+      "total": 2.0,
+      "last_closes": [
+        {
+          "trade_id": "t-old",
+          "closed_at": "2026-10-07T19:48:34+00:00",
+          "symbol": "SOL/USDT",
+          "side": "long",
+          "pnl": 2.0,
+          "cumulative": 2.0,
+          "status": "JOURNAL_BOOKED",
+          "close_reason": "trail",
+          "strategy_name": "spec:donchian"
+        }
+      ],
+      "source": "journal closed trades, journal-booked realized P&L (not venue net accounting)"
+    },
+    "scan": null,
+    "research": {
+      "counts": {
+        "combos": 1,
+        "candidates": 0,
+        "tests": 0,
+        "questions": 0
+      },
+      "candidates_by_state": {},
+      "referee_enabled": null,
+      "handoff_enabled": null,
+      "source": "journal research ledger tables and config.research flags"
+    }
+  },
+  "/owner-api/v1/research/board": {
+    "generated_at": "2026-10-07T20:48:34.287569+00:00",
+    "stores": {
+      "questions": 0,
+      "runs": 0,
+      "results": 0,
+      "bank_objects": 0,
+      "registrations": 0,
+      "evidence": 0
+    },
+    "combos": [
+      {
+        "hash": "h-fixture",
+        "tf": "4h",
+        "geo": "trail",
+        "k": 1,
+        "round": "singles",
+        "parts": null,
+        "status": "scored",
+        "verdict": "prune",
+        "label": "donchian_hi(100)",
+        "reason": "fixture: below its window control",
+        "consistency_p": null,
+        "median_pf": 1.04,
+        "total_pct": null,
+        "max_dd_pct": null,
+        "trades": 37,
+        "scored_symbols": null,
+        "testable": null,
+        "has_long": 0,
+        "has_short": 0,
+        "created_at": "2026-10-07T19:48:34+00:00"
+      }
+    ],
+    "total": 1,
+    "truncated": false,
+    "verdicts": [
+      {
+        "status": "scored",
+        "verdict": "prune",
+        "n": 1
+      }
+    ],
+    "batches": {
+      "n": 1,
+      "failed": 0,
+      "last_started": "2026-10-07T19:48:34+00:00"
+    },
+    "last_batch": {
+      "started": "2026-10-07T19:48:34+00:00",
+      "finished": "2026-10-07T19:49:34+00:00",
+      "tf": "4h",
+      "geo": "trail",
+      "round": "singles",
+      "n": 5,
+      "ok": 1,
+      "error": ""
+    },
+    "controls": {
+      "total": 0,
+      "powered": 0
+    },
+    "candidates_by_state": {},
+    "held_out_looks": {
+      "n": 0,
+      "rejected": null
+    },
+    "referee_enabled": null,
+    "handoff_enabled": null,
+    "horizons": null,
+    "source": "journal research ledger (research_combos, batches, controls, candidates, tests); discovery evidence only"
+  },
+  "/owner-api/v1/strategies/board": {
+    "generated_at": "2026-10-07T20:48:34.297534+00:00",
+    "versions": null,
+    "authority_errors": {
+      "versions": "version_ledger_not_reported"
+    },
+    "strategies": [
+      {
+        "id": "s1",
+        "name": "Donchian",
+        "kind": "spec",
+        "state": "active",
+        "origin": "analyst",
+        "generation": 0,
+        "parent_id": null,
+        "created_at": "2026-10-07T20:48:34+00:00",
+        "state_changed_at": "2026-10-07T20:48:34+00:00",
+        "retire_reason": null,
+        "spec_sha256": null,
+        "description": "Legacy spec strategy; no declarative spec is stored.",
+        "provenance": null,
+        "timeframe": null,
+        "direction": null,
+        "open_trades": 1,
+        "closed_trades": 0,
+        "unknown_pnl_trades": 0,
+        "wins": 0,
+        "pnl_total": null,
+        "pnl_30d": null,
+        "trades_30d": 0,
+        "profit_factor": null,
+        "first_trade_at": "2026-10-07T14:48:34+00:00",
+        "last_trade_at": "2026-10-07T14:48:34+00:00",
+        "curve": [],
+        "recent": [],
+        "registry_stats": null
+      }
+    ],
+    "source": "journal strategies registry + journal-booked trades per strategy id; not venue-verified, not an admission"
+  },
+  "/owner-api/v1/operations/log": {
+    "generated_at": "2026-10-07T20:48:34.302674+00:00",
+    "events": [
+      {
+        "id": "scan:2026-10-07T20",
+        "at": "2026-10-07T20:46:34+00:00",
+        "type": "Scan",
+        "n": 1,
+        "what": "1 scan pass \u00b7 latest pass 1 coins \u00b7 0 directional \u00b7 0 traded",
+        "who": "Attention + analysts",
+        "result": "All HOLD",
+        "tone": "grey",
+        "facts": {
+          "hour_utc": "2026-10-07T20:00",
+          "passes": 1,
+          "decisions": 1,
+          "directional": 0,
+          "executed": 0,
+          "block_reasons": []
+        },
+        "coins": [
+          [
+            "BTC/USDT",
+            0.0,
+            0.5,
+            "HOLD",
+            false,
+            null
+          ]
+        ],
+        "scan_id": null,
+        "last_scan_at": "2026-10-07T20:46:34+00:00"
+      },
+      {
+        "id": "close:t-old",
+        "at": "2026-10-07T19:48:34+00:00",
+        "type": "Order",
+        "n": 1,
+        "what": "Closed LONG SOL-USDT @ 152.0 \u00b7 trail",
+        "who": "spec:donchian",
+        "result": "Won",
+        "tone": "ok",
+        "facts": {
+          "trade_id": "t-old",
+          "symbol": "SOL/USDT",
+          "side": "long",
+          "amount": 1.0,
+          "entry_price": 150.0,
+          "leverage": 2,
+          "journal_stop": null,
+          "exit_price": 152.0,
+          "close_reason": "trail",
+          "realized_pnl_journal": 2.0
+        }
+      },
+      {
+        "id": "ctl:1",
+        "at": "2026-10-07T17:48:34+00:00",
+        "type": "Safety",
+        "n": 1,
+        "what": "state change \u00b7 ACTIVE \u2192 FROZEN",
+        "who": "operator",
+        "result": "Recorded",
+        "tone": "grey",
+        "facts": {
+          "event": "state_change",
+          "control_event_ids": "1\u20131",
+          "from_state": "ACTIVE",
+          "to_state": "FROZEN",
+          "actor": "operator",
+          "occurrences": 1
+        },
+        "detail": {}
+      },
+      {
+        "id": "open:t-eth",
+        "at": "2026-10-07T15:48:34+00:00",
+        "type": "Order",
+        "n": 1,
+        "what": "Opened SHORT ETH-USDT \u00b7 0.5 @ 3000.0",
+        "who": "spec:donchian",
+        "result": "Entered",
+        "tone": "ok",
+        "facts": {
+          "trade_id": "t-eth",
+          "symbol": "ETH/USDT",
+          "side": "short",
+          "amount": 0.5,
+          "entry_price": 3000.0,
+          "leverage": 3,
+          "journal_stop": 2910.0
+        }
+      },
+      {
+        "id": "open:t-btc",
+        "at": "2026-10-07T14:48:34+00:00",
+        "type": "Order",
+        "n": 1,
+        "what": "Opened LONG BTC-USDT \u00b7 0.01 @ 60000.0",
+        "who": "spec:donchian",
+        "result": "Entered",
+        "tone": "ok",
+        "facts": {
+          "trade_id": "t-btc",
+          "symbol": "BTC/USDT",
+          "side": "long",
+          "amount": 0.01,
+          "entry_price": 60000.0,
+          "leverage": 3,
+          "journal_stop": 58200.0
+        }
+      },
+      {
+        "id": "open:t-old",
+        "at": "2026-10-05T20:48:34+00:00",
+        "type": "Order",
+        "n": 1,
+        "what": "Opened LONG SOL-USDT \u00b7 1.0 @ 150.0",
+        "who": "spec:donchian",
+        "result": "Entered",
+        "tone": "ok",
+        "facts": {
+          "trade_id": "t-old",
+          "symbol": "SOL/USDT",
+          "side": "long",
+          "amount": 1.0,
+          "entry_price": 150.0,
+          "leverage": 2,
+          "journal_stop": null
+        }
+      }
+    ],
+    "window_days": 7,
+    "window_start": "2026-09-30T20:48:34.302685+00:00",
+    "window_end": "2026-10-07T20:48:34.302685+00:00",
+    "truncated": false,
+    "scan_decision_records_aggregated": 1,
+    "rolled_up_records": 0,
+    "signal_cooldowns_not_listed": 0,
+    "newest": "2026-10-07T20:46:34+00:00",
+    "source": "journal decisions (rolled up per UTC hour), trades, control_events (same-hour repeats merged), strategy lifecycle and learning brain_events over the last 7 days; signal_cooldown control events are counted, not listed"
+  },
+  "/owner-api/v1/diagnostics": {
+    "generated_at": "2026-10-07T20:48:34.311743+00:00",
+    "storage": {
+      "files": [
+        {
+          "file": "data/attention.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/attention.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/attention_learning.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/attention_learning.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/candles.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/candles.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/derivs.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/derivs.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/execution-evidence.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/execution-evidence.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/investigation.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/investigation.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/luffy.db",
+          "bytes": 4096,
+          "growth_bytes": null,
+          "modified_at": "2026-10-07T20:48:34.096573+00:00"
+        },
+        {
+          "file": "data/luffy.db-wal",
+          "bytes": 1685112,
+          "growth_bytes": null,
+          "modified_at": "2026-10-07T20:48:34.185530+00:00"
+        },
+        {
+          "file": "data/runtime-portfolio.db",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        },
+        {
+          "file": "data/runtime-portfolio.db-wal",
+          "bytes": null,
+          "growth_bytes": null,
+          "modified_at": null
+        }
+      ],
+      "disk": {
+        "total": 105087164416,
+        "used": 56442531840,
+        "free": 43259252736
+      },
+      "filesystems": [
+        {
+          "label": "Root /",
+          "path": "/",
+          "total": 52518420480,
+          "used": 37696126976,
+          "free": 12121321472,
+          "percent_free": 23.080133334581202,
+          "mount": "/",
+          "source": "/dev/sda2",
+          "status": "OBSERVED",
+          "observed_at_ms": 1791406114312
+        },
+        {
+          "label": "LUFFY data",
+          "path": "/mnt/luffy-data/test-tmp/sarmad/pytest-run-9kzu8Ls1Dni8/base/test_browser_fixture_artifact_0/data",
+          "total": 105087164416,
+          "used": 56442531840,
+          "free": 43259252736,
+          "percent_free": 41.16511562225917,
+          "mount": "/mnt/luffy-data",
+          "source": "/dev/sdb1",
+          "status": "OBSERVED",
+          "observed_at_ms": 1791406114316
+        },
+        {
+          "label": "Recovery",
+          "path": "/mnt/luffy-recovery",
+          "total": 210239463424,
+          "used": 10946351104,
+          "free": 188539023360,
+          "percent_free": 89.67822705091496,
+          "mount": "/mnt/luffy-recovery",
+          "source": "/dev/sdc1",
+          "status": "OBSERVED",
+          "observed_at_ms": 1791406114316
+        }
+      ],
+      "growth_baseline": null,
+      "growth_status": "Growth baseline unavailable"
+    },
+    "resources": {
+      "host": {
+        "cpus": 4,
+        "loadavg": [
+          2.61,
+          3.52,
+          2.92
+        ],
+        "mem_total": 8272703488,
+        "mem_available": 5179146240
+      },
+      "dashboard_process": {
+        "pid": 2717562,
+        "rss": 184164352,
+        "threads": 6
+      }
+    },
+    "watchdog": {
+      "disabled_flag": false,
+      "disabled_since": null,
+      "log_tail": null,
+      "log_modified_at": null,
+      "note": "The flag stops scripts/watchdog.sh restarting processes; the log records restarts it performed."
+    },
+    "collectors": [
+      {
+        "file": "attention_health.json",
+        "status": "unavailable"
+      },
+      {
+        "file": "investigation_health.json",
+        "status": "unavailable"
+      },
+      {
+        "file": "attention_learning_health.json",
+        "status": "unavailable"
+      }
+    ],
+    "incidents": [
+      {
+        "id": 1,
+        "ts": "2026-10-07T17:48:34+00:00",
+        "event": "state_change",
+        "from_state": "ACTIVE",
+        "to_state": "FROZEN",
+        "actor": "operator",
+        "detail": {}
+      }
+    ],
+    "owner_audit": [],
+    "execution_recovery": null,
+    "api": {
+      "diagnostics_read_ms": 7.7
+    },
+    "unavailable": [
+      {
+        "field": "kernel_resources",
+        "reason": "the kernel heartbeat records no CPU or memory figures"
+      },
+      {
+        "field": "incident_ledger",
+        "reason": "no structured incident store; control events and owner audit are shown instead"
+      },
+      {
+        "field": "api_latency_history",
+        "reason": "the dashboard keeps no request timing history"
+      }
+    ],
+    "source": "filesystem (data/, logs/watchdog.log, /proc), journal control_events, owner_audit and execution_recovery, collector health files",
+    "probes": [
+      {
+        "probe": "journal_read",
+        "ok": true,
+        "ms": 0.0,
+        "detail": "SELECT 1"
+      },
+      {
+        "probe": "journal_newest_decision",
+        "ok": true,
+        "ms": 0.0,
+        "detail": "2026-10-07T20:46:34+00:00"
+      },
+      {
+        "probe": "knowledge_vault",
+        "ok": true,
+        "ms": 0.0,
+        "detail": "/mnt/luffy-data/test-tmp/sarmad/pytest-run-9kzu8Ls1Dni8/base/test_browser_fixture_artifact_0/knowledge"
+      },
+      {
+        "probe": "frontend_build",
+        "ok": false,
+        "ms": 0.0,
+        "detail": "frontend/dist/index.html"
+      }
+    ]
+  },
+  "/owner-api/v1/knowledge": {
+    "generated_at": "2026-10-07T20:48:34.323197+00:00",
+    "source": "knowledge vault markdown (read-only)",
+    "nodes": [
+      {
+        "id": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "label": "Aggressor Flow",
+        "kind": "market-mechanism",
+        "folder": "10 Theories/Mechanisms",
+        "status": "active",
+        "degree": 5,
+        "provenance": {
+          "id": "vault:10 Theories/Mechanisms/Aggressor Flow.md",
+          "source": "knowledge/10 Theories/Mechanisms/Aggressor Flow.md",
+          "observed_at": "2026-10-07T20:48:34.181650+00:00",
+          "time_basis": "file_modified",
+          "summary": "Aggressive flow imbalance can reveal short-term pressure.",
+          "classification": "market-mechanism \u00b7 status active \u00b7 context_only"
+        },
+        "lenses": [
+          "Knowledge",
+          "Timeline"
+        ]
+      },
+      {
+        "id": "10 Theories/Mechanisms/Absorption Test.md",
+        "label": "Absorption Test",
+        "kind": "market-mechanism",
+        "folder": "10 Theories/Mechanisms",
+        "status": "active",
+        "degree": 3,
+        "provenance": {
+          "id": "vault:10 Theories/Mechanisms/Absorption Test.md",
+          "source": "knowledge/10 Theories/Mechanisms/Absorption Test.md",
+          "observed_at": "2026-10-07T20:48:34.181800+00:00",
+          "time_basis": "file_modified",
+          "summary": "Passive liquidity absorbs aggressive flow.",
+          "classification": "market-mechanism \u00b7 status active \u00b7 context_only"
+        },
+        "lenses": [
+          "Knowledge",
+          "Timeline"
+        ]
+      },
+      {
+        "id": "40 Regimes/Liquid Active Market.md",
+        "label": "Liquid Active Market",
+        "kind": "regime",
+        "folder": "40 Regimes",
+        "status": "active",
+        "degree": 2,
+        "provenance": {
+          "id": "vault:40 Regimes/Liquid Active Market.md",
+          "source": "knowledge/40 Regimes/Liquid Active Market.md",
+          "observed_at": "2026-10-07T20:48:34.181946+00:00",
+          "time_basis": "file_modified",
+          "summary": null,
+          "classification": "regime \u00b7 status active \u00b7 context_only"
+        },
+        "lenses": [
+          "Knowledge",
+          "Timeline"
+        ]
+      },
+      {
+        "id": "MOC.md",
+        "label": "Map",
+        "kind": "Note",
+        "folder": "",
+        "status": null,
+        "degree": 2,
+        "provenance": {
+          "id": "vault:MOC.md",
+          "source": "knowledge/MOC.md",
+          "observed_at": "2026-10-07T20:48:34.182042+00:00",
+          "time_basis": "file_modified",
+          "summary": null,
+          "classification": "Note \u00b7 context_only"
+        },
+        "lenses": [
+          "Knowledge",
+          "Timeline"
+        ]
+      },
+      {
+        "id": "experiment:h-fixture",
+        "label": "experiment:h-fixture",
+        "kind": "experiment",
+        "lenses": [
+          "Evidence",
+          "Timeline"
+        ],
+        "record": {
+          "record_id": "experiment:h-fixture",
+          "kind": "experiment",
+          "identity": "h-fixture",
+          "source": "quantitative research ledger; registered referee status only",
+          "sha256": "57d69574aac7b21d16d51f331105c13a43d12e17846874a67f89ec9d60ee6bba",
+          "value": {
+            "item": {
+              "hash": "h-fixture",
+              "tf": "4h",
+              "geo": "trail",
+              "k": 1,
+              "round": "singles",
+              "parent": null,
+              "trigger": null,
+              "window": null,
+              "parts": [],
+              "status": "scored",
+              "label": "donchian_hi(100)",
+              "verdict": "prune",
+              "reason": "fixture: below its window control",
+              "consistency_p": null,
+              "median_pf": 1.04,
+              "total_pct": null,
+              "max_dd_pct": null,
+              "trades": 37,
+              "scored_symbols": null,
+              "testable": null,
+              "created_at": "2026-10-07T19:48:34+00:00",
+              "entry_long": null,
+              "entry_short": null,
+              "ablation": null,
+              "result_bytes": 0,
+              "result": null,
+              "result_truncated": false,
+              "seed_strategy": null
+            },
+            "parent": null,
+            "children": [],
+            "candidate": null,
+            "registrations": [],
+            "unavailable": [
+              {
+                "field": "candidate",
+                "reason": "not carried into the candidate bank"
+              },
+              {
+                "field": "registrations",
+                "reason": "no registered gate look for this hash"
+              },
+              {
+                "field": "strategy",
+                "reason": "the combination records no seeding strategy (trigger is not seed:<id>)"
+              }
+            ],
+            "notes": [
+              "A search result is a ranking, not admission"
+            ],
+            "source": "journal research ledger (research_combos/candidates/tests; exact hash joins)"
+          },
+          "timestamp": "2026-10-07T19:48:34+00:00",
+          "available_at": null,
+          "time_basis": "event",
+          "verification": "RECORDED",
+          "freshness": "NOT_ASSESSED",
+          "strategy_version_id": null,
+          "decision_id": null,
+          "cycle_id": null
+        },
+        "provenance": {
+          "id": "experiment:h-fixture",
+          "source": "quantitative research ledger; registered referee status only",
+          "observed_at": "2026-10-07T19:48:34+00:00",
+          "time_basis": "event",
+          "summary": "{'item': {'hash': 'h-fixture', 'tf': '4h', 'geo': 'trail', 'k': 1, 'round': 'singles', 'parent': None, 'trigger': None, 'window': None, 'parts': [], 'status': 'scored', 'label': 'donchian_hi(100)', 'verdict': 'prune', 'reason': 'fixture: below its window control', 'consistency_p': None, 'median_pf': 1.04, 'total_pct': None, 'max_dd_pct': None, 'trades': 37, 'scored_symbols': None, 'testable': None, 'created_at': '2026-10-07T19:48:34+00:00', 'entry_long': None, 'entry_short': None, 'ablation': None, 'result_bytes': 0, 'result': None, 'result_truncated': False, 'seed_strategy': None}, 'parent': None, 'children': [], 'candidate': None, 'registrations': [], 'unavailable': [{'field': 'candidate', 'reason': 'not carried into the candidate bank'}, {'field': 'registrations', 'reason': 'no registered gate look for this hash'}, {'field': 'strategy', 'reason': 'the combination records no seeding strategy (trigger is not seed:<id>)'}], 'notes': ['A search result is a ranking, not admission'], 'source': 'journal research ledger (research_combos/candidates/tests; exact hash joins)'}",
+          "classification": "RECORDED \u00b7 historical"
+        }
+      },
+      {
+        "id": "decision:d1",
+        "label": "decision:d1",
+        "kind": "decision",
+        "lenses": [
+          "Evidence",
+          "Timeline"
+        ],
+        "record": {
+          "record_id": "decision:d1",
+          "kind": "decision",
+          "identity": "d1",
+          "source": "journal decision",
+          "sha256": "3734482d6d79d7e637f60e366922dc40a73ac358bee208cc6087365fcff32b27",
+          "value": {
+            "id": "d1",
+            "cycle_id": "c1",
+            "ts": "2026-10-07T20:46:34+00:00",
+            "symbol": "BTC/USDT",
+            "action": "HOLD",
+            "score": 0.0,
+            "threshold": 0.5,
+            "confidence": 0.0,
+            "executed": 0,
+            "skip_reason": null,
+            "size_usdt": 0.0,
+            "entry_price": null,
+            "strategy_ids": null,
+            "instrument_binding_json": null,
+            "reason_codes": null,
+            "reason_codes_version": null,
+            "scan_id": null,
+            "signals_json": "[]",
+            "meta_p": null
+          },
+          "timestamp": "2026-10-07T20:46:34+00:00",
+          "available_at": null,
+          "time_basis": "event",
+          "verification": "RECORDED",
+          "freshness": "NOT_ASSESSED",
+          "strategy_version_id": null,
+          "decision_id": null,
+          "cycle_id": "c1"
+        },
+        "provenance": {
+          "id": "decision:d1",
+          "source": "journal decision",
+          "observed_at": "2026-10-07T20:46:34+00:00",
+          "time_basis": "event",
+          "summary": "{'id': 'd1', 'cycle_id': 'c1', 'ts': '2026-10-07T20:46:34+00:00', 'symbol': 'BTC/USDT', 'action': 'HOLD', 'score': 0.0, 'threshold': 0.5, 'confidence': 0.0, 'executed': 0, 'skip_reason': None, 'size_usdt': 0.0, 'entry_price': None, 'strategy_ids': None, 'instrument_binding_json': None, 'reason_codes': None, 'reason_codes_version': None, 'scan_id': None, 'signals_json': '[]', 'meta_p': None}",
+          "classification": "RECORDED \u00b7 historical"
+        }
+      },
+      {
+        "id": "strategy:s1",
+        "label": "strategy:s1",
+        "kind": "strategy",
+        "lenses": [
+          "Evidence",
+          "Timeline"
+        ],
+        "record": {
+          "record_id": "strategy:s1",
+          "kind": "strategy",
+          "identity": "s1",
+          "source": "strategy registry and lifecycle",
+          "sha256": "7eb7c9dff4a5616a8102c9957d2f9ee3c2eb6999e225052dba281d4b5b864746",
+          "value": {
+            "id": "s1",
+            "name": "Donchian",
+            "kind": "spec",
+            "state": "active",
+            "description": null,
+            "origin": "analyst",
+            "hypothesis": null,
+            "invalidation": null,
+            "regime_filter": null,
+            "markets": null,
+            "generation": 0,
+            "parent_id": "",
+            "created_at": "2026-10-07T20:48:34+00:00",
+            "retire_reason": "",
+            "state_changed_at": "2026-10-07T20:48:34+00:00",
+            "spec_sha256": null,
+            "params_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "spec": null,
+            "registry_stats": null,
+            "spec_full": null,
+            "lifecycle": [
+              {
+                "at": "2026-10-07T20:48:34+00:00",
+                "event": "registry_created",
+                "source": "strategies"
+              }
+            ],
+            "brain_events": [],
+            "family": {
+              "kind": "spec",
+              "generation": 0,
+              "parent": null,
+              "children": [],
+              "siblings": [],
+              "basis": "registry kind, parent_id and generation as recorded"
+            },
+            "source_idea": null,
+            "postmortem": null,
+            "research_seeded": [],
+            "recent_trades": [
+              {
+                "id": "t-btc",
+                "symbol": "BTC/USDT",
+                "side": "long",
+                "status": "open",
+                "opened_at": "2026-10-07T14:48:34+00:00",
+                "closed_at": null,
+                "realized_pnl": 0.0,
+                "close_reason": null
+              }
+            ],
+            "journal_economics": {
+              "trades": 1,
+              "open": 1,
+              "closed": 0,
+              "realized_pnl": null,
+              "wins": 0
+            },
+            "unavailable": [
+              {
+                "field": "health",
+                "reason": "no health record or postmortem verdict is stored for this strategy"
+              },
+              {
+                "field": "capacity",
+                "reason": "no capacity estimate is stored"
+              },
+              {
+                "field": "allocation",
+                "reason": "risk sizes each entry from config; no per-strategy allocation record is stored"
+              },
+              {
+                "field": "version_history",
+                "reason": "the registry keeps only the current row; earlier spec versions are not retained"
+              }
+            ],
+            "source": "journal strategies (current registry row), control_events strategy_* entries and journal-booked trades"
+          },
+          "timestamp": null,
+          "available_at": null,
+          "time_basis": "NOT_RECORDED",
+          "verification": "RECORDED",
+          "freshness": "NOT_ASSESSED",
+          "strategy_version_id": null,
+          "decision_id": null,
+          "cycle_id": null
+        },
+        "provenance": {
+          "id": "strategy:s1",
+          "source": "strategy registry and lifecycle",
+          "observed_at": null,
+          "time_basis": "NOT_RECORDED",
+          "summary": "{'id': 's1', 'name': 'Donchian', 'kind': 'spec', 'state': 'active', 'description': None, 'origin': 'analyst', 'hypothesis': None, 'invalidation': None, 'regime_filter': None, 'markets': None, 'generation': 0, 'parent_id': '', 'created_at': '2026-10-07T20:48:34+00:00', 'retire_reason': '', 'state_changed_at': '2026-10-07T20:48:34+00:00', 'spec_sha256': None, 'params_sha256': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a', 'spec': None, 'registry_stats': None, 'spec_full': None, 'lifecycle': [{'at': '2026-10-07T20:48:34+00:00', 'event': 'registry_created', 'source': 'strategies'}], 'brain_events': [], 'family': {'kind': 'spec', 'generation': 0, 'parent': None, 'children': [], 'siblings': [], 'basis': 'registry kind, parent_id and generation as recorded'}, 'source_idea': None, 'postmortem': None, 'research_seeded': [], 'recent_trades': [{'id': 't-btc', 'symbol': 'BTC/USDT', 'side': 'long', 'status': 'open', 'opened_at': '2026-10-07T14:48:34+00:00', 'closed_at': None, 'realized_pnl': 0.0, 'close_reason': None}], 'journal_economics': {'trades': 1, 'open': 1, 'closed': 0, 'realized_pnl': None, 'wins': 0}, 'unavailable': [{'field': 'health', 'reason': 'no health record or postmortem verdict is stored for this strategy'}, {'field': 'capacity', 'reason': 'no capacity estimate is stored'}, {'field': 'allocation', 'reason': 'risk sizes each entry from config; no per-strategy allocation record is stored'}, {'field': 'version_history', 'reason': 'the registry keeps only the current row; earlier spec versions are not retained'}], 'source': 'journal strategies (current registry row), control_events strategy_* entries and journal-booked trades'}",
+          "classification": "RECORDED \u00b7 historical"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "kt-dc8b955a89f1248e",
+        "source": "10 Theories/Mechanisms/Absorption Test.md",
+        "target": "40 Regimes/Liquid Active Market.md",
+        "relation": "fails_in",
+        "kind": "typed",
+        "resolved": true,
+        "evidence": "vault:10 Theories/Mechanisms/Absorption Test.md#relations.fails_in"
+      },
+      {
+        "id": "kt-150e6cfb908d9c05",
+        "source": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "target": "10 Theories/Mechanisms/Absorption Test.md",
+        "relation": "supports",
+        "kind": "typed",
+        "resolved": true,
+        "evidence": "vault:10 Theories/Mechanisms/Aggressor Flow.md#relations.supports"
+      },
+      {
+        "id": "kt-dbb3d109333f6878",
+        "source": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "target": "unresolved:Missing Concept",
+        "relation": "contradicts",
+        "kind": "typed",
+        "resolved": false,
+        "evidence": "vault:10 Theories/Mechanisms/Aggressor Flow.md#relations.contradicts"
+      },
+      {
+        "id": "kt-30f2c0d5ac087661",
+        "source": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "target": "40 Regimes/Liquid Active Market.md",
+        "relation": "works_in",
+        "kind": "typed",
+        "resolved": true,
+        "evidence": "vault:10 Theories/Mechanisms/Aggressor Flow.md#relations.works_in"
+      },
+      {
+        "id": "kl-14f3c2680bcd77c4",
+        "source": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "target": "10 Theories/Mechanisms/Absorption Test.md",
+        "relation": "wikilink",
+        "kind": "link",
+        "resolved": true,
+        "evidence": "vault:10 Theories/Mechanisms/Aggressor Flow.md"
+      },
+      {
+        "id": "kl-c7aab44354595588",
+        "source": "MOC.md",
+        "target": "10 Theories/Mechanisms/Aggressor Flow.md",
+        "relation": "wikilink",
+        "kind": "link",
+        "resolved": true,
+        "evidence": "vault:MOC.md"
+      },
+      {
+        "id": "kl-8145f5b330011af2",
+        "source": "MOC.md",
+        "target": "unresolved:Nowhere Note",
+        "relation": "wikilink",
+        "kind": "link",
+        "resolved": false,
+        "evidence": "vault:MOC.md"
+      }
+    ],
+    "total_nodes": 7,
+    "returned_nodes": 7,
+    "truncated": false,
+    "unresolved_edges": 2,
+    "lenses": {
+      "Knowledge": {
+        "available": true,
+        "note": "All vault notes"
+      },
+      "Timeline": {
+        "available": true,
+        "note": "Event chronology for stored records; file modification time for notes. Missing event time is NOT_RECORDED."
+      },
+      "Evidence": {
+        "available": true,
+        "note": "Exact internal records; RECORDED is not VERIFIED. Missing links are UNAVAILABLE."
+      },
+      "Code": {
+        "available": true,
+        "note": "Read-only source_paths metadata; no source link means UNLINKED. Graphify is not a runtime dependency."
+      }
+    },
+    "limits": [
+      "No paging: at most 500 notes per response",
+      "Relations are as written in note frontmatter/wikilinks; not verified evidence or causality",
+      "Source time is file modification time",
+      "No inferred trace edges. Evidence catalogs are bounded; exact owner queries provide details."
+    ]
+  },
+  "/owner-api/v1/system": {
+    "generated_at": "2026-10-07T20:48:34.338570+00:00",
+    "nodes": [
+      {
+        "id": "market-data",
+        "label": "Market Data",
+        "kind": "Component",
+        "source_file": "trader/data/feed.py",
+        "configured_enabled": null,
+        "x": 0,
+        "y": 0,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "attention",
+        "label": "Attention",
+        "kind": "Component",
+        "source_file": "trader/observability/attention.py",
+        "configured_enabled": false,
+        "x": 320,
+        "y": 0,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "orchestrator",
+        "label": "Orchestrator & analysts",
+        "kind": "Component",
+        "source_file": "trader/engine/orchestrator.py",
+        "configured_enabled": null,
+        "x": 640,
+        "y": 0,
+        "telemetry": {
+          "observed_at": "2026-10-07T20:46:34+00:00",
+          "age_s": 120.3,
+          "freshness": "fresh",
+          "health": "unknown",
+          "summary": "Latest journal decision record (activity, not health)",
+          "source": "journal decisions",
+          "stale_after_s": 900.0,
+          "status_label": null
+        }
+      },
+      {
+        "id": "risk",
+        "label": "Risk",
+        "kind": "Component",
+        "source_file": "trader/engine/risk.py",
+        "configured_enabled": null,
+        "x": 960,
+        "y": 0,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "execution",
+        "label": "Execution",
+        "kind": "Component",
+        "source_file": "trader/engine/executor.py",
+        "configured_enabled": null,
+        "x": 960,
+        "y": 250,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "supervisor",
+        "label": "Supervisor",
+        "kind": "Component",
+        "source_file": "trader/engine/supervisor.py",
+        "configured_enabled": null,
+        "x": 640,
+        "y": 250,
+        "telemetry": {
+          "observed_at": "2026-10-07T20:48:04.163373+00:00",
+          "age_s": 30.2,
+          "freshness": "fresh",
+          "health": "unknown",
+          "summary": "Last pass outcome SAFE; stage COMPLETE; reasons none",
+          "source": "journal state_kv.supervisor_status (Supervisor venue reconciliation pass)",
+          "stale_after_s": 180.0,
+          "status_label": null
+        }
+      },
+      {
+        "id": "owner-interface",
+        "label": "Owner Interface",
+        "kind": "Component",
+        "source_file": "trader/owner/service.py",
+        "configured_enabled": null,
+        "x": 320,
+        "y": 250,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "journal",
+        "label": "Journal",
+        "kind": "Component",
+        "source_file": "trader/core/journal.py",
+        "configured_enabled": null,
+        "x": 960,
+        "y": 500,
+        "telemetry": {
+          "observed_at": "2026-10-07T20:47:34+00:00",
+          "age_s": 60.3,
+          "freshness": "fresh",
+          "health": "unknown",
+          "summary": "Latest equity record written (activity, not health)",
+          "source": "journal equity",
+          "stale_after_s": 900.0,
+          "status_label": null
+        }
+      },
+      {
+        "id": "kernel",
+        "label": "Kernel cycle",
+        "kind": "Component",
+        "source_file": "trader/kernel.py",
+        "configured_enabled": null,
+        "x": 0,
+        "y": 250,
+        "telemetry": {
+          "observed_at": "2026-10-07T20:48:14.172842+00:00",
+          "age_s": 20.2,
+          "freshness": "fresh",
+          "health": "unknown",
+          "summary": "Process UNKNOWN; heartbeat fresh; successful work age None; reported control FROZEN",
+          "source": "data/heartbeat_luffy.json (kernel cycle heartbeat)",
+          "stale_after_s": 240.0,
+          "status_label": "UNKNOWN"
+        }
+      },
+      {
+        "id": "research",
+        "label": "Research",
+        "kind": "Component",
+        "source_file": "trader/research/",
+        "configured_enabled": null,
+        "x": 640,
+        "y": 500,
+        "telemetry": {
+          "observed_at": null,
+          "age_s": null,
+          "freshness": "unavailable",
+          "health": null,
+          "summary": "No telemetry source is exposed for this component",
+          "source": null
+        }
+      },
+      {
+        "id": "dashboard",
+        "label": "Dashboard server",
+        "kind": "Component",
+        "source_file": "trader/dashboard/server.py",
+        "configured_enabled": null,
+        "x": 320,
+        "y": 500,
+        "telemetry": {
+          "observed_at": "2026-10-07T20:48:34.338570+00:00",
+          "age_s": 0.0,
+          "freshness": "fresh",
+          "health": "active",
+          "summary": "This server answered the request",
+          "source": "dashboard process",
+          "stale_after_s": 900.0,
+          "status_label": null
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "arch-market-data-attention",
+        "source": "market-data",
+        "target": "attention",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-attention-orchestrator",
+        "source": "attention",
+        "target": "orchestrator",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-orchestrator-risk",
+        "source": "orchestrator",
+        "target": "risk",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-risk-execution",
+        "source": "risk",
+        "target": "execution",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-execution-journal",
+        "source": "execution",
+        "target": "journal",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-supervisor-execution",
+        "source": "supervisor",
+        "target": "execution",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-owner-interface-supervisor",
+        "source": "owner-interface",
+        "target": "supervisor",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-kernel-owner-interface",
+        "source": "kernel",
+        "target": "owner-interface",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-journal-research",
+        "source": "journal",
+        "target": "research",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-journal-dashboard",
+        "source": "journal",
+        "target": "dashboard",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      },
+      {
+        "id": "arch-dashboard-owner-interface",
+        "source": "dashboard",
+        "target": "owner-interface",
+        "kind": "architecture",
+        "relation": "declared architectural connection"
+      }
+    ],
+    "events": [],
+    "events_note": "No component activity event stream exists; no activity is animated",
+    "architecture_source": "Repository source map (declared), not observed traffic"
+  },
+  "/owner-api/v1/needs-you": {
+    "generated_at": "2026-10-07T20:48:34.345582+00:00",
+    "schema": "owner-needs-you.v1",
+    "items": [],
+    "truncated": false,
+    "pending_total": 0,
+    "total": 0,
+    "page": {
+      "offset": 0,
+      "limit": 100,
+      "has_more": false,
+      "next_offset": null,
+      "order": "pending/stale before completed history"
+    },
+    "unavailable": [
+      {
+        "field": "approvals",
+        "reason": "governance_proposal_ledger_not_recorded"
+      },
+      {
+        "field": "approvals",
+        "reason": "first_live_request_ledger_not_recorded"
+      }
+    ],
+    "source": "exact owner governance and Strategy Factory request ledgers",
+    "classes": [
+      "first_live",
+      "capability",
+      "paid_spend",
+      "risk_boundary",
+      "serious_recovery",
+      "production_code"
+    ],
+    "grants": "Decisions only. No activation, spend, risk/config mutation or order."
+  },
+  "/owner-api/v1/trades": {
+    "generated_at": "2026-10-07T20:48:34.348819+00:00",
+    "trades": [
+      {
+        "id": "t-eth",
+        "decision_id": null,
+        "symbol": "ETH/USDT",
+        "side": "short",
+        "amount": 0.5,
+        "entry_price": 3000.0,
+        "exit_price": null,
+        "notional_usdt": 1500.0,
+        "leverage": 3,
+        "stop_loss": 2910.0,
+        "take_profit": null,
+        "sl_order_id": "algo-1",
+        "initial_risk": null,
+        "tp1_done": 0,
+        "strategy_id": null,
+        "strategy_name": "spec:donchian",
+        "market_type": null,
+        "exec_mode": "live",
+        "status": "open",
+        "realized_pnl": 0.0,
+        "close_reason": null,
+        "opened_at": "2026-10-07T15:48:34+00:00",
+        "closed_at": null,
+        "mfe_r": null,
+        "mae_r": null
+      },
+      {
+        "id": "t-btc",
+        "decision_id": "d1",
+        "symbol": "BTC/USDT",
+        "side": "long",
+        "amount": 0.01,
+        "entry_price": 60000.0,
+        "exit_price": null,
+        "notional_usdt": 600.0,
+        "leverage": 3,
+        "stop_loss": 58200.0,
+        "take_profit": null,
+        "sl_order_id": "algo-1",
+        "initial_risk": null,
+        "tp1_done": 0,
+        "strategy_id": "s1",
+        "strategy_name": "spec:donchian",
+        "market_type": null,
+        "exec_mode": "live",
+        "status": "open",
+        "realized_pnl": 0.0,
+        "close_reason": null,
+        "opened_at": "2026-10-07T14:48:34+00:00",
+        "closed_at": null,
+        "mfe_r": null,
+        "mae_r": null
+      },
+      {
+        "id": "t-old",
+        "decision_id": null,
+        "symbol": "SOL/USDT",
+        "side": "long",
+        "amount": 1.0,
+        "entry_price": 150.0,
+        "exit_price": 152.0,
+        "notional_usdt": 150.0,
+        "leverage": 2,
+        "stop_loss": null,
+        "take_profit": null,
+        "sl_order_id": "",
+        "initial_risk": null,
+        "tp1_done": 0,
+        "strategy_id": null,
+        "strategy_name": "spec:donchian",
+        "market_type": null,
+        "exec_mode": null,
+        "status": "closed",
+        "realized_pnl": 2.0,
+        "close_reason": "trail",
+        "opened_at": "2026-10-05T20:48:34+00:00",
+        "closed_at": "2026-10-07T19:48:34+00:00",
+        "mfe_r": null,
+        "mae_r": null
+      }
+    ],
+    "limit": 50,
+    "status": "all",
+    "order": [
+      "opened_at DESC",
+      "id DESC"
+    ],
+    "page": {
+      "cursor": null,
+      "next_cursor": null,
+      "has_more": false,
+      "preceding": 0,
+      "total": 3,
+      "first": {
+        "opened_at": "2026-10-07T15:48:34+00:00",
+        "id": "t-eth"
+      },
+      "last": {
+        "opened_at": "2026-10-05T20:48:34+00:00",
+        "id": "t-old"
+      },
+      "history": {
+        "changed": false,
+        "reason": null
+      }
+    },
+    "consistency": "rows, preceding, total and the history check read in one read-only journal transaction",
+    "source": "journal trades (journal-booked; venue fills not re-verified here)"
+  },
+  "/owner-api/v1/owner-interface": {
+    "availability": "AVAILABLE",
+    "status": "ACCEPTED",
+    "reasons": [],
+    "principal": "owner",
+    "observed_at": "2026-10-07T20:48:34.355665+00:00",
+    "control_state": "FROZEN",
+    "supervisor": {
+      "outcome": "SAFE"
+    },
+    "heartbeat_age_s": 12.0,
+    "recovery_in_progress": false,
+    "source": "kernel Owner Interface health read (IPC)"
+  },
+  "_fixture_description": "Isolated synthetic read-only test records, copied from the V1 correction suite; never production data."
+}

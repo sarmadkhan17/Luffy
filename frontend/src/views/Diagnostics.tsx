@@ -9,6 +9,7 @@ import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DetailPanel, KV } from "../components/glass";
 import { StorageTruth } from "../components/StorageTruth";
+import { ChangeValue } from "../components/motion";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 
@@ -242,7 +243,7 @@ export default function Diagnostics() {
                 </span>
                 <span style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
                   <span className="m" style={{ fontSize: 26, color: COL[k.lvl] }}>{k.v}</span>
-                  <span className="gl-pill" style={{ background: `${COL[k.lvl]}24`, color: COL[k.lvl], textTransform: "uppercase", fontSize: 10 }}>{k.st}</span>
+                  <span className="gl-pill" style={{ background: `${COL[k.lvl]}24`, color: COL[k.lvl], textTransform: "uppercase", fontSize: 10 }}><ChangeValue value={String(k.st)} /></span>
                 </span>
                 <span style={{ fontSize: 13, color: "#b9c5d1", lineHeight: 1.45, textAlign: "left" }}>{k.x}</span>
                 {k.pct !== undefined && <span className="gl-meter" style={{ width: "100%" }}><i style={{ width: `${Math.round(k.pct * 100)}%`, background: COL[k.lvl] }} /></span>}

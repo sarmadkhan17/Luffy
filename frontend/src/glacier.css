@@ -492,3 +492,103 @@ html, body { margin: 0; background: #000; }
   .gl-filesystem-summary article { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; font-size: 13px; }
 }
 .gl-overview .gl-count { width: auto; min-width: 26px; padding: 0 8px; border-radius: 999px; flex-shrink: 0; box-sizing: border-box; }
+
+/* V2: a bounded shared motion language; critical evidence is readable at rest. */
+.gl-app { --motion-micro: 140ms; --motion-ui: 240ms; --motion-data: 450ms; --motion-ease: cubic-bezier(.22,1,.36,1); }
+.gl-route { display: flex; flex-direction: column; gap: 20px; min-width: 0; flex: 1; }
+.gl-app:not(.route-tracker) .gl-card,
+.gl-app:not(.route-tracker) .gl-card.need,
+.gl-app:not(.route-tracker) .gl-sheen i,
+.gl-app:not(.route-tracker) .gl-state i,
+.gl-app:not(.route-tracker) .gl-tile i,
+.gl-app:not(.route-tracker) .gl-gauge,
+.gl-app:not(.route-tracker) .gl-st,
+.gl-app:not(.route-tracker) .gl-ping,
+.gl-app:not(.route-tracker) .gl-grow,
+.gl-app:not(.route-tracker) .gl-fdot,
+.gl-app:not(.route-tracker) .gl-blinkdot,
+.gl-app:not(.route-tracker) .gl-curve,
+.gl-app:not(.route-tracker) .gl-area,
+.gl-app:not(.route-tracker) .gl-oc.panic,
+.gl-app:not(.route-tracker) .gl-node.on,
+.gl-app:not(.route-tracker) .gl-orbit .orbit,
+.gl-app:not(.route-tracker) .gl-fn,
+.gl-app:not(.route-tracker) .gl-gd,
+.gl-app:not(.route-tracker) .gl-fctr .o,
+.gl-app:not(.route-tracker) .vring > span { animation: none; }
+.gl-app:not(.route-tracker) .gl-sheen { display: none; }
+.gl-card { transition: border-color var(--motion-micro), box-shadow var(--motion-ui); }
+.gl-card:focus-within { border-color: rgb(var(--a) / .65); }
+.gl-card.need { box-shadow: inset 3px 0 rgb(var(--a) / .8), inset 0 1px 0 #ffffff26, 0 18px 40px #0008; }
+.gl-nav a { position: relative; transition: background var(--motion-micro), color var(--motion-micro); }
+.gl-nav a[aria-current="page"]::after { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: rgb(var(--a)); }
+.gl-app:not(.route-tracker) :is(.gl-btn,.gl-tf,.gl-segb,.gl-oc,.rcard,.why) { transition: background var(--motion-micro), border-color var(--motion-micro), transform var(--motion-micro); }
+.gl-app:not(.route-tracker) :is(.gl-btn,.gl-tf,.gl-segb,.gl-oc):active:not(:disabled) { transform: translateY(1px); }
+.gl-app button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.gl-app textarea:focus-visible { outline: 2px solid rgb(var(--a2)); outline-offset: 3px; }
+.gl-table tbody tr { transition: background var(--motion-micro); }
+.gl-table tbody tr:focus-within { background: rgb(var(--a) / .1); box-shadow: inset 3px 0 rgb(var(--a)); }
+.gl-table tbody tr.selected { background: rgb(var(--a) / .13); box-shadow: inset 3px 0 rgb(var(--a)); }
+.gl-th button[aria-pressed="true"] { color: rgb(var(--a2)); }
+.gl-change { border-radius: 4px; }
+.gl-chips .gl-tf { animation: gl-chip-in var(--motion-micro) var(--motion-ease); }
+@keyframes gl-chip-in { from { opacity: .5; } to { opacity: 1; } }
+.gl-panel { animation: none; box-shadow: 0 24px 90px #000b, inset 0 1px #ffffff20; }
+.gl-panel[data-state="open"] { animation: gl-popin var(--motion-ui) var(--motion-ease); }
+.gl-panel[data-state="closed"] { animation: gl-panel-out 180ms ease-out; }
+.gl-overlay[data-state="open"] { animation: gl-fade 180ms ease-out; }
+.gl-overlay[data-state="closed"] { animation: gl-fade-out 180ms ease-out; }
+@keyframes gl-panel-out { to { opacity: 0; transform: translate(-50%,-49%); } }
+@keyframes gl-fade-out { to { opacity: 0; } }
+.gl-panel .x { position: sticky; top: 0; order: -1; align-self: flex-end; min-height: 44px; flex-shrink: 0; margin-bottom: -44px; z-index: 3; background: #102233; }
+.gl-authority, .gl-economics { display: flex; flex-direction: column; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; }
+.gl-economics { border-color: #36424d; background: #ffffff04; }
+.gl-panel :is(.gl-authority,.gl-economics) h3,.gl-section-title { font-size: 12px; color: rgb(var(--mut)); }
+.gl-lifecycle { list-style: none; padding: 0; }
+.gl-lifecycle li { position: relative; display: flex; gap: 14px; padding-bottom: 18px; }
+.gl-lifecycle li::before { content: ""; position: absolute; left: 6px; top: 12px; bottom: 0; width: 1px; background: var(--line); }
+.gl-lifecycle li:last-child { padding-bottom: 0; }
+.gl-lifecycle li:last-child::before { display: none; }
+.gl-lifecycle-mark { width: 13px; height: 13px; border: 2px solid rgb(var(--mut)); border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
+.gl-lifecycle li[data-stale] .gl-lifecycle-mark { border-color: var(--warn); border-style: dashed; }
+.gl-lifecycle li > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.gl-lifecycle small { color: var(--txt3); }
+.gl-machine-core { width: min(220px, 70vw); height: auto; filter: drop-shadow(0 6px 12px #0008); }
+.gl-machine-core[data-state="provider_disabled"],.gl-machine-core[data-state="unavailable"] { opacity: .65; }
+.gl-hour[aria-pressed="true"] { outline: 2px solid rgb(var(--a2)); outline-offset: 1px; background: rgb(var(--a) / .12); }
+.gl-hour { border: 0; background: transparent; padding: 0; cursor: pointer; }
+.gl-orbit .gl-fn .t { max-width: 200px; white-space: normal; text-align: center; line-height: 1.4; }
+.gl-orbit .gl-fn { min-height: 44px; width: 200px; padding: 4px; border-radius: 8px; }
+.gl-orbit .gl-fn:hover,.gl-orbit .gl-fn:focus-visible { background: #102233e8; z-index: 4; }
+.gl-neighbors { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 8px; max-height: 320px; overflow: auto; }
+.gl-neighbors button { min-height: 44px; text-align: left; white-space: normal; }
+@media (max-width: 1100px) {
+  .gl-nav { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding: 3px; scroll-padding: 16px; }
+  .gl-nav .grp { flex-wrap: nowrap; flex-shrink: 0; }
+  .gl-nav a { flex-shrink: 0; white-space: nowrap; }
+  .gl-rail { gap: 12px; padding: 16px 12px; }
+}
+@media (max-width: 600px) {
+  .gl-panel { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 14px; }
+  .gl-machine-core { width: 160px; }
+  .gl-hours { overflow-x: auto; grid-template-columns: repeat(24, minmax(24px,1fr)); }
+  .gl-app :is(.gl-tf,.gl-segb,.gl-oc,.why,.gl-rowbtn) { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gl-app *, .gl-app *::before,.gl-app *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+.gl-orbit .gl-fn .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gl-node[data-telemetry="stale"] .shape { border-style: dashed; }
+.gl-node[data-telemetry="unknown"] .shape { border-color: #607588; }
+.gl-declared-highlight { transition: stroke-opacity var(--motion-micro); }
+
+.gl-app main.gl-main:focus { outline: none; }
+.gl-chart:focus-visible { outline: 2px solid rgb(var(--a2)); outline-offset: 4px; }
+.gl-capacity-track { display: block; width: 100%; border-radius: 3px; background: #ffffff14; }
+
+.gl-step-dot { position: relative; min-width: 44px; min-height: 44px !important; background: transparent; display: inline-grid; place-items: center; }
+.gl-step-dot::after { content: ""; width: 10px; height: 10px; border-radius: 5px; background: var(--step-tone); }
+.gl-step-dot[aria-current="true"]::after { width: 26px; }
+@media (max-width: 600px) { .gl-app:not(.route-tracker) button { min-width: 44px; min-height: 44px !important; } }
+
+.gl-step-list { flex-wrap: wrap; max-width: 100%; }

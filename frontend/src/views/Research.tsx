@@ -6,6 +6,10 @@ import { FlaskConical, Funnel, ListChecks } from "lucide-react";
 import { usePreview } from "../context";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DataTable, DetailPanel, KV, type Col } from "../components/glass";
+import { m } from "motion/react";
+import { useMotionPreference } from "../components/ui";
+import { glacierMotion } from "../components/motion";
+import { ChangeValue } from "../components/motion";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 
@@ -43,11 +47,13 @@ const rule = (c: Combo) => {
 
 export default function Research() {
   const { adapter } = usePreview();
+  const reduced = useMotionPreference();
   const q = useRead(adapter.mode === "LIVE" ? "research/board" : null, 120000);
   const b = (q.isError ? undefined : q.data) as Record<string, any> | undefined;
   const combos = (b?.combos ?? []) as Combo[];
   const [open, setOpen] = useState<Combo | null>(null);
   const [more, setMore] = useState(false);
+  const [stageInfo, setStageInfo] = useState<number | null>(null);
   const [shownN, setShownN] = useState<number | null>(null);
 
   const verdictN = (st: string, v?: string) => b?.verdicts == null ? null : asRows(b?.verdicts).filter((r) => r.status === st && (!v || r.verdict === v)).reduce((a, r) => a + (r.n as number), 0);
@@ -113,15 +119,15 @@ export default function Research() {
             {dots.map((d, i) => <span key={i} className="gl-fdot" aria-hidden="true" style={{ top: d.y * 200 / 260, ["--to" as string]: d.to, animationDuration: d.du, animationDelay: d.dl }} />)}
             <svg viewBox="0 0 1000 260" preserveAspectRatio="none" style={{ width: "100%", height: 200, display: "block" }} role="img" aria-label={`Funnel: ${stages.map((s) => `${s.l} ${s.n}`).join(", ")}`}>
               <defs><linearGradient id="gl-fg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style={{ stopColor: "rgb(var(--a))" }} stopOpacity=".5" /><stop offset="1" style={{ stopColor: "rgb(var(--a2))" }} stopOpacity=".12" /></linearGradient></defs>
-              <path d={funnelPath} fill="url(#gl-fg)" style={{ stroke: "rgb(var(--a))" }} strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+              <m.path initial={false} animate={{ d: funnelPath }} transition={{ duration: reduced ? 0 : glacierMotion.data }} fill="url(#gl-fg)" style={{ stroke: "rgb(var(--a))" }} strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
               {stages.slice(0, -1).map((_, i) => <path key={i} d={`M${((i + 1) * 1000) / NS} 20V240`} stroke="#ffffff1f" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />)}
             </svg>
             </div>
             <div className="gl-funnel-stages" style={{ display: "grid", gridTemplateColumns: `repeat(${NS}, minmax(0, 1fr))`, gap: 8, marginTop: 8 }}>
               {stages.map((s, i) => (
                 <div key={s.l} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span className="m" style={{ fontSize: 28 - i * 2, color: "rgb(var(--hi))" }}>{s.n === null ? "UNAVAILABLE" : s.n.toLocaleString("en-US")}</span>
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{s.l}</span>
+                  <span className="m" style={{ fontSize: 28 - i * 2, color: "rgb(var(--hi))" }}><ChangeValue value={s.n} >{s.n === null ? "UNAVAILABLE" : s.n.toLocaleString("en-US")}</ChangeValue></span>
+                  <button type="button" className="gl-tf" style={{ textAlign: "left", alignSelf: "flex-start" }} aria-label={`Explain ${s.l}`} aria-pressed={stageInfo === i} onClick={() => setStageInfo(stageInfo === i ? null : i)}>{s.l} ⓘ</button>
                   <span style={{ fontSize: 12, color: "var(--txt2)" }}>{s.d}</span>
                   <span className="m" style={{ fontSize: 11, color: i ? "rgb(var(--a2))" : GREY }}>{i === 0 ? s.n === null ? "UNAVAILABLE" : "100%" : stages[i - 1].n ? s.n === null ? "UNAVAILABLE" : `${Math.round((s.n / stages[i - 1].n!) * 100)}% of previous` : "—"}</span>
                 </div>
@@ -140,6 +146,10 @@ export default function Research() {
         )}
       </Card>
 
+      {stageInfo !== null && stages[stageInfo] && <Card className="pad" label="Stage explanation">
+        <h3>{stages[stageInfo].l} · discovery ledger</h3>
+        <p className="gl-note">{stages[stageInfo].d}. Count: {stages[stageInfo].n ?? "UNAVAILABLE"}. These are recorded stage aggregates, not proof that one exact rule progressed through every stage. Candidate discovery and Referee admission remain separate.</p>
+      </Card>}
       <Card className="pad" label="Results">
         <CardHead icon={<ListChecks size={16} />} title="Results" sub={shownN !== null ? `${shownN} of ${total ?? combos.length} rules` : undefined}>
           <span style={{ fontSize: 12, color: GREY }}>Click a rule to open its story</span>

@@ -8,6 +8,7 @@ import { usePreview } from "../context";
 import { useRouteParam } from "../links";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DataTable, DetailPanel, KV, type Col } from "../components/glass";
+import { ChangeValue } from "../components/motion";
 import { PageHeader } from "../components/PageHeader";
 import { DecisionDetail } from "./Evidence";
 import { timestamp as utc } from "../time";
@@ -33,6 +34,7 @@ export default function OperationsLog() {
   const [types, setTypes] = useState<string[]>([]);
   const [text, setText] = useState("");
   const [dayIdx, setDayIdx] = useState(0);
+  const [hour, setHour] = useState<number | null>(null);
   const [open, setOpen] = useState<Ev | null>(null);
   const [shownN, setShownN] = useState<number | null>(null);
 
@@ -41,8 +43,8 @@ export default function OperationsLog() {
   const counts = useMemo(() => Object.fromEntries(TYPES.map((t) => [t, events.filter((e) => e.type === t).length])), [events]);
   const visible = useMemo(() => {
     const t = text.trim().toLowerCase();
-    return events.filter((e) => (!types.length || types.includes(e.type)) && (!t || `${e.what} ${e.who} ${e.type} ${e.result}`.toLowerCase().includes(t)));
-  }, [events, types, text]);
+    return events.filter((e) => (hour === null || String(e.at).slice(0, 13) === `${day}T${String(hour).padStart(2, "0")}`) && (!types.length || types.includes(e.type)) && (!t || `${e.what} ${e.who} ${e.type} ${e.result}`.toLowerCase().includes(t)));
+  }, [events, types, text, day, hour]);
 
   // 24 hourly stacked bars for the selected UTC day; segment height ~ sqrt(count) so rare types stay visible
   const hours = useMemo(() => Array.from({ length: 24 }, (_, h) => {
@@ -78,8 +80,8 @@ export default function OperationsLog() {
       <p className="gl-note" data-testid="operations-disclosure">Window: {q.data?.window_start ? utc(String(q.data.window_start)) : "UNAVAILABLE"} to {q.data?.window_end ? utc(String(q.data.window_end)) : "UNAVAILABLE"}. Scans are aggregated per UTC hour; repeated safety events are merged. Rolled-up occurrences (extra scan passes / safety repeats): {String(q.data?.rolled_up_records ?? "UNAVAILABLE")}. Decision records in scan summaries: {String(q.data?.scan_decision_records_aggregated ?? "UNAVAILABLE")}. Cooldown records counted, not listed: {String(q.data?.signal_cooldowns_not_listed ?? "UNAVAILABLE")}. Truncation: {q.data?.truncated === true ? "YES" : q.data?.truncated === false ? "NO" : "NOT REPORTED"}. This is a summary of selected activity sources.</p>
       <Card className="pad" label="Activity chart">
         <CardHead icon={<BarChart3 size={16} />} title={`Activity · ${day ? dayLabel(day) : "—"} (UTC)`}>
-          <button type="button" className="gl-tf" disabled={dayIdx >= days.length - 1} onClick={() => setDayIdx(dayIdx + 1)} aria-label="Previous day"><ChevronLeft size={14} aria-hidden="true" /></button>
-          <button type="button" className="gl-tf" disabled={dayIdx === 0} onClick={() => setDayIdx(dayIdx - 1)} aria-label="Next day"><ChevronRight size={14} aria-hidden="true" /></button>
+          <button type="button" className="gl-tf" disabled={dayIdx >= days.length - 1} onClick={() => { setDayIdx(dayIdx + 1); setHour(null); }} aria-label="Previous day"><ChevronLeft size={14} aria-hidden="true" /></button>
+          <button type="button" className="gl-tf" disabled={dayIdx === 0} onClick={() => { setDayIdx(dayIdx - 1); setHour(null); }} aria-label="Next day"><ChevronRight size={14} aria-hidden="true" /></button>
           {TYPES.map((t) => (
             <button key={t} type="button" className="gl-tf" aria-pressed={types.includes(t)} style={{ padding: "0 12px", display: "inline-flex", alignItems: "center", gap: 6 }}
               onClick={() => setTypes(types.includes(t) ? types.filter((x) => x !== t) : [...types, t])}>
@@ -89,15 +91,15 @@ export default function OperationsLog() {
         </CardHead>
         {q.isPending && adapter.mode === "LIVE" ? <p className="gl-empty">Loading the activity record…</p> : (
           <>
-            <div className="gl-hours" role="img" aria-label={`Events per hour on ${day ? dayLabel(day) : "the selected day"}`}>
+            <div className="gl-hours" role="group" aria-label={`Events per hour on ${day ? dayLabel(day) : "the selected day"}`}>
               {hours.map((x) => (
-                <div key={x.h} className="gl-hour" title={x.total ? `${String(x.h).padStart(2, "0")}:00 UTC — ${x.segs.map((s) => `${s.t} ${s.n}`).join(", ")}` : `${String(x.h).padStart(2, "0")}:00 UTC — nothing recorded`}>
+                <button type="button" key={x.h} className="gl-hour" aria-label={`${String(x.h).padStart(2, "0")}:00 UTC · ${x.total} recorded occurrences`} aria-pressed={hour === x.h} onClick={() => setHour(hour === x.h ? null : x.h)} title={x.total ? `${String(x.h).padStart(2, "0")}:00 UTC — ${x.segs.map((s) => `${s.t} ${s.n}`).join(", ")}` : `${String(x.h).padStart(2, "0")}:00 UTC — nothing recorded`}>
                   {x.segs.map((s) => (<span key={s.t} className="seg" style={{ height: `${(Math.sqrt(s.n) / maxH) * 100}%`, background: TYPE_COLOR[s.t] }} />))}
-                </div>
+                </button>
               ))}
             </div>
             <div className="gl-hourlabels m">{hours.map((x) => <span key={x.h}>{x.h % 3 === 0 ? String(x.h).padStart(2, "0") : ""}</span>)}</div>
-            <p className="gl-note">Bar height is the square root of the count so rare events stay visible. Scans are counted per pass; click a type to filter the chart and the log.</p>
+            <p className="gl-note">{hour !== null && <button type="button" className="gl-tf" onClick={() => setHour(null)}>Clear {String(hour).padStart(2, "0")}:00 UTC filter ✕</button>} Bar height is the square root of the count so rare events stay visible. Scans are counted per pass; select an hour to inspect its listed records. Type filters apply to chart and log; hour selection narrows the log only. Rollups remain summaries.</p>
           </>
         )}
       </Card>
@@ -132,7 +134,7 @@ function EventPanel({ e, onClose }: { e: Ev | null; onClose: () => void }) {
   const extra = detail ? Object.entries(detail).filter(([k, v]) => !["reasons", "checks"].includes(k) && v !== null && typeof v !== "object").slice(0, 10).map(([k, v]) => [k.replaceAll("_", " "), String(v)] as [string, string]) : [];
   return (
     <DetailPanel open onClose={onClose} title={String(e.what)} description={`${e.type} · ${utc(String(e.at))} · ${e.who}`}>
-      <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: TONE[e.tone] ?? GREY }}><i style={{ width: 8, height: 8, borderRadius: "50%", background: TONE[e.tone] ?? GREY }} />{e.result}</p>
+      <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: TONE[e.tone] ?? GREY }}><i style={{ width: 8, height: 8, borderRadius: "50%", background: TONE[e.tone] ?? GREY }} /><ChangeValue value={String(e.result)} /></p>
       {reasons.length > 0 && (
         <>
           <h3 className="cz" style={{ margin: 0, fontSize: 11, color: "rgb(var(--mut))" }}>Reasons recorded</h3>

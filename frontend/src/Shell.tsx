@@ -1,6 +1,8 @@
 import { timestamp as utc } from "./time";
 import { lazyChunk, ChunkLoadError, retryFailedChunks } from "./lazyChunk";
 import { Suspense, useEffect, useState } from "react";
+import { GlacierMotion, RouteReveal } from "./components/motion";
+import { useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { usePreview } from "./context";
 import { parseHash } from "./links";
@@ -87,10 +89,21 @@ export default function Shell() {
     window.addEventListener("hashchange", update);
     return () => window.removeEventListener("hashchange", update);
   }, []);
+  const nav = useRef<HTMLElement>(null);
+  const previousRoute = useRef(route);
+  useEffect(() => {
+    if (previousRoute.current === route) return;
+    previousRoute.current = route;
+    document.title = `LUFFY · ${routes.find(r => slug(r) === route) ?? "Unavailable"}`;
+    nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    // A keyboard or evidence-link navigation lands at the new working surface.
+    document.getElementById("content")?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [route]);
   const title = routes.find((r) => slug(r) === route) ?? "Page unavailable";
   const group = RAIL.find((g) => g.items.some((r) => r === title))?.group;
   return (
-    <div className={`gl-app route-${route}`}>
+    <GlacierMotion><div className={`gl-app route-${route}`}>
       {live ? (
         <div className="live-banner" data-testid="mode-banner">
           {session?.dashboard_mode === "READ_ONLY_GUI" ? `READ-ONLY GUI — canonical evidence · control and provider actions disabled · kernel ${String(session.kernel_process?.state ?? "UNAVAILABLE").toLowerCase()} · runtime telemetry may be unknown or stale` : "LIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner Interface"}
@@ -118,7 +131,15 @@ export default function Shell() {
             <small>Autonomous Trading OS</small>
           </span>
         </a>
-        <nav className="gl-nav" aria-label="Main navigation">
+        <nav ref={nav} className="gl-nav" aria-label="Main navigation" onKeyDown={e => {
+          if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+          const links = Array.from(nav.current?.querySelectorAll<HTMLAnchorElement>("a") ?? []);
+          const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+          if (index < 0) return;
+          e.preventDefault();
+          const next = e.key === "Home" ? 0 : e.key === "End" ? links.length - 1 : (index + (e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1) + links.length) % links.length;
+          links[next]?.focus();
+        }}>
           {RAIL.map((g) => (
             <div className="grp" key={g.group}>
               <span aria-hidden="true">{g.group}</span>
@@ -158,7 +179,7 @@ export default function Shell() {
             </div>
           </>
         )}
-        <VisualBoundary
+        <RouteReveal key={route} route={route}><VisualBoundary
           key={route}
           fallback={(error, reset) => (
             <section
@@ -231,7 +252,7 @@ export default function Shell() {
               </section>
             )}
           </Suspense>
-        </VisualBoundary>
+        </VisualBoundary></RouteReveal>
       </main>
       <footer className="gl-foot">
         <span>
@@ -245,7 +266,7 @@ export default function Shell() {
             : "Fixture mode · Text only · No control connection"}
         </span>
       </footer>
-    </div>
+    </div></GlacierMotion>
   );
 }
 

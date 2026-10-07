@@ -6,7 +6,10 @@ import { Badge, EvidenceButton } from "../components/ui";
 import type { RequestState } from "../components/Avatar";
 import { NeedsYou, OwnerEvidence } from "../components/OwnerEvidence";
 import { Card, CardHead } from "../components/glass";
-import { ProviderTruth } from "../components/RuntimeTruth";
+import { useIsFetching } from "@tanstack/react-query";
+import { ProviderTruth, useRuntimeTruth } from "../components/RuntimeTruth";
+import { LuffyCore, corePresentation } from "../components/LuffyCore";
+import { rec } from "../components/records";
 import { PageHeader } from "../components/PageHeader";
 export default function Luffy() {
   const { adapter, scenario, messages, setMessages, session } = usePreview();
@@ -24,7 +27,10 @@ export default function Luffy() {
   const transcript = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const busy = state === "pending" || state === "responding";
-  const coreState = state === "cancelled" ? "idle" : state;
+  const { truth: runtime } = useRuntimeTruth();
+  const provider = rec(runtime?.brain)?.provider_state;
+  const readingEvidence = useIsFetching({ predicate: q => q.queryKey[0] === "owner-read" && String(q.queryKey[1]).startsWith("query/") }) > 0;
+  const coreState = readOnly ? "read_only" : provider === "DISABLED" ? "provider_disabled" : live && provider !== "ENABLED" ? "unavailable" : state === "idle" && readingEvidence ? "reading" : state === "cancelled" ? "idle" : state;
   const abortPending = useCallback(
     (reason: string) => {
       const pending = request.current;
@@ -146,14 +152,7 @@ export default function Luffy() {
     composer.current?.focus();
   }
 
-  const label: Record<string, [string, string, string]> = {
-    idle: ["Ready", "#3ddc97", "Waiting for you. Rings turn slowly while the core rests."],
-    pending: ["Reading the journal…", "rgb(var(--a2))", "Rings speed up while LUFFY gathers evidence."],
-    responding: ["Replying", "#3ddc97", "Steady glow while the answer arrives."],
-    error: ["No reply", "#ff7b72", "The request failed; the core turns red and stops."],
-  };
-  const [stateLabel, stateColor, stateNote] = label[coreState] ?? label.idle;
-  const orbCls = { idle: "idle", pending: "thinking", responding: "replying", error: "failed", cancelled: "idle" }[coreState as string] ?? "idle";
+  const [stateLabel, stateColor, stateNote] = corePresentation[coreState] ?? corePresentation.idle;
   const cited = collectEvidence(messages);
   const quick = live
     ? ["How am I doing today?", "What positions are open?", "Which strategy is weakest?", "What is research testing?"]
@@ -167,16 +166,15 @@ export default function Luffy() {
       <div className="gl-row" style={{ flex: 1, minHeight: 0 }} data-core-state={coreState}>
         <Card className="gl-chat" label="Conversation">
           <div className="gl-orbwrap">
-            <div className={`orb ${orbCls}`} role="img" aria-label={`LUFFY core: ${stateLabel}`}>
-              <span className="ring r1" /><span className="ring r2" /><span className="ring r3" /><span className="ring r4" /><span className="ring r5" /><span className="ring r6" /><span className="core" />
-            </div>
+            <LuffyCore state={coreState} />
             <span className="cz" style={{ fontSize: 28, color: "rgb(var(--hi))", letterSpacing: ".2em", paddingLeft: ".2em" }}>LUFFY</span>
             <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: stateColor }}>
               <i style={{ width: 9, height: 9, borderRadius: "50%", background: stateColor, boxShadow: `0 0 10px ${stateColor}` }} />
               <span data-testid="core-state-label">{stateLabel}</span>
             </span>
-            <span style={{ fontSize: 13, color: "var(--txt2)", maxWidth: 360, lineHeight: 1.5 }}>{stateNote} The core reflects this request's state.</span>
+            <span style={{ fontSize: 13, color: "var(--txt2)", maxWidth: 360, lineHeight: 1.5 }}>{stateNote}</span>
             <ProviderTruth />
+            {readingEvidence && <p className="gl-note" role="status">Reading local evidence · no external provider activity</p>}
             <ol className="core-states" aria-label="Core request states" style={{ display: "none" }}>
               {CORE_STATES.map(([st, l]) => (<li key={st} data-on={coreState === st} aria-current={coreState === st ? "step" : undefined}>{l}</li>))}
             </ol>

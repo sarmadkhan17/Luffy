@@ -1,3 +1,4 @@
+import { DataBar } from "./motion";
 import { HardDrive } from "lucide-react";
 import { Card, CardHead } from "./glass";
 import { rec, rows } from "./records";
@@ -11,7 +12,7 @@ export function StorageTruth({ storage, unavailable = false }: { storage: unknow
     <CardHead icon={<HardDrive size={16} />} title="Is LUFFY filling the disk again?" sub="Current filesystem capacity and database sizes · growth requires a recorded previous sample" />
     <div className="gl-filesystem-summary" aria-label="Filesystem free-space summary">
       {expected.map(label => { const f = fs.find(x => x.label === label); const pct = typeof f?.percent_free === "number" && Number.isFinite(f.percent_free) ? f.percent_free : null; const compact = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n >= 0 ? `${(n / 1e9).toFixed(1)} GB` : "NOT REPORTED";
-        return <article key={label}><b>{label}</b><span>Free: {compact(f?.free)} / {compact(f?.total)}</span><span>{pct === null ? "% free NOT REPORTED" : `${pct.toFixed(1)}% free`} · {pct === null ? "UNKNOWN" : pct < 10 ? "LOW FREE SPACE — critical" : pct < 20 ? "LOW FREE SPACE" : "Capacity observed"}</span></article>;
+        return <article key={label}><b>{label}</b><span>Free: {compact(f?.free)} / {compact(f?.total)}</span><span>{pct === null ? "% free NOT REPORTED" : `${pct.toFixed(1)}% free`} · {pct === null ? "UNKNOWN" : pct < 10 ? "LOW FREE SPACE — critical" : pct < 20 ? "LOW FREE SPACE" : "Capacity observed"}</span>{pct !== null && <span className="gl-capacity-track" aria-hidden="true"><DataBar width={`${Math.max(0, Math.min(100, pct))}%`} style={{ height: 5, borderRadius: 3, background: pct < 10 ? "var(--bad)" : pct < 20 ? "var(--warn)" : "rgb(var(--mut))" }} /></span>}</article>;
       })}
     </div>
     <div style={{ overflowX: "auto" }}><table className="gl-table" aria-label="Filesystem capacity"><thead><tr>{["Filesystem", "Mount / source", "Total", "Used", "Free", "% free", "State"].map(x => <th key={x}>{x}</th>)}</tr></thead><tbody>

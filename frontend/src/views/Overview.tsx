@@ -11,6 +11,7 @@ import { expireOverviewTelemetry } from "../telemetryExpiry";
 import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, CardHead, DataTable, DetailPanel, KV, type Col } from "../components/glass";
 import { RuntimeLabels } from "../components/RuntimeTruth";
+import { ChangeValue } from "../components/motion";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import type { Marks, Position, ProtectionStatus } from "../adapters/contracts";
@@ -216,7 +217,7 @@ export default function Overview() {
           <span className="gl-sheen"><i /></span>
           <div className="gl-kpi">
             <span className="gl-hd"><span className="gl-ic" aria-hidden="true"><Wallet size={16} /></span><span className="lab">Unrealized P&amp;L</span></span>
-            <span className={`big ${upnl.value === null ? "txt" : ""}`} style={{ color: upnl.value === null ? GREY : upnl.value >= 0 ? OK : BAD }} data-testid="kpi-upnl">{upnl.value === null ? "UNAVAILABLE" : signed(upnl.value)}</span>
+            <span className={`big ${upnl.value === null ? "txt" : ""}`} style={{ color: upnl.value === null ? GREY : upnl.value >= 0 ? OK : BAD }} data-testid="kpi-upnl"><ChangeValue value={upnl.value}>{upnl.value === null ? "UNAVAILABLE" : signed(upnl.value)}</ChangeValue></span>
             <span className="sub">{upnl.why}</span>
           </div>
           <LastCloses desk={desk} />
@@ -343,6 +344,7 @@ function Donut({ ps, total }: { ps: Position[]; total: number | null }) {
 type TF = "7D" | "30D" | "ALL";
 function RealizedChart({ desk, loading, error }: { desk?: Desk; loading: boolean; error?: string }) {
   const [tf, setTf] = useState<TF>("ALL");
+  const [cursor, setCursor] = useState<number | null>(null);
   const all = desk?.realized?.points ?? [];
   const view = useMemo(() => {
     if (!all.length) return null;
@@ -359,24 +361,35 @@ function RealizedChart({ desk, loading, error }: { desk?: Desk; loading: boolean
     const Y = (v: number) => (200 - ((v - lo) / Math.max(1e-9, hi - lo)) * 180).toFixed(1);
     const curve = series.map((s, i) => `${i ? "L" : "M"}${X(s.t)} ${Y(s.v)}`).join(" ");
     const labels = [0, 0.25, 0.5, 0.75, 1].map((f) => day(new Date(t0 + f * (t1 - t0)).toISOString()));
-    return { curve, area: `${curve} L800 220 L0 220 Z`, zero: Y(0), labels, change: series[series.length - 1].v, n: pts.length, lo, hi };
+    return { series, X, Y, curve, area: `${curve} L800 220 L0 220 Z`, zero: Y(0), labels, change: series[series.length - 1].v, n: pts.length, lo, hi };
   }, [all, tf]);
   return (
     <Card className="pad" label="Realized P&L">
       <CardHead icon={<LineChart size={16} />} title="Realized P&L" sub={view ? <span style={{ color: view.change >= 0 ? OK : BAD }}>{signed(view.change)} {tf === "ALL" ? "since first close" : "in this window"}</span> : undefined}>
         <div style={{ display: "flex", gap: 6 }}>
-          {(["7D", "30D", "ALL"] as TF[]).map((t) => (<button key={t} type="button" className="gl-tf" aria-pressed={tf === t} onClick={() => setTf(t)}>{t}</button>))}
+          {(["7D", "30D", "ALL"] as TF[]).map((t) => (<button key={t} type="button" className="gl-tf" aria-pressed={tf === t} onClick={() => { setTf(t); setCursor(null); }}>{t}</button>))}
         </div>
       </CardHead>
       {view ? (
         <>
-          <svg className="gl-chart" viewBox="0 0 800 220" preserveAspectRatio="none" role="img" aria-label={`Cumulative journal-booked realized profit and loss across ${view.n} closed trades, ${signed(view.lo)} to ${signed(view.hi)}`}>
+          <svg className="gl-chart" tabIndex={0} onPointerMove={e => {
+            const box = e.currentTarget.getBoundingClientRect();
+            const x = Math.max(0, Math.min(800, (e.clientX - box.left) / box.width * 800));
+            let nearest = 0;
+            view.series.forEach((point, i) => { if (Math.abs(Number(view.X(point.t)) - x) < Math.abs(Number(view.X(view.series[nearest].t)) - x)) nearest = i; });
+            setCursor(nearest);
+          }} onPointerLeave={() => setCursor(null)} onFocus={() => setCursor(view.series.length - 1)} onBlur={() => setCursor(null)}
+          onKeyDown={e => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); setCursor(Math.max(0, Math.min(view.series.length - 1, (cursor ?? view.series.length - 1) + (e.key === "ArrowLeft" ? -1 : 1)))); }
+          }} viewBox="0 0 800 220" preserveAspectRatio="none" role="img" aria-label={`Cumulative journal-booked realized profit and loss across ${view.n} closed trades, ${signed(view.lo)} to ${signed(view.hi)}`}>
             <defs><linearGradient id="gl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style={{ stopColor: "rgb(var(--a))" }} stopOpacity=".32" /><stop offset="1" style={{ stopColor: "rgb(var(--a))" }} stopOpacity="0" /></linearGradient></defs>
             <path d="M0 55H800M0 110H800M0 165H800" stroke="#1d3042" strokeWidth="1" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
             <path d={`M0 ${view.zero}H800`} stroke="#8d9fb2" strokeWidth="1" strokeDasharray="2 4" vectorEffect="non-scaling-stroke" />
             <path className="gl-area" d={view.area} fill="url(#gl-g)" />
             <path className="gl-curve" d={view.curve} fill="none" style={{ stroke: "rgb(var(--a))" }} strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+            {cursor !== null && view.series[cursor] && <g aria-hidden="true"><path d={`M${view.X(view.series[cursor].t)} 0V220`} stroke="#a0e4fa" strokeDasharray="3 4" /><circle cx={view.X(view.series[cursor].t)} cy={view.Y(view.series[cursor].v)} r="4" fill="#a0e4fa" /></g>}
           </svg>
+          <p className="gl-note" role="status" data-testid="chart-inspection">{cursor !== null && view.series[cursor] ? `${utc(new Date(view.series[cursor].t).toISOString())} · ${signed(view.series[cursor].v)} cumulative in this window · ${view.series[cursor].p?.symbol ?? "Window baseline"}` : "Hover, touch or focus the chart to inspect a close. Use left/right arrows when focused."}</p>
           <div className="gl-xl">{view.labels.map((x, i) => (<span key={i}>{x}</span>))}</div>
           <p className="gl-note">
             {desk!.realized!.closed_trades} closed trades · journal-booked, not venue net

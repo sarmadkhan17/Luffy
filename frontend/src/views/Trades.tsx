@@ -1,3 +1,6 @@
+import { m } from "motion/react";
+import { glacierMotion } from "../components/motion";
+import { useMotionPreference } from "../components/ui";
 /** Trades — approved "Final · 2" design. Journal trades, newest first, with
  * sort/filter in the headers, pagination, a centred trade story (opens on
  * click) and the owner controls in the header. P&L is journal-booked. */
@@ -123,6 +126,7 @@ export default function Trades() {
 }
 
 function TradeStory({ trade, onClose }: { trade: Trade | null; onClose: () => void }) {
+  const reduced = useMotionPreference();
   const lq = useRead(trade ? `trades/${encodeURIComponent(String(trade.id))}/lineage` : null);
   const L = rec(lq.data) as Record<string, any> | null;
   const chain = Object.fromEntries(asRows(L?.chain).map((c) => [String(c.step), c]));
@@ -161,7 +165,7 @@ function TradeStory({ trade, onClose }: { trade: Trade | null; onClose: () => vo
       {lv.length > 0 && (
         <div>
           <svg viewBox="0 0 800 200" preserveAspectRatio="none" role="img" aria-label={`Recorded price levels: ${lv.map((x) => `${x.k} ${price(x.v)}`).join(", ")}`} style={{ width: "100%", height: 140 }}>
-            {lv.map((x) => (<g key={x.k}><path d={`M0 ${Y(x.v)}H800`} stroke={x.c} strokeWidth="1.6" strokeDasharray={x.k === "Stop" ? "8 6" : undefined} vectorEffect="non-scaling-stroke" /></g>))}
+            {lv.map((x) => (<g key={x.k}><m.path initial={false} animate={{ d: `M0 ${Y(x.v)}H800` }} transition={{ duration: reduced ? 0 : glacierMotion.data }} stroke={x.c} strokeWidth="1.6" strokeDasharray={x.k === "Stop" ? "8 6" : undefined} vectorEffect="non-scaling-stroke" /></g>))}
           </svg>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "var(--txt2)" }}>
             {lv.map((x) => (<span key={x.k}><i style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: x.c, marginRight: 6 }} />{x.k} <span className="m">{price(x.v)}</span></span>))}

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
-const fixtures = JSON.parse(readFileSync("/mnt/luffy-data/test-tmp/glacier-browser-fixtures.json", "utf8"));
+const fixtures = JSON.parse(readFileSync("tests/fixtures/glacier-readonly.json", "utf8"));
 const routes = ["Overview", "Trades", "Research", "Strategies", "LUFFY", "Operations", "Live System", "Knowledge", "Diagnostics"];
 async function intercept(page: import("@playwright/test").Page, overrides: Record<string, any> = {}) {
   const data = { ...structuredClone(fixtures), ...overrides };

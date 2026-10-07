@@ -25,6 +25,24 @@ export function StrategyAuthority({ versions, errors }: { versions: unknown; err
     </Card>
     <DetailPanel open={!!selected} onClose={() => setSelected(null)} title="Exact StrategyVersion" description={value(selected?.version_id)}>
       {selected && <>
+        <section aria-label="Authority and lifecycle" className="gl-authority">
+          <h3>Authority / lifecycle · exact version</h3>
+          <ol className="gl-lifecycle">
+            {[
+              ["StrategyVersion", value(selected.version_id), "Immutable identity; bound spec and lineage hashes"],
+              ["Validation", selected.validation ? "Verified against current research evidence" : "UNAVAILABLE", value(rec(selected.validation)?.receipt_id)],
+              ["Install", selected.install ? "Verified exact current install" : "UNAVAILABLE", value(rec(selected.install)?.install_id)],
+              ["Probation", value(rec(selected.probation)?.status), value(rec(selected.probation)?.receipt_id)],
+              ["Owner approval", approval ? `${value(approval.status)} · ${value(approval.validity)}` : "NOT REPORTED", value(approval?.affected_object)],
+              ["Governor", value(governor?.to_state), value(governor?.reason_code)],
+              ["Execution eligibility", "NOT ESTABLISHED BY THIS VIEW", "Risk retains final entry authority; permission fails closed"],
+            ].map(([label, status, evidence]) => <li key={label} data-stale={status.includes("STALE") || undefined}>
+              <span className="gl-lifecycle-mark" aria-hidden="true" />
+              <div><b>{label}</b><span>{status}</span><small>{evidence}</small></div>
+            </li>)}
+          </ol>
+        </section>
+        <h3 className="gl-section-title">Identity / source evidence</h3>
         <KV items={[
           ["Strategy id", value(selected.strategy_id)], ["Strategy name / type", `${value(spec?.name)} / ${value(spec?.type ?? spec?.kind)}`],
           ["Version id", value(selected.version_id)], ["Spec hash", value(v?.spec_hash)], ["Lineage hash", value(v?.lineage_sha256)],
@@ -39,9 +57,15 @@ export function StrategyAuthority({ versions, errors }: { versions: unknown; err
           ["Version lifecycle projection", value(selected.lifecycle)], ["Governor lifecycle", value(governor?.to_state)],
           ["Latest transition", value(governor?.transition_id)], ["Transition reason", value(governor?.reason_code)],
           ["Transition time", value(governor?.at_ms)], ["Transition evidence", value(governor?.evidence ?? governor?.binding)],
-          ["Economics", selected.economics ? value(rec(selected.economics)?.current) : "UNAVAILABLE — no current exact economics projection reported"],
-          ["Recorded economics / capacity evidence (historical)", value(selected.economics)],
+
         ]} />
+        <section className="gl-economics" aria-label="Performance and economics">
+          <h3>Performance / economics · separate from authority</h3>
+          <KV items={[
+            ["Economics", selected.economics ? value(rec(selected.economics)?.current) : "UNAVAILABLE — no current exact economics projection reported"],
+            ["Recorded economics / capacity evidence (historical)", value(selected.economics)],
+          ]} />
+        </section>
         <p className="gl-note">Recorded Governor transition evidence: {value(governor)}</p>
         <p className="gl-note">Unavailable reads: {value(selected.errors)}. These reads grant no activation or order permission.</p>
       </>}
