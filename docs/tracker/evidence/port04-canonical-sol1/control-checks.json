@@ -1,0 +1,63 @@
+{
+  "PORT04_CANONICAL": "CLOSED",
+  "status_counts": {
+    "CLOSED": 67,
+    "EVIDENCE_TO_MAP": 72,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 15,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "row_count": 179,
+  "changed_rows": [
+    "PORT-04"
+  ],
+  "other_178_rows_unchanged": true,
+  "original_contracts_dependencies_readiness_preserved": true,
+  "manifest_bytes_hashes_valid": true,
+  "strict_schemas_valid": true,
+  "canonical_read": "AVAILABLE",
+  "committed_bytes_verified": false,
+  "engineering_integration_pending": true,
+  "RISK03_dependency_satisfied": true,
+  "RISK03_now_eligible": true,
+  "RISK03_status": "EVIDENCE_TO_MAP",
+  "fresh_test_evidence": {
+    "fresh-targeted": {
+      "passed": 283,
+      "failed": 0,
+      "by_file": {
+        "tests.test_port04_relationship_sources": 11,
+        "tests.test_port01_whole_book": 27,
+        "tests.test_portfolio_common_factor": 17,
+        "tests.test_portfolio_common_factor_shadow": 3,
+        "tests.test_stage6_normal_sources": 7,
+        "tests.test_stage6_closure": 46,
+        "tests.test_wrld07_relationship_state": 54,
+        "tests.test_qnt03_dependence_lineage": 10,
+        "tests.test_dec02_comparison": 25,
+        "tests.test_risk01_entry_binding": 19,
+        "tests.test_risk02_exposure_feasibility": 64
+      }
+    },
+    "fresh-metrics": {
+      "passed": 20,
+      "failed": 0,
+      "by_file": {
+        "tests.test_runtime_portfolio_integration": 20
+      }
+    },
+    "fresh-independent": {
+      "passed": 3,
+      "failed": 0,
+      "by_file": {
+        "sol1-port04-canonical.docs.tracker.evidence.port04-canonical-sol1.independent_test": 3
+      }
+    },
+    "distinct_fresh_passes": 306,
+    "reported_engineering_passes": 327,
+    "reported_327_exact_command_and_artifact": "NOT_RETAINED; not independently certified or summed with fresh evidence",
+    "full_suite_green_claim": false
+  }
+}

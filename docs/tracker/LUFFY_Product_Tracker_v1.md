@@ -1,3 +1,5 @@
+> Current [SOL-1][PORT-04]: **CLOSED at architecture/offline scope** on `387d130`. 306 distinct fresh offline passes. Persisted Attention evidence delivered by the normal checkpoint; exact whole-book/lineage/owner constraints retained; basket-to-pair attribution fixed. Optional world capture unavailable. RISK-03 now dependency-eligible, unselected/unstarted and not closed. Source integration pending; no activation authority. [Evidence](evidence/port04-canonical-sol1/closure.json). Earlier summaries below are historical.
+
 > Current [SOL-1][QNT-09]: **AWAITING_OWNER / BLOCKED_ON_POLICY_OR_EVIDENCE**. Initial production economics and capacity calibration intake approved; Quant validation owns calibration. Offline design/refusal mechanics authorized; numerical policy not approved and production registration not authorized. PORT-02 remains CLOSED. Qualified historical paper-cost transfer may suffice; applicability is unproven and no adapter implementation is justified. UNKNOWN remains UNAVAILABLE; no first-live permission. Profitability is not required for closure. [Intake](evidence/qnt09-canonical-intake-sol1/intake.json). Earlier summaries below are historical.
 
 > Current [SOL-1][EXE-04]: **CLOSED at architecture/offline scope** on `916de7322dbc6ad85a66d7c6252f5d672c9bfcc1`. Exact DEC-03-bound frozen plan; `factory-exit.closed-bars.v1`; research/paper/live causal parity, refusal, independent safety and replay verified offline. 569 distinct fresh passes. EXE-05 dependency-eligible, unselected/unstarted; its row remains open for mapping. Source integration pending; first-live fenced; no activation authority. [Evidence](evidence/exe04-canonical-sol1/closure.json). Earlier summaries below are historical.
@@ -72,7 +74,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.59-qnt09-canonical-intake-sol1
+Version: 1.60-port04-canonical-closed-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -2921,32 +2923,35 @@ future_calibration:
 - **stage**: 6
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Many symbols may be the same economic bet.
 - **closure_condition**: Exact whole-book measurement and lineage identify concentration/common-factor risk for deterministic constraints.
 - **failure_regression_proof**: No fabricated factor penalty or permanent assumed correlation.
 - **dependencies**: WRLD-07, QNT-03, PORT-01
 - **owner_role**: Portfolio owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Persisted Attention relationship source delivery and two-instrument attribution fix at 387d130dedfe259e707ddda77b5eab83aa493aa7
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no production observation or activation
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 306 distinct fresh offline passes; exact persisted checkpoint, whole-book metrics, lineage, replay, refusal and R3/R4 compatibility. Reported 327 engineering passes have no retained exact selection; no full-suite green claim.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §16.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact PORT-04 architecture/offline closure. Source integration remains pending. RISK-03 now dependency-eligible for its own exact mapping; unselected/unstarted, not auto-closed.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 387d130dedfe259e707ddda77b5eab83aa493aa7
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-08
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/port04-canonical-sol1/closure.json
+- **evidence_validity**: Pinned committed engineering bytes and exact fresh offline evidence. Optional absence remains unavailable; no production/deployment or numeric factor-model certification.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 387d130dedfe259e707ddda77b5eab83aa493aa7
+- **closure_scope**: ARCHITECTURE_OFFLINE
+- **evidence_mapping**: docs/tracker/evidence/port04-canonical-sol1/REPORT.md
 
 ### PORT-05 — Respect capacity, funding, margin and venue-size bounds.
 
@@ -7440,3 +7445,5 @@ PORT-01 canonical status counts: CLOSED 65, EVIDENCE_TO_MAP 74, DEFERRED 7, AWAI
 EXE-04 canonical status counts: {'CLOSED': 66, 'EVIDENCE_TO_MAP': 73, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 14, 'BLOCKED': 5, 'OPEN': 4} (178 total).
 
 QNT-09 canonical intake status counts: {'CLOSED': 66, 'EVIDENCE_TO_MAP': 73, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 15, 'BLOCKED': 5, 'OPEN': 4} (179 total).
+
+PORT-04 canonical status counts: {'CLOSED': 67, 'EVIDENCE_TO_MAP': 72, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 15, 'BLOCKED': 5, 'OPEN': 4} (179 total).

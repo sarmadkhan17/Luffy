@@ -1358,29 +1358,30 @@ perf03_capture_r1:
   trading_activated: false
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
-  id: EXE-04
+  id: PORT-04
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
   mode: ENGINEERING_ONLY
   reconciliation_mode: CONTROL_PLANE_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Preserve approved exit-plan authority.
-  implementation_commit: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
-  verification_revision: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+  objective: Measure common-factor, concentration and correlated evidence exposure.
+  implementation_commit: 387d130dedfe259e707ddda77b5eab83aa493aa7
+  verification_revision: 387d130dedfe259e707ddda77b5eab83aa493aa7
   implementation_complete: true
   canonical_reconciliation_pending: false
   closing_condition_satisfied: true
   evidence:
-  - docs/tracker/evidence/exe04-canonical-sol1/closure.json
-  - docs/tracker/evidence/exe04-canonical-sol1/REPORT.md
-  - docs/tracker/evidence/exe04-canonical-sol1/fresh-final.xml
+  - docs/tracker/evidence/port04-canonical-sol1/closure.json
+  - docs/tracker/evidence/port04-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/port04-canonical-sol1/fresh-targeted.xml
+  - docs/tracker/evidence/port04-canonical-sol1/fresh-independent.xml
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   successor_selected: false
-  next_action: EXE-04 CLOSED at architecture/offline scope on 916de73. EXE-05 dependencies satisfied; recommended
-    for separate native-protection evidence mapping, unselected/unstarted. Application integration pending;
-    first-live remains fenced. No runtime/provider/trading authority.
+  next_action: PORT-04 CLOSED at architecture/offline scope on 387d130. RISK-03 dependencies satisfied; recommended
+    for its own whole-account survival evidence mapping, unselected/unstarted and not auto-closed. EXE-05 remains
+    eligible. Source integration pending; no runtime/provider/execution authority.
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -1615,7 +1616,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: EXE-04
+  last_completed_item: PORT-04
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -1628,7 +1629,7 @@ current_build_selection:
   - OUT-03
   - GUI-02
   - OUT-01
-  next_recommended_item: EXE-05
+  next_recommended_item: RISK-03
   eligible_items:
   - DATA-08
   - GUI-02
@@ -1639,18 +1640,18 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  - PORT-04
   - EXE-05
+  - RISK-03
   eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
     GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
     apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: EXE-04 CLOSED at architecture/offline scope on 916de73. EXE-05 dependencies satisfied;
-    recommended for separate native-protection evidence mapping, unselected/unstarted. Application integration
-    pending; first-live remains fenced. No runtime/provider/trading authority.
-  last_terminal_item: EXE-04
+  selection_reason: PORT-04 CLOSED at architecture/offline scope on 387d130. RISK-03 dependencies satisfied;
+    recommended for its own whole-account survival evidence mapping, unselected/unstarted and not auto-closed.
+    EXE-05 remains eligible. Source integration pending; no runtime/provider/execution authority.
+  last_terminal_item: PORT-04
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
@@ -5564,3 +5565,254 @@ qnt09_canonical_intake:
   trading_activation_authorized: false
   first_live_permission: false
   evidence: docs/tracker/evidence/qnt09-canonical-intake-sol1/intake.json
+
+port04_previous_selection:
+  id: EXE-04
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  mode: ENGINEERING_ONLY
+  reconciliation_mode: CONTROL_PLANE_ONLY
+  scope: ARCHITECTURE_OFFLINE
+  objective: Preserve approved exit-plan authority.
+  implementation_commit: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+  verification_revision: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+  implementation_complete: true
+  canonical_reconciliation_pending: false
+  closing_condition_satisfied: true
+  evidence:
+  - docs/tracker/evidence/exe04-canonical-sol1/closure.json
+  - docs/tracker/evidence/exe04-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/exe04-canonical-sol1/fresh-final.xml
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+  next_action: EXE-04 CLOSED at architecture/offline scope on 916de73. EXE-05 dependencies satisfied; recommended
+    for separate native-protection evidence mapping, unselected/unstarted. Application integration pending;
+    first-live remains fenced. No runtime/provider/trading authority.
+port04_canonical_reconciliation:
+  item: PORT-04
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_commit: 387d130dedfe259e707ddda77b5eab83aa493aa7
+  engineering_parent: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
+  engineering_branch: port04-relationship-sources
+  control_baseline_revision: b6b6e6016f76d0df4869312b1b7c1a4551ba0918
+  control_plane_commit_resolution: Enclosing Git commit; no self-referential hash.
+  closure_condition: Exact whole-book measurement and lineage identify concentration/common-factor risk for
+    deterministic constraints.
+  failure_regression_proof: No fabricated factor penalty or permanent assumed correlation.
+  exact_closure_condition_satisfied: true
+  closure_mapping:
+    NORMAL_CALLER: current.checkpoint -> current.freeze -> relationship_sources -> common_factor.attach ->
+      Consumer/allocator R4/from_allocator. Real persisted Store.write scan and joined bars are consumed without
+      downstream source injection; independent actual checkpoint test proves delivery and zero order submissions.
+    ATTENTION_RELATIONSHIP: Exact attention-relationship-input.v1 scan, input-version joins, bars, method,
+      window, peer membership, original as_of_ms, bounded valid_until_ms and evidence/source identities retained.
+      adapt re-evaluates observations at the original cut and refuses evaluator mismatch. Basket measurements
+      are CONTEXT_ONLY.
+    WORLD_MODEL_LIMITATION: 'B: world-model capture currently disabled (attention settings default false; config
+      has no enabling key). WORLD_RELATIONSHIP_SOURCE_NOT_CONFIGURED is explicit. No normal production world
+      pair measurement is claimed. Existing WorldModelRecord replay and WRLD-07 measurements remain supported
+      when valid evidence exists.'
+    CONCENTRATION_MEASUREMENT: Exact verified complete venue book plus independently bound runtime metrics
+      supply current gross/per-instrument exposure, heat, per-symbol risk and margin where established. Existing
+      max_open_positions, portfolio_heat_cap_pct, per_symbol_risk_cap_pct, max_position_margin_pct and max_total_margin_pct
+      are checked; missing metrics remain unavailable and excess limits block. Shared proven lineage deduplicates
+      contributors; independence is NOT_ESTABLISHED.
+    PAIRWISE_ATTRIBUTION_FIX: Pair measurement requires two explicitly attributed instruments, current freshness
+      and exact endpoint set. A one-instrument leave-one-out basket cannot supply pair measurement_ids. Parent
+      counterexample reproduced offline; invalid old attribution receipts refuse on replay and are never rewritten.
+    MISSING_SOURCE_SEMANTICS: Missing/stale optional scan produces no measurement and explicit unavailability.
+      Unproven pair relationship remains UNKNOWN unless independent exact same exposure/shared lineage establishes
+      EXACT_SHARED_EXPOSURE. NO_ESTABLISHED_RELATIONSHIP for distinct proven lineage is not statistical independence
+      (independent_evidence_count=null); no optional absence establishes a measured pair. Malformed initial
+      optional evidence is omitted/refused; changed frozen sources or replay mismatch refuse exposure authority.
+    REPLAY: Frozen source hashes/identity, original-cut input joins, observations, expiry and exact receipt
+      reconstruction are checked. Mutated values, another scan, expired or replaced frozen source refuse. Restart
+      reconstruction is deterministic. Invalid pre-fix attribution is refused, not migrated.
+    R3_R4_COMPATIBILITY: R3 remains explicit historical replay; R4 remains the current allocator and refuses
+      absent/ineligible/stale/mismatched capability. Allocator source byte-identical to PORT-01 parent. Fresh
+      PORT-01 and PORT-04 replay/capability tests pass. No blanket acceptance of invalid historical evidence
+      is claimed.
+    RISK_AUTHORITY: Risk, risk_intent, entry_authority, executor and Kernel bytes unchanged from engineering
+      parent. Proposal-only/context-only evidence grants no sizing, leverage, order, venue or Risk approval
+      authority. No numeric factor model, penalty, assumed correlation or threshold invented.
+    PORT01_IMPACT: UNCHANGED CLOSED at ec2a68e. Whole-book/R4 capability tests pass and relevant allocator/metric/authority
+      bytes remain identical to 2ea4a95. The previously separate relationship-source gap is resolved on PORT-04
+      engineering only; source integration remains pending.
+    DEC03_IMPACT: UNCHANGED CLOSED. One-expression/conflicting-strategy/lineage behavior passes targeted DEC-02/common-factor
+      tests. DEC-03 is separate engineering 1ec9870, not present in this engineering base; current.py is shared,
+      with disjoint relationship wiring changes; the parent never contained DEC-03 position capture, so this
+      commit does not remove it. Separate DEC-03 runtime/position capture must be retained during future integration.
+      Prior PORT-01 evidence includes 80 DEC-03+R4 integrated verification passes; no new combined-tree certification
+      or application integration claimed.
+    WRLD07_IMPACT: UNCHANGED CLOSED. Fresh WRLD-07 exact metadata, freshness, invalid evidence, measured endpoints
+      and historical replay checks pass. Capture is still disabled; no runtime upgrade.
+    QNT03_IMPACT: UNCHANGED CLOSED. Fresh dependence/lineage tests pass; research/dependence.py unchanged.
+      Distinct strategy lineage does not establish statistical independence; no numeric factor adjustment or
+      pseudo-replication introduced.
+    RISK03_IMPACT: PORT-04 and RISK-01 dependencies CLOSED; RISK-03 now eligible for its own exact evidence
+      mapping, unselected/unstarted. Row unchanged EVIDENCE_TO_MAP; no automatic closure. Whole-account period
+      losses/drawdown and pre-catastrophe preservation remain its independent contract.
+    SOURCE_INTEGRATION: YES pending. Control-only commit on separate branch; 387d130 is not integrated into
+      canonical application source. No Kernel/Dashboard operation, provider/venue call, configuration activation
+      or live action.
+  limitations_adjudication:
+  - limitation: WRLD-07 world-model capture disabled
+    classification: B
+    reason: Truthful unavailable optional evidence; existing Attention basket measurement and shared-lineage/exact-book
+      evidence identify supported risks. No world pair capability established.
+  - limitation: Asset/cluster concentration policy not configured
+    classification: A
+    reason: No supported owner limit exists to consume; exact condition requires measurement/lineage for deterministic
+      constraints, not invention of owner policy. Existing configured constraints stay enforced.
+  - limitation: Per-instrument exposure measured but not consumed as a new limit
+    classification: A
+    reason: Exact measurement is retained; per-symbol risk policy remains consumed. A new exposure ceiling
+      has no owner policy authority.
+  - limitation: Historical held-position lineage may remain UNKNOWN
+    classification: B
+    reason: Unattributed held positions remain in the complete book and same-instrument exposure checks. No
+      reconstructed provenance or independent vote is invented.
+  - limitation: No production runtime observation
+    classification: A
+    reason: Architecture/offline closure only; runtime unproven and source integration pending.
+  unmet_closing_conditions: []
+  fresh_test_evidence:
+    fresh-targeted:
+      passed: 283
+      failed: 0
+      by_file:
+        tests.test_port04_relationship_sources: 11
+        tests.test_port01_whole_book: 27
+        tests.test_portfolio_common_factor: 17
+        tests.test_portfolio_common_factor_shadow: 3
+        tests.test_stage6_normal_sources: 7
+        tests.test_stage6_closure: 46
+        tests.test_wrld07_relationship_state: 54
+        tests.test_qnt03_dependence_lineage: 10
+        tests.test_dec02_comparison: 25
+        tests.test_risk01_entry_binding: 19
+        tests.test_risk02_exposure_feasibility: 64
+    fresh-metrics:
+      passed: 20
+      failed: 0
+      by_file:
+        tests.test_runtime_portfolio_integration: 20
+    fresh-independent:
+      passed: 3
+      failed: 0
+      by_file:
+        sol1-port04-canonical.docs.tracker.evidence.port04-canonical-sol1.independent_test: 3
+    distinct_fresh_passes: 306
+    reported_engineering_passes: 327
+    reported_327_exact_command_and_artifact: NOT_RETAINED; not independently certified or summed with fresh
+      evidence
+    full_suite_green_claim: false
+  engineering_objects:
+    changed:
+      tests/test_port04_relationship_sources.py:
+        bytes: 10453
+        sha256: c26f8282e447f1496a9f515ff39c9dd05267838a376403c62eeca79fd6cd7ee2
+        git_blob: e1ab92a565cf68a32bbb5258780e0a2ba682b459
+      trader/portfolio/common_factor.py:
+        bytes: 20163
+        sha256: 19a12edbedba3a0a3dd63e0e7beebe4e73668f6ecb4c72f838f9a7bf2731b515
+        git_blob: 90346ba4f8d734c8bc91df093f06023fddf7b737
+      trader/portfolio/current.py:
+        bytes: 18112
+        sha256: 4b1f8cd0715fd979bdb87a6d72a1248525e25f1831994f6b4f13b1157903e578
+        git_blob: eda725bdab747b58c4e9741491dcb832dca5088e
+    unchanged_authority_and_contracts:
+      trader/portfolio/allocator.py:
+        bytes: 35530
+        sha256: ee7cfb013450ea84ff9263e37d5a1be915f79ff8138dcd12110a21e93585969e
+        git_blob: f28df564426d5d4f252d80dea0832942893badb1
+      trader/portfolio/runtime.py:
+        bytes: 8485
+        sha256: b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e
+        git_blob: 6259547a781ec7c8f03e19c99ec84a73ec49e6fe
+      trader/portfolio/runtime_metrics.py:
+        bytes: 9873
+        sha256: cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004
+        git_blob: 0b20128301db2cc62d396438d6ef9679b3ee6558
+      trader/portfolio/candidate_bridge.py:
+        bytes: 18742
+        sha256: 15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6
+        git_blob: d2a91fc6a7c1df3e94f3428f233df7d04cb1f889
+      trader/portfolio/trade_intent.py:
+        bytes: 7852
+        sha256: d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5
+        git_blob: a4c288ebd6ccd5b246a316638753c36dc6b7aacb
+      trader/engine/risk.py:
+        bytes: 43714
+        sha256: d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132
+        git_blob: e8ed972d7851132cde9b684adb10c03b059a50aa
+      trader/engine/risk_intent.py:
+        bytes: 8627
+        sha256: 9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca
+        git_blob: 90079fc35737dfa438d85a7b62cdb82951cd1330
+      trader/engine/entry_authority.py:
+        bytes: 30772
+        sha256: 454ab8212ca98f4cec286a57ddb9dde64362dd044ad818f7417b2e12cbef2dd6
+        git_blob: 0a60845cb87f88cc23c0665b5925a9c7640bf033
+      trader/engine/executor.py:
+        bytes: 33319
+        sha256: 79fa29948e5119851366e9f7b2c0e671dd26b406753cb2c078d99e63dd5c0644
+        git_blob: e9c3f293c94181c6aefdaeacbd8cf27967c02c48
+      trader/kernel.py:
+        bytes: 175316
+        sha256: 38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f
+        git_blob: 27239effb15e03ff577b5f193382676b4fc612d2
+      trader/world/relationship.py:
+        bytes: 15510
+        sha256: 8b4944d34eda075f7d0788b8a4f9a79d1f0b2c9968e613b532b5ff3403750904
+        git_blob: 7501f9c77bdd8554746a52c83d96ae498a26a855
+      trader/world/replay.py:
+        bytes: 14775
+        sha256: 1762a0a4d100e016e39f62cd37d0e7ea9c7c01518250484dd5ca89a373fdb8f3
+        git_blob: 27154a5f758c0d71cb114fcd8eafe0e7c2be17ae
+      trader/research/dependence.py:
+        bytes: 7272
+        sha256: 7d3e69219599eb3c2e27144f534479765e5aa80cebf0e0d2a7d2718a5d6f9c48
+        git_blob: 0fbc65af1daba673f3b284bac25483d935816f04
+      config.yaml:
+        bytes: 26583
+        sha256: c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532
+        git_blob: 48687e13270bcb27e588620c9dc3c1b38f970d67
+    DEC03_separate_engineering_source_files:
+    - trader/portfolio/current.py
+    - trader/portfolio/position_evidence.py
+    - trader/portfolio/runtime.py
+    DEC03_overlap: current.py contains disjoint source-wiring changes; PORT-04 parent never included DEC-03
+      position capture. runtime.py unchanged from parent; separate position_evidence.py not present on this
+      engineering base.
+  status_counts_after:
+    CLOSED: 67
+    EVIDENCE_TO_MAP: 72
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 15
+    BLOCKED: 5
+    OPEN: 4
+  RISK03_dependency_satisfied: true
+  RISK03_now_eligible: true
+  RISK03_auto_closed: false
+  unproven_capabilities:
+  - Production normal-caller behavior/deployment
+  - Enabled normal world-model pair measurements
+  - Numeric factor model/calibrated correlation penalty
+  - Asset/cluster ceilings
+  - Complete historical held-position provenance
+  - Combined PORT-04 plus separate DEC-03 integration
+  baseline_limitations:
+  - Reported 327 test selection/artifact unavailable; independently retained fresh exact tests are authoritative.
+  - PORT-01 retained wider selection had 11 baseline failures; not rerun and no full-suite green claim.
+  - Invalid pre-fix basket-to-pair receipts are refused, not rewritten.
+  source_integration_pending: true
+  next_critical_path_item: RISK-03
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false

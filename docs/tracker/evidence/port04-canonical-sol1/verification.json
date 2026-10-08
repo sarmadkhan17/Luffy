@@ -1,0 +1,66 @@
+{
+  "engineering_revision": "387d130dedfe259e707ddda77b5eab83aa493aa7",
+  "cwd": "/mnt/luffy-data/luffy/workspaces/port04-relationship-sources",
+  "python": "/mnt/luffy-data/luffy/production/venv/bin/python",
+  "runs": [
+    {
+      "artifact": "fresh-targeted.xml",
+      "argv": [
+        "-m",
+        "pytest",
+        "tests/test_port04_relationship_sources.py",
+        "tests/test_port01_whole_book.py",
+        "tests/test_portfolio_common_factor.py",
+        "tests/test_portfolio_common_factor_shadow.py",
+        "tests/test_stage6_normal_sources.py",
+        "tests/test_stage6_closure.py",
+        "tests/test_wrld07_relationship_state.py",
+        "tests/test_qnt03_dependence_lineage.py",
+        "tests/test_dec02_comparison.py",
+        "tests/test_risk01_entry_binding.py",
+        "tests/test_risk02_exposure_feasibility.py",
+        "-q",
+        "--junitxml=<evidence>/fresh-targeted.xml"
+      ],
+      "passed": 283
+    },
+    {
+      "artifact": "fresh-metrics.xml",
+      "argv": [
+        "-m",
+        "pytest",
+        "tests/test_runtime_portfolio_integration.py",
+        "-q",
+        "--junitxml=<evidence>/fresh-metrics.xml"
+      ],
+      "passed": 20
+    },
+    {
+      "artifact": "fresh-independent.xml",
+      "argv": [
+        "-m",
+        "pytest",
+        "<evidence>/independent_test.py",
+        "-q",
+        "--junitxml=<evidence>/fresh-independent.xml"
+      ],
+      "passed": 3
+    }
+  ],
+  "evidence_directory": "docs/tracker/evidence/port04-canonical-sol1",
+  "calls": {
+    "provider": 0,
+    "venue": 0,
+    "live_activation": 0
+  },
+  "reported_327": {
+    "status": "REPORTED_ONLY_EXACT_SELECTION_NOT_RETAINED",
+    "authoritative_fresh_passes": 306
+  },
+  "DEC03": {
+    "shared_file": "trader/portfolio/current.py",
+    "relationship_delta_disjoint_from_position_capture": true,
+    "base_lacks_separate_DEC03_engineering": true,
+    "combined_tree_not_tested": true
+  }
+}
