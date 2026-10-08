@@ -1,0 +1,11 @@
+Pre-R4 normal-path gap probe (observed 2026-10-08, clean base 1426c2a, allocator R3).
+Scenario: tests/test_stage6_normal_sources.py `publications` fixture (real current.freeze -> Consumer.consume path),
+market.instrument_binding_json = None (no registry capability for the setup).
+Observed:
+  entry-capability sources in frozen inputs : []
+  trade intents                             : [('OPEN', 'COMPLETE', capability_receipt_id=None)]
+  Risk decisions (portfolio-risk-decision)  : ['APPROVE']
+The same scenario on 2ea4a95 is tests/test_port01_whole_book.py::test_normal_path_without_capability_goes_to_cash
+(no selection, no OPEN intent, ENTRY_CAPABILITY_UNAVAILABLE, CASH). Probe file was a throwaway in a detached base worktree.
+Note: the later entry_authority gate at execution still rereads the trusted capability; the gap was that Portfolio
+emitted a COMPLETE OPEN TradeIntent that reached Risk (and was APPROVED in the fixture) without frozen capability evidence.

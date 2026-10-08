@@ -1,0 +1,14 @@
+{
+ "selected_set": "42 test files matching portfolio|entry_authority|capability|allocator|trade_intent|risk_intent (selected-files.txt)",
+ "r4_tree_2ea4a95": "11 failed, 1369 passed",
+ "clean_base_1426c2a": "11 failed, 1342 passed (excludes tests/test_port01_whole_book.py, 27 tests)",
+ "failed_name_sets_identical": true,
+ "failure_signatures_identical": {"JSONDecodeError": 10, "AttributeError: 'types.SimpleNamespace' object has no attribute 'state' (trader/kernel.py:1388)": 1},
+ "families": {
+  "tests/test_launch_preflight.py": "9 (shell-gate helper output not JSON; dashboard/launch path)",
+  "tests/test_final_audit_feed_identity.py::test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat": "1 (Kernel SimpleNamespace fixture lacks .state)",
+  "tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk": "1 (owner/queries.py:205 json.loads of a '!luffy-journal-detail.v1!' wrapped stored payload)"
+ },
+ "engineering_reported": "1813 passed / 9 failed on a different selection; its 9 names are not enumerated in any retrievable artifact. The 9 launch_preflight failures are consistent with it but that equivalence is NOT verified.",
+ "full_suite_green_claim": false
+}

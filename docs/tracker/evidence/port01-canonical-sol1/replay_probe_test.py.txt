@@ -1,0 +1,19 @@
+import hashlib, os
+from dataclasses import replace
+from tests.test_portfolio_allocator import candidate, inputs, holding, test_only_models  # noqa
+from trader.portfolio import allocator as A
+BTC, ETH = 'venue:futures:BTCUSDT', 'venue:futures:ETHUSDT'
+def test_probe(test_only_models):
+    shapes = {
+     'single': inputs(candidate()),
+     'two': inputs(candidate('a', BTC, value='9'), candidate('b', ETH, value='2')),
+     'tie': inputs(candidate('a', BTC, value='3'), candidate('b', ETH, value='3')),
+     'held': inputs(candidate(), positions=(holding(),)),
+     'frozen': replace(inputs(candidate()), control_state='FROZEN'),
+    }
+    out = []
+    for name, i in shapes.items():
+        for v in ('LUFFY-PORTFOLIO-ALLOCATOR-R2', 'LUFFY-PORTFOLIO-ALLOCATOR-R3'):
+            p = A.allocate(i, v)
+            out.append(f"{name} {v[-2:]} res={hashlib.sha256(p.result_json.encode()).hexdigest()[:16]} verify={A.verify(p, i)}")
+    open(os.environ['OUT'], 'w').write('\n'.join(out) + '\n')

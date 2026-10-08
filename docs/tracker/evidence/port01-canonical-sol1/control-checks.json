@@ -1,0 +1,33 @@
+{
+  "PORT01_canonical": "CLOSED",
+  "status_counts": {
+    "CLOSED": 65,
+    "EVIDENCE_TO_MAP": 74,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "row_count": 178,
+  "changed_rows": [
+    "PORT-01"
+  ],
+  "other_177_rows_unchanged": true,
+  "original_conditions_edges_and_readiness_gates_preserved": true,
+  "strict_YAML_contracts": true,
+  "manifest_counts_bytes_hashes_valid": true,
+  "dashboard_read": "AVAILABLE",
+  "engineering_commit": "2ea4a95349062b7ec19cde6263fa8b3e8af45660",
+  "DEC02_unchanged_CLOSED": true,
+  "DEC03_unchanged_CLOSED": true,
+  "PORT04_row_unchanged": true,
+  "PORT04_dependency_satisfied": true,
+  "PORT04_now_eligible": true,
+  "PORT04_selected": false,
+  "EXE04_ENGINEERING_COMMIT": "916de7322dbc6ad85a66d7c6252f5d672c9bfcc1",
+  "EXE04_row_unchanged": true,
+  "EXE04_canonical_still_pending": true,
+  "application_code_changed": false,
+  "runtime_execution_authorized": false
+}

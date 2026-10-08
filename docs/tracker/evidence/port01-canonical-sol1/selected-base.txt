@@ -1,0 +1,14 @@
+>       assert json.loads(result.stdout)['reasons'] == ['preflight_command_failed']
+>       assert json.loads(result.stdout)['reasons'] == ['preflight_command_failed']
+FAILED tests/test_final_audit_feed_identity.py::test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[good-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[storage_active-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[storage_unreadable-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[protection_unknown-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[environment_fail-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[missing-dashboard]
+FAILED tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[malformed-dashboard]
+FAILED tests/test_launch_preflight.py::test_unavailable_preflight_command_has_zero_side_effects[missing_helper]
+FAILED tests/test_launch_preflight.py::test_unavailable_preflight_command_has_zero_side_effects[crashed_helper]
+FAILED tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk
+11 failed, 1342 passed in 1095.36s (0:18:15)

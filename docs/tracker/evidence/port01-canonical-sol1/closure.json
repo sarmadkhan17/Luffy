@@ -1,0 +1,113 @@
+{
+  "item": "PORT-01",
+  "canonical_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "engineering_commit": "2ea4a95349062b7ec19cde6263fa8b3e8af45660",
+  "engineering_base": "1426c2a70a3ee72b1e8cfc2ac7d19c505eee0c5c",
+  "control_baseline_revision": "2b5d250c418aef3268eb53dc7d1efbd081efc44f",
+  "control_plane_commit_resolution": "Enclosing Git commit; no self-referential hash.",
+  "closing_condition": "Normal Portfolio path compares current holdings and eligible candidates using exact account/book/capability cuts, then emits proposal-only TradeIntents.",
+  "failure_regression_proof": "No direct venue call or bypass of final Risk.",
+  "closing_condition_satisfied": true,
+  "closure_mapping": {
+    "original_gap": "Before R4 (R3 at 1426c2a) the normal current.freeze -> Consumer.consume path with no registry capability produced a COMPLETE OPEN TradeIntent (capability_receipt_id None) that Risk APPROVED in the normal-source fixture. This is the real normal path, not a synthetic allocator fixture; see gap-probe.txt. The entry-authority gate at execution is separate and unchanged.",
+    "r4_contract": "LUFFY-PORTFOLIO-ALLOCATOR-R4 requires exactly one frozen entry-capability:<instrument> for NEW_POSITION: entry-capability.v1 schema, receipt digest, exact instrument and market, observed_at <= cut <= valid_until, account trading ENABLED, account ELIGIBLE, venue TRADING, SHORT needs shortability PROVEN. Missing -> INCOMPLETE (ENTRY_CAPABILITY_UNAVAILABLE); stale/ineligible/invalid/ambiguous -> BLOCKED. KEEP/FLAT/SUPPORTS_EXISTING are ungated. No threshold, no venue call, no UNKNOWN -> zero.",
+    "whole_book": "One frozen cut carries holdings, every eligible candidate, account state, capability sources, portfolio snapshot id and CASH. Every candidate gets an opportunity-cost comparison against the book; CASH is always available. A capability-less economics-9 candidate cannot beat a capability-valid economics-2 candidate: R4 selects the latter while R3 on the same inputs would have chosen the former.",
+    "cash_fail_closed": "Missing/UNKNOWN economics, missing bounds, missing costs, UNKNOWN portfolio, unavailable Risk policy, FROZEN control and missing capability each select CASH with proposed_size UNAVAILABLE and a NO_ACTION intent with null requested size. Unavailable never becomes zero.",
+    "normal_caller": "current.freeze reads the capability recorded by the kernel (market instrument binding, cross-checked against the entry-authority kv record) and freezes entry-capability:<instrument>; a change during the read refuses PROPOSAL_CAPABILITY_CHANGED_DURING_READ. Consumer.consume -> allocate -> trade_intent.build binds the exact receipt -> risk_intent.evaluate. No manual priming in the normal-path tests. Absent or stale capability yields CASH and no OPEN intent.",
+    "authority_boundary": "Every TradeIntent keeps risk_final_authority=true, execution_routed=false, risk_approval=NOT_REQUESTED, side_effects=NONE. Portfolio grants no Risk approval, execution, venue, order, leverage or final-quantity authority; quantity/notional/leverage stay with Risk and entry_authority, which reread the trusted capability. The allocator capability digest is the entry_authority digest. Portfolio modules import no venue/executor/exits/protective/orchestrator.",
+    "versioning_replay": "R2, R3 and R4 are distinct, non-substitutable and all supported by verify. R2/R3 result bytes are identical between the pre-R4 base and the R4 tree on five input shapes; no historical receipt rewritten. R4 ordering is stable under candidate and source permutations; a stale or swapped cut refuses.",
+    "scope_limit": "Architecture/offline scope; capability fixtures are TEST-ONLY synthetic authorities built through register_capability. No deployed, live, provider or venue proof. Engineering commit is on branch port01-whole-book (base 1426c2a) and is not merged by this reconciliation."
+  },
+  "validation": {
+    "dedicated_port01_passed": 27,
+    "integration_dec03_plus_r4_passed": 80,
+    "integration_by_file": {
+      "tests.test_dec03_position_evidence": 21,
+      "tests.test_dec02_comparison": 25,
+      "tests.test_port01_whole_book": 27,
+      "tests.test_stage6_normal_sources": 7
+    },
+    "selected_r4_passed": 1369,
+    "selected_r4_failed": 11,
+    "selected_base_passed": 1342,
+    "selected_base_failed": 11,
+    "identical_failure_names": [
+      "tests/test_final_audit_feed_identity.py::test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[environment_fail-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[good-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[malformed-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[missing-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[protection_unknown-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[storage_active-dashboard]",
+      "tests/test_launch_preflight.py::test_actual_shell_gate_before_every_stop_start[storage_unreadable-dashboard]",
+      "tests/test_launch_preflight.py::test_unavailable_preflight_command_has_zero_side_effects[crashed_helper]",
+      "tests/test_launch_preflight.py::test_unavailable_preflight_command_has_zero_side_effects[missing_helper]",
+      "tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk"
+    ],
+    "r2_r3_replay_result_bytes_identical_across_base_and_r4": true,
+    "unrelated_files_unchanged": [
+      "trader/portfolio/current.py",
+      "trader/portfolio/trade_intent.py",
+      "trader/portfolio/runtime.py",
+      "trader/engine/entry_authority.py",
+      "trader/engine/risk.py",
+      "trader/engine/risk_intent.py",
+      "trader/engine/executor.py",
+      "trader/kernel.py",
+      "config.yaml"
+    ],
+    "counts_overlap_do_not_sum": true,
+    "full_suite_green_claim": false,
+    "engineering_reported_1813_passed_9_failed_names_enumerated": false
+  },
+  "allocator_versions": {
+    "current": "LUFFY-PORTFOLIO-ALLOCATOR-R4",
+    "historical": [
+      "LUFFY-PORTFOLIO-ALLOCATOR-R3",
+      "LUFFY-PORTFOLIO-ALLOCATOR-R2"
+    ]
+  },
+  "source_sha256": {
+    "trader/portfolio/allocator.py": "ee7cfb013450ea84ff9263e37d5a1be915f79ff8138dcd12110a21e93585969e",
+    "tests/test_port01_whole_book.py": "ec0da5ba07e000753b5194d162831b3349bf1ea66c1c3075b67709ec5cc506c0",
+    "tests/capability_fixtures.py": "fba09b9e85853aaf2fab1f9b492b7a30de0603e9ea416230963596f2f63e717a"
+  },
+  "targeted_impact": {
+    "DEC-02": "Unchanged CLOSED; row untouched. Default allocator moves R3 -> R4; R2 replay and R3 distinct. test_dec02_comparison 25 pass on the integrated tree. HISTORICAL REPLAY ONLY.",
+    "DEC-03": "Unchanged CLOSED. R4 merges cleanly onto 1ec9870; 21 DEC-03 + 25 DEC-02 + 7 normal-source + 27 PORT-01 pass (80). Not part of this engineering base, so the integrated tree is a verification merge only. UNCHANGED.",
+    "PORT-02": "Unchanged CLOSED; economics authority consumed as before. TEST/FIXTURE UPDATE (shared allocator fixture now attaches capabilities, done in 2ea4a95); test_port02_economics_authority passes.",
+    "PORT-04": "Dependency PORT-01 satisfied (WRLD-07, QNT-03 already CLOSED): eligible, unselected, unstarted, row unchanged and not auto-closed. Separate APPLICATION GAP remains: runtime current.py attaches common_factor without relationship_sources (confirmed in source; previously reported by Opus). Does not block PORT-01.",
+    "RISK-01/RISK-03": "UNCHANGED: risk.py/risk_intent.py/entry_authority.py bytes identical to base; Risk still final authority. test_risk01/02 pass.",
+    "entry_authority_execution": "UNCHANGED application code; test_stage1_entry_authority fixture assertion adjusted (TEST/FIXTURE UPDATE). No execution route added.",
+    "DEC-04": "UNCHANGED; row not touched and not closed.",
+    "Stage6_Stage8": "Stage6 fixtures TEST/FIXTURE UPDATE (done in 2ea4a95; stage6 closure and normal-source tests pass). Stage8 portfolio-cut query test fails identically on base and R4 at owner/queries.py:205 (journal-detail wrapped payload not decoded): pre-existing APPLICATION GAP unrelated to PORT-01 that masks, but does not contradict, R4 on that consumer."
+  },
+  "PORT04_dependency_satisfied": true,
+  "PORT04_now_eligible": true,
+  "PORT04_selected": false,
+  "PORT04_started": false,
+  "PORT04_auto_closed": false,
+  "PORT04_known_separate_gap": "normal checkpoint does not supply relationship_sources to common_factor.attach",
+  "EXE04_ENGINEERING_COMMIT": "916de7322dbc6ad85a66d7c6252f5d672c9bfcc1",
+  "EXE04_engineering_parked": true,
+  "EXE04_canonical_closed": false,
+  "EXE04_canonical_still_pending": true,
+  "next_control_plane_item": "EXE-04 canonical reconciliation",
+  "next_item_selected": false,
+  "application_code_changed": false,
+  "implementation_deployed": false,
+  "runtime_execution_authorized": false,
+  "provider_enablement_authorized": false,
+  "trading_activation_authorized": false,
+  "original_conditions_and_edges_preserved": true,
+  "status_counts_after": {
+    "CLOSED": 65,
+    "EVIDENCE_TO_MAP": 74,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  }
+}

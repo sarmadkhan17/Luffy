@@ -1,3 +1,5 @@
+> Current [SOL-1][PORT-01]: **CLOSED at architecture/offline scope** on `2ea4a95` (allocator R4). Pre-R4 normal path emitted a COMPLETE OPEN TradeIntent that reached Risk without frozen entry-capability evidence; R4 requires exactly one current eligible frozen capability for NEW_POSITION, else CASH. 27 dedicated + 80 integrated passes; the same 11 unrelated failures on the pre-R4 base; no full-suite green claim. R2/R3 replay byte-identical. PORT-04 dependency satisfied, eligible, unselected (separate relationship-source gap). EXE-04 engineering `916de73` exists; its canonical reconciliation is still pending. No activation authority. [Evidence](evidence/port01-canonical-sol1/closure.json). Earlier summaries below are historical.
+
 > Current [SOL-1][DEC-03]: **CLOSED at architecture/offline scope** on `1ec9870`. One canonical account/instrument holding; exact supporting/opposing strategy evidence and approved entry-plan binding retained; ancestry creates no independence authority. 79 fresh targeted passes; retained counts overlap. Same 24 unrelated provenance failures on base; no full-suite green claim. EXE-04 dependency satisfied and eligible, recommended but unselected/unstarted. PORT-01 unchanged. No activation or exit-mutation authority. [Evidence](evidence/dec03-canonical-sol1/closure.json). Earlier summaries below are historical.
 
 > Current [SOL-1][STR-04]: **CLOSED at architecture/offline scope** on `9814fdd`. Exact v2 historical owner binding verified across ACTIVE/REACTIVATED/PAUSED/DEGRADED/RETIRED; stale containment remains available and stale activation refuses. 109 fresh canonical checks passed; retained counts overlap and the unrelated Glacier static-guard baseline failure remains separate. DEC-03 dependencies satisfied; recommended, unselected and unstarted. GUI-04/REL-01 retain their own gates. No activation authority. [Evidence](evidence/str04-binding01-canonical-sol1/closure.json). Earlier summaries below are historical.
@@ -66,7 +68,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.56-dec03-canonical-closed-sol1
+Version: 1.57-port01-canonical-closed-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -2765,32 +2767,34 @@ future_calibration:
 - **stage**: 6
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Avoids trading each isolated signal independently.
 - **closure_condition**: Normal Portfolio path compares current holdings and eligible candidates using exact account/book/capability cuts, then emits proposal-only TradeIntents.
 - **failure_regression_proof**: No direct venue call or bypass of final Risk.
 - **dependencies**: DEC-01, DATA-01
 - **owner_role**: Portfolio owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Allocator R4 requires the frozen account/instrument entry capability for NEW_POSITION; whole-book/CASH/proposal-only path verified at 2ea4a95349062b7ec19cde6263fa8b3e8af45660. docs/tracker/evidence/port01-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; no deployed/live/provider proof claimed
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 27 dedicated passes; 80 integrated passes on DEC-03+R4; selected 42-file run 1369 passed/11 failed with the same 11 failures (names and signatures) on the pre-R4 base. Pre-R4 normal path produced a COMPLETE OPEN TradeIntent without capability; R4 selects CASH. R2/R3 replay bytes identical. No full-suite green claim.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§16,35.5
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact PORT-01 architecture/offline closure. PORT-04 dependency satisfied and eligible for its own relationship-source work; unselected/unstarted. Risk/order authority unchanged.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-08
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/port01-canonical-sol1/closure.json
+- **evidence_validity**: Pinned exact engineering commit and synthetic TEST-ONLY capability fixtures; no deployment, production calibration or live execution claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
+- **evidence_mapping**: docs/tracker/evidence/port01-canonical-sol1/REPORT.md
 
 ### PORT-02 — Require calibrated expected net economics rather than invented defaults.
 
@@ -7382,3 +7386,5 @@ STR-03 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 77, DEFERRED 7, AWAIT
 STR-04 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 76, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 6, OPEN 4 (178 total).
 
 DEC-03 canonical status counts: CLOSED 64, EVIDENCE_TO_MAP 75, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+PORT-01 canonical status counts: CLOSED 65, EVIDENCE_TO_MAP 74, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
