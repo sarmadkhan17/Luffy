@@ -4408,3 +4408,68 @@ exe04_canonical_reconciliation:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
+
+qnt09_canonical_intake:
+  item: QNT-09
+  title: Initial production economics and capacity calibration
+  canonical_status: AWAITING_OWNER
+  latest_assessment: BLOCKED_ON_POLICY_OR_EVIDENCE
+  release_scope: REAL_MONEY_RELEASE
+  control_baseline_revision: a355486900371f6e5ba9605e2fb84da661139489
+  control_plane_commit_resolution: Enclosing Git commit; no self-referential hash.
+  intake_approved: true
+  initial_calibration_owner: Quant validation owner
+  offline_design_refusal_mechanics_authorized: true
+  numerical_policy_status: NOT_APPROVED
+  production_registration_authorized: false
+  adapter_decision: DEFERRED_AFTER_NECESSITY_ASSESSMENT; NO_IMPLEMENTATION_JUSTIFIED
+  adapter_necessity: Existing PORT-02 interface may suffice through legitimate, qualified historical paper-cost
+    transfer. Existing transfer applicability is unproven; no mandatory need for a new adapter established.
+  dependencies:
+    STR-02: CLOSED
+    PORT-02: CLOSED
+    RISK-02: CLOSED
+  dependency_validation: All proposed dependencies exist and are CLOSED at architecture/offline scope; added
+    edges are acyclic. Closure does not establish production calibration.
+  parent: PORT-02
+  related_items:
+  - PORT-05
+  - EXE-07
+  - DATA-10
+  - QNT-04
+  - LRN-05
+  - REL-01
+  required_behavior: Establish initial calibrated gross, forward costs, numeric uncertainty reserve and bounded
+    exact-Q capacity through approved, independently evaluated, versioned evidence.
+  closure_condition: One exact supported version/instrument/side/quantity/context has complete, replayable
+    calibrated economics and capacity evidence accepted by existing authorities. Profitability is not required
+    for tracker closure.
+  profitability_required_for_closure: false
+  limitations:
+  - No qualifying production calibration exists.
+  - Existing transfer applicability is unproven.
+  - No adapter implementation is currently justified.
+  - No numeric parameters or methods are approved.
+  - UNKNOWN remains UNAVAILABLE.
+  - No first-live permission.
+  next_required_owner_decision: Quant validation owner must approve a numerical estimator policy and establish
+    qualifying versioned evidence/transfer applicability for one exact supported scope. Assess necessity before
+    reconsidering a prospective adapter; no implementation is currently justified.
+  port02_impact: NONE; CLOSED and complete row preserved
+  existing_tracker_rows_preserved: 178
+  tracker_total: 179
+  status_counts_after:
+    CLOSED: 66
+    EVIDENCE_TO_MAP: 73
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 15
+    BLOCKED: 5
+    OPEN: 4
+  no_separate_adapter_item: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_venue_calls_authorized: false
+  trading_activation_authorized: false
+  first_live_permission: false
+  evidence: docs/tracker/evidence/qnt09-canonical-intake-sol1/intake.json

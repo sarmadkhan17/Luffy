@@ -1,3 +1,5 @@
+> Current [SOL-1][QNT-09]: **AWAITING_OWNER / BLOCKED_ON_POLICY_OR_EVIDENCE**. Initial production economics and capacity calibration intake approved; Quant validation owns calibration. Offline design/refusal mechanics authorized; numerical policy not approved and production registration not authorized. PORT-02 remains CLOSED. Qualified historical paper-cost transfer may suffice; applicability is unproven and no adapter implementation is justified. UNKNOWN remains UNAVAILABLE; no first-live permission. Profitability is not required for closure. [Intake](evidence/qnt09-canonical-intake-sol1/intake.json). Earlier summaries below are historical.
+
 > Current [SOL-1][EXE-04]: **CLOSED at architecture/offline scope** on `916de7322dbc6ad85a66d7c6252f5d672c9bfcc1`. Exact DEC-03-bound frozen plan; `factory-exit.closed-bars.v1`; research/paper/live causal parity, refusal, independent safety and replay verified offline. 569 distinct fresh passes. EXE-05 dependency-eligible, unselected/unstarted; its row remains open for mapping. Source integration pending; first-live fenced; no activation authority. [Evidence](evidence/exe04-canonical-sol1/closure.json). Earlier summaries below are historical.
 
 > Current [SOL-1][PORT-01]: **CLOSED at architecture/offline scope** on `2ea4a95` (allocator R4). Pre-R4 normal path emitted a COMPLETE OPEN TradeIntent that reached Risk without frozen entry-capability evidence; R4 requires exactly one current eligible frozen capability for NEW_POSITION, else CASH. 27 dedicated + 80 integrated passes; the same 11 unrelated failures on the pre-R4 base; no full-suite green claim. R2/R3 replay byte-identical. PORT-04 dependency satisfied, eligible, unselected (separate relationship-source gap). EXE-04 engineering `916de73` exists; its canonical reconciliation is still pending. No activation authority. [Evidence](evidence/port01-canonical-sol1/closure.json). Earlier summaries below are historical.
@@ -70,7 +72,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.58-exe04-canonical-closed-sol1
+Version: 1.59-qnt09-canonical-intake-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -2447,6 +2449,48 @@ future_calibration:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+### QNT-09 — Initial production economics and capacity calibration
+
+- **area**: Quant validation
+- **stage**: 4
+- **item_type**: REQUIREMENT
+- **release_scope**: REAL_MONEY_RELEASE
+- **status**: AWAITING_OWNER
+- **required_behavior**: Establish initial calibrated gross, forward costs, numeric uncertainty reserve and bounded exact-Q capacity through approved, independently evaluated, versioned evidence.
+- **why_needed**: PORT-02 proves the authority/refusal boundary offline; qualifying initial production economics and capacity evidence remains absent.
+- **closure_condition**: One exact supported version/instrument/side/quantity/context has complete, replayable calibrated economics and capacity evidence accepted by existing authorities. Profitability is not required for tracker closure.
+- **failure_regression_proof**: Unqualified transfer, missing or unapproved numerical authority, unsupported exact quantity/context and UNKNOWN evidence remain UNAVAILABLE; evidence acceptance cannot grant production registration or first-live permission.
+- **dependencies**: STR-02, PORT-02, RISK-02
+- **owner_role**: Quant validation owner
+- **engineering_assignee**: UNASSIGNED
+- **implementation_evidence**: NOT_ESTABLISHED; control-plane intake only
+- **runtime_evidence**: NO_QUALIFYING_PRODUCTION_CALIBRATION
+- **visual_approval**: NOT_APPLICABLE
+- **latest_evidence**: Owner approved intake, initial Quant validation ownership and offline design/refusal mechanics. Latest assessment BLOCKED_ON_POLICY_OR_EVIDENCE. Existing PORT-02 interface may suffice through legitimate, qualified historical paper-cost transfer; applicability is unproven and no mandatory adapter need has been established.
+- **source_ids**: S19
+- **source_sections**: Owner canonical intake [SOL-1][QNT-09], 2026-10-08
+- **next_proof**: Quant validation owner must approve a numerical estimator policy and establish qualifying versioned evidence/transfer applicability for one exact supported scope. Assess necessity before reconsidering a prospective adapter; no implementation is currently justified.
+- **acceptance_basis**: Explicit owner-approved canonical intake; closure evidence remains unaccepted.
+- **acceptance_status**: OWNER_APPROVED_INTAKE_ONLY
+- **priority**: NORMAL
+- **resolution_at_commit**: None
+- **work_authorized**: True
+- **authorized_work_scope**: CONTROL_PLANE_INTAKE_AND_OFFLINE_DESIGN_REFUSAL_MECHANICS_ONLY
+- **updated**: 2026-10-08
+- **parent_ids**: PORT-02
+- **related_items**: PORT-05, EXE-07, DATA-10, QNT-04, LRN-05, REL-01
+- **closure_evidence**: None
+- **evidence_validity**: No qualifying calibrated evidence accepted; historical evidence is not production transfer authority.
+- **new_issue_policy**: Preserve PORT-02 CLOSED. Do not create a separate prospective-adapter tracker item.
+- **owner_approval_needed**: NUMERICAL_ESTIMATOR_POLICY_AND_QUALIFYING_EVIDENCE_REQUIRED
+- **latest_assessment**: BLOCKED_ON_POLICY_OR_EVIDENCE
+- **limitations**: No qualifying production calibration exists., Existing transfer applicability is unproven., No adapter implementation is currently justified., No numeric parameters or methods are approved., UNKNOWN remains UNAVAILABLE., No first-live permission.
+- **numerical_policy_status**: NOT_APPROVED
+- **production_registration_authorized**: False
+- **adapter_decision**: DEFERRED_AFTER_NECESSITY_ASSESSMENT; NO_IMPLEMENTATION_JUSTIFIED
+- **profitability_required_for_closure**: False
+- **first_live_permission**: False
 
 ### STR-01 — Create one immutable typed StrategySpec/StrategyVersion lineage.
 
@@ -7394,3 +7438,5 @@ DEC-03 canonical status counts: CLOSED 64, EVIDENCE_TO_MAP 75, DEFERRED 7, AWAIT
 PORT-01 canonical status counts: CLOSED 65, EVIDENCE_TO_MAP 74, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 EXE-04 canonical status counts: {'CLOSED': 66, 'EVIDENCE_TO_MAP': 73, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 14, 'BLOCKED': 5, 'OPEN': 4} (178 total).
+
+QNT-09 canonical intake status counts: {'CLOSED': 66, 'EVIDENCE_TO_MAP': 73, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 15, 'BLOCKED': 5, 'OPEN': 4} (179 total).

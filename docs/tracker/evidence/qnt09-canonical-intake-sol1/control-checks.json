@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "canonical_base": "a355486900371f6e5ba9605e2fb84da661139489",
+  "qnt09_absent_before": true,
+  "tracker_total": 179,
+  "status_counts": {
+    "CLOSED": 66,
+    "EVIDENCE_TO_MAP": 73,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 15,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "all_178_existing_rows_semantically_and_byte_preserved": true,
+  "all_existing_dependency_edges_preserved": true,
+  "dependency_graph_acyclic": true,
+  "dependencies": {
+    "STR-02": "CLOSED",
+    "PORT-02": "CLOSED",
+    "RISK-02": "CLOSED"
+  },
+  "port02_status": "CLOSED",
+  "schema_validation": "PASS",
+  "manifest_files_verified": 158,
+  "existing_selection_preserved": true,
+  "committed_bytes_verified": false
+}
