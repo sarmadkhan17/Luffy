@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="2.718" timestamp="2026-10-08T04:19:58.116113+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_orphan_positions" name="test_a_position_outside_the_universe_is_still_managed" time="0.050"><failure message="AssertionError: assert [] == ['MOVR/USDT']&#10;  &#10;  Right contains one more item: 'MOVR/USDT'&#10;  Use -v to get more diff">def test_a_position_outside_the_universe_is_still_managed():
+        k = _kernel(open_symbols=["MOVR/USDT"], universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+&gt;       assert k.exits.managed == ["MOVR/USDT"]
+E       AssertionError: assert [] == ['MOVR/USDT']
+E         
+E         Right contains one more item: 'MOVR/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:67: AssertionError</failure></testcase><testcase classname="tests.test_orphan_positions" name="test_its_exchange_exit_is_still_detected" time="0.002" /><testcase classname="tests.test_orphan_positions" name="test_a_scanned_symbol_is_not_managed_twice" time="0.001" /><testcase classname="tests.test_orphan_positions" name="test_several_orphans_are_all_managed" time="0.003"><failure message="AssertionError: assert [] == ['A/USDT', 'B/USDT', 'C/USDT']&#10;  &#10;  Right contains 3 more items, first extra item: 'A/USDT'&#10;  Use -v to get more diff">def test_several_orphans_are_all_managed():
+        k = _kernel(open_symbols=["A/USDT", "B/USDT", "C/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+&gt;       assert sorted(k.exits.managed) == ["A/USDT", "B/USDT", "C/USDT"]
+E       AssertionError: assert [] == ['A/USDT', 'B/USDT', 'C/USDT']
+E         
+E         Right contains 3 more items, first extra item: 'A/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:87: AssertionError</failure></testcase><testcase classname="tests.test_orphan_positions" name="test_an_unavailable_snapshot_does_not_abort_the_other_orphans" time="0.002"><failure message="AssertionError: assert [] == ['B/USDT']&#10;  &#10;  Right contains one more item: 'B/USDT'&#10;  Use -v to get more diff">def test_an_unavailable_snapshot_does_not_abort_the_other_orphans():
+        """One dead symbol must not strand every other position behind it."""
+        k = _kernel(open_symbols=["DEAD/USDT", "B/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        real = k._snapshot_for
+        k._snapshot_for = lambda sym, universe=None: (
+            None if sym == "DEAD/USDT" else real(sym))
+        k._manage_orphan_positions({"BTC/USDT"})
+&gt;       assert k.exits.managed == ["B/USDT"]
+E       AssertionError: assert [] == ['B/USDT']
+E         
+E         Right contains one more item: 'B/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:98: AssertionError</failure></testcase><testcase classname="tests.test_orphan_positions" name="test_no_open_trades_is_a_no_op" time="0.001" /></testsuite></testsuites>

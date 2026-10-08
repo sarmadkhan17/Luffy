@@ -1,0 +1,31 @@
+[SOL-1][EXE-04][EXIT-PARITY-R1] Engineering validation
+Worktree: /mnt/luffy-data/luffy/workspaces/sol1-exe04-exit-authority
+Baseline: 1ec9870a09868d108293b10c3417ffd14368ed2e
+Prior audit: 0c520e23843556f3df85a642643bdfe05d8ba1de
+Historical committed ref: 1ab0da0cb9cb3a3c290488d7c75edf09788b6462
+Historical dirty files used: NO
+Contract: factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc
+
+Only the prescribed launcher executed tests. It assigns isolated basetemp beneath /mnt/luffy-data/test-tmp/sarmad (no manual override).
+
+Final suite after all runtime edits:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_exe04_authority_audit.py tests/test_exe04_admitted_exit_parity.py tests/test_exe04_exit_boundaries.py tests/test_exit_semantics_probation_binding.py tests/test_exe03_partial_exit_identity.py tests/test_final_audit_partial_intent.py tests/test_final_audit_partial_ack.py tests/test_dec03_position_evidence.py tests/test_str03_approval_binding.py tests/test_str04_governor_lifecycle.py tests/test_str04_historical_binding.py tests/test_vector_backtest.py tests/test_research_portfolio_null.py tests/test_exits.py tests/test_stop_move_safety.py --junitxml=/mnt/luffy-data/test-tmp/exe04-parity-final.xml
+321 passed in 222.32s. No failures/errors/skips.
+
+Authenticated research compilation and STR-02 checks:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_exe04_admitted_exit_parity.py tests/test_str02_compile_binding.py -k 'not kernel and not unversioned_legacy_spec' --junitxml=/mnt/luffy-data/test-tmp/exe04-authenticated-research.xml
+123 passed, 2 deselected in 94.05s. The 83 parity cases overlap the final suite; 40 compiler cases are additional. Two Kernel fixture cases excluded.
+
+Factory admission/installation/approval checks:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_strategy_factory_handoff.py -k 'not kernel and not unversioned_install and not factory_writes_no_trading_state' --junitxml=/mnt/luffy-data/test-tmp/exe04-factory-regression.xml
+47 passed, 6 deselected in 22.22s. Four Kernel cases, an unversioned Kernel install helper and the pre-existing static global writer whitelist (which omits DEC-03) excluded. No whitelist/test implementation was weakened.
+
+408 distinct selected tests pass (321 + 40 + 47). 491 total passing executions across these three retained runs; 83 parity cases deliberately rerun.
+
+Intermediate development runs exposed fixture/provenance routing issues and an obsolete historical refusal-code expectation; these were corrected before the retained final runs. An initial compiler rerun was interrupted before completion to correct its Kernel test selection. No failed/interrupted run is used as closure evidence.
+
+git diff --check: PASS.
+No edits: kernel.py, allocator.py, tracker, STATE, NEXT, manifest, production or historical worktree.
+No execution: live Kernel, Dashboard restart, provider/venue API, orders, activation, EXE-05.
+Original audit report/XML unchanged; historical receipt byte-preservation is tested.
+No merge/cherry-pick, deployment, push or canonical reconciliation.

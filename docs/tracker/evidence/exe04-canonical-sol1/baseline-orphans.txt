@@ -1,0 +1,58 @@
+F..FF.                                                                   [100%]
+=================================== FAILURES ===================================
+____________ test_a_position_outside_the_universe_is_still_managed _____________
+
+    def test_a_position_outside_the_universe_is_still_managed():
+        k = _kernel(open_symbols=["MOVR/USDT"], universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert k.exits.managed == ["MOVR/USDT"]
+E       AssertionError: assert [] == ['MOVR/USDT']
+E         
+E         Right contains one more item: 'MOVR/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:67: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2122 orphan position MOVR/USDT: '_Exits' object has no attribute 'spec_exits'
+_____________________ test_several_orphans_are_all_managed _____________________
+
+    def test_several_orphans_are_all_managed():
+        k = _kernel(open_symbols=["A/USDT", "B/USDT", "C/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert sorted(k.exits.managed) == ["A/USDT", "B/USDT", "C/USDT"]
+E       AssertionError: assert [] == ['A/USDT', 'B/USDT', 'C/USDT']
+E         
+E         Right contains 3 more items, first extra item: 'A/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:87: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2122 orphan position A/USDT: '_Exits' object has no attribute 'spec_exits'
+WARNING  luffy:kernel.py:2122 orphan position B/USDT: '_Exits' object has no attribute 'spec_exits'
+WARNING  luffy:kernel.py:2122 orphan position C/USDT: '_Exits' object has no attribute 'spec_exits'
+________ test_an_unavailable_snapshot_does_not_abort_the_other_orphans _________
+
+    def test_an_unavailable_snapshot_does_not_abort_the_other_orphans():
+        """One dead symbol must not strand every other position behind it."""
+        k = _kernel(open_symbols=["DEAD/USDT", "B/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        real = k._snapshot_for
+        k._snapshot_for = lambda sym, universe=None: (
+            None if sym == "DEAD/USDT" else real(sym))
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert k.exits.managed == ["B/USDT"]
+E       AssertionError: assert [] == ['B/USDT']
+E         
+E         Right contains one more item: 'B/USDT'
+E         Use -v to get more diff
+
+tests/test_orphan_positions.py:98: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2114 orphan position DEAD/USDT: no snapshot — cannot manage this cycle
+WARNING  luffy:kernel.py:2122 orphan position B/USDT: '_Exits' object has no attribute 'spec_exits'
+=========================== short test summary info ============================
+FAILED tests/test_orphan_positions.py::test_a_position_outside_the_universe_is_still_managed
+FAILED tests/test_orphan_positions.py::test_several_orphans_are_all_managed
+FAILED tests/test_orphan_positions.py::test_an_unavailable_snapshot_does_not_abort_the_other_orphans
+3 failed, 3 passed in 2.72s

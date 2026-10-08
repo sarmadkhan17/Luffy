@@ -1,0 +1,45 @@
+{
+  "EXE04_CANONICAL": "CLOSED",
+  "status_counts": {
+    "CLOSED": 66,
+    "EVIDENCE_TO_MAP": 73,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 5,
+    "OPEN": 4
+  },
+  "row_count": 178,
+  "changed_rows": [
+    "EXE-04"
+  ],
+  "other_177_rows_unchanged": true,
+  "conditions_edges_readiness_preserved": true,
+  "strict_schemas_valid": true,
+  "manifest_bytes_hashes_valid": true,
+  "engineering_reachable_unchanged": true,
+  "dashboard_read": "AVAILABLE",
+  "EXE05_dependency_satisfied": true,
+  "EXE05_now_eligible": true,
+  "EXE05_not_closed": true,
+  "source_integration_still_pending": true,
+  "first_live_execution_still_fenced": true,
+  "application_code_changed": false,
+  "fresh_test_evidence": {
+    "fresh-final.xml": {
+      "passed": 321,
+      "failed": 0
+    },
+    "fresh-compiler.xml": {
+      "passed": 40,
+      "failed": 0
+    },
+    "fresh-factory-protection.xml": {
+      "passed": 208,
+      "failed": 3
+    },
+    "baseline_orphan_failures_identical_names_and_assertions": true,
+    "distinct_tests": 569,
+    "counts_overlap_do_not_sum_with_retained": true
+  }
+}

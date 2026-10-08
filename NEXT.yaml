@@ -42,28 +42,29 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: PORT-01
+  id: EXE-04
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
   mode: ENGINEERING_ONLY
   reconciliation_mode: CONTROL_PLANE_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Compare opportunities against the whole book, cash and account constraints.
-  implementation_commit: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
-  verification_revision: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
+  objective: Preserve approved exit-plan authority.
+  implementation_commit: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+  verification_revision: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
   implementation_complete: true
   canonical_reconciliation_pending: false
   closing_condition_satisfied: true
   evidence:
-  - docs/tracker/evidence/port01-canonical-sol1/closure.json
-  - docs/tracker/evidence/port01-canonical-sol1/REPORT.md
-  - docs/tracker/evidence/port01-canonical-sol1/fresh-port01.xml
+  - docs/tracker/evidence/exe04-canonical-sol1/closure.json
+  - docs/tracker/evidence/exe04-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/exe04-canonical-sol1/fresh-final.xml
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   successor_selected: false
-  next_action: EXE-04 canonical reconciliation (engineering 916de73) is the next control-plane item; PORT-04
-    eligible, unselected. No execution authority.
+  next_action: EXE-04 CLOSED at architecture/offline scope on 916de73. EXE-05 dependencies satisfied; recommended
+    for separate native-protection evidence mapping, unselected/unstarted. Application integration pending;
+    first-live remains fenced. No runtime/provider/trading authority.
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -558,7 +559,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: PORT-01
+  last_completed_item: EXE-04
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -571,7 +572,7 @@ current_build_selection:
   - OUT-03
   - GUI-02
   - OUT-01
-  next_recommended_item: EXE-04
+  next_recommended_item: EXE-05
   eligible_items:
   - DATA-08
   - GUI-02
@@ -582,19 +583,18 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  - EXE-04
   - PORT-04
+  - EXE-05
   eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
     GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
     apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: PORT-01 CLOSED at architecture/offline scope (engineering 2ea4a95). PORT-04 dependency
-    satisfied and eligible, unselected/unstarted. EXE-04 engineering 916de73 exists but its canonical reconciliation
-    is pending and is the next control-plane item; EXE-04 row unchanged. No execution, Risk, venue, capital
-    or trading authority.
-  last_terminal_item: PORT-01
+  selection_reason: EXE-04 CLOSED at architecture/offline scope on 916de73. EXE-05 dependencies satisfied;
+    recommended for separate native-protection evidence mapping, unselected/unstarted. Application integration
+    pending; first-live remains fenced. No runtime/provider/trading authority.
+  last_terminal_item: EXE-04
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   deferred_proof_obligations:
     ATT-03:
@@ -4142,3 +4142,269 @@ port01_canonical_reconciliation:
     AWAITING_OWNER: 14
     BLOCKED: 5
     OPEN: 4
+
+exe04_previous_selection:
+  id: PORT-01
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  mode: ENGINEERING_ONLY
+  reconciliation_mode: CONTROL_PLANE_ONLY
+  scope: ARCHITECTURE_OFFLINE
+  objective: Compare opportunities against the whole book, cash and account constraints.
+  implementation_commit: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
+  verification_revision: 2ea4a95349062b7ec19cde6263fa8b3e8af45660
+  implementation_complete: true
+  canonical_reconciliation_pending: false
+  closing_condition_satisfied: true
+  evidence:
+  - docs/tracker/evidence/port01-canonical-sol1/closure.json
+  - docs/tracker/evidence/port01-canonical-sol1/REPORT.md
+  - docs/tracker/evidence/port01-canonical-sol1/fresh-port01.xml
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+  next_action: EXE-04 canonical reconciliation (engineering 916de73) is the next control-plane item; PORT-04
+    eligible, unselected. No execution authority.
+exe04_canonical_reconciliation:
+  item: EXE-04
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_commit: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+  engineering_base: 1ec9870a09868d108293b10c3417ffd14368ed2e
+  control_baseline_revision: ec2a68ed648c03d34cf99dcd9040ff14844eca92
+  control_plane_commit_resolution: Enclosing Git commit; no self-referential hash.
+  closing_condition: Native stop, trail, partial, invalidation and permitted scale-in follow the exact strategy
+    version/plan or explicit safety authority.
+  failure_regression_proof: Wrong strategy version or confidence-only resizing is refused.
+  closing_condition_satisfied: true
+  exit_contract: factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc
+  closure_mapping:
+    DEC03_BINDING: LiveExitAdapter.position_plan independently reads the booked episode and retained independent
+      holdings, consumes DEC-03 capture/build, and verifies account/instrument/episode, exact version/install/spec/initial-plan
+      hashes, side/quantity and observation cut. Executor.close independently rechecks binding and causal replay
+      before exchange access. Original entry action/capability digest is checked where recorded. Proven through
+      live execution code with isolated offline fixtures; no venue execution claimed.
+    SUPPORTED_BEHAVIORS: ATR/% initial stops with 0.4% floor; R/ATR/% final target or explicit NONE; full remaining
+      quantity; unconditional 1..500 consecutive completed spec bars after signal bar. Signal-bar close reference
+      and completed ATR(14). Open gap, stop, target, then time cap; both-hit range selects stop first with
+      explicit ambiguity.
+    REFUSED_BEHAVIORS: Wrong/missing/substituted StrategyVersion, install, spec, plan, geometry, account slot
+      or episode; stale/future/missing holdings; non-none trail, partial schedules, executable invalidation/signal
+      exits, scale-in and undeclared fields. No exact existing admitted authority supports those positive behaviors.
+      Direct ratchet/new partial/unsupported close reasons refuse. No default trail, TP1, confidence resize
+      or alternate-version fallback.
+    RESEARCH_PAPER_LIVE_PARITY: Authenticated compile_version/research _trade, PaperExecutor and ExitEngine/LiveExitAdapter
+      use the same initialize/advance/verify_initial/replay semantics. 70 long/short causal matrix cases compare
+      state, stop, target, timing, reason and full-remaining intent, including NONE and changed legacy defaults.
+      Fill equality is outside this contract.
+    SAFETY_AUTHORITY: Authenticated OwnerService close receipt and exact manual_close event independently authorize
+      containment even with missing strategy plan/snapshot. OWNER evidence remains separate from STRATEGY;
+      panic retains FROZEN. Protective, Supervisor, recovery and Risk source bytes unchanged from DEC-03 engineering
+      baseline; offline protection regressions checked. No Risk bypass, exposure expansion or native venue
+      certification.
+    REPLAY: Reconstructed paper/live adapters retain frozen geometry. Live observations are replayed against
+      DEC-03 initial plan and exact spec on reads and final close; corrupt/unbound historical state refuses.
+      Duplicate successful locally booked action is suppressed; failed submission retains identical terminal
+      intent for retry. Legacy unattributable rows stay UNKNOWN, no future reconstruction or receipt backfill.
+      Existing EXE-03 durable reservation/recovery precedes new-partial admission refusal.
+    REGRESSIONS: EXE-03 durable identity/intent/ack, DEC-03 position evidence, STR-03 approval binding, STR-04
+      Governor/historical binding, vector/null research, legacy exits and stop safety pass in fresh-final.xml.
+      Compiler/factory and protective/supervisor/partial recovery pass separately. Three orphan-management
+      failures have identical names and assertion text on exact DEC-03 engineering baseline; unchanged Kernel
+      and orphan test bytes. See fresh-factory-protection.xml and baseline-orphans.xml.
+    BASELINE_LIMITATIONS: 'Architecture/offline exact admitted path only. No actual venue/fill/native protection
+      proof, deployment, real calibration or all-legacy certification. Three orphan-management fixture failures
+      (_Exits lacks spec_exits) reproduce identically on 1ec9870; remain unresolved for EXE-05 mapping. Retained
+      factory suite excludes six cases: Kernel fixtures/install helper and pre-existing global writer whitelist
+      omitting DEC-03; fresh combined factory/protection selection excludes nine cases by the recorded filter.
+      Compiler excludes two Kernel fixtures. Original BLOCKED audit/report/XML retained unchanged as baseline
+      counterexamples; superseded by 916de73. No full-suite green claim.'
+    EXE05_IMPACT: 'EXE-04 and ACC-01 are CLOSED: EXE-05 dependency satisfied and eligible for separate evidence
+      mapping, unselected/unstarted. EXE-05 row unchanged and not auto-closed. Real supported venue size/side/protective
+      IDs, missing/orphan/partial protection and unavailable-symbol behavior still require its own exact proof.'
+    FIRST_LIVE_IMPACT: Exact approval, validation, install, probation, inputs, capacity, current configuration
+      and lifecycle verification remain required. Unsupported exit semantics cannot obtain admission. live_entry_block
+      still returns version_first_live_execution_not_enabled for ACTIVE/REACTIVATED; parity tests assert refusal.
+      M5/REL-01 and runtime authorization unchanged; no first-live eligibility or activation inferred.
+    SOURCE_INTEGRATION: 916de73 reachable on sol1/exe04-exit-authority; not an ancestor of canonical control
+      HEAD. No application branch integration, merge or cherry-pick. Production application source unchanged.
+      EXE-04 plus separately parked engineering, including PORT-01 R4, still need a separately scoped integration/verification
+      task.
+  fresh_test_evidence:
+    fresh-final.xml:
+      passed: 321
+      failed: 0
+    fresh-compiler.xml:
+      passed: 40
+      failed: 0
+    fresh-factory-protection.xml:
+      passed: 208
+      failed: 3
+    baseline_orphan_failures_identical_names_and_assertions: true
+    distinct_tests: 569
+    counts_overlap_do_not_sum_with_retained: true
+  engineering_objects:
+    docs/superpowers/reports/2026-10-08-exe04-authority-audit.md:
+      git_blob: 43dfc25a7bd5368843a8410c9ebb261a17472214
+      bytes: 12764
+      sha256: 96c583418e53c130f2350b02c43355913d954ed3c980a14a39b43c5cd46d4da0
+    docs/superpowers/reports/2026-10-08-exe04-exit-parity-r1.md:
+      git_blob: 2bcad6bd61cd2d1dc0012a459ee6ad3a8305d01b
+      bytes: 15148
+      sha256: 4eab48672fa5fb10f8f01ed614bc732c000646c3d13626d970750e4ee5f1248b
+    docs/superpowers/reports/exe04-authority-evidence/audit.xml:
+      git_blob: 2b86a57fe70cc670254db9d81758159f46f5330c
+      bytes: 3143
+      sha256: 21c3dd693dcad8c91ad4977ca0fdff56393eb16dadb1466023ffe04663da4651
+    docs/superpowers/reports/exe04-authority-evidence/regressions.xml:
+      git_blob: 349dea0d644aa56b0d18ed65ed05ec07e5d41e1c
+      bytes: 17438
+      sha256: 510496f2150c0b3d50b38fe6e969675a64003a6afb209ee8177c1b55af0ba09a
+    docs/superpowers/reports/exe04-authority-evidence/validation.txt:
+      git_blob: 7d4d3bd88a6d6ca28cad14710559ce1eeb0b1088
+      bytes: 1447
+      sha256: 304e0fb041b78d43b86695279d3debb92e76e2f06ce5620477936fb210150b69
+    docs/superpowers/reports/exe04-exit-parity-r1-evidence/exe04-authenticated-research.xml:
+      git_blob: fa8531bca9c4877b678eb7c93018cd354f348b73
+      bytes: 17850
+      sha256: 56a7a17a74fa7fee78ff784863d0b1cf1c366f3b9e1a07e1b96e36cc0c98ec65
+    docs/superpowers/reports/exe04-exit-parity-r1-evidence/exe04-factory-regression.xml:
+      git_blob: 431c4433e308fa3c2593e4403f3e9c5d2710e703
+      bytes: 7051
+      sha256: b98f3b9cf21ab7e1bcbd4ea170cd468741c59041ddac94ca2bd38baa9784897e
+    docs/superpowers/reports/exe04-exit-parity-r1-evidence/exe04-parity-final.xml:
+      git_blob: 25b7e56e8a74416d0606a2f47b1941a0e920cf8c
+      bytes: 46241
+      sha256: 3837633120959fabba0150c13853e251dd40ca90553b59928121c884d3d948b1
+    docs/superpowers/reports/exe04-exit-parity-r1-evidence/historical-recovery.txt:
+      git_blob: 355a8478728164d694903a7072e87c7673c1f07e
+      bytes: 45244
+      sha256: 05c290ee898d77f0d0c8ba102aba4c5786aee9347312ff38ac1be5aa1cdcba5f
+    docs/superpowers/reports/exe04-exit-parity-r1-evidence/validation.txt:
+      git_blob: 31ca6e1551c054ecaea8912439e20bffc4aaf0e4
+      bytes: 3100
+      sha256: 8c7cb95875f20d8d954d3a99bd5da8a9abacde616ec91a9e0b49393a2e52ecde
+    tests/test_exe04_admitted_exit_parity.py:
+      git_blob: bdf591e4378493f98714c9ff99cea54f3e359742
+      bytes: 9419
+      sha256: fc10b99752860d10468f83dfeb3a00aa4dfca0a4eca9bfeba92d6dc53d075895
+    tests/test_exe04_authority_audit.py:
+      git_blob: abd2798ce514763a2a6b2ff1f5d225bffd4271e3
+      bytes: 10893
+      sha256: 263c56e6314345f47339cfe9207c0f1d5eb5b7332629e9030928cc19424fda6c
+    tests/test_exe04_exit_boundaries.py:
+      git_blob: ec55afe1d6d4c3a5a8551fe99b852492f55265a3
+      bytes: 9285
+      sha256: 95c36bd2eee46b337cc461893726b35a2f464325841caa30ae592d35f395a588
+    tests/test_exit_semantics_probation_binding.py:
+      git_blob: 15bee1a81662999774b2cc03e769ead049ca28a9
+      bytes: 8194
+      sha256: 36ba22a17fb9942cbb29f4ff833e46ab93921d88736cce2d1b816b6a7dc75989
+    tests/test_strategy_factory_handoff.py:
+      git_blob: dffccf9a965aa5bec9aa999a0f8d0bad9da33569
+      bytes: 57001
+      sha256: e62c026034497533ff145b31d29324200c252bbd28c3232355378c0b1dbef79e
+    trader/engine/executor.py:
+      git_blob: f46721f27a4f1da1aff2ce345651edfd4de4a0b2
+      bytes: 33659
+      sha256: db7be25222ed847bd6ce560935b91dcd52cd2c8feab528c23144c1c8de7fb35d
+    trader/engine/exits.py:
+      git_blob: 4ee2c7d1a9d1c24be4dae53796ba70ffa8743c06
+      bytes: 16774
+      sha256: b7374bda220e01de7dabfa27bec4186a018a0f8c88e77dc200fa01bbcacccb0f
+    trader/engine/paper.py:
+      git_blob: a5fc9e7deaf78ec7b7894ad4b85776a3964315db
+      bytes: 17965
+      sha256: 1e9feb21e4dc8c09483886f9e67b02f2b69e11a004688a1b8b62198e00837ec4
+    trader/engine/paper_exit_evidence.py:
+      git_blob: 1951fe3da25b3242d8d179e048a4aa1d637073d8
+      bytes: 5674
+      sha256: 78cff6994369a83c0fbfbdc1c1a3a49340469f433e23925b8cb583babe7cb377
+    trader/engine/partial_intent.py:
+      git_blob: e93d66e745d51eef37f0044da9cfb7306cd16aa0
+      bytes: 7852
+      sha256: 68ad0cd4c12d9a002b0db79bf74c0414b872649469aff6b1531e4557c402ed78
+    trader/engine/versioned_exits.py:
+      git_blob: 423affc7bfd04e93aa8434aefbdfb1130d3aa452
+      bytes: 16043
+      sha256: 55e878d83d7a8de1e5ad20750ad456cfdb5c6210b7ac6e57e0c5b2ed109c0174
+    trader/strategy/compile.py:
+      git_blob: 5881be9310fd92824fa84875b2b0d469ca11b168
+      bytes: 24238
+      sha256: 696041336e99b68b14a1b7cf22d0b757134c1ddcaf5421d9f86d95591f041e33
+    trader/strategy/exit_policy.py:
+      git_blob: 42a59935a0b1bd8ec6160590433aaa4f3dcddac2
+      bytes: 8955
+      sha256: 29255462c433920e3f188998834495c7c164fca4081e3d64059ab02e056bd73a
+    trader/strategy/factory_handoff.py:
+      git_blob: 46a93040b28beebad901ff7e251bdbcd29cdf267
+      bytes: 100218
+      sha256: d0170fbf1721700b43b5e17d4293d87e53347bfca119bb24431cb76828ec17b3
+    trader/engine/protective.py:
+      git_blob: 70e8648a6d8aba57a63808657f5c09fba4d0f856
+      bytes: 12349
+      sha256: 7f502a73453cd4dedcb895646ca09e9c6535c1336f3fc0d0afa25e0e0da3300a
+    trader/engine/supervisor.py:
+      git_blob: 0cc97546c26256d90a570b80f6b6499ae8ad502c
+      bytes: 48291
+      sha256: c80e346bd7ff704a0064132d0c8473a806e406cf7b6ce019ffd217a9fc87cb11
+    trader/engine/recovery.py:
+      git_blob: 21558c2278bfbe598b7a48a6c41cfae9640e6478
+      bytes: 16694
+      sha256: 8d8c309be66978d1de6b174b7f96d50d41bfacc0ba278901a7735560b085e5e1
+    trader/engine/risk.py:
+      git_blob: e8ed972d7851132cde9b684adb10c03b059a50aa
+      bytes: 43714
+      sha256: d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132
+    trader/engine/risk_intent.py:
+      git_blob: 90079fc35737dfa438d85a7b62cdb82951cd1330
+      bytes: 8627
+      sha256: 9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca
+    trader/engine/entry_authority.py:
+      git_blob: 0a60845cb87f88cc23c0665b5925a9c7640bf033
+      bytes: 30772
+      sha256: 454ab8212ca98f4cec286a57ddb9dde64362dd044ad818f7417b2e12cbef2dd6
+    trader/kernel.py:
+      git_blob: 27239effb15e03ff577b5f193382676b4fc612d2
+      bytes: 175316
+      sha256: 38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f
+    trader/portfolio/position_evidence.py:
+      git_blob: 86b415f1d5d8ba542a527503724910692d78d8b4
+      bytes: 9138
+      sha256: a3452d6074ca2ebce2e58c9ea5ecc0a1cac81d230d6707ab6ce12d0aed371ff4
+    trader/owner/service.py:
+      git_blob: c28db8b7d54288c3aa0a3d41164d9fffbeb34e47
+      bytes: 42975
+      sha256: c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591
+    tests/test_orphan_positions.py:
+      git_blob: bf146f42ac2b5ee319ad3d3271701648fa4e200d
+      bytes: 4010
+      sha256: 8c6ed291d64634675c18a462526f3d6cb7cd803c1f12c2abb9f7c93af9109415
+  retained_test_evidence:
+    final: 321
+    authenticated_research: 123
+    factory: 47
+    distinct: 408
+    overlaps: 83
+    excluded_factory: 6
+    excluded_compiler: 2
+  status_counts_after:
+    CLOSED: 66
+    EVIDENCE_TO_MAP: 73
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 5
+    OPEN: 4
+  EXE05_dependency_satisfied: true
+  EXE05_now_eligible: true
+  EXE05_selected: false
+  EXE05_started: false
+  EXE05_auto_closed: false
+  next_critical_path_item: EXE-05
+  source_integration_still_pending: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false

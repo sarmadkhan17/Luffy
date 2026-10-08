@@ -1,0 +1,736 @@
+Read-only committed object recovery. No historical worktree file content used.
+
+commit 54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Wed Sep 30 21:25:48 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Wed Sep 30 21:25:48 2026 +0300
+
+    Establish durable trade provenance
+
+ .../reports/2026-09-30-trade-provenance-r1.md      |   82 ++
+ scripts/backfill_trade_provenance.py               |  202 ++++
+ tests/test_trade_provenance.py                     | 1065 ++++++++++++++++++++
+ trader/core/journal.py                             |   27 +-
+ trader/core/types.py                               |    3 +
+ trader/dashboard/owner_reads.py                    |   21 +-
+ trader/engine/booking.py                           |    8 +-
+ trader/engine/executor.py                          |   69 +-
+ trader/engine/reconcile.py                         |   10 +-
+ trader/engine/recovery.py                          |    6 +-
+ trader/engine/trade_provenance.py                  |  774 ++++++++++++++
+ trader/kernel.py                                   |   70 +-
+ trader/strategy/compile.py                         |    8 +-
+ 13 files changed, 2317 insertions(+), 28 deletions(-)
+
+commit bc16c9b627ff70b98d6640b397e8b58d4054b9f7
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Wed Sep 30 23:35:42 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Wed Sep 30 23:35:42 2026 +0300
+
+    Establish strategy factory handoff
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ NEXT.yaml                                          |  14 +
+ STATE.yaml                                         |  38 +-
+ .../2026-09-30-strategy-factory-handoff-r1.md      |  95 +++
+ tests/test_strategy_factory_handoff.py             | 606 +++++++++++++++
+ trader/strategy/factory_handoff.py                 | 836 +++++++++++++++++++++
+ trader/strategy/promotion.py                       |   6 +-
+ 6 files changed, 1590 insertions(+), 5 deletions(-)
+
+commit a883313b9d8f3748f487fcea2ceefb2afcec4ae0
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 00:17:34 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 00:17:34 2026 +0300
+
+    Bind paper probation to immutable strategy versions
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ NEXT.yaml                                          |  14 +-
+ STATE.yaml                                         |  36 +-
+ .../2026-09-30-exact-version-paper-probation-r1.md | 104 +++++
+ tests/test_single_creation_path.py                 |  21 +-
+ tests/test_strategy_factory_handoff.py             | 422 +++++++++++++++++----
+ trader/kernel.py                                   | 131 +++++--
+ trader/strategy/factory_handoff.py                 | 249 +++++++++---
+ 7 files changed, 827 insertions(+), 150 deletions(-)
+
+commit 548ebb727e81d2bd82a9cd23cb8e72445d0517c2
+Merge: a883313 54aefc5
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 00:39:55 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 00:39:55 2026 +0300
+
+    Integrate intelligence, strategy factory and trade provenance
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ NEXT.yaml                                          |   12 +-
+ STATE.yaml                                         |   56 +-
+ config.yaml                                        |   24 +
+ ...-09-27-activation-risk-baseline-hardening-v1.md |  461 +++
+ ...-09-27-activation-risk-baseline-hardening-v2.md |  280 ++
+ .../2026-09-27-kernel-boot-recovery-fix-v1.md      |  211 ++
+ ...9-27-owner-recovery-concurrency-hardening-v1.md |  349 ++
+ .../2026-09-27-owner-recovery-recheck-v1.md        |  330 ++
+ ...2026-09-27-owner-recovery-risk-halt-guard-v1.md |  378 ++
+ .../active_cycles.txt                              |   19 +
+ .../cycles.txt                                     |    9 +
+ .../dirty_pre.sha                                  |    4 +
+ .../dirty_pre.txt                                  |    5 +
+ .../venue_active_final.json                        |  139 +
+ .../venue_final.json                               |  139 +
+ .../venue_post.json                                |  139 +
+ .../venue_postresume.json                          |  139 +
+ .../venue_pre.json                                 |  139 +
+ .../venue_pre2.json                                |  139 +
+ .../venue_preresume.json                           |  139 +
+ ...andle-store-transaction-safety-deployment-v1.md |   78 +
+ ...026-09-28-candle-store-transaction-safety-v1.md |  361 ++
+ .../2026-09-28-owner-frontend-live-binding-v1.md   |  428 +++
+ .../2026-09-28-owner-interface-gateway-v1.md       |  818 +++++
+ .../reports/2026-09-29-frontend-completion-m1.md   |   89 +
+ .../reports/2026-09-29-frontend-completion-m2.md   |  263 ++
+ .../reports/2026-09-29-frontend-completion-m3.md   |  294 ++
+ .../news-guard-indicator-r1.patch                  | 1186 +++++++
+ .../reports/2026-09-29-news-guard-indicator-r1.md  |  251 ++
+ .../close-trade-ui-r1.patch                        | 1616 +++++++++
+ .../reports/2026-09-29-owner-close-trade-ui-r1.md  |  284 ++
+ .../reports/2026-09-29-owner-frontend-v2.1.md      |  159 +
+ .../reports/2026-09-29-owner-frontend-v2.md        |  150 +
+ .../memory-scaling.json                            |    1 +
+ .../performance.json                               |   59 +
+ .../reports/2026-09-29-protection-snapshot-r1.md   |  320 ++
+ .../performance-r3.json                            |  120 +
+ .../performance-r4.json                            |  120 +
+ .../performance.json                               |  120 +
+ .../pytest-manifest.txt                            |   37 +
+ .../venue-gate-attempt1.json                       |  462 +++
+ .../venue-gate-harness.py                          |  171 +
+ .../reports/2026-09-29-protection-snapshot-r2.md   |  541 +++
+ .../reports/2026-09-29-protection-snapshot-r3.md   |  205 ++
+ .../reports/2026-09-29-protection-snapshot-r4.md   |  144 +
+ .../browser-results.json                           | 2803 +++++++++++++++
+ .../performance.json                               |  255 ++
+ .../pytest-baseline-failures.txt                   |   65 +
+ .../pytest-full-summary.txt                        |   76 +
+ .../query-breakdown-100k.txt                       |    2 +
+ .../query_breakdown.py                             |   38 +
+ .../reports/2026-09-29-trade-history-paging-r1.md  |  302 ++
+ .../2026-09-30-current-truth-contract-r1.md        |  556 +++
+ .../reports/2026-09-30-trade-provenance-r1.md      |   82 +
+ .../2026-10-01-core-lineage-integration-r1.md      |   96 +
+ frontend/.gitignore                                |    9 +
+ frontend/.skills/SOURCES.md                        |   30 +
+ frontend/.skills/motion/SKILL.md                   |   75 +
+ .../.skills/motion/best-practices/css-or-motion.md |   20 +
+ frontend/.skills/motion/best-practices/index.md    |   95 +
+ frontend/.skills/motion/best-practices/react.md    |  102 +
+ frontend/.skills/ui-ux-pro-max/LICENSE             |   21 +
+ frontend/.skills/ui-ux-pro-max/SKILL.md            |  214 ++
+ .../.skills/ui-ux-pro-max/references/pro-rules.md  |  117 +
+ .../ui-ux-pro-max/references/quick-reference.md    |  256 ++
+ frontend/HANDOFF.md                                |  213 ++
+ frontend/README.md                                 |   91 +
+ frontend/evidence/accessibility.json               |    7 +
+ frontend/evidence/baseline-performance.json        |  347 ++
+ frontend/evidence/baseline-source-sha256.json      |   26 +
+ frontend/evidence/browser-results.json             |  645 ++++
+ frontend/evidence/bundle.json                      |   37 +
+ frontend/evidence/capture-check.txt                |   25 +
+ frontend/evidence/changed-files.txt                |   69 +
+ frontend/evidence/dependency-audit.json            |   22 +
+ frontend/evidence/knowledge.png                    |  Bin 0 -> 289331 bytes
+ .../evidence/live-binding/browser-results-all.json | 1361 +++++++
+ .../demo-regression/accessibility.json             |    7 +
+ .../demo-regression/browser-results.json           |  122 +
+ .../live-binding/demo-regression/knowledge.png     |  Bin 0 -> 291763 bytes
+ .../demo-regression/live-system-2x.png             |  Bin 0 -> 505831 bytes
+ .../live-binding/demo-regression/live-system.png   |  Bin 0 -> 244524 bytes
+ .../live-binding/demo-regression/luffy.png         |  Bin 0 -> 289070 bytes
+ .../demo-regression/mobile-knowledge.png           |  Bin 0 -> 138814 bytes
+ .../demo-regression/mobile-live-system.png         |  Bin 0 -> 143721 bytes
+ .../live-binding/demo-regression/mobile-luffy.png  |  Bin 0 -> 101329 bytes
+ .../demo-regression/mobile-overview.png            |  Bin 0 -> 158677 bytes
+ .../live-binding/demo-regression/overview.png      |  Bin 0 -> 215216 bytes
+ .../live-binding/demo-regression/performance.json  |  399 +++
+ .../demo-regression/scale-performance.json         |   25 +
+ .../live-binding/demo-regression/system-stale.png  |  Bin 0 -> 248101 bytes
+ .../demo-regression/topology-regression.json       |  298 ++
+ frontend/evidence/live-binding/live-results.json   |  630 ++++
+ frontend/evidence/live-binding/perf-results.json   | 1074 ++++++
+ .../evidence/live-binding/performance-live.json    |   89 +
+ frontend/evidence/live-binding/server-rss.json     |   19 +
+ frontend/evidence/live-system-2x.png               |  Bin 0 -> 505831 bytes
+ frontend/evidence/live-system.png                  |  Bin 0 -> 244524 bytes
+ frontend/evidence/luffy.png                        |  Bin 0 -> 289107 bytes
+ frontend/evidence/m1-concurrency.json              |   13 +
+ frontend/evidence/m1-decisions-prod.json           |   23 +
+ frontend/evidence/m1-routes.json                   |   30 +
+ frontend/evidence/m2-concurrency.json              |   64 +
+ frontend/evidence/m2-routes.json                   |   29 +
+ frontend/evidence/m2-workflow.json                 |    9 +
+ frontend/evidence/m2/browser-results-full.json     | 3553 +++++++++++++++++++
+ frontend/evidence/m2/browser-results.json          |  392 +++
+ frontend/evidence/m2/decision.png                  |  Bin 0 -> 137032 bytes
+ frontend/evidence/m2/diagnostics.png               |  Bin 0 -> 759721 bytes
+ frontend/evidence/m2/knowledge.png                 |  Bin 0 -> 229537 bytes
+ frontend/evidence/m2/live-system.png               |  Bin 0 -> 392642 bytes
+ frontend/evidence/m2/luffy.png                     |  Bin 0 -> 415386 bytes
+ frontend/evidence/m2/m2-prod-reads.json            |  189 +
+ frontend/evidence/m2/mobile-trade-story.png        |  Bin 0 -> 89345 bytes
+ frontend/evidence/m2/operations.png                |  Bin 0 -> 692361 bytes
+ frontend/evidence/m2/overview.png                  |  Bin 0 -> 521439 bytes
+ frontend/evidence/m2/research-item.png             |  Bin 0 -> 116502 bytes
+ frontend/evidence/m2/research.png                  |  Bin 0 -> 230463 bytes
+ frontend/evidence/m2/strategies.png                |  Bin 0 -> 180973 bytes
+ frontend/evidence/m2/strategy-workspace.png        |  Bin 0 -> 261656 bytes
+ frontend/evidence/m2/trade-story.png               |  Bin 0 -> 320723 bytes
+ frontend/evidence/m2/trades.png                    |  Bin 0 -> 265919 bytes
+ frontend/evidence/m3/accessibility.json            |   14 +
+ frontend/evidence/m3/baseline/build-output.txt     |   16 +
+ .../evidence/m3/baseline/live-perf-results.json    |  242 ++
+ .../evidence/m3/baseline/performance-live.json     |   89 +
+ frontend/evidence/m3/build-output.txt              |   16 +
+ frontend/evidence/m3/capture-results.json          |  224 ++
+ frontend/evidence/m3/changed-files.txt             |   71 +
+ frontend/evidence/m3/desktop-detail-decision.png   |  Bin 0 -> 139605 bytes
+ .../m3/desktop-detail-knowledge-selected.png       |  Bin 0 -> 379389 bytes
+ .../evidence/m3/desktop-detail-luffy-reply.png     |  Bin 0 -> 407989 bytes
+ .../m3/desktop-detail-operations-decisions.png     |  Bin 0 -> 45578 bytes
+ .../evidence/m3/desktop-detail-research-item.png   |  Bin 0 -> 121936 bytes
+ .../evidence/m3/desktop-detail-strategy-child.png  |  Bin 0 -> 182408 bytes
+ .../m3/desktop-detail-strategy-workspace.png       |  Bin 0 -> 291074 bytes
+ .../evidence/m3/desktop-detail-trade-story.png     |  Bin 0 -> 318892 bytes
+ frontend/evidence/m3/desktop-diagnostics.png       |  Bin 0 -> 1002742 bytes
+ frontend/evidence/m3/desktop-knowledge.png         |  Bin 0 -> 281782 bytes
+ frontend/evidence/m3/desktop-live-system.png       |  Bin 0 -> 439864 bytes
+ frontend/evidence/m3/desktop-luffy.png             |  Bin 0 -> 369206 bytes
+ frontend/evidence/m3/desktop-operations.png        |  Bin 0 -> 877011 bytes
+ frontend/evidence/m3/desktop-overview.png          |  Bin 0 -> 601467 bytes
+ frontend/evidence/m3/desktop-research.png          |  Bin 0 -> 254856 bytes
+ frontend/evidence/m3/desktop-strategies.png        |  Bin 0 -> 210815 bytes
+ frontend/evidence/m3/desktop-trades.png            |  Bin 0 -> 311770 bytes
+ frontend/evidence/m3/evidence-manifest.txt         |   44 +
+ frontend/evidence/m3/full-browser-output.txt       |  134 +
+ frontend/evidence/m3/full-browser-results.json     | 3697 ++++++++++++++++++++
+ frontend/evidence/m3/live-perf-results.json        |  242 ++
+ frontend/evidence/m3/luffy-width-1024.png          |  Bin 0 -> 362203 bytes
+ frontend/evidence/m3/luffy-width-1440.png          |  Bin 0 -> 403478 bytes
+ frontend/evidence/m3/luffy-width-390.png           |  Bin 0 -> 174082 bytes
+ frontend/evidence/m3/luffy-width-759.png           |  Bin 0 -> 192612 bytes
+ frontend/evidence/m3/luffy-width-768.png           |  Bin 0 -> 333403 bytes
+ frontend/evidence/m3/luffy-widths.json             |   42 +
+ frontend/evidence/m3/mobile-knowledge.png          |  Bin 0 -> 193073 bytes
+ frontend/evidence/m3/mobile-luffy.png              |  Bin 0 -> 162188 bytes
+ frontend/evidence/m3/mobile-operations.png         |  Bin 0 -> 839342 bytes
+ frontend/evidence/m3/mobile-overview.png           |  Bin 0 -> 614000 bytes
+ frontend/evidence/m3/mobile-strategy-workspace.png |  Bin 0 -> 541171 bytes
+ frontend/evidence/m3/mobile-trade-story.png        |  Bin 0 -> 701500 bytes
+ frontend/evidence/m3/mobile.json                   |   20 +
+ frontend/evidence/m3/performance-comparison.json   |   66 +
+ frontend/evidence/m3/performance-live.json         |   89 +
+ frontend/evidence/m3/routes.json                   |   44 +
+ frontend/evidence/m3/source-sha256.txt             |   25 +
+ frontend/evidence/mobile-knowledge.png             |  Bin 0 -> 138814 bytes
+ frontend/evidence/mobile-live-system.png           |  Bin 0 -> 143721 bytes
+ frontend/evidence/mobile-luffy.png                 |  Bin 0 -> 101330 bytes
+ frontend/evidence/mobile-overview.png              |  Bin 0 -> 158677 bytes
+ frontend/evidence/overview.png                     |  Bin 0 -> 215216 bytes
+ frontend/evidence/performance.json                 |  411 +++
+ frontend/evidence/pre-routing-bundle.json          |   37 +
+ frontend/evidence/pre-routing-performance.json     |  407 +++
+ frontend/evidence/pre-routing-source-sha256.json   |   34 +
+ .../browser-results-full.json                      | 2379 +++++++++++++
+ .../protection-snapshot-r1/browser-results-r1.json |  256 ++
+ .../protection-snapshot-r1/browser-results.json    | 1217 +++++++
+ frontend/evidence/scale-performance.json           |   40 +
+ frontend/evidence/source-sha256.json               |   34 +
+ frontend/evidence/system-stale.png                 |  Bin 0 -> 248111 bytes
+ frontend/evidence/topology-regression.json         |  298 ++
+ frontend/evidence/unrelated-preservation.json      |   12 +
+ frontend/evidence/v2.1/README.md                   |   31 +
+ frontend/evidence/v2.1/accessibility.json          |   20 +
+ frontend/evidence/v2.1/artifact-files.txt          |   49 +
+ frontend/evidence/v2.1/backend-tests.txt           |    2 +
+ frontend/evidence/v2.1/baseline-sha256.json        |  390 +++
+ frontend/evidence/v2.1/browser-results.json        | 2201 ++++++++++++
+ frontend/evidence/v2.1/build-audit.json            |   67 +
+ frontend/evidence/v2.1/changed-files.txt           |   30 +
+ frontend/evidence/v2.1/component-tests.txt         |   17 +
+ frontend/evidence/v2.1/delta.patch                 | 2516 +++++++++++++
+ frontend/evidence/v2.1/diagnostics.png             |  Bin 0 -> 515689 bytes
+ frontend/evidence/v2.1/evidence-preservation.json  |   18 +
+ .../evidence/v2.1/knowledge-cache-performance.json |   46 +
+ frontend/evidence/v2.1/knowledge.png               |  Bin 0 -> 244850 bytes
+ frontend/evidence/v2.1/live-system.png             |  Bin 0 -> 206804 bytes
+ frontend/evidence/v2.1/luffy.png                   |  Bin 0 -> 397755 bytes
+ frontend/evidence/v2.1/mobile-diagnostics.png      |  Bin 0 -> 571873 bytes
+ frontend/evidence/v2.1/mobile-knowledge.png        |  Bin 0 -> 172145 bytes
+ frontend/evidence/v2.1/mobile-live-system.png      |  Bin 0 -> 187056 bytes
+ frontend/evidence/v2.1/mobile-luffy.png            |  Bin 0 -> 195478 bytes
+ frontend/evidence/v2.1/mobile-operations.png       |  Bin 0 -> 384467 bytes
+ frontend/evidence/v2.1/mobile-overview.png         |  Bin 0 -> 280779 bytes
+ frontend/evidence/v2.1/mobile-path-trace.png       |  Bin 0 -> 248940 bytes
+ frontend/evidence/v2.1/mobile-research.png         |  Bin 0 -> 186119 bytes
+ frontend/evidence/v2.1/mobile-strategies.png       |  Bin 0 -> 127168 bytes
+ frontend/evidence/v2.1/mobile-trades.png           |  Bin 0 -> 224807 bytes
+ frontend/evidence/v2.1/operations.png              |  Bin 0 -> 387938 bytes
+ frontend/evidence/v2.1/overview.png                |  Bin 0 -> 309589 bytes
+ frontend/evidence/v2.1/performance-before-v2.json  |   89 +
+ frontend/evidence/v2.1/performance-live.json       |   89 +
+ .../evidence/v2.1/prior-suite-output/knowledge.png |  Bin 0 -> 298125 bytes
+ .../v2.1/prior-suite-output/live-system-2x.png     |  Bin 0 -> 506131 bytes
+ .../v2.1/prior-suite-output/live-system.png        |  Bin 0 -> 243645 bytes
+ .../evidence/v2.1/prior-suite-output/luffy.png     |  Bin 0 -> 388729 bytes
+ .../v2.1/prior-suite-output/mobile-knowledge.png   |  Bin 0 -> 185503 bytes
+ .../v2.1/prior-suite-output/mobile-live-system.png |  Bin 0 -> 176661 bytes
+ .../v2.1/prior-suite-output/mobile-luffy.png       |  Bin 0 -> 165346 bytes
+ .../v2.1/prior-suite-output/mobile-overview.png    |  Bin 0 -> 193017 bytes
+ .../evidence/v2.1/prior-suite-output/overview.png  |  Bin 0 -> 218882 bytes
+ .../v2.1/prior-suite-output/performance.json       |  406 +++
+ .../v2.1/prior-suite-output/scale-performance.json |   30 +
+ .../v2.1/prior-suite-output/system-stale.png       |  Bin 0 -> 246148 bytes
+ frontend/evidence/v2.1/research.png                |  Bin 0 -> 235619 bytes
+ frontend/evidence/v2.1/source-sha256.json          |   32 +
+ frontend/evidence/v2.1/strategies.png              |  Bin 0 -> 142958 bytes
+ frontend/evidence/v2.1/trades.png                  |  Bin 0 -> 229764 bytes
+ frontend/evidence/v2.1/typecheck.txt               |    4 +
+ frontend/evidence/v2/README.md                     |   26 +
+ frontend/evidence/v2/accessibility.json            |   20 +
+ frontend/evidence/v2/baseline-sha256.json          |   47 +
+ frontend/evidence/v2/browser-results-final.json    | 1615 +++++++++
+ frontend/evidence/v2/browser-results.json          |  810 +++++
+ frontend/evidence/v2/build-check.json              |    6 +
+ frontend/evidence/v2/changed-files.txt             |   66 +
+ frontend/evidence/v2/checks.json                   |   38 +
+ .../evidence/v2/demo-regression/accessibility.json |    7 +
+ frontend/evidence/v2/demo-regression/knowledge.png |  Bin 0 -> 295965 bytes
+ .../evidence/v2/demo-regression/live-system-2x.png |  Bin 0 -> 505831 bytes
+ .../evidence/v2/demo-regression/live-system.png    |  Bin 0 -> 244524 bytes
+ frontend/evidence/v2/demo-regression/luffy.png     |  Bin 0 -> 392571 bytes
+ .../v2/demo-regression/mobile-knowledge.png        |  Bin 0 -> 171660 bytes
+ .../v2/demo-regression/mobile-live-system.png      |  Bin 0 -> 162486 bytes
+ .../evidence/v2/demo-regression/mobile-luffy.png   |  Bin 0 -> 147748 bytes
+ .../v2/demo-regression/mobile-overview.png         |  Bin 0 -> 170992 bytes
+ frontend/evidence/v2/demo-regression/overview.png  |  Bin 0 -> 215216 bytes
+ .../evidence/v2/demo-regression/performance.json   |  399 +++
+ .../v2/demo-regression/scale-performance.json      |   24 +
+ .../evidence/v2/demo-regression/system-stale.png   |  Bin 0 -> 248106 bytes
+ .../v2/demo-regression/topology-regression.json    |  298 ++
+ frontend/evidence/v2/diagnostics.png               |  Bin 0 -> 514603 bytes
+ frontend/evidence/v2/final-visual-controls.json    |  464 +++
+ frontend/evidence/v2/knowledge.png                 |  Bin 0 -> 244210 bytes
+ frontend/evidence/v2/live-system.png               |  Bin 0 -> 206115 bytes
+ frontend/evidence/v2/luffy.png                     |  Bin 0 -> 397343 bytes
+ frontend/evidence/v2/mobile-diagnostics.png        |  Bin 0 -> 571000 bytes
+ frontend/evidence/v2/mobile-knowledge.png          |  Bin 0 -> 171665 bytes
+ frontend/evidence/v2/mobile-live-system.png        |  Bin 0 -> 186639 bytes
+ frontend/evidence/v2/mobile-luffy.png              |  Bin 0 -> 195247 bytes
+ frontend/evidence/v2/mobile-operations.png         |  Bin 0 -> 383564 bytes
+ frontend/evidence/v2/mobile-overview.png           |  Bin 0 -> 283263 bytes
+ frontend/evidence/v2/mobile-path-trace.png         |  Bin 0 -> 249158 bytes
+ frontend/evidence/v2/mobile-research.png           |  Bin 0 -> 185898 bytes
+ frontend/evidence/v2/mobile-strategies.png         |  Bin 0 -> 126834 bytes
+ frontend/evidence/v2/mobile-trades.png             |  Bin 0 -> 223454 bytes
+ frontend/evidence/v2/operations.png                |  Bin 0 -> 386270 bytes
+ frontend/evidence/v2/overview.png                  |  Bin 0 -> 313961 bytes
+ frontend/evidence/v2/path-capture.json             |  122 +
+ frontend/evidence/v2/performance-live.json         |   89 +
+ frontend/evidence/v2/preservation.json             |   13 +
+ frontend/evidence/v2/research.png                  |  Bin 0 -> 235202 bytes
+ frontend/evidence/v2/source-sha256.json            |   71 +
+ frontend/evidence/v2/strategies.png                |  Bin 0 -> 142587 bytes
+ frontend/evidence/v2/trades.png                    |  Bin 0 -> 228892 bytes
+ frontend/index.html                                |   17 +
+ frontend/package-lock.json                         | 3326 ++++++++++++++++++
+ frontend/package.json                              |   41 +
+ frontend/playwright.config.ts                      |   56 +
+ frontend/playwright.m3.config.ts                   |   23 +
+ frontend/src/Shell.tsx                             |  303 ++
+ frontend/src/adapters/contracts.ts                 |  275 ++
+ frontend/src/adapters/fixture.ts                   |  286 ++
+ frontend/src/adapters/live.ts                      |  774 ++++
+ frontend/src/adapters/pending.ts                   |   81 +
+ frontend/src/adapters/readContracts.ts             |  309 ++
+ frontend/src/assets/chart-room.svg                 |    1 +
+ frontend/src/components/Avatar.tsx                 |  164 +
+ frontend/src/components/EquityChart.tsx            |   54 +
+ frontend/src/components/HealthStatus.tsx           |   30 +
+ frontend/src/components/PathTrace.tsx              |   73 +
+ frontend/src/components/product.tsx                |  129 +
+ frontend/src/components/records.tsx                |  212 ++
+ frontend/src/components/ui.tsx                     |  225 ++
+ frontend/src/components/workspace.tsx              |  302 ++
+ frontend/src/context.tsx                           |   91 +
+ frontend/src/demo.tsx                              |   33 +
+ frontend/src/lazyChunk.ts                          |   69 +
+ frontend/src/links.ts                              |   54 +
+ frontend/src/live.css                              |  650 ++++
+ frontend/src/liveRoot.tsx                          |  196 ++
+ frontend/src/main.tsx                              |    6 +
+ frontend/src/product.css                           | 2242 ++++++++++++
+ frontend/src/protectionExpiry.ts                   |   41 +
+ frontend/src/styles.css                            | 1521 ++++++++
+ frontend/src/time.ts                               |   17 +
+ frontend/src/tokens.css                            |   13 +
+ frontend/src/useOwnerTelemetry.ts                  |   64 +
+ frontend/src/views/Activity.tsx                    |  234 ++
+ frontend/src/views/Evidence.tsx                    | 1225 +++++++
+ frontend/src/views/GraphView.tsx                   |  890 +++++
+ frontend/src/views/LiveReads.tsx                   | 1234 +++++++
+ frontend/src/views/Luffy.tsx                       |  417 +++
+ frontend/src/views/Operations.tsx                  |  339 ++
+ frontend/src/views/Overview.tsx                    |  542 +++
+ frontend/src/views/Routes.tsx                      |  573 +++
+ frontend/src/views/graphGeometry.ts                |  339 ++
+ frontend/src/views/graphPath.ts                    |   36 +
+ frontend/src/views/graphScope.ts                   |   30 +
+ .../tests/browser/close-trade-deferred.spec.ts     |   47 +
+ frontend/tests/browser/corrections.spec.ts         |  536 +++
+ frontend/tests/browser/evidencePath.ts             |   12 +
+ frontend/tests/browser/live-perf.spec.ts           |  250 ++
+ frontend/tests/browser/live.spec.ts                |  434 +++
+ frontend/tests/browser/liveHelpers.ts              |   19 +
+ frontend/tests/browser/m1-routes.spec.ts           |  294 ++
+ frontend/tests/browser/m2-routes.spec.ts           |  416 +++
+ frontend/tests/browser/m3-capture.spec.ts          |  335 ++
+ frontend/tests/browser/performance.spec.ts         |  205 ++
+ frontend/tests/browser/preview.spec.ts             |  417 +++
+ frontend/tests/browser/protection-r1.spec.ts       |   58 +
+ frontend/tests/browser/protection-r2.spec.ts       |   68 +
+ frontend/tests/browser/root-cutover.spec.ts        |   82 +
+ frontend/tests/browser/trade-history.spec.ts       |  325 ++
+ frontend/tests/browser/v2-controls.spec.ts         |   78 +
+ frontend/tests/browser/v2.spec.ts                  |  179 +
+ frontend/tests/browser/v21.spec.ts                 |  333 ++
+ frontend/tests/closeTradeDeferred.test.tsx         |   90 +
+ frontend/tests/components.test.tsx                 |   61 +
+ frontend/tests/contracts.test.ts                   |   74 +
+ frontend/tests/graphPath.test.ts                   |   31 +
+ frontend/tests/harness/index.html                  |   12 +
+ frontend/tests/harness/main.tsx                    |  140 +
+ frontend/tests/health.test.tsx                     |   35 +
+ frontend/tests/live.test.tsx                       |  247 ++
+ frontend/tests/m1.test.tsx                         |  238 ++
+ frontend/tests/m2.test.tsx                         |  858 +++++
+ frontend/tests/protectionSnapshot.test.tsx         |  257 ++
+ frontend/tests/setup.ts                            |   14 +
+ frontend/tests/tradeHistory.test.tsx               |  519 +++
+ frontend/tests/v21.test.tsx                        |  116 +
+ frontend/tests/workspace.test.tsx                  |   71 +
+ frontend/tsconfig.json                             |   21 +
+ frontend/vite.config.ts                            |   20 +
+ scripts/backfill_trade_provenance.py               |  202 ++
+ scripts/bench_owner_interface.py                   |  140 +
+ scripts/bench_protection_snapshot.py               |  226 ++
+ scripts/bench_trade_history.py                     |  184 +
+ scripts/measure_owner_dashboard_rss.py             |   67 +
+ tests/active_setter_inventory.py                   |  385 ++
+ tests/owner_frontend_fixture.py                    |  616 ++++
+ tests/owner_frontend_server.py                     |   98 +
+ tests/test_activation_risk_baseline.py             |  783 +++++
+ tests/test_activation_risk_baseline_v2.py          | 1648 +++++++++
+ tests/test_attention_supplemental.py               |    7 +-
+ tests/test_attention_telemetry.py                  |    5 +-
+ tests/test_attention_view.py                       |   48 +-
+ tests/test_candle_store_transaction_safety.py      |  677 ++++
+ tests/test_chat_agent.py                           |   13 +-
+ tests/test_control_state_recovery.py               |    5 +-
+ tests/test_current_truth_completion_clock.py       |  250 ++
+ tests/test_current_truth_contract.py               | 1088 ++++++
+ tests/test_current_truth_corrections.py            |  714 ++++
+ tests/test_current_truth_integration.py            |  348 ++
+ tests/test_dashboard_auth.py                       |    2 -
+ tests/test_decision_rejection_reason_codes.py      |    9 +-
+ tests/test_investigation_view.py                   |   18 +-
+ tests/test_kernel_boot_recovery.py                 |  413 +++
+ tests/test_manual_close.py                         |   29 +-
+ tests/test_owner_frontend_api.py                   |  332 ++
+ tests/test_owner_interface.py                      | 1047 ++++++
+ tests/test_owner_interface_boundary.py             |  481 +++
+ tests/test_owner_interface_r3.py                   |  472 +++
+ tests/test_owner_interface_r4.py                   |  407 +++
+ tests/test_owner_interface_r5.py                   |  584 ++++
+ tests/test_owner_interface_r6.py                   |  227 ++
+ tests/test_owner_read_cache.py                     |  101 +
+ tests/test_owner_reads.py                          |  390 +++
+ tests/test_owner_reads_m2.py                       |  546 +++
+ tests/test_owner_recovery.py                       |  612 ++++
+ tests/test_owner_recovery_concurrency.py           |  682 ++++
+ tests/test_owner_recovery_risk_guard.py            |  591 ++++
+ tests/test_owner_telegram_binding.py               |  174 +
+ tests/test_protection_snapshot.py                  | 1192 +++++++
+ tests/test_rent_wiring.py                          |    6 +-
+ tests/test_risk_state_persistence.py               |    9 +-
+ tests/test_scout_upgrades.py                       |   18 +-
+ tests/test_strategy_factory_handoff.py             |  135 +-
+ tests/test_supervisor.py                           |   24 +-
+ tests/test_trade_history.py                        |  492 +++
+ tests/test_trade_provenance.py                     | 1065 ++++++
+ tests/test_venue_reads.py                          |  251 ++
+ trader/agents/news_guard.py                        |  179 +-
+ trader/api/graphql_schema.py                       |  336 +-
+ trader/brain/scraper.py                            |   77 +-
+ trader/chat/agent.py                               |   13 +-
+ trader/chat/engine.py                              |   58 +-
+ trader/core/journal.py                             |   58 +-
+ trader/core/truth.py                               |  115 +
+ trader/core/types.py                               |    3 +
+ trader/dashboard/auth.py                           |   16 +-
+ trader/dashboard/current_truth.py                  |  593 ++++
+ trader/dashboard/owner_api.py                      | 1048 ++++++
+ trader/dashboard/owner_reads.py                    | 1506 ++++++++
+ trader/dashboard/server.py                         |  301 +-
+ trader/dashboard/trade_history.py                  |  215 ++
+ trader/dashboard/valuation.py                      |  156 +
+ trader/dashboard/web/attention.js                  |   72 -
+ trader/dashboard/web/index.html                    | 1678 ---------
+ trader/dashboard/web/investigation.js              |   80 -
+ trader/data/feed.py                                |  106 +-
+ trader/data/references.py                          |   28 +-
+ trader/data/sqlite_tx.py                           |   91 +
+ trader/engine/booking.py                           |    8 +-
+ trader/engine/control_fence.py                     |   12 +
+ trader/engine/executor.py                          |   69 +-
+ trader/engine/protection_snapshot.py               |  983 ++++++
+ trader/engine/reconcile.py                         |   10 +-
+ trader/engine/recovery.py                          |    6 +-
+ trader/engine/risk.py                              |  598 +++-
+ trader/engine/state.py                             |  125 +-
+ trader/engine/supervisor.py                        |  516 ++-
+ trader/engine/trade_provenance.py                  |  774 ++++
+ trader/engine/venue_reads.py                       |  333 ++
+ trader/kernel.py                                   |  895 ++++-
+ trader/owner/__init__.py                           |   19 +
+ trader/owner/adapters/__init__.py                  |    5 +
+ trader/owner/adapters/dashboard.py                 |   35 +
+ trader/owner/adapters/openclaw.py                  |  193 +
+ trader/owner/adapters/render.py                    |   51 +
+ trader/owner/adapters/telegram.py                  |   62 +
+ trader/owner/authz.py                              |   98 +
+ trader/owner/cli.py                                |   44 +
+ trader/owner/contract.py                           |  242 ++
+ trader/owner/ipc.py                                |  430 +++
+ trader/owner/service.py                            |  773 ++++
+ trader/strategy/compile.py                         |    8 +-
+ 449 files changed, 99617 insertions(+), 2405 deletions(-)
+
+commit b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 01:47:55 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 01:47:55 2026 +0300
+
+    Establish truthful strategy capacity contract
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ NEXT.yaml                                          |  14 +-
+ STATE.yaml                                         |  41 +-
+ .../reports/2026-10-01-strategy-capacity-r1.md     | 116 +++
+ tests/test_strategy_capacity.py                    | 545 +++++++++++++
+ tests/test_strategy_factory_handoff.py             |  46 +-
+ trader/strategy/capacity.py                        | 840 +++++++++++++++++++++
+ trader/strategy/factory_handoff.py                 |  58 +-
+ 7 files changed, 1632 insertions(+), 28 deletions(-)
+
+commit 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 03:38:03 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 03:38:03 2026 +0300
+
+    Close cross-stage strategy authority gaps
+
+ tests/test_cross_stage_authority.py           | 473 ++++++++++++++++++++++++++
+ tests/test_decision_rejection_reason_codes.py |  30 +-
+ tests/test_entry_geometry_end_to_end.py       |   1 +
+ tests/test_single_creation_path.py            |   4 +-
+ tests/test_strategy_factory_handoff.py        |  32 +-
+ trader/core/reason_codes.py                   |   2 +
+ trader/engine/executor.py                     |  19 +-
+ trader/engine/exits.py                        |  45 ++-
+ trader/kernel.py                              |  26 +-
+ trader/research/combo.py                      |  15 +
+ trader/research/runner.py                     |   8 +-
+ trader/strategy/factory_handoff.py            | 188 ++++++++--
+ 12 files changed, 802 insertions(+), 41 deletions(-)
+
+commit e60e04540dde4668f12bcfc6caf5992f6580928b
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 04:35:28 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 04:35:28 2026 +0300
+
+    Integrate capacity evidence with strategy authority fixes
+
+ NEXT.yaml                                          |  49 ++-
+ STATE.yaml                                         |  82 +++-
+ .../2026-10-01-capacity-evidence-capture-r1.md     |  88 ++++
+ .../2026-10-01-capacity-evidence-integration-r1.md | 145 ++++++
+ scripts/capacity_depth_shadow.py                   | 183 ++++++++
+ tests/test_capacity_evidence_capture.py            | 485 +++++++++++++++++++++
+ tests/test_strategy_capacity.py                    |  16 +-
+ trader/core/instrument_registry.py                 |   7 +
+ trader/data/binance_usdm_registry.py               |   5 +
+ trader/engine/evidence_capture.py                  | 296 +++++++++++++
+ trader/engine/execution_evidence.py                | 188 ++++++++
+ trader/kernel.py                                   |  48 +-
+ trader/observability/depth_evidence.py             | 200 +++++++++
+ trader/strategy/capacity.py                        | 126 +++++-
+ 14 files changed, 1881 insertions(+), 37 deletions(-)
+
+commit d4de42adcef0a9a7d905febe90712113fd68253f
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 05:22:11 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 05:22:11 2026 +0300
+
+    Establish truthful versioned paper probation
+
+ NEXT.yaml                                          |  37 +--
+ STATE.yaml                                         |  76 ++++-
+ .../2026-10-01-versioned-paper-execution-r1.md     |  95 ++++++
+ ...10-01-versioned-paper-probation-truth-fix-r1.md |  52 ++++
+ tests/paper_cost_evidence_fixture.py               |  18 ++
+ tests/test_cross_stage_authority.py                |   9 +-
+ tests/test_strategy_factory_handoff.py             |  29 +-
+ tests/test_versioned_paper_execution.py            | 318 +++++++++++++++++++++
+ tests/test_versioned_paper_probation_truth.py      | 183 ++++++++++++
+ trader/engine/paper.py                             | 269 +++++++++++++++++
+ trader/kernel.py                                   |  34 +++
+ trader/strategy/factory_handoff.py                 | 143 +++++++--
+ 12 files changed, 1211 insertions(+), 52 deletions(-)
+
+commit 1ab0da0cb9cb3a3c290488d7c75edf09788b6462
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Thu Oct 1 13:49:50 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Thu Oct 1 13:49:50 2026 +0300
+
+    Unify and bind versioned exit semantics
+
+ NEXT.yaml                                          |  29 +-
+ STATE.yaml                                         |  51 +++
+ ...01-admitted-exit-semantic-parity-r1-matrix.json | 130 ++++++++
+ .../2026-10-01-admitted-exit-semantic-parity-r1.md |  24 ++
+ tests/test_admitted_exit_semantic_parity.py        | 359 +++++++++++++++++++++
+ tests/test_cross_stage_authority.py                |  10 +-
+ tests/test_exchange_exit_is_size_aware.py          |   4 +-
+ tests/test_exit_semantics_probation_binding.py     | 158 +++++++++
+ tests/test_research_referee.py                     |   7 +-
+ tests/test_single_creation_path.py                 |  10 +-
+ tests/test_strategy_capacity.py                    |   8 +-
+ tests/test_strategy_factory_handoff.py             |  56 +++-
+ tests/test_versioned_paper_execution.py            |  14 +-
+ trader/brain/analyst.py                            |  14 +-
+ trader/core/journal.py                             |   8 +-
+ trader/engine/booking.py                           |  29 ++
+ trader/engine/executor.py                          |   4 +
+ trader/engine/exits.py                             |  32 +-
+ trader/engine/paper.py                             | 120 ++++---
+ trader/engine/paper_exit_evidence.py               | 122 +++++++
+ trader/engine/versioned_exits.py                   | 109 +++++++
+ trader/kernel.py                                   |  53 ++-
+ trader/research/combo.py                           |  11 +-
+ trader/research/referee.py                         |  35 +-
+ trader/research/runner.py                          |  12 +-
+ trader/strategy/backtest.py                        |   4 +
+ trader/strategy/compile.py                         |   7 +-
+ trader/strategy/exit_policy.py                     | 177 ++++++++++
+ trader/strategy/factory_handoff.py                 |  82 ++++-
+ trader/strategy/vector_backtest.py                 |  56 +++-
+ 30 files changed, 1578 insertions(+), 157 deletions(-)
+
+commit 1bed3958740ec2d0d575aabc817978086d31d390
+Author:     Sarmad <sarmadkhan17.sk@gmail.com>
+AuthorDate: Fri Oct 2 02:48:53 2026 +0300
+Commit:     Sarmad <sarmadkhan17.sk@gmail.com>
+CommitDate: Fri Oct 2 02:48:53 2026 +0300
+
+    Enforce universal strategy authority
+
+ NEXT.yaml                                          |   94 +-
+ STATE.yaml                                         |   24 +-
+ .../control-risk-economics-regressions.txt         |    7 +
+ .../current-inventory.json                         |   29 +
+ .../exit-accounting-regressions.txt                |    3 +
+ .../final-check.txt                                |    2 +
+ .../focused-tests.txt                              |    3 +
+ .../strategy-authority-search.txt                  |   55 +
+ ...10-02-stage5-universal-strategy-authority-r1.md |  118 ++
+ scripts/backfill_trade_provenance.py               |  202 +++
+ scripts/repair_proxy_demotions.py                  |    3 +
+ scripts/universal_strategy_authority_inventory.py  |   54 +
+ tests/authority_capacity_fixtures.py               |  152 ++
+ tests/authority_cost_fixtures.py                   |   63 +
+ tests/authority_factory_fixtures.py                |  185 +++
+ tests/authority_legacy_fixtures.py                 |   25 +
+ tests/test_activation_risk_baseline.py             |    2 +
+ tests/test_entry_recovery.py                       |    2 +
+ tests/test_exchange_exit_is_size_aware.py          |    4 +-
+ tests/test_single_creation_path.py                 |   15 +-
+ tests/test_trade_provenance.py                     | 1073 ++++++++++++++
+ tests/test_universal_strategy_authority.py         |  244 ++++
+ trader/brain/tv.py                                 |    2 +
+ trader/core/instrument_registry.py                 |  211 +++
+ trader/core/journal.py                             |   42 +-
+ trader/core/reason_codes.py                        |   87 ++
+ trader/core/types.py                               |    3 +
+ trader/dashboard/owner_reads.py                    |   21 +-
+ trader/data/binance_usdm_registry.py               |  167 +++
+ trader/data/registry_provider.py                   |  307 ++++
+ trader/engine/booking.py                           |   37 +-
+ trader/engine/control_fence.py                     |   16 +-
+ trader/engine/evidence_capture.py                  |  296 ++++
+ trader/engine/execution_evidence.py                |  188 +++
+ trader/engine/executor.py                          |  123 +-
+ trader/engine/exits.py                             |   63 +-
+ trader/engine/paper.py                             |  298 ++++
+ trader/engine/paper_cost_evidence.py               |  290 ++++
+ trader/engine/paper_exit_evidence.py               |  122 ++
+ trader/engine/reconcile.py                         |   10 +-
+ trader/engine/recovery.py                          |    6 +-
+ trader/engine/trade_provenance.py                  |  774 +++++++++++
+ trader/engine/versioned_exits.py                   |  110 ++
+ trader/kernel.py                                   |  458 +++++-
+ trader/observability/depth_evidence.py             |  200 +++
+ trader/observability/execution_calibration.py      |  138 ++
+ trader/observability/execution_shadow.py           |   44 +
+ trader/observability/funding_events.py             |  152 ++
+ trader/observability/portfolio_observation.py      |  143 ++
+ trader/observability/prospective_execution.py      |  359 +++++
+ trader/observability/stage5_activation.py          |  117 ++
+ trader/research/combo.py                           |   24 +-
+ trader/research/referee.py                         |   35 +-
+ trader/research/runner.py                          |   20 +-
+ trader/strategy/backtest.py                        |    4 +
+ trader/strategy/capacity.py                        |  928 +++++++++++++
+ trader/strategy/compile.py                         |   42 +-
+ trader/strategy/exit_policy.py                     |  177 +++
+ trader/strategy/factory_handoff.py                 | 1462 ++++++++++++++++++++
+ trader/strategy/legacy_authority.py                |   58 +
+ trader/strategy/promotion.py                       |   13 +-
+ trader/strategy/signal_occurrence.py               |  107 ++
+ trader/strategy/vector_backtest.py                 |   56 +-
+ 63 files changed, 9914 insertions(+), 155 deletions(-)
+
+Exit-related historical commit series (chronological):
+
+8923245be845addfd9fb35c59e17597a8c5bfdab ef0bad1af3974bb193ba19bb371555101cd7b939 Integrate world model with strategy and research contexts
+230eaa0ee3a779df1989888d3bf3d636103f20ab 8e9a3910e3519e4179167aa744af6cb04079ae6e Add strategy signal occurrence identity
+54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63 87b9e4ba4bcbc8a9fa4f1ee8472abb7143d43a72 Establish durable trade provenance
+bc16c9b627ff70b98d6640b397e8b58d4054b9f7 a2d44dcf0535664d02f91a17f3526892d2fae84b Establish strategy factory handoff
+a883313b9d8f3748f487fcea2ceefb2afcec4ae0 bc16c9b627ff70b98d6640b397e8b58d4054b9f7 Bind paper probation to immutable strategy versions
+548ebb727e81d2bd82a9cd23cb8e72445d0517c2 a883313b9d8f3748f487fcea2ceefb2afcec4ae0 54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63 Integrate intelligence, strategy factory and trade provenance
+b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9 548ebb727e81d2bd82a9cd23cb8e72445d0517c2 Establish truthful strategy capacity contract
+6b7f0f7f434fbe6b7c227595a43d4a325dc849e6 b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9 Close cross-stage strategy authority gaps
+d4de42adcef0a9a7d905febe90712113fd68253f e60e04540dde4668f12bcfc6caf5992f6580928b Establish truthful versioned paper probation
+1ab0da0cb9cb3a3c290488d7c75edf09788b6462 d4de42adcef0a9a7d905febe90712113fd68253f Unify and bind versioned exit semantics

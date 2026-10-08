@@ -1,0 +1,15 @@
+Fresh offline verification on detached committed tree /mnt/luffy-data/test-tmp/exe04-canonical-916de73 at 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1; exact commands recorded below. Launcher /home/sarmad/.local/bin/luffy-pytest provides isolated per-run basetemp. No Kernel boot, Dashboard restart, provider/venue call or activation. Tests invoke application classes with temporary fixtures and venue doubles only.
+
+Final:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_exe04_authority_audit.py tests/test_exe04_admitted_exit_parity.py tests/test_exe04_exit_boundaries.py tests/test_exit_semantics_probation_binding.py tests/test_exe03_partial_exit_identity.py tests/test_final_audit_partial_intent.py tests/test_final_audit_partial_ack.py tests/test_dec03_position_evidence.py tests/test_str03_approval_binding.py tests/test_str04_governor_lifecycle.py tests/test_str04_historical_binding.py tests/test_vector_backtest.py tests/test_research_portfolio_null.py tests/test_exits.py tests/test_stop_move_safety.py --junitxml=/mnt/luffy-data/test-tmp/exe04-canonical-results/fresh-final.xml
+
+Compiler:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_str02_compile_binding.py -k "not kernel and not unversioned_legacy_spec" --junitxml=/mnt/luffy-data/test-tmp/exe04-canonical-results/fresh-compiler.xml
+
+Factory/protection impact:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_strategy_factory_handoff.py -k "not kernel and not unversioned_install and not factory_writes_no_trading_state" tests/test_protective_stops.py tests/test_protection_snapshot.py tests/test_orphan_positions.py tests/test_final_audit_supervisor_partial.py tests/test_supervisor.py --junitxml=/mnt/luffy-data/test-tmp/exe04-canonical-results/fresh-factory-protection.xml
+
+Exact DEC-03 engineering baseline 1ec9870a09868d108293b10c3417ffd14368ed2e, existing worktree sol1-dec03-position-evidence; tracked trader/tests clean:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_orphan_positions.py --junitxml=/mnt/luffy-data/test-tmp/exe04-canonical-results/baseline-orphans.xml
+
+Three orphan failures reproduce on the exact baseline. No unrelated application fixes or branch integration attempted. Retained engineering evidence is extracted verbatim from committed Git blobs, including prior BLOCKED audit and final parity evidence. Local Claude CLI availability probe failed: Not logged in. Control reconciliation performed directly.

@@ -1,0 +1,22 @@
+[SOL-1][EXE-04] BLOCKED. Passing audit counterexamples demonstrate baseline gaps.
+
+Baseline: 1ec9870a09868d108293b10c3417ffd14368ed2e
+Branch: sol1/exe04-exit-authority
+Ancestry gate: PASS (DEC-03, STR-04, DEC-02, STR-03).
+
+Command:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_exe04_authority_audit.py tests/test_exe03_partial_exit_identity.py tests/test_final_audit_partial_intent.py tests/test_final_audit_partial_ack.py tests/test_dec03_position_evidence.py tests/test_str04_historical_binding.py tests/test_str04_governor_lifecycle.py --junitxml=/mnt/luffy-data/test-tmp/exe04-authority-final.xml
+Result: 123 passed in 86.00s (0:01:25).
+This run collected 19 audit cases before the final complete-B-substitution case was added.
+The 104 existing regression cases all passed. Retained result: regressions.xml.
+
+Final audit command:
+/home/sarmad/.local/bin/luffy-pytest -q tests/test_exe04_authority_audit.py --junitxml=/mnt/luffy-data/test-tmp/exe04-counterexamples-final.xml
+Result: 20 passed in 17.24s.
+Retained result: audit.xml. Includes the complete-B-substitution counterexample.
+
+124 distinct cases verified across these two overlapping runs; no skipped/xfail cases.
+The passing counterexample cases are not closure acceptance tests.
+Basetemp: wrapper-managed unique directory under /mnt/luffy-data/test-tmp/sarmad.
+No runtime implementation changed. No actual APIs, orders, Kernel, Dashboard or activation.
+git diff --check: PASS.

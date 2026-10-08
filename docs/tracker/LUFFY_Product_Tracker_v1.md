@@ -1,3 +1,5 @@
+> Current [SOL-1][EXE-04]: **CLOSED at architecture/offline scope** on `916de7322dbc6ad85a66d7c6252f5d672c9bfcc1`. Exact DEC-03-bound frozen plan; `factory-exit.closed-bars.v1`; research/paper/live causal parity, refusal, independent safety and replay verified offline. 569 distinct fresh passes. EXE-05 dependency-eligible, unselected/unstarted; its row remains open for mapping. Source integration pending; first-live fenced; no activation authority. [Evidence](evidence/exe04-canonical-sol1/closure.json). Earlier summaries below are historical.
+
 > Current [SOL-1][PORT-01]: **CLOSED at architecture/offline scope** on `2ea4a95` (allocator R4). Pre-R4 normal path emitted a COMPLETE OPEN TradeIntent that reached Risk without frozen entry-capability evidence; R4 requires exactly one current eligible frozen capability for NEW_POSITION, else CASH. 27 dedicated + 80 integrated passes; the same 11 unrelated failures on the pre-R4 base; no full-suite green claim. R2/R3 replay byte-identical. PORT-04 dependency satisfied, eligible, unselected (separate relationship-source gap). EXE-04 engineering `916de73` exists; its canonical reconciliation is still pending. No activation authority. [Evidence](evidence/port01-canonical-sol1/closure.json). Earlier summaries below are historical.
 
 > Current [SOL-1][DEC-03]: **CLOSED at architecture/offline scope** on `1ec9870`. One canonical account/instrument holding; exact supporting/opposing strategy evidence and approved entry-plan binding retained; ancestry creates no independence authority. 79 fresh targeted passes; retained counts overlap. Same 24 unrelated provenance failures on base; no full-suite green claim. EXE-04 dependency satisfied and eligible, recommended but unselected/unstarted. PORT-01 unchanged. No activation or exit-mutation authority. [Evidence](evidence/dec03-canonical-sol1/closure.json). Earlier summaries below are historical.
@@ -68,7 +70,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.57-port01-canonical-closed-sol1
+Version: 1.58-exe04-canonical-closed-sol1
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -3271,32 +3273,34 @@ future_calibration:
 - **stage**: 1
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Confidence updates must not silently alter live trade geometry.
 - **closure_condition**: Native stop, trail, partial, invalidation and permitted scale-in follow the exact strategy version/plan or explicit safety authority.
 - **failure_regression_proof**: Wrong strategy version or confidence-only resizing is refused.
 - **dependencies**: STR-01, DEC-03
 - **owner_role**: Execution & recovery owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: Exact DEC-03-bound admitted causal exit execution at 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1. docs/tracker/evidence/exe04-canonical-sol1/closure.json
+- **runtime_evidence**: ARCHITECTURE_OFFLINE_ONLY; live execution code exercised with isolated offline fixtures; no venue/deployment proof
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: 569 distinct fresh offline tests pass; retained 408 selected tests overlap. Exact frozen plan, three-adapter parity, refusal, containment and replay verified. No full-suite green claim.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §18.5
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for exact EXE-04 architecture/offline closure. EXE-05 dependency satisfied and eligible for its own native-protection evidence; unselected/unstarted. Source integration and first-live gates remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-08
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/exe04-canonical-sol1/closure.json
+- **evidence_validity**: Pinned committed engineering bytes and fresh isolated offline proof; no deployment, venue execution, native-protection verification or all-legacy certification.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: 916de7322dbc6ad85a66d7c6252f5d672c9bfcc1
+- **evidence_mapping**: docs/tracker/evidence/exe04-canonical-sol1/REPORT.md
 
 ### EXE-05 — Maintain native protection and detect naked/orphan exposure.
 
@@ -7388,3 +7392,5 @@ STR-04 canonical status counts: CLOSED 62, EVIDENCE_TO_MAP 76, DEFERRED 7, AWAIT
 DEC-03 canonical status counts: CLOSED 64, EVIDENCE_TO_MAP 75, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
 
 PORT-01 canonical status counts: CLOSED 65, EVIDENCE_TO_MAP 74, DEFERRED 7, AWAITING_EVIDENCE 9, AWAITING_OWNER 14, BLOCKED 5, OPEN 4 (178 total).
+
+EXE-04 canonical status counts: {'CLOSED': 66, 'EVIDENCE_TO_MAP': 73, 'DEFERRED': 7, 'AWAITING_EVIDENCE': 9, 'AWAITING_OWNER': 14, 'BLOCKED': 5, 'OPEN': 4} (178 total).
