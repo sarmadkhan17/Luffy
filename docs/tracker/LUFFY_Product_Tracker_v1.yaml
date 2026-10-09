@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.61-single-owner-priority-audit-sol1
+  version: 1.62-single-owner-second-review-opus
   single_owner_audit:
     schema: luffy-single-owner-classification.v1
     date: '2026-10-09'
@@ -25,6 +25,30 @@ metadata:
     legacy_priority_preserved: true
     original_status_dependencies_closing_conditions_preserved: true
     report_path: docs/tracker/reports/2026-10-09-single-owner-priority-audit.md
+  second_review:
+    schema: luffy-single-owner-second-review.v1
+    date: '2026-10-09'
+    reviewer_role: independent correction of Sol-1 classification
+    branch: opus-tracker-second-review-20261009
+    parent_audit_commit: 7a5f1dd212f9f038d7409b70786e1719d7d6f029
+    parent_audit_branch: sol1-single-owner-tracker-audit
+    production_baseline: 9319ecfcca62536b7e5de48c0e3ee4e39dc2c828
+    protected_candidate: b839d99d6b37421ae60f302b8af225df50737e47
+    candidate_deployed: false
+    section: single_owner_second_review
+    item_overlay_field: single_owner_classification.second_review
+    priority_counts_after_review:
+      P0: 58
+      P1: 79
+      P2: 30
+      P3: 12
+    priority_or_category_changes: 0
+    items_with_overlay: 89
+    incident_count: 50
+    original_status_dependencies_closing_conditions_preserved: true
+    report_path: docs/tracker/reports/2026-10-09-single-owner-second-review.md
+    scope_note: Second-review fields are audit metadata and proposals. They grant no operating authority
+      and change no original status, dependency, closing condition, evidence or owner decision.
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -640,6 +664,21 @@ items:
         tested, observed and approved status.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-F5
+      - INC-F9
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Offline PASS must not be reported as deployment. The 134 remaining baseline failures cannot be
+        verified here; 23 of the 24 inspectable legacy failures are obsolete Risk-authority fixtures whose downstream
+        scenarios are unverified.
 - id: GOV-05
   area: Product & governance
   stage: '0'
@@ -697,6 +736,21 @@ items:
       applies only when its consumer, feature, exposure, restore or expansion is used; absence grants no
       bypass. Read-only Dashboard alone does not require Kernel/venue readiness.
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A2
+      - INC-F6
+      - INC-A1
+      - INC-F5
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Preservation of historical closure and regression attribution is satisfied by recording incidents
+        separately, as done here.
 - id: GOV-06
   area: Product & governance
   stage: '0'
@@ -858,6 +912,25 @@ items:
         only the deployed artifacts, without requiring publication.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: INTEGRATION_GAP
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A1
+      - INC-A9
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Narrow blocker: production is 9319ecf and the safety corrections exist only in b839d99. The
+        loaded Kernel and served frontend must be shown to be b839d99 (runtime_identity verify, frontend build
+        id c1bf5ba3...). Remote Git parity and exhaustive reconstruction of historical process identities are
+        NOT_CURRENT_BLOCKER (proposal; owner deferral and closing condition untouched).'
 - id: GOV-08
   area: Product & governance
   stage: '0'
@@ -1011,6 +1084,18 @@ items:
         self-rewriting of production architecture.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: UNVERIFIED
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Mapping obligation: not a missing-code finding and not shown to be satisfied or defective.'
 - id: GOV-10
   area: Product & governance
   stage: '0'
@@ -1184,6 +1269,23 @@ items:
         do not write another bootstrap system.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A3
+      - INC-A6
+      - INC-A7
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Essential: single executor, PID-bound graceful stop and loaded-source identity. Deferred enterprise
+        deployment is not required. Live boot/stop proof is produced by the contained observation rather than
+        being a precondition to it; it is required before DEMO_ACTIVE. Existing owner deferral unchanged.'
 - id: RUN-02
   area: Runtime & safety
   stage: '1'
@@ -1263,6 +1365,24 @@ items:
         semantics and newer owner intent.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A7
+      - INC-A8
+      incident_status: DEMONSTRATED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Entries must remain impossible during observation: FROZEN, operator hold, watchdog.off and PENDING
+        fence. Default-ACTIVE of a fresh Journal is mitigated procedurally only; no source default change was
+        found.'
 - id: RUN-03
   area: Runtime & safety
   stage: '1'
@@ -1345,6 +1465,23 @@ items:
         within the approved operational envelope.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-F1
+      - INC-A3
+      - INC-F2
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Observation of the live cycle is the evidence itself; Phase B needs the first observation within
+        STARTUP_TIMEOUT_S=240 s. A refusal fails closed; it does not create risk beyond a failed start.
 - id: RUN-04
   area: Runtime & safety
   stage: '1'
@@ -1506,6 +1643,18 @@ items:
         and protection during provider/network outages.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: UNVERIFIED
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Mapping obligation: not a missing-code finding and not shown to be satisfied or defective.'
 - id: RUN-06
   area: Runtime & safety
   stage: '1'
@@ -1729,6 +1878,20 @@ items:
         successful-work containment on intended source.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-F2
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Independent successful-work detection is required before unattended entries; not needed to start
+        a contained, attended observation.
 - id: MON-02
   area: Runtime & safety
   stage: '1'
@@ -1808,6 +1971,22 @@ items:
         read and committed-write availability without hiding contention.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A6
+      - INC-F3
+      - INC-A4
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Critical-store availability must fail closed; writer containment visibility is limited to the
+        current user.
 - id: MON-03
   area: Runtime & safety
   stage: '1'
@@ -1969,6 +2148,17 @@ items:
         alerts even when the Journal fails.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: UNVERIFIED
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'EVIDENCE_TO_MAP: durable alert path not mapped; no missing-code finding.'
 - id: MON-05
   area: Runtime & safety
   stage: '1'
@@ -2070,6 +2260,18 @@ items:
         historical causal attribution.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      incident_ids:
+      - INC-F1
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Exhaustive historical attribution is not a safety requirement; present timing evidence is carried
+        by PERF-01/RUN-03. Existing deferral unchanged.
 - id: MON-06
   area: Runtime & safety
   stage: '1'
@@ -2211,6 +2413,21 @@ items:
         critical backup set.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Owner row for incident(s) listed in single_owner_second_review.incidents; no blocker finding
+        on this row.
+      incident_ids:
+      - INC-D4
+      - INC-F6
+      - INC-F7
+      - INC-F8
 - id: BKP-02
   area: Runtime & safety
   stage: '1'
@@ -2292,6 +2509,25 @@ items:
         without restoring permission to trade.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A5
+      - INC-A9
+      - INC-F9
+      - INC-D1
+      incident_status: FIXED_OFFLINE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Applies when restoring/publishing the clean Journal: restore must not reinstate trading permission.
+        Offline proven; a reviewed production publisher is still required.'
 - id: BKP-03
   area: Runtime & safety
   stage: '1'
@@ -2372,6 +2608,16 @@ items:
         retain contained restore behavior now.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OWNER_DECISION
+      required_for:
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Off-host recovery policy matters for real capital history; owner policy needed; no DEMO blocker.
 - id: DATA-01
   area: Data & storage
   stage: '1'
@@ -2451,6 +2697,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: DATA-02
   area: Data & storage
   stage: '1'
@@ -2535,6 +2792,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: DATA-03
   area: Data & storage
   stage: '1'
@@ -2619,6 +2887,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: DATA-04
   area: Data & storage
   stage: '1'
@@ -2703,6 +2982,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: DATA-05
   area: Data & storage
   stage: '1'
@@ -2868,6 +3158,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: DATA-07
   area: Data & storage
   stage: '1'
@@ -3026,6 +3327,20 @@ items:
         at the logical event boundary.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: UNVERIFIED
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Mapping obligation: not a missing-code finding and not shown to be satisfied or defective.'
+      incident_ids:
+      - INC-C7
 - id: DATA-09
   area: Data & storage
   stage: '1'
@@ -3309,6 +3624,24 @@ items:
         files from deployed source and measure storage growth.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-A4
+      - INC-F3
+      - INC-F4
+      - INC-A5
+      incident_status: DEMONSTRATED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Disk capacity (root 94% used) and WAL/descriptor growth must be checked before any exchange;
+        descriptor leak fixed offline (c0f01fb).
 - id: WRLD-01
   area: Perception & WorldModel
   stage: '2'
@@ -3787,6 +4120,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: WRLD-07
   area: Perception & WorldModel
   stage: '2'
@@ -4947,6 +5291,19 @@ items:
         cost and expose blocked work.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      incident_ids:
+      - INC-E5
+      - INC-E2
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Future research activation is not required for initial contained observation; durable research
+        denial is (INC-E4).
 - id: QNT-01
   area: Quant validation
   stage: '4'
@@ -5280,6 +5637,22 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-E3
+      - INC-E4
+      - INC-E7
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; held-out access now refuses before reads in b839d99.
 - id: QNT-05
   area: Quant validation
   stage: '4'
@@ -5362,6 +5735,26 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-E1
+      - INC-E2
+      - INC-E4
+      - INC-E6
+      - INC-E7
+      - INC-E8
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened. Persisted epoch research denial is required for the selected clean epoch
+        and exists only in b839d99; it must be present in the published Journal.
 - id: QNT-06
   area: Quant validation
   stage: '4'
@@ -5692,6 +6085,22 @@ items:
         or valid transfer through existing PORT-02; no new adapter assumed.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-D7
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Precise DEMO need: the allocator (trader/portfolio/allocator.py _economic_reasons/_size) refuses
+        unless a verified PORT-02 receipt establishes expected_net_value from a calibrated gross-value model,
+        a calibrated uncertainty reserve and forward costs, plus five ESTABLISHED size bounds and capacity.
+        Required only to OPEN a position (DEMO_ACTIVE entries), not for observation and not as real-money release
+        breadth. No fallback economics may be fabricated.'
 - id: STR-01
   area: Strategies & decisions
   stage: '5'
@@ -5777,6 +6186,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-D2
+      - INC-D3
 - id: STR-02
   area: Strategies & decisions
   stage: '5'
@@ -5864,6 +6287,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-D4
+      - INC-D5
 - id: STR-03
   area: Strategies & decisions
   stage: '5'
@@ -5957,6 +6394,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: REAL_MONEY_AUTHORIZATION_GATE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for:
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Real-money-only first-strategy approval invariant. Does not block OBSERVATION or DEMO_ACTIVE.
 - id: STR-04
   area: Strategies & decisions
   stage: '5'
@@ -6045,6 +6493,24 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-D1
+      - INC-D2
+      - INC-D3
+      - INC-D6
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Lifecycle authority preserved (21/21, 18 retired/2 paper/1 demoted). No admitted strategy exists;
+        at least one exact admitted version is needed before any DEMO entry.
 - id: STR-05
   area: Strategies & decisions
   stage: '5'
@@ -6107,6 +6573,18 @@ items:
       applies only when its consumer, feature, exposure, restore or expansion is used; absence grants no
       bypass. Read-only Dashboard alone does not require Kernel/venue readiness.
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-D6
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Decay/no-opportunity distinction matters once a strategy is admitted; not needed for observation.
 - id: DEC-01
   area: Strategies & decisions
   stage: '5'
@@ -6195,6 +6673,19 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-D6
 - id: DEC-02
   area: Strategies & decisions
   stage: '5'
@@ -6372,6 +6863,19 @@ items:
         authority; preserve the existing offline closure.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; source is an ancestor of b839d99 (c1e64e4), not deployed.
 - id: DEC-04
   area: Strategies & decisions
   stage: '5'
@@ -6539,6 +7043,19 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; source in b839d99 (9a05f5b), not deployed.
 - id: PORT-02
   area: Portfolio
   stage: '6'
@@ -6634,6 +7151,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-D7
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; the receipt contract works, the calibrated inputs are absent (QNT-09).
 - id: PORT-03
   area: Portfolio
   stage: '6'
@@ -6783,6 +7311,19 @@ items:
         authority; do not reopen completed engineering proof.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; source in b839d99 (ba90cc2), not deployed.
 - id: PORT-05
   area: Portfolio
   stage: '6'
@@ -6864,6 +7405,17 @@ items:
         margin and venue-size bounds.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Quantity/capacity bounds needed for any entry; mapping obligation.
 - id: PORT-06
   area: Portfolio
   stage: '6'
@@ -7071,6 +7623,18 @@ items:
         exhaustive outcome coverage without changing edges automatically.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Exact TradeIntent -> Risk -> action binding needed for any entry; mapping obligation, not a code
+        finding.
 - id: RISK-01
   area: Risk
   stage: '1'
@@ -7154,6 +7718,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-A8
+      - INC-B1
 - id: RISK-02
   area: Risk
   stage: '1'
@@ -7234,6 +7812,22 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-B9
+      incident_status: DEMONSTRATED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'CLOSED row not reopened. Separate operational evidence: venue leverage, margin type and position
+        mode are unverified while sizing assumes config leverage 5. Needs a separately authorized bounded GET
+        before any entry.'
 - id: RISK-03
   area: Risk
   stage: '1'
@@ -7315,6 +7909,34 @@ items:
         preservation; refuse entries if authority is unavailable.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-B1
+      - INC-B2
+      - INC-B3
+      - INC-B4
+      - INC-B5
+      - INC-B6
+      - INC-A2
+      - INC-B7
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      owner_decision_needed: true
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Exact remaining procedure (not a generic gap): owner approves earliest account day and the equity
+        explanation (5199.24 on 2026-10-08 with AVAX open vs 5178.83 flat on 2026-10-09); fresh 5-GET authenticated
+        batch; record_margin -> update_equity(evidence) on empty Risk state -> repair_baseline(5519.90634238);
+        guarded publication; startup inside the freshness window; Phase B with the Kernel own observation. Requires
+        review of the DRAFT jit_risk_init.py and a production publisher. Drawdown from the preserved peak at
+        5178.83 is about 6.2%, below the 8% de-risk step in config; FROZEN observation does not release entries.'
 - id: RISK-04
   area: Risk
   stage: '1'
@@ -7393,6 +8015,20 @@ items:
         explicit owner decisions with versioned replay.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OWNER_DECISION
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-B3
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Limit authority is configured and unchanged; versioned owner-decision replay is needed before
+        any limit change, not before FROZEN observation.
 - id: EXE-01
   area: Execution & recovery
   stage: '1'
@@ -7477,6 +8113,19 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-C7
 - id: EXE-02
   area: Execution & recovery
   stage: '1'
@@ -7557,6 +8206,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-C6
+      - INC-C7
 - id: EXE-03
   area: Execution & recovery
   stage: '1'
@@ -7636,6 +8299,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-C2
+      - INC-C7
 - id: EXE-04
   area: Execution & recovery
   stage: '1'
@@ -7724,6 +8401,19 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; source in b839d99 (ea56241), not deployed.
 - id: EXE-05
   area: Execution & recovery
   stage: '1'
@@ -7805,6 +8495,27 @@ items:
         orphan/naked handling before autonomous entries.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-B8
+      - INC-C4
+      - INC-B9
+      - INC-C1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Not a missing-code finding. Requires a fresh whole-account inventory at the window (positions,
+        ordinary orders AND algo orders, totalInitialMargin) because the 2026-10-09T00:48Z flat observation
+        is stale and AVAX/SOL receipts are not current proof. Offline protection corrections exist in b839d99
+        (5d97393).
 - id: EXE-06
   area: Execution & recovery
   stage: '1'
@@ -7889,6 +8600,25 @@ items:
         venue/protection truth; no entry while uncertain.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-C5
+      - INC-C6
+      - INC-B8
+      - INC-C1
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Restart reconciliation against fresh venue truth is unproved operationally; required for any
+        Kernel start that may reconcile or manage exits.
 - id: EXE-07
   area: Execution & recovery
   stage: '1'
@@ -8058,6 +8788,25 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-C1
+      - INC-C2
+      - INC-C3
+      - INC-C4
+      - INC-C5
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened. Native-exit booking corrections recorded as separate incidents (INC-C*).
+        Under the clean-epoch route the old Journal SOL/AVAX rows are archived rather than reconciled; whether
+        to book that history is an owner decision, not a blocker.
 - id: ACC-02
   area: Accounting & outcomes
   stage: '7'
@@ -8146,6 +8895,20 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-C2
+      - INC-C3
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened; atomic fill attribution corrected offline in 20dae12.
 - id: ACC-03
   area: Accounting & outcomes
   stage: '7'
@@ -8234,6 +8997,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: OUT-01
   area: Accounting & outcomes
   stage: '7'
@@ -8321,6 +9095,18 @@ items:
         monetary action binding before entries, defer exhaustive nontrade story completeness if approved.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for: []
+      incident_ids:
+      - INC-D8
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Monetary identity is carried by ACC/EXE/PORT-08; exhaustive nontrade outcome completeness is
+        intelligence evidence, not a startup blocker.
 - id: OUT-02
   area: Accounting & outcomes
   stage: '7'
@@ -8962,6 +9748,21 @@ items:
         owning authorities with atomic conflict-safe receipts.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-D8
+      - INC-E8
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Required only if adaptive writes are enabled; research denial does not disable ordinary strategy
+        learning.
 - id: LRN-04
   area: Learning & memory
   stage: '7'
@@ -9286,6 +10087,18 @@ items:
         and safety independent of LLMs.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: UNVERIFIED
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Mapping obligation: not a missing-code finding and not shown to be satisfied or defective.'
 - id: LLM-02
   area: Provider & access
   stage: '3'
@@ -9370,6 +10183,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: LLM-03
   area: Provider & access
   stage: '3'
@@ -9619,6 +10443,31 @@ items:
         exclusion.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: UNVERIFIED
+      blocker_kind: EXTERNAL_DEPENDENCY
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-B7
+      - INC-B8
+      split:
+        account_visibility_via_trading_key: OPERATIONALLY_VERIFIED_STALE
+        read_only_key_validity_for_kernel_reader: UNVERIFIED
+        independent_read_key_hardening_beyond_that: NOT_CURRENT_BLOCKER
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Corrects the first audit: DEMO account visibility is not wholly unavailable. Authenticated trading-key
+        GETs returned HTTP 200 on 2026-10-08T11:21Z and 2026-10-09T00:48Z with the same key-derived scope (point-in-time,
+        stale). Separately, the Kernel venue snapshot reader (trader/engine/venue_reads.py) requires a distinct
+        BINANCE_READ_API_KEY and publishes UNREADABLE venue_reader_unavailable without it; that read key returned
+        -2015 on 2026-10-08T05:16Z and has not been shown valid since. So read-key validity is an unverified
+        external dependency of OBSERVATION and DEMO_ACTIVE unless the owner approves a different read path;
+        it is not a missing-implementation finding and independent hardening beyond this is not required.'
 - id: SEC-02
   area: Provider & access
   stage: '3'
@@ -9702,6 +10551,20 @@ items:
         and separate browser/gateway from trading truth.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Keep minimum authentication on the LAN-bound owner controls (configured address 192.168.126.131).
+        Applies once the Dashboard is started; auth middleware exists, actual reachability UNKNOWN. Enterprise
+        identity administration is not required.
 - id: SEC-03
   area: Provider & access
   stage: '3'
@@ -9782,6 +10645,16 @@ items:
         and external content as untrusted.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Needed only if external retrieval is enabled; providers are disabled.
 - id: SEC-04
   area: Provider & access
   stage: '3'
@@ -10009,6 +10882,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: OWN-03
   area: Owner interface
   stage: '8'
@@ -10090,6 +10974,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: OWN-04
   area: Owner interface
   stage: '8'
@@ -10386,6 +11281,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-02
   area: Dashboard GUI
   stage: '8'
@@ -10544,6 +11449,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-03
   area: Dashboard GUI
   stage: '8'
@@ -10702,6 +11617,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-04
   area: Dashboard GUI
   stage: '8'
@@ -10861,6 +11786,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-05
   area: Dashboard GUI
   stage: '8'
@@ -11018,6 +11953,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-06
   area: Dashboard GUI
   stage: '8'
@@ -11174,6 +12119,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-07
   area: Dashboard GUI
   stage: '8'
@@ -11254,6 +12209,16 @@ items:
         actual runtime components, links, data movement and health.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: VIS-07
   area: Dashboard visual approval
   stage: '8'
@@ -11329,6 +12294,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-08
   area: Dashboard GUI
   stage: '8'
@@ -11486,6 +12461,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUI-09
   area: Dashboard GUI
   stage: '8'
@@ -11644,6 +12629,16 @@ items:
         acceptance as an activation prerequisite.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUX-01
   area: GUI shared behaviour
   stage: '8'
@@ -11977,6 +12972,17 @@ items:
         and safe across retries, stale state and loss of connection.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Typed owner commands need authentication when enabled; not needed for contained read-only observation.
 - id: GUX-06
   area: GUI shared behaviour
   stage: '8'
@@ -12152,6 +13158,16 @@ items:
       applies only when its consumer, feature, exposure, restore or expansion is used; absence grants no
       bypass. Read-only Dashboard alone does not require Kernel/venue readiness.
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: All-screen visual acceptance is not an OBSERVATION or DEMO_ACTIVE prerequisite; owner approval
+        status unchanged.
 - id: GUX-09
   area: GUI shared behaviour
   stage: '8'
@@ -12292,6 +13308,18 @@ items:
         and no secrets in the browser.'
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_MAPPING_OBLIGATION
+      blocker_validity: CONDITIONAL_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - OBSERVATION
+      - DEMO_ACTIVE
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Same minimum-auth boundary as SEC-02; READ_ONLY_GUI refuses control/provider/write routes.
 - id: GUX-11
   area: GUI shared behaviour
   stage: '8'
@@ -12448,6 +13476,17 @@ items:
         evidence before any real capital.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: REAL_MONEY_AUTHORIZATION_GATE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OWNER_DECISION
+      required_for:
+      - REAL_MONEY
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Real-money-only release gate; unsatisfied by design. Does not block OBSERVATION or DEMO_ACTIVE.
 - id: REL-02
   area: Release & expansion
   stage: 9–10
@@ -12778,6 +13817,15 @@ items:
         closure a fresh activation gate.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Exhausted harness attempt; successor criteria are carried by PERF-01/RUN-03.
 - id: OBS-01
   area: Observed issues
   stage: Cross-cutting
@@ -12863,6 +13911,22 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      incident_ids:
+      - INC-A2
+      - INC-A3
+      - INC-B6
+      incident_status: INTEGRATED_NOT_DEPLOYED
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: CLOSED row not reopened. Startup refusal was subsequently extended (0c328af, f9a2ae8) as separate
+        incidents; the seven unchanged refusals pass offline.
 - id: OBS-02
   area: Observed issues
   stage: Cross-cutting
@@ -13076,6 +14140,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: PERF-01
   area: Observed issues
   stage: Cross-cutting
@@ -13175,6 +14250,26 @@ items:
         causal reconstruction.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: UNSATISFIED_OPERATIONAL_PROOF
+      blocker_validity: TRUE_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for:
+      - DEMO_ACTIVE
+      incident_ids:
+      - INC-F1
+      incident_status: UNRESOLVED
+      split:
+        present_recurring_health: TRUE_CURRENT_BLOCKER
+        historical_causal_attribution: NOT_CURRENT_BLOCKER
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: 'Present recurring health is required: every cycle within the existing 240 s contract with protection
+        and exit servicing intact, >=3 cycles in the contained window. The first-cycle bound is also a CONDITIONAL
+        risk for Phase B in OBSERVATION. Historical causal attribution of the 224-260 s cycles is separable
+        and may be unreproducible; the 240 s contract is not waived.'
 - id: PERF-02
   area: Observed issues
   stage: Cross-cutting
@@ -13328,6 +14423,16 @@ items:
         safety. Original packet recovery or a new observation requires its own scope authorization.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Advisory 50 ms Attention budget; gate only on demonstrated safety interference. Condition text
+        untouched.
 - id: FIX-01
   area: Observed issues
   stage: Cross-cutting
@@ -13409,6 +14514,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: FIX-02
   area: Observed issues
   stage: Cross-cutting
@@ -13732,6 +14848,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: OBS-05
   area: Observed issues
   stage: Cross-cutting
@@ -13827,6 +14954,19 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
+      incident_ids:
+      - INC-A3
 - id: OPEN-01
   area: Observed issues
   stage: Cross-cutting
@@ -13909,6 +15049,18 @@ items:
         gate or starving safety.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      incident_ids:
+      - INC-E5
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Future research activation is not required for initial contained observation; durable research
+        denial is (INC-E4).
 - id: OPEN-02
   area: Observed issues
   stage: Cross-cutting
@@ -13988,6 +15140,18 @@ items:
         or defer its rollout.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      incident_ids:
+      - INC-E5
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Future research activation is not required for initial contained observation; durable research
+        denial is (INC-E4).
 - id: OPEN-03
   area: Observed issues
   stage: Cross-cutting
@@ -14069,6 +15233,18 @@ items:
       minimum_next_requirement: Choose only the intended worker coverage for any later authorized observation.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPTIONAL_FEATURE
+      required_for: []
+      incident_ids:
+      - INC-E5
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Future research activation is not required for initial contained observation; durable research
+        denial is (INC-E4).
 - id: OPEN-04
   area: Observed issues
   stage: Cross-cutting
@@ -14149,6 +15325,17 @@ items:
         evidence required by the selected operating level.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      p0_nature: SAFETY_INVARIANT_CLOSED_OFFLINE
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: null
+      required_for: []
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Closed offline row retained as a safety invariant; not reopened and no incident in this review
+        names it.
 - id: OPEN-05
   area: Observed issues
   stage: Cross-cutting
@@ -14304,6 +15491,18 @@ items:
         need; preserve replay and failed research.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OWNER_DECISION
+      required_for: []
+      incident_ids:
+      - INC-F7
+      - INC-F8
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Retention rules needed only before deleting or altering archived evidence.
 - id: OPEN-07
   area: Observed issues
   stage: Cross-cutting
@@ -14386,6 +15585,17 @@ items:
         fabricated eligible rules.
       owner_approval_required_for_scope_change: true
     proposal_only: true
+    second_review:
+      schema: luffy-second-review.v1
+      blocker_validity: NOT_CURRENT_BLOCKER
+      blocker_kind: OPERATIONAL_EVIDENCE
+      required_for: []
+      incident_ids:
+      - INC-D8
+      classification_change:
+        priority: NONE
+        primary_category: NONE
+      summary: Prospective chain is an intelligence gap, not a safety precondition.
 - id: OPEN-08
   area: Observed issues
   stage: Cross-cutting
@@ -19293,3 +20503,1755 @@ port04_canonical_reconciliation:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
+single_owner_second_review:
+  schema: luffy-single-owner-second-review.v1
+  identity:
+    production_head: 9319ecfcca62536b7e5de48c0e3ee4e39dc2c828
+    protected_candidate: b839d99d6b37421ae60f302b8af225df50737e47
+    sol1_audit_commit: 7a5f1dd212f9f038d7409b70786e1719d7d6f029
+    candidate_relation: b839d99 is a fast-forward descendant of 9319ecf (26 commits); not deployed.
+  enums:
+    incident_status:
+    - DEMONSTRATED
+    - FIXED_OFFLINE
+    - INTEGRATED_NOT_DEPLOYED
+    - OPERATIONALLY_VERIFIED
+    - UNRESOLVED
+    - HISTORICAL
+    blocker_validity:
+    - TRUE_CURRENT_BLOCKER
+    - CONDITIONAL_BLOCKER
+    - NOT_CURRENT_BLOCKER
+    - HISTORICAL_RESOLVED
+    - UNVERIFIED
+    blocker_kind:
+    - IMPLEMENTATION_DEFECT
+    - INTEGRATION_GAP
+    - OPERATIONAL_EVIDENCE
+    - OWNER_DECISION
+    - EXTERNAL_DEPENDENCY
+    - OPTIONAL_FEATURE
+    required_for:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    - REAL_MONEY
+    p0_nature:
+    - SAFETY_INVARIANT_CLOSED_OFFLINE
+    - SAFETY_INVARIANT_MAPPING_OBLIGATION
+    - UNSATISFIED_OPERATIONAL_PROOF
+    - REAL_MONEY_AUTHORIZATION_GATE
+    evidence_verification:
+    - INSPECTED
+    - COMMIT_VERIFIED
+    - UNAVAILABLE
+    incident_status_note: Status describes the incident, not tracker row status. FIXED_OFFLINE means a
+      source correction with offline regression exists on a branch; INTEGRATED_NOT_DEPLOYED means it is
+      an ancestor of the protected candidate but production HEAD is still the baseline; OPERATIONALLY_VERIFIED
+      requires venue/runtime proof and is used only for the retained read-only venue observations, which
+      are point-in-time and stale.
+  operating_level_definitions:
+    OBSERVATION: Contained FROZEN Kernel start with operator hold and research denial; no entries; reconciliation
+      and exit/protection duties may run.
+    DEMO_ACTIVE: Entries permitted on the Binance DEMO account (BINANCE_DEMO=true).
+    REAL_MONEY: Separately authorized later; not covered by this review.
+  incidents:
+  - incident_id: INC-A1
+    group: A
+    title: Production/integrated source divergence
+    owner_ids:
+    - GOV-07
+    - GOV-05
+    demonstrated_failure: Historical local/remote/process source mismatch (retained GOV-07 identity map);
+      production checkout is 9319ecfcca62536b7e5de48c0e3ee4e39dc2c828 while the engineering candidate
+      is b839d99d6b37421ae60f302b8af225df50737e47, 26 commits ahead and a fast-forward descendant.
+    root_cause: Engineering lanes branched independently; no single deployed revision was ever pinned
+      and verified.
+    source_correction: 'Single linear candidate: 9319ecf -> aeab6e8 -> 6021a30 -> b839d99; no merge needed
+      (ancestry verified).'
+    integration_status: 'INTEGRATED_NOT_DEPLOYED: production HEAD still 9319ecf (git worktree list shows
+      production at 9319ecf).'
+    offline_regression_evidence: 133 focused tests across six files on b839d99; 4600 tracked files hashed
+      against git objects in rehearsal.
+    operational_proof: None. Loaded-process identity of any future Kernel is unproved.
+    remaining_blocker: Pin and deploy b839d99, then verify loaded backend revision and served frontend
+      build id after authorized start.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+    - commit: b839d99d6b37421ae60f302b8af225df50737e47
+      verification: COMMIT_VERIFIED
+    - commit: 9319ecfcca62536b7e5de48c0e3ee4e39dc2c828
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-A2
+    group: A
+    title: Seven startup account/Risk identity-refusal failures
+    owner_ids:
+    - OBS-01
+    - RISK-03
+    - GOV-05
+    demonstrated_failure: 'tests/test_required_identity_refusal.py: seven strict refusals returned allow=True
+      on the unchanged integrated baseline (Phase A and cached protection and Phase B accepted unresolved
+      Risk/account identity).'
+    root_cause: Startup admission did not consume account-bound Risk; real gap was operational startup
+      without account/Risk binding (Phase A allow=True launches the Kernel, which can reconcile and manage
+      exits in FROZEN).
+    source_correction: 0c328af (cherry-pick of 196f8ff) read-only startup binding consumer; fixture alignment
+      46991d0.
+    integration_status: INTEGRATED_NOT_DEPLOYED (ancestor of b839d99).
+    offline_regression_evidence: All seven pass; exact test file SHA-256 e674bd17...ead retained identical
+      to the external original.
+    operational_proof: None; no Kernel was started.
+    remaining_blocker: Refusal is correct for the current unbound Journal; satisfied only by fresh account-bound
+      Risk (INC-B1..B5).
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-startup-readiness-authority-fix.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/tests/test_required_identity_refusal.py
+      verification: INSPECTED
+    - commit: 0c328afddee68a2f6da9c578f794a2dd047effe0
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-A3
+    group: A
+    title: Phase A / Phase B admission corrections
+    owner_ids:
+    - OBS-01
+    - OBS-05
+    - RUN-01
+    demonstrated_failure: Phase A accepted stale account receipts; Phase B had no requirement for an observation
+      from the current boot.
+    root_cause: Freshness bound not applied before operational launch permission.
+    source_correction: f9a2ae8 refuse stale account evidence before Phase A; Phase B requires a current-boot
+      receipt within the 300 s account freshness bound and rechecks binding and Risk digest immediately
+      before READY. 240 s startup contract unchanged.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Boundary tests for freshness, revocation and no-FD-growth pass offline.
+    operational_proof: None. Historic first cycle 223.759 s (r3) and 259.776 s (failed) mean Phase B inside
+      240 s is not demonstrated.
+    remaining_blocker: Phase B needs the Kernel own first observation inside STARTUP_TIMEOUT_S=240 s;
+      not rehearsable offline.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-startup-readiness-authority-fix.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - commit: f9a2ae83025503608a510bf31746a57906a08868
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-A4
+    group: A
+    title: Journal descriptor lifecycle regression (db/-wal/-shm descriptor leak and its side effect)
+    owner_ids:
+    - DATA-12
+    - MON-02
+    demonstrated_failure: Discarded Journals leaked db/-wal/-shm descriptors (GC-invisible closure cycle);
+      an 813-test integration run exhausted RLIMIT_NOFILE=1024.
+    root_cause: sqlite user-function closures referenced Journal/connection.
+    source_correction: c0f01fb close connections deterministically (cherry-pick of e577ca5).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Repeated restore/read-only/shadow open-close cycles return to baseline
+      descriptor count.
+    operational_proof: None operational.
+    remaining_blocker: None for the descriptor leak itself; see INC-A5 for the regression it introduced.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-integration-demo-20261008/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - commit: c0f01fbb502383cba3d0112ff65570d2ad87eddc
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-A5
+    group: A
+    title: Restore failure for Journals built through __new__ (regression of the descriptor fix)
+    owner_ids:
+    - BKP-02
+    - DATA-12
+    demonstrated_failure: restore_refused:AttributeError; close()/__del__ could not release connections
+      in restore, the read-only research view and the shadow store.
+    root_cause: c0f01fb moved connection tracking onto instances; three __new__ construction paths lacked
+      _registry_lock/_conns/_closed.
+    source_correction: adabdec extract _init_runtime_state(), _adopt_connection(); safe close on never-initialised
+      instances (cherry-pick of 928853f).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: 191 focused tests before inclusion plus repeated lifecycle checks; 8
+      repeated restores per case.
+    operational_proof: None.
+    remaining_blocker: None known. Original closure of the descriptor-leak fix is preserved; this regression
+      is recorded separately.
+    introduced_by_another_fix: true
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - commit: adabdec75270dab9832a40af5584baa1bb29bb58
+      verification: COMMIT_VERIFIED
+    - commit: c0f01fbb502383cba3d0112ff65570d2ad87eddc
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-A6
+    group: A
+    title: Multiple Dashboard/auxiliary processes retaining database handles
+    owner_ids:
+    - RUN-01
+    - MON-02
+    demonstrated_failure: On 2026-10-08 a scratch read-only server (pid 2614411) held writable luffy.db/-wal/-shm
+      descriptors (flags 02500002) beside the Dashboard; exclusive writer containment could not be proven
+      (other users processes uninspectable, sudo needs a password).
+    root_cause: Auxiliary tooling opened the operational Journal read-write; process descriptors of other
+      PIDs are not inspectable.
+    source_correction: 'No source fix. Operational: Dashboard and the auxiliary PID were stopped by PID-bound
+      SIGTERM; 2026-10-09 preparation recorded no accessible production DB descriptors.'
+    integration_status: HISTORICAL for the specific processes; containment at cutover time remains a procedure.
+    offline_regression_evidence: 'Preparation report: PROCESS_CONTAINMENT PASS (accessible processes only).'
+    operational_proof: 'Partial: containment visible to the current user only.'
+    remaining_blocker: Re-verify no Kernel/Dashboard/controller/research worker/DB writer immediately
+      before any exchange; unverifiable PIDs remain a stated limitation.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: HISTORICAL
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol-dashboard-containment-blocked-20261008T150845Z/RESULT.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol-final-reconciliation-20261008T151801Z/RESULT.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+  - incident_id: INC-A7
+    group: A
+    title: FROZEN/operator/watchdog containment
+    owner_ids:
+    - RUN-02
+    - RUN-01
+    demonstrated_failure: Entries must remain impossible while the unbound Journal and fences are in place;
+      watchdog could restart a stopped Kernel.
+    root_cause: Containment depends on control state, operator hold and data/watchdog.off in every generation.
+    source_correction: Supported ControlStateMachine.set(FROZEN, operator) with hold=1; publication_guard
+      verifies containment; watchdog.off preserved in both generations.
+    integration_status: INTEGRATED_NOT_DEPLOYED (rehearsal on private candidate only).
+    offline_regression_evidence: can_enter=false; Risk.check_entry refuses; 11-case publication gate refusals
+      verified.
+    operational_proof: None.
+    remaining_blocker: Observation must keep operator hold and entry fences; FROZEN still performs reconciliation
+      and exit/protection work (not zero-side-effect).
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+  - incident_id: INC-A8
+    group: A
+    title: Fresh Journal default-ACTIVE initialization
+    owner_ids:
+    - RUN-02
+    - RISK-01
+    demonstrated_failure: A freshly initialised Journal is not intrinsically contained; the cutover gate
+      lists "ACTIVE control" as a refusal case.
+    root_cause: Default control state of a new Journal is not FROZEN.
+    source_correction: No default-state source change located. Containment is imposed by construction
+      order (install FROZEN + hold before publication) and the publication gate.
+    integration_status: Mitigated procedurally; source default UNVERIFIED as unchanged.
+    offline_regression_evidence: Gate refuses ACTIVE control, released hold, absent watchdog hold (verified
+      in rehearsal).
+    operational_proof: None.
+    remaining_blocker: Any path that creates a Journal outside the gated procedure remains uncontained;
+      no source default fix is claimed.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+  - incident_id: INC-A9
+    group: A
+    title: Crash-safe operational database publication
+    owner_ids:
+    - BKP-02
+    - GOV-07
+    demonstrated_failure: Two database filename renames cannot atomically publish a WAL-mode Journal;
+      copy of a WAL database can miss committed pages.
+    root_cause: No WAL-aware snapshot/exchange protocol.
+    source_correction: 'Recovery-only tooling: SQLite online backup, DELETE-mode normalisation, one checked
+      renameat2(RENAME_EXCHANGE) of whole generations, external transaction record. Not source in the
+      candidate.'
+    integration_status: NOT in b839d99; preparation scripts only. Production publisher intentionally absent.
+    offline_regression_evidence: Crash points before/after exchange and after fsync recover to a whole
+      generation; 11 refusals verified. Power loss not emulated.
+    operational_proof: None.
+    remaining_blocker: A reviewed production variant of publisher and jit_risk_init.py (marked DRAFT,
+      NOT OWNER-REVIEWED) is required.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: FIXED_OFFLINE
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+  - incident_id: INC-B1
+    group: B
+    title: Legacy unbound historical Risk baseline
+    owner_ids:
+    - RISK-03
+    - RISK-01
+    demonstrated_failure: Historical Risk baseline carries no account/environment binding; October 5 daily
+      evidence is historical.
+    root_cause: Baseline was written before account scope binding existed.
+    source_correction: '3b23fb4 (cherry-pick of 447bb8d): preserve survival baselines, enforce account
+      margin; startup refuses unbound baselines.'
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Risk persistence/survival/activation tests (370 passed in consolidated
+      lane).
+    operational_proof: '2026-10-08 trading-key GET: same key-derived scope as October 5 receipt, but binding
+      was not performed.'
+    remaining_blocker: Genuine fresh account-bound Risk state with preserved peak is required; not created.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/demo-trading-key-verification-20261008/20261008T112141Z-f83f4d46/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - commit: 3b23fb4e4d43294e14fb08f072bed015e518db0e
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-B2
+    group: B
+    title: Preserved historical peak 5519.90634238
+    owner_ids:
+    - RISK-03
+    demonstrated_failure: The survival high-water mark must not be lost or lowered by a rebuild.
+    root_cause: A fresh Risk state would reset the drawdown reference and grant a new daily allowance.
+    source_correction: RiskManager.repair_baseline requires peak >= every proven high-water mark; lowering
+      to 5519.0 refused.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Floor refusal and successful audited repair proven on private candidate.
+    operational_proof: None.
+    remaining_blocker: Peak must be restored in the operational Journal in the correct order (INC-B4).
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/trader/engine/risk.py
+      verification: INSPECTED
+  - incident_id: INC-B3
+    group: B
+    title: Daily Risk authority and UTC-day continuity
+    owner_ids:
+    - RISK-03
+    - RISK-04
+    demonstrated_failure: A repaired state with day_key=None stays daily_state_unavailable; startup refuses
+      (startup_risk_malformed_or_daily_unavailable).
+    root_cause: repair_baseline deliberately does not invent an accounting day; update_equity cannot roll
+      an unscoped state into a new day.
+    source_correction: None required (behavior is intended). Procedure change only (INC-B4/B5).
+    integration_status: N/A
+    offline_regression_evidence: Refusal verified by actual startup_binding.
+    operational_proof: None.
+    remaining_blocker: Daily baseline for the first valid UTC day (proposed earliest 2026-10-10T00:00:00Z,
+      NOT owner-approved) from genuine evidence.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-B4
+    group: B
+    title: Incorrect repair_baseline() -> update_equity() ordering
+    owner_ids:
+    - RISK-03
+    demonstrated_failure: The first runbook (section 1) and the candidate built by the final rehearsal
+      ran repair first, producing a permanent daily-state-unavailable Journal.
+    root_cause: 'Procedure error: initialising from empty state after the floor is restored is the only
+      path that yields a daily baseline; reverse order is unrecoverable.'
+    source_correction: No source change. Runbook v2 section A fixes the order; jit_risk_init.py implements
+      it as DRAFT.
+    integration_status: Runbook-only; the claim "do not reverse" rests on the Opus appendix, which this
+      review could not inspect.
+    offline_regression_evidence: Offline timing rehearsals (<1 s init) on simulated evidence.
+    operational_proof: None.
+    remaining_blocker: Opus appendix and any sealed receipt UNAVAILABLE here; jit_risk_init.py needs owner/Opus
+      review. Source docstring of repair_baseline confirms it never changes control state.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: Opus Risk-baseline recovery appendix (no sealed path supplied)
+      verification: UNAVAILABLE
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/trader/engine/risk.py
+      verification: INSPECTED
+  - incident_id: INC-B5
+    group: B
+    title: Correct evidence-backed update_equity() -> repair_baseline() sequence
+    owner_ids:
+    - RISK-03
+    demonstrated_failure: The correct sequence has never been executed against a real observation.
+    root_cause: Needs a raw /fapi/v3/account body with request-start/receipt times, record_margin, then
+      update_equity(evidence), then repair_baseline(5519.90634238).
+    source_correction: Runbook v2 sections C-D; jit_risk_init.py (DRAFT).
+    integration_status: Not integrated (recovery tooling).
+    offline_regression_evidence: Simulated evidence only.
+    operational_proof: None.
+    remaining_blocker: 'Exact procedure: (1) owner approves date>=2026-10-10Z and equity explanation;
+      (2) separately authorized 5-GET batch, t0=receipt of /fapi/v3/account; (3) record_margin -> update_equity
+      -> repair_baseline on private copy; (4) guarded publication; (5) restart.sh within window, abort
+      if now-t0>240 s; (6) Phase B uses the Kernel fresh observation.'
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: Opus Risk-baseline recovery appendix (no sealed path supplied)
+      verification: UNAVAILABLE
+  - incident_id: INC-B6
+    group: B
+    title: 300-second margin-evidence freshness contract
+    owner_ids:
+    - RISK-03
+    - OBS-01
+    demonstrated_failure: Evidence older than the bound must not authorize launch or READY.
+    root_cause: Existing account freshness bound (300 s) was not applied in Phase A before f9a2ae8.
+    source_correction: f9a2ae8 applies the existing ACCOUNT_STALE_S bound; jit_risk_init.py adds a stricter
+      120 s window; operator abort rule 240 s.
+    integration_status: INTEGRATED_NOT_DEPLOYED (source); stricter windows are runbook-only.
+    offline_regression_evidence: Boundary tests pass.
+    operational_proof: None.
+    remaining_blocker: 'Constant verified in source: ACCOUNT_STALE_S = 300.0 at trader/dashboard/current_truth.py:26
+      (b839d99), consumed by preflight.startup_binding. Evidence must be re-captured inside the window;
+      the stricter 120 s and 240 s windows exist only in the unreviewed runbook/jit script.'
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-startup-readiness-authority-fix.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+  - incident_id: INC-B7
+    group: B
+    title: Current authenticated DEMO account binding
+    owner_ids:
+    - SEC-01
+    - RISK-03
+    demonstrated_failure: Binding requires a key-derived execution scope (execution-account.v1:07d17001...)
+      matching Risk equity_authority; Binance UID is not returned.
+    root_cause: Scope is derived from the key, not an independent account identifier.
+    source_correction: Startup binding consumer (0c328af).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Offline.
+    operational_proof: 'OPERATIONALLY_VERIFIED point-in-time: trading-key GETs HTTP 200 on 2026-10-08T11:21Z
+      and 2026-10-09T00:48Z, same scope as October 5.'
+    remaining_blocker: Fresh capture at the cutover window; read-only key still unverified (INC-B10).
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: OPERATIONALLY_VERIFIED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/demo-trading-key-verification-20261008/20261008T112141Z-f83f4d46/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/20261009T004802Z-39c30637/result.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+  - incident_id: INC-B8
+    group: B
+    title: Account-wide position/order/algo flatness verification
+    owner_ids:
+    - EXE-05
+    - EXE-06
+    demonstrated_failure: Empty candidate tables do not prove venue flatness. On 2026-10-08 the account
+      held AVAX long 77 with a native stop.
+    root_cause: Journal is not venue truth.
+    source_correction: Five-endpoint GET protocol (account, positionRisk, openOrders, openAlgoOrders,
+      multiAssetsMargin).
+    integration_status: Procedure.
+    offline_regression_evidence: N/A
+    operational_proof: 'OPERATIONALLY_VERIFIED point-in-time: at 2026-10-09T00:48:13Z positions=0, ordinary=0,
+      algo=0, totalInitialMargin=0, equity 5178.82661257, account and positionRisk consistent. Now stale.'
+    remaining_blocker: Must be recaptured inside the window.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: OPERATIONALLY_VERIFIED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/20261009T004802Z-39c30637/result.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/demo-trading-key-verification-20261008/20261008T112141Z-f83f4d46/REPORT.txt
+      verification: INSPECTED
+  - incident_id: INC-B9
+    group: B
+    title: Venue leverage assumed by sizing but unverified at the venue
+    owner_ids:
+    - RISK-02
+    - EXE-05
+    demonstrated_failure: config risk.leverage=5 drives sizing; an empty positionRisk exposes no per-symbol
+      leverage or margin type, and accountConfig/symbolConfig/position-mode were not authorized.
+    root_cause: Evidence gap, not a code defect.
+    source_correction: None.
+    integration_status: N/A
+    offline_regression_evidence: RISK-02 closure covers validation from authority, not the venue setting.
+    operational_proof: 'UNVERIFIED: only multiAssetsMargin=false observed.'
+    remaining_blocker: Needs a separately authorized bounded GET for leverage/margin type/position mode
+      before any entry; not needed for FROZEN observation without entries.
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/20261009T004802Z-39c30637/result.json
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/production/config.yaml
+      verification: INSPECTED
+  - incident_id: INC-C1
+    group: C
+    title: SOL native-stop exit confirmed by venue but not reflected in the old Journal
+    owner_ids:
+    - ACC-01
+    - EXE-06
+    - EXE-05
+    demonstrated_failure: Algo 1000000229852282 FINISHED; child order 4218597830 FILLED SELL 5.77 @116.15
+      at 2026-10-07T13:13:52.781Z; venue realized P&L 27.696, exit commission 0.2680742; local pos_051412e2d6
+      remained open, exit_price NULL.
+    root_cause: The native stop fired after the last retained Kernel shutdown/heartbeat (2026-10-05T23:27Z);
+      no reconciliation booked the exit.
+    source_correction: 20dae12 (cherry-pick of 2ca6915/6a1a85f) atomic account-bound native exit booking.
+    integration_status: INTEGRATED_NOT_DEPLOYED; never applied to the operational Journal.
+    offline_regression_evidence: Isolated replay books close at 116.15, P&L 27.4279258 (exit commission
+      only); entry costs and funding remain UNKNOWN.
+    operational_proof: Venue facts OPERATIONALLY_VERIFIED by read-only GETs on 2026-10-08; operational
+      reconciliation BLOCKED by writer-containment (INC-A6).
+    remaining_blocker: Under the clean-epoch route the old Journal is archived, not reconciled; owner
+      must decide whether SOL/AVAX history is booked anywhere.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol-historical-reconciliation-20261008/20261008T113053Z-b8c8946f/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/native-exit-final-review-20261008/REVIEW.json
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol-final-reconciliation-20261008T151801Z/RESULT.json
+      verification: INSPECTED
+    - commit: 20dae12c34a0b8d95e0834b28e93113caa28c030
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-C2
+    group: C
+    title: Five native-exit reconciliation safety defects and correction
+    owner_ids:
+    - ACC-01
+    - ACC-02
+    - EXE-03
+    demonstrated_failure: 'Final review enumerates five invariants: A account scope, B terminal replay,
+      C complete evidence, D atomicity, E exact fills.'
+    root_cause: Early drafts could bind to the wrong account, accept conflicting terminal replay, estimated
+      closure, partial writes or marks instead of fills.
+    source_correction: 6a1a85f -> 2ca6915 -> 20dae12.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: 'REVIEW.json marks A-E PASS incl. SQL abort and process-loss before commit;
+      identical replay changes no logical rows. Trust boundary: hashes verify client observations, not
+      Binance signatures.'
+    operational_proof: None.
+    remaining_blocker: The earlier defective drafts are described only in REVIEW.json; I did not independently
+      re-derive each defect.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/native-exit-final-review-20261008/REVIEW.json
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - commit: 6a1a85f73bce6e06921acdc4bdc0a3a4de972740
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-C3
+    group: C
+    title: Atomic fill attribution, booking and provenance
+    owner_ids:
+    - ACC-02
+    - ACC-01
+    demonstrated_failure: Trade update, booking, provenance and fills must commit together.
+    root_cause: Separate writes could leave partial financial state.
+    source_correction: Single Journal BEGIN IMMEDIATE transaction (Journal writer, booking.py, trade_provenance.py).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Rollback and replay probes pass; 157 SOL/native/reconcile/accounting
+      cases covered.
+    operational_proof: None.
+    remaining_blocker: No live native-exit has yet gone through this path.
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/native-exit-final-review-20261008/REVIEW.json
+      verification: INSPECTED
+  - incident_id: INC-C4
+    group: C
+    title: AVAX historical protection evidence versus later flat-account verification
+    owner_ids:
+    - EXE-05
+    - ACC-01
+    demonstrated_failure: '2026-10-08: AVAX long 77 @8.279 with algo 1000000230355565 (STOP_MARKET SELL
+      reduceOnly, trigger 10.456). 2026-10-09T00:48Z: account flat, no algo orders.'
+    root_cause: The venue position was closed between the two snapshots; no retained report establishes
+      how (stop trigger, manual or other) or its P&L.
+    source_correction: None.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: Both snapshots OPERATIONALLY_VERIFIED as point-in-time; closure mechanism UNVERIFIED.
+      The 10-08 protection receipt is not current proof.
+    remaining_blocker: Journal/venue divergence persists in the old Journal; attribution would need a
+      separate authorized history-preserving read.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/demo-trading-key-verification-20261008/20261008T112141Z-f83f4d46/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/20261009T004802Z-39c30637/result.json
+      verification: INSPECTED
+  - incident_id: INC-C5
+    group: C
+    title: Journal/account/venue divergence during Kernel downtime
+    owner_ids:
+    - EXE-06
+    - ACC-01
+    demonstrated_failure: Venue state changed (SOL stop fill, AVAX closure) while the Kernel was stopped;
+      the old Journal stayed stale.
+    root_cause: Downtime with native stops active and no reconciliation until restart.
+    source_correction: 20dae12 handles SOL-class native exits at restart/reconcile.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: See INC-C1..C3.
+    operational_proof: None.
+    remaining_blocker: Restart reconciliation against fresh venue truth is unproved operationally; only
+      one instance of the class has been analysed.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol-historical-reconciliation-20261008/20261008T113053Z-b8c8946f/REPORT.txt
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+  - incident_id: INC-C6
+    group: C
+    title: Restart and reconciliation authority
+    owner_ids:
+    - EXE-06
+    - EXE-02
+    demonstrated_failure: FROZEN permits reconciliation and exit management; an unreviewed Phase A allow
+      could therefore touch a real account.
+    root_cause: Authority trace showed Phase A is operational permission.
+    source_correction: Startup binding (0c328af) and freshness (f9a2ae8).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Offline.
+    operational_proof: None.
+    remaining_blocker: Live contained restart proof still absent (RUN-01/EXE-06).
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-startup-readiness-authority-fix.md
+      verification: INSPECTED
+  - incident_id: INC-C7
+    group: C
+    title: No duplicate order/fill accounting
+    owner_ids:
+    - EXE-01
+    - EXE-02
+    - EXE-03
+    - DATA-08
+    demonstrated_failure: Identical replay of a native exit must insert nothing; conflicting terminal
+      content must refuse.
+    root_cause: Logical retry identity at the event boundary.
+    source_correction: Included in 20dae12; OPEN-04 CLOSED covers measured journal retries.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Replay/restart probes pass.
+    operational_proof: None.
+    remaining_blocker: DATA-08 other producers remain EVIDENCE_TO_MAP (mapping, not a defect finding).
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/native-exit-final-review-20261008/REVIEW.json
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+  - incident_id: INC-D1
+    group: D
+    title: Strategy preservation initially losing retirement and lifecycle restrictions
+    owner_ids:
+    - STR-04
+    - BKP-02
+    demonstrated_failure: The first export dropped retirement reasons/lifecycle restrictions, which would
+      have allowed re-admission.
+    root_cause: Export did not carry full lifecycle columns.
+    source_correction: Replaced by the lossless contract (INC-D2).
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Original blocked export artifact is UNAVAILABLE to this review; the loss is stated
+      in the Sol-2 verdict text only.
+    introduced_by_another_fix: true
+    blocks: []
+    incident_status: HISTORICAL
+    evidence:
+    - path: Original blocked strategy export that lost retirement/lifecycle restrictions
+      verification: UNAVAILABLE
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+  - incident_id: INC-D2
+    group: D
+    title: Lossless strategy restoration
+    owner_ids:
+    - STR-04
+    - STR-01
+    demonstrated_failure: 21/21 strategies restored with all 18 original columns, null Factory identities
+      preserved, no authority transfer.
+    root_cause: N/A
+    source_correction: 6021a30 Journal.export/restore_strategy_preservation, trader/core/strategy_preservation.py.
+    integration_status: INTEGRATED_NOT_DEPLOYED (ancestor of b839d99).
+    offline_regression_evidence: 20 importer cases plus independent 21-record rehearsal; two baseline-reproduced
+      legacy promotion failures disclosed.
+    operational_proof: None.
+    remaining_blocker: 'Restore refuses a non-clean target: it must run first, before containment; resume
+      uses compare, not re-run.'
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/strategy-preservation.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+    - commit: 6021a307b7c3b8d4ae0125ec530baa0b97835408
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-D3
+    group: D
+    title: 'All 21 strategy identities: 18 retired, two paper, one demoted'
+    owner_ids:
+    - STR-04
+    - STR-01
+    demonstrated_failure: Population is pre-Factory (14 Genome, 7 StrategySpec); none active or admitted.
+    root_cause: Historical lifecycle outcomes.
+    source_correction: Preserved verbatim; restrictions enforced (only two paper specs dispatched in compatibility
+      probe).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Counts and column equality verified.
+    operational_proof: None.
+    remaining_blocker: No demonstrated admitted DEMO strategy exists (see INC-D6).
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-D4
+    group: D
+    title: Six required model assets
+    owner_ids:
+    - BKP-01
+    - STR-02
+    demonstrated_failure: agent_calibration, agent_weights, analyst_candidates, doctrine, ewa_state, meta_model
+      must travel with strategies.
+    root_cause: Strategies depend on file assets outside the Journal.
+    source_correction: Bundle hashes verified, five loaders exact; staged privately.
+    integration_status: Recovery tooling + bundle.
+    offline_regression_evidence: Hash-verified; 14 evaluators resolve, 7 specs compile.
+    operational_proof: None.
+    remaining_blocker: data/doctrine.json is frozen; do not rewrite. Governed learned-state registries
+      are intentionally absent.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: FIXED_OFFLINE
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+  - incident_id: INC-D5
+    group: D
+    title: Strategy evaluation compatibility
+    owner_ids:
+    - STR-02
+    demonstrated_failure: Specs must evaluate on current data without input failures.
+    root_cause: N/A
+    source_correction: Compatibility probe.
+    integration_status: N/A
+    offline_regression_evidence: Two paper specs returned_none on qualified synthetic OHLCV/funding/OI;
+      19 restricted rows not dispatched.
+    operational_proof: None; no live completed cycle.
+    remaining_blocker: Real market inputs and a completed live cycle not demonstrated.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: FIXED_OFFLINE
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-D6
+    group: D
+    title: Absence of demonstrated admitted DEMO trading strategies
+    owner_ids:
+    - STR-04
+    - STR-05
+    - DEC-01
+    demonstrated_failure: No active/admitted strategy; entry routing needs a strategy-proposed direction
+      (require_strategy_signal).
+    root_cause: All inherited strategies are retired/paper/demoted; new strategies need research the denial
+      currently fences.
+    source_correction: None (by design).
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Without an admitted version LUFFY cannot open a DEMO position; this is an intelligence
+      gap, not a startup defect.
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/production/config.yaml
+      verification: INSPECTED
+  - incident_id: INC-D7
+    group: D
+    title: Missing/unqualified economics for the intended allocator
+    owner_ids:
+    - QNT-09
+    - PORT-02
+    demonstrated_failure: Allocator _economic_reasons demands ESTABLISHED expected_net_value from a verified
+      receipt whose gross-value model, calibrated uncertainty reserve and forward costs are established;
+      economics.py emits CALIBRATED_MODEL_AUTHORITY_UNPROVEN, CALIBRATED_ECONOMIC_RESERVE_METHOD_AND_COVERAGE_MISSING,
+      CALIBRATED_FORWARD_COST_SCOPE_BRIDGE_MISSING otherwise. Sizing also needs five ESTABLISHED bounds
+      and capacity.
+    root_cause: Calibration evidence does not exist; inventing fallback economics is prohibited.
+    source_correction: None.
+    integration_status: N/A
+    offline_regression_evidence: PORT-02 receipt contract closed offline.
+    operational_proof: None.
+    remaining_blocker: 'Minimum: one exact-scope qualified economics/capacity receipt for the admitted
+      version. Not required for observation or real-money-only STR-03/REL-01.'
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/trader/portfolio/allocator.py
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/trader/portfolio/economics.py
+      verification: INSPECTED
+  - incident_id: INC-D8
+    group: D
+    title: Outcome-to-learning proof not demonstrated end-to-end
+    owner_ids:
+    - OUT-01
+    - OPEN-07
+    - LRN-03
+    demonstrated_failure: No prospective terminal->replay->learning->normal-consumer chain has been observed.
+    root_cause: No live trades or non-trade outcomes since the offline closures.
+    source_correction: None.
+    integration_status: N/A
+    offline_regression_evidence: Synthetic replay-complete proposal applied on a disposable copy only.
+    operational_proof: None.
+    remaining_blocker: Needs one eligible prospective chain; offline PASS is not operational proof.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-E1
+    group: E
+    title: Fresh Journal implicitly creating research-budget authority
+    owner_ids:
+    - QNT-05
+    demonstrated_failure: Ledger.record_test with no registered budget accepted a probe row and created
+      default alpha=0.1/w0=0.05; next_alpha started sequence 1 at 0.0025.
+    root_cause: No persisted authority boundary shared by budget, test registration and held-out loaders.
+    source_correction: b839d99 trader/research/authority.py persisted deny-only epoch authority in state_kv
+      with a control_events audit chain.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Budget/register/spend/CLI/scheduler/child refusal; restart, corruption,
+      audit-loss, unsigned-release, revocation fail closed.
+    operational_proof: None.
+    remaining_blocker: Hashes are consistency checks, not signatures; privileged direct SQLite writes
+      are out of contract.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/research-epoch-authority.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - commit: b839d99d6b37421ae60f302b8af225df50737e47
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-E2
+    group: E
+    title: CLI --once and scheduler bypasses
+    owner_ids:
+    - QNT-05
+    - RES-09
+    demonstrated_failure: CLI --once overrode enabled=false and reached planner entry.
+    root_cause: Config-only gating.
+    source_correction: Authority consulted by CLI, scheduler, runner, job and referee.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Offline refusal tests.
+    operational_proof: None.
+    remaining_blocker: Source config still has research.enabled=true; DENIED epoch is the effective fence
+      (tracked config change would dirty runtime identity).
+    introduced_by_another_fix: true
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - commit: b839d99d6b37421ae60f302b8af225df50737e47
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-E3
+    group: E
+    title: Direct held-out access lacking governance binding
+    owner_ids:
+    - QNT-04
+    demonstrated_failure: load_heldout reached DataFeed construction with enabled/referee/handoff all
+      false.
+    root_cause: No shared denial.
+    source_correction: Protected loaders check authority before reads.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Sentinel proves no data opened; no held-out data consumed.
+    operational_proof: None.
+    remaining_blocker: Historical held-out B prohibition is documentation, not a registered spent look.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-minimal-clean-demo-epoch-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-E4
+    group: E
+    title: Durable epoch-bound research DENIED correction
+    owner_ids:
+    - QNT-05
+    - QNT-04
+    demonstrated_failure: Required for the selected clean epoch.
+    root_cause: N/A
+    source_correction: deny_epoch with exact epoch id, evidence hash, store identity; retry never rearms
+      REVOKED.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: PASS on private candidate.
+    operational_proof: None.
+    remaining_blocker: Must be present in the published Journal; the publication gate refuses otherwise.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/research-epoch-authority.md
+      verification: INSPECTED
+  - incident_id: INC-E5
+    group: E
+    title: Future authorized research release unavailable
+    owner_ids:
+    - RES-09
+    - OPEN-01
+    - OPEN-02
+    demonstrated_failure: v1 supports denial/revocation only; even a self-hashed AUTHORIZED record refuses.
+    root_cause: No trusted owner decision-to-adoption contract.
+    source_correction: None by design.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Needed only to resume quantitative research; not for observation or ordinary strategy
+      evaluation.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/research-epoch-authority.md
+      verification: INSPECTED
+  - incident_id: INC-E6
+    group: E
+    title: Zero durable research_tests records despite extensive research combinations
+    owner_ids:
+    - QNT-05
+    demonstrated_failure: 'Retained source counts: budget 1, slices 3, tests 0, candidates 0, controls
+      74, gauges 312, combos 2735, batches 22238; spent/spent_cut return None; first-look alpha computes
+      0.0025.'
+    root_cause: Duplicate-look refusal depends on research_tests, not discovery combinations.
+    source_correction: None; no records fabricated.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Past looks cannot be proven refused; the DENIED epoch is the containment, not a
+      reconstruction.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+  - incident_id: INC-E7
+    group: E
+    title: Historical research-budget uncertainty
+    owner_ids:
+    - QNT-05
+    - QNT-04
+    demonstrated_failure: Registered alpha 0.1, w0 0.05 on 2026-10-07T18:27:34Z, but consumed-look history
+      is uncertain.
+    root_cause: See INC-E6.
+    source_correction: Archive retained; no import.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Opus staging package and eight-table hash receipt UNAVAILABLE; any future release
+      must resolve this with authentic evidence.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: Opus research staging package/transfer.py under session scratchpad 7d5822ef
+      verification: UNAVAILABLE
+  - incident_id: INC-E8
+    group: E
+    title: Disabled research spending versus ordinary strategy learning
+    owner_ids:
+    - QNT-05
+    - LRN-03
+    demonstrated_failure: The denial is scoped to quantitative research budgets/held-out/dispatch; market-data
+      acquisition, pure strategy evaluation and unrelated learning are outside it.
+    root_cause: N/A
+    source_correction: Scope statement in authority doc.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Learning compatibility probe applied a retirement on a disposable copy.
+    operational_proof: None.
+    remaining_blocker: Do not treat the denial as disabling learning, and do not treat learning as research
+      spending.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/research-epoch-authority.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-F1
+    group: F
+    title: Historical 240-second cycle failures
+    owner_ids:
+    - PERF-01
+    - RUN-03
+    demonstrated_failure: First cycle 259.776 s (> 240 s, zero completed window cycles) in a corrected-harness
+      attempt; r3 first cycle 223.759 s.
+    root_cause: Causal attribution unresolved; offline residual accounting and probes exist.
+    source_correction: cd0a8c6 (hash retained snapshot once), f376e1a (probes).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Offline diagnostics only.
+    operational_proof: None.
+    remaining_blocker: Present recurring health is required (>=3 cycles inside 240 s with protection/exit
+      servicing); historical causal reconstruction may not be reproducible and is separable.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-integration-demo-20261008/REPORT.txt
+      verification: INSPECTED
+    - commit: cd0a8c6c5b803284c3974b39f828fbc478dac11d
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-F2
+    group: F
+    title: Recurring successful-work/heartbeat proof
+    owner_ids:
+    - MON-01
+    - RUN-03
+    demonstrated_failure: A heartbeat does not prove successful work.
+    root_cause: N/A
+    source_correction: Existing observers (FIX-01, OBS-04).
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: Offline.
+    operational_proof: None.
+    remaining_blocker: No recurring successful-work distribution exists for the intended source.
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: UNRESOLVED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+  - incident_id: INC-F3
+    group: F
+    title: Journal storage growth incidents
+    owner_ids:
+    - DATA-12
+    - MON-02
+    demonstrated_failure: Retained cleanup removed ~31 GB of test/workspace families; root filesystem
+      remains 94% used with 3.2 GB free (runbook).
+    root_cause: Test and workspace artifacts plus WAL growth.
+    source_correction: No source change located specific to Journal growth; FIX-04/FIX-05 closed earlier.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Specific Journal-growth measurements are not in the evidence I inspected; capacity
+      must be rechecked before any exchange.
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-storage-cleanup-20261008T040317Z/cleanup-totals.json
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-cutover-timing-20261009/FINAL_EXECUTION_RUNBOOK.md
+      verification: INSPECTED
+  - incident_id: INC-F4
+    group: F
+    title: Descriptor leakage and correction
+    owner_ids:
+    - DATA-12
+    demonstrated_failure: See INC-A4.
+    root_cause: See INC-A4.
+    source_correction: c0f01fb.
+    integration_status: INTEGRATED_NOT_DEPLOYED.
+    offline_regression_evidence: See INC-A4.
+    operational_proof: None.
+    remaining_blocker: See INC-A4/A5.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: INTEGRATED_NOT_DEPLOYED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol1-integration-demo-20261008/REPORT.txt
+      verification: INSPECTED
+    - commit: c0f01fbb502383cba3d0112ff65570d2ad87eddc
+      verification: COMMIT_VERIFIED
+  - incident_id: INC-F5
+    group: F
+    title: 134 remaining baseline test failures
+    owner_ids:
+    - GOV-04
+    - GOV-05
+    demonstrated_failure: 'User-reported count of 134. Retained comparable counts I could inspect: 24
+      known legacy provenance failures (23 obsolete Risk-authority fixture setup, 1 timestamp alias),
+      a 14-failure baseline log, 2 legacy promotion failures; 1966 passed in the consolidated lane.'
+    root_cause: Obsolete fixtures; downstream scenarios unverified.
+    source_correction: None; no assertion weakened.
+    integration_status: N/A
+    offline_regression_evidence: Focused groups only; no full suite.
+    operational_proof: None.
+    remaining_blocker: The 134 figure and its evidence limits are UNAVAILABLE to this review; downstream
+      Risk-authority scenarios are unverified.
+    introduced_by_another_fix: false
+    blocks:
+    - DEMO_ACTIVE
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: 'Report of 134 remaining baseline test failures: no retained artifact located by this review'
+      verification: UNAVAILABLE
+    - path: /mnt/luffy-data/luffy/workspaces/opus-durable-research-epoch-authority-20261009/docs/superpowers/reports/2026-10-08-sol2-consolidated-demo-integration.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-baseline14.log
+      verification: INSPECTED
+  - incident_id: INC-F6
+    group: F
+    title: Historical archive certification
+    owner_ids:
+    - BKP-01
+    - GOV-05
+    demonstrated_failure: Archive protected by permission bits and SHA-256 only; same-owner can chmod/delete;
+      not immutable.
+    root_cause: No root/chattr.
+    source_correction: Hash-only recertification repeated.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Preserve in full; do not alter.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/historical-archive-20261009/CERTIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol1-demo-cutover-preparation-20261009/PREPARATION_REPORT.json
+      verification: INSPECTED
+  - incident_id: INC-F7
+    group: F
+    title: Eight archived SQLite databases
+    owner_ids:
+    - BKP-01
+    - OPEN-06
+    demonstrated_failure: Eight stores archived with online backup; present optional stores are mandatory
+      in persistence/backup STORES.
+    root_cause: N/A
+    source_correction: N/A
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Retention/usefulness rules need owner policy before any deletion (OPEN-06).
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: HISTORICAL
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/historical-archive-20261009/CERTIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+  - incident_id: INC-F8
+    group: F
+    title: Cross-database reference limitations
+    owner_ids:
+    - OPEN-06
+    - BKP-01
+    demonstrated_failure: 116 runtime-portfolio cycle references are unmatched to luffy.db (check timed
+      out, not investigated).
+    root_cause: Unknown.
+    source_correction: None.
+    integration_status: N/A
+    offline_regression_evidence: N/A
+    operational_proof: None.
+    remaining_blocker: Cross-database historical replay closure is NOT certified; must remain an explicit
+      accepted limitation.
+    introduced_by_another_fix: false
+    blocks: []
+    incident_status: DEMONSTRATED
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/historical-archive-20261009/CERTIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+  - incident_id: INC-F9
+    group: F
+    title: Fresh clean-Journal combined rehearsal and remaining runtime proof
+    owner_ids:
+    - GOV-04
+    - BKP-02
+    demonstrated_failure: Earlier combined rehearsal was BLOCKED (strategy restore refuses a contained
+      target; Opus transfer.py refuses an existing target); the final lane built one candidate in the
+      supported order and PASSED, READY_FOR_CONTROLLED_CUTOVER=NO.
+    root_cause: API ordering conflict.
+    source_correction: 'Composition order: restore strategies -> FROZEN+hold -> deny_epoch -> verify.'
+    integration_status: Rehearsal only.
+    offline_regression_evidence: 133 targeted tests passed.
+    operational_proof: None.
+    remaining_blocker: 'Runtime proof absent: no Kernel cycle, no real market data, no served frontend
+      identity.'
+    introduced_by_another_fix: false
+    blocks:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    incident_status: FIXED_OFFLINE
+    evidence:
+    - path: /mnt/luffy-recovery/recovery/sol2-final-combined-clean-epoch-20261009/FINAL_VERIFICATION.md
+      verification: INSPECTED
+    - path: /mnt/luffy-recovery/recovery/sol2-combined-final-verification-20261009/VERDICT.md
+      verification: INSPECTED
+  current_blockers:
+  - blocker_id: BLK-01
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - RISK-03
+    - RISK-04
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: The only candidate Journal is deliberately unbound (peak 5519.90634238, daily state null);
+      real startup refuses it (startup_risk_malformed_or_daily_unavailable).
+    minimum_requirement: Owner-approved earliest account day and equity explanation; then the evidence-backed
+      update_equity -> repair_baseline sequence on a private copy (INC-B5), guarded publication, startup
+      inside the freshness window.
+    evidence: INC-B1..B6
+  - blocker_id: BLK-02
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - EXE-05
+    - EXE-06
+    - SEC-01
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: No current whole-account inventory. The 2026-10-09T00:48Z flat observation (positions 0,
+      orders 0, algo 0, margin 0, equity 5178.82661257) is stale.
+    minimum_requirement: Separately authorized GET-only batch (account, positionRisk, openOrders, openAlgoOrders,
+      multiAssetsMargin) captured at t0 inside the startup window; same key-derived scope.
+    evidence: INC-B7, INC-B8
+  - blocker_id: BLK-03
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - SEC-01
+    blocker_validity: UNVERIFIED
+    blocker_kind: EXTERNAL_DEPENDENCY
+    statement: The Kernel venue snapshot reader requires a distinct BINANCE_READ_API_KEY; that key returned
+      -2015 on 2026-10-08 and has not been shown valid.
+    minimum_requirement: Owner verifies the read-only key (permissions/IP) for the DEMO account, or approves
+      a different read path as an owner decision.
+    evidence: READ1008 report; trader/engine/venue_reads.py
+  - blocker_id: BLK-04
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - GOV-07
+    - BKP-02
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: INTEGRATION_GAP
+    statement: Production is 9319ecf; the corrections are only in b839d99. No reviewed production publisher
+      exists and jit_risk_init.py is a DRAFT.
+    minimum_requirement: Authorized deployment of exactly b839d99 (+ frontend receipt build id c1bf5ba3...),
+      reviewed publisher/JIT script, verification of the loaded revision after start.
+    evidence: INC-A1, INC-A9
+  - blocker_id: BLK-05
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - RUN-02
+    - RUN-01
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: 'Containment must hold during observation: FROZEN, operator hold, watchdog.off, durable
+      research DENIED epoch; no other DB writer.'
+    minimum_requirement: Publication gate passes on the real candidate; re-verify no other writer and
+      descriptor visibility immediately before exchange.
+    evidence: INC-A6..A8, INC-E4
+  - blocker_id: BLK-06
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - DATA-12
+    blocker_validity: CONDITIONAL_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Root filesystem 94% used (3.2 GB free) per the runbook; recovery capacity must exceed retained
+      generations plus growth.
+    minimum_requirement: Execution-time capacity check on /mnt/luffy-data; no deletion needed by this
+      tracker.
+    evidence: INC-F3
+  - blocker_id: BLK-07
+    operating_levels:
+    - OBSERVATION
+    tracker_ids:
+    - RUN-03
+    - PERF-01
+    blocker_validity: CONDITIONAL_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Phase B requires the Kernel own first observation within 240 s; historic first cycles were
+      223.759 s and 259.776 s. A miss fails closed.
+    minimum_requirement: Attempt the contained start; a refusal is an acceptable, safe outcome and evidence.
+    evidence: INC-A3, INC-F1
+  - blocker_id: BLK-08
+    operating_levels:
+    - DEMO_ACTIVE
+    tracker_ids:
+    - PERF-01
+    - RUN-03
+    - MON-01
+    - RUN-01
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: No recurring successful-work and timing proof for the intended source; no live boot/stop
+      proof.
+    minimum_requirement: '>=3 completed cycles over ~15 minutes inside the 240 s contract with protection/exit
+      servicing, repeat flat inventory, graceful stop.'
+    evidence: INC-F1, INC-F2
+  - blocker_id: BLK-09
+    operating_levels:
+    - DEMO_ACTIVE
+    tracker_ids:
+    - STR-04
+    - DEC-01
+    - STR-05
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: 'No admitted/active strategy: 18 retired, 2 paper, 1 demoted; research is fenced by the
+      DENIED epoch.'
+    minimum_requirement: At least one exact admitted version through the single creation/admission path;
+      owner release of FROZEN and holds.
+    evidence: INC-D3, INC-D6
+  - blocker_id: BLK-10
+    operating_levels:
+    - DEMO_ACTIVE
+    tracker_ids:
+    - QNT-09
+    - PORT-02
+    - PORT-05
+    - PORT-08
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Allocator refuses without a verified receipt with ESTABLISHED expected_net_value (calibrated
+      gross model, calibrated reserve, forward costs) and five ESTABLISHED size bounds plus capacity.
+    minimum_requirement: Qualified exact-scope economics/capacity for the admitted version. No fallback
+      economics.
+    evidence: INC-D7
+  - blocker_id: BLK-11
+    operating_levels:
+    - DEMO_ACTIVE
+    tracker_ids:
+    - RISK-02
+    - EXE-05
+    blocker_validity: UNVERIFIED
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Sizing assumes config leverage 5; venue leverage, margin type and position mode are unverified
+      (empty positionRisk exposes none).
+    minimum_requirement: Separately authorized bounded GET for leverage/margin/position mode before any
+      entry.
+    evidence: INC-B9
+  - blocker_id: BLK-12
+    operating_levels:
+    - DEMO_ACTIVE
+    tracker_ids:
+    - GOV-04
+    blocker_validity: CONDITIONAL_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Remaining baseline failures (user-reported 134, not independently available) have unverified
+      downstream scenarios, notably obsolete Risk-authority fixtures.
+    minimum_requirement: Map each failing safety-relevant scenario to a passing covering test or fix its
+      fixture; no assertion weakened.
+    evidence: INC-F5
+  - blocker_id: BLK-13
+    operating_levels:
+    - OBSERVATION
+    - DEMO_ACTIVE
+    tracker_ids:
+    - SEC-02
+    - GUX-10
+    blocker_validity: CONDITIONAL_BLOCKER
+    blocker_kind: OPERATIONAL_EVIDENCE
+    statement: Dashboard binds 192.168.126.131; authentication middleware exists but actual reachability
+      is unknown.
+    minimum_requirement: Keep minimum authentication; verify only if the Dashboard is started.
+    evidence: tracker SEC-02/GUX-10 retained evidence
+  - blocker_id: BLK-14
+    operating_levels:
+    - REAL_MONEY
+    tracker_ids:
+    - STR-03
+    - REL-01
+    - QNT-09
+    - BKP-03
+    blocker_validity: TRUE_CURRENT_BLOCKER
+    blocker_kind: OWNER_DECISION
+    statement: Real-money first-strategy approval, release authorization, production calibration and off-host
+      recovery policy.
+    minimum_requirement: Separate later owner authorization. Does not block OBSERVATION or DEMO_ACTIVE.
+    evidence: Sol-1 audit; tracker rows
+  not_current_blockers:
+  - ids:
+    - STR-03
+    - REL-01
+    note: Real-money-only; remove from OBSERVATION and DEMO_ACTIVE blocker lists.
+  - ids:
+    - VIS-01..VIS-09
+    - GUI-07
+    - GUX-08
+    note: Aesthetic/topology/3D acceptance has no monetary-safety role.
+  - ids:
+    - RES-09
+    - OPEN-01
+    - OPEN-02
+    - OPEN-03
+    note: Future research activation; durable denial (not activation) is the requirement.
+  - ids:
+    - MON-05
+    - PERF-01 historical causal condition
+    note: Historical attribution is separable from present recurring health.
+  - ids:
+    - GOV-07 remote Git parity / exhaustive process history
+    note: Loaded-source identity is essential; enterprise reconstruction is not.
+  - ids:
+    - ACC-01
+    - ACC-02
+    - DEC-03
+    - PORT-01
+    - PORT-04
+    - EXE-04
+    - OBS-01
+    - QNT-04
+    - QNT-05
+    note: CLOSED rows not reopened; their later corrections are recorded as incidents with INTEGRATED_NOT_DEPLOYED
+      status.
+  - ids:
+    - SEC-01 account visibility
+    note: Not wholly unavailable; trading-key GETs succeeded (stale). Only read-key validity (BLK-03)
+      remains.
+  essential_intelligence_gaps:
+  - gap: Admitted strategy supply
+    ids:
+    - STR-04
+    - DEC-01
+    - RES-01
+    - RES-08
+    need: A research path that can produce and admit an exact version while the quantitative-research
+      epoch is DENIED requires a future trusted owner release contract; until then only inherited (retired/paper/demoted)
+      strategies exist.
+  - gap: Calibrated economics
+    ids:
+    - QNT-09
+    - PORT-02
+    - EXE-07
+    need: Gross-value model with calibration, uncertainty reserve method and forward cost bridge for at
+      least one exact scope.
+  - gap: Market inputs and a completed live cycle
+    ids:
+    - DATA-01
+    - DATA-02
+    - ATT-02
+    need: Real public data for each eligible symbol/timeframe and funding/OI/reference/world inputs; startup/heartbeat
+      is not cycle completion.
+  - gap: Outcome-to-learning chain
+    ids:
+    - OUT-01
+    - OPEN-07
+    - LRN-01
+    - LRN-03
+    - MEM-01
+    need: One prospective terminal -> replay -> learning -> normal consumer chain with later attributable
+      behavior.
+  - gap: Non-trade and decay discrimination
+    ids:
+    - STR-05
+    - OUT-04
+    need: Distinguish decay from no opportunity, regime absence and data failure once a strategy is admitted.
+  - gap: Operating-cost coverage
+    ids:
+    - GOV-10
+    - REL-04
+    need: Honest net economics after operating costs; no profit quota or forced trade.
+  single_owner_simplification_proposals:
+  - ids:
+    - GOV-07
+    proposal: SIMPLIFY
+    note: Local loaded-source/config/frontend identity; drop remote parity as an activation condition.
+  - ids:
+    - PERF-01
+    - MON-05
+    proposal: SIMPLIFY
+    note: Gate on present recurring health; historical causal reconstruction optional.
+  - ids:
+    - SEC-01
+    proposal: SIMPLIFY
+    note: Reduce to key-derived scope binding plus a working venue read path.
+  - ids:
+    - SEC-02
+    - GUX-10
+    proposal: KEEP
+    note: Minimum authentication on exposed LAN controls; no enterprise administration.
+  - ids:
+    - RISK-03
+    - RISK-04
+    - EXE-05
+    - EXE-06
+    - RUN-02
+    - ACC-01
+    - DEC-03
+    - PORT-04
+    proposal: KEEP
+    note: Financial safety invariants.
+  - ids:
+    - STR-03
+    - REL-01
+    - BKP-03
+    proposal: DEFER
+    note: Real-money gates; keep visible, remove from DEMO lists.
+  - ids:
+    - QNT-09
+    proposal: SIMPLIFY
+    note: One qualified exact-scope economics, not broad calibration.
+  - ids:
+    - VIS-01..VIS-09
+    - GUI-07
+    - GUX-08
+    proposal: DEFER
+    note: Visual acceptance and 3D/topology.
+  - ids:
+    - RES-09
+    - OPEN-01
+    - OPEN-02
+    - OPEN-03
+    proposal: DEFER
+    note: Research activation after owner release contract.
+  - ids:
+    - REL-02
+    - REL-03
+    proposal: DEFER
+    note: Existing owner deferrals unchanged.
+  owner_decisions_required:
+  - id: OD-1
+    decision: Earliest account day for the Risk baseline (proposed 2026-10-10T00:00:00Z) and acceptance
+      of the equity explanation 5199.24 (AVAX open, 2026-10-08) vs 5178.83 (flat, 2026-10-09).
+    ids:
+    - RISK-03
+  - id: OD-2
+    decision: 'How to obtain venue reads: fix the BINANCE_READ_API_KEY for the DEMO account, or approve
+      a different read path (a source change).'
+    ids:
+    - SEC-01
+  - id: OD-3
+    decision: Whether SOL/AVAX history in the archived Journal is ever booked (history-preserving reconciliation)
+      or left as unreconciled historical evidence; AVAX closure mechanism is unverified.
+    ids:
+    - ACC-01
+    - EXE-06
+  - id: OD-4
+    decision: Accept the cross-database replay limitation (116 unmatched references) and non-immutable
+      archive explicitly.
+    ids:
+    - BKP-01
+    - OPEN-06
+  - id: OD-5
+    decision: Choose the calibration scope/estimator for the first DEMO entry economics; and which admitted
+      version.
+    ids:
+    - QNT-09
+    - STR-04
+  - id: OD-6
+    decision: Whether present recurring health (PERF-01) and local loaded-source identity (GOV-07) may
+      be accepted separately from historical reconstruction/remote parity; contract text stays unchanged
+      until approved.
+    ids:
+    - PERF-01
+    - GOV-07
+  - id: OD-7
+    decision: Source config keeps research.enabled=true; accept the DENIED epoch as the fence or approve
+      a config change with a new runtime identity.
+    ids:
+    - QNT-05
+  unavailable_evidence:
+  - artifact: Opus Risk-baseline recovery appendix (no sealed path supplied)
+    reason: Not accessible/located; claims resting on it are labelled UNAVAILABLE, not independently inspected.
+  - artifact: Opus research staging package/transfer.py under session scratchpad 7d5822ef
+    reason: Not accessible/located; claims resting on it are labelled UNAVAILABLE, not independently inspected.
+  - artifact: 'Report of 134 remaining baseline test failures: no retained artifact located by this review'
+    reason: Not accessible/located; claims resting on it are labelled UNAVAILABLE, not independently inspected.
+  - artifact: Original blocked strategy export that lost retirement/lifecycle restrictions
+    reason: Not accessible/located; claims resting on it are labelled UNAVAILABLE, not independently inspected.
+  - artifact: Local Claude CLI execution
+    reason: Not probed; this review was performed directly in the session and no delegated review is claimed.
+  - artifact: Graphify graph queries
+    reason: 'Not run: the task forbids Graphify mutation and `graphify query` refreshes graphify-out/cache/last_query_stamp.'
+  smallest_prerequisites:
+    next_contained_observation:
+    - BLK-01
+    - BLK-02
+    - BLK-03
+    - BLK-04
+    - BLK-05
+    - BLK-06 (check)
+    - BLK-13 (if Dashboard started)
+    demo_active_additional:
+    - BLK-08
+    - BLK-09
+    - BLK-10
+    - BLK-11
+    - BLK-12
