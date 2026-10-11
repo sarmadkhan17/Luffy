@@ -304,6 +304,8 @@ def open_readonly(db_path) -> Journal:
     conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True,
                            timeout=30)
     conn.row_factory = sqlite3.Row
+    from trader.core import journal_evidence
+    journal_evidence.install(conn)
     j._local.conn = conn
     return j
 
