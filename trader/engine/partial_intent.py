@@ -63,6 +63,28 @@ def validate(executor, intent):
             raise ValueError('partial_canonical_binding_mismatch')
 
 
+def reject(executor, intent, exc):
+    """Release an intent whose order the venue definitively refused.
+
+    Only for ccxt InvalidOrder/InsufficientFunds raised by the submission
+    itself — the same classification the entry path uses to mark REFUSED.
+    Anything else (timeouts, network, unknown errors) is ambiguous and stays
+    pending for exact-order recovery. Only a never-acknowledged intent is
+    released; the refusal is kept as a control event.
+    """
+    with executor.journal._tx() as db:
+        released = db.execute(
+            "DELETE FROM partial_exit_intents WHERE trade_id=? AND state='SUBMISSION_ATTEMPTED' "
+            "AND client_order_id=?", (intent['trade_id'], intent['client_order_id'])).rowcount
+    if released:
+        executor.journal.log_control_event('partial_exit_rejected', 'executor', detail={
+            'trade_id': intent['trade_id'], 'symbol': intent['symbol'],
+            'client_order_id': intent['client_order_id'],
+            'requested_quantity': intent['requested_quantity'],
+            'error': type(exc).__name__})
+    return bool(released)
+
+
 def acknowledge(executor, intent, order):
     intent = dict(intent,order_id=str(order.get('id') or ''))
     with executor.journal._tx() as db:

@@ -315,24 +315,30 @@ class ExitEngine:
             log.error(f"stop move failed {sym}: {e} — keeping the existing "
                       f"stop at {trade.get('stop_loss')}")
             return
-        if old_oid and not protective.cancel_stop(self.ex, old_oid, sym):
-            # A duplicate stop is survivable; no stop is not. The orphan
-            # sweep clears what could not be cancelled here.
-            log.warning(f"stale stop {old_oid} on {sym} survives — "
-                        f"new stop {new_oid} is in force")
         try:
-            # Both writes in ONE committed transaction. This used to journal
-            # the new stop id through Journal.query(), which runs on a
-            # thread-local connection with no transaction wrapper and DOES
-            # NOT COMMIT — so the id stayed invisible to every other
-            # connection while holding a write lock, and the next ratchet
-            # tried to cancel an id that was already superseded.
+            # Journal the new stop id BEFORE the incumbent is cancelled, in
+            # ONE committed transaction (Journal.query() does not commit).
+            # If this write fails the journal still names the old stop, so the
+            # old stop must stay in force and the new one is withdrawn:
+            # cancelling the old one first left sl_order_id naming a cancelled
+            # stop while the live one was unknown to the journal, where the
+            # orphan sweep could cancel it as unowned.
             with self.journal._tx() as c:
                 c.execute("UPDATE trades SET stop_loss=?, sl_order_id=? "
                           "WHERE id=?",
                           (round(new_sl, 6), new_oid, trade["id"]))
         except Exception as e:
-            log.warning(f"stop move journalling failed {sym}: {e}")
+            log.warning(f"stop move journalling failed {sym}: {e} — keeping "
+                        f"the existing stop {old_oid or '(none)'}")
+            if new_oid and not protective.cancel_stop(self.ex, new_oid, sym):
+                log.warning(f"unjournaled stop {new_oid} on {sym} not "
+                            f"withdrawn; the orphan sweep will clear it")
+            return
+        if old_oid and not protective.cancel_stop(self.ex, old_oid, sym):
+            # A duplicate stop is survivable; no stop is not. The orphan
+            # sweep clears what could not be cancelled here.
+            log.warning(f"stale stop {old_oid} on {sym} survives — "
+                        f"new stop {new_oid} is in force")
         trade["stop_loss"] = new_sl
         trade["sl_order_id"] = new_oid
 

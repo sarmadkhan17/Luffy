@@ -1,4 +1,5 @@
-"""Off-path demo accounting queue. No order writes or live learning application.
+"""Off-path demo accounting queue. No order writes. Completed receipts are
+delivered to Learning through trader.learning.producers (journal writes).
 
 One process owns the queue lock. Attempts are reserved durably before capture;
 crash recovery replays any complete file before deciding to retry. Evidence is
@@ -22,6 +23,8 @@ MAX_JOBS = 10000
 MAX_ATTEMPTS = 10000
 MAX_BYTES = 256 * 1024 * 1024
 MAX_ARTIFACT = 8 * 1024 * 1024
+MAX_CONFLICT_ATTEMPTS = 3
+TERMINAL_STATUSES = ('complete', 'unsupported_scope', 'conflict')
 BASE_RETRY_MS = 300000
 MAX_RETRY_MS = 28800000
 
@@ -58,6 +61,17 @@ def finish(db, attempt, now):
         status = 'retry'
         reasons = json.loads(prior[0]) + ['attempt_unavailable_retry:' + type(exc).__name__]
     count = db.execute('SELECT attempts FROM jobs WHERE trade_id=?', (tid,)).fetchone()[0]
+    if (status == 'retry' and count >= MAX_CONFLICT_ATTEMPTS and reasons
+            and all(isinstance(r, str) and not r.endswith('_retry')
+                    and not r.startswith(('attempt_unavailable_retry', 'capture_failed'))
+                    for r in reasons)):
+        # trade_accounting names every transient reason `*_retry`; a reason
+        # without that suffix (ownership/clock/balance conflict, unsupported
+        # scope) is a statement about the evidence, not about timing. Retrying
+        # it forever only spends the global attempt budget and venue reads.
+        # Evidence is retained; the job leaves the due queue and stays visible
+        # in the health counts.
+        status = 'conflict'
     delay = min(MAX_RETRY_MS, BASE_RETRY_MS * 2 ** min(count - 1, 7))
     with db:
         db.execute('UPDATE attempts SET status=?,finished_ms=?,reasons=? WHERE id=?',
@@ -97,7 +111,7 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
         capacity_blocked = scanned < len(rows)
         attempted = 0
         storage_blocked = False
-        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status NOT IN ('complete','unsupported_scope') AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
+        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status NOT IN ('complete','unsupported_scope','conflict') AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
                                  (now, max_trades)).fetchall():
             used = sum(p.stat().st_size for p in directory.glob('*.json'))
             if db.execute('SELECT count(*) FROM attempts').fetchone()[0] >= MAX_ATTEMPTS or used + MAX_ARTIFACT > MAX_BYTES:
@@ -168,11 +182,21 @@ def deliver_completed(db, journal):
             with db:
                 db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,oid))
             report['delivered']+=1
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            # A corrupt artifact is terminal for delivery too, but its message
+            # is not stored: record only the exception type.
+            with db:
+                db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,'UNBOUND:artifact_unreadable:'+type(exc).__name__))
+            report['unbound']+=1
         except ValueError as exc:
             # Missing historical identity is terminal, not a retry that can
             # starve prospective receipts. Never create a historical registration.
+            # Only a short reason code is stored, never free-form text.
+            code = str(exc)
+            if not (0 < len(code) <= 80 and all(c.islower() or c.isdigit() or c == '_' for c in code)):
+                code = 'value_error'
             with db:
-                db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,'UNBOUND:'+str(exc)))
+                db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,'UNBOUND:'+code))
             report['unbound']+=1
         except Exception:
             report['retry']+=1

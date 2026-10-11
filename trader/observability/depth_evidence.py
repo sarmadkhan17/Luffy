@@ -2,8 +2,10 @@
 
 Validates and stores the body of one unauthenticated GET of
 ``/fapi/v1/depth?symbol=S&limit=N``; the request itself is made by the
-shadow runner (scripts/capacity_depth_shadow.py) with the public fetcher (no
-auth headers, no proxies, no redirects, bounded bytes). No credentials,
+caller (today: ``stage5_activation.run`` and the order-path ``execution_shadow``)
+with the public fetcher (no auth headers, no proxies, no redirects, bounded
+bytes). ``request_url`` and ``observe`` are the live entry points; the
+``connect``/``store``/``reject``/``storage`` helpers have no production caller. No credentials,
 account endpoint, order API, CCXT, Kernel, Risk or journal.
 
 Each accepted observation keeps the raw levels exactly as the venue sent

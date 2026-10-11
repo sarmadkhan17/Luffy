@@ -32,13 +32,26 @@ class _Ex:
 
 
 class _Journal:
+    def __init__(self, fail_write=False):
+        self.fail_write, self.writes = fail_write, []
     def update_position_protection(self, *a, **k): pass
     def query(self, *a, **k): pass
+    def _tx(self):
+        j = self
+
+        class _Tx:
+            def __enter__(self_):
+                if j.fail_write:
+                    raise RuntimeError("database is locked")
+                return self_
+            def __exit__(self_, *exc): return False
+            def execute(self_, sql, params=()): j.writes.append(params)
+        return _Tx()
 
 
-def _engine(ex):
+def _engine(ex, journal=None):
     e = object.__new__(ExitEngine)
-    e.ex, e.journal = ex, _Journal()
+    e.ex, e.journal = ex, journal or _Journal()
     return e
 
 
@@ -76,3 +89,28 @@ def test_a_failed_cancel_still_leaves_the_new_stop_in_charge():
     t = _trade()
     _engine(ex)._move_stop(t, 105.0)
     assert t["stop_loss"] == 105.0 and t["sl_order_id"] == "new1"
+
+
+def test_journal_failure_keeps_the_old_stop_and_withdraws_the_new_one():
+    """P-3: the journal must never name a cancelled stop while a live one is unknown."""
+    ex = _Ex()
+    t = _trade()
+    _engine(ex, _Journal(fail_write=True))._move_stop(t, 105.0)
+    assert ex.created                      # replacement was placed first
+    assert ex.cancelled == ["new1"]        # …and withdrawn; old1 untouched
+    assert t["sl_order_id"] == "old1" and t["stop_loss"] == 100.0
+
+
+def test_journal_is_written_before_the_old_stop_is_cancelled():
+    order = []
+    ex = _Ex()
+    j = _Journal()
+    real_tx = j._tx
+
+    def tx():
+        order.append("journal")
+        return real_tx()
+    j._tx = tx
+    ex.cancel_order = lambda oid, sym: order.append("cancel:" + oid)
+    _engine(ex, j)._move_stop(_trade(), 105.0)
+    assert order == ["journal", "cancel:old1"]

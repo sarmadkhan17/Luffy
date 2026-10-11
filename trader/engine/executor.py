@@ -24,6 +24,7 @@ from .booking import monetary_total, order_evidence
 from .accounting import safe_fill
 from .reconcile import venue_realized_pnl
 from .recovery import EntryRecovery
+from ccxt import InvalidOrder, InsufficientFunds
 
 log = logging.getLogger(__name__)
 
@@ -360,6 +361,14 @@ class Executor:
             return protective.place_stop(self.ex, symbol, close_side,
                                          amount, stop_price)
         except Exception as e:
+            # The first submission may have reached the venue before it raised
+            # (timeout after accept). Adopt a stop that already matches rather
+            # than stacking a second one beside it.
+            existing = self._matching_venue_stop(symbol, side, amount, stop_price)
+            if existing:
+                log.warning(f"native stop {symbol}: placement raised ({e}) but "
+                            f"stop {existing} is already on the venue — adopted")
+                return existing
             # ccxt unified stopLossPrice → fallback to binance STOP_MARKET
             try:
                 o = self.ex.create_order(
@@ -371,6 +380,25 @@ class Executor:
                 log.error(f"NATIVE STOP FAILED {symbol}: {e2} — position "
                           f"unprotected! Consider manual flatten.")
                 return ""
+
+    def _matching_venue_stop(self, symbol: str, side: Side, amount: float,
+                             stop_price: float) -> str:
+        """Id of a venue stop that already protects this position, else "".
+
+        An unreadable listing returns "" (the caller then falls back to
+        placing a stop: a duplicate reduce-only stop is survivable, a naked
+        position is not).
+        """
+        try:
+            snapshot = protective.open_stops(self.ex, symbol)
+            pos_side = "long" if side == Side.LONG else "short"
+            for stop in snapshot:
+                if protective.protection_match(self.ex, symbol, pos_side, amount,
+                                               stop_price, stop).matches:
+                    return str(stop.get("id") or "")
+        except Exception as e:
+            log.debug(f"stop pre-check unavailable {symbol}: {e}")
+        return ""
 
     # ── venue truth for exits ────────────────────────────────────────────
     def _order_fills(self, symbol: str, order_id: str,
@@ -471,8 +499,14 @@ class Executor:
             submitted_ms = intent['created_ms']
             sent_ms = submitted_ms - 60_000
             if submit:
-                order = self.ex.create_order(sym, "market", side_close, requested,
-                    params={"reduceOnly": True,"newClientOrderId":intent['client_order_id']})
+                try:
+                    order = self.ex.create_order(sym, "market", side_close, requested,
+                        params={"reduceOnly": True,"newClientOrderId":intent['client_order_id']})
+                except (InvalidOrder, InsufficientFunds) as refused:
+                    # definitive refusal: nothing was placed, so the intent
+                    # must not block entries until owner recovery
+                    partial.reject(self, intent, refused)
+                    raise
                 intent = partial.acknowledge(self,intent,order)
             else:
                 order = partial.resolve(self,intent)

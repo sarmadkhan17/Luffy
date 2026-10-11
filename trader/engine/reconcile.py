@@ -494,24 +494,114 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
     return summary
 
 
-def flatten_all(exchange, journal: Journal, notifier=None) -> int:
-    """PANIC: cancel protective orders then market-close every open position.
+class FlattenResult(int):
+    """`flatten_all` outcome. Equal to the number of positions confirmed closed,
+    so callers that only count keep working; `complete` is the part that
+    matters: False means exposure may remain and the panic must stay pending.
+    """
+    complete: bool
+    remaining: tuple
+    unjournaled: tuple
 
-    Returns count of positions closed. Best-effort per symbol — one failure
-    doesn't stop the rest.
+    def __new__(cls, closed, remaining=(), unjournaled=()):
+        self = super().__new__(cls, closed)
+        self.remaining = tuple(remaining)
+        self.unjournaled = tuple(unjournaled)
+        self.complete = not self.remaining and not self.unjournaled
+        return self
+
+
+FLATTEN_ATTEMPTS = 3
+
+
+def _venue_amounts(exchange) -> dict | None:
+    """{normalised symbol: open contracts} from the venue, or None if the
+    snapshot is unreadable or invalid. Flat symbols are simply absent."""
+    try:
+        rows = exchange.fetch_positions()
+        if not isinstance(rows, list):
+            return None
+        out: dict = {}
+        for p in rows:
+            amount = float(p.get("contracts") or 0)
+            if not math.isfinite(amount) or amount < 0:
+                return None
+            if amount > 0:
+                out[norm_symbol(p["symbol"])] = amount
+        return out
+    except Exception:
+        return None
+
+
+def flatten_all(exchange, journal: Journal, notifier=None) -> FlattenResult:
+    """PANIC: reduce-only market-close every journal-open futures position.
+
+    The venue protective stop is released only after the venue itself shows
+    the position flat; a refused, timed-out or partial close leaves the stop
+    standing. Ambiguous submissions are never assumed to have failed or
+    succeeded: the venue position is re-read and the remaining size, not the
+    request outcome, drives the next attempt (reduce-only bounds every retry,
+    so a retry cannot add or flip exposure). Venue positions with no journal
+    row are reported, never closed here (reconcile adopts them).
+
+    Returns a FlattenResult: the count confirmed closed plus `.complete` /
+    `.remaining` / `.unjournaled`. A caller must not treat panic as served
+    while `.complete` is False.
     """
     open_trades = [t for t in journal.open_trades()
                    if t["market_type"] == "futures"]
     closed = 0
+    remaining: list = []
     for t in open_trades:
         sym = t["symbol"]
+        key = norm_symbol(sym)
         side_close = "sell" if t["side"] == "long" else "buy"
+        order = None
+        flat = False
+        last_error = None
         try:
-            if t.get("sl_order_id"):
-                protective.cancel_stop(exchange, t["sl_order_id"], sym)
-            order = exchange.create_order(
-                sym, "market", side_close, float(t["amount"]),
-                params={"reduceOnly": True})
+            for _ in range(FLATTEN_ATTEMPTS):
+                venue = _venue_amounts(exchange)
+                size = float(t["amount"])
+                if venue is not None and venue.get(key, 0.0) > 0:
+                    size = venue[key]          # venue truth, not the journal
+                elif venue is not None and order is not None:
+                    flat = True                # our order left nothing behind
+                    break
+                if venue is None and order is not None:
+                    break                      # sent, cannot read back: never resend blind
+                try:
+                    order = exchange.create_order(
+                        sym, "market", side_close, size,
+                        params={"reduceOnly": True})
+                except Exception as e:          # rejected / timeout / ambiguous
+                    last_error = e
+                    venue = _venue_amounts(exchange)
+                    if venue is not None and venue.get(key, 0.0) <= 0:
+                        # nothing left: either filled despite the error or
+                        # already flat. Either way no exposure and no order
+                        # response to book from.
+                        flat = True
+                        break
+                    continue                    # still exposed: re-read, retry
+                venue = _venue_amounts(exchange)
+                if venue is not None and venue.get(key, 0.0) <= 0:
+                    flat = True
+                    break
+                # venue unreadable or still exposed (partial): loop re-reads
+            if not flat:
+                remaining.append(sym)
+                log.error(f"PANIC close INCOMPLETE {sym}: venue exposure not "
+                          f"confirmed flat ({type(last_error).__name__ if last_error else 'unconfirmed'}) "
+                          f"— protective stop left standing")
+                continue
+            if order is None:
+                # Venue shows flat without an order of ours: the position was
+                # already gone. No fill to book; reconcile closes the journal
+                # row from venue P&L. Not exposure, so not "remaining".
+                log.warning(f"PANIC {sym}: venue already flat; journal row "
+                            f"left to reconcile")
+                continue
             fill = float(order.get("average") or order.get("price") or 0)
             source = "order_response_price"
             if fill <= 0:                      # async fills: confirm via ticker
@@ -536,8 +626,26 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
             closed += 1
             log.warning(f"PANIC close {sym}: {t['amount']} @ ~{fill} "
                         f"(pnl {pnl:+.2f})")
+            if t.get("sl_order_id"):           # flat now: the stop is an orphan
+                protective.cancel_stop(exchange, t["sl_order_id"], sym)
         except Exception as e:
-            log.error(f"PANIC close FAILED {sym}: {e} — will retry next cycle")
-    if notifier and closed:
-        notifier.send(f"🚨 PANIC: flattened {closed} position(s)")
-    return closed
+            remaining.append(sym)
+            log.error(f"PANIC close FAILED {sym}: {type(e).__name__}: {e}")
+    journal_keys = {norm_symbol(t["symbol"]) for t in open_trades}
+    after = _venue_amounts(exchange)
+    unjournaled = sorted(k for k in (after or {}) if k not in journal_keys)
+    result = FlattenResult(closed, remaining, unjournaled)
+    if not result.complete:
+        try:
+            journal.log_control_event("panic_flatten_incomplete", "luffy", detail={
+                "closed": int(result), "remaining": list(result.remaining),
+                "unjournaled_venue_positions": list(result.unjournaled)})
+        except Exception:
+            log.exception("panic incomplete event not recorded")
+    if notifier and (closed or not result.complete):
+        msg = f"🚨 PANIC: flattened {closed} position(s)"
+        if not result.complete:
+            msg += (f"; NOT FLAT: {list(result.remaining) + list(result.unjournaled)}"
+                    " — protective stops left standing")
+        notifier.send(msg)
+    return result

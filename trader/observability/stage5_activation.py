@@ -94,7 +94,23 @@ def start(kernel):
     window = data / 'stage5-activation.json'
     if not window.exists():
         return
-    read_window(window, time.time_ns() // 1_000_000)
+    now_ms = time.time_ns() // 1_000_000
+    try:
+        read_window(window, now_ms)
+    except Exception as exc:
+        # An unreadable, malformed, future-dated or over-long window file is an
+        # observation-collection problem and must never abort kernel boot.
+        # Nothing is started; the reason is left where the owner looks.
+        reason = 'WINDOW_FILE_' + type(exc).__name__ + ':' + str(exc)[:80]
+        log.error('Stage-5 collection not started: %s', reason)
+        try:
+            directory = data / 'stage5-public'
+            directory.mkdir(exist_ok=True)
+            (directory / 'status.json').write_text(json.dumps(
+                {'status': 'EXTERNAL_BLOCKED', 'reason': reason, 'observed_ms': now_ms}))
+        except Exception:
+            log.exception('Stage-5 blocked status not recorded')
+        return
     from trader.strategy import factory_handoff as H, capacity
     from .prospective_execution import for_journal
     H.ensure(kernel.journal)
