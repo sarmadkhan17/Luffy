@@ -105,3 +105,25 @@ def test_flatten_survives_single_failure(tmp_path, monkeypatch):
     n = flatten_all(ex, j)
     assert n == 1                       # B closed despite A failing
     assert len(j.open_trades()) == 1    # A still open → retried next cycle
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "KNOWN DEFECT (PROPOSED_ONLY fix): flatten_all cancels the protective stop "
+    "BEFORE the market close is accepted, and the kernel consumes the panic "
+    "request after one call, so a refused close leaves the position naked "
+    "until reconcile re-arms it. The stop should only be released after the "
+    "reduce-only close is accepted."))
+def test_flatten_failure_keeps_the_protective_stop(tmp_path, monkeypatch):
+    ex = FakeExchange(tickers={"A/USDT": 100.0})
+
+    def refuse(*a, **k):
+        raise RuntimeError("exchange hiccup")
+
+    monkeypatch.setattr(ex, "create_order", refuse)
+    j = make_journal(tmp_path, [_pos("A/USDT", sl_order_id="sl_A")])
+    assert flatten_all(ex, j) == 0
+    assert len(j.open_trades()) == 1
+    assert ex.cancelled == [], "the position is still open: its venue stop must stand"

@@ -552,3 +552,24 @@ def test_pre_upgrade_durable_history_also_blocks_completed_action(setup):
     assert call(e,d) is None
     assert d.skip_reason=='logical_action_already_reserved'
     assert not ex.sent
+
+
+def test_non_live_exec_mode_has_no_order_path(setup):
+    """PAPER and DEMO stay separate: a paper-labelled action can never reach
+    the venue through the real executor, even with an exact Risk permission."""
+    ex,j,e,d=setup
+    kw=permission(e,d)
+    assert e.open(d,2,2,95,110,'strategy','strategy',exec_mode='paper',**kw) is None
+    assert 'no real order path' in d.skip_reason
+    assert not ex.sent and not j.open_trades()
+
+
+def test_venue_endpoint_switch_after_authorization_sends_nothing(setup):
+    """A permission minted against the demo account cannot be spent after the
+    executor's venue context becomes a different environment/account."""
+    ex,j,e,d=setup
+    kw=permission(e,d)
+    ex.urls={'api':{'fapiPrivateV3':'https://fapi.binance.com/fapi/v3'}}
+    assert e.open(d,2,2,95,110,'strategy','strategy',**kw) is None
+    assert d.skip_reason=='venue_account_binding_unverified'
+    assert not ex.sent and not j.open_trades()

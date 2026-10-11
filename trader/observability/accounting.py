@@ -97,7 +97,7 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
         capacity_blocked = scanned < len(rows)
         attempted = 0
         storage_blocked = False
-        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status!='complete' AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
+        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status NOT IN ('complete','unsupported_scope') AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
                                  (now, max_trades)).fetchall():
             used = sum(p.stat().st_size for p in directory.glob('*.json'))
             if db.execute('SELECT count(*) FROM attempts').fetchone()[0] >= MAX_ATTEMPTS or used + MAX_ARTIFACT > MAX_BYTES:
@@ -113,6 +113,12 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
                 with db:
                     db.execute("UPDATE jobs SET status='waiting_close',due_ms=?,reasons=? WHERE trade_id=?",
                                (now + BASE_RETRY_MS, '["natural_close_pending"]', tid))
+                continue
+            if trade.get('exec_mode') != 'live' or trade.get('market_type') != 'futures':
+                # Out of scope (e.g. paper): terminal, no venue construction, no attempts.
+                with db:
+                    db.execute("UPDATE jobs SET status='unsupported_scope',reasons=? WHERE trade_id=?",
+                               ('["unsupported_trade_scope"]', tid))
                 continue
             aid = uuid.uuid4().hex
             path = directory.resolve() / (aid + '.json')

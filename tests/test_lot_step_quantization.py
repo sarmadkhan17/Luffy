@@ -16,157 +16,108 @@ and, because it keeps the symbol present in fetch_positions(), it hid a
 completed exit from the kernel for hours. Quantize at the boundary and the
 residue cannot accumulate.
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import pytest
 
-from trader.core.config import load_config
-from trader.core.journal import Journal
-from trader.core.types import Action, Decision, MarketType, Position, Side
-from trader.engine.executor import Executor
+from tests.entry_authority_fixtures import permission
+from tests.test_entry_recovery import setup  # noqa: F401  (real Risk/capability harness)
 
-
-class WholeLotEx:
-    """A venue whose amount step is 1, like UNI/USDT — it truncates."""
-
-    def __init__(self, fill=5.8933):
-        self.orders: list[tuple] = []
-        self.stops: list[tuple] = []
-        self.fill = fill
-        self.position = 0.0        # what the venue actually holds
-
-    def amount_to_precision(self, symbol, amount):
-        return str(int(float(amount)))          # ccxt returns a string
-
-    def create_order(self, symbol, typ, side, amount, params=None):
-        got = float(self.amount_to_precision(symbol, amount))
-        self.position += got if side == "buy" else -got
-        self.orders.append((symbol, typ, side, amount))
-        return {"id": "o1", "average": self.fill, "price": self.fill,
-                "filled": got, "amount": got, "status": "closed"}
-
-    def cancel_order(self, oid, symbol):
-        return {}
-
-    def set_leverage(self, lev, symbol):
-        return {}
+# Executor.open() now admits only an exact Risk-issued permission, so these
+# tests drive the real entry boundary (tests/entry_authority_fixtures) against a
+# venue that truncates to whole lots, instead of the pre-Stage-1 bare fake.
+REQUESTED = 5.7          # what Risk permits; the venue's step is 1
 
 
 @pytest.fixture
-def ex_and_journal(tmp_path):
-    ex = WholeLotEx()
-    j = Journal(tmp_path / "j.db")
-    e = Executor(ex, j, load_config(), MarketType.FUTURES)
-    e._place_native_stop = lambda sym, side, amount, px: (
-        ex.stops.append((sym, side, amount, px)) or "sl1")
-    return ex, j, e
+def lots(setup):
+    ex, j, e, d = setup
+    ex.amount_to_precision = lambda symbol, amount: str(int(float(amount)))
+    return ex, j, e, d
 
 
-_N = [0]
+def _open(e, d, amount=REQUESTED):
+    kw = permission(e, d, amount=amount)
+    return e.open(d, amount, 2., 95., 110., 'strategy', 'strategy', **kw)
 
 
-def _decision(j, sym="UNI/USDT"):
-    """A journalled decision — executor.open() schedules an outcome against
-    it, and outcomes carry a foreign key back to decisions/cycles."""
-    _N[0] += 1
-    cid, did = f"cyc_{_N[0]}", f"dec_{_N[0]}"
-    d = Decision(id=did, cycle_id=cid, symbol=sym, action=Action.BUY,
-                 score=1.0, threshold=0.5, confidence=0.9, votes=[],
-                 strategy_signals=[])
-    with j._tx() as c:
-        c.execute("INSERT INTO cycles(id,ts,symbol,price) VALUES (?,?,?,?)",
-                  (cid, d.ts, sym, 100.0))
-    j.log_decision(d)
-    return d
+def _reduce_only(ex):
+    return [s for s in ex.sent if s[4].get('reduceOnly') and 'stopLossPrice' not in s[4]]
 
 
-def test_entry_is_quantized_before_it_reaches_the_venue(ex_and_journal):
-    ex, j, e = ex_and_journal
-    e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77, take_profit=6.1,
-           strategy_id="s", strategy_name="ema_trend")
-    sent = ex.orders[0][3]
-    assert sent == pytest.approx(607.0), \
-        f"venue was handed {sent}, which it silently truncates to 607"
+def test_entry_is_quantized_before_it_reaches_the_venue(lots):
+    ex, j, e, d = lots
+    assert _open(e, d) is not None
+    entries = [s for s in ex.sent if s[1] == 'market' and not s[4].get('reduceOnly')
+               and 'stopLossPrice' not in s[4]]
+    assert entries[0][3] == pytest.approx(5.0), \
+        f"venue was handed {entries[0][3]}, which it silently truncates to 5"
 
 
-def test_the_journal_records_what_the_venue_filled(ex_and_journal):
-    ex, j, e = ex_and_journal
-    pos = e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77,
-                 take_profit=6.1, strategy_id="s", strategy_name="ema_trend")
-    assert pos.amount == pytest.approx(607.0)
+def test_the_journal_records_what_the_venue_filled(lots):
+    ex, j, e, d = lots
+    pos = _open(e, d)
+    assert pos.amount == pytest.approx(5.0)
     row = j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0]
-    assert row["amount"] == pytest.approx(607.0)
-    assert row["notional_usdt"] == pytest.approx(round(607 * 5.8933, 2))
+    assert row["amount"] == pytest.approx(5.0)
+    assert row["notional_usdt"] == pytest.approx(round(5 * 100.0, 2))
 
 
-def test_the_protective_stop_covers_the_whole_filled_position(ex_and_journal):
-    ex, j, e = ex_and_journal
-    e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77, take_profit=6.1,
-           strategy_id="s", strategy_name="ema_trend")
-    assert ex.stops[0][2] == pytest.approx(607.0), \
+def test_the_protective_stop_covers_the_whole_filled_position(lots):
+    ex, j, e, d = lots
+    _open(e, d)
+    assert float(ex.stops[0]['quantity']) == pytest.approx(5.0), \
         "a stop for less than the position leaves the remainder naked"
 
 
-def test_a_partial_sells_a_whole_number_of_lots(ex_and_journal):
-    ex, j, e = ex_and_journal
-    pos = e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77,
-                 take_profit=6.1, strategy_id="s", strategy_name="ema_trend")
+def test_a_partial_sells_a_whole_number_of_lots(lots):
+    ex, j, e, d = lots
+    pos = _open(e, d)
     t = j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0]
-    ex.fill = 5.997
-    assert e.close_partial(dict(t), float(t["amount"]) * 0.5, 5.997, "tp1")
-    assert ex.orders[-1][3] == pytest.approx(303.0)
+    assert e.close_partial(dict(t), float(t["amount"]) * 0.5, 100.0, "tp1")
+    assert _reduce_only(ex)[-1][3] == pytest.approx(2.0)
     row = j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0]
-    assert row["amount"] == pytest.approx(304.0), \
-        "the remainder is what the venue still holds, not 607.73/2"
+    assert row["amount"] == pytest.approx(3.0), \
+        "the remainder is what the venue still holds, not 5/2"
 
 
-def test_the_full_cycle_strands_nothing(ex_and_journal):
-    """The regression itself: open, take a half, stop out — venue flat."""
-    ex, j, e = ex_and_journal
-    pos = e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77,
-                 take_profit=6.1, strategy_id="s", strategy_name="ema_trend")
-
+def test_the_full_cycle_strands_nothing(lots):
+    """The regression itself: open, take a half, close the rest — the
+    reduce-only quantity sent equals the quantity the venue filled."""
+    ex, j, e, d = lots
+    pos = _open(e, d)
     t = dict(j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0])
-    ex.fill = 5.997
-    e.close_partial(t, float(t["amount"]) * 0.5, 5.997, "tp1")
-
+    e.close_partial(t, float(t["amount"]) * 0.5, 100.0, "tp1")
     t = dict(j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0])
-    ex.fill = 6.187
-    e.close(t, 6.187, "sl_fill")
+    e.close(t, 100.0, "sl_fill")
+    sold = sum(s[3] for s in _reduce_only(ex))
+    assert sold == pytest.approx(5.0), \
+        f"{5.0 - sold} lots left on the venue as unmanaged dust"
 
-    assert ex.position == pytest.approx(0.0), \
-        f"{ex.position} lots left on the venue as unmanaged dust"
 
-
-def test_a_sub_lot_partial_is_refused_rather_than_sent_as_zero(ex_and_journal):
+def test_a_sub_lot_partial_is_refused_rather_than_sent_as_zero(lots):
     """Rounding 0.4 lots down to 0 would be an order the venue rejects —
     and, if it did not, a 'partial' that closes nothing while the journal
     books a fill."""
-    ex, j, e = ex_and_journal
-    pos = e.open(_decision(j), 607.73360606, atr=0.1, stop_loss=5.77,
-                 take_profit=6.1, strategy_id="s", strategy_name="ema_trend")
+    ex, j, e, d = lots
+    pos = _open(e, d)
     t = dict(j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0])
-    before = len(ex.orders)
-    assert e.close_partial(t, 0.4, 5.99, "tp1") is False
-    assert len(ex.orders) == before, "no order may be sent for zero lots"
+    before = len(ex.sent)
+    assert e.close_partial(t, 0.4, 100.0, "tp1") is False
+    assert len(ex.sent) == before, "no order may be sent for zero lots"
     row = j.query("SELECT * FROM trades WHERE id=?", (pos.id,))[0]
-    assert row["amount"] == pytest.approx(607.0), "nothing was sold"
+    assert row["amount"] == pytest.approx(5.0), "nothing was sold"
 
 
-def test_a_venue_without_precision_helpers_is_left_alone(tmp_path):
+def test_a_venue_without_precision_helpers_is_left_alone():
     """Spot books, tests and backtests hand in plain fakes; quantization
     must degrade to the requested amount, never crash."""
+    from trader.engine.executor import quantize
+
     class Bare:
-        def __init__(self): self.orders = []
-        def create_order(self, symbol, typ, side, amount, params=None):
-            self.orders.append(amount)
-            return {"id": "o", "average": 100.0, "price": 100.0}
-    ex = Bare()
-    j = Journal(tmp_path / "j.db")
-    e = Executor(ex, j, load_config(), MarketType.SPOT)
-    e.open(_decision(j, "BTC/USDT"), 1.2345, atr=1.0, stop_loss=98.0,
-           take_profit=110.0, strategy_id="s", strategy_name="n")
-    assert ex.orders[0] == pytest.approx(1.2345)
+        pass
+
+    class Broken:
+        def amount_to_precision(self, symbol, amount):
+            raise RuntimeError("markets not loaded")
+
+    assert quantize(Bare(), "BTC/USDT", 1.2345) == pytest.approx(1.2345)
+    assert quantize(Broken(), "BTC/USDT", 1.2345) == pytest.approx(1.2345)

@@ -25,7 +25,12 @@ from trader.engine.executor import Executor
 
 class FakeEx:
     def create_order(self, symbol, typ, side, amount, params=None):
-        return {"id": "x", "average": 110.0, "price": 110.0}
+        # A terminal fill: close_partial books the venue's executed quantity
+        # (`filled`) and refuses an order that reports none.
+        return {"id": "x", "average": 110.0, "price": 110.0,
+                "filled": amount, "status": "closed", "reduceOnly": True,
+                "clientOrderId": (params or {}).get("newClientOrderId"),
+                "symbol": symbol, "side": side}
 
     def cancel_order(self, oid, symbol):
         return {}

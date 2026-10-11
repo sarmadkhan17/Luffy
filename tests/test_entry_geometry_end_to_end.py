@@ -58,6 +58,11 @@ class _Risk:
         self.seen_stop_frac = a[4] if len(a) > 4 else kw["side_risk_frac"]
         return _Sizing()
 
+    def authorize_entry(self, *a, **kw):
+        # Final Risk authority is covered by test_risk01/test_stage1; this
+        # test only follows the geometry handed on to the executor.
+        return object()
+
 
 class _Exec:
     tp_atr_mult = 4.5
@@ -80,6 +85,20 @@ class _D:
         self.action, self.strategy_signals = action, sigs
 
 
+_JOURNAL = {}
+
+
+@pytest.fixture(autouse=True)
+def _journal(tmp_path):
+    from tests.authority_legacy_fixtures import seed
+    from trader.core.journal import Journal
+    j = Journal(tmp_path / "j.db")
+    seed(j, "donchian")
+    _JOURNAL["j"] = j
+    yield
+    _JOURNAL.clear()
+
+
 def _kernel(spec_exits, min_notional=10):
     k = Kernel.__new__(Kernel)
     k.cfg = {"timeframes": {"execution": "15m"},
@@ -88,11 +107,11 @@ def _kernel(spec_exits, min_notional=10):
     k._spec_exits = spec_exits
     k.market_type = MarketType.FUTURES
 
-    class _J:
-        def open_trades(self): return []
     class _SM:
         state = "ACTIVE"
-    k.journal, k.state_machine = _J(), _SM()
+    # A real journal carrying the explicit TEST-ONLY legacy authority: the
+    # version fence reads strategy authority from it before any entry.
+    k.journal, k.state_machine = _JOURNAL["j"], _SM()
     return k
 
 

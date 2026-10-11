@@ -623,9 +623,10 @@ def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):
     pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, "s", "s")
     assert pos is None and d.skip_reason == "state=HALTED"
     assert [m for m in venue.mutations if m[0] == "create_order"] == []
-    # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still
-    # applied before the final fence even though no order is sent.
-    assert [m[0] for m in venue.mutations] == ["set_leverage"]
+    # Stage 1 removed the executor's set_leverage mutation: leverage is
+    # verified against the venue's own observation (entry_authority), never
+    # applied, so a refused entry leaves the venue completely untouched.
+    assert [m[0] for m in venue.mutations] == []
 
 
 # ── 14: rollback with a corrupt baseline cannot activate ────────────────────

@@ -25,6 +25,12 @@ Two rules the venue forces:
     stopped, and closing is the executor's call — reconcile must not send it.
 """
 from trader.engine import reconcile
+from trader.engine.protective import StopSnapshot
+
+
+def _stops(*rows):
+    """What protective.open_stops returns: rows plus a completeness marker."""
+    return lambda e, *a, **k: StopSnapshot(list(rows), complete=True)
 
 
 class _Journal:
@@ -77,7 +83,7 @@ def _trade(symbol, amount, side="long", stop_loss=95.0, sl_order_id=""):
 def _patch(monkeypatch, ex, placed):
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))
-    monkeypatch.setattr(reconcile.protective, "open_stops", lambda e: [])
+    monkeypatch.setattr(reconcile.protective, "open_stops", _stops())
 
     def _place(e, symbol, close_side, amount, stop_price):
         placed.append((symbol, close_side, amount, stop_price))
@@ -155,7 +161,7 @@ def test_a_covered_position_is_left_alone(monkeypatch):
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))
     monkeypatch.setattr(reconcile.protective, "open_stops",
-                        lambda e: [{"symbol": "BTCUSDT"}])
+                        _stops({"symbol": "BTCUSDT"}))
     monkeypatch.setattr(reconcile.protective, "place_stop",
                         lambda *a, **k: placed.append(a) or "x")
     j = _Journal([_trade("BTC/USDT", 0.5, sl_order_id="algo_1")])

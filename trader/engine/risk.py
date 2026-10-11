@@ -1,13 +1,15 @@
 """RiskManager — the ONLY hard-gate component in Luffy (REQUIREMENTS §10).
 
-Everything else votes or suggests; this enforces capital survival rules:
-- portfolio heat cap (total open risk ≤ 15%)
-- per-symbol risk cap (≤ 8%)
-- max open positions (10)
-- daily loss breaker (−6% blocks NEW entries until UTC midnight)
-- staged de-risk on rolling drawdown (×0.5 @ −8%, ×0.25 @ −12%)
-- full halt at −20% (raises → kernel flips ControlState.HALTED)
-- proving period: first N live trades at ×0.5 size
+Everything else votes or suggests; this enforces capital survival rules. Every
+limit is read from config.yaml `risk:` (see policy_from_config / policy()),
+never from this docstring:
+- portfolio heat cap (total open risk) and per-symbol risk cap
+- max open positions
+- daily loss breaker (blocks NEW entries until UTC midnight)
+- staged de-risk multipliers on rolling drawdown
+- full halt at the configured drawdown (raises RiskError → kernel HALTED)
+- proving period: first N live trades at a reduced size multiplier
+- margin caps per position and in total
 
 Position sizing = risk-based: notional sized so that stop-distance loss
 equals allowed risk, then clamped by caps and min notional.
@@ -814,7 +816,10 @@ class RiskManager:
                     basis='EXISTING_RISK_ENTRY_BASIS_CALCULATIONS')
 
     def _position_risk(self, p: Position, mark: float) -> float:
-        """Open risk ≈ distance to stop × amount × leverage."""
+        """Open risk ≈ notional × fractional distance to stop (= amount × stop distance).
+
+        `mark` is accepted for interface symmetry and is not used: the
+        calculation is entry-basis by design (see portfolio_metrics)."""
         if p.stop_loss <= 0:
             return p.notional_usdt * 0.05     # unprotected fallback estimate
         dist = abs(p.entry_price - p.stop_loss) / p.entry_price

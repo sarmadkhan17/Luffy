@@ -234,7 +234,9 @@ class ObservedExchange:
             unified_symbol=symbol, side=side, requested_quantity=amount, order_type=type,
             phase='pre_submission', event_ms=time.time_ns()//1_000_000,
             environment=environment(self.exchange), decision_id=ctx.get('decision_id'))
-        reference = ctx.get('reference') or {}
+        reference = ctx.get('reference')
+        if not isinstance(reference, dict):
+            reference = {}  # observer must never raise on a malformed context
         ref_ms = reference.get('observed_at')
         if isinstance(ref_ms,str):
             from trader.engine.paper_cost_evidence import ms
@@ -289,7 +291,10 @@ class ObservedExchange:
     def fetch_my_trades(self, symbol=None, *args, **kwargs):
         results=self.exchange.fetch_my_trades(symbol,*args,**kwargs)
         for row in results or []:
-            self.capture.write('venue_fill',dict(environment=environment(self.exchange),symbol=symbol, fill=safe_fill(row)))
+            try:  # observation failure must never alter the caller's result
+                self.capture.write('venue_fill',dict(environment=environment(self.exchange),symbol=symbol, fill=safe_fill(row)))
+            except Exception as exc:
+                self.capture.write('order_fee_unavailable',dict(venue_order_id=None,reason=builtins.type(exc).__name__))
         return results
 
     def cancel_order(self, order_id, symbol=None, *args, **kwargs):

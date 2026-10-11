@@ -15,8 +15,18 @@ guard for thirteen hours while that symbol sat past its entry trigger.
 
 Detection is the fix here. Placing orders is the executor's job and arming a
 stop that the venue will refuse for size is not protection.
+
+(Superseded in part: reconcile now also re-arms from the venue's size — see
+tests/test_naked_position_is_rearmed.py. These cases still guard the
+*detection* contract: `naked` counts, venue spelling, unreadable != protected.)
 """
 from trader.engine import reconcile
+from trader.engine.protective import StopSnapshot
+
+
+def _stops(*rows):
+    """What protective.open_stops returns: rows plus a completeness marker."""
+    return lambda ex, *a, **k: StopSnapshot(list(rows), complete=True)
 
 
 class _Journal:
@@ -51,7 +61,7 @@ def _trade(symbol, amount, sl_order_id=""):
 def test_a_position_with_no_protective_order_is_reported(monkeypatch):
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))
-    monkeypatch.setattr(reconcile.protective, "open_stops", lambda ex: [])
+    monkeypatch.setattr(reconcile.protective, "open_stops", _stops())
     j = _Journal([_trade("UNI/USDT", 1.0)])
     ex = type("E", (), {"fetch_positions": lambda s: [_pos("UNI/USDT", 1.0)]})()
     out = reconcile.reconcile_futures(ex, j)
@@ -61,9 +71,9 @@ def test_a_position_with_no_protective_order_is_reported(monkeypatch):
 def test_a_protected_position_is_not_reported(monkeypatch):
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))
-    monkeypatch.setattr(reconcile.protective, "open_stops", lambda ex: [
+    monkeypatch.setattr(reconcile.protective, "open_stops", _stops(
         {"id": "9", "symbol": "UNIUSDT", "side": "sell", "amount": 1.0,
-         "stop_price": 95.0, "kind": "algo"}])
+         "stop_price": 95.0, "kind": "algo"}))
     j = _Journal([_trade("UNI/USDT", 1.0, sl_order_id="9")])
     ex = type("E", (), {"fetch_positions": lambda s: [_pos("UNI/USDT", 1.0)]})()
     out = reconcile.reconcile_futures(ex, j)
@@ -76,9 +86,9 @@ def test_the_venue_spelling_does_not_hide_a_stop(monkeypatch):
     naked one as fine, depending which way it fails."""
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))
-    monkeypatch.setattr(reconcile.protective, "open_stops", lambda ex: [
+    monkeypatch.setattr(reconcile.protective, "open_stops", _stops(
         {"id": "9", "symbol": "UNIUSDT", "side": "sell", "amount": 1.0,
-         "stop_price": 95.0, "kind": "algo"}])
+         "stop_price": 95.0, "kind": "algo"}))
     j = _Journal([_trade("UNI/USDT", 1.0, sl_order_id="9")])
     ex = type("E", (), {
         "fetch_positions": lambda s: [_pos("UNI/USDT:USDT", 1.0)]})()
@@ -88,7 +98,7 @@ def test_the_venue_spelling_does_not_hide_a_stop(monkeypatch):
 
 def test_a_failure_to_read_stops_is_not_read_as_protection(monkeypatch):
     """If the venue will not say, the answer is unknown — never 'protected'."""
-    def boom(ex):
+    def boom(ex, *a, **k):
         raise RuntimeError("venue down")
     monkeypatch.setattr(reconcile.protective, "sweep_orphans",
                         lambda *a, **k: (0, 0))

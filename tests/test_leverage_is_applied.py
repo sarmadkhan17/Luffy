@@ -1,76 +1,36 @@
 """The leverage the sizing math assumes must be the leverage the venue uses.
 
-`risk.leverage` drove the margin figure (`notional / leverage`) and was
-journalled on every trade, and `set_leverage` was never called. So the venue
-traded at whatever the account happened to be set to, while the sizer
-budgeted margin for 5x. If the venue sat at 1x, every position needed five
-times the margin the risk manager thought it did — and with the position cap
-now at 8 rather than 4, that gap is reachable.
+History: `risk.leverage` drove the margin figure (`notional / leverage`) while
+`set_leverage` was never called, so the venue traded at whatever the account
+happened to be set to. An interim fix applied it per symbol before every
+order (`Executor._ensure_leverage`).
 
-Applied once per symbol and cached: Binance rejects a leverage change while a
-position is open on that symbol, so re-sending it per order is both wasted
-and a source of spurious errors.
+Stage 1 entry authority (commit 8d49c69) replaced *applying* with *verifying*:
+the executor no longer mutates the venue before the final fence, and a
+capability is only usable when the venue's own observed leverage and bracket
+equal the leverage Risk sized for. The two properties below guard that
+contract; the unknown / bracket / stale variants live in
+tests/test_stage1_entry_authority.py and tests/test_risk02_exposure_feasibility.py.
 """
-from trader.engine.executor import Executor
+import pytest
+
+from tests.entry_authority_fixtures import permission
+from tests.test_entry_recovery import setup  # noqa: F401  (real Risk/capability harness)
 
 
-class _Ex:
-    def __init__(self, fail=False):
-        self.calls, self.fail = [], fail
-    def set_leverage(self, lev, symbol, params=None):
-        if self.fail:
-            raise RuntimeError("cannot change leverage with an open position")
-        self.calls.append((lev, symbol))
+def test_entry_never_mutates_venue_leverage(setup):
+    ex, j, e, d = setup
+    calls = []
+    ex.set_leverage = lambda *a, **k: calls.append((a, k))
+    kw = permission(e, d)
+    assert e.open(d, 2., 2., 95., 110., 'strategy', 'strategy', **kw) is not None
+    assert calls == [], "entry must verify leverage, not apply it"
+    assert not hasattr(e, "_ensure_leverage")
 
 
-def _exec(ex, leverage=5):
-    from trader.core.types import MarketType
-    e = object.__new__(Executor)
-    e.ex, e.leverage = ex, leverage
-    e.market_type = MarketType.FUTURES
-    e._leverage_set = set()
-    return e
-
-
-def test_leverage_is_applied_to_the_venue():
-    ex = _Ex()
-    _exec(ex)._ensure_leverage("BTC/USDT")
-    assert ex.calls == [(5, "BTC/USDT")]
-
-
-def test_it_is_sent_once_per_symbol_not_once_per_order():
-    ex = _Ex()
-    e = _exec(ex)
-    for _ in range(4):
-        e._ensure_leverage("BTC/USDT")
-    assert len(ex.calls) == 1
-
-
-def test_each_symbol_gets_its_own_call():
-    ex = _Ex()
-    e = _exec(ex)
-    e._ensure_leverage("BTC/USDT")
-    e._ensure_leverage("ETH/USDT")
-    assert sorted(s for _, s in ex.calls) == ["BTC/USDT", "ETH/USDT"]
-
-
-def test_a_rejected_change_does_not_block_the_order():
-    """Binance refuses a leverage change while a position is open on that
-    symbol. That is expected, not a reason to skip the trade."""
-    e = _exec(_Ex(fail=True))
-    e._ensure_leverage("BTC/USDT")          # must not raise
-
-
-def test_a_rejection_is_not_cached_as_success():
-    ex = _Ex(fail=True)
-    e = _exec(ex)
-    e._ensure_leverage("BTC/USDT")
-    ex.fail = False
-    e._ensure_leverage("BTC/USDT")
-    assert ex.calls == [(5, "BTC/USDT")], "a failed apply must be retried later"
-
-
-def test_an_exchange_without_set_leverage_is_tolerated():
-    class _Bare:
-        pass
-    _exec(_Bare())._ensure_leverage("BTC/USDT")     # must not raise
+def test_sizing_leverage_must_equal_the_venue_observation(setup):
+    ex, j, e, d = setup
+    e.risk_manager.leverage += 1     # Risk would now size for a leverage the venue does not hold
+    with pytest.raises(ValueError, match="leverage_unverified"):
+        permission(e, d)
+    assert not ex.sent, "no order may be sent against unverified leverage"

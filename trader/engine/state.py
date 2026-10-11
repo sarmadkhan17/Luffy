@@ -91,6 +91,12 @@ class ControlStateMachine:
         if entry_refusal(self.journal, probe=True):
             return False
         self.refresh()
+        # refresh() keeps the last in-memory state when the persisted value is
+        # unreadable. The persisted value is the authority and an unreadable
+        # one means entries blocked (control_fence.persisted_state, which the
+        # Executor's final fence also uses) — never the stale in-memory state.
+        if persisted_state(self.journal) is None:
+            return False
         return self.state == ControlState.ACTIVE
 
     def manages_exits(self) -> bool:

@@ -196,3 +196,16 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     # MacroGuard neither freezes nor auto-resumes out of RECOVERY.
     assert j.kv["control_state"] == "RECOVERY"
     assert k.heartbeat.beat.call_args.args[0]["state"] == "RECOVERY"
+
+
+def test_can_enter_fails_closed_on_an_invalid_persisted_state(journal):
+    """control_fence.persisted_state() treats an unreadable persisted state as
+    "entries blocked" (and the Executor fence honours it). The scan-level gate
+    must agree instead of falling back to the stale in-memory ACTIVE."""
+    sm = ControlStateMachine(journal)
+    assert sm.can_enter()
+    journal.kv_set("control_state", "NOT_A_STATE")      # corrupt / foreign write
+    assert sm.can_enter() is False
+    assert sm.manages_exits()                            # exits are unaffected
+    journal.kv_set("control_state", "ACTIVE")            # repaired
+    assert sm.can_enter() is True

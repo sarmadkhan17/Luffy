@@ -27,6 +27,12 @@ def _df(n=300, drift=0.0006, seed=3, vol_lo=True):
 class JFake:
     def agent_accuracy(self, since_hours=0):
         return []
+    def kv_get(self, key, default=None):
+        # Orchestrator reads its frozen accuracy multipliers from kv
+        return default
+    def query(self, *a, **k):
+        # learning targets probe sqlite_master; an empty answer = no table
+        return []
     def log_cycle(self, *a, **k): pass
     def log_votes(self, *a, **k): pass
     def log_decision(self, *a, **k): pass

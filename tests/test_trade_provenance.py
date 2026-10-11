@@ -17,6 +17,8 @@ from trader.engine import trade_provenance as TP
 from trader.engine.executor import Executor
 from trader.engine.reconcile import reconcile_futures
 from trader.strategy.compile import compile_spec
+from trader.engine.entry_authority import proposal_binding
+from tests.entry_authority_fixtures import bind
 from tests.test_spec import _valid
 
 SYM = "BTC/USDT"
@@ -81,13 +83,32 @@ def env(tmp_path, monkeypatch):
     j.upsert_spec(_valid())
     grant(j, "seed_test")  # TEST-ONLY exact historical owner authority
     ex = Venue()
-    e = Executor(ex, j, load_config(), MarketType.FUTURES)
-    e.fill_retry_s = 0
+    e = executor_for(j, ex)
     return ex, j, e
+
+
+def executor_for(j, ex):
+    """An Executor wired as in production: exact capability bound through the
+    production registry/Risk contracts (TEST-ONLY observations), so entries are
+    admitted only by a Risk-issued permission."""
+    cfg = load_config()
+    risk, _ = bind(j, ex, cfg)
+    e = Executor(ex, j, cfg, MarketType.FUTURES, risk_manager=risk)
+    e.fill_retry_s = 0
+    return e
+
+
+def admit(e, d, amount=2.0, atr=1.0, stop=95.0, target=110.0, sid="seed_test",
+          identity=None, reference=None):
+    """Final Risk permission for exactly the action the test is about to open."""
+    return dict(risk_permission=e.risk_manager.authorize_entry(
+        d, amount, atr, stop, target, sid, identity=identity,
+        reference=REF if reference is None else reference))
 
 
 def decision(j, did="d1", symbol=SYM, action=Action.BUY):
     d = Decision(did, "c" + did, symbol, action, 1.0, .5, .8, [], [])
+    d.instrument_binding_json = proposal_binding(j, symbol)
     with j._tx() as db:
         db.execute("INSERT OR IGNORE INTO cycles(id,ts,symbol) VALUES (?,?,?)",
                    ("c" + did, "2026-09-30T00:00:00+00:00", symbol))
@@ -118,7 +139,8 @@ def open_trade(env, did="d1", identity=None, reference=REF):
     if identity is None:
         identity, _ = spec_identity(d)
     pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "seed_test", "Funding Exhaustion Fade",
-                 entry_identity=identity, reference=reference)
+                 entry_identity=identity, reference=reference,
+                 **admit(e, d, identity=identity, reference=reference))
     assert pos is not None
     return pos
 
@@ -456,16 +478,22 @@ def test_recovered_entry_keeps_identity_and_order_identity(tmp_path, monkeypatch
     from tests.authority_legacy_fixtures import grant
     j.upsert_spec(_valid())
     grant(j, "seed_test")
-    d = decision(j)
     ex = RecoveryVenue()
-    e = Executor(ex, j, load_config(), MarketType.FUTURES)
+    e = executor_for(j, ex)
+    d = decision(j)
     ident, _ = spec_identity(d)
     ex.entry_error = RequestTimeout("accepted, response lost")
-    assert e.open(d, 2., 2., 95., 110., "seed_test", "s", entry_identity=ident) is None
+    ref = dict(price=100.)
+    assert e.open(d, 2., 2., 95., 110., "seed_test", "s", entry_identity=ident, reference=ref,
+                  **admit(e, d, atr=2., identity=ident, reference=ref)) is None
     e.recover_entries()
     e.recover_entries()
     t = j.open_trades()[0]
-    assert json.loads(t["entry_identity_json"]) == ident
+    stored = json.loads(t["entry_identity_json"])
+    # the entry boundary adds its exact execution binding; the rest is the
+    # identity the caller supplied, unchanged
+    assert stored.pop("execution_binding")["logical_id"]
+    assert stored == ident
     leg = prov(j, t["id"])["legs"][0]
     assert leg["purpose"] == "recovered_entry" and leg["order"]["venue_order_id"] == "entry"
     assert leg["order"]["client_order_id"].startswith("lr_")
@@ -476,16 +504,16 @@ def test_recovered_entry_keeps_identity_and_order_identity(tmp_path, monkeypatch
 def test_provenance_does_not_change_what_is_sent(tmp_path, monkeypatch):
     monkeypatch.setattr("trader.engine.executor.time.sleep", lambda _: None)
     sent = []
-    for n, kwargs in enumerate([{}, {"entry_identity": {"status": "VERIFIED"},
-                                     "reference": REF}]):
+    for n, kwargs in enumerate([{"reference": REF},
+                                {"entry_identity": {"status": "VERIFIED"}, "reference": REF}]):
         j = Journal(tmp_path / f"j{n}.db")
         from tests.authority_legacy_fixtures import seed
         seed(j, "s")
         ex = Venue()
-        e = Executor(ex, j, load_config(), MarketType.FUTURES)
-        e.fill_retry_s = 0
+        e = executor_for(j, ex)
         d = decision(j)
-        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "s", "s", **kwargs)
+        pos = e.open(d, 2.0, 1.0, 95.0, 110.0, "s", "s", **kwargs,
+                     **admit(e, d, sid="s", identity=kwargs.get("entry_identity")))
         e.close_partial(row(j, pos.id), 1.0, 104.0)
         e.close(row(j, pos.id), 105.0)
         sent.append([(s, t, side, amt, {k: v for k, v in p.items() if k != "newClientOrderId"})
@@ -582,8 +610,9 @@ def test_kernel_population_identity_matches_the_evaluator_that_signalled(tmp_pat
     assert reference == {"price": 101.0, "basis": "decision_snapshot_price",
                          "definition": reference["definition"],
                          "snapshot_at": "2026-09-30T00:00:00+00:00",
-                         "observed_at": "2026-09-30T00:00:00+00:00",
                          "bar_ts": "2026-09-29T23:45:00"}
+    # entries carry the snapshot time as `snapshot_at`; `observed_at` is the
+    # exit-path key and execution_evidence falls back to snapshot_at for entries
     # the registry changes and the population reloads: the old signal no longer verifies
     mutated = _valid()
     mutated.filters = ["adx(14) < 30"]
