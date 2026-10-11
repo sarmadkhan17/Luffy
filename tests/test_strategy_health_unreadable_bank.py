@@ -39,6 +39,12 @@ from trader.strategy import health_observation as ho
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "37f9473"                         # HEAD this package was cut from
+# Sol1's independently verified read-only evidence-function repair is the
+# accepted baseline for this one reader. All other historical pins stay at BASE.
+BASE_OVERRIDES = {
+    "trader/cognition/research_bank_view.py":
+        "1338cab44659eefb3084c1a1795d053c1aa7d5ce",
+}
 TABLE = "research_unreadable_bank_objects"
 OBJ_TABLES = ("research_unreadable_questions", "research_unreadable_plans",
               "research_unreadable_evidence", "research_unreadable_results")
@@ -740,7 +746,8 @@ def test_source_registry_bytes_and_hash_unchanged(tmp_path):
 
 
 def _at_base(path):
-    blob = subprocess.run(["git", "-C", str(ROOT), "show", f"{BASE}:{path}"],
+    baseline = BASE_OVERRIDES.get(path, BASE)
+    blob = subprocess.run(["git", "-C", str(ROOT), "show", f"{baseline}:{path}"],
                           capture_output=True, text=True)
     if blob.returncode != 0:
         pytest.skip("baseline commit not available")
@@ -857,6 +864,7 @@ def test_nothing_calls_the_new_module():
                        # (from_json / row_for only) during recovery
                        "cognition/research_shadow.py",
                        "cognition/research_shadow_report.py",
+                       "cognition/research_shadow_store.py",  # isolated capture hook
                        "cognition/research_unreadable_recall.py",
                        "core/journal.py",
                        "learning/capture.py",

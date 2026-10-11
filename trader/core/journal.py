@@ -1685,15 +1685,20 @@ class Journal:
         An insert writes its research-registration.v1 receipt in the same
         transaction; a duplicate or conflict never registers. Nothing is
         written unless "inserted"."""
-        from ..learning import capture as lc, capture_runtime as lr
         return self._record_registered(
             "research_unreadable_bank_objects", self._UNREADABLE_BANK_COLUMNS,
             "bank_object_id",
             "bank_object_id=? OR (run_id=? AND result_id=?)",
             (row["bank_object_id"], row["run_id"], row["result_id"]),
             row, recorded_at_ms,
-            on_insert=lambda c: lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank,
-                row, recorded_at_ms, self, unreadable=True))
+            on_insert=lambda c: self._capture_research_unreadable_bank(
+                c, row, recorded_at_ms))
+
+    def _capture_research_unreadable_bank(self, conn, row, recorded_at_ms):
+        """Regular Journal capture; isolated research stores override this hook."""
+        from ..learning import capture as lc, capture_runtime as lr
+        lc.safely(conn, 'research-bank:'+row['bank_object_id'], lr.research_bank,
+                  row, recorded_at_ms, self, unreadable=True)
 
     def research_unreadable_bank_objects(self, run_id: str | None = None
                                          ) -> list[dict]:

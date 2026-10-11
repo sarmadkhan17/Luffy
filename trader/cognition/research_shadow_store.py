@@ -299,6 +299,10 @@ class ShadowJournal(Journal):
         # Keep Bank persistence/registration; do not import forbidden consumers.
         return None
 
+    def _capture_research_unreadable_bank(self, conn, row, recorded_at_ms):
+        # The unreadable family has the same research-only storage boundary.
+        return None
+
     def _conn(self) -> sqlite3.Connection:
         if threading.get_ident() != self._owner:
             raise ShadowStoreError("shadow_journal_single_thread")
