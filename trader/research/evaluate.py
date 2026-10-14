@@ -21,6 +21,7 @@ path here can read a bar the search is not entitled to.
 from __future__ import annotations
 
 import logging
+import sqlite3
 import statistics as st
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -73,6 +74,20 @@ class Bundle:
     # series, BEFORE the cut: how much history exists, not how much the
     # slice holds. `derivs` is already cut, so it cannot say that.
     first_obs: dict = field(default_factory=dict)
+    # Why each requested symbol is absent from `frames` — diagnostic only.
+    # {symbol: {"reason": ..., ...}}; nothing here feeds an evaluation.
+    requested: tuple = ()
+    dropped: dict = field(default_factory=dict)
+
+
+def is_transient_read_error(exc: BaseException) -> bool:
+    """A store read that failed because the store was busy, not because the
+    history is absent: a retry can succeed, so it must never be counted as a
+    permanent missing-history verdict."""
+    if not isinstance(exc, sqlite3.OperationalError):
+        return False
+    msg = str(exc).lower()
+    return any(k in msg for k in ("locked", "busy", "disk i/o"))
 
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),
@@ -91,14 +106,21 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     # fetch inside a niced child would be invisible.
     feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
     full = {}
+    dropped = {}
     for sym in symbols:
         try:
             df = feed.cached_ohlcv(sym, tf, limit=200000)
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research load {sym} {tf}: {e}")
+            dropped[sym] = {"reason": "read_error",
+                            "transient": is_transient_read_error(e),
+                            "error": f"{type(e).__name__}: {e}"[:200]}
             continue
         if df is not None and len(df) >= 500:
             full[sym] = df
+        else:
+            dropped[sym] = {"reason": "short_history",
+                            "bars": 0 if df is None else int(len(df))}
 
     split = (cfg.get('research') or {}).get('predictive_split')
     if split:
@@ -108,6 +130,10 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     if cap_ms:      # a spent held-out look read bars from here on
         cut = min(cut, int(cap_ms))
     disc = slices.discovery(full, cut)
+    for sym, df in full.items():
+        if sym not in disc:
+            dropped[sym] = {"reason": "short_before_cut",
+                            "bars": int(len(slices.before(df, cut)))}
 
     # held-out BAR COUNTS only — never their prices. The projection needs to
     # know how much room a rule would have to fire in, which is metadata.
@@ -129,6 +155,8 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
             sym_frames[sym] = spec_evidence.frames_for(df, tf)
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research frames_for {sym} {tf}: {e}")
+            dropped[sym] = {"reason": "frames_error",
+                            "error": f"{type(e).__name__}: {e}"[:200]}
     disc = {s: d for s, d in disc.items() if s in sym_frames}
 
     derivs = {}
@@ -169,7 +197,8 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         equity=float(cfg.get("research", {}).get("equity", 2000.0)),
         risk_pct=float(rcfg.get("risk_per_trade_pct", 0.5)),
         max_open=int(rcfg.get("max_open_trades", 8)),
-        world=load_world(paths, requires, cut), first_obs=first_obs)
+        world=load_world(paths, requires, cut), first_obs=first_obs,
+        requested=tuple(symbols), dropped=dropped)
 
 
 def load_world(paths, requires, cut=None):

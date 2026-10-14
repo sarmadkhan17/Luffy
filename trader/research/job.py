@@ -62,6 +62,53 @@ def _coverage(b, requires) -> dict:
     return out
 
 
+#: how a bundle was judged against the symbol floor the runner passed in
+ADMITTED = "admitted"
+INSUFFICIENT_REPLAY_HISTORY = "insufficient_replay_history"
+INSUFFICIENT_SYMBOL_COVERAGE = "insufficient_symbol_coverage"
+TRANSIENT_READ_FAILURE = "transient_read_failure"
+READ_ERROR = "read_error"
+
+
+def admit_bundle(b, floor: int) -> dict:
+    """Judge a loaded bundle against `floor`, before anything is scored.
+
+    Pure: reads only what `load_bundle` already holds. The verdict is a
+    diagnosis, never a different number of symbols — `loaded_symbols` is the
+    bundle's own count, exactly what the runner's guard has always read.
+
+    - `transient_read_failure`: store reads failed with a busy/locked error
+      and, had they succeeded, the floor would have been met. Retry-able.
+    - `read_error`: the same, but the failures are not busy/locked errors.
+    - `insufficient_symbol_coverage`: fewer symbols were requested than the
+      floor, or some loaded but not enough.
+    - `insufficient_replay_history`: the request was large enough and not one
+      symbol held replay-eligible history before the cut.
+    """
+    loaded, requested = len(b.frames), len(b.requested or b.frames)
+    floor = int(floor)
+    dropped = dict(getattr(b, "dropped", None) or {})
+    transient = sorted(s for s, d in dropped.items()
+                       if d.get("reason") == "read_error" and d.get("transient"))
+    errored = sorted(s for s, d in dropped.items()
+                     if d.get("reason") == "read_error"
+                     and not d.get("transient"))
+    if loaded >= floor:
+        reason = ADMITTED
+    elif transient and loaded + len(transient) >= floor:
+        reason = TRANSIENT_READ_FAILURE
+    elif errored and loaded + len(transient) + len(errored) >= floor:
+        reason = READ_ERROR
+    elif requested < floor or loaded > 0:
+        reason = INSUFFICIENT_SYMBOL_COVERAGE
+    else:
+        reason = INSUFFICIENT_REPLAY_HISTORY
+    return {"admitted": reason == ADMITTED, "reason": reason,
+            "loaded_symbols": loaded, "requested_symbols": requested,
+            "required_symbols": floor, "tf": b.tf, "cut_ms": int(b.cut),
+            "transient_symbols": transient, "dropped": dropped}
+
+
 def measure_job(payload: dict) -> dict:
     """Percentiles for every gauge, and how much of the slice it exists on."""
     t0 = time.monotonic()
@@ -108,6 +155,16 @@ def evaluate_job(payload: dict) -> dict:
                            payload.get("heldout_symbols") or ()),
                        paths=payload.get("paths"),
                        cap_ms=payload.get("spent_cut_ms"))
+    admission = None
+    if payload.get("min_symbols") is not None:
+        admission = admit_bundle(b, payload["min_symbols"])
+        if not admission["admitted"]:
+            # Refuse BEFORE any combination is scored: the runner would
+            # discard the whole batch on this same count anyway.
+            return {"results": [], "done": 0, "skipped": 0,
+                    "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),
+                    "coverage": {}, "admission": admission,
+                    "elapsed_s": round(time.monotonic() - t0, 2)}
     results, skipped = [], 0
     for c in combos:
         if time.monotonic() - t0 >= soft:
@@ -133,10 +190,13 @@ def evaluate_job(payload: dict) -> dict:
                             "portfolio": {"accounting": accounting_provenance(
                                 b.equity, b.risk_pct, b.max_open, RESEARCH_CLOCK)},
                             "error": f"{type(exc).__name__}: {exc}"[:300]})
-    return {"results": results, "done": len(results), "skipped": skipped,
-            "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),
-            "coverage": _coverage(b, payload.get("requires") or ()),
-            "elapsed_s": round(time.monotonic() - t0, 2)}
+    out = {"results": results, "done": len(results), "skipped": skipped,
+           "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),
+           "coverage": _coverage(b, payload.get("requires") or ()),
+           "elapsed_s": round(time.monotonic() - t0, 2)}
+    if admission is not None:
+        out["admission"] = admission
+    return out
 
 
 def select_job(payload: dict) -> dict:

@@ -225,7 +225,18 @@ class ResearchRunner:
         for c in batch.combos:
             reqs.update(c.requires)
         timeout = float(self._r("batch_seconds"))
+        # The applicable floor is decided HERE and handed to the child so it
+        # can refuse a bundle it cannot fill before scoring anything. A
+        # control still answers to the control floor, never the discovery
+        # one (see the comment at the guard below).
+        if batch.round == "control":
+            floor_key, min_syms = ("MIN_CONTROL_SYMBOLS",
+                                   control.MIN_CONTROL_SYMBOLS)
+        else:
+            floor_key = "min_discovery_symbols"
+            min_syms = int(self._r("min_discovery_symbols"))
         payload = {"tf": batch.tf, "geo": batch.geo, "symbols": symbols,
+                   "min_symbols": min_syms,
                    "heldout_symbols": held, "requires": sorted(reqs),
                    "combos": [c.as_dict() for c in batch.combos],
                    "cfg": self.cfg, "paths": self._paths(),
@@ -260,23 +271,20 @@ class ResearchRunner:
         # never load more than 15 here — under the discovery floor this
         # refused every control batch forever (273 of 335 on 2026-09-14).
         loaded = (res.value or {}).get("loaded_symbols")
-        if batch.round == "control":
-            floor_key, min_syms = ("MIN_CONTROL_SYMBOLS",
-                                   control.MIN_CONTROL_SYMBOLS)
-        else:
-            floor_key = "min_discovery_symbols"
-            min_syms = int(self._r("min_discovery_symbols"))
         if loaded is not None and int(loaded) < min_syms:
             msg = (f"bundle loaded only {loaded} of {len(symbols)} "
                    f"requested symbols, below {floor_key}="
                    f"{min_syms} — refusing rather than searching a "
                    f"degraded universe")
+            adm = (res.value or {}).get("admission")
+            if adm:
+                msg += f" [{adm.get('reason')}]"
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, msg)
             log.warning(f"research batch {batch.tf}/{batch.geo}/"
                         f"{batch.round}: {msg}")
             return {"kind": "evaluate", "tf": batch.tf, "geo": batch.geo,
                     "round": batch.round, "ok": False, "skipped": None,
-                    "error": msg}
+                    "error": msg, "admission": adm}
 
         by_hash = {c.hash: c for c in batch.combos}
         recorded = 0
