@@ -116,6 +116,29 @@ def test_changed_source_policy_and_risk_expansion_refused(prepared):
     assert not F.governor_events(j,json.loads(p.current_json)['version_id'])
 
 
+def test_strategy_package_cleanup_keeps_history_and_refuses_old_identity(prepared, monkeypatch):
+    j, cfg, ev, proposal, req, ms = prepared
+    historical_json = ev.historical_json
+    original_manifest = L.code_manifest()
+    assert json.loads(historical_json)['outcome']['code_manifest'] == original_manifest
+    changed_manifest = deepcopy(original_manifest)
+    changed_manifest['files']['trader/strategy/evidence.py'] = L.digest('retired Genome gates')
+    assert changed_manifest != original_manifest
+    monkeypatch.setattr(L, 'code_manifest', lambda: changed_manifest)
+
+    assert L.verified_history(ev)
+    refreshed = L.propose(ev, L.Target.LIFECYCLE, json.loads(proposal.current_json), rule=L.DECAY_RULE)
+    assert refreshed.status == L.Status.STALE
+    assert refreshed.proposed_json is None
+    assert 'historical evaluator unavailable' in refreshed.reason
+    before = '\n'.join(j.conn.iterdump())
+    receipt = A.apply(j, cfg, ev, proposal, req, at_ms=ms, shadow=True)
+    assert receipt['result'] == 'STALE'
+    assert receipt['reason'] == 'exact registered evaluator version differs'
+    assert '\n'.join(j.conn.iterdump()) == before
+    assert ev.historical_json == historical_json
+
+
 @pytest.mark.parametrize('forbidden', ['RISK_LIMITS','CATASTROPHE_BOUNDARY','LEVERAGE_POLICY','CONTROL_STATE','CAPACITY','STRATEGY_SPEC'])
 def test_forbidden_targets_cannot_apply(prepared,forbidden):
     j,cfg,e,p,r,ms=prepared
