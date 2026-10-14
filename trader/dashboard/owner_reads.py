@@ -544,7 +544,8 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
     if not _table_exists(journal, "research_combos"):
         out.update(available=False, partial=True,
                    reason="quantitative research ledger tables are absent",
-                   unavailable=[_unavailable('results', 'quantitative result store is unavailable')])
+                   unavailable=[_unavailable('questions', 'research-question chains were retired (RP-04); no question store is read'),
+                                _unavailable('results', 'quantitative result store is unavailable')])
         return out
     out["available"] = True
     out["counts"] = {
@@ -589,6 +590,7 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
                                           "ORDER BY seq DESC LIMIT ?", (limit,))
     out["ideas"] = assessed_ideas(journal, limit=min(limit, 50))
     out["unavailable"] = [
+        _unavailable("questions", "research-question chains were retired (RP-04); no question store is read"),
         _unavailable("plans", "frozen protocols are not persisted as records the API can read"),
         _unavailable("costs", "no attributed research cost records; missing is not zero"),
         _unavailable("shadow_reports", "no shadow-report store"),
