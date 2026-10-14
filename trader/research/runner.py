@@ -70,7 +70,9 @@ class ResearchRunner:
             if (cfg.get('research') or {}).get('predictive_split') != predictive_experiment['split']:
                 raise ValueError('experiment_split_binding')
         retrospective = (cfg.get("research") or {}).get("retrospective")
-        if retrospective and ((cfg.get("research") or {}).get("referee", True)
+        if retrospective is not None and (not isinstance(retrospective, dict) or not retrospective):
+            raise ValueError('explicit retrospective research requires a nonempty dataset contract')
+        if retrospective is not None and ((cfg.get("research") or {}).get("referee", True)
                               or (cfg.get("research") or {}).get("handoff", False)):
             raise ValueError("retrospective_discovery_requires_referee_and_handoff_disabled")
         if retrospective:

@@ -108,7 +108,9 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     # accidental use of it raises instead of quietly fetching — a silent
     # fetch inside a niced child would be invisible.
     retrospective = (cfg.get("research") or {}).get("retrospective")
-    if retrospective:
+    if retrospective is not None:
+        if not isinstance(retrospective, dict) or not retrospective:
+            raise ValueError('explicit retrospective research requires a nonempty dataset contract')
         return _retrospective_bundle(tf, symbols, cfg, requires,
                                      heldout_symbols, paths, cap_ms)
     feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))

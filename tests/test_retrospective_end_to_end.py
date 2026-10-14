@@ -109,3 +109,11 @@ def test_protected_symbol_cannot_be_relabelled_as_discovery(historical):
     with pytest.raises(ValueError, match='protected_symbol_refused'):
         evaluate.load_bundle('4h', ['S16/USDT'], cfg, heldout_symbols=['S16/USDT'],
                              paths={'candles': str(candles)})
+
+
+def test_empty_explicit_contract_refuses_before_any_store_access(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError('invalid explicit research contract opened a store')
+    monkeypatch.setattr(DataFeed, '__init__', forbidden)
+    with pytest.raises(ValueError, match='nonempty dataset contract'):
+        evaluate.load_bundle('4h', ['BTC/USDT'], {'research': {'retrospective': {}}})
