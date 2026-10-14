@@ -164,9 +164,9 @@ def translate(h, candles_path, cfg, as_of_ms):
 def statistical_identity(experiment):
     """What an experiment statistically asks, free of how it was named.
 
-    Excludes hypothesis/source ids, generation clock, mechanism text and code or
-    data fingerprints, so regeneration, renaming or a retry of the same
-    expression over the same registered split and policy is the same question.
+    Excludes hypothesis/source ids, generation clock and mechanism text, so
+    regeneration, renaming or a retry of the same expression over the same
+    registered split, policy, data cut and implementation is the same question.
     """
     s = experiment['split']
     return P.digest(dict(predictor=sorted(experiment['predictor']), target=experiment['target'],
@@ -174,7 +174,11 @@ def statistical_identity(experiment):
         timeframe=experiment['timeframe'], geometry=experiment['geometry'],
         split={k: s[k] for k in ('start_ms', 'cut_ms', 'end_ms', 'fraction', 'discovery_symbols', 'heldout_symbols')},
         baseline_null=experiment['baseline_null'], metrics=experiment['metrics'],
-        minimum_evidence=experiment['minimum_evidence']))
+        minimum_evidence=experiment['minimum_evidence'],
+        # A revised dataset or implementation is a different experiment: a
+        # duplicate refusal must never stand in for evidence it did not produce.
+        data=(experiment.get('data_provenance') or {}).get('content_id'),
+        implementation=experiment.get('evaluation_version')))
 
 
 def validate(experiment):

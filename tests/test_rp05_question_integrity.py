@@ -123,3 +123,48 @@ def test_statistical_identity_ignores_naming_but_not_the_question(population):
     c = deepcopy(a)
     c['minimum_evidence']['min_discovery_symbols'] += 1
     assert E.statistical_identity(c) != E.statistical_identity(a)
+
+
+def test_revised_dataset_or_implementation_is_not_a_duplicate(population):
+    source, bank, candles, created, later, s = population
+    a = E.translate(P.propose(s, 'volume_breakout_context.v1', created), candles, CFG, later)
+    base = E.statistical_identity(a)
+    c = deepcopy(a)
+    c['data_provenance']['content_id'] = 'f' * 64
+    assert E.statistical_identity(c) != base
+    c = deepcopy(a)
+    c['evaluation_version']['evaluate'] = 'f' * 64
+    assert E.statistical_identity(c) != base
+
+
+def test_duplicate_refusal_carries_no_evidence_and_not_across_implementation(population, monkeypatch):
+    source, bank, candles, created, later, s = population
+    fake = NumericalFixture('UNSUPPORTED')
+    consume(population, fake, created, submit=False)
+    first = P.hypothesis_from_dict(saved(bank, 'bridge_hypotheses')[0]['hypothesis'])
+    for _ in range(8):
+        consume(population, fake, later)
+    assert any(r['hypothesis_id'] == first.hypothesis_id and r['experiment_id']
+               for r in saved(bank, 'bridge_bank_results'))
+    looks = [n for n, _ in fake.calls].count('referee_job')
+    # same implementation -> duplicate: a refusal that copies no measurement
+    h2 = _twin(population, created)
+    with B.store(bank) as db:
+        with db:
+            B.append(db, 'bridge_hypotheses', h2.hypothesis_id,
+                     dict(hypothesis=asdict(h2), novelty='RELATED_PRIOR', related_prior=[]))
+    for _ in range(3):
+        consume(population, fake, later)
+    dup = next(r for r in saved(bank, 'bridge_bank_results') if r['hypothesis_id'] == h2.hypothesis_id)
+    assert dup['referee_disposition']['state'] == 'DUPLICATE_EXPERIMENT_IDENTITY'
+    assert dup['measured_result'] is None and dup['quantitative_evidence'] is None
+    assert dup['measurement_id'] is None and dup['experiment_id'] is None
+    assert [n for n, _ in fake.calls].count('referee_job') == looks
+    # revised implementation -> a distinct experiment, never refused as a duplicate
+    h3 = P.propose(P.replace_source_prior(s, '[{"note":"rp05-impl"}]'), 'volume_breakout_context.v1', created)
+    real = E.evaluation_version
+    monkeypatch.setattr(E, 'evaluation_version', lambda: dict(real(), evaluate='e' * 64))
+    ex3 = E.translate(h3, candles, CFG, later)
+    assert ex3['status'] == 'READY'
+    ex1 = saved(bank, 'bridge_experiments')[0]
+    assert E.statistical_identity(ex3) != E.statistical_identity(ex1)
