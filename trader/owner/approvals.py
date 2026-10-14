@@ -19,6 +19,17 @@ SOURCES = {
 }
 
 
+#: Source kinds that existed historically and were retired with their stores.
+#: An approval that binds one keeps its identity and evidence untouched; the
+#: binding can no longer be read, so the item reports a retired (not valid,
+#: not approvable) source instead of failing with an unhandled KeyError.
+RETIRED_SOURCES = {'research_bank': 'research_bank_chains_retired_rp04'}
+
+
+class RetiredSource(ValueError):
+    """The binding names a source kind that was retired."""
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False,
                       allow_nan=False)
@@ -54,6 +65,10 @@ def source(journal, kind, identity):
         if not path.is_file():
             return None
         return dict(path=identity, content_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    if kind in RETIRED_SOURCES:
+        raise RetiredSource('retired_source:' + kind)
+    if kind not in SOURCES:
+        raise ValueError('unregistered_source_kind')
     table, key, col = SOURCES[kind]
     if kind == 'context' and not identity.startswith('owner_proposal_context:'):
         raise ValueError('unregistered_context')
@@ -126,6 +141,8 @@ def validity(journal, cfg, item, now_ms):
             value = source(journal, b['kind'], b['identity'])
             if value is None or digest(value) != b['sha256']:
                 reasons.append('source_missing_or_changed:' + b['identity'])
+        except RetiredSource:
+            reasons.append('source_retired:%s:%s' % (b.get('kind'), b.get('identity')))
         except (ValueError, KeyError, TypeError):
             reasons.append('source_unreadable:' + str(b.get('identity')))
     newer = journal.query('SELECT payload FROM owner_approval_items WHERE item_id!=?', (item['item_id'],))
