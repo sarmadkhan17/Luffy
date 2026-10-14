@@ -22,7 +22,8 @@ import json
 import logging
 
 from ..core.types import now_utc
-from ..strategy.portfolio_evidence import require_compatible_accounting
+from ..strategy.portfolio_evidence import (is_current_accounting,
+                                         require_compatible_accounting)
 
 log = logging.getLogger(__name__)
 
@@ -360,6 +361,59 @@ class Ledger:
         rows = self.journal.query(
             "SELECT COUNT(*) AS n FROM research_combos WHERE tf=?", (tf,))
         return int(rows[0]["n"]) if rows else 0
+
+    def _referenced_hashes(self, c) -> set:
+        """Combo hashes that a spent look or a referee decision points at.
+
+        Those rows are statistical history's anchor; they are never
+        discarded, only archived by `archive_horizon` as before."""
+        out = set()
+        for sql in ("SELECT hash FROM research_tests",
+                    "SELECT hash FROM research_candidates",
+                    "SELECT twin_of FROM research_candidates"):
+            out.update(r[0] for r in c.execute(sql).fetchall() if r[0])
+        return out
+
+    def legacy_accounting_rows(self, c, tf: str | None = None) -> tuple:
+        """(discardable hashes, retained-because-referenced hashes) among the
+        combos whose portfolio numbers lack the current accounting contract.
+
+        Their per-symbol evidence is not rewritten in place: the corrected
+        and legacy results of one hash must never mix, so the row is
+        recomputed by the planner under `portfolio-exit-realized.v1`."""
+        ref = self._referenced_hashes(c)
+        sql, args = "SELECT hash, result FROM research_combos", ()
+        if tf is not None:
+            sql, args = sql + " WHERE tf=?", (tf,)
+        drop, held = [], []
+        for h, res in c.execute(sql, args).fetchall():
+            try:
+                pf = (json.loads(res or "{}") or {}).get("portfolio") or {}
+            except ValueError:
+                pf = {}
+            if is_current_accounting(pf):
+                continue
+            (held if h in ref else drop).append(h)
+        return drop, held
+
+    def discard_legacy_accounting(self, tf: str | None = None,
+                                  apply: bool = False) -> dict:
+        """Remove combos scored under the legacy entry-booked portfolio model.
+
+        Deletes only `research_combos` rows that (a) lack current accounting
+        and (b) no spent look or candidate references. Gauges, slices, the
+        registered budget, tests, candidates, controls and batches are not
+        touched, so hashes keep their thresholds, the held-out cut stays
+        frozen and the look sequence continues. Nothing is archived: the
+        discarded numbers are invalid, not superseded. Without `apply` it
+        only reports."""
+        with self.journal._tx() as c:
+            drop, held = self.legacy_accounting_rows(c, tf)
+            if apply:
+                c.executemany("DELETE FROM research_combos WHERE hash=?",
+                              [(h,) for h in drop])
+        return {"discarded" if apply else "would_discard": len(drop),
+                "retained_referenced": len(held), "applied": bool(apply)}
 
     def archive_horizon(self, tf: str, vintage: str) -> dict:
         """Move every `research_combos`/`research_controls` row for `tf`

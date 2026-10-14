@@ -10,6 +10,7 @@ These tests never touch `data/luffy.db`: `_journal` is monkeypatched to a
 `tmp_path` database, and `ResearchRunner.step` is monkeypatched so no real
 search work runs.
 """
+import json
 import sys
 
 from trader.core.journal import Journal
@@ -85,14 +86,24 @@ def test_measure_refuses_a_horizon_that_already_holds_scored_combos(
 
 
 def test_measure_rekey_archives_then_proceeds(monkeypatch, tmp_path, capsys):
+    """A legacy-accounting row is invalid, not superseded: `--rekey` drops
+    it unarchived. A row under current accounting is archived as before."""
     _use_tmp_journal(monkeypatch, tmp_path)
     j = cli._journal()
     from trader.research.ledger import Ledger
+    from trader.strategy.portfolio_evidence import (accounting_provenance,
+                                                    RESEARCH_CLOCK)
     led = Ledger(j)
     led.ensure()
     led.record_result(
-        {"hash": "a", "tf": "4h", "geo": "trail", "k": 1,
+        {"hash": "legacy", "tf": "4h", "geo": "trail", "k": 1,
          "consistency_p": 0.01, "portfolio": {"total_pct": 10.0}},
+        "grow", "carries information", {})
+    led.record_result(
+        {"hash": "current", "tf": "4h", "geo": "trail", "k": 1,
+         "consistency_p": 0.01,
+         "portfolio": {"total_pct": 10.0, "accounting": accounting_provenance(
+             2000, .5, 8, RESEARCH_CLOCK)}},
         "grow", "carries information", {})
     monkeypatch.setattr(
         ResearchRunner, "step",
@@ -103,11 +114,13 @@ def test_measure_rekey_archives_then_proceeds(monkeypatch, tmp_path, capsys):
         ["trader.research", "--measure", "--tf", "4h", "--rekey"])
     assert cli.main() == 0
     out = capsys.readouterr().out
+    assert "discarded 1 legacy-accounting combo" in out
     assert "archived 1 combo" in out
     assert led.combos_exist("4h") == 0
     archived = led.journal.query(
         "SELECT * FROM research_archive WHERE tf='4h'")
-    assert archived and archived[0]["table_name"] == "research_combos"
+    assert [r["table_name"] for r in archived] == ["research_combos"]
+    assert json.loads(archived[0]["row_json"])["hash"] == "current"
 
 
 def test_top_on_an_empty_ledger_says_so_rather_than_staying_silent(

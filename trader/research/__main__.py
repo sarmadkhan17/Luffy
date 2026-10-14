@@ -114,6 +114,12 @@ def main() -> int:
                          "research_controls rows before --measure "
                          "re-points its thresholds — required once the "
                          "ledger already holds rows scored under them")
+    ap.add_argument("--discard-legacy-accounting", action="store_true",
+                    help="delete research_combos rows scored under the "
+                         "legacy entry-booked portfolio model (no archive; "
+                         "rows a spent look references are kept). Reports "
+                         "only unless --apply is also given")
+    ap.add_argument("--apply", action="store_true")
     ap.add_argument("--tf", default="")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO,
@@ -125,6 +131,11 @@ def main() -> int:
     j = _journal()
     led = Ledger(j)
     led.ensure()
+
+    if args.discard_legacy_accounting:
+        print(json.dumps(led.discard_legacy_accounting(
+            args.tf or None, apply=args.apply)))
+        return 0
 
     if args.once or args.measure:
         from .runner import ResearchRunner
@@ -149,6 +160,11 @@ def main() -> int:
                     return 1
                 if n:
                     from ..core.types import now_utc
+                    # invalid legacy-accounting rows are discarded, never
+                    # archived as if they were superseded results
+                    gone = led.discard_legacy_accounting(tf, apply=True)
+                    print(f"discarded {gone['discarded']} legacy-accounting "
+                          f"combo(s) for {tf} without archiving")
                     moved = led.archive_horizon(tf, now_utc().isoformat())
                     print(f"archived {moved['combos']} combo(s) and "
                           f"{moved['controls']} control row(s) for {tf} "
