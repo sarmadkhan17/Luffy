@@ -185,3 +185,23 @@ def test_snapshot_preserves_source_and_refuses_nested_destination(tmp_path):
     assert (copies/'test.db').read_bytes()==before
     with pytest.raises(ValueError,match='DESTINATION_WITHIN_SOURCE'):C.snapshot(source,source/'nested')
     with pytest.raises(FileExistsError):C.snapshot(source,tmp_path/'isolated')
+
+
+def test_readonly_inventory_refuses_pending_wal(tmp_path):
+    db,*_ = fixture_db(tmp_path)
+    path=tmp_path/'copies/runtime-portfolio.db';db.close()
+    before=path.read_bytes()
+    scan=C.read_normalized_copy(path)
+    assert scan.execute('SELECT count(*) FROM evaluations').fetchone()==(1,)
+    with pytest.raises(sqlite3.OperationalError):scan.execute('DELETE FROM evaluations')
+    scan.close()
+    assert path.read_bytes()==before
+    (path.parent/(path.name+'-wal')).write_bytes(b'pending WAL')
+    with pytest.raises(ValueError,match='PENDING_SIDECAR'):C.read_normalized_copy(path)
+
+
+def test_hardlink_cannot_be_an_isolated_target(tmp_path):
+    db,*_ = fixture_db(tmp_path);db.close()
+    path=tmp_path/'copies/runtime-portfolio.db'
+    (tmp_path/'alias.db').hardlink_to(path)
+    with pytest.raises(ValueError,match='HARDLINK_DATABASE_REFUSED'):C.read_copy(path)

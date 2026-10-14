@@ -112,6 +112,8 @@ def snapshot(source, destination):
 
 def guard_copy(path):
     path = Path(path).resolve()
+    if path.stat().st_nlink != 1:
+        raise ValueError('HARDLINK_DATABASE_REFUSED')
     receipt = json.loads((path.parent.parent / 'snapshot.json').read_text())
     if path.name not in receipt or path.parent.name != 'copies':
         raise ValueError('UNRECOGNIZED_ISOLATED_COPY')
@@ -121,6 +123,13 @@ def guard_copy(path):
     return path
 
 
+def blob_digest(db):
+    digest = hashlib.sha256()
+    for row in db.execute('SELECT * FROM '+BLOBS+' ORDER BY sha256'):
+        digest_row(digest, row)
+    return digest.hexdigest()
+
+
 def read_copy(path):
     # No source/production database is opened by SQLite, including for reads.
     path = guard_copy(path)
@@ -128,6 +137,17 @@ def read_copy(path):
     E.install(db)
     db.execute('PRAGMA temp_store=MEMORY')
     db.execute('PRAGMA cache_size=-32768')
+    return db
+
+
+def read_normalized_copy(path):
+    path = guard_copy(path)
+    for suffix in ('-wal', '-journal'):
+        sidecar = Path(str(path)+suffix)
+        if sidecar.exists() and sidecar.stat().st_size:
+            raise ValueError('READONLY_SCAN_PENDING_SIDECAR_REFUSED:' + path.name)
+    db = E.install(sqlite3.connect(path.as_uri()+'?mode=ro&immutable=1', uri=True))
+    db.execute('PRAGMA query_only=ON')
     return db
 
 
@@ -258,27 +278,35 @@ def apply_copy(db, manifest):
     return after
 
 
-def rehearse(directory, report_path):
+def rehearse(directory, report_path, *, inventory_directory=None):
     directory = Path(directory).resolve(); report_path = Path(report_path)
     if report_path.exists():
         raise FileExistsError('REPORT_EXISTS')
     report_path.mkdir(parents=True)
-    paths = sorted(directory.glob('*.db'))
+    inventory_directory = Path(inventory_directory).resolve() if inventory_directory else directory
+    paths = sorted(inventory_directory.glob('*.db'))
     connections = {}; baseline = {}; root_sets = {}; manifest_counts = {}; physical_hashes = {}
     def file_sha(path):
         with path.open('rb') as stream:
             return hashlib.file_digest(stream, 'sha256').hexdigest()
     try:
         for path in paths:
-            disk = read_copy(path)
-            disk.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-            disk.execute('PRAGMA journal_mode=DELETE')
-            disk.close()
+            if inventory_directory == directory:
+                disk = read_copy(path)
+                disk.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+                disk.execute('PRAGMA journal_mode=DELETE')
+                disk.close()
+            else:
+                read_normalized_copy(path).close()
             physical_hashes[path.name] = file_sha(path)
             # Sequential materialization avoids millions of random reads on
             # fragmented historical stores. Only one scan DB owns RAM at once.
             # Databases above four GiB keep bounded cache and disk streaming.
-            if path.stat().st_size <= 4 * 1024**3:
+            memory_available = next(int(line.split()[1])*1024 for line in
+                                    Path('/proc/meminfo').read_text().splitlines()
+                                    if line.startswith('MemAvailable:'))
+            if (path.stat().st_size <= 4 * 1024**3
+                    and memory_available >= path.stat().st_size * 1.15 + 512 * 1024**2):
                 db = E.install(sqlite3.connect(':memory:'))
                 scan = sqlite3.connect(path.as_uri()+'?mode=ro&immutable=1', uri=True)
                 try:
@@ -295,6 +323,8 @@ def rehearse(directory, report_path):
             print('inventoried', path.name, flush=True)
         (report_path/'inventory.json').write_text(json.dumps(baseline, indent=2))
         name = 'runtime-portfolio.db'; db = read_copy(directory/name); connections[name] = db
+        if inventory(db) != baseline[name]:
+            raise ValueError('TARGET_COPY_DIFFERS_FROM_INVENTORY')
         external = set().union(*(roots for key, roots in root_sets.items() if key != name))
         candidates, refusal = portfolio_candidates(db, root_sets[name] | external)
         manifest = {'version': 'da10.cleanup.v1', 'production_apply_authorized': False,
@@ -305,11 +335,14 @@ def rehearse(directory, report_path):
         (report_path/'production-cleanup-manifest.json').write_text(json.dumps(manifest, indent=2))
         start = time.perf_counter(); before_bytes = (directory/name).stat().st_size
         after = apply_copy(db, manifest)
+        surviving_blobs = blob_digest(db)
         elapsed = time.perf_counter()-start
         # Physical reclaim only on the recognized private copy. Verify rowid
         # digests after VACUUM; a rewritten replay ordering is a refusal.
         db.execute('PRAGMA journal_mode=DELETE'); db.execute('VACUUM')
         compact = inventory(db)
+        if blob_digest(db) != surviving_blobs:
+            raise ValueError('VACUUM_BLOB_CONTENT_CHANGED')
         for table in after['tables']:
             if table != BLOBS and compact['tables'][table] != after['tables'][table]:
                 raise ValueError('VACUUM_ROWID_CHANGED:' + table)
@@ -330,11 +363,12 @@ def rehearse(directory, report_path):
                   'before_bytes': before_bytes, 'after_bytes': (directory/name).stat().st_size,
                   'physical_reclaimed_bytes': before_bytes-(directory/name).stat().st_size,
                   'cleanup_seconds': elapsed, 'before': baseline[name], 'after': compact,
-                  'preserved_tables_exact': True, 'manifests_verified': manifest_counts,
+                  'preserved_tables_exact': True, 'surviving_blob_content_exact': True,
+                  'manifests_verified': manifest_counts,
                   'portfolio_replayed': replayed, 'portfolio_replay_failures': replay_failures}
         # Verify all other databases were never mutated by cleanup.
         for key, expected_sha in physical_hashes.items():
-            if key != name and file_sha(directory/key) != expected_sha:
+            if (key != name or inventory_directory != directory) and file_sha(inventory_directory/key) != expected_sha:
                 raise ValueError('OTHER_DATABASE_CHANGED:' + key)
         result['other_database_files_unchanged'] = True
         result['normalized_copy_file_sha256'] = physical_hashes

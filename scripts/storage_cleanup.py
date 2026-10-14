@@ -11,6 +11,7 @@ if __name__ == '__main__':
     inputs.add_argument('--isolated-copies')
     inputs.add_argument('--source-data')
     parser.add_argument('--scratch')
+    parser.add_argument('--inventory-copies', help='Read-only normalized copies for inventory; target remains in --isolated-copies')
     parser.add_argument('--report', required=True)
     args = parser.parse_args()
     if args.source_data:
@@ -19,4 +20,4 @@ if __name__ == '__main__':
         copies = snapshot(args.source_data, args.scratch)
     else:
         copies = args.isolated_copies
-    rehearse(copies, args.report)
+    rehearse(copies, args.report, inventory_directory=args.inventory_copies)
