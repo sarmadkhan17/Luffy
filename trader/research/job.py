@@ -68,6 +68,8 @@ INSUFFICIENT_REPLAY_HISTORY = "insufficient_replay_history"
 INSUFFICIENT_SYMBOL_COVERAGE = "insufficient_symbol_coverage"
 TRANSIENT_READ_FAILURE = "transient_read_failure"
 READ_ERROR = "read_error"
+#: per-symbol drop reasons that ARE a statement about the history itself
+DETERMINISTIC_DROPS = ("short_history", "short_before_cut")
 
 
 def admit_bundle(b, floor: int) -> dict:
@@ -90,9 +92,17 @@ def admit_bundle(b, floor: int) -> dict:
     dropped = dict(getattr(b, "dropped", None) or {})
     transient = sorted(s for s, d in dropped.items()
                        if d.get("reason") == "read_error" and d.get("transient"))
+    # Anything that is neither a clean "this series holds too little
+    # replay-eligible history" nor a recognised busy/locked read is UNKNOWN:
+    # a failed frame build, a corrupt revision, an exception type nobody
+    # classified. Unknown is never evidence of missing history.
     errored = sorted(s for s, d in dropped.items()
-                     if d.get("reason") == "read_error"
+                     if d.get("reason") in ("read_error", "frames_error")
                      and not d.get("transient"))
+    unknown = sorted(s for s, d in dropped.items()
+                     if d.get("reason") not in DETERMINISTIC_DROPS
+                     and not (d.get("reason") == "read_error"
+                              and d.get("transient")))
     if loaded >= floor:
         reason = ADMITTED
     elif transient and loaded + len(transient) >= floor:
@@ -103,10 +113,19 @@ def admit_bundle(b, floor: int) -> dict:
         reason = INSUFFICIENT_SYMBOL_COVERAGE
     else:
         reason = INSUFFICIENT_REPLAY_HISTORY
+    # `deterministic`: the refusal is fully explained by replay-eligible
+    # history that is absent at this cut. Any transient or unknown drop in
+    # the bundle withholds it, even when the floor was unreachable anyway:
+    # the evidence for that symbol is incomplete and must stay retryable.
+    deterministic = (reason in (INSUFFICIENT_REPLAY_HISTORY,
+                                INSUFFICIENT_SYMBOL_COVERAGE)
+                     and not transient and not unknown)
     return {"admitted": reason == ADMITTED, "reason": reason,
+            "deterministic": deterministic,
             "loaded_symbols": loaded, "requested_symbols": requested,
             "required_symbols": floor, "tf": b.tf, "cut_ms": int(b.cut),
-            "transient_symbols": transient, "dropped": dropped}
+            "transient_symbols": transient, "unknown_symbols": unknown,
+            "dropped": dropped}
 
 
 def measure_job(payload: dict) -> dict:

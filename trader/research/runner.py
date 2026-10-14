@@ -58,7 +58,8 @@ DEFAULTS = {
 
 
 class ResearchRunner:
-    def __init__(self, journal, cfg: dict, run=run_child, *, predictive_experiment=None):
+    def __init__(self, journal, cfg: dict, run=run_child, *, predictive_experiment=None,
+                 clock=None):
         self.journal = journal
         self.cfg = cfg
         self.run = run
@@ -70,6 +71,10 @@ class ResearchRunner:
                 raise ValueError('experiment_split_binding')
         self.ledger = Ledger(journal)
         self.ledger.ensure()
+        # Process-local on purpose: a restart forgets every refusal and the
+        # first step after it probes with a real child.
+        from .refusal import Refusals
+        self._refusals = Refusals(clock or time.monotonic)
 
     # ── config ───────────────────────────────────────────────────────────
     def _r(self, key):
@@ -169,7 +174,54 @@ class ResearchRunner:
 
         if batch.kind == "measure":
             return self._measure(batch, disc, held)
+        skip = self._suppressed(batch, disc)
+        if skip is not None:
+            return skip
         return self._evaluate(batch, disc, held)
+
+    # ── repeated deterministic refusals ──────────────────────────────────
+    def _bundle_request(self, batch, disc):
+        """(symbols, floor_key, floor) exactly as `_evaluate` sends them."""
+        if batch.round == "control":
+            return (control.incumbent_universe(self.journal),
+                    "MIN_CONTROL_SYMBOLS", control.MIN_CONTROL_SYMBOLS)
+        return (disc, "min_discovery_symbols",
+                int(self._r("min_discovery_symbols")))
+
+    def _refusal_inputs(self, batch, disc):
+        """(slot, identity, stamp-thunk) for this request, or None when the
+        evidence needed to recognise it cannot be established."""
+        from . import refusal
+        try:
+            symbols, floor_key, floor = self._bundle_request(batch, disc)
+            sl = self.ledger.slices(batch.tf) or {}
+            slot = refusal.Refusals.slot(batch.tf, batch.round, floor_key,
+                                         symbols)
+            ident = refusal.identity(
+                self.cfg, batch.tf, batch.round, floor_key, floor, symbols,
+                self.ledger.spent_cut(batch.tf), sl.get("cut_ms"))
+            path = refusal.candle_path(self.cfg)
+            return slot, ident, (
+                lambda: refusal.stamp(path, batch.tf, symbols))
+        except Exception as e:                          # noqa: BLE001
+            log.debug(f"research refusal identity unavailable: {e}")
+            return None
+
+    def _suppressed(self, batch, disc):
+        if self.predictive_experiment is not None or not len(self._refusals):
+            return None
+        got = self._refusal_inputs(batch, disc)
+        if got is None:
+            return None
+        slot, ident, read_stamp = got
+        e = self._refusals.decide(slot, ident, read_stamp)
+        if e is None:
+            return None
+        log.debug(f"research {batch.tf}/{batch.round}: bundle refused as "
+                  f"{e['reason']} and nothing changed — not relaunching")
+        return {"skipped": "bundle_refused_unchanged", "tf": batch.tf,
+                "round": batch.round, "reason": e["reason"],
+                "loaded_symbols": e["loaded"], "required_symbols": e["required"]}
 
     # ── the two jobs ─────────────────────────────────────────────────────
     def _paths(self) -> dict:
@@ -245,12 +297,19 @@ class ResearchRunner:
                    "seed": int(self._r("seed")),
                    "soft_deadline_s": max(
                        30.0, timeout - float(self._r("soft_margin_s")))}
+        # Read the evidence stamp BEFORE the child looks, so anything
+        # appended while it runs reads later as a change, never as "same".
+        pre = (self._refusal_inputs(batch, disc)
+               if self.predictive_experiment is None else None)
+        pre_stamp = pre[2]() if pre is not None else None
         bid = self.ledger.start_batch(batch.tf, batch.geo, batch.round,
                                       len(batch.combos))
         t0 = time.monotonic()
         res = self.run(job.evaluate_job, payload, timeout_s=timeout,
                        nice=int(self._r("nice")))
         if not res.ok:
+            if pre is not None:
+                self._refusals.clear(pre[0])    # a crash is never evidence
             self.ledger.finish_batch(bid, False, time.monotonic() - t0,
                                      res.error)
             log.warning(f"research batch {batch.tf}/{batch.geo}/"
@@ -279,6 +338,13 @@ class ResearchRunner:
             adm = (res.value or {}).get("admission")
             if adm:
                 msg += f" [{adm.get('reason')}]"
+            if pre is not None:
+                # only a refusal the child proved deterministic, for the
+                # exact request this runner made, may ever be remembered
+                ok = (adm and adm.get("required_symbols") == min_syms
+                      and adm.get("requested_symbols") == len(symbols))
+                self._refusals.record(pre[0], pre[1], pre_stamp,
+                                      adm if ok else None)
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, msg)
             log.warning(f"research batch {batch.tf}/{batch.geo}/"
                         f"{batch.round}: {msg}")
@@ -286,6 +352,8 @@ class ResearchRunner:
                     "round": batch.round, "ok": False, "skipped": None,
                     "error": msg, "admission": adm}
 
+        if pre is not None:
+            self._refusals.clear(pre[0])         # admitted: forget it
         by_hash = {c.hash: c for c in batch.combos}
         recorded = 0
         cut_ms = (res.value or {}).get("cut_ms")
