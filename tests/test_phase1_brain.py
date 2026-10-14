@@ -1,9 +1,9 @@
 """Phase-1 quantitative core regression tests.
 
-EWA: fold math, recovery mixing, prior shrinkage, normalization.
-Meta-labeling: feature shape, size bounds, validation gate (bad brier →
-passthrough; separable data → live judgment).
-Adaptive threshold: fallback, tightening under low hit rates.
+EWA: retired fold/recovery authority refuses; historical prior math remains.
+Meta-labeling: retired fitting authority refuses noisy and separable labels;
+historical feature shape, size bounds and passthrough remain covered.
+Adaptive threshold: explicit historical frozen-state reads.
 
 All state files are monkeypatched to tmp paths — production
 data/*.json is never touched from tests.
@@ -48,8 +48,28 @@ def _seed(j, *, cid, did, symbol, action, ok, votes, regime="RANGING"):
     j._conn().commit()
 
 
+def _assert_writer_refuses(journal, writer, path, monkeypatch, consumer, **kwargs):
+    """Retired authority cannot read labels, create state or mutate history."""
+    before = "\n".join(journal._conn().iterdump())
+    existed = path.exists()
+    original = path.read_bytes() if existed else None
+    with monkeypatch.context() as guard:
+        guard.setattr(journal, "query", lambda *a, **k:
+                      pytest.fail("legacy labels read before authority refusal"))
+        for _ in range(2):
+            with pytest.raises(ValueError) as refused:
+                writer(journal, **kwargs)
+            assert str(refused.value) == (
+                "replay_complete_learning_authority_required:" + consumer)
+            assert "\n".join(journal._conn().iterdump()) == before
+            assert path.exists() == existed
+            if existed:
+                assert path.read_bytes() == original
+
+
 # ── EWA ──────────────────────────────────────────────────────────────────
 def test_ewa_fold_and_recovery(tmp_path, monkeypatch):
+    """Neither wrong-call history nor recovery authorizes a legacy writer."""
     from trader.agents import weights_online as ewa
     monkeypatch.setattr(ewa, "PATH", tmp_path / "ewa.json")
     j = _journal(tmp_path)
@@ -59,18 +79,19 @@ def test_ewa_fold_and_recovery(tmp_path, monkeypatch):
         _seed(j, cid=f"cw{i}", did=f"dw{i}", symbol=f"W{i}/USDT",
               action="BUY", ok=0,            # BUY lost → long voters wrong
               votes=[("alpha", +0.5), ("beta", -0.5)])
-    st = ewa.update(j, eta=0.5, mix=0.05)
-    a, b = st["agents"]["alpha"]["w"], st["agents"]["beta"]["w"]
-    assert b > a            # beta (dissenting=right) holds up
-    assert a > 0.01         # mixing keeps alpha alive (no zero-pinning)
+    _assert_writer_refuses(j, ewa.update, ewa.PATH, monkeypatch,
+                          "weights_online", eta=0.5, mix=0.05)
 
     # recovery: alpha goes on a 40-call correct streak → converges toward 1
     for i in range(10, 50):
         _seed(j, cid=f"cw{i}", did=f"dw{i}", symbol=f"W{i}/USDT",
               action="SELL", ok=1,           # SELL won → short voters right
               votes=[("alpha", -0.5), ("beta", +0.5)])
-    st = ewa.update(j, eta=0.5, mix=0.05)
-    assert st["agents"]["alpha"]["w"] > 0.8   # recovered
+    # Frozen historical state is preserved even after a strong recovery streak.
+    ewa.PATH.write_bytes(b'{"agents":{"alpha":{"w":0.2,"n":10}},'
+                        b'"cursor":"historical","updated":0}')
+    _assert_writer_refuses(j, ewa.update, ewa.PATH, monkeypatch,
+                          "weights_online", eta=0.5, mix=0.05)
 
 
 def test_ewa_blended_normalized(tmp_path, monkeypatch):
@@ -150,6 +171,7 @@ def test_meta_features_shape_and_size_bounds():
 
 
 def test_meta_validation_gate(tmp_path, monkeypatch):
+    """Label quality cannot replace registered replay authority for fitting."""
     from trader.brain import meta_label as ml
     monkeypatch.setattr(ml, "PATH", tmp_path / "meta.json")
     monkeypatch.setattr(ml, "_cache", {"m": None, "ts": 0.0})
@@ -163,10 +185,8 @@ def test_meta_validation_gate(tmp_path, monkeypatch):
         _seed(j, cid=f"cm{i}", did=f"dm{i}", symbol=f"M{i}/USDT",
               action="BUY" if i % 2 else "SELL", ok=ok,
               votes=[("alpha", 0.5 if i % 3 else -0.5)])
-    st = ml.refit(j)
-    # n_test < 30 → not ready regardless
-    assert st["n"] == 60 and st["n_test"] < ml.META_MIN_TEST
-    assert st["ready"] is False
+    _assert_writer_refuses(j, ml.refit, ml.PATH, monkeypatch, "meta_label")
+    assert ml._cache == {"m": None, "ts": 0.0}
     assert ml.judge([0.5] * len(ml.FEATS)) is None   # passthrough
 
     # a clean-separable pattern: BUY+high score wins, SELL loses
@@ -177,13 +197,14 @@ def test_meta_validation_gate(tmp_path, monkeypatch):
         _seed(j2, cid=f"cg{i}", did=f"dg{i}", symbol=f"G{i}/USDT",
               action="BUY" if win else "SELL", ok=1 if win else 0,
               votes=[("alpha", 0.5 if win else -0.5)])
-    st2 = ml.refit(j2)
-    assert st2["n_test"] >= ml.META_MIN_TEST
-    # deterministic pattern → both halves fit → ready, judge responds
-    assert st2["ready"] is True
+    # Even enough separable labels must not overwrite retained model state.
+    ml.PATH.write_bytes(b'{"w":null,"n":7,"n_test":0,"ready":false,'
+                       b'"disabled":false,"updated":0}')
+    _assert_writer_refuses(j2, ml.refit, ml.PATH, monkeypatch, "meta_label")
+    assert ml._cache == {"m": None, "ts": 0.0}
     p = ml.judge(ml.features(0.9, 0.24, 1.0, "RANGING", 0.0, 25.0,
                              "2026-08-31T14:00:00+00:00", 0, 0.5, False))
-    assert p is not None and 0.0 <= p <= 1.0
+    assert p is None  # refused fitting did not create live judgment authority
 
 
 # ── adaptive threshold ───────────────────────────────────────────────────
