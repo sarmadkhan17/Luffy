@@ -135,8 +135,11 @@ describe("live adapter", () => {
 });
 
 describe("pending owner requests", () => {
-  beforeEach(() => localStorage.clear());
-  it("one key per id; oldest reused; completion removes only its own key", () => {
+  beforeEach(() => {
+    pending.entries().forEach((entry) => pending.done(entry.id));
+    localStorage.clear();
+  });
+  it("late completion removes only its id and preserves newer unresolved requests", () => {
     const put = (id: string, t: number) =>
       localStorage.setItem(pending.PREFIX + id, JSON.stringify({ action: "halt", id, t }));
     put("zz-older-request-0001", 1);
@@ -148,6 +151,23 @@ describe("pending owner requests", () => {
     pending.done(a.id);
     expect(pending.find("halt")!.id).toBe(b.id);
     expect(localStorage.getItem(pending.PREFIX + b.id)).not.toBeNull();
+  });
+  it("keeps another action across completion and reloads the same persisted id", async () => {
+    const panic = pending.create("panic").entry;
+    expect(localStorage.getItem(pending.PREFIX + panic.id)).not.toBeNull();
+
+    // A second tab has a separate module instance but shares origin storage.
+    vi.resetModules();
+    const tabBPending = await import("../src/adapters/pending");
+    const halt = tabBPending.create("halt").entry;
+    tabBPending.done(halt.id);
+    expect(tabBPending.find("panic")?.id).toBe(panic.id);
+    expect(tabBPending.find("halt")).toBeNull();
+
+    // A fresh module after reload has no memory and recovers A's same id.
+    vi.resetModules();
+    const reloadedPending = await import("../src/adapters/pending");
+    expect(reloadedPending.find("panic")?.id).toBe(panic.id);
   });
 });
 
@@ -245,6 +265,43 @@ describe("owner controls", () => {
     expect(op).toBe("resume");
     expect(req.id).toMatch(/^[A-Za-z0-9-]{16,64}$/);
     expect(pending.find("resume")).toBeNull(); // definitive → released
+  });
+  it("warns and keeps an unresolved request in memory when browser storage fails", async () => {
+    const storageWrite = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        throw new DOMException("quota exceeded", "QuotaExceededError");
+      });
+    const user = userEvent.setup();
+    withProvider(
+      {
+        ...base,
+        control: vi.fn(async () => null),
+        ownerInterface: vi.fn(async () => ({
+          availability: "AVAILABLE" as const,
+          status: "ACCEPTED",
+          reasons: [],
+          observedAt: now,
+          controlState: "FROZEN",
+          recoveryInProgress: false,
+        })),
+      },
+      <Operations />,
+    );
+    const halt = await screen.findByRole("button", { name: "Halt" });
+    await waitFor(() => expect(halt).toBeEnabled());
+    await user.click(halt);
+    await user.click(screen.getByRole("button", { name: /Send Halt/ }));
+    expect(
+      await screen.findByText(/Browser storage unavailable/),
+    ).toBeVisible();
+    const unresolved = pending.find("halt");
+    expect(unresolved).not.toBeNull();
+    expect(await screen.findByTestId("control-outcome")).toHaveTextContent(
+      "outcome unknown",
+    );
+    storageWrite.mockRestore();
+    if (unresolved) pending.done(unresolved.id);
   });
 });
 

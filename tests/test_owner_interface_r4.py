@@ -324,84 +324,9 @@ def test_negative_control_w5_inflight_eviction_is_caught(tmp_path, monkeypatch):
         check_overflow_counts_only_discarded_rows(tmp_path, monkeypatch)
 
 
-# ═══ W3 — cross-tab pending ids (real JS, two isolated tab contexts) ════════
-NODE = shutil.which("node") or shutil.which("nodejs")
-HTML = (ROOT / "trader" / "dashboard" / "web" / "index.html").read_text()
-OWNER_BLOCK = HTML[HTML.index("/* Owner controls: typed requests executed by the kernel"):
-                   HTML.index("/* ── refresh ── */")]
-
-CROSS_TAB = r"""
-const vm = require('vm');
-const shared = {};
-const localStorage = {getItem: k => (k in shared ? shared[k] : null),
-                           setItem: (k, v) => { shared[k] = String(v); },
-                           removeItem: k => { delete shared[k]; },
-                           key: i => Object.keys(shared)[i] ?? null,
-                           get length() { return Object.keys(shared).length; }};
-function pendingMap() { const m = {};
-  for (const k of Object.keys(shared)) if (k.startsWith('luffy.owner.req.')) {
-    const e = JSON.parse(shared[k]); m[e.action] = e; }
-  return m; }
-const cryptoObj = globalThis.crypto || require('crypto').webcrypto;
-function tab(name) {                      // one browser tab: its own globals, shared storage
-  const t = {name, calls: [], toasts: [], answer: null, allow: true};
-  const ctx = {localStorage, crypto: cryptoObj, console, setTimeout,
-               confirm: () => t.allow, toast: m => t.toasts.push(m), refresh: () => {},
-               document: {querySelectorAll: () => []},
-               gql: (q, v) => { t.calls.push({r: v.r, op: v.o || 'panic'}); return t.answer(); }};
-  vm.createContext(ctx);
-  vm.runInContext(OWNER_BLOCK, ctx);
-  t.ctx = ctx;
-  return t;
-}
-const ok = s => Promise.resolve({res: {status: s, message: s, replayed: false, reasons: []}});
-(async () => {
-  const B = tab('B');
-  B.allow = false; await B.ctx.ownerControl('halt');       // click + cancel: initializes B
-  const A = tab('A');
-  A.answer = () => Promise.reject(new Error('network'));
-  await A.ctx.ownerControl('panic');                       // outcome unknown: id A stored
-  const idA = A.calls[0].r;
-  const afterA = pendingMap();
-  B.allow = true; B.answer = () => ok('ACCEPTED');
-  await B.ctx.ownerControl('halt');                        // B completes HALT
-  const afterB = pendingMap();
-  const A2 = tab('A-reloaded'); A2.allow = false;          // reload; must not need consent
-  A2.answer = () => ok('ACCEPTED');
-  await A2.ctx.ownerControl('panic');
-  // IN_PROGRESS is non-definitive: the id must survive it
-  const C = tab('C'); C.answer = () => ok('IN_PROGRESS');
-  await C.ctx.ownerControl('freeze');
-  const afterPending = pendingMap();
-  console.log(JSON.stringify({idA, afterA, afterB, retry: A2.calls.map(c => c.r),
-                              afterPending, freezeId: C.calls[0].r}));
-})();
-"""
-
-
-def _run_cross_tab(block):
-    script = CROSS_TAB.replace("OWNER_BLOCK", json.dumps(block))
-    out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=60)
-    assert out.returncode == 0, out.stderr
-    return json.loads(out.stdout)
-
-
-def check_other_tab_never_erases_unresolved_id(block):
-    out = _run_cross_tab(block)
-    assert out["afterA"]["panic"]["id"] == out["idA"]
-    assert out["afterB"].get("panic", {}).get("id") == out["idA"], out   # B kept A's entry
-    assert out["retry"] == [out["idA"]], out                           # reload reuses id A
-    assert out["afterPending"]["freeze"]["id"] == out["freezeId"]      # PENDING keeps the id
-    return out
-
-
-@pytest.mark.skipif(NODE is None, reason="node not installed")
-def test_w3_other_tab_never_erases_unresolved_id():
-    check_other_tab_never_erases_unresolved_id(OWNER_BLOCK)
-
-
-# The revision-4 "stale per-tab cached read" mutant no longer applies: with one
-# storage key per request no tab ever writes another tab's entries. The
-# concurrent-interleaving negative controls (revision-4 whole-map block, stale
-# tab, sibling erasure, simultaneous creation) are real-browser tests in
-# tests/test_owner_dashboard_browser.py.
+# The retired-dashboard W3 cross-tab test is migrated to the current pending
+# request store tests in frontend/tests/live.test.tsx and
+# frontend/tests/browser/v2-controls.spec.ts. Current storage uses one key per
+# request id, so one tab's definitive completion cannot erase another tab's
+# unresolved request. Old whole-map JavaScript mutant controls targeted code
+# removed at the React dashboard cutover.
