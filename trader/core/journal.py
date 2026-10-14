@@ -574,6 +574,7 @@ class Journal:
             from ..engine.entry_authority import SCHEMA as entry_request_schema
             c.executescript(entry_request_schema)
             for stmt in (
+                "ALTER TABLE decisions ADD COLUMN strategy_selection_json TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN instrument_binding_json TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN reason_codes TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN reason_codes_version TEXT DEFAULT NULL",
@@ -684,6 +685,9 @@ class Journal:
                 "confidence,rationale,meta) VALUES (?,?,?,?,?,?,?,?,?)", rows)
 
     def log_decision(self, d: Decision, *, capture_inputs=None) -> None:
+        if getattr(d, 'strategy_selection', None) is not None:
+            from ..strategy.plan_owner import verified_selection
+            verified_selection(d.strategy_signals, d.strategy_selection)
         strat_ids = ",".join(s.get("strategy_id", "")
                              for s in d.strategy_signals or [])
         signals = json.dumps(d.strategy_signals or [])
@@ -692,12 +696,13 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version,instrument_binding_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version,instrument_binding_json,strategy_selection_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids, signals,
                  d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
-                 *self._reason_codes_cols(getattr(d, "reason_codes", None)), getattr(d, "instrument_binding_json", None)))
+                 *self._reason_codes_cols(getattr(d, "reason_codes", None)), getattr(d, "instrument_binding_json", None),
+                 json.dumps(d.strategy_selection, sort_keys=True, allow_nan=False) if getattr(d, "strategy_selection", None) is not None else None))
 
             from ..learning import capture as lc, capture_runtime as lr
             captured_row = dict(c.execute('SELECT * FROM decisions WHERE id=?', (d.id,)).fetchone())

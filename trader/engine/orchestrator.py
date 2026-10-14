@@ -1,179 +1,24 @@
-"""Orchestrator — aggregates votes + strategy signals into one Decision.
+"""Strategy-led decisions with typed analyst evidence and existing market guards.
 
-No vetoes — except two explicit, evidence-based ones:
-  1. higher-timeframe veto: strong 4h trend refuses counter-trend entries
-     (soft bump at |s|>0.35, hard refusal at |s|≥htf_hard_veto)
-  2. news blackout: while macro headlines churn, threshold rises
-
-    net = Σ(conv' × |conv'|·confidence · w_agent · fit) / Σw
-    where conv' is the journal-calibrated conviction (calibration.py).
-
-Regime-fit scales each analyst's conviction; measured agent accuracy
-(from validation replay + live outcomes) modulates weight.
-
-Dynamic threshold: agreement tightens it (unanimous 0.18), conflict
-loosens it (0.32). Output is always a Decision — executed or skipped
-with reason.
+No analyst or strategy vote counts, weighted signal netting, confidence-based
+owner ranking, or legacy meta-model sizing. Unresolved owners/conflicts HOLD.
+Risk and Execution remain the final exposure authorities.
 """
 from __future__ import annotations
 
 import logging
-import threading
 import time
 from datetime import datetime, timezone
 
-from ..agents import calibration
 from ..agents.base import Analyst
-from ..agents.regime import classify, fit_multiplier
+from ..agents.regime import classify
 from ..core.journal import Journal
 from ..core.types import (Action, Decision, Side, Snapshot, StrategySignal,
                           Vote, new_id)
 from ..strategy import library as strat_lib
+from ..strategy.plan_owner import select
 
 log = logging.getLogger(__name__)
-
-_DEFAULT_WEIGHTS = {"structure": 0.24, "flow": 0.15, "momentum": 0.17,
-                    "value": 0.11, "rotation": 0.13,
-                    "positioning": 0.11, "depth": 0.09}
-STRATEGY_VOTE_WEIGHT = 0.45      # strategies speak louder than any analyst
-
-
-def _measured_weights() -> tuple[dict, dict]:
-    """Evidence-based weights from the validation harness, if available."""
-    try:
-        from ..agents.validate import load_weights
-        w = load_weights()
-        if w and w.get("base_weights"):
-            fit = {}
-            for agent, by_regime in (w.get("agents") or {}).items():
-                fit[agent] = {r: (round(2 * (v["acc_1h"] - 0.5) + 0.6, 2)
-                                  if v.get("acc_1h") is not None else 0.55)
-                              for r, v in (by_regime.get("by_regime")
-                                           or {}).items()}
-            return w["base_weights"], fit
-    except Exception:
-        pass
-    return {}, {}
-
-
-def agreement_fraction(votes: list, sigs: list, net: float) -> float:
-    """Share of directional opinions pointing the same way as `net`.
-
-    Feeds the dynamic threshold (unanimous -> 0.18, conflicted -> 0.32) and
-    the reported confidence.
-
-    Strategy signals contribute their OWN direction. They previously entered
-    the tally as `None` and were scored with `(v.conviction if v else net) *
-    sign(net) > 0`, which for a None reduces to `abs(net) > 0` — always True.
-    Every strategy signal therefore counted as agreement even when it pointed
-    the opposite way, so ADDING an opposing signal LOWERED the bar to trade.
-    """
-    directional = [v.conviction for v in votes if abs(v.conviction) > 0.05]
-    directional += [1.0 if s.action == Action.BUY else -1.0 for s in sigs]
-    if len(directional) < 2:
-        return 0.5
-    sign = 1 if net >= 0 else -1
-    return sum(1 for d in directional if d * sign > 0) / len(directional)
-
-
-#: below this a conviction is not an opinion — the same line
-#: agreement_fraction uses to decide what counts as directional
-ABSTAIN_BELOW = 0.05
-
-
-def net_score(votes: list, sigs: list, base_weights: dict,
-              strategy_weights: dict) -> float:
-    """Weighted opinion in [-1, 1]. Silence abstains.
-
-    An analyst with no conviction used to add nothing above the line and its
-    full weight below it, so seven quiet analysts dragged any score toward
-    zero exactly as seven opposing ones would. With a combined analyst weight
-    of 1.0 against STRATEGY_VOTE_WEIGHT 0.45, one strategy signal at its
-    typical 0.6 confidence reached 0.6*0.45 / 1.45 = 0.186 — under every
-    threshold the live system produces (0.22-0.47). No amount of evidence
-    could let a validated strategy trade on its own, which is the opposite of
-    what STRATEGY_VOTE_WEIGHT's own comment promises.
-
-    Disagreement still counts fully. Only abstention is excused.
-    """
-    from ..learning.consumers import vote_confidence, evidence_factor
-    num = den = 0.0
-    for v in votes:
-        if abs(v.conviction) <= ABSTAIN_BELOW:
-            continue
-        w = base_weights.get(v.agent, 0.10) * v.meta.get("acc_mult", 1.0)
-        num += (v.conviction * abs(v.conviction) * vote_confidence(v) * evidence_factor(v)
-                * v.meta.get("regime_fit", 1.0)) * w
-        den += w
-    # the SET speaks, weighted — never reduced to a single winner
-    for s in sigs:
-        dirn = 1.0 if s.action == Action.BUY else -1.0
-        w = STRATEGY_VOTE_WEIGHT * strategy_weights.get(
-            getattr(s, "strategy_id", ""), 1.0)
-        num += dirn * s.confidence * w
-        den += w
-    return num / den if den > 0 else 0.0
-
-
-def strategy_score(sigs: list, strategy_weights: dict) -> float:
-    """The book's own opinion, with no analyst in it.
-
-    Pooling the two put the one mechanism with measured edge in a weighted
-    average against seven that have none. Live, on 2026-09-02, that read:
-
-        UNI/USDT  HOLD  score=+0.2454  thr=0.2629
-           signal: Donchian Breakout Trail -> BUY conf=0.60
-
-    Donchian was firing, correctly, and the blend held it under threshold.
-    With a combined analyst weight of 1.0 against STRATEGY_VOTE_WEIGHT 0.45,
-    a lone signal at 0.6 confidence can reach at most 0.186 on its own, and
-    even with analysts leaning the same way it lands short. The strategy had
-    signalled for a week and taken zero trades.
-
-    The analysts are not neutral ballast either: measured over 204 live
-    decisions they returned -0.695% a call at the 4h horizon and won 34.6%
-    (t=-3.84), losing on BOTH sides. Averaging a measured edge against a
-    measured anti-edge is not diversification.
-    """
-    num = den = 0.0
-    for s in sigs:
-        dirn = 1.0 if s.action == Action.BUY else -1.0
-        w = strategy_weights.get(getattr(s, "strategy_id", ""), 1.0)
-        num += dirn * s.confidence * w
-        den += w
-    return num / den if den > 0 else 0.0
-
-
-def strategy_gate(action, sigs: list) -> tuple:
-    """A trade needs a strategy that says so. -> (action, veto, gated_lean)
-
-    Measured on 204 live decisions (2026-08-24..09-02): at the 4h horizon the
-    blended score returned -0.695% a call and won 34.6%, t=-3.84 — and BOTH
-    sides lost there (BUY -0.335%, SELL -1.117%). Market drift can make one
-    side lose; it cannot make both lose at the same horizon. That is negative
-    skill, and until this gate the analyst blend could open a position with no
-    strategy behind it at all.
-
-    Analysts still weigh in: they set the score that decides WHICH of the
-    proposed setups is worth taking, and they can still talk one down below
-    threshold. What they may no longer do is invent a direction of their own.
-    That is the shape CLAUDE.md describes — strategies own entry, analysts
-    supply coins and direction — and the cutover it says is manual.
-
-    `gated_lean` is the direction that was refused, kept so the veto is
-    graded like any other prediction. Reopening this must be an evidence
-    decision, not an opinion.
-    """
-    if action == Action.HOLD:
-        return action, "", None
-    if not sigs:
-        return Action.HOLD, "no strategy signal", action
-    if not any(s.action == action for s in sigs):
-        return (Action.HOLD,
-                f"no strategy agrees with {action.value} "
-                f"({len(sigs)} signalled the other way)", action)
-    return action, "", None
-
 
 def regime_allows(genome, regime: str) -> bool:
     """Is this strategy eligible in `regime`?
@@ -254,94 +99,8 @@ class Orchestrator:
         sc = ((cfg or {}).get("scouts") or {})
         self.htf_soft_bump = float(sc.get("htf_soft_bump", 0.07))
         self.htf_hard_veto = float(sc.get("htf_hard_veto", 0.80))
-        self.calib_cfg = (sc.get("calibration") or {})
-        self.ewa_cfg = (sc.get("ewa") or {})
-        self.meta_cfg = (sc.get("meta") or {})
-        self._adapt_cfg = (sc.get("adaptive_threshold") or {})
-        self.require_strategy_signal = bool(
-            sc.get("require_strategy_signal", True))
-        self.strategy_leads = bool(sc.get("strategy_leads", True))
-        self._hit_cache: tuple[float, dict] = (0.0, {})   # ts, regime→(hr, n)
-        self._blend_cache: tuple[float, str, dict] = (0.0, "", {})
-        self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
-        self._lock = threading.Lock()
-        self._shadow_last: dict[str, float] = {}          # symbol → ts
-        self.shadow_sample_rate: float = 0.15             # of leaners
-        self.base_weights, self.measured_fit = {}, {}
-        self.reload_weights()
-
-    def reload_weights(self) -> None:
-        """(Re)load measured weights + regime fit and renormalize.
-
-        Merging a 5-agent measured set (Σ=1.0) over the 7-agent defaults
-        left Σ=1.2 — a ~17% systematic dilution of every net score.
-        Hot-reloadable so the weekly validation harness takes effect
-        within one brain tick instead of requiring a restart."""
-        mw, mfit = _measured_weights()
-        merged = {**_DEFAULT_WEIGHTS, **mw}
-        tot = sum(merged.values()) or 1.0
-        merged = {k: v / tot for k, v in merged.items()}
-        # EWA online aggregation: evidence-weighted blend toward the
-        # per-agent exponential weights (theory: cumulative loss tracks
-        # the best expert under non-stationarity)
-        if self.ewa_cfg.get("enabled", True):
-            try:
-                from ..agents import weights_online
-                merged = weights_online.blended_weights(
-                    merged, prior_k=float(self.ewa_cfg.get("prior", 30.0)))
-            except Exception as e:
-                log.debug(f"ewa blend skipped: {e}")
-        self.base_weights = merged
-        self.measured_fit = mfit
-        with self._lock:
-            self._acc_cache = (0.0, {})
-        if any(a != d for a, d in zip(sorted(self.base_weights),
-                                      sorted(_DEFAULT_WEIGHTS))):
-            log.info(f"orchestrator weights: "
-                     f"{ {k: round(v, 3) for k, v in self.base_weights.items()} }")
-
-    # ── accuracy → weight multiplier (bounded 0.7..1.3, evidence-scaled) ──
-    def _accuracy_multipliers(self, ttl: float = 1800.0) -> dict[str, float]:
-        import json
-        raw = self.journal.kv_get('legacy_frozen_accuracy_multipliers', '{}')
-        return json.loads(raw)
-
-    # ── adaptive base threshold (per-regime hit rates × vol scale) ──────
-    def _adaptive_base(self, regime: str, vol_ratio: float = 1.0) -> float:
-        """Regime-conditional threshold from realized 30d hit rates: when
-        recent signals in this regime paid (hr>0.5) the base relaxes; when
-        they lost it tightens. Falls back to the static base until
-        min_outcomes labels exist for the regime. Scaled modestly by
-        relative volatility expansion."""
-        import json
-        frozen = json.loads(self.journal.kv_get('legacy_frozen_adaptive_base', '{}'))
-        return frozen.get(regime, self.base_threshold)
-
-    # ── weighing the active strategy set ───────────────────────────────
-    def _strategy_weights(self, population: list[tuple],
-                          regime: str) -> dict:
-        """{strategy_id: weight} for this regime, recomputed every 30 min.
-
-        Analysts have always entered the sum weighted by measured accuracy
-        and regime fit. Strategies entered it flat, so the book averaged its
-        mechanisms instead of combining them — a strategy paying in the live
-        regime spoke no louder than one that had stopped working. This is
-        the same treatment, from the same kind of evidence.
-        """
-        now = time.time()
-        ts, cached_regime, cached = self._blend_cache
-        if cached and cached_regime == regime and now - ts < 1800:
-            return cached
-        try:
-            from ..strategy.blend import strategy_weights
-            specs = [st for st, _g in population]
-            fresh = strategy_weights(self.journal, specs, regime)
-        except Exception as e:
-            log.debug(f"strategy blend skipped: {e}")
-            fresh = {}
-        with self._lock:
-            self._blend_cache = (now, regime, fresh)
-        return fresh
+        self._shadow_last: dict[str, float] = {}
+        self.shadow_sample_rate: float = 0.15
 
     def decide(self, snap: Snapshot, population: list[tuple],
                entry_allowed: bool = True,
@@ -359,9 +118,6 @@ class Orchestrator:
 
         # ── collect votes ────────────────────────────────────────────────
         votes: list[Vote] = []
-        acc_mults = self._accuracy_multipliers()
-        cal_state = calibration.load() if \
-            self.calib_cfg.get("enabled", True) else {}
         for name, analyst in self.analysts.items():
             try:
                 v = analyst.evaluate(snap)
@@ -385,13 +141,9 @@ class Orchestrator:
                 log.warning('analyst %s has unavailable typed evidence on %s', name, snap.symbol)
                 continue
             receipts.add("analyst", name, "emitted_vote")
-            measured = (self.measured_fit.get(v.agent) or {}).get(snap.regime)
-            v.meta["regime_fit"] = measured if measured is not None else \
-                fit_multiplier(analyst.regime_affinity, snap.regime)
-            v.meta["acc_mult"] = round(acc_mults.get(name, 1.0), 2)
-            v.meta["htf"] = round(htf, 3)
-            v.meta["news_blackout"] = bool(news.get("active"))
-            v.meta['legacy_calibration_authority'] = 'HISTORICAL_INPUT_ONLY'
+            v.meta['evidence_authority'] = 'MEASUREMENT_ONLY'
+            v.meta['htf'] = round(htf, 3)
+            v.meta['news_blackout'] = bool(news.get('active'))
             from ..learning.consumers import govern_vote
             govern_vote(self.journal, v, snap.symbol, snap.regime,
                         getattr(analyst, 'evidence_timeframe', None) or v.meta.get('horizon'))
@@ -425,21 +177,14 @@ class Orchestrator:
             if sig is not None:
                 sigs.append(sig)
 
-        # ── aggregate ────────────────────────────────────────────────────
-        sw = self._strategy_weights(population, snap.regime)
-        net = net_score(votes, sigs, self.base_weights, sw)
-        # Strategies own entry; analysts supply coins and direction. Once a
-        # strategy has spoken, the analysts no longer set the score — they
-        # are still evaluated and journalled, so their skill stays
-        # measurable and this stays reversible.
-        blended = net
-        if self.strategy_leads and sigs:
-            net = strategy_score(sigs, sw)
-
-        frac = agreement_fraction(votes, sigs, net)
-        threshold = self._adaptive_base(snap.regime,
-                                        regime_info.get("vol_ratio", 1.0)) \
-            * (1.45 - 0.55 * frac)   # 0.18..0.32 band around the base
+        # One strategy supplies the proposal. Supporters are not votes.
+        selection = select(sigs)
+        owner = selection['owner']
+        chosen = next((s for s in sigs if s.strategy_id == owner), None)
+        net = (chosen.confidence * (1 if chosen.action == Action.BUY else -1)) if chosen else 0.0
+        threshold = self.base_threshold
+        strat_veto = selection['basis'] if selection['status'] == 'REFUSED' else ''
+        gated_lean = None
 
         if news.get("active"):
             threshold += 0.08
@@ -462,20 +207,6 @@ class Orchestrator:
         else:
             action = Action.HOLD
 
-        # ── a trade needs a strategy that says so ───────────────────────
-        # Measured on the live journal (204 decisions, 2026-08-24..09-02):
-        # at the 4h horizon the blended score returned -0.695% a call and
-        # won 34.6%, t=-3.84 — and BOTH sides lost there (BUY -0.335%,
-        # SELL -1.117%). Market drift can make one side lose; it cannot
-        # make both lose at the same horizon. That is negative skill, and
-        # the analyst blend was free to open a position with no strategy
-        # behind it at all. It no longer is: analysts choose among what a
-        # validated mechanism has already proposed, which is the shape
-        # CLAUDE.md describes and the cutover it says is manual.
-        strat_veto, gated_lean = "", None
-        if self.require_strategy_signal:
-            action, strat_veto, gated_lean = strategy_gate(action, sigs)
-
         # NaN from indicator edge cases must never reach SQLite (it becomes
         # NULL → NOT NULL violation → crash-loop → duplicate entries)
         def _clean(x: float, default: float = 0.0) -> float:
@@ -486,7 +217,7 @@ class Orchestrator:
         # ── signal cooldown: one decision per setup, not per minute ─────
         # A persisting condition would re-fire identical signals every
         # cycle, flooding the journal with pseudo-replicated outcomes.
-        # Re-arm only after 45 min, an opposite signal, or a HOLD break.
+        # Same-direction decisions re-arm after 45 min; opposite direction resets it.
         if action != Action.HOLD:
             try:
                 last = self.journal.query(
@@ -508,53 +239,16 @@ class Orchestrator:
             except Exception as e:
                 log.debug(f"cooldown check failed: {e}")
 
-        if self.strategy_leads and sigs and abs(blended - net) > 1e-9:
-            log.debug(f"{snap.symbol}: strategy leads {net:+.3f} "
-                      f"(blend would have said {blended:+.3f})")
         net = _clean(net)
         threshold = max(_clean(threshold, 0.24), 0.05)
-        confidence = min(0.95, max(0.30, _clean(
-            abs(net) / max(threshold, 1e-9) * 0.62 * (0.7 + 0.3 * frac), 0.3)))
+        confidence = _clean(chosen.confidence) if chosen else 0.0
         d_ts = datetime.now(timezone.utc).isoformat()
-
-        # ── meta-labeling: the secondary model judges the primary signal ─
-        # LIVE with hard bounds (operator choice): veto below META_FLOOR,
-        # shrink-only sizing above it; passthrough (no meta_p) until the
-        # model has ≥40 training labels or if auto-disabled. Vetoed calls
-        # stay directional so their outcome grades the veto itself.
-        meta_p, meta_size = 0.0, 1.0
-        if action != Action.HOLD and self.meta_cfg.get("enabled", True):
-            try:
-                from ..brain import meta_label
-                lean_buy = action == Action.BUY
-                n_agree = sum(1 for s in sigs
-                              if (s.action == Action.BUY) == lean_buy)
-                sig_agree = (n_agree / len(sigs)) if sigs else 0.5
-                feat = meta_label.features(
-                    net, threshold, frac, snap.regime, htf, snap.adx,
-                    d_ts, len(sigs), sig_agree, bool(news.get("active")))
-                p = meta_label.judge(feat)
-                if p is not None:
-                    meta_p = p
-                    # The meta model is fit on correct_4h from decisions the
-                    # ANALYST BLEND produced — the same process measured at
-                    # -0.695% and 34.6% wins. It may shrink a strategy-led
-                    # call's size, but it does not get to veto a mechanism
-                    # on labels drawn from a losing one.
-                    lead = self.strategy_leads and bool(sigs)
-                    if p < meta_label.META_FLOOR and not lead:
-                        veto_reason = (f"meta: p={p:.2f} "
-                                       f"< {meta_label.META_FLOOR}")
-                    else:
-                        meta_size = meta_label.size_mult(p)
-            except Exception as e:
-                log.debug(f"meta judge failed: {e}")
 
         d = Decision(
             id=new_id("dec"), cycle_id=cycle_id, symbol=snap.symbol,
             action=action, score=_clean(net), threshold=threshold,
-            confidence=confidence, ts=d_ts, meta_p=meta_p,
-            meta_size=meta_size,
+            confidence=confidence, ts=d_ts,
+            strategy_selection=selection,
             instrument_binding_json=getattr(snap, 'instrument_binding_json', None),
             votes=[v.as_dict() for v in votes],
             strategy_signals=[vars(s) | {"action": s.action.value}
@@ -609,11 +303,10 @@ class Orchestrator:
             self._maybe_shadow_outcome(decision, snap)
 
     def _maybe_shadow_outcome(self, decision: Decision, snap) -> None:
-        """Near-threshold HOLDs are the cheapest training data: the vote
-        stack leaned a direction and the 4h move grades every agent's vote
-        against its own direction. Sampled (probabilistic + per-symbol
-        cooldown) so persistent lean conditions can't flood the journal —
-        this is what finally feeds calibration's 60-sample gate."""
+        """Retain bounded outcome observation for a justified near-threshold
+        strategy lean. Refused conflicts have zero score and are never netted
+        into a shadow prediction. Historical Decisions keep their old contract.
+        """
         import random
         lo = 0.6 * decision.threshold
         if abs(decision.score) < lo:
@@ -630,3 +323,12 @@ class Orchestrator:
             decision.ts,
             "BUY" if decision.score > 0 else "SELL",   # the lean's side
             snap.price)
+
+
+def __getattr__(name):
+    # Old research imports remain available, but decide() never calls them.
+    if name in {'net_score', 'strategy_score', 'agreement_fraction',
+                'strategy_gate', 'STRATEGY_VOTE_WEIGHT', 'ABSTAIN_BELOW'}:
+        from ..strategy import legacy_blend
+        return getattr(legacy_blend, name)
+    raise AttributeError(name)

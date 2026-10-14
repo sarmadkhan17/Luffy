@@ -172,6 +172,7 @@ class Decision:
     evaluation_causes: list = field(default_factory=list)
     omitted_causes: int = 0
     instrument_binding_json: str | None = None
+    strategy_selection: dict | None = None  # NULL means historical selection semantics
 
 
 @dataclass

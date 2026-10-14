@@ -500,13 +500,10 @@ class Analyst:
 
     # ── the active set, for the regime we are actually in ────────────────
     def active_set(self, specs: list, tf: str = "1h") -> dict:
-        """Which strategies trade now, and how loudly each one speaks.
+        """Historical diagnostic weights, never current strategy selection.
 
-        Deliberately not a single pick. The orchestrator combines every
-        eligible signal, and the governing premise is that no edge lasts —
-        collapsing the book to one mechanism means dying with it. So this
-        reports the SET, with the same weights the orchestrator will apply,
-        rather than inventing a second ordering that nothing consumes.
+        Regime membership is descriptive. Stored weights/default one are not
+        comparable reliability evidence or plan-owner authority.
         """
         from ..strategy.blend import strategy_weights
         reg = self.current_regime(tf) or {}

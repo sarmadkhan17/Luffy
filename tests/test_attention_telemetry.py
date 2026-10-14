@@ -206,7 +206,6 @@ def test_orchestrator_flag_preserves_decision_and_records_every_path(tmp_path, m
     from trader.strategy import library
     from trader.core.journal import Journal
     from trader.core.types import Snapshot, Action, StrategySignal
-    monkeypatch.setattr(mod, '_measured_weights', lambda: ({},{}))
     monkeypatch.setattr(mod, 'classify', lambda *a: {'regime':'RANGING','adx':20})
     monkeypatch.setattr(mod, 'htf_trend_score', lambda *a: 0)
     monkeypatch.setattr(mod, 'regime_allows', lambda g, r: g.strategy_id != 'regime')
@@ -225,7 +224,6 @@ def test_orchestrator_flag_preserves_decision_and_records_every_path(tmp_path, m
         orc = mod.Orchestrator(analysts, Journal(tmp_path/f'{enabled}.db'), cfg={
             'attention':{'enabled':enabled}, 'scouts':{k:{'enabled':False} for k in
                 ['calibration','ewa','meta','adaptive_threshold']}})
-        monkeypatch.setattr(orc, '_strategy_weights', lambda *a: {})
         snap=Snapshot(symbol='S',ts='2026-09-16T00:00:00+00:00',price=100,dfs={})
         decisions.append(orc.decide(snap,population))
     off,on=decisions

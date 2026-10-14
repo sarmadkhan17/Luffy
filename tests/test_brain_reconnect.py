@@ -161,26 +161,13 @@ def test_shadow_outcome_skipped_for_flat_holds(tmp_path):
 
 
 # ── 3. weight normalization ──────────────────────────────────────────────
-def test_weights_sum_to_one(tmp_path):
-    j = _mk_journal(tmp_path)
-    o = _orch(j)
-    total = sum(o.base_weights.values())
-    assert abs(total - 1.0) < 1e-9
+def test_current_orchestrator_has_no_analyst_weight_authority(tmp_path):
+    o = _orch(_mk_journal(tmp_path))
+    assert not hasattr(o, 'base_weights')
+    assert not hasattr(o, '_accuracy_multipliers')
 
 
-# ── 4. evidence-scaled multipliers ───────────────────────────────────────
-def test_multiplier_evidence_scaling(tmp_path):
+def test_historical_multiplier_reads_do_not_recalculate(tmp_path):
+    from trader.strategy.legacy_blend import frozen_accuracy
     j = _mk_journal(tmp_path)
-    o = _orch(j)
-    # same terrible accuracy, different sample sizes
-    j.query("INSERT OR REPLACE INTO state_kv(key,value) "
-            "VALUES ('noop','1')")
-    # inject rows via the real path: one cluster of 6 outcomes, acc 0.2
-    for i in range(6):
-        cid, did = f"c{i}", f"d{i}"
-        _seed_outcome_cycle(j, symbol=f"S{i}/USDT", cycle_id=cid,
-                            decision_id=did, action="BUY", correct_4h=0)
-        _mk_vote(j, cid, f"S{i}/USDT", "momentum", +0.5)
-    mults = o._accuracy_multipliers()
-    # n=6, acc=0 → mult = 1 + (-1)*(6/26) ≈ 0.77 — NOT the old 0.6 floor
-    assert 0.70 <= mults["momentum"] <= 0.85
+    assert frozen_accuracy(j) == {}

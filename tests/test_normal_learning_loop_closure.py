@@ -10,6 +10,7 @@ import json
 import socket
 import sqlite3
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -411,13 +412,16 @@ TARGETS = [L.Target.CONFIDENCE, L.Target.WEIGHTS, L.Target.ALLOCATION, L.Target.
 
 
 def evidence_consumer(target, j):
-    """CONFIDENCE / WEIGHTS reach net_score through the real Orchestrator.decide path."""
+    """Governed reliability remains contextual analyst evidence, not trading votes."""
     snap = _snap()
     regime = regime_of(snap)
     context = K.evidence_context(snap.symbol, '15m', regime, 'stub', Side.LONG.value, 'analyst', 'stub')
 
     def consume():
-        return analyst_orchestrator(j).decide(_snap(), population=[], entry_allowed=True).score
+        d = analyst_orchestrator(j).decide(_snap(), population=[], entry_allowed=True)
+        from trader.learning.consumers import vote_confidence, evidence_factor
+        vote = SimpleNamespace(**d.votes[0])
+        return vote_confidence(vote) if target == L.Target.CONFIDENCE else evidence_factor(vote)
     return context, ({'reliability': .5}), consume
 
 
@@ -635,7 +639,7 @@ def test_governed_state_reaches_net_score_through_the_normal_path_and_baseline_i
         assert meta[key]['value'] == value and meta[key]['revision'] == 1
         # raw evidence preserved; only the projection differs
         assert d.votes[0]['confidence'] == .8 and d.votes[0]['conviction'] == .8
-    assert baseline.score > scores[L.Target.CONFIDENCE] > scores[L.Target.WEIGHTS]
+    assert baseline.score == scores[L.Target.CONFIDENCE] == scores[L.Target.WEIGHTS] == 0.0
     # a different horizon/agent never inherits it
     other = analyst_orchestrator(j, timeframe='1h').decide(_snap(), population=[], entry_allowed=True)
     assert other.score == baseline.score
@@ -705,16 +709,17 @@ def test_legacy_adaptation_stays_explicitly_isolated(isolated):
     from trader.strategy.blend import strategy_weights
     from trader.engine.orchestrator import Orchestrator
     orch = Orchestrator([], j)
-    assert orch._accuracy_multipliers() == {}
-    assert orch._adaptive_base('ranging') == orch.base_threshold
+    from trader.strategy.legacy_blend import frozen_accuracy, frozen_base
+    assert frozen_accuracy(j) == {}
+    assert frozen_base(j, 'ranging', orch.base_threshold) == orch.base_threshold
     assert strategy_weights(j, [], 'ranging') == {}
     # recorded outcomes never trigger a recalculation: the reads only see explicitly frozen legacy state
     import inspect
-    for fn in (Orchestrator._accuracy_multipliers, Orchestrator._adaptive_base):
+    for fn in (frozen_accuracy, frozen_base):
         src = inspect.getsource(fn)
         assert 'legacy_frozen_' in src and '.query(' not in src and 'SELECT' not in src
     j.kv_set('legacy_frozen_adaptive_base', json.dumps({'ranging': .31}))
-    assert Orchestrator([], j)._adaptive_base('ranging') == .31   # explicit frozen snapshot only
+    assert frozen_base(j, 'ranging') == .31   # explicit frozen snapshot only
     for consumer in ('strategy_weights', 'adaptive_base', 'accuracy_multipliers'):
         with pytest.raises(ValueError, match='replay_complete_learning_authority_required:' + consumer):
             L.refuse_legacy_learning(consumer)

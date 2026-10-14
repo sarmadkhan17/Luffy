@@ -398,7 +398,17 @@ def bind_signal_version(db, inputs, row):
         agreeing=signals
     if not agreeing or not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
         return inputs
-    top=max(agreeing,key=lambda s:s.get('confidence',0))
+    from trader.strategy.plan_owner import historical_owner, verified_selection
+    raw_selection = row.get('strategy_selection_json')
+    if raw_selection is not None:
+        receipt = verified_selection(signals, json.loads(raw_selection))
+        if receipt['status'] != 'SELECTED': return inputs
+        owner = receipt['owner']
+    else:
+        # Never reinterpret historical confidence ownership using today's policy.
+        owner = inputs.get('strategy_owner') or historical_owner(agreeing, agreeing[0]['action'])
+    top=next((s for s in agreeing if s.get('strategy_id')==owner),None)
+    if top is None: return inputs
     sh=(top.get('params') or {}).get('spec_sha256')
     if not sh: return inputs
     cut=timestamp(row['ts'])

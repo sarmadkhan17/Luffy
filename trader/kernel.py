@@ -20,7 +20,6 @@ import sys
 import threading
 import time
 
-from .agents.calibration import maybe_refit as maybe_refit_calibration
 from .agents.flow import FlowAnalyst
 from .agents.momentum import MomentumAnalyst, RotationAnalyst, ValueAnalyst
 from .agents.macro_guard import MacroGuard
@@ -44,6 +43,7 @@ from .engine.supervisor import OwnerContext, Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
 from .observability.portfolio_observation import observe_positions, trading_source
+from .strategy.plan_owner import decision_owner, exit_score
 from .strategy.genome import Genome
 
 log = logging.getLogger("luffy")
@@ -1356,7 +1356,7 @@ class Kernel:
                 for t in self.journal.open_trades():
                     if t["symbol"] != symbol:
                         continue
-                    score = d.score if d.symbol == symbol else None
+                    score = exit_score(d, t) if d.symbol == symbol else None
                     if self._manages_exits():
                         r = self._manage_one(t, snap, score)
                         if r:
@@ -1444,25 +1444,21 @@ class Kernel:
         self.journal.kv_set("news_guard_state", payload)
 
     def _top_strategy(self, d) -> str:
-        """The strategy this trade belongs to: highest confidence AMONG the
-        signals that actually proposed the direction being taken.
-
-        `max(confidence)` over every signal could hand the trade — and its
-        P&L, and therefore its decay and promotion arithmetic — to a strategy
-        that signalled the other way.
-        """
-        agree = [s for s in (d.strategy_signals or [])
-                 if s.get("action") == d.action.value]
-        if not agree:
-            return ""
-        return max(agree, key=lambda s: s.get("confidence", 0)).get(
-            "strategy_id", "")
+        """One shared resolver; historical records retain their original algorithm."""
+        try:
+            return decision_owner(d)
+        except ValueError as exc:
+            d.skip_reason = 'selection: ' + str(exc)
+            return ''
 
     def _try_enter(self, d, snap, equity, closed_count) -> bool:
         from .agents.indicators import atr as _atr
         exec_tf = self.cfg["timeframes"]["execution"]
         side = "long" if d.action == Action.BUY else "short"
         top_strategy = self._top_strategy(d)
+        if not top_strategy:
+            d.skip_reason = d.skip_reason or 'no justified strategy plan owner'
+            return False
         # paper/live authority fence: a factory StrategyVersion reaches the
         # real order path only when exact-version first-live eligible (never
         # today); the executor re-checks at submission
@@ -2365,27 +2361,6 @@ class Kernel:
                 log.warning(f"postmortem failed: {e}")
         if Kernel._outcome_tick % 60 == 1:      # ~hourly brain/vault tick
             try:
-                maybe_refit_calibration(
-                    self.journal,
-                    min_samples=int((self.cfg.get("scouts", {})
-                                     .get("calibration", {})
-                                     .get("min_samples", 60))),
-                    refit_hours=float((self.cfg.get("scouts", {})
-                                       .get("calibration", {})
-                                       .get("refit_hours", 6))))
-            except Exception as e:
-                log.warning(f"calibration tick failed: {e}")
-            try:
-                from .agents import weights_online
-                from .brain import meta_label
-                ewa_cfg = self.cfg.get("scouts", {}).get("ewa", {})
-                weights_online.maybe_update(
-                    self.journal,
-                    eta=float(ewa_cfg.get("eta", 0.30)))
-                meta_label.maybe_refit(self.journal)
-            except Exception as e:
-                log.warning(f"ewa/meta tick failed: {e}")
-            try:
                 # Lifecycle rules for the legacy genomes. The LLM strategist
                 # review that used to follow was removed on 2026-09-11: its
                 # "mutate" verdict, Proposer and invention pass were three
@@ -2405,7 +2380,6 @@ class Kernel:
                     self._pop_sig = sig
                     self.exits.genomes = {st.id: st.params
                                           for st, _g in fresh}
-                    self.orchestrator.reload_weights()
                     elig = sum(1 for s in sig
                                if s[1] in ("paper", "active"))
                     log.info(f"population hot-reloaded: {len(fresh)} "
@@ -3157,13 +3131,12 @@ class Kernel:
                 from .agents import calibration
                 fits = {k for k in calibration.load()
                         if not k.startswith("_")}
-                w = self.orchestrator.base_weights
                 lines = []
                 for a in self.orchestrator.analysts:
                     acc_s = f"{acc[a]:.0%}" if a in acc and \
                         acc[a] is not None else "—"
                     cal = " ·cal" if a in fits else ""
-                    lines.append(f"{a:12s} w={w.get(a, 0):.2f} "
+                    lines.append(f"{a:12s} evidence-only "
                                  f"acc={acc_s}{cal}")
                 reply("🔭 scouts:\n" + "\n".join(lines))
             except Exception as e:

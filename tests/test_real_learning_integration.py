@@ -102,7 +102,7 @@ def consumer_case(target,j,monkeypatch,tmp_path):
             assert world.to_json()==original
             return result['value']
         return context,{'confidence':.75},consume
-    from trader.engine.orchestrator import net_score
+    from trader.strategy.legacy_blend import net_score
     from trader.core.types import Side
     context=C.evidence_context('BTC','4h','ranging','signal','BUY','family','expert')
     def consume():
@@ -215,12 +215,12 @@ def test_legacy_no_outcome_queries_or_updates(isolated):
     # Changing recorded outcomes cannot trigger recalculation on these reads.
     j.kv_set('legacy_frozen_strategy_weights',json.dumps({'ranging':{'s':.8}}))
     assert strategy_weights(j,[SimpleNamespace(id='s')],'ranging')=={'s':.8}
-    obj=Orchestrator.__new__(Orchestrator);obj.journal=j;obj.base_threshold=.22
+    from trader.strategy.legacy_blend import frozen_accuracy, frozen_base
     j.kv_set('legacy_frozen_accuracy_multipliers',json.dumps({'agent':.9}))
     j.kv_set('legacy_frozen_adaptive_base',json.dumps({'ranging':.25}))
     j.agent_accuracy=lambda **k:pytest.fail('legacy outcome query')
-    assert obj._accuracy_multipliers()=={'agent':.9}
-    assert obj._adaptive_base('ranging',2)==.25
+    assert frozen_accuracy(j)=={'agent':.9}
+    assert frozen_base(j,'ranging',.22)==.25
 
 def test_owner_refuses_raw_writes_and_test_rule_has_no_runtime_entry(isolated):
     j,cfg,ev,o,v=isolated

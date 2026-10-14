@@ -1,3 +1,4 @@
+"""Historical fc6c0b2 compatibility; flags here do not restore live voting."""
 """A trade needs a strategy that says so.
 
 Measured on 204 live decisions (2026-08-24..09-02): at the 4h horizon the
@@ -22,12 +23,8 @@ from trader.core.types import Action, StrategySignal
 
 
 def _orc(require=True):
-    from trader.core.journal import Journal
-    from trader.engine.orchestrator import Orchestrator
-    import tempfile, os
-    fd, path = tempfile.mkstemp(suffix=".db"); os.close(fd)
-    return Orchestrator([], Journal(Path(path)),
-                        cfg={"scouts": {"require_strategy_signal": require}})
+    from types import SimpleNamespace
+    return SimpleNamespace(require_strategy_signal=require)
 
 
 def _sig(action, sid="s1", conf=0.7):
@@ -38,7 +35,7 @@ def _sig(action, sid="s1", conf=0.7):
 
 def _apply(orc, action, sigs):
     """Exactly what decide() runs — the real function, not a copy of it."""
-    from trader.engine.orchestrator import strategy_gate
+    from trader.strategy.legacy_blend import strategy_gate
     if not orc.require_strategy_signal:
         return action, "", None
     return strategy_gate(action, sigs)
@@ -94,7 +91,7 @@ def test_a_lone_signal_clears_every_threshold_the_system_produces():
     0.2629 threshold, because a single signal reaches at most
     0.6 * 0.45 / 1.45 = 0.186 once seven analysts are averaged in. It had
     signalled for a week and taken zero trades."""
-    from trader.engine.orchestrator import strategy_score
+    from trader.strategy.legacy_blend import strategy_score
     s = strategy_score([_sig(Action.BUY, conf=0.6)], {})
     assert s == pytest.approx(0.6)
     assert s > 0.34            # the top of the adaptive threshold band
@@ -102,20 +99,20 @@ def test_a_lone_signal_clears_every_threshold_the_system_produces():
 
 @pytest.mark.parametrize("action,sign", [(Action.BUY, 1), (Action.SELL, -1)])
 def test_direction_is_signed_symmetrically(action, sign):
-    from trader.engine.orchestrator import strategy_score
+    from trader.strategy.legacy_blend import strategy_score
     assert strategy_score([_sig(action, conf=0.6)], {}) == \
         pytest.approx(0.6 * sign)
 
 
 def test_disagreeing_strategies_cancel_rather_than_pick_a_winner():
-    from trader.engine.orchestrator import strategy_score
+    from trader.strategy.legacy_blend import strategy_score
     assert strategy_score([_sig(Action.BUY, "a", 0.6),
                            _sig(Action.SELL, "b", 0.6)], {}) == \
         pytest.approx(0.0)
 
 
 def test_a_strategy_weighted_down_speaks_more_quietly():
-    from trader.engine.orchestrator import strategy_score
+    from trader.strategy.legacy_blend import strategy_score
     sigs = [_sig(Action.BUY, "a", 0.6), _sig(Action.SELL, "b", 0.6)]
     s = strategy_score(sigs, {"a": 3.0, "b": 1.0})
     assert s == pytest.approx((0.6 * 3 - 0.6) / 4)
@@ -123,17 +120,5 @@ def test_a_strategy_weighted_down_speaks_more_quietly():
 
 
 def test_no_signal_is_no_opinion_not_a_zero_vote():
-    from trader.engine.orchestrator import strategy_score
+    from trader.strategy.legacy_blend import strategy_score
     assert strategy_score([], {}) == 0.0
-
-
-def test_the_lead_can_be_turned_off():
-    orc = _orc()
-    assert orc.strategy_leads is True
-    from trader.core.journal import Journal
-    from trader.engine.orchestrator import Orchestrator
-    import tempfile, os
-    fd, path = tempfile.mkstemp(suffix=".db"); os.close(fd)
-    off = Orchestrator([], Journal(Path(path)),
-                       cfg={"scouts": {"strategy_leads": False}})
-    assert off.strategy_leads is False

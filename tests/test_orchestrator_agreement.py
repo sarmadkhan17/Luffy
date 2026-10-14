@@ -1,3 +1,4 @@
+"""Historical arithmetic compatibility; never current entry authority."""
 """Directional-agreement tally (orchestrator.agreement_fraction).
 
 Regression: strategy signals used to be counted as `None` and scored via
@@ -11,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from trader.core.types import Action, Side, StrategySignal, Vote
-from trader.engine.orchestrator import agreement_fraction
+from trader.strategy.legacy_blend import agreement_fraction
 
 
 def _sig(action):

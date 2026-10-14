@@ -1,3 +1,4 @@
+"""Historical arithmetic compatibility; never current entry authority."""
 """An analyst with no opinion abstains; it does not vote against.
 
 `decide()` added every analyst's weight to the denominator whether or not it
@@ -16,7 +17,7 @@ comment, "strategies speak louder than any analyst", claims it can.
 as non-directional. This uses that same line.
 """
 from trader.core.types import Action, Side, StrategySignal, Vote
-from trader.engine.orchestrator import STRATEGY_VOTE_WEIGHT, net_score
+from trader.strategy.legacy_blend import STRATEGY_VOTE_WEIGHT, net_score
 
 
 def _vote(agent, conviction, confidence=1.0):

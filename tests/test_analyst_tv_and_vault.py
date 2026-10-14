@@ -147,8 +147,8 @@ def test_each_member_carries_the_weight_the_orchestrator_will_apply(
     strong.provenance = {"regime_evidence": ev}
     weak = _spec(id="weak", name="Weak", regime_filter=["RANGING"])
     out = analyst.active_set([weak, strong])
-    assert out["members"][0]["spec"] == "strong"
-    assert out["members"][0]["weight"] > out["members"][1]["weight"]
+    assert out["members"][0]["spec"] == "weak"
+    assert out["members"][0]["weight"] == out["members"][1]["weight"] == 1.0
 
 
 def test_a_spec_with_no_regime_filter_always_trades(analyst, monkeypatch):
@@ -205,7 +205,7 @@ def test_evidence_is_stored_even_when_no_regime_qualifies(analyst,
     assert spec.provenance["regime_evidence"] == by
 
 
-def test_stored_evidence_drives_the_blend_weight(analyst, monkeypatch):
+def test_stored_regime_evidence_does_not_reactivate_historical_weighting(analyst, monkeypatch):
     """End to end: what the Analyst measures is what the orchestrator
     weighs."""
     from trader.strategy.blend import strategy_weights
@@ -220,5 +220,5 @@ def test_stored_evidence_drives_the_blend_weight(analyst, monkeypatch):
                                                "by_regime": by})
     spec = _spec()
     analyst.set_measured_regimes(spec)
-    assert strategy_weights(_J(), [spec], "RANGING")[spec.id] > 1.0
+    assert strategy_weights(_J(), [spec], "RANGING")[spec.id] == 1.0
     assert strategy_weights(_J(), [spec], "VOLATILE")[spec.id] == 1.0

@@ -36,11 +36,12 @@ def test_a_louder_signal_on_the_other_side_takes_no_credit():
     assert _top(None, d) == "donchian"
 
 
-def test_the_loudest_of_the_agreeing_signals_wins():
-    d = _D(Action.SELL, [_sig("quiet", "SELL", 0.4),
-                         _sig("loud", "SELL", 0.8),
+def test_historical_matching_confidence_owner_is_preserved():
+    """Unversioned historical decisions retain fc6c0b2 ownership."""
+    d = _D(Action.SELL, [_sig("a_quiet", "SELL", 0.4),
+                         _sig("z_loud", "SELL", 0.8),
                          _sig("wrong_way", "BUY", 0.99)])
-    assert _top(None, d) == "loud"
+    assert _top(None, d) == "z_loud"
 
 
 def test_no_agreeing_signal_attributes_to_nobody():

@@ -187,23 +187,10 @@ def test_meta_validation_gate(tmp_path, monkeypatch):
 
 
 # ── adaptive threshold ───────────────────────────────────────────────────
-def test_adaptive_threshold_fallback_and_tighten(tmp_path):
-    from trader.engine.orchestrator import Orchestrator
+def test_historical_threshold_is_explicitly_frozen(tmp_path):
+    import json
+    from trader.strategy.legacy_blend import frozen_base
     j = _journal(tmp_path)
-    o = Orchestrator([], j, base_threshold=0.24, cfg={})
-    # no outcome data → static base
-    assert abs(o._adaptive_base("RANGING") - 0.24) < 1e-6
-
-    # a losing regime (hit rate 0.19, n=40) → base tightens toward cap
-    for i in range(40):
-        _seed(j, cid=f"cl{i}", did=f"dl{i}", symbol=f"L{i}/USDT",
-              action="SELL", ok=0, votes=[("alpha", -0.5)],
-              regime="TRENDING_DOWN")
-    o2 = Orchestrator([], j, base_threshold=0.24, cfg={})
-    base = o2._adaptive_base("TRENDING_DOWN")
-    assert base > 0.30          # punished regime → higher bar
-    # untouched regime still falls back
-    assert abs(o2._adaptive_base("TRENDING_UP") - 0.24) < 1e-6
-    # vol expansion scales modestly
-    assert o2._adaptive_base("RANGING", vol_ratio=2.0) > \
-        o2._adaptive_base("RANGING", vol_ratio=1.0)
+    assert frozen_base(j, 'RANGING') == .24
+    j.kv_set('legacy_frozen_adaptive_base', json.dumps({'RANGING': .31}))
+    assert frozen_base(j, 'RANGING') == .31
