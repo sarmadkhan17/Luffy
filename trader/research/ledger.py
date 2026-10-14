@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS research_controls (
     window TEXT NOT NULL,
     consistency_p REAL,
     powered INTEGER,
-    status TEXT,                   -- measured | uncalibrated | untestable
+    status TEXT,        -- measured | uncalibrated | untestable | unavailable
     detail TEXT,
     measured_at TEXT,
     PRIMARY KEY (tf, window)
@@ -144,6 +144,10 @@ CREATE TABLE IF NOT EXISTS research_batches (
 class Ledger:
     def __init__(self, journal):
         self.journal = journal
+        # tf -> the discovery cut the latest child batch reported. Not
+        # persisted: it is only ever evidence for re-opening an
+        # `unavailable` control, and absent evidence leaves it closed.
+        self._cuts: dict = {}
 
     def ensure(self) -> None:
         with self.journal._tx() as c:
@@ -227,11 +231,41 @@ class Ledger:
                 (tf, window, res.get("consistency_p"), 1 if powered else 0,
                  status, json.dumps(res)[:20000], now_utc().isoformat()))
 
+    def observe_cut(self, tf: str, cut_ms) -> None:
+        if cut_ms:
+            self._cuts[tf] = int(cut_ms)
+
+    def _reopened(self, tf: str, detail: str) -> bool:
+        """Has the evidence behind an `unavailable` control changed?
+
+        Only two things reopen it: the evaluation identity (control rule or
+        symbol floor) differs from the one recorded, or the discovery slice
+        now reaches far enough into the missing series for the control to
+        trade (`usable_from_ms`, recorded with the evidence). The cut merely
+        advancing, while the series is still outside it, changes nothing.
+        """
+        from . import control
+        try:
+            ev = json.loads(detail or "{}")
+        except ValueError:
+            return False
+        if ev.get("identity") != control.evidence_identity():
+            return True
+        cut = self._cuts.get(tf)
+        marks = [m.get("usable_from_ms")
+                 for m in (ev.get("unavailable") or {}).values()]
+        if cut is None or not marks or any(m is None for m in marks):
+            return False
+        return int(cut) >= max(int(m) for m in marks)
+
     def control(self, tf: str, window: str) -> dict | None:
         rows = self.journal.query(
             "SELECT * FROM research_controls WHERE tf=? AND window=?",
             (tf, window))
         if not rows:
+            return None
+        if rows[0].get("status") == "unavailable" \
+                and self._reopened(tf, rows[0].get("detail")):
             return None
         return {"tf": tf, "window": window,
                 "consistency_p": rows[0]["consistency_p"],

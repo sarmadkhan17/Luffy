@@ -21,6 +21,8 @@ import time
 from ..core.child import run_child
 from . import control, growth, job, planner
 from .combo import subsets
+from .evaluate import _TF_SECONDS
+from .slices import MIN_SLICE_BARS
 from .ledger import Ledger
 
 log = logging.getLogger(__name__)
@@ -193,6 +195,7 @@ class ResearchRunner:
                     "skipped": None, "error": res.error}
         v = res.value or {}
         n = self.ledger.record_gauges(batch.tf, v.get("gauges", {}))
+        self.ledger.observe_cut(batch.tf, v.get("cut_ms"))
         self.ledger.record_slices(batch.tf, v.get("cut_ms", 0),
                                   v.get("counts", {}))
         self.ledger.finish_batch(bid, True, time.monotonic() - t0)
@@ -265,8 +268,11 @@ class ResearchRunner:
 
         by_hash = {c.hash: c for c in batch.combos}
         recorded = 0
+        cut_ms = (res.value or {}).get("cut_ms")
+        self.ledger.observe_cut(batch.tf, cut_ms)
+        coverage = (res.value or {}).get("coverage")
         for r in (res.value or {}).get("results", []):
-            self._record(r, by_hash.get(r["hash"]), batch)
+            self._record(r, by_hash.get(r["hash"]), batch, coverage, cut_ms)
             recorded += 1
         self.ledger.finish_batch(bid, True, time.monotonic() - t0)
         deferred = (res.value or {}).get("skipped", 0)
@@ -278,7 +284,7 @@ class ResearchRunner:
                 "round": batch.round, "ok": True, "skipped": None,
                 "recorded": recorded, "deferred": deferred}
 
-    def _record(self, r: dict, c, batch) -> None:
+    def _record(self, r: dict, c, batch, coverage=None, cut_ms=None) -> None:
         if c is not None and c.evaluation_scope:
             r = dict(r, predictive_combo=c.as_dict(), source_hypothesis_id=c.trigger,
                      experiment_id=c.evaluation_scope)
@@ -303,6 +309,30 @@ class ResearchRunner:
             # calibrate" apart from "calibrated, no power" — but it is not
             # retried, unlike the crash/empty case.
             verdict = r.get("verdict")
+            # ...with ONE exception, for "took no trades" only: when the
+            # window's own required series has no observation inside the
+            # slice, the rule could not have traded — nothing was
+            # measured, and re-asking cannot change that until the data
+            # does. Recorded as `unavailable`, never powered, never a
+            # result; `ledger.control()` reopens it on changed evidence.
+            if verdict == "empty":
+                window = r.get("window", "ohlcv")
+                gap = control.unavailable(
+                    window, coverage, _TF_SECONDS.get(batch.tf, 900),
+                    MIN_SLICE_BARS)
+                if gap:
+                    self.ledger.record_control(
+                        batch.tf, window,
+                        {"verdict": "unavailable", "consistency_p": None,
+                         "reason": "required_data_unavailable",
+                         "unavailable": gap, "cut_ms": cut_ms,
+                         "identity": control.evidence_identity()},
+                        False, status="unavailable")
+                    log.info(f"research control {batch.tf}/{window}: "
+                             f"required data unavailable in the discovery "
+                             f"slice ({', '.join(sorted(gap))}) — recorded, "
+                             f"not retried until it changes")
+                    return
             if verdict in ("error", "empty"):
                 log.warning(
                     f"research control {batch.tf}/"

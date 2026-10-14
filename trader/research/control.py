@@ -58,6 +58,43 @@ MASKS = {
 MIN_CONTROL_SYMBOLS = 12
 
 
+def evidence_identity() -> dict:
+    """What an `unavailable` verdict was reached under. If the rule's
+    identity or the symbol floor changes, the old verdict says nothing
+    about the new control."""
+    from .combo import SCHEMA_VERSION
+    return {"schema": SCHEMA_VERSION, "min_symbols": MIN_CONTROL_SYMBOLS,
+            "channel": dict(CHANNEL)}
+
+
+def unavailable(window: str, coverage, step_s: int, min_bars: int):
+    """The required series a zero-trade control could not have traded on, or
+    None when the window's data is present (a genuine zero-trade control).
+
+    A requirement is unavailable when fewer of the loaded symbols than
+    `MIN_CONTROL_SYMBOLS` (or than exist, for a reference) have any
+    observation inside the slice — the same floor the control already
+    answers to. `usable_from_ms` is when enough symbols' history has been
+    in the slice for `min_bars` bars; None means the history itself does
+    not exist yet, which no cut advance can fix.
+    """
+    out = {}
+    for req in (r for r in window.split("|") if r and r != "ohlcv"):
+        m = (coverage or {}).get(req)
+        if not m or int(m.get("of", 0)) <= 0:
+            continue
+        of, have = int(m["of"]), int(m.get("have", 0))
+        need = min(MIN_CONTROL_SYMBOLS, of)
+        if have >= need:
+            continue
+        firsts = sorted(int(x) for x in m.get("first_ms") or ())
+        ready = firsts[need - 1] if len(firsts) >= need else None
+        out[req] = {"have": have, "of": of, "first_ms": firsts,
+                    "usable_from_ms": None if ready is None
+                    else ready + int(min_bars) * int(step_s) * 1000}
+    return out or None
+
+
 def incumbent_universe(journal=None) -> list:
     """The declared 16, read from the book when it is available.
 

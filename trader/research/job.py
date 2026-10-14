@@ -36,6 +36,31 @@ def _ctxs(b) -> list:
     return out
 
 
+def _coverage(b, requires) -> dict:
+    """How much of each non-candle requirement the discovery slice holds:
+    {requirement: {have, of, first_ms}}. `have` counts loaded symbols with at
+    least one observation inside the slice (a reference is one series);
+    `first_ms` is each symbol's first observation before the cut, so the
+    caller can tell "not yet collected" from "collected, but after the cut".
+    Facts the bundle already holds; nothing is read here."""
+    from ..strategy.spec_evidence import _SERIES_FOR
+    out = {}
+    for req in requires:
+        if req.startswith("ref:"):
+            have = 1 if (b.market or {}).get(req.split(":", 1)[1]) is not None \
+                and len(b.market[req.split(":", 1)[1]]) else 0
+            of = 1
+        elif req in _SERIES_FOR:
+            series = _SERIES_FOR[req]
+            have = sum(1 for d in b.derivs.values() if len(d.get(series, ())))
+            of = len(b.derivs)
+        else:
+            continue
+        out[req] = {"have": have, "of": of,
+                    "first_ms": sorted(b.first_obs.get(req, []))}
+    return out
+
+
 def measure_job(payload: dict) -> dict:
     """Percentiles for every gauge, and how much of the slice it exists on."""
     t0 = time.monotonic()
@@ -106,7 +131,8 @@ def evaluate_job(payload: dict) -> dict:
                             "trades": 0, "verdict": "error",
                             "error": f"{type(exc).__name__}: {exc}"[:300]})
     return {"results": results, "done": len(results), "skipped": skipped,
-            "loaded_symbols": len(b.frames),
+            "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),
+            "coverage": _coverage(b, payload.get("requires") or ()),
             "elapsed_s": round(time.monotonic() - t0, 2)}
 
 

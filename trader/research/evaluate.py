@@ -69,6 +69,10 @@ class Bundle:
     # bars before it are warmup context from before the cut.
     first_bars: dict = field(default_factory=dict)
     world: WorldContext | None = None  # same contract as compiled strategies
+    # requirement name -> first observation (ms) of each loaded symbol's
+    # series, BEFORE the cut: how much history exists, not how much the
+    # slice holds. `derivs` is already cut, so it cannot say that.
+    first_obs: dict = field(default_factory=dict)
 
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),
@@ -128,10 +132,15 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     disc = {s: d for s, d in disc.items() if s in sym_frames}
 
     derivs = {}
+    first_obs: dict = {}
     if any(r not in ("ohlcv", "world") and not r.startswith("ref:") for r in requires):
         dfeed = DerivFeed(db_path=paths.get("derivs"))
         for sym in disc:
             got = spec_evidence.load_derivs(sym, requires, dfeed)
+            for req, series in spec_evidence._SERIES_FOR.items():
+                if series in got and req in requires:
+                    first_obs.setdefault(req, []).append(
+                        int(slices._ms(got[series]).min()))
             derivs[sym] = {k: slices.before(v, cut) for k, v in got.items()}
     else:
         derivs = {s: {} for s in disc}
@@ -145,6 +154,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         for k in ref_keys:
             df = store.load(k)
             if df is not None and len(df):
+                first_obs[f"ref:{k}"] = [int(slices._ms(df).min())]
                 market[k] = slices.before(df, cut)
         market = market or None
 
@@ -159,7 +169,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         equity=float(cfg.get("research", {}).get("equity", 2000.0)),
         risk_pct=float(rcfg.get("risk_per_trade_pct", 0.5)),
         max_open=int(rcfg.get("max_open_trades", 8)),
-        world=load_world(paths, requires, cut))
+        world=load_world(paths, requires, cut), first_obs=first_obs)
 
 
 def load_world(paths, requires, cut=None):
