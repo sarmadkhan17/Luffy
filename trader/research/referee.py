@@ -28,7 +28,7 @@ import statistics as st
 import numpy as np
 
 from ..strategy import null_baseline, spec_evidence
-from ..strategy.portfolio_evidence import portfolio_curve
+from ..strategy.portfolio_evidence import portfolio_curve, RESEARCH_CLOCK
 from ..strategy.vector_backtest import WARMUP, walk_table
 from . import portfolio_null as pn
 from . import slices
@@ -308,11 +308,10 @@ def gate3(candidate_fills: list, book_fills: list, equity: float,
           risk_pct: float, max_open: int) -> dict:
     """Does the book make more money with the candidate in it?"""
     def curve(fills):
-        if not fills:
-            return {"total_pct": 0.0, "max_dd_pct": 0.0}
         c = portfolio_curve(fills, equity, risk_pct, max_open)
         return {"total_pct": round(float(c["total_pct"]), 3),
-                "max_dd_pct": round(float(c["max_dd_pct"]), 3)}
+                "max_dd_pct": round(float(c["max_dd_pct"]), 3),
+                "accounting": {**c["accounting"], "clock": RESEARCH_CLOCK}}
 
     without = curve(book_fills)
     with_ = curve(list(book_fills) + list(candidate_fills))
@@ -523,8 +522,7 @@ def examine(c, payload: dict) -> dict:
                         "scored_symbols": 0}
     rot = pn.common_rotation(legs_b, compiled.spec.exit, risk, tf,
                              b_b.equity, b_b.risk_pct, b_b.max_open,
-                             draws=int(payload["draws"]), seed=seed) \
-        if legs_b else {"p": None, "reason": "no B legs"}
+                             draws=int(payload["draws"]), seed=seed)
     for r in (a, b):
         r.pop("symbols", None)
     out.update(a=a, b=b, rotation=rot, gate1=gate1(a, b, rot), cut_ms=cut)
@@ -539,5 +537,6 @@ def examine(c, payload: dict) -> dict:
                                 b_b.max_open), "book": notes,
                         "book_exit_bindings": payload.get("book_exit_bindings") or {}}
     else:
-        out["gate3"] = {"passed": False, "reason": "no B legs", "book": {}}
+        out["gate3"] = {**gate3([], [], b_b.equity, b_b.risk_pct, b_b.max_open),
+                        "reason": "no B legs", "book": {}}
     return out

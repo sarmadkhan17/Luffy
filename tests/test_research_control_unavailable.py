@@ -18,6 +18,7 @@ from trader.research.evaluate import _TF_SECONDS
 from trader.research.ledger import Ledger
 from trader.research.runner import ResearchRunner
 from trader.research.slices import MIN_SLICE_BARS
+from trader.strategy.portfolio_evidence import accounting_provenance, RESEARCH_CLOCK
 
 CUT = 1_741_452_480_000
 STEP_MS = _TF_SECONDS["4h"] * 1000
@@ -44,7 +45,9 @@ def _row(c, **kw):
            "entry_long": c.long, "entry_short": c.short, "symbols": {},
            "trades": 200, "scored_symbols": 8, "consistency_p": 0.001,
            "median_pf": 1.4, "median_rate": 0.01,
-           "portfolio": {"total_pct": 15.0, "max_dd_pct": 20.0, "taken": 90},
+           "portfolio": {"accounting": accounting_provenance(
+                             2000, .5, 8, RESEARCH_CLOCK),
+                         "total_pct": 15.0, "max_dd_pct": 20.0, "taken": 90},
            "projection": {"markets_a": 6, "markets_b": 6},
            "testable": True, "verdict": "scored"}
     row.update(kw)

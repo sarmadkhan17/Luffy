@@ -99,12 +99,14 @@ def assess_joint(legs, exit_spec, risk, tf, *, hypothesis, world=None, sources=N
     retained. Different outcomes sharing a market are handled by the joint
     null, rather than by an assumed permanent return-correlation coefficient.
     """
+    from ..strategy.portfolio_evidence import accounting_provenance, RESEARCH_CLOCK
     legs = sorted(legs, key=lambda l: l.symbol)
     lineage = [contributor(l) for l in legs]
     protocol = {"version": "joint-timing.v1", "hypothesis": hypothesis,
                 "risk": risk, "exit": asdict(exit_spec), "tf": tf,
                 "exit_semantics_id": getattr(exit_spec, "_exit_semantics_id", None),
                 "equity": equity, "risk_pct": risk_pct, "max_open": max_open,
+                "portfolio_accounting": accounting_provenance(equity, risk_pct, max_open, RESEARCH_CLOCK),
                 "seed": seed, "consistency_draws": consistency_draws,
                 "dependence_draws": dependence_draws, "rotation_draws": rotation_draws,
                 "statistic": "dependence-corrected symbol consistency AND portfolio total_pct",

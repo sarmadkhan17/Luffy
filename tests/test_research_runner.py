@@ -11,6 +11,7 @@ from trader.core.journal import Journal
 from trader.research import vocab
 from trader.research.ledger import Ledger
 from trader.research.runner import ResearchRunner
+from trader.strategy.portfolio_evidence import accounting_provenance, RESEARCH_CLOCK
 import pytest
 
 
@@ -65,7 +66,7 @@ def _measured(fn, payload):
             "entry_long": c.long, "entry_short": c.short, "symbols": {},
             "trades": 200, "scored_symbols": 8, "consistency_p": 0.001,
             "median_pf": 1.4, "median_rate": 0.01,
-            "portfolio": {"total_pct": 15.0, "max_dd_pct": 20.0,
+            "portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK), "total_pct": 15.0, "max_dd_pct": 20.0,
                           "taken": 90},
             "projection": {"markets_a": 6, "markets_b": 6},
             "testable": True, "verdict": "scored"})
@@ -282,7 +283,7 @@ def _control_result(verdict, error=None):
                    "entry_short": c.short, "symbols": {}, "trades": 0,
                    "verdict": verdict, "consistency_p": None,
                    "median_pf": 0.0,
-                   "portfolio": {"total_pct": 0.0, "max_dd_pct": 0.0,
+                   "portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK), "total_pct": 0.0, "max_dd_pct": 0.0,
                                 "taken": 0}}
             if error:
                 row["error"] = error
@@ -333,7 +334,7 @@ def _short_bundle(fn, payload):
             "entry_long": c.long, "entry_short": c.short, "symbols": {},
             "trades": 200, "scored_symbols": 8, "consistency_p": 0.001,
             "median_pf": 1.4, "median_rate": 0.01,
-            "portfolio": {"total_pct": 15.0, "max_dd_pct": 20.0,
+            "portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK), "total_pct": 15.0, "max_dd_pct": 20.0,
                           "taken": 90},
             "projection": {"markets_a": 6, "markets_b": 6},
             "testable": True, "verdict": "scored"})
@@ -394,7 +395,7 @@ def test_the_label_gate_uses_the_configured_control_max_p(tmp_path):
                 "entry_long": c.long, "entry_short": c.short,
                 "symbols": {}, "trades": 200, "scored_symbols": 8,
                 "consistency_p": 0.3, "median_pf": 1.1, "median_rate": 0.01,
-                "portfolio": {"total_pct": 5.0, "max_dd_pct": 20.0,
+                "portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK), "total_pct": 5.0, "max_dd_pct": 20.0,
                              "taken": 90},
                 "projection": {"markets_a": 6, "markets_b": 6},
                 "testable": True, "verdict": "scored"})
@@ -434,7 +435,7 @@ def _survivors(r, n=3):
         r.ledger.record_result(
             {"hash": c.hash, "tf": "4h", "geo": "trail", "k": 1,
              "parts": list(c.keys), "window": c.window, "trades": 300,
-             "consistency_p": 1e-4, "portfolio": {"total_pct": 50.0 - i,
+             "consistency_p": 1e-4, "portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK), "total_pct": 50.0 - i,
                                                   "max_dd_pct": 20.0},
              "scored_symbols": 19, "testable": True, "verdict": "scored"},
             "survivor", "every part earns its place", {})
@@ -476,9 +477,11 @@ def _passing(p=1e-5, gate3=True):
     return {"hash": "x", "looked": True,
             "a": {"trades": 300, "consistency_p": 1e-6},
             "b": {"trades": 300, "consistency_p": 1e-6},
-            "rotation": {"p": p},
+            "rotation": {"p": p, "accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK)},
             "gate1": {"p": p, "reason": f"B common rotation p={p:.2e}"},
-            "gate3": {"passed": gate3, "reason": "adds compounded return"
+            "gate3": {"without": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK)},
+                      "with": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK)},
+                      "passed": gate3, "reason": "adds compounded return"
                       if gate3 else "book return 10% -> 9% with it"}}
 
 

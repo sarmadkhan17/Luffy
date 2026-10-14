@@ -33,7 +33,7 @@ import pandas as pd
 
 from ..strategy import null_baseline, spec_evidence
 from ..strategy.compile import compile_spec
-from ..strategy.portfolio_evidence import Fill, portfolio_curve
+from ..strategy.portfolio_evidence import Fill, portfolio_curve, accounting_provenance, RESEARCH_CLOCK
 from ..strategy.vector_backtest import funding_for, simulate
 from . import slices
 
@@ -206,7 +206,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
            "symbols": {}, "trades": 0, "scored_symbols": 0,
            "consistency_p": None, "median_pf": 0.0, "median_rate": 0.0,
            "portfolio": {"total_pct": 0.0, "max_dd_pct": 0.0, "taken": 0,
-                         "order": []},
+                         "order": [], "accounting": accounting_provenance(
+                             b.equity, b.risk_pct, b.max_open, RESEARCH_CLOCK)},
            "projection": {"markets_a": 0, "markets_b": 0},
            "testable": False, "verdict": "empty"}
     try:
@@ -216,7 +217,6 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         out["error"] = str(e)
         return out
 
-    step = _TF_SECONDS.get(c.tf, 900)
     if "world" in compiled.data_requires:
         gaps = spec_evidence.missing_data(spec, list(b.frames), frames=b.frames, world=b.world)
         if gaps:
@@ -255,8 +255,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         clock = _clock(df)
         for f in mine:
             fills.append(Fill(
-                entry_i=int((clock[f.entry_i] - t0) // step),
-                exit_i=int((clock[f.exit_i] - t0) // step),
+                entry_i=int(clock[f.entry_i] - t0),
+                exit_i=int(clock[f.exit_i] - t0),
                 r_multiple=f.r_multiple, symbol=sym))
 
         if r.trades < min_symbol_trades:
@@ -283,7 +283,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         out["portfolio"] = {
             "total_pct": round(curve["total_pct"], 3),
             "max_dd_pct": round(curve["max_dd_pct"], 3),
-            "taken": curve["taken"], "order": curve["order"]}
+            "taken": curve["taken"], "order": curve["order"],
+            "accounting": {**curve["accounting"], "clock": RESEARCH_CLOCK}}
     out["scored_symbols"] = len(pcts)
     out["median_pf"] = round(st.median(pfs), 3) if pfs else 0.0
     out["median_rate"] = st.median(rates) if rates else 0.0

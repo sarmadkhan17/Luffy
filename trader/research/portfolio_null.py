@@ -30,9 +30,10 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from ..strategy.portfolio_evidence import Fill, portfolio_curve
+from ..strategy.portfolio_evidence import (Fill, portfolio_curve, accounting_provenance,
+                                         require_compatible_accounting, RESEARCH_CLOCK)
 from ..strategy.vector_backtest import WARMUP, trade_table, walk_table
-from .evaluate import _TF_SECONDS, _clock
+from .evaluate import _clock
 
 log = logging.getLogger(__name__)
 
@@ -62,14 +63,15 @@ def _mask(a, first_bar: int) -> np.ndarray:
 
 
 def _prepare(legs, exit_spec, risk: dict, tf: str, t0: int | None = None):
-    """Build each leg's trade table and bar grid once — a draw re-uses them.
-    The grid is relative to `t0` (default: the earliest leg), so it is
-    rebuilt only when the set of legs or the origin changes. `tf` sets the
-    grid's bar length, which need not be the legs' own timeframe."""
-    key = (tf, t0, tuple(id(l) for l in legs))
+    """Build tables and a shared seconds clock once; offsets remain bar counts.
+
+    Keep exact source timestamps even when a book leg is faster than `tf`.
+    Flooring onto that grid can collapse a holding interval or reorder events.
+    `t0` is the shared origin in UTC seconds (default: the earliest leg).
+    """
+    key = (RESEARCH_CLOCK, tf, t0, tuple(id(l) for l in legs))
     if all(getattr(l, "_prep_key", None) == key for l in legs):
         return
-    step = _TF_SECONDS.get(tf, 900)
     clocks = {id(l): _clock(l.df) for l in legs}
     if t0 is None:
         t0 = min(int(c[0]) for c in clocks.values())
@@ -77,7 +79,7 @@ def _prepare(legs, exit_spec, risk: dict, tf: str, t0: int | None = None):
         if l.table is None:
             l.table = trade_table(l.df, exit_spec, risk, funding=l.funding,
                                   first_bar=l.first_bar)
-        l._grid = ((clocks[id(l)] - t0) // step).astype(np.int64)
+        l._grid = (clocks[id(l)] - t0).astype(np.int64)
         l._long = np.asarray(l.long, dtype=bool)
         l._short = np.asarray(l.short, dtype=bool)
         l._prep_key = key
@@ -85,7 +87,7 @@ def _prepare(legs, exit_spec, risk: dict, tf: str, t0: int | None = None):
 
 def fills_for(legs, exit_spec, risk: dict, tf: str, offset: int = 0,
               t0: int | None = None) -> tuple[list, int]:
-    """Every leg's fills on one bar grid, entries rolled by `offset` bars."""
+    """Fills on one seconds clock, entries rolled by `offset` source bars."""
     _prepare(legs, exit_spec, risk, tf, t0)
     fills, trades = [], 0
     for l in legs:
@@ -117,14 +119,17 @@ def common_rotation(legs, exit_spec, risk: dict, tf: str, equity: float,
     """{actual_total_pct, null_median, percentile, p, draws, trades}."""
     legs = [l for l in legs if l.df is not None and len(l.df) > WARMUP + 2]
     out = {"actual_total_pct": 0.0, "null_median": None, "percentile": None,
-           "p": None, "draws": 0, "trades": 0}
+           "p": None, "draws": 0, "trades": 0,
+           "accounting": accounting_provenance(equity, risk_pct, max_open, RESEARCH_CLOCK)}
     if not legs:
         return out
     fills, trades = fills_for(legs, exit_spec, risk, tf)
     out["trades"] = trades
     if not fills:
         return out
-    actual = portfolio_curve(fills, equity, risk_pct, max_open)["total_pct"]
+    actual_curve = portfolio_curve(fills, equity, risk_pct, max_open)
+    actual = actual_curve["total_pct"]
+    out["accounting"] = {**actual_curve["accounting"], "clock": RESEARCH_CLOCK}
     out["actual_total_pct"] = round(float(actual), 3)
 
     # the offset must move every leg clear of its own warmup at both ends;
@@ -138,8 +143,9 @@ def common_rotation(legs, exit_spec, risk: dict, tf: str, equity: float,
     null = np.empty(int(draws))
     for k, off in enumerate(rng.integers(lo_off, hi_off, size=int(draws))):
         f, _ = fills_for(legs, exit_spec, risk, tf, offset=int(off))
-        null[k] = portfolio_curve(f, equity, risk_pct, max_open)[
-            "total_pct"] if f else 0.0
+        null_curve = portfolio_curve(f, equity, risk_pct, max_open)
+        require_compatible_accounting(actual_curve, null_curve)
+        null[k] = null_curve["total_pct"]
     beaten_by = int((null >= actual).sum())
     out.update(null_median=round(float(np.median(null)), 3),
                percentile=round(float((null < actual).mean()), 4),

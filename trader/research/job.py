@@ -18,6 +18,7 @@ from __future__ import annotations
 import time
 
 from ..strategy.features import FeatureCtx
+from ..strategy.portfolio_evidence import accounting_provenance, RESEARCH_CLOCK
 from . import evaluate as ev
 from . import slices, thresholds
 from .combo import Combination
@@ -129,6 +130,8 @@ def evaluate_job(payload: dict) -> dict:
                             "parts": list(c.keys), "round": c.round,
                             "parent": c.parent, "trigger": c.trigger,
                             "trades": 0, "verdict": "error",
+                            "portfolio": {"accounting": accounting_provenance(
+                                b.equity, b.risk_pct, b.max_open, RESEARCH_CLOCK)},
                             "error": f"{type(exc).__name__}: {exc}"[:300]})
     return {"results": results, "done": len(results), "skipped": skipped,
             "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),

@@ -22,6 +22,7 @@ import json
 import logging
 
 from ..core.types import now_utc
+from ..strategy.portfolio_evidence import require_compatible_accounting
 
 log = logging.getLogger(__name__)
 
@@ -277,6 +278,11 @@ class Ledger:
                       ablation: dict, label: str = "") -> None:
         pf = res.get("portfolio") or {}
         with self.journal._tx() as c:
+            prior = c.execute("SELECT result FROM research_combos WHERE hash=?",
+                              (res["hash"],)).fetchone()
+            if prior:
+                old = json.loads(prior[0] or "{}")
+                require_compatible_accounting(old.get("portfolio") or {}, pf)
             c.execute(
                 "INSERT OR REPLACE INTO research_combos "
                 "(hash, tf, geo, k, round, parent, trigger, window, parts, "
@@ -334,9 +340,12 @@ class Ledger:
             args.append(verdict)
         sql += " ORDER BY consistency_p IS NULL, consistency_p, " \
                "total_pct DESC, hash"
-        if limit:
-            sql += f" LIMIT {int(limit)}"
-        return self.journal.query(sql, tuple(args))
+        rows = self.journal.query(sql, tuple(args))
+        # Stored legacy rows remain readable/replayable. A mixed ranking is
+        # refused, never silently used as a beam or candidate comparison.
+        require_compatible_accounting(*(json.loads(r["result"] or "{}").get("portfolio") or {}
+                                        for r in rows))
+        return rows[:int(limit)] if limit else rows
 
     # ── re-measurement ───────────────────────────────────────────────────
     def combos_exist(self, tf: str) -> int:

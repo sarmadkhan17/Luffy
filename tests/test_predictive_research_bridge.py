@@ -21,7 +21,7 @@ from trader.research.universe import DISCOVERY, HELDOUT
 from trader.core.child import ChildResult
 from trader.core.journal import Journal
 from trader.strategy import factory_handoff as F
-from trader.strategy.portfolio_evidence import Fill
+from trader.strategy.portfolio_evidence import Fill, accounting_provenance, RESEARCH_CLOCK
 from trader.learning import capture as Lc, foundation as L
 from tests.test_investigation_state_feedback import paths
 from tests.test_investigation_research_family import measured
@@ -78,7 +78,8 @@ class NumericalFixture:
                     parts=list(c.keys),round=c.round,parent=c.parent,trigger=c.trigger,
                     entry_long=c.long,entry_short=c.short,verdict='scored',testable=True,
                     trades=200,scored_symbols=16,consistency_p=.001 if c.k==2 or c.round=='control' else .02,
-                    median_pf=1.4,portfolio=dict(total_pct=20 if c.k==2 else 10,max_dd_pct=5),
+                    median_pf=1.4,portfolio=dict(total_pct=20 if c.k==2 else 10,max_dd_pct=5,
+                        accounting=accounting_provenance(2000,.5,8,RESEARCH_CLOCK)),
                     projection=dict(markets_a=8,markets_b=8)))
             out=dict(results=results,loaded_symbols=len(payload['symbols']))
         elif fn is job.select_job:
@@ -87,7 +88,7 @@ class NumericalFixture:
             n=60 if self.disposition!='DATA_INSUFFICIENT' else 1
             p=.5 if self.disposition=='UNSUPPORTED' else .00001
             a=b=dict(trades=n,scored_symbols=16,consistency_p=p,consistency_p_dep=p,rho_bar=0)
-            rotation=dict(p=p)
+            rotation=dict(p=p,accounting=accounting_provenance(2000,.5,8,RESEARCH_CLOCK))
             gate=referee.gate1(a,b,rotation)
             fills=[Fill(i*2,i*2+1,1 if i%3 else -.5,'BTC/USDT') for i in range(60)]
             g3=referee.gate3(fills,[],2000,.5,8)

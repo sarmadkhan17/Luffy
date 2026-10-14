@@ -16,9 +16,12 @@ handled, because the child may not survive them:
 from __future__ import annotations
 
 import logging
+import json
 import time
 
 from ..core.child import run_child
+from ..strategy.portfolio_evidence import (AccountingMismatch, require_current_accounting,
+                                         require_compatible_accounting)
 from . import control, growth, job, planner
 from .combo import subsets
 from .evaluate import _TF_SECONDS
@@ -133,6 +136,15 @@ class ResearchRunner:
         if cycle_seconds is not None \
                 and float(cycle_seconds) > float(self._r("skip_if_cycle_s")):
             return {"skipped": "busy", "cycle_seconds": cycle_seconds}
+
+        # Preserve frozen rows/hashes and spent looks. A legacy study needs an
+        # explicit owner disposition; resuming it cannot mix accounting eras.
+        try:
+            for tf in self._r("horizons"):
+                for row in self.ledger.rows(tf):
+                    require_current_accounting(json.loads(row["result"] or "{}").get("portfolio") or {})
+        except AccountingMismatch as exc:
+            return {"ok": False, "skipped": "portfolio_accounting_incompatible", "error": str(exc)}
 
         # A queued candidate is a pending decision, so the referee goes
         # before any new round. It lives here and not in planner.py, which
@@ -272,7 +284,13 @@ class ResearchRunner:
         self.ledger.observe_cut(batch.tf, cut_ms)
         coverage = (res.value or {}).get("coverage")
         for r in (res.value or {}).get("results", []):
-            self._record(r, by_hash.get(r["hash"]), batch, coverage, cut_ms)
+            try:
+                self._record(r, by_hash.get(r["hash"]), batch, coverage, cut_ms)
+            except AccountingMismatch as exc:
+                self.ledger.finish_batch(bid, False, time.monotonic() - t0, str(exc))
+                return {"kind": "evaluate", "ok": False,
+                        "skipped": "portfolio_accounting_incompatible",
+                        "recorded": recorded, "error": str(exc)}
             recorded += 1
         self.ledger.finish_batch(bid, True, time.monotonic() - t0)
         deferred = (res.value or {}).get("skipped", 0)
@@ -285,6 +303,7 @@ class ResearchRunner:
                 "recorded": recorded, "deferred": deferred}
 
     def _record(self, r: dict, c, batch, coverage=None, cut_ms=None) -> None:
+        require_current_accounting(r.get("portfolio") or {})
         if c is not None and c.evaluation_scope:
             r = dict(r, predictive_combo=c.as_dict(), source_hypothesis_id=c.trigger,
                      experiment_id=c.evaluation_scope)
@@ -409,6 +428,12 @@ class ResearchRunner:
 
     def _select(self, tf, geo, rows) -> dict:
         from . import referee
+        try:
+            for row in rows:
+                require_current_accounting(json.loads(row["result"] or "{}").get("portfolio") or {})
+        except AccountingMismatch as exc:
+            return {"kind": "referee_select", "ok": False,
+                    "skipped": "portfolio_accounting_incompatible", "error": str(exc)}
         combos, dead = [], []
         for row in rows:
             c = self._combo(row, tf, geo)
@@ -501,6 +526,13 @@ class ResearchRunner:
                 f"held-out already spent (test {prior['seq']})"))
             return {**out, "ok": True, "state": "refused"}
 
+        try:
+            discovery = (self.ledger.result(h) or {}).get("portfolio") or {}
+            require_current_accounting(discovery)
+        except AccountingMismatch as exc:
+            # Refuse before reading held-out prices or touching the budget.
+            return {**out, "ok": False, "skipped": "portfolio_accounting_incompatible", "error": str(exc)}
+
         row = self.journal.query(
             "SELECT * FROM research_combos WHERE hash=?", (h,))
         c = self._combo(row[0], tf, geo) if row else None
@@ -546,6 +578,18 @@ class ResearchRunner:
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}
+        if res.ok and not v.get("error"):
+            try:
+                portfolios = [v.get("rotation") or {},
+                              (v.get("gate3") or {}).get("without") or {},
+                              (v.get("gate3") or {}).get("with") or {}]
+                for portfolio in portfolios:
+                    require_current_accounting(portfolio)
+                require_compatible_accounting(discovery, *portfolios)
+            except AccountingMismatch as exc:
+                # A worker may already have read held-out prices. Preserve the
+                # registered failed-look handling and its existing budget rules.
+                v = {**v, "error": str(exc)}
         if not res.ok or v.get("error"):
             err = res.error if not res.ok else v["error"]
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, err)

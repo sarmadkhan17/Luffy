@@ -23,6 +23,8 @@ the Reason step (phase 4) explains.
 """
 from __future__ import annotations
 
+from ..strategy.portfolio_evidence import require_compatible_accounting
+
 #: above this, a rule is not distinguishable enough from its own rotation to
 #: be worth spending the search's time extending. Deliberately loose: a piece
 #: may be useless alone and valuable in company, and this only decides where
@@ -61,6 +63,8 @@ def carries_information(res, max_p: float = GROW_MAX_P) -> bool:
 
 def earns_place(child, other) -> tuple[bool, str]:
     """Is `child` better than `other` on BOTH measures?"""
+    require_compatible_accounting((child or {}).get("portfolio") or {},
+                                 (other or {}).get("portfolio") or {})
     cp, op = _p(child), _p(other)
     cpct, opct = _pct(child), _pct(other)
     if cp >= op:
@@ -77,6 +81,8 @@ def ablation(child, subset_results: dict) -> dict:
     """{removed part key: what the rule loses without it}."""
     out = {}
     for key, res in (subset_results or {}).items():
+        require_compatible_accounting((child or {}).get("portfolio") or {},
+                                     (res or {}).get("portfolio") or {})
         out[key] = {
             "p": res.get("consistency_p"),
             "total_pct": (res.get("portfolio") or {}).get("total_pct"),

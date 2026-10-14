@@ -3,6 +3,7 @@
 Negative controls: retry, restart, rename/duplicate, exhausted budget,
 reset attempt, unregistered threshold."""
 from types import SimpleNamespace
+import json
 
 import pytest
 
@@ -10,6 +11,7 @@ from trader.core.journal import Journal
 from trader.research import fdr, portfolio_null as pn
 from trader.research.ledger import Ledger
 from trader.research.runner import ResearchRunner
+from trader.strategy.portfolio_evidence import accounting_provenance, RESEARCH_CLOCK
 
 
 def _led(path):
@@ -109,8 +111,9 @@ def test_exhausted_budget_defers_not_tests(db):
         _combo=lambda row, tf, geo: object())
     led.journal.query  # noqa: B018
     with led.journal._tx() as c:
-        c.execute("INSERT INTO research_combos (hash, tf, geo, k) "
-                  "VALUES ('late','4h','fixed',1)")
+        c.execute("INSERT INTO research_combos (hash, tf, geo, k, result) "
+                  "VALUES ('late','4h','fixed',1,?)", (json.dumps({
+                      'portfolio': {'accounting': accounting_provenance(2000,.5,8,RESEARCH_CLOCK)}}),))
     out = ResearchRunner._examine(fake, "4h", "fixed", {"hash": "late"}, 1)
     assert out["state"] == "deferred"
     assert led.candidate("late")["state"] == "deferred"
