@@ -71,6 +71,24 @@ def inventory(db):
             'objects': list(db.execute('SELECT name,sum(pgsize),sum(payload),sum(unused) FROM dbstat GROUP BY name ORDER BY sum(pgsize) DESC'))}
 
 
+def retained_inventory(db, physical_sha256):
+    """Non-target stores are protected more strongly by complete file hashes.
+
+    Counts and DDL inventory use the readonly normalized copy. No candidate
+    belongs to these stores; every byte is compared again after cleanup.
+    Evidence manifests resolve in their own SQLite main/src namespace, never
+    through a global cross-database SHA catalog.
+    """
+    return {'tables': {name: {'rows': db.execute('SELECT count(*) FROM '+quote(name)).fetchone()[0]}
+                       for name, _ in tables(db)},
+            'schema_sha256': hashlib.sha256(canonical(schema(db)).encode()).hexdigest(),
+            'page_size': db.execute('PRAGMA page_size').fetchone()[0],
+            'pages': db.execute('PRAGMA page_count').fetchone()[0],
+            'free_pages': db.execute('PRAGMA freelist_count').fetchone()[0],
+            'verification': 'COMPLETE_DATABASE_FILE_BYTE_PARITY',
+            'file_sha256': physical_sha256}
+
+
 def snapshot(source, destination):
     """Copy stable database+sidecars without opening a source in SQLite.
 
@@ -201,6 +219,8 @@ def portfolio_candidates(db, roots):
             return [], {'reason': 'UNKNOWN_COLUMNS_RETAINED'}
     if list(db.execute('PRAGMA foreign_key_check')):
         raise ValueError('FOREIGN_KEY_CHECK_FAILED')
+    if any(list(db.execute('PRAGMA foreign_key_list('+quote(name)+')')) for name in actual):
+        return [], {'reason': 'UNKNOWN_FOREIGN_KEYS_RETAINED'}
     # Unknown trigger side effects may mutate immutable history on deletion.
     if list(db.execute("SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name=?", (BLOBS,))):
         raise ValueError('BLOB_TRIGGER_REFUSED')
@@ -299,25 +319,17 @@ def rehearse(directory, report_path, *, inventory_directory=None):
             else:
                 read_normalized_copy(path).close()
             physical_hashes[path.name] = file_sha(path)
-            # Sequential materialization avoids millions of random reads on
-            # fragmented historical stores. Only one scan DB owns RAM at once.
-            # Databases above four GiB keep bounded cache and disk streaming.
-            memory_available = next(int(line.split()[1])*1024 for line in
-                                    Path('/proc/meminfo').read_text().splitlines()
-                                    if line.startswith('MemAvailable:'))
-            if (path.stat().st_size <= 4 * 1024**3
-                    and memory_available >= path.stat().st_size * 1.15 + 512 * 1024**2):
-                db = E.install(sqlite3.connect(':memory:'))
-                scan = sqlite3.connect(path.as_uri()+'?mode=ro&immutable=1', uri=True)
-                try:
-                    scan.backup(db, pages=4096)
-                finally:
-                    scan.close()
-                db.execute('PRAGMA temp_store=MEMORY')
+            if path.name != 'runtime-portfolio.db':
+                db = read_normalized_copy(path)
+                baseline[path.name] = retained_inventory(db, physical_hashes[path.name])
+                root_sets[path.name] = set()
+                manifest_counts[path.name] = 'BYTE_EXACT_FILE_PRESERVED'
             else:
-                db = read_copy(path)
-            baseline[path.name] = inventory(db)
-            root_sets[path.name], manifest_counts[path.name] = references(db)
+                # Only the deletion target needs an expanded root closure.
+                # Decoder lookup is database-local: main or its attached src.
+                db = read_normalized_copy(path)
+                baseline[path.name] = inventory(db)
+                root_sets[path.name], manifest_counts[path.name] = references(db)
             db.close()
             (report_path/'inventory-progress.json').write_text(json.dumps(baseline, indent=2))
             print('inventoried', path.name, flush=True)
@@ -331,7 +343,8 @@ def rehearse(directory, report_path, *, inventory_directory=None):
                     'database': name, 'before': baseline[name], 'external_roots': sorted(external),
                     'delete': candidates, 'refusal': refusal,
                     'compressed_payload_bytes': sum(r['compressed_bytes'] for r in candidates),
-                    'snapshot': json.loads((directory.parent/'snapshot.json').read_text())}
+                    'snapshot': json.loads((directory.parent/'snapshot.json').read_text()),
+                    'reference_scope': 'Target main/src namespace; other stores preserved byte-for-byte; runtime.py, owner/queries.py and learning readers resolve retained evaluation/state rows'}
         (report_path/'production-cleanup-manifest.json').write_text(json.dumps(manifest, indent=2))
         start = time.perf_counter(); before_bytes = (directory/name).stat().st_size
         after = apply_copy(db, manifest)

@@ -205,3 +205,14 @@ def test_hardlink_cannot_be_an_isolated_target(tmp_path):
     path=tmp_path/'copies/runtime-portfolio.db'
     (tmp_path/'alias.db').hardlink_to(path)
     with pytest.raises(ValueError,match='HARDLINK_DATABASE_REFUSED'):C.read_copy(path)
+
+
+def test_unknown_foreign_key_declaration_retains_every_blob(tmp_path):
+    db,*_ = fixture_db(tmp_path)
+    db.execute('DROP TABLE checkpoints')
+    db.execute('CREATE TABLE checkpoints(event_id TEXT PRIMARY KEY,payload TEXT NOT NULL REFERENCES journal_evidence_blobs_v1(sha256))')
+    db.commit();before=C.inventory(db)
+    manifest,refusal=plan(db)
+    assert not manifest['delete'] and refusal['reason']=='UNKNOWN_FOREIGN_KEYS_RETAINED'
+    assert C.inventory(db)==before
+    db.close()
