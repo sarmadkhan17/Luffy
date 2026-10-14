@@ -322,6 +322,49 @@ def test_kernel_snapshot_actual_boundary(store,tmp_path,monkeypatch):
     assert k._snapshot_for('BTC/USDT') is None
 
 
+@pytest.mark.parametrize('case,expected', [
+    ('missing', False), ('stale', False), ('partial', False),
+    ('invalid_quality', False), ('wrong_identity', False), ('valid', True),
+])
+def test_execution_availability_counts_only_qualified_frame(
+        case, expected, store, tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from trader.kernel import Kernel
+    from trader.core.journal import Journal
+    from trader.core.types import MarketType
+    import trader.kernel as module
+
+    feed, clock = store
+    data = feed.fetch_ohlcv('BTC/USDT', min_bars=1)
+    if case == 'stale':
+        clock.at = T + Q + P.TF_MS['15m'] + feed.ttl['15m'] * 1000 + 1
+    elif case == 'partial':
+        data['bar_state'] = 'PARTIAL'
+    elif case == 'invalid_quality':
+        data['quality'] = 'INVALID'
+    elif case == 'wrong_identity':
+        foreign = data.copy()
+        foreign['instrument_id'] = 'binance_usdm:futures:ETHUSDT'
+        data = pd.concat([data, foreign], ignore_index=True)
+
+    feed.fetch_multi = lambda *args: {} if case == 'missing' else {'15m': data}
+    feed.fetch_ohlcv = lambda *args: None
+    kernel = Kernel.__new__(Kernel)
+    kernel.feed = feed
+    kernel.journal = Journal(tmp_path / f'journal-{case}.db')
+    kernel.cfg = {'timeframes': {'context': [], 'execution': '15m'}}
+    kernel.market_type = MarketType.FUTURES
+    kernel.universe = SimpleNamespace()
+    kernel._derivs_for = lambda *args, **kwargs: None
+    kernel._market_for = lambda **kwargs: None
+    kernel._last_snapshot_feed_available = True
+    monkeypatch.setattr(module.time, 'time', lambda: clock.at / 1000)
+
+    snapshot = kernel._snapshot_for('BTC/USDT')
+    assert (snapshot is not None) is expected
+    assert kernel._last_snapshot_feed_available is expected
+
+
 def test_opportunity_refuses_future_signal_source():
     from trader.cognition.opportunity_context import build,OpportunityContextRefused
     params={'spec_id':'s','spec_fingerprint':'f'*64,'signal_timeframe':'15m',

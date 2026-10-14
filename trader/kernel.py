@@ -915,6 +915,9 @@ class Kernel:
     # ── per-symbol pipeline ───────────────────────────────────────────────
     def _snapshot_for(self, symbol: str,
                       universe: dict | None = None) -> Snapshot | None:
+        # Reset per attempt so an early refusal cannot inherit the last
+        # symbol's availability result.
+        self._last_snapshot_feed_available = False
         from .engine.entry_authority import proposal_binding
         instrument_binding = proposal_binding(self.journal, symbol)
         if instrument_binding:
@@ -926,7 +929,6 @@ class Kernel:
         dfs = self.feed.fetch_multi(
             symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
         exec_tf = self.cfg["timeframes"]["execution"]
-        self._last_snapshot_feed_available = exec_tf in dfs and dfs[exec_tf] is not None and len(dfs[exec_tf]) > 0
         from .data import market_provenance as mp
         as_of = int(time.time()*1000)
         btc = self.feed.fetch_ohlcv('BTC/USDT', '1h')
@@ -946,6 +948,10 @@ class Kernel:
             return None
         if instrument_binding and iid != bound_iid.value:
             return None
+        # This metric means the execution frame passed freshness, quality,
+        # and instrument-identity checks. Snapshot construction is counted
+        # separately by the caller after this method succeeds.
+        self._last_snapshot_feed_available = True
         safe_universe = {}
         for sym, frames in (universe or {}).items():
             safe = {tf: mp.usable_current(frame, tf, as_of, self.feed.ttl.get(tf, 300))
