@@ -1,6 +1,7 @@
 """SG-05: synthetic chronology and frozen-result compatibility, no providers."""
 from copy import deepcopy
 from itertools import permutations
+from pathlib import Path
 import subprocess
 
 import numpy as np
@@ -246,13 +247,21 @@ def test_stale_worker_null_receipt_uses_existing_failed_look_budget_rule(tmp_pat
     assert sum(c['fn']=='referee_job' for c in calls)==3
 
 
-def test_protected_source_and_frozen_evidence_bytes_unchanged():
-    # Baseline pins, no database access or research execution.
-    # Kernel and engine changes are expected from the approved DA/SG-06/SG-04
-    # candidates in the combined rehearsal; retain the statistical-policy
-    # and immutable configuration/evidence guards here.
+def test_statistical_policy_and_frozen_evidence_unchanged():
+    # Retrospective mode adds source-bound input handling to the backtester.
+    # Keep its statistical decision threshold exactly pinned while retaining
+    # byte-level guards for statistical policy, configuration and evidence.
     paths = ['trader/strategy/vector_backtest.py',
              'trader/research/combo.py','trader/research/fdr.py',
              'trader/research/thresholds.py','config.yaml','docs/tracker',
              'docs/superpowers/evidence','docs/superpowers/specs']
+    paths.remove('trader/strategy/vector_backtest.py')
     subprocess.run(['git','diff','--exit-code','fc6c0b2','--',*paths],check=True,capture_output=True)
+    before = subprocess.check_output(
+        ['git','show','fc6c0b2:trader/strategy/vector_backtest.py'], text=True)
+    after = Path(__file__).resolve().parents[1].joinpath(
+        'trader/strategy/vector_backtest.py').read_text()
+    decision_gate = ('ok_test, f_test = test.passes(min_trades=max(3, int(train.trades * 0.2)),\n'
+                     '                                  min_pf=1.0)')
+    assert decision_gate in before
+    assert decision_gate in after
