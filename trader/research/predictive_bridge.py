@@ -316,7 +316,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     append(db, 'bridge_sources', source.bank_id, asdict(source))
                     for q in P.next_questions(source):
                         append(db, 'bridge_questions', q['question_id'], q)
-                    for transformation in P.TRANSFORMS:
+                    for transformation in P.generatable():
                         h = P.propose(source, transformation, now_ms)
                         status, related = prior_classification(db, h)
                         check=dict(source_bank_id=source.bank_id,transformation=transformation,
@@ -334,7 +334,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                 h = P.hypothesis_from_dict(saved['hypothesis'])
                 finished = [o for o in records(db,'bridge_bank_results') if o['hypothesis_id']==h.hypothesis_id
                             and (o['classification'] in ('SUPPORTED','UNSUPPORTED','NOT_TESTABLE')
-                                 or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE'))]
+                                 or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE','DUPLICATE_EXPERIMENT_IDENTITY'))]
                 if finished:
                     continue
                 if P.TRANSFORMS[h.transformation]['shape']=='combination':
@@ -359,6 +359,20 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     with db:
                         feedback(db,h,None,'DATA_INSUFFICIENT',None,dict(state=ex['reason']),now_ms)
                     continue
+                if not existing:
+                    identity = E.statistical_identity(ex)
+                    twin = next((e for e in records(db,'bridge_experiments')
+                                 if E.statistical_identity(e) == identity), None)
+                    if twin:
+                        # Same registered question under a new name: no new look.
+                        counts['exact_duplicates'] += 1
+                        with db:
+                            append(db,'bridge_registration_checks',P.digest([h.hypothesis_id,'experiment_identity']),
+                                dict(source_bank_id=h.bank_id,transformation=h.transformation,proposal_id=h.hypothesis_id,
+                                     classification='DUPLICATE_EXPERIMENT_IDENTITY',related_prior=[twin['experiment_id']]))
+                            feedback(db,h,None,'DATA_INSUFFICIENT',None,
+                                     dict(state='DUPLICATE_EXPERIMENT_IDENTITY',identical_experiment_id=twin['experiment_id']),now_ms)
+                        continue
                 if not submit or offered >= max_experiments:
                     continue
                 offered += 1

@@ -180,17 +180,12 @@ def test_duplicate_retry_and_fresh_interpreter_preserve_protected_provenance(com
     assert next(e for e in replay['experiments'] if e['experiment_id']==ex['experiment_id'])==ex
 
 
-def test_unsupported_paired_null_is_retained_without_quantitative_result(completed):
+def test_unsupported_shapes_are_never_generated_or_registered(completed):
     case,*_=completed
-    h=next(r['hypothesis'] for r in rows(case[1],'bridge_hypotheses')
-           if r['hypothesis']['transformation']=='volume_breakout_no_benefit.v1')
-    result=next(r for r in rows(case[1],'bridge_bank_results') if r['hypothesis_id']==h['hypothesis_id'])
-    assert result['classification']=='NOT_TESTABLE' and result['quantitative_outcome']=='UNTESTED'
-    assert result['experiment_id'] is result['measurement_id'] is result['quantitative_evidence_id'] is None
-    assert result['measured_result'] is None and not result['predictive_strategy_validation']
-    translations=[r for r in rows(case[1],'bridge_translations') if r['hypothesis_id']==h['hypothesis_id']]
-    assert translations and translations[0]['translation']['status']=='UNSUPPORTED_EXPERIMENT_SHAPE'
-    assert translations[0]['contract']['proposal_contract']==json.loads(h['proposal_contract_json'])
+    hyps=rows(case[1],'bridge_hypotheses')
+    assert {r['hypothesis']['transformation'] for r in hyps}=={'volume_breakout_context.v1'}
+    assert not any(r['classification']=='NOT_TESTABLE' for r in rows(case[1],'bridge_bank_results'))
+    assert all(r['translation']['status']!='UNSUPPORTED_EXPERIMENT_SHAPE' for r in rows(case[1],'bridge_translations'))
 
 
 def test_unavailable_quantitative_result_cannot_read_a_candidate_as_pass(base):

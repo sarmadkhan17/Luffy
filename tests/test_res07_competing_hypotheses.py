@@ -24,26 +24,13 @@ def proposal_source(paths):
     return P.source_from_chain(chain, chain["runs"][-1], end+2)
 
 
-def test_normal_chain_retains_genuine_competitors_and_exact_restart(population):
+def test_normal_chain_registers_only_supported_shapes_and_exact_restart(population):
     source, bank, candles, created, later, _ = population
     original = source.read_bytes()
     consume(population, NumericalFixture(), created, submit=False)
     records = saved(bank, 'bridge_hypotheses')
     by = {r['hypothesis']['transformation']: P.hypothesis_from_dict(r['hypothesis']) for r in records}
-    benefit = by['volume_breakout_context.v1']
-    null = by['volume_breakout_no_benefit.v1']
-    a, b = [json.loads(h.proposal_contract_json) for h in (benefit, null)]
-    assert benefit.hypothesis_id != null.hypothesis_id
-    assert benefit.predictor_definition == null.predictor_definition
-    assert benefit.target_definition == null.target_definition
-    assert benefit.asset_scope == null.asset_scope and benefit.horizon == null.horizon
-    assert a['competition_group'] == b['competition_group']
-    assert a['competing_transformation'] == null.transformation
-    assert b['competing_transformation'] == benefit.transformation
-    assert a['test']['metric'] == b['test']['metric']
-    assert a['test']['baseline'] == b['test']['baseline']
-    assert (a['test']['comparator'], b['test']['comparator']) == ('> 0', '<= 0')
-    assert E.translate(null, candles, {}, later)['status'] == 'UNSUPPORTED_EXPERIMENT_SHAPE'
+    assert set(by) == {'volume_breakout_context.v1'} == set(P.generatable())
     assert all(json.loads(h.proposal_contract_json)['predictive_edge_status'] == 'UNTESTED'
                for h in by.values())
     consume(population, NumericalFixture(), later, submit=False)
@@ -66,7 +53,7 @@ def test_explicit_evidence_lineage_scope_and_unknown_cause(proposal_source):
     source = proposal_source
     retained = json.loads(source.retained_chain_json)
     state = json.loads(retained['evidence']['frozen']['case_payload'])['state']
-    for transformation in P.TRANSFORMS:
+    for transformation in P.generatable():
         h = P.propose(source, transformation, source.available_ms)
         P.validate(h)
         c = json.loads(h.proposal_contract_json)
@@ -118,7 +105,11 @@ def test_legacy_hypothesis_identity_and_payload_are_preserved(proposal_source):
         assert replayed.hypothesis_id == h.hypothesis_id
         assert replayed.provenance_hash == h.provenance_hash
         assert P.canonical(asdict(replayed)) == P.canonical(raw)
-        assert P.propose(source, transformation, source.available_ms).hypothesis_id != h.hypothesis_id
+        if transformation in P.generatable():
+            assert P.propose(source, transformation, source.available_ms).hypothesis_id != h.hypothesis_id
+        else:
+            with pytest.raises(ValueError, match='unsupported_experiment_shape'):
+                P.propose(source, transformation, source.available_ms)
 
 
 def test_supported_source_projection_required_at_generation(proposal_source):

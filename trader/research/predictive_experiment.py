@@ -161,6 +161,22 @@ def translate(h, candles_path, cfg, as_of_ms):
     return dict(body, experiment_id=P.digest(body))
 
 
+def statistical_identity(experiment):
+    """What an experiment statistically asks, free of how it was named.
+
+    Excludes hypothesis/source ids, generation clock, mechanism text and code or
+    data fingerprints, so regeneration, renaming or a retry of the same
+    expression over the same registered split and policy is the same question.
+    """
+    s = experiment['split']
+    return P.digest(dict(predictor=sorted(experiment['predictor']), target=experiment['target'],
+        horizon=experiment['horizon'], direction=experiment['direction'],
+        timeframe=experiment['timeframe'], geometry=experiment['geometry'],
+        split={k: s[k] for k in ('start_ms', 'cut_ms', 'end_ms', 'fraction', 'discovery_symbols', 'heldout_symbols')},
+        baseline_null=experiment['baseline_null'], metrics=experiment['metrics'],
+        minimum_evidence=experiment['minimum_evidence']))
+
+
 def validate(experiment):
     if experiment.get('experiment_id') != P.digest({k:v for k,v in experiment.items() if k != 'experiment_id'}):
         raise ValueError('experiment_integrity')

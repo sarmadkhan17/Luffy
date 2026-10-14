@@ -116,9 +116,9 @@ def test_normal_bank_consumer_to_planner_referee_feedback(population, dispositio
     original=source.read_bytes()
     first=consume(population,fake,created)
     assert first['counts']['eligible_research_results']==1
-    assert first['counts']['hypotheses_proposed']==3
+    assert first['counts']['hypotheses_proposed']==1
     assert first['counts']['data_insufficient']==1
-    assert first['counts']['not_testable']==2
+    assert first['counts']['not_testable']==0
     assert fake.calls==[] # descriptive support did not create predictive evidence
     assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
     for _ in range(6):
@@ -195,7 +195,8 @@ def test_bounded_next_question_generator_all_outcomes(population,classification)
 
 def test_shape_leakage_and_factory_bypass_refused(population):
     source,bank,candles,created,later,s=population
-    h=P.propose(s,'exact_volume_path.v1',created)
+    with pytest.raises(ValueError,match='unsupported_experiment_shape'): P.propose(s,'exact_volume_path.v1',created)
+    h=P._propose(s,'exact_volume_path.v1',created,P.SCHEMA)
     assert E.translate(h,candles,CFG,later)['status']=='UNSUPPORTED_EXPERIMENT_SHAPE'
     h=P.propose(s,'volume_breakout_context.v1',created)
     ex=E.translate(h,candles,CFG,later)
@@ -231,7 +232,7 @@ def test_feedback_retains_stage7_replay_and_no_truth_from_priority(population):
     consume(population,NumericalFixture(),created)
     with sqlite3.connect(bank) as db:
         ids=[r[0] for r in db.execute('SELECT outcome_id FROM learning_outcome_captures')]
-        assert len(ids)==3
+        assert len(ids)==1  # unsupported templates are no longer generated
         for oid in ids:
             outcome,retained=Lc.learning_outcome(db,oid)
             assert outcome.kind==L.Kind.RESEARCH
@@ -308,7 +309,7 @@ def test_source_alias_budget_and_immutable_checkpoint_refused(population):
         with pytest.raises(sqlite3.IntegrityError,match='immutable'): db.execute("UPDATE bridge_hypotheses SET payload='{}'")
     second=consume(population,NumericalFixture(),created+1)
     assert second['counts']['eligible_research_results']==0 and second['counts']['hypotheses_proposed']==0
-    assert len(saved(bank,'bridge_hypotheses'))==3
+    assert len(saved(bank,'bridge_hypotheses'))==1
 
 
 def test_global_existing_error_budget_is_inherited(population):

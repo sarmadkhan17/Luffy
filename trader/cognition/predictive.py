@@ -44,6 +44,15 @@ TRANSFORMS = {
     },
 }
 
+# Shapes the current planner/runner/referee contract can express. TRANSFORMS stays
+# the registry of every template ever generated so retained hypotheses still
+# replay; only supported shapes may be newly generated or registered.
+SUPPORTED_SHAPES = ('combination',)
+
+
+def generatable():
+    return tuple(k for k, t in TRANSFORMS.items() if t['shape'] in SUPPORTED_SHAPES)
+
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
@@ -172,6 +181,8 @@ def proposal_contract(source, transformation):
 def propose(source, transformation, now_ms):
     # Generation accepts only a verified retained source projection.
     source_from_dict(asdict(source))
+    if transformation in TRANSFORMS and TRANSFORMS[transformation]['shape'] not in SUPPORTED_SHAPES:
+        raise ValueError('unsupported_experiment_shape')
     return _propose(source, transformation, now_ms, SCHEMA)
 
 
