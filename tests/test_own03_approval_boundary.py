@@ -5,27 +5,24 @@ import pytest
 
 from trader.core.types import Action, Decision
 from trader.owner import approvals as A, queries as Q
-from trader.research.external_research import research_pass
 from trader.strategy import factory_handoff as F
-from tests.test_external_research_router import registered, FakeChild
 from tests.test_stage8_owner_os import proposal, service, request
 from tests.test_strategy_factory_handoff import cfg, _journal, _to_approval, T0, DAY
 
 
 def test_routine_hold_decision_and_research_never_create_blanket_approval(tmp_path):
-    j = registered(tmp_path)
+    from trader.core.journal import Journal
+    j = Journal(tmp_path / 'j.db')
     with j._tx() as c:
         c.execute("INSERT INTO cycles(id,ts,symbol) VALUES(?,?,?)",
                   ('fixture-cycle', '2026-10-06T00:00:00+00:00', 'BTC/USDT'))
-    # Real bounded research producer, with retrieval replaced by an offline child.
-    bank = research_pass(j, child=FakeChild([]))['results'][0]['bank']
     for action in (Action.HOLD, Action.BUY):
         d = Decision('own03-' + action.value, 'fixture-cycle', 'BTC/USDT',
                      action, .8, .2, .9, [], [])
         j.log_decision(d)
     for _ in range(3):
         before = j._conn().total_changes
-        assert Q.query(j, 'research', bank['bank_object_id'])['status'] == 'AVAILABLE'
+        assert Q.query(j, 'research')['records'] == []
         for action in (Action.HOLD, Action.BUY):
             assert Q.query(j, 'decision', 'own03-' + action.value)['status'] == 'AVAILABLE'
         assert A.items(j, {})['items'] == []

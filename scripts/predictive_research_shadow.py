@@ -29,7 +29,7 @@ def run(investigation,journal,candles,cfg,*,as_of_ms,max_sources):
     if not 1<=max_sources<=B.MAX_SOURCES:
         raise ValueError('source_budget')
     actual=inventory(investigation,['cases','updates','memory_cases','investigation_research_records'])
-    quantitative=inventory(journal,['research_bank_objects','research_unreadable_bank_objects',
+    quantitative=inventory(journal,[
         'research_combos','research_tests','research_candidates'])
     reasons={}
     inspected=0

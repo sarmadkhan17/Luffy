@@ -293,29 +293,6 @@ def forward(db, original, updates, targets, now_ms):
                     observation,now_ms,deps)
 
 
-def research_bank(db, row, recorded_ms, journal, *, unreadable=False):
-    if unreadable:
-        from trader.cognition import research_unreadable_bank as B
-    else:
-        from trader.cognition import research_bank as B
-    rec, chain=B.verify_row(journal, dict(row,recorded_at_ms=recorded_ms))
-    q=chain['question']
-    # These exact registered protocol objects do not assert trading context.
-    initial=[]
-    for role,key in (('question','question'),('plan','plan'),('research_evidence','evidence')):
-        initial.append(freeze(db,role,chain[key],recorded_ms,'verified Research Bank linked chain'))
-    lineage=asdict(L.Lineage(None,None,None))
-    key='research-bank:'+rec['bank_object_id']
-    C.register(db,key,L.Kind.RESEARCH.value,lineage,recorded_ms,initial,profile='RESEARCH')
-    observation=dict(result_status=rec.get('result_status',rec.get('result',{}).get('status')),
-        result_reason=rec.get('result_reason',rec.get('result',{}).get('reason')),
-        bank_object_id=rec['bank_object_id'],question_id=q['question_id'],authority='recorded_result_not_claim_equivalence')
-    deps=[freeze(db,'research_run',dict(chain=chain),recorded_ms,'verified research run/telemetry chain'),freeze(db,'falsifier_result',chain['result'],recorded_ms,'verified research result; predicates may be absent'),
-          freeze(db,'bank',rec,recorded_ms,'verified Research Bank object'),
-          freeze(db,'outcome',dict(observation=observation),recorded_ms,'verified Research Bank result')]
-    return C.attach(db,key,key,L.Kind.RESEARCH.value,L.Boundary.REALIZED.value,observation,recorded_ms,deps)
-
-
 def investigation_research(db,chain,bank,recorded_ms):
     """The producer supplies its just-built, registered family chain."""
     key='research-bank:'+bank['bank_object_id']

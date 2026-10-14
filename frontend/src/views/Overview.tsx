@@ -598,7 +598,7 @@ function ResearchCard({ desk, sys, loading }: { desk?: Desk; sys?: Record<string
           </span>
         </span>
       </div>
-      {r && [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests), line("Questions", r.counts.questions)].map((x) => (
+      {r && [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests)].map((x) => (
         <div className="gl-list" key={x.n}><span><i style={{ background: x.c }} />{x.n}</span><span style={{ color: x.c }}>{x.v}</span></div>
       ))}
       <a className="gl-link" href="#research">Open Research →</a>

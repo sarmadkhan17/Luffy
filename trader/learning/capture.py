@@ -12,11 +12,6 @@ from . import foundation as L
 SCHEMA = 'learning-replay-manifest.v1'
 TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions', 'learning_decision_source_manifests', 'learning_produced_chains')
 DURABLE = {'strategy_versions': ('version_id', 'canonical_json'),
-           'research_bank_objects': ('bank_object_id', 'canonical_json'),
-           'research_questions': ('question_id', 'canonical_json'),
-           'research_plans': ('plan_id', 'canonical_json'),
-           'research_evidence': ('evidence_id', 'canonical_json'),
-           'research_results': ('result_id', 'canonical_json'),
            'versioned_paper_cost_sources': ('source_id', 'canonical_json'),
            'versioned_paper_cost_receipts': ('trade_id', 'canonical_json')}
 ROLES = ('cycle', 'decision', 'data', 'world', 'context', 'strategy', 'exit_semantics',
@@ -785,9 +780,6 @@ def validate_chain(body,sources,blobs):
         if bank.get('bank_kind')=='predictive_experiment':
             from trader.research.predictive_bridge import replay_feedback
             rebuilt=replay_feedback(chain,bank)
-        elif bank.get('bank_kind')=='strategy_health_unreadable':
-            from trader.cognition import research_unreadable_bank as B
-            rebuilt=B.build(chain)
         elif bank.get('bank_kind')=='investigation_volume_anomaly':
             from trader.observability import investigation_research as I
             I.verify_evidence(chain['evidence'])
@@ -796,8 +788,9 @@ def validate_chain(body,sources,blobs):
             rebuilt=I.build_bank(chain['question'],chain['plan'],chain['evidence'],chain['result'],chain['receipt'],
                                  builder_id=bank['builder_id'])
         else:
-            from trader.cognition import research_bank as B
-            rebuilt=B.build(chain)
+            # strategy_decay and strategy_health_unreadable chains were retired
+            # (RP-04); any other kind has no registered replay builder.
+            raise ValueError('retired_or_unsupported_research_bank_kind:'+str(bank.get('bank_kind')))
         if rebuilt!=bank:
             raise ValueError('research_bank_chain_differs')
         for role,key in (('question','question'),('plan','plan'),('research_evidence','evidence'),('falsifier_result','result')):

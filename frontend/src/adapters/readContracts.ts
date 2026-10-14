@@ -263,7 +263,7 @@ const versionAuthority = shape({
   approval: nullable(record), governor: nullable(record), lifecycle: nullable(str), economics: nullable(record), errors: record,
 });
 const strategyBoard = shape({ strategies: list(record), versions: nullable(list(versionAuthority)), authority_errors: record });
-const researchBoard = shape({ combos: nullable(list(record)), total: nullable(num), verdicts: nullable(list(record)), candidates_by_state: nullable(record), stores: record, referee_enabled: optional(nullable(bool)) });
+const researchBoard = shape({ combos: nullable(list(record)), total: nullable(num), verdicts: nullable(list(record)), candidates_by_state: nullable(record), referee_enabled: optional(nullable(bool)) });
 const operationLog = shape({ events: list(record), window_days: num, window_start: str, window_end: str, truncated: bool, rolled_up_records: num, scan_decision_records_aggregated: num, signal_cooldowns_not_listed: num });
 const diagnostics = shape({
   storage: shape({ files: list(shape({ file: str })), filesystems: optional(list(shape({ label: str, path: str, total: nullable(num), used: nullable(num), free: nullable(num), percent_free: nullable(num), mount: nullable(str), source: nullable(str), status: str }))) }),

@@ -89,9 +89,8 @@ def captured(journal, decision_id=None):
 def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
     if kind not in KINDS or (identity is not None and (not isinstance(identity, str) or not 1 <= len(identity) <= 128)):
         raise ValueError('unsupported_owner_query')
-    if type(offset) is not int or offset < 0 or (offset and (identity or kind not in ('research', 'capability', 'cost', 'approvals'))):
+    if type(offset) is not int or offset < 0 or (offset and (identity or kind != 'approvals')):
         raise ValueError('unsupported_catalog_offset')
-    question_page = None
     root = Path(root) if root is not None else Path(journal.db_path).parent.parent
     cfg = cfg if cfg is not None else {}
     records, missing = [], []
@@ -132,47 +131,12 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
         if not records:
             missing.append('exact_world_or_learning_capture_NOT_RECORDED')
     elif kind in ('research', 'capability', 'cost'):
-        for row in rows(journal, 'research_bank_objects', 'bank_object_id', identity):
-            if row['schema'] == 'external-evidence-bank-object.v1':
-                from trader.research.external_research import verify_bank
-                value = verify_bank(journal, row)
-                # verifier returns the verified bank object
-                if value is None:
-                    value = json.loads(row['canonical_json'])
-            else:
-                from trader.cognition.research_bank_view import build
-                value = build(journal, bank_object_id=row['bank_object_id'], max_prior_objects=5)
-            records.append(record('research', row['bank_object_id'], value, source='Research Bank verified chain',
-                                  at=row['recorded_at_ms'], available=row['recorded_at_ms'], verified=True))
-            if row['schema'] != 'external-evidence-bank-object.v1':
-                # The existing verified Bank view deliberately exposes evidence
-                # identity rather than copying values. Follow that exact link
-                # for the owner, without a semantic/time-proximity join.
-                for evidence in rows(journal, 'research_evidence', 'evidence_id', row['evidence_id']):
-                    records.append(record('research_evidence', evidence['evidence_id'], json.loads(evidence['canonical_json']),
-                                          source='research_evidence linked by verified Bank evidence_id',
-                                          available=evidence['recorded_at_ms'], verified=True))
-        # Questions with no result remain visible, including failed/empty runs.
-        questions = rows(journal, 'research_questions', 'question_id', identity, limit=LIMIT+1, offset=offset)
-        question_page = dict(offset=offset, limit=LIMIT, has_more=len(questions)>LIMIT,
-                             next_offset=offset+LIMIT if len(questions)>LIMIT else None,
-                             order='journal insertion order, newest first', scope='research_questions')
-        for row in questions[:LIMIT]:
-            value = json.loads(row['canonical_json'])
-            records.append(record('question', row['question_id'], value, source='research_questions',
-                                  at=row['recorded_at_ms'], available=row['recorded_at_ms']))
         if kind == 'research':
             for row in rows(journal, 'research_combos', 'hash', identity):
                 value = R.research_item(journal, row['hash'])
                 records.append(record('experiment', row['hash'], value,
                                       source='quantitative research ledger; registered referee status only', at=row['created_at']))
         if kind == 'cost':
-            for row in rows(journal, 'research_runs', 'run_id', identity):
-                value = json.loads(row['telemetry_json'])
-                if hashlib.sha256(row['telemetry_json'].encode()).hexdigest() != row['telemetry_sha256']:
-                    raise ValueError('cost_telemetry_hash_differs')
-                records.append(record('cost', row['run_id'], value, source='research_runs telemetry',
-                                      available=row['recorded_at_ms'], verified=True))
             usage = root / 'data/brain_usage.json'
             if identity in (None, 'brain_usage') and usage.is_file():
                 raw = usage.read_bytes()
@@ -220,7 +184,7 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
         missing.extend(x['reason'] for x in feed['unavailable'])
     if not records:
         missing.append('exact_records_UNAVAILABLE')
-    return dict(schema='owner-query.v1', query=dict(kind=kind, identity=identity, offset=offset), questions_page=question_page, generated_at=stamp(),
+    return dict(schema='owner-query.v1', query=dict(kind=kind, identity=identity, offset=offset), generated_at=stamp(),
                 status='AVAILABLE' if records else 'UNAVAILABLE', records=records,
                 unavailable=[dict(field=kind, reason=m) for m in dict.fromkeys(missing)],
                 source='typed internal record readers; read-only', truncated=len(records)>=LIMIT,

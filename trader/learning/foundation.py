@@ -532,45 +532,12 @@ def save_immutable(directory, record):
     return path
 
 
-def exact_failed_research(journal, bank_id, ev):
-    """Recall one exact Research Bank identity, preserving context-only status."""
-    from trader.cognition import research_bank as B
-    if not any(identity == bank_id for identity, _, _ in ev.provenance):
-        raise ValueError('bank_not_bound_to_learning_evidence')
-    rows = journal.query('SELECT * FROM research_bank_objects WHERE bank_object_id=?', (bank_id,))
-    if len(rows) != 1:
-        raise ValueError('exact_bank_object_missing')
-    if not any(identity == bank_id and sha == rows[0]['canonical_sha256'] for identity, _, sha in ev.provenance):
-        raise ValueError('bank_evidence_hash_differs')
-    rec, _ = B.verify_row(journal, rows[0])
-    if rec['result_status'] not in ('REFUTED', 'INCONCLUSIVE', 'FAILED'):
-        raise ValueError('not_a_failed_or_inconclusive_research_result')
-    return dict(bank_object_id=bank_id, result_status=rec['result_status'],
-                result_reason=rec['result_reason'], scope=rec['scope'], authority='context_only',
-                same_claim='NOT_ESTABLISHED_WITHOUT_REGISTERED_CLAIM_IDENTITY')
-
-
 def outcome_from_payload(raw):
     return Outcome(Kind(raw['kind']), Boundary(raw['boundary']),
         Lineage(**dict(raw['lineage'], execution_ids=tuple(raw['lineage']['execution_ids']),
                        trade_ids=tuple(raw['lineage']['trade_ids']))),
         raw['decision_ms'], raw['observed_ms'], tuple(Source(**s) for s in raw['sources']),
         raw['observation_json'], raw['label'])
-
-
-def prior_failed_for_question(journal, question_id, *, max_objects):
-    """Existing structured prior recall; equality is explicit, never fuzzy.
-
-    Matching protocol, spec and simulation settings identifies a repeated
-    structured question context; it does not prove a registered claim identity.
-    """
-    from trader.cognition import research_recall as R
-    receipt = R.recall(journal, question_id, max_objects=max_objects)
-    keys = ('source_health_fingerprint', 'source_spec_fingerprint',
-            'source_spec_content_sha256', 'source_simulation_settings_sha256')
-    prior = [dict(p, structured_context_equal=all(p['identity_vs_question'].get(k) == R.EQUAL for k in keys))
-             for p in receipt['prior'] if p['result_status'] in ('REFUTED', 'INCONCLUSIVE', 'FAILED')]
-    return dict(receipt, prior=prior, suppression_authority=False)
 
 
 def refuse_legacy_learning(consumer):

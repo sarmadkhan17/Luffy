@@ -109,20 +109,6 @@ def test_full_small_migration_preserves_rowid_sequence_schema(tmp_path):
     assert not candidate.execute("SELECT name FROM sqlite_master WHERE name='partial_exit_intents'").fetchall()
 
 
-def test_attached_research_sql_resolves_and_verifies(tmp_path):
-    from trader.cognition import research_shadow_store as S
-    source=Journal(tmp_path/'source.db');raw=' {"schema_version": "legacy.v1", "price": 1.00} '
-    with source._tx() as db:
-        marker=E.store(db,raw)
-        db.execute('INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)',('t',S.SPEC_KIND,'s1',marker))
-    source._conn().close();S.init_shadow(tmp_path/'shadow.db')
-    j=S.open_shadow(tmp_path/'shadow.db',tmp_path/'source.db',readonly=False);j.set_bound(1,1)
-    assert j.query('SELECT detail FROM brain_events')[0]['detail']==raw
-    assert j.source_query('SELECT detail FROM src.brain_events')[0]['detail']==raw
-    with pytest.raises(sqlite3.DatabaseError):j.source_query('UPDATE src.brain_events SET detail=\'{}\'')
-    j.close()
-
-
 def test_streaming_preserves_standard_json_key_and_scalar_contract():
     value={True:'\u2603',None:1.0,2:['x',False],3.5:None}
     assert ''.join(E.serialize(value))==json.dumps(value)

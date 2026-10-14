@@ -1,6 +1,7 @@
 """RES-05: existing question schema and normal producer, no providers."""
 import copy
 import json
+import socket
 import sqlite3
 
 import pytest
@@ -10,8 +11,19 @@ from tests.test_investigation_research_family import measured, registered, recor
 from tests.test_res01_question_producer import producer, root_for, retained
 from tests.test_intelligence_spine import publish, table
 from tests.test_attention_telemetry import frames
-from tests.test_res05_bank_persistence import offline  # noqa: F401
 from trader.observability import investigation_research as R
+
+
+@pytest.fixture(autouse=True)
+def offline(monkeypatch):
+    def refuse(*args, **kwargs):
+        pytest.fail("unexpected provider/network call")
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket, "create_connection", refuse)
+    from trader.brain.llm import BrainLLM
+    for method in ("chat", "chat_tools", "chat_json"):
+        monkeypatch.setattr(BrainLLM, method, refuse)
+
 
 
 def assert_links(chain):
@@ -177,3 +189,24 @@ def test_legacy_bank_and_question_identity_remain_readable_and_unchanged(paths):
     legacy_run = {k: v for k, v in legacy_chain['runs'][0].items() if k != 'next_questions'}
     source = P.source_from_chain(legacy_chain, legacy_run, now)
     assert P.source_from_dict(asdict(source)) == source
+
+
+@pytest.mark.parametrize("completed", [False, True])
+def test_investigation_terminal_record_has_linked_next_questions(paths, completed):
+    _, dest, now = paths
+    iid, cut = measured(paths, "same_direction") if completed else (registered(paths)[0], now)
+    R.run(dest, iid, recorded_at_ms=cut + 2)
+    chain = R.chain(dest, iid)
+    last = chain["runs"][-1]
+    bank = last["bank"]
+    assert bank["links"]["question"]["id"] == chain["question"]["question_id"]
+    assert bank["links"]["result"]["id"] == last["result"]["result_id"]
+    assert bank["result_status"] == ("SUPPORTED" if completed else "INCONCLUSIVE")
+    if completed:
+        assert len(bank["contradictory_evidence"]["items"]) == 2
+        assert all(i["status"] == "REFUTED" for i in bank["contradictory_evidence"]["items"])
+    assert bank["next_questions"]["status"] == "AVAILABLE"
+    assert last["next_questions"]
+    assert all(q["lineage"]["result_id"] == last["result"]["result_id"]
+               for q in last["next_questions"])
+    assert bank["cost"]["status"] == "NOT_MEASURED"

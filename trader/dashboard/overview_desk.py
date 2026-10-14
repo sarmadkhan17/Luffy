@@ -9,7 +9,7 @@ from .economics import booking_receipts, journal_pnl
 
 RECENT_CLOSES = 10
 SCAN_LIMIT = 60
-RESEARCH_TABLES = ("research_combos", "research_candidates", "research_tests", "research_questions")
+RESEARCH_TABLES = ("research_combos", "research_candidates", "research_tests")
 
 
 def realized_curve(journal) -> dict:
@@ -106,11 +106,7 @@ def research_board(journal, cfg: dict | None) -> dict:
     cand = q("SELECT state, COUNT(*) n FROM research_candidates GROUP BY state")
     tests = q("SELECT COUNT(*) n, SUM(rejected) rejected FROM research_tests")
     research = (cfg or {}).get("research") or {}
-    stores = {}
-    for name in ("research_questions", "research_runs", "research_results", "research_bank_objects", "research_registrations", "research_evidence"):
-        n = q(f"SELECT COUNT(*) n FROM {name}")
-        stores[name.removeprefix("research_")] = n[0]["n"] if n else None
-    return {"stores": stores, "combos": combos, "total": total[0]["n"] if total else None,
+    return {"combos": combos, "total": total[0]["n"] if total else None,
             "truncated": bool(combos and total and len(combos) < total[0]["n"]),
             "verdicts": verdicts, "batches": batches[0] if batches else None,
             "last_batch": last[0] if last else None,

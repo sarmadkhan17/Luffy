@@ -15,7 +15,6 @@ from trader.owner.contract import OwnerRequest
 from trader.owner.service import OwnerService
 from tests.test_historical_outcome_capture import prospective, finish
 from tests.test_strategy_factory_handoff import cfg, _journal, _to_approval, T0, DAY
-from tests.test_external_research_router import registered, FakeChild
 from tests.owner_frontend_fixture import make_app, TOKEN
 from tests.test_portfolio_allocator import test_only_models
 
@@ -68,35 +67,6 @@ def test_enter_record_is_not_venue_or_invented_sizing(tmp_path, monkeypatch):
     assert out['records'][0]['verification']=='RECORDED'
     assert 'venue verification' in out['semantics']
     assert out['unavailable']
-
-
-def test_research_exact_source_trace_empty_and_inconclusive(tmp_path):
-    from trader.research.external_research import research_pass
-    j=registered(tmp_path)
-    bank=research_pass(j,child=FakeChild([]))['results'][0]['bank']
-    out=Q.query(j,'research',bank['bank_object_id'])
-    r=out['records'][0]
-    assert r['verification']=='VERIFIED'
-    assert r['value']['question']['question_id']==bank['question']['question_id']
-    assert r['value']['sources'] and r['value']['searches']
-    assert r['value']['result_status']=='INCONCLUSIVE'
-    assert r['value']['experiments']==[]
-    assert r['value']['contradictory_evidence']['status']=='NOT_CLASSIFIED'
-    assert r['value']['limitations'] and r['value']['cost']['paid_cost_usd']==0
-    assert 'not predictive edge' in str(out['unavailable'])
-
-
-def test_standard_research_view_exposes_exact_linked_evidence_values(tmp_path):
-    from tests.test_strategy_decay_research_bank import _filed
-    j,_=_filed(tmp_path)
-    bank=j.research_bank_objects()[0]
-    before=j._conn().total_changes
-    out=Q.query(j,'research',bank['bank_object_id'])
-    assert {r['kind'] for r in out['records']}=={'research','research_evidence'}
-    evidence=next(r for r in out['records'] if r['kind']=='research_evidence')
-    stored=j.query('SELECT canonical_json FROM research_evidence WHERE evidence_id=?',(bank['evidence_id'],))[0]
-    assert evidence['value']==json.loads(stored['canonical_json'])
-    assert evidence['verification']=='VERIFIED' and j._conn().total_changes==before
 
 
 def test_portfolio_exact_cut_candidates_rejection_intent_risk(tmp_path,monkeypatch,test_only_models):
@@ -293,43 +263,6 @@ def test_normal_risk_execution_authorities_preserved():
             return {n.name:ast.dump(n,include_attributes=False) for n in executor.body
                     if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name not in allowed}
         assert authorities(after)==authorities(before)
-
-
-def stored_questions(j, n=51):
-    """Offline identity/window fixture, not predictive research evidence."""
-    for k in range(n):
-        value = dict(question_id=f'q{k}', status='INCONCLUSIVE', question=f'fixture question {k}')
-        assert j.record_research_question(dict(question_id=f'q{k}', schema='research-question.v1',
-            question_kind='strategy_decay', trigger='TEST_ONLY', scope_kind='strategy', scope_id='fixture',
-            source_kind='spec', source_event_id=k, canonical_json=json.dumps(value)), recorded_at_ms=k+1)=='inserted'
-
-
-def test_oldest_stored_question_is_reachable_by_api_and_chat(tmp_path, monkeypatch):
-    from trader.chat.agent import AnalystAgent
-    app,j,_=make_app(tmp_path,monkeypatch); stored_questions(j)
-    c=TestClient(app); headers={'x-luffy-token':TOKEN}
-    first=c.get('/owner-api/v1/query/research',headers=headers).json()
-    assert first['questions_page']['next_offset']==50
-    second=c.get('/owner-api/v1/query/research?offset=50',headers=headers).json()
-    assert [r['identity'] for r in second['records'] if r['kind']=='question']==['q0']
-    exact=c.get('/owner-api/v1/query/research?identity=q0',headers=headers).json()
-    assert exact['status']=='AVAILABLE' and exact['records'][0]['identity']=='q0'
-    # The same advertised typed contract is consumed by the actual chat dispatcher.
-    agent=AnalystAgent.__new__(AnalystAgent); agent.journal=j; agent.query_cfg={}
-    assert agent._exec('owner_query',json.dumps({'kind':'research','identity':'q0'}))['status']=='AVAILABLE'
-    assert agent._exec('owner_query',json.dumps({'kind':'research','offset':50}))['records'][0]['identity']=='q0'
-
-
-def test_research_route_reads_questions_even_without_quantitative_results(tmp_path):
-    from trader.dashboard.owner_reads import research
-    j=Journal(tmp_path/'j.db'); stored_questions(j)
-    before=j._conn().total_changes
-    first=research(j); second=research(j,offset=50)
-    assert first['available'] and len(first['questions'])==50
-    assert first['questions_page']['has_more']
-    assert second['questions'][0]['identity']=='q0'
-    assert all(u['field']!='questions' for u in first['unavailable'])
-    assert j._conn().total_changes==before
 
 
 def test_completed_history_cannot_hide_pending_first_live_and_all_pending_are_pageable(tmp_path,cfg):

@@ -15,7 +15,6 @@ SOURCES = {
     'strategy_version': ('strategy_versions', 'version_id', 'canonical_json'),
     'validation': ('strategy_validation_receipts', 'receipt_id', 'canonical_json'),
     'probation': ('strategy_probation_receipts', 'receipt_id', 'canonical_json'),
-    'research_bank': ('research_bank_objects', 'bank_object_id', 'canonical_json'),
     'context': ('state_kv', 'key', 'value'),
 }
 

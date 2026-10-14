@@ -185,22 +185,6 @@ def test_realized_requires_verified_execution_not_counterfactual(chain):
     assert 'realized_accounting_unverified' in L.replay(actual, sources).faults
 
 
-def test_exact_prior_inconclusive_research_recalled_and_tamper_refused(tmp_path, chain):
-    from tests.test_strategy_decay_research_bank import _filed, _bank_row
-    j, _ = _filed(tmp_path)
-    row = _bank_row(j)
-    bank_id = row['bank_object_id']
-    o, sources, _, _ = chain
-    e = replace(get_evidence(o, sources), provenance=((bank_id, 'bank-v1', row['canonical_sha256']),))
-    result = L.exact_failed_research(j, bank_id, e)
-    assert result['result_status'] == 'INCONCLUSIVE'
-    assert result['authority'] == 'context_only'
-    with j._tx() as c:
-        c.execute("UPDATE research_bank_objects SET canonical_sha256='tampered'")
-    with pytest.raises(ValueError):
-        L.exact_failed_research(j, bank_id, e)
-
-
 def test_file_backed_journal_application_refused(tmp_path, chain):
     from trader.core.journal import Journal
     o, sources, cur, _ = chain
@@ -222,16 +206,6 @@ def test_fresh_process_replay(chain, tmp_path):
     bundle.write_text(L.canonical(raw))
     result = subprocess.check_output([sys.executable, 'scripts/learning_replay.py', str(bundle)], text=True)
     assert json.loads(result) == run(raw)
-
-
-def test_structured_prior_context_recall_does_not_suppress(tmp_path):
-    from tests.test_strategy_decay_research_recall import _timeline, _qid
-    j = _timeline(tmp_path, other_spec=False)
-    before = j.query('SELECT COUNT(*) AS n FROM research_runs')
-    result = L.prior_failed_for_question(j, _qid(j, ms=5), max_objects=20)
-    assert result['prior'] and result['prior'][0]['structured_context_equal']
-    assert result['authority'] == 'context_only' and not result['suppression_authority']
-    assert j.query('SELECT COUNT(*) AS n FROM research_runs') == before
 
 
 def test_verified_realized_execution_stays_separate(chain):

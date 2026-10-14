@@ -34,7 +34,6 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
-from trader.cognition import research_families as rf
 from . import investigation_research as IR
 from . import world_producer
 
@@ -173,8 +172,7 @@ def _research_at_registration(family) -> dict:
                 **{stage: dict(pending) for stage in RESEARCH_STAGES}}
     return {"research_question": {"status": UNAVAILABLE, "reason": NO_RESEARCH_FAMILY,
                                   "investigation_family": family,
-                                  "investigation_research_families": [IR.SOURCE_FAMILY],
-                                  "health_research_families": list(rf.FAMILY_NAMES)},
+                                  "investigation_research_families": [IR.SOURCE_FAMILY]},
             **{stage: {"status": NOT_RUN, "reason": UPSTREAM_UNAVAILABLE}
                for stage in RESEARCH_STAGES}}
 

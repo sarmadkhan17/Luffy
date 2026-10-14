@@ -2,13 +2,10 @@
 
 The one research family whose question source is an EXISTING persisted
 investigation.v2 ``volume_anomaly`` case in the investigation ledger. It runs
-the Q -> P -> E -> R chain and files a Research Bank object, with the same
-record roles, bank field layout, identity and insert/duplicate/conflict
-semantics as the strategy-decay chain (research_question/plan/evidence/
-result/run/bank). Like strategy_health_unreadable, it persists in its own
-append-only table: the decay tables are read unfiltered by the decay
-verifiers and key questions by an integer journal event id, which an
-investigation does not have.
+the Q -> P -> E -> R chain and files a Research Bank object in its own
+append-only table, keyed by the investigation case. (The earlier
+strategy-decay and strategy-health-unreadable chains it was modelled on were
+retired in RP-04; this family is self-contained.)
 
 Source authority is the case's own frozen protocol (catalog_id, threshold
 2.0, N=20 baseline, H=5 exact forward target bars, alternatives

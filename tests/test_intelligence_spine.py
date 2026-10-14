@@ -17,7 +17,6 @@ import pytest
 
 from trader.cognition import investigation as I
 from trader.cognition import opportunity_context as oc
-from trader.cognition import research_families as rf
 from trader.cognition.contracts import Candle, load_input
 from trader.observability import attention as A, investigation as C
 from trader.observability import intelligence_trace as T

@@ -171,8 +171,6 @@ def test_research_contract(live):
     assert d["results"][0]["hash"] == "h-fixture" and d["results"][0]["verdict"] == "prune"
     assert d["runs"][0]["n"] == 5 and d["counts"]["registered_tests"] == 0
     assert {u["field"] for u in d["unavailable"]} >= {"plans", "costs"}
-    assert "questions" not in {u["field"] for u in d["unavailable"]}
-    assert d["questions"] == [] and d["questions_page"]["has_more"] is False
 
 
 def test_strategies_contract(live):

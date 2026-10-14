@@ -175,24 +175,6 @@ def test_restart_manifest_is_deterministic(prospective):
     assert C.manifest(j2._conn(),oid)==expected
 
 
-def test_automatic_research_bank_chain_capture(tmp_path):
-    from tests.test_strategy_decay_research_bank import _filed
-    j,_=_filed(tmp_path)
-    failures=j.query('SELECT * FROM learning_capture_failures')
-    assert not failures,failures
-    rows=j.query('SELECT outcome_id FROM learning_outcome_captures')
-    assert rows
-    m=C.manifest(j._conn(),rows[0]['outcome_id'])
-    assert m['status']=='REPLAY_COMPLETE',m['dependencies']
-    assert m['sources']['bank']['result_status']=='INCONCLUSIVE'
-    assert m['sources']['question']['question_id']==m['sources']['bank']['question']['question_id']
-    assert chain(j,rows[0]['outcome_id'])[3].quality=='VERIFIED_REPLAY'
-    from trader.learning.producers import materialize
-    captured=materialize(j._conn(),rows[0]['outcome_id'])
-    assert captured['authoritative'] and captured['proposal']['proposed_json'] is None
-    assert json.loads(captured['outcome']['observation_json'])['result_status']=='INCONCLUSIVE'
-
-
 def test_missing_original_registration_no_legacy_backfill(tmp_path):
     j=Journal(tmp_path/'legacy.db')
     with j._tx() as db:
@@ -351,19 +333,6 @@ def test_public_funding_reference_is_exact_and_missing_not_zero(prospective):
             C.semantic('funding',receipt,{})
     absent=C.unavailable('funding','EVENT_POSITION_NOTIONAL_BASIS_UNAVAILABLE')
     assert absent['status']=='UNAVAILABLE' and absent['sha256'] is None
-
-
-def test_unreadable_research_bank_exact_chain_captured(tmp_path):
-    from tests.test_strategy_health_unreadable_bank import _filed
-    j,_=_filed(tmp_path)
-    assert not j.query('SELECT * FROM learning_capture_failures')
-    rows=j.query('SELECT outcome_id FROM learning_outcome_captures')
-    assert rows
-    for row in rows:
-        m=C.manifest(j._conn(),row['outcome_id'])
-        assert m['status']=='REPLAY_COMPLETE',m['dependencies']
-        assert m['sources']['bank']['bank_kind']=='strategy_health_unreadable'
-        assert chain(j,row['outcome_id'])[3].quality=='VERIFIED_REPLAY'
 
 
 def test_investigation_registered_research_chain_captured(paths):

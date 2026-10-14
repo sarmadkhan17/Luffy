@@ -8,7 +8,7 @@ from trader.core import journal_evidence as E
 from compact_journal import protect_source,dump
 
 root=Path(__file__).resolve().parents[2];source=protect_source(Path('/mnt/luffy-recovery/recovery/journal-working-20261004T141639Z-c048bf08/journal/luffy.db'));target=protect_source(root/'candidate/luffy.db');E.install(target)
-report={'status':'VERIFYING','recorded_learning_replays':0,'recorded_learning_replay_results':{},'source_replay_errors':{},'source_research_tables':{},'auxiliary_revision_cut_replays':0,'mismatches':[]}
+report={'status':'VERIFYING','recorded_learning_replays':0,'recorded_learning_replay_results':{},'source_replay_errors':{},'auxiliary_revision_cut_replays':0,'mismatches':[]}
 
 def replay(db,oid):
     try:
@@ -35,8 +35,6 @@ for rev,key,event,available,observed,raw in source.execute('SELECT * FROM market
     a=source.execute(sql,(key,cut,cut)).fetchone();b=target.execute(sql,(key,cut,cut)).fetchone()
     if a!=b:report['mismatches'].append({'revision_id':rev,'type':'auxiliary_revision_at_cut'})
     report['auxiliary_revision_cut_replays']+=1
-for table in ['research_questions','research_plans','research_evidence','research_results','research_runs','research_bank_objects']:
-    report['source_research_tables'][table]=source.execute('SELECT count(*) FROM '+table).fetchone()[0]
 report['supported_readers']='Journal.query logical SQL; direct SQL brain_events_logical_v1 after journal_evidence.install; attached authorizer-limited research views/source_query; all production owner/dashboard/graphql callers use Journal.query. Source historical serialized hashes remain exact.'
 report['status']='PASS' if not report['mismatches'] else 'FAIL';dump(root/'evidence/replay-parity.json',report)
 if report['mismatches']:raise SystemExit('replay mismatch')
