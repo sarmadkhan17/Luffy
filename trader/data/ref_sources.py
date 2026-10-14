@@ -217,7 +217,7 @@ def refresh_all(feed, members: list, store=None, get=get_json,
             run(key, lambda: defillama_stables(get))
 
     run("alts", lambda: alts_index(
-        {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in members}))
+        {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in dict.fromkeys(members)}))
 
     last = store.last_ts("cg_btc_d")
     if last is None or now - last >= cg_every:

@@ -26,6 +26,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import sqlite3
+import hashlib
 import threading
 import time
 from . import market_provenance as mp
@@ -36,7 +37,7 @@ import pandas as pd
 
 from ..core.config import ROOT
 from ..core.types import TF_MS, closed_bars
-from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx, insert_rows
+from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx, save_projection
 
 HOUR = 3_600_000
 DAY = 86_400_000
@@ -145,8 +146,8 @@ class RefStore:
         n = len(df)
         # A single immutable acquisition is shared by all its bars. Hash it
         # once; repeated whole-response hashing made reference refresh O(n²).
-        raw_hash = mp.digest(raw) if raw is not None else None
         raw_text = mp.encode(raw) if raw is not None else None
+        raw_hash = hashlib.sha256(raw_text.encode()).hexdigest() if raw_text is not None else None
         received = self._clock_ms() if now_ms is None else mp.cut(now_ms)
         if not all(k in df for k in mp.META):
             # The recorder's source receipt is required. Arbitrary imported
@@ -188,7 +189,7 @@ class RefStore:
                     conn.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)',
                                  (raw_hash, df['source'].iloc[0], raw_text))
                 mp.append(conn, "reference:"+key, prepared=prepared)
-                insert_rows(conn, "INSERT OR REPLACE INTO refs", rows, 7)
+                save_projection(conn, 'refs', ('key','ts','open','high','low','close','volume'), ('key','ts'), rows)
         return len(rows)
 
     def load(self, key: str, since_ms: int = 0, *, as_of_ms=None):

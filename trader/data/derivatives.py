@@ -137,10 +137,10 @@ class DerivFeed:
         prepared = mp.prepare(df)
         projection = [(symbol, series, int(t), float(v))
                       for t, v in zip(mp.ms(df['ts']), df['value'])]
-        from .sqlite_tx import write_tx, insert_rows
+        from .sqlite_tx import write_tx, save_projection
         with write_tx(self._local, self.db, 'derivative receipt') as conn:
             mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
-            insert_rows(conn, 'INSERT OR REPLACE INTO derivs', projection, 4)
+            save_projection(conn, 'derivs', ('symbol','series','ts','value'), ('symbol','series','ts'), projection)
 
     def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
         if self.retrospective is not None:
@@ -526,7 +526,9 @@ class DerivFeed:
         if self.retrospective is not None:
             raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
-        for sym in symbols:
+        # A duplicated universe member is the same acquisition in this pass.
+        # A later pass still retrieves and records a legitimate new receipt.
+        for sym in dict.fromkeys(symbols):
             for series, method in self._SERIES_FETCHERS:
                 try:
                     df = getattr(self, method)(sym)

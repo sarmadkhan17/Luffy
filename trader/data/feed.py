@@ -478,8 +478,8 @@ class DataFeed:
             # the lock (and the batch) open — see sqlite_tx
             with write_tx(self._local, self.db, "write") as conn:
                 mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
-                from .sqlite_tx import insert_rows
-                insert_rows(conn, "INSERT OR REPLACE INTO candles", rows, 9)
+                from .sqlite_tx import save_projection
+                save_projection(conn, 'candles', ('symbol','tf','ts','open','high','low','close','volume','taker_buy'), ('symbol','tf','ts'), rows)
         except Exception as e:
             log.warning(f"candle store write {symbol} {tf}: {e}")
 
@@ -725,6 +725,7 @@ class DataFeed:
                     min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
+        symbol = norm_symbol(symbol)
         if self.retrospective is not None:
             raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
         if self.background_acquisition and not getattr(self._local, 'acquiring', False):
@@ -763,7 +764,9 @@ class DataFeed:
         if hit and hit[1] is not None and ('instrument_id' not in hit[1] or
                 not hit[1]['instrument_id'].eq(iid).all() or not hit[1]['source'].eq(source).all()):
             hit=None
-        if hit and not force and 0 <= now_ms / 1000 - hit[0] < self.ttl.get(tf, 300):
+        if (hit and hit[1] is not None and not force
+                and 0 <= now_ms / 1000 - hit[0] < self.ttl.get(tf, 300)
+                and (len(hit[1]) >= limit or self._at_floor(symbol, tf, hit[1]))):
             return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))
 
         stored = self.latest_ohlcv(symbol, tf, limit)

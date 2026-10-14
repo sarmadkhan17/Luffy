@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 BUSY_TIMEOUT_S = 5.0
 
 
-def insert_rows(conn, prefix, rows, width):
+def insert_rows(conn, prefix, rows, width, *, suffix=""):
     """Bounded VALUES statements inside the caller's atomic transaction.
 
     Unlike executemany's per-row SQLite crossings, one statement does each
@@ -49,7 +49,7 @@ def insert_rows(conn, prefix, rows, width):
     iterator = iter(rows)
     while batch := list(islice(iterator, 64)):
         conn.execute(prefix + ' VALUES ' + ','.join(
-            '(' + ','.join('?' for _ in range(width)) + ')' for _ in batch),
+            '(' + ','.join('?' for _ in range(width)) + ')' for _ in batch) + suffix,
             tuple(value for row in batch for value in row))
 
 
@@ -105,3 +105,19 @@ def write_tx(local: threading.local, conn: sqlite3.Connection,
     except BaseException:
         abort(local, conn, label)
         raise
+
+
+def save_projection(conn, table, columns, key_columns, rows):
+    """Persist the mutable inventory only when values actually change.
+
+    Receipt/revision appends remain separate and atomic in the caller's
+    transaction. IS NOT compares NULL safely; corrections still update all
+    values. Identifiers are code-owned, never provider/user input.
+    """
+    values = [column for column in columns if column not in key_columns]
+    suffix = (' ON CONFLICT (' + ','.join(key_columns) + ') DO UPDATE SET ' +
+              ','.join(column + '=excluded.' + column for column in values) +
+              ' WHERE ' + ' OR '.join(table + '.' + column + ' IS NOT excluded.' + column
+                                     for column in values))
+    insert_rows(conn, 'INSERT INTO ' + table + '(' + ','.join(columns) + ')',
+                rows, len(columns), suffix=suffix)

@@ -213,6 +213,12 @@ def append(conn, key, df=None, *, prepared=None):
         ids = tuple(dict.fromkeys(r['revision_id'] for r in batch))
         existing = set(json.loads(conn.execute('SELECT json_group_array(revision_id) FROM market_revisions '
                     'WHERE revision_id IN (' + ','.join('?' for _ in ids) + ')', ids).fetchone()[0]))
+        # Exact retries already have sealed identities. Avoid parent reads
+        # and record serialization; a new acquisition has a new revision ID
+        # even when the observed numeric values are unchanged.
+        batch = [r for r in batch if r['revision_id'] not in existing]
+        if not batch:
+            continue
         groups = {}
         for r in batch:
             groups.setdefault((r['instrument_id'], r['source']), set()).add(r['event_time_ms'])
