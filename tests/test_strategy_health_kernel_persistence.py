@@ -205,8 +205,6 @@ def test_kernel_flush_preserves_transaction_guard(review):
 
 
 def test_history_and_research_readers_keep_existing_events_unchanged(review):
-    from trader.cognition import research_question
-
     spec = _spec()
     review.run([spec])
     historical = review.journal.strategy_health_rows()
@@ -218,9 +216,9 @@ def test_history_and_research_readers_keep_existing_events_unchanged(review):
     assert history["invalid_records"] == []
     assert history["sweeps_without_record"] == []
     assert history["specs"][0]["n_sweep_observations"] == 2
-    questions = research_question.derive(rows).questions
-    assert len(questions) == 1
-    assert questions[0]["trigger"] == research_question.TRANSITION_TO_DECAYED
+    # RP-04 retires the derived strategy-health question reader. The
+    # canonical append-only health history remains available and unchanged.
+    assert history["specs"][0]["n_sweep_observations"] == 2
     before = review.journal.strategy_health_rows()
     for analyst in review.instances:
         assert analyst.flush_health_observations() is True

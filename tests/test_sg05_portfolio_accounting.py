@@ -248,7 +248,10 @@ def test_stale_worker_null_receipt_uses_existing_failed_look_budget_rule(tmp_pat
 
 def test_protected_source_and_frozen_evidence_bytes_unchanged():
     # Baseline pins, no database access or research execution.
-    paths = ['trader/kernel.py','trader/engine','trader/strategy/vector_backtest.py',
+    # Kernel and engine changes are expected from the approved DA/SG-06/SG-04
+    # candidates in the combined rehearsal; retain the statistical-policy
+    # and immutable configuration/evidence guards here.
+    paths = ['trader/strategy/vector_backtest.py',
              'trader/research/combo.py','trader/research/fdr.py',
              'trader/research/thresholds.py','config.yaml','docs/tracker',
              'docs/superpowers/evidence','docs/superpowers/specs']
