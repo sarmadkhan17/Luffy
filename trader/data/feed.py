@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections import OrderedDict
+from contextlib import nullcontext
 
 import numpy as np
 import time
@@ -74,6 +76,8 @@ class DataFeed:
     exchange REST calls (paged past the 1000-bar/request cap).
     """
 
+    BACKGROUND_QUEUE_CAPACITY = 128
+
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
                  db_path=None, clock_ms=None):
         self._clock_ms = clock_ms or (lambda: int(time.time() * 1000))
@@ -100,6 +104,17 @@ class DataFeed:
         self._local = threading.local()                     # per-thread conns
         #: symbol -> unix ts it was last seen as non-existent on the exchange
         self._dead: dict[str, float] = {}
+        self.background_acquisition = False
+        self._acquisition_lock = threading.Lock()
+        self._acquisition_queue_lock = threading.Lock()
+        self._acquisition_queue = OrderedDict()
+        self._acquisition_stopping = False
+        self._acquisition_queue_counts = {
+            'accepted': 0, 'coalesced': 0, 'completed': 0,
+            'skipped_fresh': 0, 'failed': 0, 'refused_full': 0,
+            'refused_shutdown': 0, 'cancelled': 0,
+        }
+        self._acquisition_queue_last_outcome = None
 
     @property
     def ex(self):
@@ -117,11 +132,147 @@ class DataFeed:
         work can continue without fabricating a tradable identity.
         """
         try:
-            self.ex.load_markets()
+            with self._acquisition_lock if self.background_acquisition else nullcontext():
+                self.ex.load_markets()
+            self._start_background_worker()
             return True
         except Exception as exc:
             log.warning("market-data initialization unavailable: %s", exc)
+            self._start_background_worker()
             return False
+
+    def background_acquisition_health(self):
+        """Bounded status for the optional single-worker candle queue."""
+        with self._acquisition_queue_lock:
+            return {
+                'capacity': self.BACKGROUND_QUEUE_CAPACITY,
+                'pending': len(self._acquisition_queue),
+                'worker_busy': self._acquisition_lock.locked(),
+                'stopping': self._acquisition_stopping,
+                **self._acquisition_queue_counts,
+                'last_outcome': self._acquisition_queue_last_outcome,
+            }
+
+    def cancel_background_acquisition(self):
+        """Cancel queued work during shutdown; in-flight provider calls cannot be interrupted."""
+        with self._acquisition_queue_lock:
+            self._acquisition_stopping = True
+            cancelled = len(self._acquisition_queue)
+            self._acquisition_queue.clear()
+            self._acquisition_queue_counts['cancelled'] += cancelled
+            self._acquisition_queue_last_outcome = 'shutdown_cancelled'
+            return cancelled
+
+    def _start_background_worker(self):
+        if not self.background_acquisition:
+            return False
+        with self._acquisition_queue_lock:
+            if self._acquisition_stopping or not self._acquisition_queue:
+                return False
+            if not self._acquisition_lock.acquire(False):
+                return False
+        try:
+            threading.Thread(target=self._drain_background_queue,
+                             name='candle-acquisition', daemon=True).start()
+            return True
+        except Exception as exc:
+            with self._acquisition_queue_lock:
+                refused = len(self._acquisition_queue)
+                self._acquisition_queue.clear()
+                self._acquisition_queue_counts['failed'] += refused
+                self._acquisition_queue_last_outcome = (
+                    'worker_start_failed:' + type(exc).__name__)
+                self._acquisition_lock.release()
+            log.warning('background candle worker unavailable: %s', type(exc).__name__)
+            return False
+
+    def _queue_background_request(self, symbol, tf, limit, force, min_bars):
+        key = (norm_symbol(symbol), tf)
+        with self._acquisition_queue_lock:
+            if self._acquisition_stopping:
+                self._acquisition_queue_counts['refused_shutdown'] += 1
+                self._acquisition_queue_last_outcome = 'refused_shutdown'
+                return False
+            pending = self._acquisition_queue.get(key)
+            if pending is not None:
+                pending['limit'] = max(pending['limit'], min(int(limit), 20000))
+                pending['force'] = pending['force'] or bool(force)
+                pending['min_bars'] = max(pending['min_bars'], int(min_bars))
+                self._acquisition_queue_counts['coalesced'] += 1
+                self._acquisition_queue_last_outcome = 'coalesced'
+            elif len(self._acquisition_queue) >= self.BACKGROUND_QUEUE_CAPACITY:
+                self._acquisition_queue_counts['refused_full'] += 1
+                self._acquisition_queue_last_outcome = 'refused_queue_full'
+                log.warning('background candle request refused: queue full (%s %s)',
+                            symbol, tf)
+                return False
+            else:
+                self._acquisition_queue[key] = {
+                    'symbol': symbol, 'tf': tf,
+                    'limit': min(int(limit), 20000),
+                    'force': bool(force), 'min_bars': int(min_bars),
+                }
+                self._acquisition_queue_counts['accepted'] += 1
+                self._acquisition_queue_last_outcome = 'queued'
+        self._start_background_worker()
+        return True
+
+    def _background_needs_data(self, request, current=None, *, current_loaded=False):
+        if not current_loaded:
+            current = self.latest_ohlcv(request['symbol'], request['tf'], request['limit'])
+            current = mp.usable_current(current, request['tf'], self._clock_ms(),
+                                        self.ttl.get(request['tf'], 300))
+        return (request['force'] or current is None or
+                (len(current) < min(request['limit'], 20000) and
+                 not self._at_floor(request['symbol'], request['tf'], current)) or
+                ('quality' in current and current['quality'].eq('STALE').any()))
+
+    def _drain_background_queue(self):
+        try:
+            while True:
+                with self._acquisition_queue_lock:
+                    if self._acquisition_stopping or not self._acquisition_queue:
+                        return
+                    _key, request = self._acquisition_queue.popitem(last=False)
+                try:
+                    if not self._background_needs_data(request):
+                        with self._acquisition_queue_lock:
+                            self._acquisition_queue_counts['skipped_fresh'] += 1
+                            self._acquisition_queue_last_outcome = 'skipped_fresh'
+                        continue
+                    with self._acquisition_queue_lock:
+                        stopping = self._acquisition_stopping
+                        if stopping:
+                            self._acquisition_queue_counts['cancelled'] += 1
+                            self._acquisition_queue_last_outcome = 'shutdown_cancelled'
+                    if stopping:
+                        continue
+                    self._local.acquiring = True
+                    result = self.fetch_ohlcv(request['symbol'], request['tf'],
+                                              request['limit'], request['force'],
+                                              request['min_bars'])
+                    with self._acquisition_queue_lock:
+                        outcome = 'completed' if result is not None else 'failed'
+                        self._acquisition_queue_counts[outcome] += 1
+                        self._acquisition_queue_last_outcome = outcome
+                except Exception as exc:
+                    with self._acquisition_queue_lock:
+                        self._acquisition_queue_counts['failed'] += 1
+                        self._acquisition_queue_last_outcome = (
+                            'failed:' + type(exc).__name__)
+                    log.warning('background candles unavailable: %s', type(exc).__name__)
+                finally:
+                    self._local.acquiring = False
+                    conn = getattr(self._local, 'conn', None)
+                    if conn is not None:
+                        close_quietly(conn, 'background acquisition')
+                        del self._local.conn
+        finally:
+            with self._acquisition_queue_lock:
+                self._acquisition_lock.release()
+                restart = bool(self._acquisition_queue) and not self._acquisition_stopping
+            if restart:
+                self._start_background_worker()
 
     # ── persistent candle store ─────────────────────────────────────────
     #: seconds a statement waits on a lock before "database is locked"
@@ -362,12 +513,17 @@ class DataFeed:
         now_ms = int(time.time() * 1000)
         cursor = now_ms - limit * tf_ms
         rows: list = []
-        while cursor < now_ms:
+        for _ in range((limit + 999) // 1000 + 1):
+            if cursor >= now_ms:
+                break
             batch = self._klines(symbol, tf, since=cursor, limit=1000)
             if not batch:
                 break
             rows.extend(batch)
-            cursor = batch[-1][0] + tf_ms
+            next_cursor = batch[-1][0] + tf_ms
+            if next_cursor <= cursor:
+                break
+            cursor = next_cursor
             if len(batch) < 1000:
                 break
         return rows[-limit:]
@@ -440,6 +596,17 @@ class DataFeed:
                     min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
+        if self.background_acquisition and not getattr(self._local, 'acquiring', False):
+            current = self.latest_ohlcv(symbol, tf, limit)
+            now_ms = self._clock_ms()
+            current = mp.usable_current(current, tf, now_ms, self.ttl.get(tf, 300))
+            needs_data = (current is None or
+                          (len(current) < min(limit, 20000) and
+                           not self._at_floor(symbol, tf, current)) or force or
+                          ('quality' in current and current['quality'].eq('STALE').any()))
+            if needs_data:
+                self._queue_background_request(symbol, tf, limit, force, min_bars)
+            return current if current is not None and len(current) >= min_bars else None
         ck = (symbol, tf)
         tf_ms = self._TF_MS.get(tf, 900_000)
         now_ms = self._clock_ms()

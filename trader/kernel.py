@@ -118,6 +118,8 @@ class Kernel:
         # production public API; orders still go to self.exchange via the
         # Executor.
         self.feed = DataFeed()
+        # Missing candle preparation stays off the mandatory servicing path.
+        self.feed.background_acquisition = True
         self.universe = Universe(cfg, self.exchange)
         try:
             self.universe.attach_journal(self.journal)
@@ -375,7 +377,11 @@ class Kernel:
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
-        self.feed.initialize_markets()
+        if getattr(self.feed, "background_acquisition", False):
+            threading.Thread(target=self.feed.initialize_markets,
+                             name="market-initialization", daemon=True).start()
+        else:
+            self.feed.initialize_markets()
         self._filter_universe_to_venue()
         from .observability.stage5_activation import start
         start(self)
@@ -466,6 +472,9 @@ class Kernel:
         self._attention_call("close")
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+        feed = getattr(self, "feed", None)
+        if feed is not None and getattr(feed, "background_acquisition", False):
+            feed.cancel_background_acquisition()
         server = getattr(self, "_owner_ipc", None)
         if server is not None:
             server.stop()
