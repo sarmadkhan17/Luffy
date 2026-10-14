@@ -40,8 +40,9 @@ DRAWS = 4000
 
 
 def main():
-    cfg, feed = load_config(), DataFeed()
-    db = sqlite3.connect("data/luffy.db")
+    cfg = load_config()
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
+    db = spec_evidence.offline_strategy_db(feed)
     spec = StrategySpec.from_dict(json.loads(db.execute(
         "select spec_json from strategies where id=?",
         ("auth_donchian_breakout_trail",)).fetchone()[0]))
@@ -68,11 +69,14 @@ def main():
 
     print(f"scoring {len(frames)} symbols once...", flush=True)
     score = {}
+    evaluation_runs = {}
     for sym, df in frames.items():
         sf = spec_evidence.frames_for(df, tf)
         ctx = dict(btc=btc, universe=universe,
-                   derivs=spec_evidence.load_derivs(sym, spec.data_requires))
+                   derivs=spec_evidence.load_derivs(sym, spec.data_requires, frame=df))
         r = vector_walk_forward(compiled, sf, risk, symbol=sym, **ctx)
+        if feed.retrospective is not None:
+            evaluation_runs[sym] = r['evaluation_identity']
         if r["test"].trades < 8:
             continue
         a = null_baseline.assess(compiled, sf, risk, r["test"].profit_factor,
@@ -82,6 +86,10 @@ def main():
         if a.get("percentile") is not None:
             score[sym] = (r["test"].profit_factor, a["percentile"])
 
+    if feed.retrospective is not None:
+        import hashlib
+        print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'dataset':feed.retrospective, 'runs':evaluation_runs,
+            'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest(), 'factory_validated':False}, sort_keys=True))
     have = [s for s in declared if s in score]
     others = [s for s in score if s not in declared]
     print(f"scored {len(score)}: {len(have)} declared, {len(others)} not\n")

@@ -41,7 +41,7 @@ from trader.strategy.compile import compile_spec
 from trader.strategy.spec import StrategySpec, ExitSpec
 from trader.strategy.vector_backtest import funding_for, vector_walk_forward
 
-cfg=load_config(); feed=DataFeed()
+cfg=load_config(); feed=spec_evidence.offline_feed(cfg, sys.argv)
 
 # Two universes, and a candidate must survive both. Bonferroni over the
 # number of looks is a weak control against a search of this shape: it
@@ -339,14 +339,17 @@ if PICK:
 
 from trader.strategy.null_baseline import consistency_p as consistency
 
+if feed.retrospective is not None:
+    print('RETROSPECTIVE DISCOVERY ONLY: held-out symbol evaluation refused; no Factory validation')
 results=[]
+evaluation_runs={}
 for gname in GKEYS:
   geo = GEOS[gname]
   print(f"\n{'='*74}\nGEOMETRY {gname}: stop {geo.stop} target {geo.target} "
         f"trail {geo.trail} time {geo.time}\n{'='*74}", flush=True)
   for tf in TFS:
       universe = {}
-      for s in DISCOVERY+TRADFI+HELDOUT:
+      for s in DISCOVERY+TRADFI+([] if feed.retrospective is not None else HELDOUT):
           d=load(s,tf)
           if d is not None: universe[s]=d
       disc = {k: v for k, v in universe.items() if k not in HELDOUT}
@@ -377,7 +380,7 @@ for gname in GKEYS:
               except Exception: continue
               risk=spec_evidence.risk_for(cfg["risk"], tf)
               is_held = sym in held
-              ctx = dict(btc=btc, derivs=spec_evidence.load_derivs(sym, requires),
+              ctx = dict(btc=btc, derivs=spec_evidence.load_derivs(sym, requires, frame=df),
                          universe=uni_held if is_held else uni_disc)
               # a mechanism cannot be judged on a symbol whose series is
               # absent; that is silence, not a failing score
@@ -403,6 +406,8 @@ for gname in GKEYS:
                                      seed=17, split=0.7, part="test",
                                      funding=funding_for(sym, sf[tf], risk),
                                      **ctx)
+              if feed.retrospective is not None:
+                  evaluation_runs[f'{gname}:{tf}:{name}:{sym}'] = r['evaluation_identity']
               p=a.get("percentile")
               if p is None: continue
               if is_held:
@@ -451,3 +456,9 @@ for g, tf, name, pf, pc, b, n, t, pcts, hpcts, hpfs, ht in scored:
 if not shown:
     print("\n  nothing survives both universes. A discovery-only result is\n"
           "  a description of the symbols it was found on.")
+
+if feed.retrospective is not None:
+    import json
+    import hashlib
+    print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'dataset':feed.retrospective, 'runs':evaluation_runs,
+        'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest(), 'factory_validated':False},sort_keys=True))

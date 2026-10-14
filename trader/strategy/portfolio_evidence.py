@@ -21,6 +21,8 @@ symbol that got lucky nor rejected on a symbol that did not.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 from dataclasses import dataclass
 from functools import lru_cache
 from hashlib import sha256
@@ -100,7 +102,7 @@ class Fill:
 
 
 def portfolio_curve(fills: list[Fill], equity: float, risk_pct: float,
-                    max_open: int) -> dict:
+                    max_open: int, *, evaluation_identity: dict | None = None) -> dict:
     """Size at entry, realize cost-inclusive net R at exit on one shared clock.
 
     Drawdown is CLOSED equity, not mark-to-market. Prior-position exits at a
@@ -141,4 +143,5 @@ def portfolio_curve(fills: list[Fill], equity: float, risk_pct: float,
     return {"final": eq, "taken": taken, "max_dd_pct": max_dd,
             "total_pct": (eq / equity - 1.0) * 100.0 if equity else 0.0,
             "order": order,
-            "accounting": accounting_provenance(equity, risk_pct, max_open)}
+            "accounting": accounting_provenance(equity, risk_pct, max_open),
+            **({'evaluation_identity': deepcopy(evaluation_identity)} if evaluation_identity is not None else {})}

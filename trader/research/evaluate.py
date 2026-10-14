@@ -20,6 +20,8 @@ path here can read a bar the search is not entitled to.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 import logging
 import sqlite3
 import statistics as st
@@ -78,6 +80,7 @@ class Bundle:
     # {symbol: {"reason": ..., ...}}; nothing here feeds an evaluation.
     requested: tuple = ()
     dropped: dict = field(default_factory=dict)
+    evidence: dict = field(default_factory=dict)
 
 
 def is_transient_read_error(exc: BaseException) -> bool:
@@ -104,6 +107,10 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     # built for research reads must never construct a ccxt client, and an
     # accidental use of it raises instead of quietly fetching — a silent
     # fetch inside a niced child would be invisible.
+    retrospective = (cfg.get("research") or {}).get("retrospective")
+    if retrospective:
+        return _retrospective_bundle(tf, symbols, cfg, requires,
+                                     heldout_symbols, paths, cap_ms)
     feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
     full = {}
     dropped = {}
@@ -201,6 +208,136 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         requested=tuple(symbols), dropped=dropped)
 
 
+def authenticated_discovery_contract(cfg, tf, cap_ms=None):
+    """Authenticate the preserved boundary using counts/cuts, without prices."""
+    import hashlib
+    from pathlib import Path
+    contract = dict(cfg["research"]["retrospective"])
+    path = contract.get("discovery_cut_source")
+    if not path:
+        raise ValueError("retrospective_discovery_missing_preserved_cut_source")
+    digest_state = hashlib.sha256()
+    with Path(path).open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest_state.update(chunk)
+    digest = digest_state.hexdigest()
+    expected = contract.get("discovery_cut_source_sha256")
+    if not expected:
+        raise ValueError("retrospective_discovery_missing_cut_source_hash")
+    if digest != expected:
+        raise ValueError("retrospective_discovery_cut_source_hash_mismatch")
+    con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        row = con.execute("SELECT cut_ms FROM research_slices WHERE tf=?", (tf,)).fetchone()
+    finally:
+        con.close()
+    if not row or int(row[0]) != int(contract["cut_ms"]):
+        raise ValueError("retrospective_discovery_preserved_cut_mismatch")
+    contract["discovery_cut_source_sha256"] = digest
+    if cap_ms is not None:
+        contract["cut_ms"] = min(int(contract["cut_ms"]), int(cap_ms))
+    return contract
+
+
+def _retrospective_bundle(tf, symbols, cfg, requires, heldout_symbols, paths, cap_ms):
+    """Discovery prices are selected before the SQL read; mirrors are counts only."""
+    import hashlib
+    import json
+    from ..data.feed import DataFeed
+    from ..data.derivatives import DerivFeed
+    from ..data.references import RefStore
+    from .universe import NoExchange, MIN_BARS, HELDOUT
+    protected = set(HELDOUT) | set(heldout_symbols)
+    if protected.intersection(symbols):
+        raise ValueError('retrospective_discovery_protected_symbol_refused')
+    contract = authenticated_discovery_contract(cfg, tf, cap_ms)
+    cut = int(contract["cut_ms"])
+    contract.update(cut_ms=cut, paths=dict(paths))
+    feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"),
+                    retrospective=contract)
+    frames, sym_frames, dropped = {}, {}, {}
+    identities = {}
+    for sym in symbols:
+        try:
+            df = feed.cached_ohlcv(sym, tf, limit=200000)
+            inventory = feed.retrospective_coverage(
+                sym, tf, closed_before_ms=253402300799000, metadata_only=True)
+            if (inventory["bars"] < MIN_BARS or df is None
+                    or len(df) < slices.MIN_SLICE_BARS):
+                dropped[sym] = {"reason": "short_before_cut",
+                                "bars": 0 if df is None else len(df)}
+                continue
+            sf = spec_evidence.frames_for(df, tf)
+            frames[sym], sym_frames[sym] = df, sf
+            identities[sym] = dict(df.attrs)
+        except Exception as exc:
+            dropped[sym] = {"reason": "read_error",
+                            "transient": is_transient_read_error(exc),
+                            "error": f"{type(exc).__name__}: {exc}"[:200]}
+    # A uses the distinct held-out markets; B uses the later discovery era.
+    # Coverage is permitted timestamp/count metadata, never a loaded frame.
+    counts = {"a": {}, "b": {}}
+    for part, syms in (("a", heldout_symbols), ("b", symbols)):
+        for sym in syms:
+            try:
+                meta = feed.retrospective_coverage(
+                    sym, tf, start_ms=(cut if part == "b" else contract.get("start_ms")),
+                    end_ms=contract.get("end_ms"),
+                    closed_before_ms=contract.get("end_ms") or 253402300799000,
+                    metadata_only=True)
+                if int(meta["bars"]) >= (MIN_BARS if part == "a" else slices.MIN_SLICE_BARS):
+                    counts[part][sym] = int(meta["bars"])
+            except (ValueError, sqlite3.Error):
+                continue
+    derivs, first_obs = {sym: {} for sym in frames}, {}
+    dfeed, store = None, None
+    derivative_requirements = [r for r in requires if r in spec_evidence._SERIES_FOR]
+    if derivative_requirements:
+        if not paths.get("derivs"):
+            raise ValueError("retrospective_dependency_missing: derivatives dataset path")
+        dfeed = DerivFeed(db_path=paths["derivs"], retrospective=contract)
+        for sym in frames:
+            got = spec_evidence.load_derivs(sym, derivative_requirements, dfeed)
+            for req in derivative_requirements:
+                series = spec_evidence._SERIES_FOR[req]
+                if series not in got:
+                    raise ValueError(f"retrospective_dependency_missing: {sym} {req}")
+                first_obs.setdefault(req, []).append(int(slices._ms(got[series]).min()))
+            derivs[sym] = got
+    market = {}
+    ref_keys = [r.split(":", 1)[1] for r in requires if r.startswith("ref:")]
+    if ref_keys:
+        store = RefStore(paths.get("refs") or paths["candles"], retrospective=contract)
+        for key in ref_keys:
+            df = store.load(key)
+            if df is None or not len(df):
+                raise ValueError(f"retrospective_dependency_missing: ref:{key}")
+            market[key] = df
+            first_obs[f"ref:{key}"] = [int(slices._ms(df).min())]
+    identity = {"kind": "retrospective_discovery", "factory_validated": False,
+                "dataset_id": contract["dataset_id"], "cut_ms": cut,
+                "configuration": deepcopy(cfg), "inputs": deepcopy(identities),
+                "implementation_sources": spec_evidence.quant_contract.retrospective_source_identity(),
+                "dependencies": {"derivs": {sym: {key: dict(df.attrs)
+                    for key, df in got.items()} for sym, got in derivs.items()},
+                    "refs": {key: dict(df.attrs) for key, df in market.items()}},
+                "compiler": hashlib.sha256(__import__("pathlib").Path(
+                    spec_evidence.__file__).with_name("compile.py").read_bytes()).hexdigest(),
+                "evaluation": hashlib.sha256(__import__("pathlib").Path(__file__).read_bytes()).hexdigest()}
+    identity["identity"] = hashlib.sha256(json.dumps(identity, sort_keys=True,
+                                                      default=str).encode()).hexdigest()
+    risk = cfg.get("risk") or {}
+    return Bundle(tf=tf, frames=frames, sym_frames=sym_frames,
+                  universe={sym: {tf: df} for sym, df in frames.items()},
+                  btc=sym_frames.get("BTC/USDT"), market=market or None,
+                  derivs=derivs, risk=spec_evidence.risk_for(risk, tf), cut=cut,
+                  heldout_bars=counts, equity=float(cfg.get("research", {}).get("equity", 2000)),
+                  risk_pct=float(risk.get("risk_per_trade_pct", .5)),
+                  max_open=int(risk.get("max_open_trades", 8)),
+                  world=load_world(paths, requires, cut), first_obs=first_obs,
+                  requested=tuple(symbols), dropped=dropped, evidence=identity)
+
+
 def load_world(paths, requires, cut=None):
     if "world" not in requires:
         return None
@@ -239,6 +376,20 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
                              b.equity, b.risk_pct, b.max_open, RESEARCH_CLOCK)},
            "projection": {"markets_a": 0, "markets_b": 0},
            "testable": False, "verdict": "empty"}
+    if b.evidence:
+        import hashlib
+        import json
+        evidence = dict(b.evidence, draws=int(draws), seed=int(seed),
+                        min_symbol_trades=int(min_symbol_trades), combination=c.as_dict())
+        evidence["evaluation_identity"] = hashlib.sha256(json.dumps(
+            evidence, sort_keys=True, default=str).encode()).hexdigest()
+        evidence["cost_assumptions"] = {
+            "funding": "retained_signed_funding" if b.risk.get("real_funding", True)
+                       else "explicit_estimated_flat_funding",
+            "funding_rate_8h": b.risk.get("funding_rate_8h"),
+            "taker_fee_pct": b.risk.get("taker_fee_pct"),
+            "slippage_atr_frac": b.risk.get("slippage_atr_frac")}
+        out["evidence"] = evidence
     try:
         compiled = compile_spec(spec)
     except Exception as e:                              # noqa: BLE001
@@ -246,11 +397,33 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         out["error"] = str(e)
         return out
 
-    if "world" in compiled.data_requires:
+    if b.evidence:
+        gaps = {}
+        for sym, df in b.frames.items():
+            missing = [req for req in compiled.data_requires
+                       if req in spec_evidence._SERIES_FOR
+                       and spec_evidence._SERIES_FOR[req] not in b.derivs.get(sym, {})]
+            missing += [req for req in compiled.data_requires
+                        if req.startswith("ref:") and req.split(":", 1)[1] not in (b.market or {})]
+            if missing:
+                gaps[sym] = [f"{req}: retrospective dependency missing" for req in missing]
+        if gaps:
+            out.update(verdict="untested", untested=True, context_gaps=gaps)
+            return out
+    if b.evidence or "world" in compiled.data_requires:
         gaps = spec_evidence.missing_data(spec, list(b.frames), frames=b.frames, world=b.world)
         if gaps:
             out.update(verdict="untested", untested=True, context_gaps=gaps)
             return out
+    retrospective_funding = {}
+    if b.evidence:
+        for sym, df in b.frames.items():
+            try:
+                retrospective_funding[sym] = funding_for(sym, df, b.risk)
+            except (ValueError, sqlite3.Error) as exc:
+                out.update(verdict="untested", untested=True,
+                           context_gaps={sym: [f"funding: {exc}"]})
+                return out
     t0 = None
     for df in b.frames.values():
         first = int(_clock(df)[0])
@@ -265,7 +438,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
                 universe=b.universe, market=b.market, symbol=sym, world=b.world)
-            fund = funding_for(sym, df, b.risk)
+            fund = retrospective_funding.get(sym) if b.evidence else funding_for(sym, df, b.risk)
             mine: list = []
             r = simulate(lo, sh, df, spec.exit, b.risk, symbol=sym,
                          funding=fund, fills_out=mine)

@@ -69,8 +69,60 @@ class ResearchRunner:
             validate(predictive_experiment)
             if (cfg.get('research') or {}).get('predictive_split') != predictive_experiment['split']:
                 raise ValueError('experiment_split_binding')
+        retrospective = (cfg.get("research") or {}).get("retrospective")
+        if retrospective and ((cfg.get("research") or {}).get("referee", True)
+                              or (cfg.get("research") or {}).get("handoff", False)):
+            raise ValueError("retrospective_discovery_requires_referee_and_handoff_disabled")
+        if retrospective:
+            from .evaluate import authenticated_discovery_contract
+            for tf in (cfg.get("research") or {}).get("horizons", DEFAULTS["horizons"]):
+                authenticated_discovery_contract(cfg, tf)
+            from pathlib import Path
+            from ..core.config import ROOT
+            output = Path(journal.db_path).resolve()
+            sources = list(((cfg.get("research") or {}).get("paths") or {}).values())
+            sources += [retrospective.get("discovery_cut_source"), ROOT / "data" / "luffy.db"]
+            if any(source and output == Path(source).resolve() for source in sources):
+                raise ValueError("retrospective_requires_isolated_output_journal")
         self.ledger = Ledger(journal)
-        self.ledger.ensure()
+        if retrospective:
+            # Resume only the exact same isolated study. Existing state has no
+            # retrospective binding and must retain its original identities.
+            import hashlib
+            selected = dict((cfg.get("research") or {}).get("paths") or {})
+            selected["discovery_cut_source"] = retrospective.get("discovery_cut_source")
+            fingerprints = {}
+            for key, source in selected.items():
+                if not source:
+                    continue
+                target = Path(source).resolve()
+                files = []
+                for filename in (target, Path(str(target) + "-wal")):
+                    try:
+                        st = filename.stat()
+                        files.append([str(filename), st.st_dev, st.st_ino,
+                                      st.st_size, st.st_mtime_ns, st.st_ctime_ns])
+                    except FileNotFoundError:
+                        files.append([str(filename), None])
+                fingerprints[key] = files
+            binding = hashlib.sha256(json.dumps(
+                {"configuration": cfg, "selected_sources": fingerprints},
+                sort_keys=True).encode()).hexdigest()
+            prior = journal.kv_get("research.retrospective.binding")
+            if prior is not None and prior != binding:
+                raise ValueError("retrospective_research_ledger_binding_mismatch")
+            if prior is None:
+                existing = {row["name"] for row in journal.query(
+                    "SELECT name FROM sqlite_master WHERE type='table'")}
+                for table in ("research_gauges", "research_controls", "research_slices",
+                              "research_tests", "research_candidates", "research_combos"):
+                    if table in existing and journal.query(f"SELECT 1 FROM {table} LIMIT 1"):
+                        raise ValueError("retrospective_requires_fresh_isolated_research_ledger")
+            self.ledger.ensure()
+            if prior is None:
+                journal.kv_set("research.retrospective.binding", binding)
+        else:
+            self.ledger.ensure()
         # Process-local on purpose: a restart forgets every refusal and the
         # first step after it probes with a real child.
         from .refusal import Refusals
@@ -105,7 +157,16 @@ class ResearchRunner:
             return s['discovery_symbols'], s['heldout_symbols']
         from .universe import DISCOVERY, HELDOUT, coverage
         try:
-            cov = coverage([tf])
+            if (self.cfg.get("research") or {}).get("retrospective"):
+                from ..data.feed import DataFeed
+                from .universe import NoExchange
+                from .evaluate import authenticated_discovery_contract
+                feed = DataFeed(exchange=NoExchange(), db_path=self._paths().get("candles"),
+                                retrospective=authenticated_discovery_contract(
+                                    self.cfg, tf, self.ledger.spent_cut(tf)))
+                cov = coverage([tf], feed=feed)
+            else:
+                cov = coverage([tf])
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research coverage unavailable: {e}")
             return [], []
@@ -201,8 +262,10 @@ class ResearchRunner:
                 self.cfg, batch.tf, batch.round, floor_key, floor, symbols,
                 self.ledger.spent_cut(batch.tf), sl.get("cut_ms"))
             path = refusal.candle_path(self.cfg)
-            return slot, ident, (
-                lambda: refusal.stamp(path, batch.tf, symbols))
+            read_stamp = (refusal.retrospective_stamp
+                          if (self.cfg.get("research") or {}).get("retrospective")
+                          else refusal.stamp)
+            return slot, ident, (lambda: read_stamp(path, batch.tf, symbols))
         except Exception as e:                          # noqa: BLE001
             log.debug(f"research refusal identity unavailable: {e}")
             return None
@@ -226,7 +289,7 @@ class ResearchRunner:
     # ── the two jobs ─────────────────────────────────────────────────────
     def _paths(self) -> dict:
         p = (self.cfg.get("research") or {}).get("paths") or {}
-        return {"candles": p.get("candles"), "derivs": p.get("derivs")}
+        return dict(p, candles=p.get("candles"), derivs=p.get("derivs"))
 
     def _measure(self, batch, disc, held) -> dict:
         from .vocab import GAUGES, expressions, part_requires, Part

@@ -293,7 +293,7 @@ def _eval_htf(node: ast.Call, ctx):
     # Native klines are OPEN-labelled; aggregates declare their label semantics.
     known = ms(frame['ts']) + (0 if frame.attrs.get('timestamp_semantics') == 'interval_close'
                                else TF_MS[tf])
-    if 'available_at_ms' in frame:
+    if 'available_at_ms' in frame and frame.attrs.get('read_mode') != 'retrospective':
         known = np.maximum(known, frame['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
         # A rolling transform also depends on earlier source revisions.
         known = np.maximum.accumulate(known)
@@ -301,12 +301,14 @@ def _eval_htf(node: ast.Call, ctx):
     if ctx.as_of_ms is not None:
         base_cut = np.minimum(base_cut, ctx.as_of_ms)
         # Current evaluation's anchor is the explicit receipt/decision cut.
-        if ctx.df.attrs.get('read_mode') != 'replay' and len(base_cut):
+        if ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(base_cut):
             base_cut[-1] = ctx.as_of_ms
     pos = np.searchsorted(known, base_cut, side='right') - 1
     arr = vals.to_numpy(dtype=float,na_value=np.nan)
     if 'quality' in frame:
-        arr = np.where(frame['quality'].eq('VALID') & frame['bar_state'].eq('FINAL'), arr, np.nan)
+        quality = frame['observation_quality' if frame.attrs.get('read_mode') == 'retrospective' else 'quality'].eq('VALID')
+        final = frame['bar_state'].eq('FINAL') if 'bar_state' in frame else True
+        arr = np.where(quality & final, arr, np.nan)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
 
@@ -336,7 +338,7 @@ def _eval_ref(node: ast.Call, ctx):
         base_cut = to_ms(ctx.df['ts']) + TF_MS.get(ctx.tf,0)
         if ctx.as_of_ms is not None:
             base_cut = np.minimum(base_cut,ctx.as_of_ms)
-            if ctx.df.attrs.get('read_mode') != 'replay' and len(base_cut):
+            if ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(base_cut):
                 base_cut[-1] = ctx.as_of_ms
         epochs = np.sort(frame['available_at_ms'].dropna().unique())
         groups = np.searchsorted(epochs,base_cut,side='right')-1
@@ -361,12 +363,12 @@ def _eval_ref(node: ast.Call, ctx):
         return pd.Series(vals, index=ctx.index)
     event_known = to_ms(frame["ts"]) + ref.close_after_ms
     known = event_known.copy()
-    if 'available_at_ms' in frame:
+    if 'available_at_ms' in frame and frame.attrs.get('read_mode') != 'retrospective':
         known = np.maximum.accumulate(np.maximum(known, frame['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64')))
     base_close = to_ms(ctx.df["ts"]) + TF_MS.get(ctx.tf, 0)
     if ctx.as_of_ms is not None:
         base_close = np.minimum(base_close,ctx.as_of_ms)
-        if ctx.df.attrs.get('read_mode') != 'replay' and len(base_close):
+        if ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(base_close):
             base_close[-1] = ctx.as_of_ms
     pos = np.searchsorted(known, base_close, side="right") - 1
     safe = np.clip(pos, 0, None)
@@ -420,6 +422,26 @@ def _eval_xs(name: str, node: ast.Call, ctx):
         sub = ctx.for_symbol(sym)
         if sub is None:
             continue
+        if ctx.df.attrs.get('read_mode') == 'retrospective':
+            # Peers never borrow the base market's derivatives. Resolve only
+            # the inner expression's dependencies in the selected dataset.
+            from . import spec_evidence
+            needed = data_requires(node.args[0])
+            derivative_needs = [r for r in needed if r in spec_evidence._SERIES_FOR]
+            if derivative_needs:
+                sub.derivs = spec_evidence.load_derivs(sym, derivative_needs, frame=sub.df)
+                source_inputs = sub.df.attrs.setdefault('retrospective_dependency_inputs', {})
+                source_inputs.update({key: frame.attrs['input_identity'] for key, frame in sub.derivs.items()})
+                from .features_deriv import _deriv
+                for req in derivative_needs:
+                    key = spec_evidence._SERIES_FOR[req]
+                    if np.isfinite(_deriv(sub,key).to_numpy()).mean() < spec_evidence.MIN_COVERAGE:
+                        raise SpecError('retrospective peer dependency missing trustworthy coverage: ' + sym + ' ' + req)
+            inner = features_used(node.args[0])
+            if any(feature in ('taker_buy', 'taker_buy_frac') for feature in inner):
+                raw = sub.df.get('taker_buy')
+                if raw is None or np.isfinite(raw.to_numpy()).mean() < spec_evidence.MIN_COVERAGE:
+                    raise SpecError('retrospective peer dependency missing retained aggressor observations: ' + sym)
         vals = _eval(node.args[0], sub)
         if not isinstance(vals, pd.Series):
             continue
@@ -427,12 +449,12 @@ def _eval_xs(name: str, node: ast.Call, ctx):
         from ..core.types import TF_MS
         peer_ts = ms(sub.df['ts'])+TF_MS[ctx.tf]
         known = peer_ts.copy()
-        if 'available_at_ms' in sub.df:
+        if 'available_at_ms' in sub.df and sub.df.attrs.get('read_mode') != 'retrospective':
             known = np.maximum.accumulate(np.maximum(known,sub.df['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64')))
         cuts = ms(ctx.df['ts'])+TF_MS[ctx.tf]
         if ctx.as_of_ms is not None:
             cuts = np.minimum(cuts,ctx.as_of_ms)
-            if ctx.df.attrs.get('read_mode')!='replay' and len(cuts):
+            if ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(cuts):
                 cuts[-1]=ctx.as_of_ms
         pos = np.searchsorted(known, cuts, side="right") - 1
         arr = vals.to_numpy(dtype=float,na_value=np.nan)

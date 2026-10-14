@@ -33,6 +33,15 @@ def align(obs: pd.DataFrame | None, base_ts) -> pd.Series:
     o = obs.dropna(subset=["ts"]).sort_values("ts")
     if o.empty:
         return pd.Series(np.nan, index=idx)
+    if obs.attrs.get('read_mode') == 'retrospective':
+        # Event-time observations are explicitly retrospective, never receipt evidence.
+        times = pd.to_datetime(pd.Series(list(base_ts)), utc=True).to_numpy(dtype='datetime64[ms]').astype('int64')
+        events = o['event_time_ms'].to_numpy(dtype='int64')
+        pos = np.searchsorted(events, times, side='right') - 1
+        safe = np.clip(pos, 0, None)
+        age = o['max_age_ms'].fillna(np.inf).to_numpy(float) if 'max_age_ms' in o else np.full(len(o), np.inf)
+        valid = (pos >= 0) & (times - events[safe] <= age[safe]) & o['quality'].eq('VALID').to_numpy()[safe]
+        return pd.Series(np.where(valid, o['value'].to_numpy(float)[safe], np.nan), index=idx)
     if 'available_at_ms' in o:
         # Select the newest EVENT, then its exact revision at each cut. A
         # late correction of an older event must not displace a newer event.
@@ -71,7 +80,7 @@ def _deriv(ctx: FeatureCtx, name: str) -> pd.Series:
         points = ms(ctx.df['ts'])+TF_MS[ctx.tf]
         if ctx.as_of_ms is not None:
             points = np.minimum(points,ctx.as_of_ms)
-            if ctx.df.attrs.get('read_mode')!='replay' and len(points):
+            if ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(points):
                 points[-1]=ctx.as_of_ms
         cuts=pd.to_datetime(points,unit='ms',utc=True)
     s = align(src,cuts)
@@ -131,13 +140,11 @@ def _taker_z(ctx, n):
 
 @register("taker_buy_frac", domain=(0.0, 1.0))
 def _taker_buy_frac(ctx):
-    """Aggressor-buy share estimated from candle position.
+    """Retained aggressor-buy volume divided by the candle's total volume.
 
-    Unlike `taker_ratio` this comes from the candle store's own `taker_buy`
-    column (feed.py:99-104), so it has the FULL ~209 days of history rather
-    than the exchange endpoint's 30-day wall. It is a proxy, not the real
-    print — but it is the only flow measure that can be backtested deeply
-    today.
+    This is measured venue flow only where the candle source retains a
+    trustworthy taker-buy observation. Missing observations remain NaN;
+    candle shape does not establish aggressor participation.
     """
     v = ctx.df["volume"]
     tb = ctx.df.get("taker_buy")

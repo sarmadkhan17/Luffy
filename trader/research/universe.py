@@ -71,6 +71,26 @@ def coverage(tfs=None, feed=None) -> dict:
     """
     feed = feed or DataFeed(exchange=NoExchange())
     want = set(DISCOVERY + HELDOUT)
+    if getattr(feed, "retrospective", None):
+        out = {}
+        for tf in (tfs or list(TARGETS)):
+            try:
+                from .slices import MIN_SLICE_BARS
+                out[tf] = {}
+                for sym in want:
+                    inventory = feed.retrospective_coverage(
+                        sym, tf, metadata_only=True, closed_before_ms=253402300799000)
+                    if inventory["bars"] < MIN_BARS:
+                        continue
+                    if sym in HELDOUT:
+                        out[tf][sym] = int(inventory["bars"])
+                    else:
+                        eligible = feed.retrospective_coverage(sym, tf)
+                        if eligible["bars"] >= MIN_SLICE_BARS:
+                            out[tf][sym] = int(eligible["bars"])
+            except sqlite3.Error:
+                return {"skipped": "coverage_unavailable"}
+        return out
     out = {}
     for tf in (tfs or list(TARGETS)):
         try:

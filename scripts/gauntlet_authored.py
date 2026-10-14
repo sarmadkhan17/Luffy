@@ -29,9 +29,16 @@ def load(dirs):
 
 def main(dirs=None, min_pf=1.15):
     cfg = load_config()
-    frames = evidence.load_frames(DataFeed(), cfg)
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
+    frames = evidence.load_frames(feed, cfg) if feed.retrospective is None else {}
+    native_frames = {}
+    dirs = dirs if dirs is not None else sys.argv[1:] or SPEC_DIRS
     rows = []
     for src, spec in load(dirs or SPEC_DIRS):
+        if feed.retrospective is not None:
+            if spec.timeframe not in native_frames:
+                native_frames[spec.timeframe] = spec_evidence.load_frames(cfg,spec.timeframe,feed=feed)
+            frames = native_frames[spec.timeframe]
         ok, ev = spec_evidence.run_gauntlet(spec, frames, cfg, min_pf=min_pf)
         rows.append({
             "name": spec.name,
@@ -41,6 +48,8 @@ def main(dirs=None, min_pf=1.15):
             "worst_pf": ev.get("worst_test_pf", 0.0),
             "trades": ev.get("test_trades", 0),
             "reason": ev.get("reason", "PASSED"),
+            **({'quant_contract':ev.get('quant_contract'), 'factory_validated':False,
+                'evidence_scope':'retrospective_observation'} if feed.retrospective is not None else {}),
         })
 
     rows.sort(key=lambda r: (-r["worst_pf"], r["name"]))
@@ -62,8 +71,11 @@ def main(dirs=None, min_pf=1.15):
         best = max(tested, key=lambda r: r["worst_pf"])
         print(f"best tested: {best['name']} at worst-symbol OOS PF "
               f"{best['worst_pf']:.2f} over {best['trades']} trades")
+    if feed.retrospective is not None:
+        import hashlib
+        print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest(), 'rows':rows}, sort_keys=True))
     return rows
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or None)
+    main()

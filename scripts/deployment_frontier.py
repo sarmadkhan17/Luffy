@@ -47,8 +47,8 @@ from trader.strategy.vector_backtest import funding_for, simulate
 BAR_MS = {"4h": 4 * 3600, "1h": 3600, "15m": 900}
 
 
-def load_spec(spec_id: str) -> StrategySpec:
-    db = sqlite3.connect("data/luffy.db")
+def load_spec(spec_id: str, feed=None) -> StrategySpec:
+    db = spec_evidence.offline_strategy_db(feed)
     row = db.execute("select spec_json from strategies where id=?",
                      (spec_id,)).fetchone()
     if not row:
@@ -80,14 +80,20 @@ def collect(spec: StrategySpec, symbols: list, cfg: dict, feed: DataFeed):
     step = BAR_MS[tf]
 
     fills, per_symbol = [], {}
+    identity_frames = dict(frames)
     for sym, df in frames.items():
         sf = spec_evidence.frames_for(df, tf)
-        derivs = spec_evidence.load_derivs(sym, spec.data_requires)
+        derivs = spec_evidence.load_derivs(sym, spec.data_requires, frame=df)
         lo, sh = compiled.entries(sf, btc=btc, derivs=derivs,
                                   universe=universe, symbol=sym)
+        fund = funding_for(sym, df, risk)
+        if feed.retrospective is not None:
+            identity_frames[f'_derivs:{sym}'] = derivs
+            if fund is not None:
+                identity_frames[f'_cost:{sym}'] = df[['ts']].assign(value=fund)
         out = []
         simulate(lo, sh, df, spec.exit, risk, symbol=sym, fills_out=out,
-                 funding=funding_for(sym, df, risk))
+                 funding=fund)
         # `.astype("int64")` keeps the column's OWN resolution, and the
         # candle store holds datetime64[ms] while a 15m frame elsewhere may
         # hold ns. Dividing by a hardcoded 10**9 therefore silently produces
@@ -101,6 +107,10 @@ def collect(spec: StrategySpec, symbols: list, cfg: dict, feed: DataFeed):
                 exit_i=int((ts[f.exit_i] - t0) // step),
                 r_multiple=f.r_multiple, symbol=sym))
         per_symbol[sym] = len(out)
+    if feed.retrospective is not None:
+        import hashlib
+        print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'run':spec_evidence.quant_contract.run_identity(spec,identity_frames,risk),
+            'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest()},sort_keys=True))
     span = max(f.exit_i for f in fills) - min(f.entry_i for f in fills)
     span_years = (span * step) / (365.25 * 24 * 3600)
     assert span_years > 0, f"bad clock: span {span} bars"
@@ -121,10 +131,10 @@ def row(fills, years, equity, risk_pct, max_open):
 
 
 def main():
-    spec_id = sys.argv[1] if len(sys.argv) > 1 else "auth_donchian_breakout_trail"
     cfg = load_config()
-    feed = DataFeed()
-    spec = load_spec(spec_id)
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
+    spec_id = sys.argv[1] if len(sys.argv) > 1 else "auth_donchian_breakout_trail"
+    spec = load_spec(spec_id, feed)
     declared = list((spec.universe or {}).get("include") or [])
     equity = 4900.0
 

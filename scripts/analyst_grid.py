@@ -11,6 +11,8 @@ it. Treat these as candidates, not as validated edges.
 
 import json
 import sys
+import hashlib
+from pathlib import Path
 
 from trader.strategy.genome import Genome
 from trader.strategy import evidence
@@ -62,7 +64,8 @@ GRID = {
 
 def main() -> None:
     cfg = load_config()
-    feed = DataFeed()
+    from trader.strategy import spec_evidence
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
     # full cached history across the configured symbol set, with HTF/BTC
     # context attached — was 2 symbols x 2900 bars (~30d) and no context,
     # which left rotation_momo unable to emit a single signal.
@@ -117,12 +120,29 @@ def main() -> None:
     # analyst_gauntlet.py reads data/analyst_candidates.json — the old
     # /tmp/opencode/ path meant this file was never actually consumed.
     out_path = ROOT / "data" / "analyst_candidates.json"
+    if feed.retrospective is not None:
+        from pathlib import Path
+        output = feed.retrospective.get('output_path')
+        if not output:
+            raise ValueError('retrospective grid output requires explicit isolated output_path; production candidate writes forbidden')
+        out_path = Path(output).resolve()
+        if out_path == (ROOT / 'data' / 'analyst_candidates.json').resolve():
+            raise ValueError('retrospective grid cannot replace production candidates')
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w") as fh:
+    with open(out_path, "x" if feed.retrospective is not None else "w") as fh:
         json.dump([{"family": f, "params": p,
                     "min_test_pf": round(score, 3), "trades": trades,
                     "selected_from_trials": total_trials,
-                    "symbols": list(dfs)}
+                    "symbols": list(dfs),
+                    **({'evidence_scope':'retrospective_observation', 'factory_validated':False,
+                        'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                        'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest(),
+                        'evaluation_identity':spec_evidence.quant_contract.run_identity(
+                            Genome(strategy_id=f'grid_{f}_result', family=f, hypothesis=HYP[f],
+                                   invalidation='Retire below profit factor 1.0 over 30 trades.',
+                                   regime_filter=frozenset({'TRENDING_UP','TRENDING_DOWN','RANGING','VOLATILE'}),
+                                   markets=frozenset({'futures'}), params=p),
+                            dfs,cfg['risk'])} if feed.retrospective is not None else {})}
                    for score, f, p, _, trades in results[:6]], fh, indent=1)
     print(f"\nwrote {out_path} "
           f"(winners selected from {total_trials} uncorrected trials)")

@@ -30,8 +30,30 @@ _SERIES_FOR = {"funding": "funding", "open_interest": "oi",
                "basis": "basis"}
 
 
-def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None) -> dict:
+def dependency_store(frame, kind, supplied=None):
+    """Bind existing stores to the selected retrospective dataset, never globals."""
+    d = getattr(frame, 'attrs', {}).get('retrospective')
+    if d is None:
+        return supplied
+    paths = d.get('paths', {})
+    path = (paths.get('refs') or paths.get('candles')) if kind == 'candles' else paths.get(kind)
+    if not path:
+        raise ValueError('retrospective dependency requires dataset path: ' + kind)
+    if supplied is not None:
+        from pathlib import Path
+        if (getattr(supplied, 'retrospective', None) != d or
+                Path(supplied._db_path).resolve() != Path(path).resolve()):
+            raise ValueError('retrospective dependency dataset mismatch: ' + kind)
+        return supplied
+    if kind == 'derivs':
+        return DerivFeed(db_path=path, retrospective=d)
+    from ..data.references import RefStore
+    return RefStore(db_path=path, retrospective=d)
+
+
+def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None, frame=None) -> dict:
     """{feature-series-name: raw observation frame} for one symbol."""
+    feed = dependency_store(frame, 'derivs', feed) if any(r in _SERIES_FOR for r in requires) else feed
     feed = feed or DerivFeed()
     out = {}
     for req in requires:
@@ -45,12 +67,13 @@ def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_m
     return out
 
 
-def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
+def load_refs(requires, store=None, *, as_of_ms=None, frame=None) -> dict:
     """{reference key: frame} for every `ref:<key>` a spec requires."""
     keys = [r.split(":", 1)[1] for r in requires or ()
             if isinstance(r, str) and r.startswith("ref:")]
     if not keys:
         return {}
+    store = dependency_store(frame, 'candles', store)
     if store is None:
         from ..data.references import RefStore
         store = RefStore()
@@ -76,10 +99,12 @@ def funding_series(symbol: str, df, feed: DerivFeed | None = None):
     """
     import numpy as np
 
-    feed = feed or DerivFeed()
+    feed = dependency_store(df, 'derivs', feed) or DerivFeed()
     try:
         f = feed.load(symbol, "funding")
     except Exception as e:
+        if df.attrs.get('read_mode') == 'retrospective':
+            raise
         log.warning(f"funding_series {symbol}: {e}")
         return None
     if f is None or not len(f) or df is None or not len(df):
@@ -90,7 +115,10 @@ def funding_series(symbol: str, df, feed: DerivFeed | None = None):
         from ..core.types import TF_MS
         import pandas as pd
         tf = df.attrs.get('timeframe') or '15m'
-        return align(f,pd.to_datetime(ms(df['ts'])+TF_MS[tf],unit='ms',utc=True)).to_numpy(float)
+        arr = align(f,pd.to_datetime(ms(df['ts'])+TF_MS[tf],unit='ms',utc=True)).to_numpy(float)
+        if df.attrs.get('read_mode') == 'retrospective' and not np.isfinite(arr).all():
+            raise ValueError('retrospective funding requires trustworthy settlement coverage for every scored bar; flat substitution forbidden')
+        return arr
     fts = f["ts"].to_numpy("datetime64[ns]")
     bts = df["ts"].to_numpy("datetime64[ns]")
     idx = np.searchsorted(fts, bts, side="right") - 1
@@ -134,6 +162,10 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
     world_needed = "world" in spec.data_requires
     if not needed and not ref_needed and not world_needed:
         return {}
+    retrospective_frame = next((f for k, f in (frames or {}).items()
+        if not k.startswith('_') and getattr(f, 'attrs', {}).get('retrospective')), None)
+    if retrospective_frame is not None and world_needed:
+        return {sym: ['world: explicit dataset-bound historical context required'] for sym in symbols}
     if world_needed:
         import ast
         from . import dsl
@@ -148,8 +180,8 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
                 if isinstance(node, ast.Call) and node.func.id == 'world_observation':
                     world_queries.add(tuple(a.value for a in node.args))
     if needed:
-        feed = feed or DerivFeed()
-    refs = load_refs(ref_needed, ref_store) if ref_needed else {}
+        feed = dependency_store(retrospective_frame, 'derivs', feed) or DerivFeed()
+    refs = load_refs(ref_needed, ref_store, frame=retrospective_frame) if ref_needed else {}
     gaps: dict = {}
     for sym in symbols:
         have = load_derivs(sym, spec.data_requires, feed) if needed else {}
@@ -181,7 +213,24 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
                 if df is None or span <= 0:
                     continue
                 d0 = pd.to_datetime(df["ts"], utc=True).iloc[0]
-                cov = max(0.0, (f1 - max(d0, f0)).total_seconds()) / span
+                if frame.attrs.get('read_mode') == 'retrospective':
+                    import numpy as np
+                    from ..core.types import TF_MS
+                    from ..data.market_provenance import ms
+                    from .features_deriv import align
+                    if r in _SERIES_FOR:
+                        cuts = pd.to_datetime(ms(frame['ts']) + TF_MS[frame.attrs['timeframe']], unit='ms', utc=True)
+                        cov = float(np.isfinite(align(df, cuts).to_numpy()).mean())
+                    else:
+                        from .features import FeatureCtx
+                        from . import dsl
+                        key = r.split(':', 1)[1]
+                        tf = frame.attrs['timeframe']
+                        ctx = FeatureCtx({tf: frame}, tf, market={key: df})
+                        vals = dsl.evaluate(dsl.parse(f'ref("{key}", close)'), ctx)
+                        cov = float(np.isfinite(vals.to_numpy()).mean())
+                else:
+                    cov = max(0.0, (f1 - max(d0, f0)).total_seconds()) / span
                 if cov < MIN_COVERAGE:
                     problems.append(
                         f"{r}: covers {cov:.0%} of the frame "
@@ -242,6 +291,42 @@ def frames_for(df, timeframe: str) -> dict:
     return out
 
 
+def offline_strategy_db(feed):
+    """Read registered specs without opening an implicit writable journal."""
+    import sqlite3
+    from pathlib import Path
+    descriptor = getattr(feed, 'retrospective', None)
+    path = descriptor.get('paths', {}).get('journal') if descriptor else 'data/luffy.db'
+    if not path:
+        raise ValueError('offline registered strategy requires explicit dataset paths.journal')
+    return sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
+
+
+def offline_feed(cfg=None, argv=None):
+    """Existing offline programs select one explicit DataFeed dataset manifest.
+
+    --dataset-manifest JSON declares dataset_id, cut_ms and paths.candles;
+    paths.derivs must be supplied when measured dependent data is required.
+    No manifest preserves the existing caller behavior.
+    """
+    from ..data.feed import DataFeed
+    descriptor = (cfg or {}).get('offline_dataset')
+    if argv is not None and '--dataset-manifest' in argv:
+        import json
+        from pathlib import Path
+        i = argv.index('--dataset-manifest')
+        if i + 1 >= len(argv):
+            raise ValueError('--dataset-manifest requires a JSON path')
+        descriptor = json.loads(Path(argv[i+1]).read_text())
+        del argv[i:i+2]
+    if descriptor is None:
+        return DataFeed()
+    path = descriptor.get('paths', {}).get('candles')
+    if not path:
+        raise ValueError('offline dataset requires paths.candles')
+    return DataFeed(db_path=path, retrospective=descriptor)
+
+
 def load_frames(cfg: dict, timeframe: str = "15m", feed=None,
                 symbols: list | None = None) -> dict:
     """{symbol: df} read NATIVELY at `timeframe` from the candle store.
@@ -252,7 +337,7 @@ def load_frames(cfg: dict, timeframe: str = "15m", feed=None,
     """
     from ..data.feed import DataFeed
     from .evidence import backtest_bars, backtest_symbols
-    feed = feed or DataFeed()
+    feed = feed or offline_feed(cfg)
     syms = symbols or backtest_symbols(cfg)
     limit = max(backtest_bars(cfg), 40000)
     out = {}
@@ -306,14 +391,30 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
     compiled = compile_spec(spec)
     syms = [k for k in frames if not k.startswith("_")]
     btc = frames.get("_btc_1h")
-    btcd = {"15m": btc} if btc is not None else None
-    feed = feed or DerivFeed()
+    btcd = {detect_tf(btc) or "15m": btc} if btc is not None else None
+    retrospective_frame = next((f for k, f in frames.items()
+        if not k.startswith('_') and getattr(f, 'attrs', {}).get('retrospective')), None)
+    if any(r in _SERIES_FOR for r in spec.data_requires):
+        feed = dependency_store(retrospective_frame, 'derivs', feed) or DerivFeed()
 
     gaps = missing_data(spec, syms, feed, frames=frames)
     ev = {"stage": "spec_walk_forward", "spec": spec.id,
           "data_requires": list(spec.data_requires), "per_symbol": {}}
     # QNT-01: definitions, estimated-cost basis and a pinned run identity
-    ev["quant_contract"] = quant_contract.contract(spec, frames, risk_for(cfg["risk"], spec.timeframe))
+    identity_frames = dict(frames)
+    if retrospective_frame is not None and not gaps:
+        for sym in syms:
+            for series, dependency in load_derivs(sym, spec.data_requires, feed, frame=frames[sym]).items():
+                identity_frames[f'_dependency:{sym}:{series}'] = dependency
+        for key, dependency in load_refs(spec.data_requires, frame=retrospective_frame).items():
+            identity_frames[f'_reference:{key}'] = dependency
+        if cfg['risk'].get('real_funding', True):
+            for sym in syms:
+                fund_store = dependency_store(frames[sym], 'derivs', feed)
+                identity_frames[f'_cost:{sym}:funding'] = fund_store.load(sym, 'funding')
+    ev["quant_contract"] = quant_contract.contract(spec, identity_frames, risk_for(cfg["risk"], spec.timeframe))
+    if retrospective_frame is not None:
+        ev.update(evidence_scope='retrospective_observation', factory_validated=False)
     if gaps:
         # NEVER score a spec whose inputs are absent: NaN comparisons are all
         # False, so it would report 0 trades and read as 'no edge'.
@@ -339,12 +440,13 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
         sym_frames = sym_frames_map.get(sym)
         if sym_frames is None:
             continue
-        derivs = load_derivs(sym, spec.data_requires, feed)
+        derivs = load_derivs(sym, spec.data_requires, feed, frame=frames[sym])
+        refs = load_refs(spec.data_requires, frame=frames[sym])
         risk = risk_for(cfg["risk"], spec.timeframe)
         try:
             r = vector_walk_forward(compiled, sym_frames, risk,
                                     btc=btcd, derivs=derivs, symbol=sym,
-                                    universe=universe)
+                                    universe=universe, market=refs)
         except Exception as e:
             log.warning(f"spec gauntlet {spec.id} {sym}: {e}")
             continue
@@ -353,7 +455,7 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
             try:
                 nb = null_baseline.assess(
                     compiled, sym_frames, risk, r["test"].profit_factor,
-                    btc=btcd, derivs=derivs, universe=universe, symbol=sym,
+                    btc=btcd, derivs=derivs, universe=universe, market=refs, symbol=sym,
                     draws=null_draws, split=0.7, part="test",
                     funding=funding_for(sym, sym_frames[spec.timeframe], risk))
                 null_pcts[sym] = nb.get("percentile")

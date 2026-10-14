@@ -75,7 +75,7 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
     duration = TF_MS[rule]
     opens = mp.ms(df['ts'])
     own = df.attrs.get('timeframe')
-    qualified = all(k in df for k in mp.META)
+    qualified = all(k in df for k in mp.META) and not (df.attrs.get('read_mode') == 'retrospective' and df['observed_at_ms'].isna().any())
     if qualified and own not in TF_MS:
         raise ValueError('qualified aggregation requires source timeframe')
     step = TF_MS.get(own) or (int(np.median(np.diff(opens))) if len(opens) > 1 else duration)
@@ -85,10 +85,15 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
     for bucket, group in df.assign(_bucket=opens//duration*duration).groupby('_bucket'):
         stamps = mp.ms(group['ts'])
         complete = np.array_equal(stamps, np.arange(bucket, bucket+duration, step))
+        if df.attrs.get('read_mode') == 'retrospective' and not complete:
+            continue
         value = dict(ts=pd.to_datetime(bucket, unit='ms', utc=True),
                      open=group['open'].iloc[0], high=group['high'].max(skipna=False),
                      low=group['low'].min(skipna=False), close=group['close'].iloc[-1],
                      volume=group['volume'].sum(min_count=len(group)))
+        if df.attrs.get('read_mode') == 'retrospective' and 'taker_buy' in group:
+            # Sum only source-confirmed constituent aggressor observations.
+            value['taker_buy'] = group['taker_buy'].sum(min_count=len(group))
         if qualified:
             complete = complete and group['bar_state'].eq('FINAL').all()
             receipts = group['observed_at_ms'].astype('int64')
@@ -116,6 +121,10 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
             value.update(body)
         records.append(value)
     out = pd.DataFrame(records)
+    if df.attrs.get('read_mode') == 'retrospective':
+        out['observation_quality'] = 'VALID'
+        if not qualified:
+            out['quality'] = 'UNKNOWN'
     out.attrs.update(df.attrs)
     out.attrs.update(timeframe=rule, timestamp_semantics='interval_open',
                      transform_version='ohlcv.aggregate.v1')
@@ -141,9 +150,9 @@ def _snap(df: pd.DataFrame, price: float,
 def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
              equity: float = 2000.0,
              ctx: dict[str, pd.DataFrame] | None = None) -> BacktestResult:
-    if df.attrs.get('schema_version') == 'market.receipt.v1' and df.attrs.get('read_mode') != 'replay':
+    if df.attrs.get('schema_version') == 'market.receipt.v1' and df.attrs.get('read_mode') not in ('replay', 'retrospective'):
         raise ValueError('historical backtest requires replay revisions, not latest/as-of snapshot')
-    if 'quality' in df and not df['quality'].eq('VALID').all():
+    if 'quality' in df and not df['observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'].eq('VALID').all():
         raise ValueError('historical backtest requires valid market evidence')
     res = BacktestResult(genome_id=genome.strategy_id, symbol="BT",
                          bars=len(df))
@@ -175,7 +184,7 @@ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
                 from ..core.types import TF_MS
                 frame_tf = k.removeprefix('BTC_')
                 known = ms(cdf['ts']) + TF_MS.get(frame_tf, 0)
-                if 'available_at_ms' in cdf:
+                if 'available_at_ms' in cdf and cdf.attrs.get('read_mode') != 'retrospective':
                     known = np.maximum(known, cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
                 ctx_idx[k] = (cdf, np.maximum.accumulate(known))
 

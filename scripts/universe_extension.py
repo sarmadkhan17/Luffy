@@ -46,10 +46,14 @@ EQUITY = 4900.0
 
 
 def candidates(feed, tf, min_bars=3000):
-    db = sqlite3.connect("data/candles.db")
-    rows = [r[0] for r in db.execute(
-        "select symbol, count(*) n from candles where tf=? group by symbol "
-        "having n >= ? order by n desc", (tf, min_bars))]
+    if feed.retrospective is not None:
+        tf_rows = feed.db.execute('SELECT DISTINCT symbol FROM candles WHERE tf=? ORDER BY symbol', (tf,)).fetchall()
+        rows = [r[0] for r in tf_rows if feed.retrospective_coverage(r[0], tf)['bars'] >= min_bars]
+    else:
+        db = sqlite3.connect("data/candles.db")
+        rows = [r[0] for r in db.execute(
+            "select symbol, count(*) n from candles where tf=? group by symbol "
+            "having n >= ? order by n desc", (tf, min_bars))]
     # tokenized equities and commodities are not crypto perps and are not
     # what this mechanism was built on; the venue also lists them recently
     bad = ("XAU", "XAG", "CL", "SOXL", "SNDK", "MU", "SPCX", "MSTR", "CRCL",
@@ -74,11 +78,16 @@ def measure(spec, symbols, cfg, feed, label):
     step = 4 * 3600
 
     pfs, pcts, trades, fills = [], [], 0, []
+    identity_frames = dict(frames)
     for sym, df in frames.items():
         sf = spec_evidence.frames_for(df, tf)
         ctx = dict(btc=btc, universe=universe,
-                   derivs=spec_evidence.load_derivs(sym, spec.data_requires))
+                   derivs=spec_evidence.load_derivs(sym, spec.data_requires, frame=df))
         fund = funding_for(sym, df, risk)
+        if feed.retrospective is not None:
+            identity_frames[f'_derivs:{sym}'] = ctx['derivs']
+            if fund is not None:
+                identity_frames[f'_cost:{sym}'] = df[['ts']].assign(value=fund)
         r = vector_walk_forward(compiled, sf, risk, symbol=sym, **ctx)
         trades += r["test"].trades
         if r["test"].trades >= 8:
@@ -106,8 +115,13 @@ def measure(spec, symbols, cfg, feed, label):
           f"   above median {sum(1 for v in pcts if v > 0.5)}/{len(pcts)}")
     print(f"  consistency p = " + (f"{p:.2e}" if p is not None else "n/a")
           + f"   ->  {'PASS' if p is not None and p < 0.01 else 'REFUSED'}")
+    identity = spec_evidence.quant_contract.run_identity(spec,identity_frames,risk) if feed.retrospective is not None else None
+    if identity:
+        import hashlib
+        print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'run':identity, 'label':label,
+            'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest()},sort_keys=True))
     for slots in (8, 12):
-        c = portfolio_curve(fills, EQUITY, 0.5, slots)
+        c = portfolio_curve(fills, EQUITY, 0.5, slots, evaluation_identity=identity)
         cagr = ((c["final"] / EQUITY) ** (1.0 / years) - 1.0) * 100.0 \
             if years > 0 and c["final"] > 0 else float("nan")
         print(f"  deploy 0.5%/{slots:<2}  offered {len(fills):>4}  taken {c['taken']:>4}"
@@ -116,8 +130,9 @@ def measure(spec, symbols, cfg, feed, label):
 
 
 def main():
-    cfg, feed = load_config(), DataFeed()
-    db = sqlite3.connect("data/luffy.db")
+    cfg = load_config()
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
+    db = spec_evidence.offline_strategy_db(feed)
     spec = StrategySpec.from_dict(json.loads(db.execute(
         "select spec_json from strategies where id=?",
         ("auth_donchian_breakout_trail",)).fetchone()[0]))

@@ -175,10 +175,22 @@ class Ledger:
     # ── the vocabulary's measurements ────────────────────────────────────
     def record_gauges(self, tf: str, rows: dict) -> int:
         now = now_utc().isoformat()
+        retrospective = bool(self.journal.kv_get("research.retrospective.binding"))
         with self.journal._tx() as c:
             for expr, m in rows.items():
+                values = (m.get("p10"), m.get("p25"), m.get("p75"), m.get("p90"),
+                          m.get("min"), m.get("max"), int(m.get("n", 0)),
+                          float(m.get("finite_frac", 0.0)), 1 if m.get("usable") else 0)
+                if retrospective:
+                    prior = c.execute("SELECT p10,p25,p75,p90,min,max,n,finite_frac,usable "
+                                      "FROM research_gauges WHERE tf=? AND expr=?", (tf, expr)).fetchone()
+                    if prior:
+                        if tuple(prior) != values:
+                            raise ValueError("immutable_retrospective_gauge_conflict")
+                        continue
+                insert = "INSERT INTO" if retrospective else "INSERT OR REPLACE INTO"
                 c.execute(
-                    "INSERT OR REPLACE INTO research_gauges "
+                    insert + " research_gauges "
                     "(tf, expr, p10, p25, p75, p90, min, max, n, "
                     "finite_frac, usable, measured_at) "
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -206,9 +218,17 @@ class Ledger:
         frozen = self.spent_cut(tf)
         if frozen is not None:
             cut_ms = min(int(cut_ms), frozen) if cut_ms else frozen
+        retrospective = bool(self.journal.kv_get("research.retrospective.binding"))
         with self.journal._tx() as c:
+            if retrospective:
+                prior = c.execute("SELECT cut_ms,counts FROM research_slices WHERE tf=?", (tf,)).fetchone()
+                if prior:
+                    if int(prior[0]) != int(cut_ms) or json.loads(prior[1]) != counts:
+                        raise ValueError("immutable_retrospective_slice_conflict")
+                    return
+            insert = "INSERT INTO" if retrospective else "INSERT OR REPLACE INTO"
             c.execute(
-                "INSERT OR REPLACE INTO research_slices "
+                insert + " research_slices "
                 "(tf, cut_ms, counts, measured_at) VALUES (?,?,?,?)",
                 (tf, int(cut_ms), json.dumps(counts),
                  now_utc().isoformat()))
@@ -225,9 +245,19 @@ class Ledger:
     # ── the window controls ──────────────────────────────────────────────
     def record_control(self, tf: str, window: str, res: dict,
                        powered: bool, status: str = "measured") -> None:
+        retrospective = bool(self.journal.kv_get("research.retrospective.binding"))
         with self.journal._tx() as c:
+            if retrospective:
+                prior = c.execute("SELECT consistency_p,powered,status,detail FROM research_controls "
+                                  "WHERE tf=? AND window=?", (tf, window)).fetchone()
+                if prior:
+                    if (tuple(prior[:3]) != (res.get("consistency_p"), 1 if powered else 0, status)
+                            or json.loads(prior[3]) != res):
+                        raise ValueError("immutable_retrospective_control_conflict")
+                    return
+            insert = "INSERT INTO" if retrospective else "INSERT OR REPLACE INTO"
             c.execute(
-                "INSERT OR REPLACE INTO research_controls "
+                insert + " research_controls "
                 "(tf, window, consistency_p, powered, status, detail, "
                 "measured_at) VALUES (?,?,?,?,?,?,?)",
                 (tf, window, res.get("consistency_p"), 1 if powered else 0,
@@ -284,8 +314,13 @@ class Ledger:
             if prior:
                 old = json.loads(prior[0] or "{}")
                 require_compatible_accounting(old.get("portfolio") or {}, pf)
+                if old.get("evidence") or res.get("evidence"):
+                    if old != _slim(res):
+                        raise ValueError("immutable_retrospective_research_identity_conflict")
+                    return
+            insert = "INSERT INTO" if res.get("evidence") else "INSERT OR REPLACE INTO"
             c.execute(
-                "INSERT OR REPLACE INTO research_combos "
+                insert + " research_combos "
                 "(hash, tf, geo, k, round, parent, trigger, window, parts, "
                 "entry_long, entry_short, status, label, verdict, reason, "
                 "consistency_p, median_pf, total_pct, max_dd_pct, trades, "

@@ -90,7 +90,8 @@ class CompiledStrategy:
         ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world)
         n = len(ctx.index)
         # This accumulator is mutated below; pandas can expose a read-only view.
-        quality_ok = (ctx.df['quality'].eq('VALID').to_numpy(copy=True)
+        quality_column = 'observation_quality' if ctx.df.attrs.get('read_mode') == 'retrospective' else 'quality'
+        quality_ok = (ctx.df[quality_column].eq('VALID').to_numpy(copy=True)
                       if 'quality' in ctx.df else np.ones(n, dtype=bool))
         keep = quality_ok.copy()
         for f in self._filters:
@@ -123,6 +124,8 @@ class CompiledStrategy:
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
+        if frames[tf].attrs.get('read_mode') == 'retrospective' and "world" in self.data_requires:
+            raise dsl.SpecError('retrospective world dependency requires dataset-bound historical evidence; global fallback forbidden')
         if world is None and "world" in self.data_requires:
             # No latest/unbounded fallback: an uncut load would answer a
             # historical evaluation from a different world than a current one.
@@ -131,8 +134,83 @@ class CompiledStrategy:
                 raise dsl.SpecError("world_context_cut_required")
             from ..world.context import load_context
             world = load_context(as_of_ms=cut)
-        return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
-                          universe=universe, market=market, symbol=symbol, world=world)
+        if frames[tf].attrs.get('read_mode') == 'retrospective':
+            from ..data.feed import norm_symbol
+            declared = frames[tf].attrs.get('symbol')
+            if symbol is None:
+                symbol = declared
+            elif declared and norm_symbol(symbol) != declared:
+                raise dsl.SpecError('retrospective symbol binding mismatch')
+        ctx = FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
+                         universe=universe, market=market, symbol=symbol, world=world)
+        if frames[tf].attrs.get('read_mode') == 'retrospective':
+            import ast
+            from .spec_evidence import MIN_COVERAGE
+            from .features_deriv import _deriv
+            from .features import _btc_aligned
+            missing = self.missing_inputs(ctx)
+            for key in self.deps['derivs']:
+                if key not in missing and np.isfinite(_deriv(ctx,key).to_numpy()).mean() < MIN_COVERAGE:
+                    missing.append(key + ': insufficient trustworthy historical coverage')
+            def check_context(node, scope):
+                name = node.id if isinstance(node, ast.Name) else node.func.id if isinstance(node, ast.Call) else None
+                if name in ('taker_buy','taker_buy_frac'):
+                    source = ctx.frames.get(scope)
+                    raw = source.get('taker_buy') if source is not None else None
+                    if raw is None or not len(raw) or np.isfinite(raw.to_numpy()).mean() < MIN_COVERAGE:
+                        missing.append('taker_buy: insufficient trustworthy retained aggressor observations')
+                if isinstance(node, ast.Call):
+                    name = node.func.id
+                    if name == 'htf':
+                        scope = node.args[0].value
+                        source = ctx.frames.get(scope)
+                        if source is None or not len(source):
+                            missing.append('htf:' + scope)
+                        else:
+                            observed = dsl.evaluate(dsl.parse(f'htf("{scope}", close)'), ctx)
+                            if np.isfinite(observed.to_numpy()).mean() < MIN_COVERAGE:
+                                missing.append('htf:' + scope + ': insufficient trustworthy historical coverage')
+                    elif name in ('btc_ret','btc_ema_dist','corr_btc','rel_strength_btc'):
+                        source = (ctx.btc or {}).get(scope)
+                        if source is None:
+                            source = (ctx.btc or {}).get('15m')
+                        if source is None or not len(source):
+                            missing.append('btc:' + scope)
+                        elif source.attrs.get('symbol') != 'BTC/USDT':
+                            missing.append('btc:explicit BTC/USDT source required')
+                        elif scope in ctx.frames:
+                            scoped = ctx if scope == tf else ctx.scoped(scope)
+                            if np.isfinite(_btc_aligned(scoped).to_numpy()).mean() < MIN_COVERAGE:
+                                missing.append('btc:' + scope + ': insufficient trustworthy historical coverage')
+                    elif name in ('xs_rank','breadth','dispersion'):
+                        peers = [member.get(scope) for peer, member in (ctx.universe or {}).items()
+                                 if name != 'xs_rank' or peer != ctx.symbol]
+                        if not ctx.symbol or not any(peer is not None and len(peer) for peer in peers):
+                            missing.append('universe:' + scope)
+                        elif scope in ctx.frames:
+                            from ..data.feed import norm_symbol
+                            for peer, member in (ctx.universe or {}).items():
+                                source = member.get(scope)
+                                if source is not None and source.attrs.get('symbol') != norm_symbol(peer):
+                                    raise dsl.SpecError('retrospective universe symbol binding mismatch')
+                            scoped = ctx if scope == tf else ctx.scoped(scope)
+                            observed = dsl.evaluate(dsl.parse(f'{name}(close)'), scoped)
+                            if np.isfinite(observed.to_numpy()).mean() < MIN_COVERAGE:
+                                missing.append('universe:' + scope + ': insufficient trustworthy historical coverage')
+                for child in ast.iter_child_nodes(node):
+                    check_context(child, scope)
+            for tree in (self._long, self._short, *self._filters, self._exit):
+                if tree is not None:
+                    check_context(tree, tf)
+            for key in self.deps['refs']:
+                if 'ref:' + key not in missing:
+                    observed = dsl.evaluate(dsl.parse(f'ref("{key}", close)'), ctx)
+                    if len(observed) and (not np.isfinite(observed.iloc[-1]) or
+                                         np.isfinite(observed.to_numpy()).mean() < MIN_COVERAGE):
+                        missing.append('ref:' + key + ': insufficient trustworthy historical coverage')
+            if missing:
+                raise dsl.SpecError('retrospective missing declared dependency: ' + ', '.join(dict.fromkeys(missing)))
+        return ctx
 
     def _verify_spec(self):
         from ..engine.trade_provenance import spec_version
@@ -153,6 +231,11 @@ class CompiledStrategy:
         (library.py:293) find it like any other evaluator.
         """
         def _evaluate(_genome, snap, *, diagnostic=None):
+            if any(getattr(df, 'attrs', {}).get('read_mode') == 'retrospective'
+                   for df in snap.dfs.values()):
+                if diagnostic:
+                    diagnostic('retrospective_observations_have_no_live_authority')
+                return None
             import pandas as pd
             from ..data.market_provenance import cut as valid_cut
             try:

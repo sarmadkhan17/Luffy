@@ -349,14 +349,42 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
 
 def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
                     derivs=None, equity: float = 2000.0,
-                    symbol: str = "BT") -> BacktestResult:
+                    symbol: str = "BT", universe=None, market=None) -> BacktestResult:
     _require_replay(frames)
     _require_replay(btc)
-    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol)
-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol)
-    return simulate(lo, sh, frames[compiled.spec.timeframe], compiled.spec.exit,
-                    risk_cfg, equity=equity, genome_id=compiled.spec.id,
-                    symbol=symbol, exit_sig=ex)
+    for member in (universe or {}).values():
+        _require_replay(member)
+    df = frames[compiled.spec.timeframe]
+    if df.attrs.get('read_mode') == 'retrospective':
+        from ..data.feed import norm_symbol
+        declared = df.attrs.get('symbol')
+        if symbol == 'BT':
+            if not declared:
+                raise ValueError('retrospective backtest requires explicit market symbol')
+            symbol = declared
+        elif declared and norm_symbol(symbol) != declared:
+            raise ValueError('retrospective symbol binding mismatch')
+    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol,
+                              universe=universe, market=market)
+    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol,
+                              universe=universe, market=market)
+    df = frames[compiled.spec.timeframe]
+    fund = funding_for(symbol, df, risk_cfg) if df.attrs.get('read_mode') == 'retrospective' else None
+    result = simulate(lo, sh, df, compiled.spec.exit, risk_cfg, equity=equity,
+                      genome_id=compiled.spec.id, symbol=symbol, exit_sig=ex, funding=fund)
+    if df.attrs.get('read_mode') == 'retrospective':
+        from . import quant_contract
+        from ..data.market_provenance import digest
+        inputs = {'frames':frames, 'btc':btc or {}, 'derivs':derivs or {},
+                  'universe':universe or {}, 'market':market or {}}
+        if fund is not None:
+            inputs['funding_cost'] = df[['ts']].assign(value=fund)
+        contract = quant_contract.contract(compiled.spec, inputs, risk_cfg)
+        result.evidence = {'quant_contract':contract,
+            'evaluation_identity':digest({'run':contract['run']['identity'], 'equity':equity,
+                                          'compiler_identity':compiled.identity}),
+            'evidence_scope':'retrospective_observation', 'factory_validated':False}
+    return result
 
 
 #: (symbol, first bar, bar count) -> aligned signed funding, or None
@@ -365,9 +393,9 @@ _FUNDING_CACHE: dict = {}
 
 def _require_replay(frames):
     for df in (frames or {}).values():
-        if df is not None and 'revision_id' in df and df.attrs.get('read_mode') != 'replay':
+        if df is not None and 'revision_id' in df and df.attrs.get('read_mode') not in ('replay', 'retrospective'):
             raise ValueError('historical engine requires retained bar-cut replay')
-        if df is not None and 'quality' in df and not df['quality'].eq('VALID').all():
+        if df is not None and 'quality' in df and not df['observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'].eq('VALID').all():
             raise ValueError('historical engine requires valid market evidence')
 
 
@@ -378,18 +406,28 @@ def funding_for(symbol: str, df, risk_cfg: dict):
     equivalence harness uses. Cached per frame because a gauntlet scores the
     same symbol many times.
     """
+    if getattr(df, 'attrs', {}).get('read_mode') == 'retrospective' and risk_cfg.get('real_funding', True) and (not symbol or symbol == 'BT'):
+        raise ValueError('retrospective measured funding requires explicit market symbol')
     if not risk_cfg.get("real_funding", True) or not symbol or symbol == "BT":
         return None
     if df is None or not len(df) or "ts" not in getattr(df, "columns", ()):
         return None
+    if df.attrs.get('read_mode') == 'retrospective':
+        # A candle-only cache key cannot authenticate dependency corrections.
+        # Read the explicitly bound retained settlements each time instead.
+        from . import spec_evidence
+        return spec_evidence.funding_series(symbol, df)
     from ..data.market_provenance import digest
     key = (symbol, str(df["ts"].iloc[0]), len(df),
-           df.attrs.get('as_of_ms'),digest(df['revision_id'].tolist()) if 'revision_id' in df else None)
+           df.attrs.get('as_of_ms'), df.attrs.get('dataset_id'), df.attrs.get('input_identity'),
+           digest(df.attrs.get('retrospective')),digest(df['revision_id'].tolist()) if 'revision_id' in df else None)
     if key not in _FUNDING_CACHE:
         try:
             from . import spec_evidence
             _FUNDING_CACHE[key] = spec_evidence.funding_series(symbol, df)
         except Exception:
+            if df.attrs.get('read_mode') == 'retrospective':
+                raise
             _FUNDING_CACHE[key] = None
     return _FUNDING_CACHE[key]
 
@@ -411,6 +449,15 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
         _require_replay(member)
     tf = compiled.spec.timeframe
     df = frames[tf]
+    if df.attrs.get('read_mode') == 'retrospective':
+        from ..data.feed import norm_symbol
+        declared = df.attrs.get('symbol')
+        if symbol == 'BT':
+            if not declared:
+                raise ValueError('retrospective walk-forward requires explicit market symbol')
+            symbol = declared
+        elif declared and norm_symbol(symbol) != declared:
+            raise ValueError('retrospective symbol binding mismatch')
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol)
     ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
@@ -431,5 +478,17 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     ok_train, f_train = train.passes()
     ok_test, f_test = test.passes(min_trades=max(3, int(train.trades * 0.2)),
                                   min_pf=1.0)
-    return {"train": train, "test": test, "robust": ok_train and ok_test,
-            "train_fails": f_train, "test_fails": f_test}
+    result = {"train": train, "test": test, "robust": ok_train and ok_test,
+              "train_fails": f_train, "test_fails": f_test}
+    if df.attrs.get('read_mode') == 'retrospective':
+        from . import quant_contract
+        from ..data.market_provenance import digest
+        inputs = {'frames':frames, 'btc':btc or {}, 'derivs':derivs or {},
+                  'universe':universe or {}, 'market':market or {}}
+        if fund is not None:
+            inputs['funding_cost'] = df[['ts']].assign(value=fund)
+        result['quant_contract'] = quant_contract.contract(compiled.spec, inputs, risk_cfg)
+        result['evaluation_identity'] = digest({'run':result['quant_contract']['run']['identity'], 'split':split,
+                                                'compiler_identity':compiled.identity})
+        result.update(evidence_scope='retrospective_observation', factory_validated=False)
+    return result

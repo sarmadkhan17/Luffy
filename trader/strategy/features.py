@@ -72,6 +72,27 @@ class FeatureCtx:
     _world_valid: object | None = field(default=None, repr=False)
 
     def __post_init__(self):
+        base = self.frames.get(self.tf, pd.DataFrame())
+        if base.attrs.get('read_mode') == 'retrospective':
+            from ..data import market_provenance as mp
+            from ..core.types import TF_MS
+            if self.as_of_ms is not None:
+                raise ValueError('retrospective observations cannot serve historical as-of evidence')
+            descriptor = base.attrs.get('retrospective')
+            if not descriptor or not descriptor.get('dataset_id'):
+                raise ValueError('retrospective feature context requires dataset identity')
+            cut = mp.cut(descriptor['cut_ms'])
+            groups = [self.frames, self.btc, self.derivs, self.market]
+            groups += list((self.universe or {}).values())
+            for group in groups:
+                for tf, frame in (group or {}).items():
+                    if frame is None:
+                        continue
+                    if frame.attrs.get('retrospective') != descriptor:
+                        raise ValueError('retrospective feature dependency dataset mismatch')
+                    duration = TF_MS.get(frame.attrs.get('timeframe') or tf, 0)
+                    if len(frame) and (mp.ms(frame['ts']) + duration > cut).any():
+                        raise ValueError('retrospective feature dependency crosses historical cut')
         if self.world is not None:
             from ..world.context import WorldContext
             if not isinstance(self.world, WorldContext):
@@ -99,7 +120,10 @@ class FeatureCtx:
     def temporal_identity(self):
         from ..data.market_provenance import digest
         def ids(frames):
-            return {k: list(v['revision_id']) if v is not None and 'revision_id' in v else []
+            return {k: ({'revisions': list(v['revision_id']) if 'revision_id' in v else [],
+                         'dataset': v.attrs.get('retrospective'), 'input_identity': v.attrs.get('input_identity')}
+                        if v is not None and v.attrs.get('read_mode') == 'retrospective' else
+                        list(v['revision_id']) if v is not None and 'revision_id' in v else [])
                     for k, v in (frames or {}).items()}
         return digest(dict(cut=self.as_of_ms, frames=ids(self.frames), btc=ids(self.btc),
                            derivs=ids(self.derivs), market=ids(self.market),
@@ -109,9 +133,11 @@ class FeatureCtx:
     def bind_result(self, result, name):
         if isinstance(result, pd.Series):
             if 'quality' in self.df:
-                result = result.where(self.df['quality'].eq('VALID'))
+                column = 'observation_quality' if self.df.attrs.get('read_mode') == 'retrospective' else 'quality'
+                result = result.where(self.df[column].eq('VALID'))
             result.attrs['market_provenance'] = dict(
                 transform_version='features.v1:'+name, as_of_ms=self.as_of_ms,
+                evidence_scope=self.df.attrs.get('evidence_scope'), dataset_id=self.df.attrs.get('dataset_id'),
                 source_identity=self.temporal_identity(),
                 source_revisions={tf: list(df['revision_id']) for tf, df in self.frames.items()
                                   if df is not None and 'revision_id' in df},
@@ -195,7 +221,7 @@ def world_observation(ctx: FeatureCtx, kind: str, horizon: str) -> pd.Series:
     cuts = ms(ctx.df['ts']) + TF_MS[ctx.tf]
     # A current evaluation anchors its final row at the explicit decision
     # cut, just like ref()/htf(). Replay rows always use their own close.
-    if ctx.as_of_ms is not None and ctx.df.attrs.get('read_mode') != 'replay' and len(cuts):
+    if ctx.as_of_ms is not None and ctx.df.attrs.get('read_mode') not in ('replay', 'retrospective') and len(cuts):
         cuts = cuts.copy()
         cuts[-1] = ctx.as_of_ms
     for cut in cuts:
@@ -403,8 +429,17 @@ def _btc_aligned(ctx: FeatureCtx, col: str = "close") -> pd.Series:
     b = _btc(ctx)
     if b is None or "ts" not in b.columns:
         return pd.Series(np.nan, index=ctx.index)
-    base_ts = pd.to_datetime(ctx.df["ts"], utc=True).values
-    b_ts = pd.to_datetime(b["ts"], utc=True).values
+    if ctx.df.attrs.get('read_mode') == 'retrospective':
+        from ..core.types import TF_MS
+        from ..data.market_provenance import ms
+        source_tf = b.attrs.get('timeframe')
+        if source_tf not in TF_MS:
+            raise ValueError('retrospective BTC dependency requires explicit source timeframe')
+        base_ts = ms(ctx.df['ts']) + TF_MS[ctx.tf]
+        b_ts = ms(b['ts']) + TF_MS[source_tf]
+    else:
+        base_ts = pd.to_datetime(ctx.df["ts"], utc=True).values
+        b_ts = pd.to_datetime(b["ts"], utc=True).values
     pos = np.searchsorted(b_ts, base_ts, side="right") - 1
     vals = b[col].to_numpy(float)
     out = np.where(pos >= 0, vals[np.clip(pos, 0, None)], np.nan)

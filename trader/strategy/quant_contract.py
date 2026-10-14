@@ -10,6 +10,8 @@ actuals; journal/venue figures carry their own labels elsewhere.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 import hashlib
 import inspect
 import json
@@ -61,10 +63,10 @@ def expectancy(res) -> dict:
     return {"trades": n, "usdt_per_trade": (res.pnl_usdt / n) if n else None}
 
 
-def data_digest(df) -> str:
+def data_digest(df, *, include_dependent=False) -> str:
     """Content hash of the OHLCV the engine reads (timestamps and prices)."""
     h = hashlib.sha256()
-    for c in ("ts", "open", "high", "low", "close", "volume"):
+    for c in ("ts", "open", "high", "low", "close", "volume") + (("value",) if include_dependent else ()):
         if c in df:
             col = df[c]
             h.update(c.encode())
@@ -81,16 +83,54 @@ def engine_digest() -> str:
     return hashlib.sha256(src.encode()).hexdigest()
 
 
+def retrospective_source_identity():
+    """Pin retrospective implementations without relabeling historical compiles."""
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    names = ('strategy/compile.py', 'strategy/features.py', 'strategy/features_deriv.py',
+             'strategy/features_xs.py', 'strategy/dsl.py', 'strategy/backtest.py',
+             'strategy/vector_backtest.py', 'strategy/rolling.py',
+             'strategy/quant_contract.py', 'strategy/spec_evidence.py',
+             'strategy/portfolio_evidence.py', 'data/feed.py',
+             'data/market_provenance.py', 'data/derivatives.py', 'data/references.py')
+    return {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in names}
+
+
 def run_identity(spec, frames: dict, risk_cfg: dict) -> dict:
     """Everything a result depends on, pinned: same identity => same numbers."""
-    data = {k: data_digest(v) for k, v in sorted(frames.items()) if v is not None and hasattr(v, "columns")}
+    def flatten(group, prefix=''):
+        out = {}
+        for key, value in group.items():
+            name = prefix + key
+            if isinstance(value, dict):
+                out.update(flatten(value, name + ':'))
+            else:
+                out[name] = value
+        return out
+    flat = flatten(frames)
+    retrospective = any(getattr(v, 'attrs', {}).get('retrospective') for v in flat.values())
+    if retrospective:
+        frames = flat
+    data = {k: data_digest(v, include_dependent=retrospective) for k, v in sorted(frames.items())
+            if v is not None and hasattr(v, "columns")}
+    datasets = {k: {name: deepcopy(v.attrs.get(name)) for name in
+                ('dataset_id', 'historical_cut_ms', 'retrospective', 'evidence_scope', 'input_identity', 'source_limitation', 'retrospective_dependency_inputs')}
+                for k, v in sorted(frames.items()) if hasattr(v, 'attrs') and v.attrs.get('retrospective')}
     cfg = {k: risk_cfg.get(k) for k in _CFG_KEYS}
     ident = {"contract": CONTRACT_ID, "spec_id": getattr(spec, "id", None),
              "spec_digest": _digest(spec.to_dict() if hasattr(spec, "to_dict") else repr(spec)),
              "data_digest": _digest(data), "config": cfg, "config_digest": _digest(cfg),
              "engine_digest": engine_digest()}
+    if datasets:
+        from .compile import compile_spec
+        compiled = compile_spec(spec) if hasattr(spec, 'entry_long') else None
+        ident['datasets'] = datasets
+        ident['implementation_sources'] = retrospective_source_identity()
+        ident['compiler_identity'] = compiled.identity if compiled else None
+        ident['retrospective_only'] = True
+        ident['factory_validated'] = False
     ident["identity"] = _digest({k: ident[k] for k in ("contract", "spec_digest", "data_digest",
-                                                       "config_digest", "engine_digest")})
+                                                       "config_digest", "engine_digest")} | ({"datasets": datasets, "compiler_identity": ident["compiler_identity"], "implementation_sources": ident["implementation_sources"]} if datasets else {}))
     return ident
 
 

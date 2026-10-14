@@ -22,6 +22,8 @@ one — every day without it is a day of history permanently lost.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 import logging
 import threading
 import time
@@ -63,8 +65,13 @@ def to_binance(symbol: str) -> str:
 
 
 class DerivFeed:
-    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None):
+    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None, *, retrospective=None):
         self._db_path = str(db_path) if db_path else None
+        self.retrospective = deepcopy(retrospective) if retrospective is not None else None
+        if self.retrospective is not None:
+            if not db_path or not self.retrospective.get('dataset_id'):
+                raise ValueError('retrospective dependency requires explicit dataset_id and db_path')
+            mp.cut(self.retrospective['cut_ms'])
         self._local = threading.local()
         self.timeout = timeout
         self._clock_ms = clock_ms or (lambda: int(time.time()*1000))
@@ -75,6 +82,13 @@ class DerivFeed:
     def db(self):
         conn = getattr(self._local, "conn", None)
         if conn is None:
+            if self.retrospective is not None:
+                import sqlite3
+                from pathlib import Path
+                conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
+                conn.execute('PRAGMA query_only=ON')
+                self._local.conn = conn
+                return conn
             import sqlite3
             if self._db_path is None:
                 from ..core.config import ROOT
@@ -110,6 +124,8 @@ class DerivFeed:
         return ts.astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
 
     def save(self, symbol: str, series: str, df: pd.DataFrame) -> None:
+        if self.retrospective is not None:
+            raise ValueError('retrospective dependency is read-only')
         if df is None or df.empty:
             return
         # Imported plain values are inventory, never historical receipt proof.
@@ -127,6 +143,34 @@ class DerivFeed:
             insert_rows(conn, 'INSERT OR REPLACE INTO derivs', projection, 4)
 
     def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
+        if self.retrospective is not None:
+            d = self.retrospective
+            if as_of_ms is not None:
+                raise ValueError('retrospective observations cannot serve historical as-of evidence')
+            if not self.db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='market_revisions'").fetchone():
+                raise ValueError('retrospective dependency requires trustworthy retained provenance: market_revisions')
+            identities = self.db.execute(
+                "SELECT DISTINCT json_extract(record_json,'$.instrument_id') "
+                "FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? "
+                "AND (? IS NULL OR event_ms<?)",
+                ('derivative:'+symbol+':'+series, d.get('start_ms',0), d['cut_ms']-0,
+                 d.get('end_ms'), d.get('end_ms'))).fetchall()
+            if len({row[0] for row in identities if row[0] is not None}) > 1:
+                raise ValueError('retrospective dependency ambiguous instrument identity: ' + 'derivative:'+symbol+':'+series)
+            df = mp.retrospective_load(self.db, 'derivative:'+symbol+':'+series, cut_ms=d['cut_ms'],
+                                      start_ms=d.get('start_ms', 0), end_ms=d.get('end_ms'),
+                                      limit=limit)
+            if df is not None:
+                import numpy as np
+                df = df.loc[df['quality'].eq('VALID') & df['source'].notna() & df['instrument_id'].notna()
+                            & np.isfinite(df['value'])].copy()
+            if df is None or not len(df):
+                raise ValueError('retrospective dependency missing trustworthy retained source: ' + 'derivative:'+symbol+':'+series)
+            df['observation_quality'] = 'VALID'
+            df.attrs.update(input_identity=mp.digest(df['revision_id'].tolist()), retrospective=deepcopy(d), dataset_id=d['dataset_id'],
+                            historical_cut_ms=d['cut_ms'], read_mode='retrospective',
+                            evidence_scope='retrospective_observation')
+            return df
         at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
         df = mp.load(self.db, 'derivative:'+symbol+':'+series, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None, window_start_ms=window_start_ms)
         df = mp.eligible_frame(df, None, at)
@@ -150,6 +194,8 @@ class DerivFeed:
 
     # ── fetch ────────────────────────────────────────────────────────────
     def _get(self, path: str, params: dict, base: str = FAPI) -> list:
+        if self.retrospective is not None:
+            raise ValueError('retrospective dependency forbids provider calls')
         import uuid
         self._local.receipts = []
         started = self._clock_ms()
@@ -434,6 +480,8 @@ class DerivFeed:
         2024 has no 2021 frame to reach and asking for one only burns pages
         against an empty window.
         """
+        if self.retrospective is not None:
+            raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
         since = since or {}
         for sym in symbols:
@@ -475,6 +523,8 @@ class DerivFeed:
     def record_all(self, symbols: list, delay: float = 0.3) -> dict:
         """One pass over every symbol and series. Rows already stored are
         replaced, so this is safe to run at any cadence and safe to retry."""
+        if self.retrospective is not None:
+            raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
         for sym in symbols:
             for series, method in self._SERIES_FETCHERS:

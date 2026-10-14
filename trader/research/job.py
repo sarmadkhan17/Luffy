@@ -149,6 +149,7 @@ def measure_job(payload: dict) -> dict:
         min_finite_frac=float(rcfg.get("min_finite_frac",
                                        thresholds.MIN_FINITE_FRAC)))
     return {"tf": b.tf, "cut_ms": int(b.cut), "gauges": gauges,
+            **({"evidence": b.evidence} if b.evidence else {}),
             "counts": {"discovery": slices.bar_counts(b.frames),
                        "heldout_a": b.heldout_bars.get("a", {}),
                        "heldout_b": b.heldout_bars.get("b", {})},
@@ -212,6 +213,7 @@ def evaluate_job(payload: dict) -> dict:
     out = {"results": results, "done": len(results), "skipped": skipped,
            "loaded_symbols": len(b.frames), "cut_ms": int(b.cut),
            "coverage": _coverage(b, payload.get("requires") or ()),
+           **({"evidence": b.evidence} if b.evidence else {}),
            "elapsed_s": round(time.monotonic() - t0, 2)}
     if admission is not None:
         out["admission"] = admission

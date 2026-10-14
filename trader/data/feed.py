@@ -4,6 +4,8 @@ Binance demo keys from .env; sandbox mode when BINANCE_DEMO is truthy.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 import logging
 import threading
 from collections import OrderedDict
@@ -79,7 +81,17 @@ class DataFeed:
     BACKGROUND_QUEUE_CAPACITY = 128
 
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
-                 db_path=None, clock_ms=None):
+                 db_path=None, clock_ms=None, retrospective=None):
+        self.retrospective = deepcopy(retrospective) if retrospective is not None else None
+        if self.retrospective is not None:
+            if not db_path or not isinstance(self.retrospective.get('dataset_id'), str) or not self.retrospective['dataset_id'].strip():
+                raise ValueError('retrospective requires explicit database and dataset_id')
+            mp.cut(self.retrospective.get('cut_ms'))
+            for key in ('start_ms', 'end_ms'):
+                if self.retrospective.get(key) is not None:
+                    mp.cut(self.retrospective[key])
+            if self.retrospective.get('start_ms', 0) > self.retrospective['cut_ms']:
+                raise ValueError('retrospective start exceeds historical cut')
         self._clock_ms = clock_ms or (lambda: int(time.time() * 1000))
         self._ex = exchange
         #: the venue orders are actually sent to (demo, when demo is on)
@@ -95,7 +107,7 @@ class DataFeed:
         from ..core.config import Env
         on_demo = Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes")
         self.data_ex = make_exchange("futures", demo=False, with_keys=False) \
-            if (on_demo and exchange is None) else None
+            if (on_demo and exchange is None and self.retrospective is None) else None
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
@@ -119,6 +131,8 @@ class DataFeed:
     @property
     def ex(self):
         """Exchange used for market data (production public when on demo)."""
+        if self.retrospective is not None:
+            raise RuntimeError('retrospective provider access forbidden')
         if self.data_ex is not None:
             return self.data_ex
         if self._ex is None:
@@ -286,6 +300,13 @@ class DataFeed:
             if self._db_path is None:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "candles.db")
+            if self.retrospective is not None:
+                from pathlib import Path
+                uri = Path(self._db_path).resolve().as_uri() + '?mode=ro'
+                conn = sqlite3.connect(uri, uri=True, timeout=self.BUSY_TIMEOUT_S)
+                conn.execute('PRAGMA query_only=ON')
+                self._local.conn = conn
+                return conn
             conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
             try:
                 conn.execute(
@@ -585,8 +606,116 @@ class DataFeed:
                      as_of_ms=at, limit=limit, replay_tf=tf)
         return mp.eligible_frame(df,tf,at)
 
+    def _retrospective_query(self, symbol, tf, *, start_ms=None, end_ms=None,
+                             closed_before_ms=None, metadata_only=False):
+        if self.retrospective is None:
+            raise ValueError('explicit retrospective dataset required')
+        if tf not in self._TF_MS:
+            raise ValueError('unsupported retrospective timeframe')
+        contract = self.retrospective
+        start = contract.get('start_ms', 0) if start_ms is None else mp.cut(start_ms)
+        cut = contract['cut_ms'] if closed_before_ms is None else mp.cut(closed_before_ms)
+        end = contract.get('end_ms') if end_ms is None else mp.cut(end_ms)
+        # Only metadata counting can inspect coverage beyond the discovery cut.
+        if not metadata_only:
+            cut = min(cut, contract['cut_ms'])
+        tables = {r[0] for r in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        args = [norm_symbol(symbol), tf, start, cut - self._TF_MS[tf]]
+        predicate = 'symbol=? AND tf=? AND ts>=? AND ts<=?'
+        if end is not None:
+            predicate += ' AND ts<?'
+            args.append(end)
+        # The projection is the audited stored observation, never evidence of
+        # what was available at the old bar close. Validate without reading
+        # post-cut prices. Legacy receipt/source clocks remain unknown.
+        if not metadata_only:
+            predicate += " AND low>0 AND volume>=0 AND low<=open AND low<=close AND high>=open AND high>=close"
+            predicate += " AND abs(open)<1e308 AND abs(high)<1e308 AND abs(low)<1e308 AND abs(close)<1e308 AND abs(volume)<1e308"
+        if 'candles' not in tables:
+            raise ValueError('retrospective candle projection missing')
+        return predicate, args, tables
+
+    def retrospective_coverage(self, symbol, tf='15m', *, start_ms=None,
+                                end_ms=None, closed_before_ms=None, metadata_only=False):
+        """Coverage through the same bounded projection, with no price loading.
+
+        metadata_only allows protected-era counts but selects only timestamps.
+        It is inventory, not evidence that a held-out evaluation is eligible.
+        """
+        predicate, args, _ = self._retrospective_query(symbol, tf, start_ms=start_ms,
+            end_ms=end_ms, closed_before_ms=closed_before_ms, metadata_only=metadata_only)
+        n, first, last = self.db.execute(
+            'SELECT COUNT(*),MIN(ts),MAX(ts) FROM candles WHERE '+predicate, args).fetchone()
+        return {'bars': int(n), 'first_ms': first, 'last_ms': last,
+                'dataset_id': self.retrospective['dataset_id'],
+                'evidence_scope': 'coverage_metadata' if metadata_only else 'retrospective_observation'}
+
+    def retrospective_ohlcv(self, symbol, tf='15m', limit=200000):
+        """Read audited stored OHLCV closed by the explicit historical cut.
+
+        Acquisition clocks are preserved if retained; missing provenance is
+        UNKNOWN. This never manufactures historically available evidence.
+        """
+        if type(limit) is not int or limit <= 0:
+            raise ValueError('positive retrospective limit required')
+        predicate, args, tables = self._retrospective_query(symbol, tf)
+        columns = {r[1] for r in self.db.execute('PRAGMA table_info(candles)')}
+        taker = 'taker_buy' if 'taker_buy' in columns else 'NULL AS taker_buy'
+        rows = self.db.execute('SELECT ts,open,high,low,close,volume,'+taker+
+            ' FROM candles WHERE '+predicate+' ORDER BY ts DESC LIMIT ?', args+[limit]).fetchall()
+        if not rows:
+            return None
+        df = pd.DataFrame(rows[::-1], columns=COLUMNS+['taker_buy'])
+        df['ts'] = pd.to_datetime(df['ts'], unit='ms', utc=True)
+        stored_taker = pd.to_numeric(df['taker_buy'], errors='coerce')
+        # Old projections may contain an unverified flow proxy. It cannot
+        # become a measured aggressor feature without a matching source receipt.
+        df['taker_buy'] = np.nan
+        for key in mp.META:
+            df[key] = None
+        df['quality'] = 'UNKNOWN'
+        df['observation_quality'] = 'VALID'
+        df['bar_state'] = 'FINAL'
+        df['event_time_ms'] = mp.ms(df['ts'])
+        # Retain only receipts exactly matching this stored projection. A
+        # receipt for a different revision must never authenticate these bytes.
+        if 'market_revisions' in tables:
+            receipts = mp.retrospective_load(self.db, self._series_key(symbol, tf),
+                cut_ms=self.retrospective['cut_ms'], tf=tf,
+                start_ms=self.retrospective.get('start_ms',0),
+                end_ms=self.retrospective.get('end_ms'), limit=limit)
+            if receipts is not None:
+                # Vectorized exact projection match avoids one pandas mutation
+                # per receipt field in multi-year universes.
+                matched = receipts.set_index('event_time_ms', drop=False).reindex(df['event_time_ms'])
+                matched.index = df.index
+                agrees = pd.Series(True, index=df.index)
+                for key in COLUMNS[1:]:
+                    agrees &= matched[key].eq(df[key])
+                for key in mp.META:
+                    df.loc[agrees,key] = matched.loc[agrees,key].to_numpy()
+                if 'taker_buy' in matched:
+                    trustworthy = (agrees & matched['quality'].eq('VALID') &
+                        matched['source'].notna() & matched['instrument_id'].notna() &
+                        matched['taker_buy'].eq(stored_taker) & stored_taker.ge(0) &
+                        stored_taker.le(df['volume']) & np.isfinite(stored_taker))
+                    df.loc[trustworthy,'taker_buy'] = stored_taker.loc[trustworthy]
+        identity = mp.digest({'dataset_id':self.retrospective['dataset_id'],
+            'symbol':norm_symbol(symbol),'tf':tf,'contract':self.retrospective,
+            'rows':df.to_json(orient='split',date_unit='ms',date_format='iso')})
+        df.attrs.update(retrospective=deepcopy(self.retrospective),
+            dataset_id=self.retrospective['dataset_id'], symbol=norm_symbol(symbol), historical_cut_ms=self.retrospective['cut_ms'],
+            timeframe=tf,timestamp_semantics='interval_open',read_mode='retrospective',
+            evidence_scope='retrospective_observation',input_identity=identity,
+            source_limitation='Stored observations; unknown provenance remains unknown; no historical availability claim')
+        return df
+
     def cached_ohlcv(self, symbol, tf='15m', limit=20000, *, as_of_ms=None):
         """Compatibility historical API: replay by default, explicit cut otherwise."""
+        if self.retrospective is not None:
+            if as_of_ms is not None:
+                raise ValueError('retrospective observation cannot establish as-of evidence')
+            return self.retrospective_ohlcv(symbol, tf, limit=limit)
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
         return self.replay_ohlcv(symbol, tf, limit)
@@ -596,6 +725,8 @@ class DataFeed:
                     min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
+        if self.retrospective is not None:
+            raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
         if self.background_acquisition and not getattr(self._local, 'acquiring', False):
             current = self.latest_ohlcv(symbol, tf, limit)
             now_ms = self._clock_ms()

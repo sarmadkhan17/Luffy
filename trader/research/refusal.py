@@ -126,6 +126,52 @@ def stamp(path: str, tf: str, symbols) -> list | None:
     return [[k] + got.get(k, [0]) for k in keys]
 
 
+def retrospective_stamp(path: str, tf: str, symbols) -> list | None:
+    """Detect projection changes using inventory and file metadata only.
+
+    Legacy projections can change without acquisition revisions. Price
+    corrections move SQLite's file/WAL clock; appends also move inventory.
+    This only invalidates a refusal and never decides data eligibility.
+    """
+    from pathlib import Path
+    from ..core.types import norm_symbol
+    want = sorted({norm_symbol(sym) for sym in symbols})
+    if not want:
+        return None
+
+    def files():
+        out = []
+        for filename in (path, str(path) + "-wal"):
+            try:
+                st = os.stat(filename)
+                out.append([filename, st.st_dev, st.st_ino, st.st_size,
+                            st.st_mtime_ns, st.st_ctime_ns])
+            except FileNotFoundError:
+                out.append([filename, None])
+        return out
+
+    try:
+        before = files()
+        con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True,
+                              timeout=2.0)
+        try:
+            tables = {row[0] for row in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'")}
+            rows = con.execute(
+                "SELECT symbol, COUNT(*), MIN(ts), MAX(ts), SUM(ts) FROM candles "
+                "WHERE tf=? AND symbol IN (" + ",".join("?" for _ in want) +
+                ") GROUP BY symbol", [tf, *want]).fetchall()
+        finally:
+            con.close()
+        revisions = stamp(path, tf, symbols) if "market_revisions" in tables else []
+        if revisions is None or before != files():
+            return None
+        inventory = {row[0]: list(row[1:]) for row in rows}
+        return [before, [[sym, *inventory.get(sym, [0])] for sym in want], revisions]
+    except (OSError, sqlite3.Error):
+        return None
+
+
 def identity(cfg: dict, tf: str, round_: str, floor_key: str, floor: int,
              symbols, cap_ms, cut_ms) -> str:
     """Everything a refusal was reached under, except the data stamp.
@@ -139,7 +185,8 @@ def identity(cfg: dict, tf: str, round_: str, floor_key: str, floor: int,
            "floor": int(floor), "symbols": sorted(symbols),
            "cap_ms": None if cap_ms is None else int(cap_ms),
            "cut_ms": None if cut_ms is None else int(cut_ms),
-           "source": _file_identity(path)}
+           "source": _file_identity(path),
+           "retrospective": (cfg.get("research") or {}).get("retrospective")}
     return hashlib.sha256(json.dumps(doc, sort_keys=True).encode()
                           ).hexdigest()
 

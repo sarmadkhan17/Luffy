@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .vector_backtest import WARMUP, funding_for, simulate, warm_window
+from . import spec_evidence
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class WindowStats:
     n_windows: int = 0
     trades: list = field(default_factory=list)
     pfs: list = field(default_factory=list)
+    evidence: dict = field(default_factory=dict)
 
     @property
     def hit_rate(self) -> float:
@@ -58,7 +60,7 @@ class WindowStats:
         return {"windows": self.n_windows, "hit_rate": round(self.hit_rate, 3),
                 "median_pf": round(self.median_pf, 3),
                 "p25_pf": round(self.p25_pf, 3),
-                "total_trades": self.total_trades}
+                "total_trades": self.total_trades, **({"evidence":self.evidence} if self.evidence else {})}
 
 
 def bars(timeframe: str, days: float) -> int:
@@ -78,16 +80,29 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
     st = WindowStats()
+    identity_frames = dict(frames)
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < win:
             continue
         derivs = derivs_for(sym) if derivs_for else None
+        if df.attrs.get('read_mode') == 'retrospective' and derivs_for is None:
+            derivs = spec_evidence.load_derivs(sym, compiled.data_requires, frame=df)
+        fund = funding_for(sym, df, risk_cfg) if df.attrs.get('read_mode') == 'retrospective' else None
+        market = frames.get('_market')
+        if df.attrs.get('read_mode') == 'retrospective':
+            market = market if market is not None else spec_evidence.load_refs(compiled.data_requires, frame=df)
+            identity_frames[f'_derivs:{sym}'] = derivs or {}
+            if fund is not None:
+                identity_frames[f'_cost:{sym}'] = df[['ts']].assign(value=fund)
+            identity_frames['_market'] = market
         try:
             lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
                                       universe=universe,
-                                      market=frames.get("_market"),
+                                      market=market,
                                       symbol=sym)
         except Exception as e:
+            if df.attrs.get('read_mode') == 'retrospective':
+                raise ValueError('retrospective strategy evaluation refused: ' + str(e)) from e
             log.warning(f"rolling {compiled.spec.id} {sym}: {e}")
             continue
         for a in range(0, len(df) - win, step):
@@ -95,11 +110,16 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             sl, score_from = warm_window(a, b)
             r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
                          compiled.spec.exit, risk_cfg, symbol=sym,
-                         score_from=score_from)
+                         score_from=score_from, funding=None if fund is None else fund[sl])
             if r.trades >= min_trades:
                 st.n_windows += 1
                 st.trades.append(r.trades)
                 st.pfs.append(r.profit_factor)
+    if any(getattr(f, 'attrs', {}).get('retrospective') for f in frames.values()):
+        st.evidence = spec_evidence.quant_contract.run_identity(compiled.spec, identity_frames, risk_cfg)
+        st.evidence['window_configuration'] = dict(timeframe=timeframe, window_days=window_days, step_days=step_days, min_trades=min_trades)
+        from ..data.market_provenance import digest
+        st.evidence['identity'] = digest(st.evidence)
     return st
 
 
@@ -184,6 +204,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
     per_symbol, gross_win, gross_loss, trades, wins = {}, 0.0, 0.0, 0, 0
+    identity_frames = dict(frames)
     d = diagnostics
     if d is not None:
         d.clear()
@@ -206,7 +227,16 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         sl, score_from = warm_window(len(df) - n, len(df))
         recent = df.iloc[sl].reset_index(drop=True)
         derivs = derivs_for(sym) if derivs_for else None
+        if df.attrs.get('read_mode') == 'retrospective' and derivs_for is None:
+            derivs = spec_evidence.load_derivs(sym, compiled.data_requires, frame=df)
         fund = funding_for(sym, recent, risk_cfg)
+        market = frames.get('_market')
+        if df.attrs.get('read_mode') == 'retrospective':
+            market = market if market is not None else spec_evidence.load_refs(compiled.data_requires, frame=df)
+            identity_frames[f'_derivs:{sym}'] = derivs or {}
+            identity_frames['_market'] = market
+            if fund is not None:
+                identity_frames[f'_cost:{sym}'] = recent[['ts']].assign(value=fund)
         stage = "strategy_evaluation"
         try:
             # NOTE: universe carries the FULL frames, not `recent` — a
@@ -216,12 +246,14 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             # whole window.
             lo, sh = compiled.entries({timeframe: recent}, btc=btc,
                                       derivs=derivs, universe=universe,
-                                      market=frames.get("_market"),
+                                      market=market,
                                       symbol=sym)
             stage = "simulation"
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
                          symbol=sym, funding=fund, score_from=score_from)
         except Exception as e:
+            if df.attrs.get('read_mode') == 'retrospective':
+                raise ValueError('retrospective strategy evaluation refused: ' + str(e)) from e
             log.warning(f"recent {compiled.spec.id} {sym}: {e}")
             if d is not None:
                 d["errored"][sym] = _diag_error(stage, e)
@@ -258,6 +290,11 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
           "pooled_pf": round(pooled_pf, 3), "trades": trades,
           "winrate": round(wins / trades, 3) if trades else 0.0,
           "pnl": round(gross_win - gross_loss, 2)}
+    if any(getattr(f, 'attrs', {}).get('retrospective') for f in frames.values()):
+        ev['quant_contract'] = spec_evidence.quant_contract.contract(compiled.spec, identity_frames, risk_cfg)
+        from ..data.market_provenance import digest
+        ev['evaluation_identity'] = digest({'run':ev['quant_contract']['run']['identity'], 'timeframe':timeframe, 'recent_days':recent_days})
+        ev.update(evidence_scope='retrospective_observation', factory_validated=False)
     if d is not None:
         d.update(trades=trades, wins=wins, gross_win=gross_win,
                  gross_loss=gross_loss)
@@ -374,17 +411,30 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
     by_regime: dict[str, WindowStats] = {}
+    identity_frames = dict(frames)
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < win:
             continue
         derivs = derivs_for(sym) if derivs_for else None
+        if df.attrs.get('read_mode') == 'retrospective' and derivs_for is None:
+            derivs = spec_evidence.load_derivs(sym, compiled.data_requires, frame=df)
+        fund = funding_for(sym, df, risk_cfg) if df.attrs.get('read_mode') == 'retrospective' else None
+        market = frames.get('_market')
+        if df.attrs.get('read_mode') == 'retrospective':
+            market = market if market is not None else spec_evidence.load_refs(compiled.data_requires, frame=df)
+            identity_frames[f'_derivs:{sym}'] = derivs or {}
+            if fund is not None:
+                identity_frames[f'_cost:{sym}'] = df[['ts']].assign(value=fund)
+            identity_frames['_market'] = market
         try:
             lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
                                       universe=universe,
-                                      market=frames.get("_market"),
+                                      market=market,
                                       symbol=sym)
             regimes = regime_series(df)
         except Exception as e:
+            if df.attrs.get('read_mode') == 'retrospective':
+                raise ValueError('retrospective strategy evaluation refused: ' + str(e)) from e
             log.warning(f"regime_windows {compiled.spec.id} {sym}: {e}")
             continue
         if not len(regimes):
@@ -402,13 +452,19 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             sl, score_from = warm_window(a, b)
             r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
                          compiled.spec.exit, risk_cfg, symbol=sym,
-                         score_from=score_from)
+                         score_from=score_from, funding=None if fund is None else fund[sl])
             if r.trades < min_trades:
                 continue
             st = by_regime.setdefault(dominant, WindowStats())
             st.n_windows += 1
             st.trades.append(r.trades)
             st.pfs.append(r.profit_factor)
+    if any(getattr(f, 'attrs', {}).get('retrospective') for f in frames.values()):
+        identity = spec_evidence.quant_contract.run_identity(compiled.spec, identity_frames, risk_cfg)
+        for st in by_regime.values():
+            st.evidence = {**identity, 'window_configuration':dict(timeframe=timeframe, window_days=window_days, step_days=step_days, min_trades=min_trades)}
+            from ..data.market_provenance import digest
+            st.evidence['identity'] = digest(st.evidence)
     return by_regime
 
 

@@ -435,3 +435,47 @@ def resolve_lineage(conns, lineage, *, transforms=None):
             raise ValueError('lineage_transform_mismatch')
         out[rid] = receipt_metadata({**r, **{k: r.get(k) for k in META}})
     return out
+
+
+def retrospective_load(conn, key, *, cut_ms, tf=None, start_ms=0,
+                       end_ms=None, limit=200000):
+    """Retained observations bounded by event close, regardless of acquisition.
+
+    Receipt hashes and indexed clocks are checked as for as-of reads. Original
+    acquisition clocks remain untouched; this is not historical availability.
+    No source record beyond the event boundary is selected or decoded.
+    """
+    cut(cut_ms)
+    start_ms = 0 if start_ms is None else start_ms
+    cut(start_ms)
+    if end_ms is not None:
+        cut(end_ms)
+    clauses = 'series_key=? AND event_ms>=? AND event_ms<=?'
+    args = [key, start_ms, cut_ms - TF_MS.get(tf, 0)]
+    if end_ms is not None:
+        clauses += ' AND event_ms<?'
+        args.append(end_ms)
+    rows = conn.execute('SELECT record_json,revision_id,event_ms,available_ms,observed_ms '
+        'FROM (SELECT *,ROW_NUMBER() OVER (PARTITION BY event_ms '
+        'ORDER BY observed_ms DESC,rowid DESC) ordinal FROM market_revisions WHERE '+
+        clauses+') WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?', args+[limit]).fetchall()
+    selected = []
+    for raw, rid, event, available, observed in reversed(rows):
+        r = json.loads(raw)
+        value = {k:r[k] for k in VALUES if k in r}
+        body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
+        if r['content_hash'] != digest({'raw':json.loads(r['raw_json']),'value':value}) or r['revision_id'] != digest(body):
+            raise ValueError('market_revision_content_corrupt')
+        if (rid,event,available,observed) != (r['revision_id'],r['event_time_ms'],r['available_at_ms'],r['observed_at_ms']):
+            raise ValueError('market_revision_index_corrupt')
+        if r['bar_state'] != 'FINAL' or r['quality'] not in ('VALID','UNKNOWN'):
+            continue
+        selected.append(r)
+    if not selected:
+        return None
+    df = pd.DataFrame(selected)
+    df['ts'] = pd.to_datetime(df['event_time_ms'],unit='ms',utc=True)
+    df.attrs.update(read_mode='retrospective',historical_cut_ms=cut_ms,
+                    timeframe=tf,timestamp_semantics='interval_open',
+                    evidence_scope='retrospective_observation')
+    return df

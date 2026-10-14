@@ -77,11 +77,16 @@ def evaluate(spec, frames, cfg, feed):
     step = 4 * 3600 if tf == "4h" else (3600 if tf == "1h" else 900)
 
     pfs, pcts, trades, fills = [], [], 0, []
+    identity_frames = dict(frames)
     for sym, df in frames.items():
         sf = spec_evidence.frames_for(df, tf)
-        derivs = spec_evidence.load_derivs(sym, spec.data_requires)
+        derivs = spec_evidence.load_derivs(sym, spec.data_requires, frame=df)
         ctx = dict(btc=btc, derivs=derivs, universe=universe)
         fund = funding_for(sym, df, risk)
+        if feed.retrospective is not None:
+            identity_frames[f"_derivs:{sym}"] = derivs
+            if fund is not None:
+                identity_frames[f"_cost:{sym}"] = df[["ts"]].assign(value=fund)
         r = vector_walk_forward(compiled, sf, risk, symbol=sym, **ctx)
         trades += r["test"].trades
         if r["test"].trades >= 8:
@@ -104,18 +109,23 @@ def evaluate(spec, frames, cfg, feed):
     eq = 4900.0
     years = ((max(f.exit_i for f in fills) - min(f.entry_i for f in fills))
              * step) / (365.25 * 24 * 3600) if fills else 0.0
-    c = portfolio_curve(fills, eq, 0.5, 8) if fills else {"final": eq, "max_dd_pct": 0}
+    identity = (spec_evidence.quant_contract.run_identity(
+        spec, identity_frames, risk) if feed.retrospective is not None else None)
+    c = portfolio_curve(fills, eq, 0.5, 8, evaluation_identity=identity)
     cagr = ((c["final"] / eq) ** (1.0 / years) - 1.0) * 100.0 \
         if years > 0 and c["final"] > 0 else float("nan")
     return {"pf": st.median(pfs) if pfs else float("nan"),
             "p": consistency_p(pcts), "n_sym": len(pcts), "trades": trades,
-            "fills": len(fills), "cagr": cagr, "dd": c["max_dd_pct"]}
+            "fills": len(fills), "cagr": cagr, "dd": c["max_dd_pct"],
+            "accounting": {**c["accounting"], "clock": "shared timeframe bar grid"},
+            **({"evaluation_identity": identity} if identity else {})}
 
 
 def main():
+    cfg = load_config()
+    feed = spec_evidence.offline_feed(cfg, sys.argv)
     spec_id = sys.argv[1] if len(sys.argv) > 1 else "auth_donchian_breakout_trail"
-    cfg, feed = load_config(), DataFeed()
-    db = sqlite3.connect("data/luffy.db")
+    db = spec_evidence.offline_strategy_db(feed)
     base = StrategySpec.from_dict(json.loads(db.execute(
         "select spec_json from strategies where id=?", (spec_id,)).fetchone()[0]))
     tf = base.timeframe
@@ -134,6 +144,10 @@ def main():
         except Exception as e:
             print(f"  {name:<13} FAILED: {e}")
             continue
+        if feed.retrospective is not None:
+            import hashlib
+            print('RETROSPECTIVE_EVIDENCE ' + json.dumps({'variant':name, 'run':r['evaluation_identity'],
+                'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest()},sort_keys=True))
         p = f"{r['p']:.1e}" if r["p"] is not None else "n/a"
         print(f"  {name:<13} {r['pf']:>5.2f} {p:>9} {r['n_sym']:>5} "
               f"{r['trades']:>11} {r['fills']:>6} {r['cagr']:>6.1f}% "
