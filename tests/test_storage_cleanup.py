@@ -216,3 +216,18 @@ def test_unknown_foreign_key_declaration_retains_every_blob(tmp_path):
     assert not manifest['delete'] and refusal['reason']=='UNKNOWN_FOREIGN_KEYS_RETAINED'
     assert C.inventory(db)==before
     db.close()
+
+
+def test_snapshot_refuses_changes_to_an_earlier_database(tmp_path,monkeypatch):
+    source=tmp_path/'source';source.mkdir()
+    for name in ('a.db','b.db'):
+        db=sqlite3.connect(source/name);db.execute('CREATE TABLE events(id INTEGER PRIMARY KEY)');db.commit();db.close()
+    original=C.shutil.copyfile
+    def copy_then_change_earlier(src,dst):
+        result=original(src,dst)
+        if str(src).endswith('b.db'):
+            db=sqlite3.connect(source/'a.db');db.execute('INSERT INTO events VALUES (1)');db.commit();db.close()
+        return result
+    monkeypatch.setattr(C.shutil,'copyfile',copy_then_change_earlier)
+    with pytest.raises(ValueError,match='MULTI_DATABASE_SNAPSHOT'):C.snapshot(source,tmp_path/'isolated')
+    assert not (tmp_path/'isolated/snapshot.json').exists()

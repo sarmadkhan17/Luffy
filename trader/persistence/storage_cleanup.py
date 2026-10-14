@@ -122,9 +122,13 @@ def snapshot(source, destination):
             with (copies/Path(item).name).open('rb') as stream:
                 hashes[Path(item).name] = hashlib.file_digest(stream, 'sha256').hexdigest()
         receipt[path.name] = {'source_files': before, 'stable': True, 'copy_files': hashes}
-        (destination/'snapshot.json').write_text(json.dumps(receipt, indent=2))
     if sorted(source.glob('*.db')) != paths:
         raise ValueError('SOURCE_FILE_SET_CHANGED_REFUSED')
+    for record in receipt.values():
+        for original, expected in record['source_files'].items():
+            if not Path(original).exists() or signature(Path(original)) != expected:
+                raise ValueError('SOURCE_CHANGED_DURING_MULTI_DATABASE_SNAPSHOT')
+    (destination/'snapshot.json').write_text(json.dumps(receipt, indent=2))
     return copies
 
 
