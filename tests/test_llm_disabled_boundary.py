@@ -126,7 +126,8 @@ def test_kernel_background_generation_records_refusal_without_send(offline, tmp_
     kernel.cfg = cfg
     kernel.journal = Journal(tmp_path / "kernel.db")
     kernel.feed = kernel.notifier = None
-    analyst = SimpleNamespace(review_deployed=lambda book: [])
+    analyst = SimpleNamespace(review_deployed=lambda book: [],
+                              flush_health_observations=lambda: True)
     monkeypatch.setattr("trader.brain.analyst.Analyst", lambda *a: analyst)
     monkeypatch.setattr("trader.brain.llm.BrainLLM", lambda *a: llm)
     monkeypatch.setattr(kernel, "_research_handoff", lambda *a: None)

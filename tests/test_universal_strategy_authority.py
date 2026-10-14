@@ -71,6 +71,7 @@ def test_original_mechanism_admission_bypass_submits_nothing(tmp_path, monkeypat
     class Analyst:
         def __init__(self, *a): pass
         def review_deployed(self, book): return []
+        def flush_health_observations(self): return True
         def admit(self, proposed, book): return True, {'recent':{'pooled_pf':2,'trades':30}}
         def set_measured_regimes(self, spec): return []
     class Writer:

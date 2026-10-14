@@ -625,30 +625,35 @@ class Kernel:
         book = [spec for _r, spec in rows]
 
         # 1. retire what has stopped working
-        retired = analyst.review_deployed(book)
-        if retired:
-            # The legacy sweep is descriptive, with no exact replay proposal.
-            from .learning.foundation import refuse_legacy_learning
-            try:
-                refuse_legacy_learning("legacy_recent_decay")
-            except ValueError as exc:
-                log.warning(str(exc))
-                retired = []
-        for a in retired:
-            from .strategy import factory_handoff as fh
-            if fh.versioned(self.journal, a["spec"]):
-                versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
-                if len(versions) != 1:
-                    raise ValueError('governor_install_ambiguous')
-                fh.retire_version(self.journal, versions[0]['version_id'], fh.RETIRED,
-                    reason_code=a["evidence"]["verdict"][:200], actor='strategy_governor', at_ms=int(time.time()*1000))
-            else:
-                with self.journal._tx() as c:
-                    c.execute("UPDATE strategies SET state='retired', retire_reason=? WHERE id=?",
-                              (a["evidence"]["verdict"][:200], a["spec"]))
-        if retired:
-            book = [s for s in book
-                    if s.id not in {a["spec"] for a in retired}]
+        try:
+            retired = analyst.review_deployed(book)
+            if retired:
+                # The legacy sweep is descriptive, with no exact replay proposal.
+                from .learning.foundation import refuse_legacy_learning
+                try:
+                    refuse_legacy_learning("legacy_recent_decay")
+                except ValueError as exc:
+                    log.warning(str(exc))
+                    retired = []
+            for a in retired:
+                from .strategy import factory_handoff as fh
+                if fh.versioned(self.journal, a["spec"]):
+                    versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
+                    if len(versions) != 1:
+                        raise ValueError('governor_install_ambiguous')
+                    fh.retire_version(self.journal, versions[0]['version_id'], fh.RETIRED,
+                        reason_code=a["evidence"]["verdict"][:200], actor='strategy_governor', at_ms=int(time.time()*1000))
+                else:
+                    with self.journal._tx() as c:
+                        c.execute("UPDATE strategies SET state='retired', retire_reason=? WHERE id=?",
+                                  (a["evidence"]["verdict"][:200], a["spec"]))
+            if retired:
+                book = [s for s in book
+                        if s.id not in {a["spec"] for a in retired}]
+        finally:
+            # Best-effort, nonthrowing and idempotent if review already flushed.
+            # Keep telemetry outside lifecycle transactions and before replacements.
+            analyst.flush_health_observations()
 
         # 2. generate replacements — from what the Researcher actually read
         added = []

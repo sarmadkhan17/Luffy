@@ -168,6 +168,9 @@ def _kernel_stub(journal, monkeypatch, writer):
         def review_deployed(self, book):
             return []
 
+        def flush_health_observations(self):
+            return True
+
     monkeypatch.setattr(analyst_mod, "Analyst", _Analyst)
     monkeypatch.setattr(llm_mod, "BrainLLM", lambda cfg: object())
     monkeypatch.setattr(sw_mod, "SpecWriter", lambda llm: writer)
