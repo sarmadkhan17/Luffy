@@ -234,12 +234,8 @@ class Kernel:
         from .strategy.compile import compile_spec, compile_version
         if not fh.versioned(self.journal, spec.id):
             return compile_spec(spec)
-        rows = self.journal.query(
-            "SELECT version_id FROM strategy_version_installs WHERE strategy_id=?",
-            (spec.id,))
-        if len(rows) != 1:
-            raise ValueError("install_missing_or_ambiguous")
-        compiled = compile_version(self.journal, rows[0]["version_id"])
+        inst = fh.resolve_current_install(self.journal, spec.id)
+        compiled = compile_version(self.journal, inst["version_id"])
         if spec.to_dict() != compiled.spec.to_dict():
             raise ValueError("installed_row_differs_from_version")
         return compiled
@@ -638,10 +634,8 @@ class Kernel:
             for a in retired:
                 from .strategy import factory_handoff as fh
                 if fh.versioned(self.journal, a["spec"]):
-                    versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
-                    if len(versions) != 1:
-                        raise ValueError('governor_install_ambiguous')
-                    fh.retire_version(self.journal, versions[0]['version_id'], fh.RETIRED,
+                    inst = fh.resolve_current_install(self.journal, a["spec"])
+                    fh.retire_version(self.journal, inst['version_id'], fh.RETIRED,
                         reason_code=a["evidence"]["verdict"][:200], actor='strategy_governor', at_ms=int(time.time()*1000))
                 else:
                     with self.journal._tx() as c:
@@ -1506,10 +1500,8 @@ class Kernel:
             from .strategy import exit_policy as E
             from .core.types import TF_MS
             try:
-                installs = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (top_strategy,))
-                if len(installs) != 1:
-                    raise ValueError('versioned_entry_install_ambiguous')
-                version = fh.load_version(self.journal, installs[0]['version_id'])
+                install = fh.resolve_current_install(self.journal, top_strategy)
+                version = fh.load_version(self.journal, install['version_id'])
                 fh.verify_validation(self.journal, version)
                 install = fh.verify_install(self.journal, version)
                 from .strategy.spec import StrategySpec

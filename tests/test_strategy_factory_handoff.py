@@ -961,8 +961,33 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/strategy/compile.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/strategy/compile.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # Glacier's exception is restricted to these exact inspection calls.
+    # A Factory writer, module escape or alternate import still fails here.
+    import ast
+    dashboard = ast.parse(pathlib.Path('trader/dashboard/glacier_truth.py').read_text())
+    imports = [n for n in ast.walk(dashboard) if isinstance(n, ast.ImportFrom)
+               and n.module == 'trader.strategy']
+    assert [(a.name, a.asname) for n in imports for a in n.names
+            if a.name == 'factory_handoff'] == [('factory_handoff', 'f')]
+    assert not any(isinstance(n, ast.ImportFrom) and 'factory_handoff' in (n.module or '')
+                   or isinstance(n, ast.Import) and any('factory_handoff' in a.name for a in n.names)
+                   or isinstance(n, ast.Attribute) and n.attr == 'factory_handoff'
+                   for n in ast.walk(dashboard))
+    allowed = {'load_version', 'verify_validation', 'verify_install',
+               '_verify_probation', 'approval_request', 'governor_events', 'state_of'}
+    parents = {child: parent for parent in ast.walk(dashboard) for child in ast.iter_child_nodes(parent)}
+    seen = set()
+    for node in ast.walk(dashboard):
+        if isinstance(node, ast.Name) and node.id == 'f':
+            attribute = parents[node]
+            assert isinstance(attribute, ast.Attribute) and attribute.value is node
+            call = parents[attribute]
+            assert isinstance(call, ast.Call) and call.func is attribute
+            assert attribute.attr in allowed
+            seen.add(attribute.attr)
+    assert seen == allowed
     # STR-02: the compiler may only READ/verify an exact version; it can never
     # create, install, govern or retire one (compiling grants no authority).
     compile_src = pathlib.Path('trader/strategy/compile.py').read_text()
@@ -1009,9 +1034,10 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= {
-            "versioned", "live_entry_block", "load_version", "verify_validation", "verify_install"}, name
+            "versioned", "live_entry_block", "load_version", "verify_validation", "verify_install",
+            "resolve_current_install"}, name
     for name, allowed in (("_install_spec", {"versioned"}),
-                          ("_compile_population_spec", {"versioned"}),
+                          ("_compile_population_spec", {"versioned", "resolve_current_install"}),
                           ("_manage_paper", {"state_of", "evaluate_probation", "SHADOW"})):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= allowed

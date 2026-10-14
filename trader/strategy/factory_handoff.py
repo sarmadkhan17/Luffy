@@ -853,10 +853,8 @@ def bind_installed_spec(journal, spec):
     """
     if not versioned(journal, spec.id):
         return spec
-    rows = journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (spec.id,))
-    if len(rows) != 1:
-        _refuse('install_missing_or_ambiguous')
-    v = load_version(journal, rows[0]['version_id'])
+    inst = resolve_current_install(journal, spec.id)
+    v = load_version(journal, inst['version_id'])
     verify_exit_binding(journal, v)
     verify_install(journal, v, current=False)
     _, h = _frozen_spec(spec)
@@ -866,7 +864,7 @@ def bind_installed_spec(journal, spec):
     bind_research(spec)
     spec.exit._exit_binding = {'exit_semantics_id': EXIT_SEMANTICS_ID,
         'version_id': v['version_id'], 'spec_hash': v['spec_hash'],
-        'install_id': _install_record(journal, v['version_id'])['install_id']}
+        'install_id': inst['install_id']}
     return spec
 
 
@@ -1015,7 +1013,53 @@ def verify_install(journal, version: dict, *, current: bool = True) -> dict:
             _refuse("installed_version_missing")
         if inst[1] != version["spec_hash"]:
             _refuse("installed_version_differs")
+        if resolve_current_install(journal, version["strategy_id"]) != rec:
+            _refuse("installed_version_differs")
     return rec
+
+
+def resolve_current_install(journal, strategy_id: str) -> dict:
+    """Read the unique authenticated install of the current compiled spec.
+
+    The existing strategies spec projection and immutable exact-install
+    receipt establish the binding together. Historical receipts with other
+    specs remain history; two installs of the same spec are ambiguous even
+    when their clocks or lifecycle labels differ. No new authority is stored.
+    Historical trades must instead verify their recorded version/install
+    with verify_install(current=False).
+    """
+    current = _installed(journal, strategy_id)
+    if current is None or not current[0]:
+        _refuse('install_missing_or_ambiguous')
+    spec, spec_hash = current
+    sql = 'SELECT * FROM strategy_version_installs WHERE strategy_id=? AND spec_hash=?'
+    rows = journal.query(sql, (strategy_id, spec_hash))
+    if len(rows) != 1:
+        _refuse('install_missing_or_ambiguous')
+    row = rows[0]
+    v = load_version(journal, row['version_id'])
+    if v.get('schema') != VERSION_SCHEMA or 'lineage' not in v:
+        _refuse('legacy_version_lacks_lineage_contract')
+    val = verify_validation(journal, v)
+    inst = verify_install(journal, v, current=False)
+    if (any(row[k] != inst[k] for k in
+            ('install_id', 'version_id', 'strategy_id', 'spec_hash', 'mode'))
+            or inst['schema'] != INSTALL_SCHEMA or inst['mode'] != 'paper'
+            or (v['strategy_id'], v['spec_hash']) != (strategy_id, spec_hash)
+            or inst['validation_receipt_id'] != val['receipt_id']
+            or canonical(inst['installed_spec']) != canonical(spec)
+            or canonical(v['spec']) != canonical(spec)):
+        _refuse('install_binding_conflict')
+    bound = [e for e in events(journal, v['version_id']) if e['to_state'] == SHADOW]
+    if (len(bound) != 1 or bound[0]['from_state'] != VALIDATED
+            or bound[0]['ref_id'] != inst['install_id']
+            or bound[0]['actor'] != 'factory'
+            or bound[0]['at_ms'] != inst['installed_at_ms']):
+        _refuse('install_event_unbound')
+    if (journal.query(sql, (strategy_id, spec_hash)) != rows
+            or _installed(journal, strategy_id) != current):
+        _refuse('installed_version_changed')
+    return inst
 
 
 def _ms(iso: str | None) -> int | None:
@@ -1652,15 +1696,24 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
         if not versioned(journal, strategy_id):
             from .legacy_authority import grandfathered
             return None if grandfathered(journal, strategy_id) else "VERSIONED_AUTHORITY_REQUIRED"
-        inst = _installed(journal, strategy_id)
-        if inst is None:
-            return "version_install_unbound"
-        rows = journal.query("SELECT version_id FROM strategy_versions WHERE "
-                             "strategy_id=? AND spec_hash=?",
-                             (strategy_id, inst[1]))
-        if len(rows) != 1:
-            return "version_install_unbound"
-        vid = rows[0]["version_id"]
+        try:
+            inst = resolve_current_install(journal, strategy_id)
+        except HandoffRefused as e:
+            if e.code == 'install_missing_or_ambiguous':
+                # A unique uninstalled proposal can explain the refusal; it
+                # cannot supply a current install or first-live authority.
+                current = _installed(journal, strategy_id)
+                rows = journal.query(
+                    'SELECT version_id FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+                    (strategy_id, current[1])) if current else []
+                if len(rows) == 1:
+                    load_version(journal, rows[0]['version_id'])
+                    state = state_of(journal, rows[0]['version_id'])
+                    if state == PROPOSED:
+                        return f'version_not_live_authorized:{state}'
+                return "version_install_unbound"
+            raise
+        vid = inst['version_id']
         st = state_of(journal, vid)
         if projection_gap(journal, vid):
             return "version_projection_diverged"

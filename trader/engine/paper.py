@@ -120,10 +120,8 @@ class PaperExecutor:
         a PAPER account once; subsequent paper P&L never changes real equity.
         """
         from ..agents.indicators import atr
-        rows = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (strategy_id,))
-        if len(rows) != 1:
-            raise ValueError('paper_install_ambiguous')
-        v = F.load_version(self.journal, rows[0]['version_id'])
+        inst = F.resolve_current_install(self.journal, strategy_id)
+        v = F.load_version(self.journal, inst['version_id'])
         F.verify_validation(self.journal, v)
         inst = F.verify_install(self.journal, v)
         if F.state_of(self.journal, v['version_id']) not in (F.SHADOW, F.APPROVAL_REQUIRED, F.APPROVED_FIRST_LIVE):
