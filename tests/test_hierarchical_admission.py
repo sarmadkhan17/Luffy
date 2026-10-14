@@ -113,6 +113,57 @@ def test_rotation_collisions_restart_and_failed_acquisition(policy,tmp_path):
     assert b==A.admit(o,policy,a['next_state'])
 
 
+def _receipt_observation(schema, tmp_path, cfg, monkeypatch):
+    if schema == 'v1':
+        return observation()
+    monkeypatch.setattr('trader.data.broad_crypto.time.time', lambda: CUT / 1000)
+    observed, _, _ = observe(broad_kernel(tmp_path / 'v2-source', cfg, n=3), [])
+    assert observed['schema'] == 'broad-crypto.v2'
+    return observed
+
+
+@pytest.mark.parametrize('schema', ['v1', 'v2'])
+def test_receipt_preparation_leaves_sqlite_writer_available(schema, policy, tmp_path, cfg, monkeypatch):
+    import sqlite3
+    j = Journal(tmp_path/'preparation.db')
+    observed = _receipt_observation(schema, tmp_path, cfg, monkeypatch)
+    A.persist(j, observed, policy)
+    verify = A.verify_receipt
+    probes = []
+    def checked(receipt):
+        # The independent committed safety write must remain possible during
+        # both retained-receipt verification and next-receipt verification.
+        with sqlite3.connect(j.db_path, timeout=.05) as other:
+            other.execute('BEGIN IMMEDIATE')
+            other.execute('INSERT OR REPLACE INTO state_kv VALUES (?,?)',
+                          ('__critical_storage_probe__', 'offline-test'))
+        probes.append(receipt['receipt_id'])
+        return verify(receipt)
+    monkeypatch.setattr(A, 'verify_receipt', checked)
+    result = A.persist(j, observed, policy)
+    assert len(probes) == 2
+    assert A.latest(j)['receipt_id'] == result['receipt_id']
+
+
+@pytest.mark.parametrize('schema', ['v1', 'v2'])
+def test_receipt_preparation_refuses_concurrent_rotation(schema, policy, tmp_path, cfg, monkeypatch):
+    j = Journal(tmp_path/'concurrent.db')
+    observed = _receipt_observation(schema, tmp_path, cfg, monkeypatch)
+    A.persist(j, observed, policy)
+    verify = A.verify_receipt
+    winner = []
+    def checked(receipt):
+        monkeypatch.setattr(A, 'verify_receipt', verify)
+        other = Journal(j.db_path)
+        winner.append(A.persist(other, observed, policy))
+        return verify(receipt)
+    monkeypatch.setattr(A, 'verify_receipt', checked)
+    with pytest.raises(ValueError, match='admission_rotation_changed_during_prepare'):
+        A.persist(j, observed, policy)
+    assert A.latest(j)['receipt_id'] == winner[0]['receipt_id']
+    assert len(j.query("SELECT id FROM brain_events WHERE kind='attention_admission'")) == 2
+
+
 def test_exploration_no_starvation_in_stable_cohort(policy):
     state=A.initial_state(); seen=set();o=observation(30,scores=False,relevant=False)
     for _ in range(15):
@@ -150,19 +201,20 @@ def test_persisted_rotation_corruption_refuses_without_reset(policy,tmp_path):
 
 
 def markets(symbols):
-    return {s:dict(id=s.replace('/',''),active=True,quote='USDT',spot=False,
+    return {s:dict(id=s.replace('/',''),symbol=s,active=True,quote='USDT',spot=False,
         info=dict(symbol=s.replace('/',''),underlyingType='COIN',status='TRADING',contractType='PERPETUAL',
                   onboardDate=CUT-100*86400000)) for s in symbols}
 
 
-def ticker(last=10,volume=2e8):
-    return dict(last=last,quoteVolume=volume,timestamp=CUT,percentage=5)
+def ticker(last=10,volume=2e8,*,symbol):
+    return dict(symbol=symbol,info={'symbol':symbol.replace('/','')},
+        last=last,quoteVolume=volume,timestamp=CUT,percentage=5)
 
 
 def test_crypto_eligibility_and_pit():
     syms=['BTC/USDT','XAU/USDT','NEW/USDT','STALE/USDT','BAD/USDT','DENIED/USDT','MISSING/USDT']
     ms=markets(syms);ms['XAU/USDT']['info']['underlyingType']='COMMODITY';ms['MISSING/USDT']['info'].pop('underlyingType')
-    ts={s:ticker() for s in syms};ts['NEW/USDT']=ticker(.001,10);ts['STALE/USDT']['timestamp']=CUT-400000
+    ts={s:ticker(symbol=s) for s in syms};ts['NEW/USDT']=ticker(.001,10,symbol='NEW/USDT');ts['STALE/USDT']['timestamp']=CUT-400000
     ts['BAD/USDT']['timestamp']=CUT+1
     rows,excluded=project(ts,ms,cut=CUT,blacklist=set(),stale_ms=300000,capability_exclusions=['DENIED/USDT'])
     assert set(rows)=={'BTC/USDT','NEW/USDT'}  # no price/volume/top-N observation shrink
@@ -174,7 +226,7 @@ def test_crypto_eligibility_and_pit():
 def broad_kernel(tmp_path,cfg,n=30):
     k=object.__new__(Kernel);k.cfg=deepcopy(cfg);k.population=[];k.journal=Journal(tmp_path/'j.db')
     syms=list(observation(n)['rows']);ms=markets(syms)
-    k.exchange=NS(markets=ms,id='binanceusdm',urls={'api':'https://offline.example/fapi'});k.universe=NS(ex=NS(fetch_tickers=Mock(return_value={s:ticker() for s in syms})),blacklist=set())
+    k.exchange=NS(markets=ms,id='binanceusdm',urls={'api':'https://offline.example/fapi'});k.universe=NS(ex=NS(fetch_tickers=Mock(return_value={s:ticker(symbol=s) for s in syms})),blacklist=set())
     import pandas as pd
     from trader.data import market_provenance as mp
     metadata=mp.annotate(pd.DataFrame(dict(ts=pd.to_datetime([CUT],unit='ms',utc=True),close=[float(len(ms))])),
@@ -344,6 +396,42 @@ def test_actual_cycle_admits_before_deep_and_keeps_all_holdings(tmp_path,cfg,mon
     k._oi_map.assert_called_once_with(symbols=list(k._symbol_roles.deep))
     # Rejected discretionary symbols never cross the expensive boundary.
     assert not (set(k._admission_receipt['rejected_deferred'])&{c.args[0] for c in k._snapshot_for.call_args_list})
+
+
+@pytest.mark.parametrize('aux_kind', ['missing', 'available', 'future'])
+def test_actual_cycle_preserves_admission_with_market_lineage(tmp_path,cfg,monkeypatch,aux_kind):
+    """Auxiliary provenance must not replace admission before the second symbol."""
+    k=full_cycle_kernel(tmp_path,cfg,monkeypatch)
+    original=k._snapshot_for.side_effect
+    snapshots={}
+    def snapshot(symbol,**kw):
+        snap=original(symbol,**kw)
+        snap.market_provenance_parts={'as_of_ms':CUT}
+        snapshots[symbol]=snap
+        return snap
+    k._snapshot_for.side_effect=snapshot
+    k._manage_paper=Mock()
+    kinds=('order_book','funding','open_interest')
+    k._market_aux={}
+    if aux_kind!='missing':
+        for symbol in k.exchange.markets:
+            for kind in kinds:
+                k._market_aux[kind+':'+symbol]=dict(
+                    available_at_ms=CUT+(1000 if aux_kind=='future' else 0),
+                    source='TEST-ONLY:'+kind)
+    stats=k.cycle()
+    receipt=A.verify_receipt(k._admission_receipt)
+    replay=A.latest(k.journal)
+    assert A.canonical(receipt)==A.canonical(replay)
+    assert stats['deep_processed']==stats['decisions']==stats['admission']['deep_admitted']==2
+    assert stats['entries']==0 and k.state_machine.state==ControlState.FROZEN
+    assert k.orchestrator.decide.call_count==2
+    for candidate in A.candidates(replay):
+        snap=snapshots[candidate['symbol']]
+        assert snap.admission_context['investigation']==candidate
+        expected={kind:k._market_aux[kind+':'+snap.symbol] for kind in kinds} if aux_kind=='available' else {}
+        assert snap.market_provenance_parts['auxiliary']==expected
+    assert k._manage_one.call_count==15
 
 
 @pytest.mark.parametrize('failure',['empty_tickers','stale_tickers','cursor_corrupt','admission_storage','snapshot_failure','decision_failure'])

@@ -5,48 +5,135 @@ permission inference. Venue metadata's underlyingType=COIN proves crypto.
 """
 import math
 import time
-from trader.core.types import norm_symbol
+from collections import Counter
+from trader.core.types import norm_symbol, MarketType
+from trader.core.instrument_registry import InstrumentId
 from trader.attention_admission import digest, PEER_VERSION
 from trader.cognition.contracts import TF_MS
 from trader.observability.attention import capture, evaluate_snapshot, settings
 from trader.strategy.scan_plan import plan_scan
 
 ANCHORS = ('BTC/USDT','ETH/USDT')
+SCHEMA = 'broad-crypto.v2'
 
 
-def project(tickers, markets, *, cut, blacklist, stale_ms, capability_exclusions=()):
-    """Pure point-in-time eligible cohort projection, with explicit refusals."""
-    rows, excluded = {}, {}
-    by_symbol = {norm_symbol(k):m for k,m in markets.items()}
-    for key,t in sorted(tickers.items()):
-        sym = norm_symbol(key)
-        m = by_symbol.get(sym,{})
-        info = m.get('info') or {}
+def _instrument_id(value):
+    if not isinstance(value,str) or not value or any(c.isspace() for c in value):
+        return None
+    try:
+        return InstrumentId('binance_usdm',MarketType.FUTURES,value).value
+    except ValueError:
+        return None
+
+
+def _info(record):
+    return record.get('info') if isinstance(record,dict) and isinstance(record.get('info'),dict) else {}
+
+
+def _identity_matches(tickers, markets):
+    """Exact retained native IDs; duplicate aliases never select a winner."""
+    if (not isinstance(tickers,dict) or not isinstance(markets,dict)
+            or any(not isinstance(k,str) or not k or any(c.isspace() for c in k)
+                   for k in (*tickers,*markets))):
+        raise ValueError('malformed_crypto_identity')
+    by_id = {}
+    for key,m in sorted(markets.items()):
+        info = _info(m)
+        native = m.get('id') if isinstance(m,dict) else None
+        iid, raw_iid = _instrument_id(native), _instrument_id(info.get('symbol'))
         reason = None
+        if iid is None or raw_iid is None: reason = 'malformed_crypto_identity'
+        elif iid != raw_iid or m.get('symbol',key) != key: reason = 'conflicting_crypto_identity'
+        # Index both declared IDs of inconsistent metadata so neither can
+        # borrow a different valid alias or masquerade as missing metadata.
+        for identity in {iid,raw_iid} - {None}:
+            by_id.setdefault(identity,[]).append((key,m,reason))
+    counts = Counter(_instrument_id(_info(t).get('symbol')) for t in tickers.values())
+    for key,t in sorted(tickers.items()):
+        iid = _instrument_id(_info(t).get('symbol'))
+        matches = by_id.get(iid,[]) if iid is not None else []
+        m, reason = {}, None
+        if iid is None: reason = 'malformed_crypto_identity'
+        elif counts[iid] > 1 or len(matches) > 1: reason = 'ambiguous_crypto_identity'
+        elif not matches:
+            reason = 'malformed_crypto_identity' if key in markets else 'venue_metadata_missing'
+        else:
+            market_key,m,reason = matches[0]  # exactly one candidate, never first-wins
+            if reason is None and (key != market_key or t.get('symbol',key) != key):
+                reason = 'conflicting_crypto_identity'
+        yield key,t,m,iid,reason
+
+
+def _venue_exclusion(m):
+    info = _info(m)
+    if info.get('underlyingType') != 'COIN': return 'non_crypto_or_unknown_classification'
+    if not m.get('active',False) or info.get('status') != 'TRADING': return 'venue_not_trading'
+    if m.get('quote') != 'USDT' or m.get('spot') or info.get('contractType') != 'PERPETUAL':
+        return 'unsupported_instrument'
+
+
+def _ticker_clock_exclusion(event, cut, stale_ms):
+    if event is not None and (type(event) not in (int,float) or not math.isfinite(event)
+                             or event > cut or event < cut-stale_ms):
+        return 'stale_or_invalid_ticker_clock'
+
+
+def verify_identity_projection(observation):
+    """Qualify v2 rows against their frozen sources, without replaying policy."""
+    try:
+        sources, cut = observation['source_receipts'], observation['source_cut_ms']
+        tickers, markets = sources['tickers'], sources['venue_metadata']
+        if observation['source_identity'] != digest([SCHEMA,cut,tickers,markets]):
+            raise ValueError('source_identity_mismatch')
+        stale_ms = observation['attention_event']['capture_settings']['stale_seconds']*1000
+        matched = {}
+        for key,t,m,iid,reason in _identity_matches(tickers,markets):
+            if reason is None and _venue_exclusion(m) is None:
+                matched[iid] = (norm_symbol(key),t,_info(m))
+        for sym,row in observation['rows'].items():
+            label,t,info = matched[row['instrument_id']]
+            if (label != sym or row['ticker'] != t or row['metadata'] != info
+                    or row['event_time_ms'] != t.get('timestamp') or row['available_at_ms'] != cut
+                    or _ticker_clock_exclusion(t.get('timestamp'),cut,stale_ms)):
+                raise ValueError('source_identity_mismatch')
+    except (KeyError,TypeError,ValueError) as exc:
+        raise ValueError('admission_crypto_identity_invalid') from exc
+
+
+def project(tickers, markets, *, cut, blacklist, stale_ms, capability_exclusions=(), source_exclusions=None):
+    """Pure point-in-time eligible cohort projection, with explicit refusals."""
+    rows, refusals = {}, {}
+    for key,t,m,iid,reason in _identity_matches(tickers,markets):
+        info = _info(m)
+        if reason is None: reason = _venue_exclusion(m)
+        # Only the exact matched contract was judged above. Normalization is
+        # for existing policy masks and consumer labels, never for matching.
+        sym = norm_symbol(key)
         if sym in blacklist: reason = 'deterministic_blacklist'
         elif sym in capability_exclusions: reason = 'account_symbol_ineligible'
-        elif info.get('underlyingType') != 'COIN': reason = 'non_crypto_or_unknown_classification'
-        elif not m.get('active',False) or info.get('status') != 'TRADING': reason = 'venue_not_trading'
-        elif m.get('quote') != 'USDT' or m.get('spot') or info.get('contractType') != 'PERPETUAL': reason = 'unsupported_instrument'
-        event = t.get('timestamp')
-        if reason is None and event is not None:
-            if type(event) not in (int,float) or not math.isfinite(event) or event > cut or event < cut-stale_ms:
-                reason = 'stale_or_invalid_ticker_clock'
+        event = t.get('timestamp') if isinstance(t,dict) else None
+        if reason is None: reason = _ticker_clock_exclusion(event,cut,stale_ms)
         def number(name,positive=False):
-            v=t.get(name)
+            v=t.get(name) if isinstance(t,dict) else None
             return v if type(v) in (int,float) and math.isfinite(v) and (v>0 if positive else True) else None
         last, volume = number('last',True),number('quoteVolume')
         if reason is None and (last is None or volume is None or volume < 0): reason = 'invalid_ticker'
         if reason:
-            excluded[sym] = reason; continue
+            refusals.setdefault(sym,set()).add(reason)
+            if source_exclusions is not None:
+                source_exclusions[key] = dict(instrument_id=iid,reason=reason)
+            continue
         if sym in rows: raise ValueError('duplicate_crypto_identity')
         missing = [k for k in ('percentage','change','bid','ask','baseVolume') if number(k) is None]
         rows[sym] = dict(symbol=sym,asset_class='CRYPTO',quality='VALID',available_at_ms=cut,
             event_time_ms=event,last=last,quote_volume=volume,return_24h_pct=number('percentage'),
             change_24h=number('change'),bid=number('bid',True),ask=number('ask',True),
             base_volume=number('baseVolume'),missing_reasons=missing + ([] if event is not None else ['provider_event_time_unknown']),
-            instrument_id='binance_usdm:futures:'+info['symbol'],metadata=info,ticker=t,
+            instrument_id=iid,metadata=info,ticker=t,
             listing_onboard_ms=info.get('onboardDate'))
+    # A rejected sibling is not an exclusion of the accepted perpetual.
+    excluded = {sym:next(iter(reasons)) if len(reasons)==1 else 'multiple_instrument_refusals'
+                for sym,reasons in sorted(refusals.items()) if sym not in rows}
     return rows,excluded
 
 
@@ -55,6 +142,7 @@ def observe(kernel, exposure):
     ex = kernel.universe.ex
     cfg = kernel.cfg
     started = int(time.time()*1000)
+    source_exclusions = {}
     try:
         tickers = ex.fetch_tickers()
         cut = int(time.time()*1000)
@@ -89,10 +177,11 @@ def observe(kernel, exposure):
                     and cap.get('record',{}).get('account_eligibility')=='INELIGIBLE'):
                 account_excluded.append(r['key'][len(CAP_KEY):])
         rows,excluded = project(tickers,markets,cut=cut,blacklist=kernel.universe.blacklist,
-            stale_ms=cfg['attention']['stale_seconds']*1000,capability_exclusions=account_excluded)
+            stale_ms=cfg['attention']['stale_seconds']*1000,capability_exclusions=account_excluded,
+            source_exclusions=source_exclusions)
         status='VALID'
     except Exception as exc:
-        cut=int(time.time()*1000);tickers={};markets={};rows={};excluded={};metadata_receipt=None;status='UNAVAILABLE:'+type(exc).__name__
+        cut=int(time.time()*1000);tickers={};markets={};rows={};excluded={};source_exclusions={};metadata_receipt=None;status='UNAVAILABLE:'+type(exc).__name__
     # Retain the old strategy-volume peer definition using cheap onboard
     # metadata instead of first-candle network probes (explicit v2 semantics).
     scan=cfg['universe']['auto_scan']
@@ -123,7 +212,7 @@ def observe(kernel, exposure):
             rows[sym]['missing_reasons'].append('cached_history_unavailable')
     capture_cfg=settings(cfg['attention'])
     capture_cfg['max_symbols']=max(1,len(rows))
-    memberships={s:dict(source='broad-crypto.v1',symbol=s,quality='VALID',available_at_ms=cut,observed_at_ms=cut) for s in rows}
+    memberships={s:dict(source=SCHEMA,symbol=s,quality='VALID',available_at_ms=cut,observed_at_ms=cut) for s in rows}
     event=capture(frames,sorted(rows),'broad:'+digest([cut,rows]),capture_cfg,cut,membership_receipts=memberships)
     # Pure evaluator; worker availability cannot alter synchronous admission.
     event['capture_ms'] = None  # elapsed timing is not a deterministic admission input
@@ -131,8 +220,8 @@ def observe(kernel, exposure):
     scores={r['symbol']:r for r in result['rows']}
     if status=='VALID' and any(not r.get('eligible') for r in scores.values()): status='DEGRADED_CACHED_HISTORY'
     if peer_plan: kernel._scan_timeframes=peer_plan.timeframes
-    observation=dict(schema='broad-crypto.v1',source_cut_ms=cut,source_identity=digest([cut,tickers,markets]),
-        rows=rows,excluded=excluded,peer_cohort=peers,peer_version=PEER_VERSION,
+    observation=dict(schema=SCHEMA,source_cut_ms=cut,source_identity=digest([SCHEMA,cut,tickers,markets]),
+        rows=rows,excluded=excluded,source_exclusions=source_exclusions,peer_cohort=peers,peer_version=PEER_VERSION,
         strategy_relevance=relevance,required_by_strategy=required_by_strategy,required_symbols=required_symbols,
         attention_event=event,strategy_specs=[sp.to_dict() for sp in specs],
         context_anchors=list(ANCHORS),exposure_required=sorted(exposure),

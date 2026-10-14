@@ -1278,9 +1278,9 @@ class Kernel:
                     if cut < lineage['as_of_ms']:
                         stats['skips'] += 1
                         continue
-                    auxiliary = {kind: receipt for kind in ('order_book','funding','open_interest')
-                                 if (receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
-                                 and receipt['available_at_ms'] <= cut}
+                    auxiliary = {kind: aux_receipt for kind in ('order_book','funding','open_interest')
+                                 if (aux_receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
+                                 and aux_receipt['available_at_ms'] <= cut}
                     lineage.update(as_of_ms=cut, auxiliary=auxiliary)
                     snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
                     snap.market_provenance_parts = lineage

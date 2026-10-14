@@ -100,12 +100,16 @@ def admit(observation, policy, state):
     Learned priority has no influence on this version's compute admission.
     """
     old = verify_state(state)
-    if observation.get('schema') != 'broad-crypto.v1' or observation.get('source_cut_ms') is None:
+    if observation.get('schema') not in ('broad-crypto.v1','broad-crypto.v2') or observation.get('source_cut_ms') is None:
         raise ValueError('broad_observation_invalid')
     cut = observation['source_cut_ms']
     if type(cut) is not int or cut < 0:
         raise ValueError('source_cut_invalid')
     rows = observation['rows']
+    if observation['schema'] == 'broad-crypto.v2':
+        # v1 is historical replay, never reinterpreted by the repaired join.
+        from .data.broad_crypto import verify_identity_projection
+        verify_identity_projection(observation)
     if rows and 'source_receipts' in observation:
         # Real observations carry raw source receipts. Replay must qualify
         # their inner clocks/bytes, not trust the outer cohort timestamp.
@@ -241,26 +245,37 @@ def verify_receipt(receipt):
 
 def persist(journal, observation, policy):
     with journal._tx() as db:
-        db.execute('BEGIN IMMEDIATE')
-        row = db.execute('SELECT value FROM state_kv WHERE key=?',(STATE_KEY,)).fetchone()
+        # Verify and compute large receipts before taking SQLite's writer lock.
+        # One statement reads the pair; the committed pair is checked again
+        # under BEGIN IMMEDIATE before any evidence or rotation is written.
+        keys = (STATE_KEY, RECEIPT_KEY)
+        original = dict(db.execute('SELECT key,value FROM state_kv WHERE key IN (?,?)', keys))
         from trader.core import journal_evidence as E
-        previous=db.execute('SELECT value FROM state_kv WHERE key=?',(RECEIPT_KEY,)).fetchone()
-        if row is None or previous is None:
-            if row is not None or previous is not None or db.execute(
+        if STATE_KEY not in original or RECEIPT_KEY not in original:
+            if original or db.execute(
                     "SELECT 1 FROM brain_events WHERE kind='attention_admission' LIMIT 1").fetchone():
                 raise ValueError('admission_rotation_or_receipt_missing')
             state=initial_state()
         else:
-            state=json.loads(row[0])
-            prior=verify_receipt(json.loads(E.resolve(db,previous[0])))
+            state=json.loads(original[STATE_KEY])
+            prior=verify_receipt(json.loads(E.resolve(db,original[RECEIPT_KEY])))
             if canonical(state)!=canonical(prior['next_state']):
                 raise ValueError('admission_rotation_receipt_mismatch')
         receipt = admit(observation,policy,state)
         verify_receipt(receipt)
-        from trader.core import journal_evidence as E
-        # One cheap bounded receipt for the whole observed cohort, not deep
-        # per-symbol Journal/learning capture. Raw tickers remain exact here.
-        detail = E.store(db,receipt)
+        # Preserve the exact logical JSON bytes while doing encoding outside
+        # the writer lock. The existing store still verifies and retains the
+        # bounded frozen segments in the atomic transaction.
+        prepared = E.FrozenJSON(tuple(E.pieces(json.dumps(receipt))))
+        db.execute('BEGIN IMMEDIATE')
+        if dict(db.execute('SELECT key,value FROM state_kv WHERE key IN (?,?)', keys)) != original:
+            raise ValueError('admission_rotation_changed_during_prepare')
+        if not original and db.execute(
+                "SELECT 1 FROM brain_events WHERE kind='attention_admission' LIMIT 1").fetchone():
+            raise ValueError('admission_rotation_or_receipt_missing')
+        # Retain the whole cohort receipt atomically with its next rotation.
+        # Raw tickers remain exact; no per-symbol learning capture is added.
+        detail = E.store(db,prepared)
         db.execute('INSERT INTO brain_events(ts,kind,subject,detail) VALUES(?,?,?,?)',
             (__import__('datetime').datetime.fromtimestamp(observation['source_cut_ms']/1000,__import__('datetime').timezone.utc).isoformat(),
              'attention_admission',receipt['receipt_id'],detail))
