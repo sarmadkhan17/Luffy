@@ -1,0 +1,206 @@
+{
+ "schema": "rp02-synthetic-power.v1",
+ "note": "random-walk synthetic legs, 10 symbols, baseline (pre-fix) referee code, no real data",
+ "rows": [
+  {
+   "protected_b_bars": 420,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 0,
+   "testable": 0,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 127.5
+  },
+  {
+   "protected_b_bars": 420,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 0,
+   "testable": 0,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 119.0
+  },
+  {
+   "protected_b_bars": 450,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 28,
+   "testable": 40,
+   "reject_at_0_05": 2,
+   "raw_rotation_p_le_0_005": 2,
+   "median_trades": 137.5
+  },
+  {
+   "protected_b_bars": 450,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 28,
+   "testable": 40,
+   "reject_at_0_05": 16,
+   "raw_rotation_p_le_0_005": 21,
+   "median_trades": 125.0
+  },
+  {
+   "protected_b_bars": 480,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 58,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 1,
+   "median_trades": 142.0
+  },
+  {
+   "protected_b_bars": 480,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 58,
+   "testable": 40,
+   "reject_at_0_05": 14,
+   "raw_rotation_p_le_0_005": 14,
+   "median_trades": 131.5
+  },
+  {
+   "protected_b_bars": 520,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 98,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 1,
+   "median_trades": 156.0
+  },
+  {
+   "protected_b_bars": 520,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 98,
+   "testable": 40,
+   "reject_at_0_05": 19,
+   "raw_rotation_p_le_0_005": 20,
+   "median_trades": 143.5
+  },
+  {
+   "protected_b_bars": 560,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 138,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 168.0
+  },
+  {
+   "protected_b_bars": 560,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 138,
+   "testable": 40,
+   "reject_at_0_05": 13,
+   "raw_rotation_p_le_0_005": 10,
+   "median_trades": 155.0
+  },
+  {
+   "protected_b_bars": 620,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 198,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 183.0
+  },
+  {
+   "protected_b_bars": 620,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 198,
+   "testable": 40,
+   "reject_at_0_05": 10,
+   "raw_rotation_p_le_0_005": 11,
+   "median_trades": 164.0
+  },
+  {
+   "protected_b_bars": 700,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 278,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 213.5
+  },
+  {
+   "protected_b_bars": 700,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 278,
+   "testable": 40,
+   "reject_at_0_05": 17,
+   "raw_rotation_p_le_0_005": 12,
+   "median_trades": 188.0
+  },
+  {
+   "protected_b_bars": 840,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 418,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 248.0
+  },
+  {
+   "protected_b_bars": 840,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 418,
+   "testable": 40,
+   "reject_at_0_05": 18,
+   "raw_rotation_p_le_0_005": 13,
+   "median_trades": 223.5
+  },
+  {
+   "protected_b_bars": 980,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 558,
+   "testable": 40,
+   "reject_at_0_05": 1,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 285.5
+  },
+  {
+   "protected_b_bars": 980,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 558,
+   "testable": 40,
+   "reject_at_0_05": 19,
+   "raw_rotation_p_le_0_005": 11,
+   "median_trades": 256.5
+  },
+  {
+   "protected_b_bars": 1400,
+   "edge_fraction": 0.0,
+   "runs": 40,
+   "distinct_offsets": 978,
+   "testable": 40,
+   "reject_at_0_05": 0,
+   "raw_rotation_p_le_0_005": 0,
+   "median_trades": 411.0
+  },
+  {
+   "protected_b_bars": 1400,
+   "edge_fraction": 0.3,
+   "runs": 40,
+   "distinct_offsets": 978,
+   "testable": 40,
+   "reject_at_0_05": 32,
+   "raw_rotation_p_le_0_005": 30,
+   "median_trades": 370.0
+  }
+ ]
+}
