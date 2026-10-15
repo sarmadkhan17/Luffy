@@ -276,11 +276,12 @@ def test_negative_control_overwrite_detected(store,monkeypatch):
 def test_negative_control_future_cache_detected(store,monkeypatch):
     f,c=store;f.fetch_ohlcv('BTC/USDT',min_bars=1);c.at-=1
     # Strip the second safety check in the same defective cache branch.
-    source=textwrap.dedent(inspect.getsource(DataFeed.fetch_ohlcv))
+    acquisition = getattr(DataFeed, '_fetch_ohlcv', DataFeed.fetch_ohlcv)
+    source=textwrap.dedent(inspect.getsource(acquisition))
     source=source.replace('0 <= now_ms / 1000 - hit[0]', 'now_ms / 1000 - hit[0]').replace(
-        'return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))\n', 'return hit[1]\n',1)
-    ns=dict(DataFeed.fetch_ohlcv.__globals__);exec(source,ns)
-    monkeypatch.setattr(DataFeed,'fetch_ohlcv',ns['fetch_ohlcv'])
+        'mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))', 'hit[1]',1)
+    ns=dict(acquisition.__globals__);exec(source,ns)
+    monkeypatch.setattr(DataFeed,acquisition.__name__,ns[acquisition.__name__])
     with pytest.raises(AssertionError):
         result=f.fetch_ohlcv('BTC/USDT',min_bars=1)
         assert result is None or (result.available_at_ms.le(c.at) & result.observed_at_ms.le(c.at)).all(), 'future cache leaked'

@@ -311,9 +311,12 @@ class DataFeed:
                                               request['limit'], request['force'],
                                               request['min_bars'])
                     with self._acquisition_queue_lock:
-                        outcome = 'completed' if result is not None or self._local.acquisition_short else 'failed'
+                        outcome = ('completed' if not self._local.acquisition_failure and
+                                   (result is not None or self._local.acquisition_short) else 'failed')
                         self._acquisition_queue_counts[outcome] += 1
-                        if getattr(self._local, 'acquisition_failure', None):
+                        if getattr(self._local, 'persistence_failure', None):
+                            outcome = 'persistence_unavailable:' + self._local.persistence_failure
+                        elif getattr(self._local, 'acquisition_failure', None):
                             outcome = 'source_unavailable:' + self._local.acquisition_failure
                         qualified = (result is not None and len(result) >= request['min_bars'] and
                                      result['quality'].eq('VALID').all() and
@@ -531,7 +534,7 @@ class DataFeed:
     STORE_OVERLAP_BARS = 4
 
     def _store_save(self, symbol: str, tf: str, df: pd.DataFrame,
-                    now_ms: int | None = None) -> None:
+                    now_ms: int | None = None) -> bool:
         """Persist CLOSED bars only. A forming bar is not a bar.
 
         A partially-formed candle has the right open and a high/low/close
@@ -541,18 +544,18 @@ class DataFeed:
         layer down. Once written it read as final to every backtest,
         feature and live signal above it.
         """
+        self._local.persistence_failure = None
         symbol = norm_symbol(symbol)
         if now_ms is None:
             now_ms = self._clock_ms()
         original = df
         df = closed_bars(df, tf, now_ms)
-        if not len(df):
-            prepared = mp.prepare(original)
-            with write_tx(self._local, self.db, "partial receipt") as conn:
-                mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
-            return
         try:
             prepared = mp.prepare(original)
+            if not len(df):
+                with write_tx(self._local, self.db, "partial receipt") as conn:
+                    mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
+                return True
             # .value/.astype(int64) are ns-based only for datetime64[ns];
             # this repo's pandas keeps ms resolution → convert explicitly
             unit = getattr(df["ts"].dt, "unit", None) or (
@@ -572,17 +575,27 @@ class DataFeed:
                 mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
                 from .sqlite_tx import save_projection
                 save_projection(conn, 'candles', ('symbol','tf','ts','open','high','low','close','volume','taker_buy'), ('symbol','tf','ts'), rows)
+            return True
         except Exception as e:
+            import sqlite3
+            self._local.persistence_failure = ('sqlite_busy' if isinstance(e, sqlite3.OperationalError)
+                and getattr(e, 'sqlite_errorcode', None) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
+                else 'write_failure')
+            self._local.acquisition_failure = 'persistence_write_failure'
             log.warning(f"candle store write {symbol} {tf}: {e}")
+            return False
 
     def _merge_save(self, symbol: str, tf: str,
                     stored: Optional[pd.DataFrame],
                     fresh: pd.DataFrame) -> pd.DataFrame:
-        df = fresh if stored is None else pd.concat([stored, fresh]) \
-            .drop_duplicates(subset="ts", keep="last") \
-            .sort_values("ts").reset_index(drop=True)
-        self._store_save(symbol, tf, fresh)
-        retained = self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=len(df), include_partial=True)
+        # Only the retained read supplies decision frames. Count timestamps,
+        # rather than duplicating every value and receipt column before it.
+        size = len(fresh) if stored is None else len(pd.Index(stored['ts']).union(fresh['ts']))
+        if not self._store_save(symbol, tf, fresh):
+            # Never publish an uncommitted receipt or reread after a failed
+            # write. Existing qualified observations can still be used.
+            return mp.eligible_frame(stored, tf, self._clock_ms(), final=False)
+        retained = self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=size, include_partial=True)
         return retained
 
     @staticmethod
@@ -609,6 +622,8 @@ class DataFeed:
         venue's history. Remember where, so the next call does not re-walk a
         young symbol from its listing date just because it is younger than
         the limit asked for."""
+        if getattr(self._local, 'persistence_failure', None):
+            return df  # no second write after the receipt transaction failed
         if df is not None and len(df) and len(df) < limit:
             try:
                 with write_tx(self._local, self.db, "floor") as conn:
@@ -815,6 +830,50 @@ class DataFeed:
     def fetch_ohlcv(self, symbol: str, tf: str = "15m",
                     limit: int = 400, force: bool = False,
                     min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
+        """Acquire through the existing path and retain one bounded diagnostic.
+
+        Diagnostics contain no frames, exception text or authority. A store
+        read failure refuses this series, leaving later symbols serviceable.
+        """
+        import sqlite3
+        # Caller contract errors retain their public API behavior.
+        if as_of_ms is not None:
+            mp.cut(as_of_ms)
+        elif self.retrospective is not None:
+            raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
+        self._local.acquisition_failure = None
+        self._local.persistence_failure = None
+        self._local.acquisition_short = False
+        reason = None
+        try:
+            result = self._fetch_ohlcv(symbol, tf, limit, force, min_bars, as_of_ms=as_of_ms)
+        except (sqlite3.Error, OSError):
+            result, reason = None, 'read_failure'
+        except (ValueError, KeyError, TypeError):
+            result, reason = None, 'invalid'
+        if reason is None:
+            if result is None or result.empty:
+                reason = ('persistence_failure' if self._local.persistence_failure else
+                          'insufficient_history' if self._local.acquisition_short else
+                          'source_unavailable' if self._local.acquisition_failure else 'missing')
+            elif result['quality'].eq('STALE').any():
+                reason = 'stale'
+            elif not result['quality'].eq('VALID').all():
+                reason = 'invalid'
+            else:
+                reason = 'valid'
+        self._local.fetch_diagnostic = dict(symbol=norm_symbol(symbol), timeframe=tf,
+            reason=reason, persistence=self._local.persistence_failure,
+            acquisition_failed=bool(self._local.acquisition_failure))
+        return result
+
+    def fetch_diagnostics(self):
+        """Latest fetch_multi call on this thread; no additional store reads."""
+        return deepcopy(getattr(self._local, 'multi_diagnostics', {}))
+
+    def _fetch_ohlcv(self, symbol: str, tf: str = "15m",
+                    limit: int = 400, force: bool = False,
+                    min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
         symbol = norm_symbol(symbol)
@@ -864,7 +923,9 @@ class DataFeed:
         if (hit and hit[1] is not None and len(hit[1]) >= min_bars and not force
                 and 0 <= now_ms / 1000 - hit[0] < self.ttl.get(tf, 300)
                 and (len(hit[1]) >= limit or self._at_floor(symbol, tf, hit[1]))):
-            return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))
+            current = mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))
+            if current is not None and current['quality'].eq('VALID').all():
+                return current
 
         stored = self.latest_ohlcv(symbol, tf, limit)
         qualified = stored
@@ -981,10 +1042,15 @@ class DataFeed:
 
     def fetch_multi(self, symbol: str, tfs: list[str], limit: int = 400) -> dict[str, pd.DataFrame]:
         out = {}
-        for tf in tfs:
+        diagnostics = {}
+        for tf in dict.fromkeys(tfs):
             df = self.fetch_ohlcv(symbol, tf, limit)
+            last = getattr(self._local, 'fetch_diagnostic', {})
+            if last.get('symbol') == norm_symbol(symbol) and last.get('timeframe') == tf:
+                diagnostics[tf] = dict(last)
             if df is not None:
                 out[tf] = df
+        self._local.multi_diagnostics = diagnostics
         return out
 
     def price(self, symbol: str) -> float | None:

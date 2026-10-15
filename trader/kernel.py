@@ -953,6 +953,10 @@ class Kernel:
         # Reset per attempt so an early refusal cannot inherit the last
         # symbol's availability result.
         self._last_snapshot_feed_available = False
+        exec_tf = self.cfg['timeframes']['execution']
+        self._last_snapshot_diagnostic = dict(status='REFUSED', reason='missing',
+            symbol=symbol, timeframe=exec_tf, as_of_ms=int(time.time()*1000))
+        diagnostic = self._last_snapshot_diagnostic
         from .engine.entry_authority import proposal_binding
         instrument_binding = proposal_binding(self.journal, symbol)
         if instrument_binding:
@@ -961,27 +965,51 @@ class Kernel:
             iid=cap['record']['instrument_id']
             bound_iid = InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol'])
             self.feed.bind_instrument(symbol,bound_iid)
-        dfs = self.feed.fetch_multi(
-            symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
-        exec_tf = self.cfg["timeframes"]["execution"]
+        try:
+            dfs = self.feed.fetch_multi(
+                symbol, self.cfg['timeframes']['context'] + [exec_tf])
+        except Exception:
+            diagnostic['reason'] = 'read_failure'
+            return None
+        diagnostics = self.feed.fetch_diagnostics() if hasattr(self.feed, 'fetch_diagnostics') else {}
         from .data import market_provenance as mp
-        as_of = int(time.time()*1000)
-        btc = self.feed.fetch_ohlcv('BTC/USDT', '1h')
+        # Reuse the exact already acquired BTC frame when it is this symbol's
+        # context, rather than reading it again and mixing two observations.
+        try:
+            btc = dfs.get('1h') if symbol == 'BTC/USDT' and '1h' in dfs else self.feed.fetch_ohlcv('BTC/USDT', '1h')
+        except Exception:
+            btc = None  # optional context cannot abort other symbols
         # Use a post-acquisition cut: this is when these receipts were held.
         as_of = int(time.time()*1000)
+        diagnostic['as_of_ms'] = as_of
         if btc is not None:
             dfs['BTC_1h'] = btc
-        dfs = {key: mp.usable_current(frame, '1h' if key == 'BTC_1h' else key,
-                    as_of, self.feed.ttl.get('1h' if key == 'BTC_1h' else key, 300))
-               for key, frame in dfs.items()}
-        dfs = {key: frame for key, frame in dfs.items()
-               if frame is not None and len(frame) and frame['quality'].eq('VALID').all()}
+        expected_iid, expected_source = self.feed._identity(symbol) if hasattr(self.feed, '_identity') else (None, None)
+        if instrument_binding:
+            expected_iid = bound_iid.value
+        safe, reasons = {}, {}
+        for key, frame in dfs.items():
+            tf = '1h' if key == 'BTC_1h' else key
+            try:
+                current, reason = mp.current_frame_status(frame, tf, as_of, self.feed.ttl.get(tf, 300),
+                    instrument_id=expected_iid if key != 'BTC_1h' else None,
+                    source=expected_source if key != 'BTC_1h' else None)
+            except Exception:
+                current, reason = None, 'invalid'
+            reasons[key] = reason
+            if current is not None:
+                safe[key] = current
+        dfs = safe
         if exec_tf not in dfs:
+            diagnostic['reason'] = reasons.get(exec_tf, diagnostics.get(exec_tf, {}).get('reason', 'missing'))
+            diagnostic['acquisition'] = diagnostics.get(exec_tf)
             return None
         iid = dfs[exec_tf]['instrument_id'].iloc[-1]
         if not iid or not dfs[exec_tf]['instrument_id'].eq(iid).all():
+            diagnostic['reason'] = 'identity_mismatch'
             return None
         if instrument_binding and iid != bound_iid.value:
+            diagnostic['reason'] = 'identity_mismatch'
             return None
         # This metric means the execution frame passed freshness, quality,
         # and instrument-identity checks. Snapshot construction is counted
@@ -1029,13 +1057,15 @@ class Kernel:
             if old is None or old[0] != identity:
                 old = cache[name] = (identity, FrozenJSON.freeze(selected), tuple(selected.values()))
             lineage[name] = old[1]
-        return Snapshot(symbol=symbol,
+        snapshot = Snapshot(symbol=symbol,
                         ts=dt.datetime.fromtimestamp(as_of/1000, dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs, market_type=self.market_type.value,
                         btc_ctx=btc_ctx, universe=safe_universe, derivs=derivs, market=market,
                         anchor_frames=getattr(self,'_context_anchor_frames',{}),
                         instrument_binding_json=instrument_binding,
                         market_provenance_parts=lineage)
+        diagnostic.update(status='AVAILABLE', reason='valid')
+        return snapshot
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
@@ -1276,6 +1306,7 @@ class Kernel:
             discretionary_deep_admitted=len(deep_symbols),exposure_required=len(roles.exposure),
             execution_datafeed_available=0,snapshots_constructed=0)
         stats['processing_boundaries'] = boundaries
+        stats['snapshot_refusals'] = {}
         # Peer population is independent; these are cache-only reads and never
         # network candle refreshes for rejected candidates.
         universe_frames = self._peer_frames(roles.peers)
@@ -1298,6 +1329,12 @@ class Kernel:
                 snap = self._candidate_snapshot_for(symbol, receipt, universe_frames)
                 boundaries['execution_datafeed_available'] += int(getattr(self, '_last_snapshot_feed_available', False))
                 if snap is None:
+                    refusal = getattr(self, '_last_snapshot_diagnostic', None)
+                    if not isinstance(refusal, dict) or refusal.get('symbol') != symbol:
+                        refusal = dict(status='REFUSED', reason='missing', symbol=symbol,
+                            timeframe=exec_tf, as_of_ms=int(time.time()*1000))
+                    reason = refusal['reason']
+                    stats['snapshot_refusals'][reason] = stats['snapshot_refusals'].get(reason, 0) + 1
                     try:
                         from .learning import capture as lc, capture_runtime as lr
                         with self.journal._tx() as capture_db:
@@ -1305,12 +1342,12 @@ class Kernel:
                                 scan_id, symbol, int(time.time()*1000),
                                 admission_context=dict(receipt_id=receipt['receipt_id'],
                                     category=next(r['category'] for r in receipt['rows'] if r['symbol']==symbol),
-                                    acquisition='FAILED_SNAPSHOT'))
+                                    acquisition='FAILED_SNAPSHOT', snapshot_refusal=refusal))
                     except Exception:
                         pass
                     if scan_id and len(attention_causes) < attention_cap:
                         attention_causes.append({"symbol": symbol, "decision_id": None,
-                                                 "reason": "missing_snapshot"})
+                                                 "reason": "missing_snapshot", "snapshot_refusal": refusal})
                     continue
                 stats["deep_processed"] += 1
                 boundaries['snapshots_constructed'] += 1

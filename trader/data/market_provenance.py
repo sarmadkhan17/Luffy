@@ -383,6 +383,32 @@ def usable_current(df, tf, as_of_ms, ttl_s):
     return out
 
 
+def current_frame_status(df, tf, as_of_ms, ttl_s, *, instrument_id=None, source=None):
+    """Qualify an already acquired frame once, with a finite refusal vocabulary.
+
+    No reads, retries or inferred receipt clocks. The returned frame is the
+    same eligible current view used by existing snapshot consumers.
+    """
+    if df is None or df.empty:
+        return None, 'missing'
+    if not all(k in df for k in (*META, 'ts', 'close')):
+        return None, 'invalid'
+    out = usable_current(df, tf, as_of_ms, ttl_s)
+    if out is None or out.empty:
+        reason = 'incomplete' if df['bar_state'].eq('PARTIAL').any() else 'unavailable_at_cut'
+        return None, reason
+    if out['quality'].eq('STALE').any():
+        return None, 'stale'
+    if not out['quality'].eq('VALID').all():
+        return None, 'invalid'
+    iid = out['instrument_id'].iloc[-1]
+    if (not isinstance(iid, str) or not iid or not out['instrument_id'].eq(iid).all() or
+            (instrument_id is not None and iid != instrument_id) or
+            (source is not None and not out['source'].eq(source).all())):
+        return None, 'identity_mismatch'
+    return out, 'valid'
+
+
 def resolve_lineage(conns, lineage, *, transforms=None):
     """Rebuild every retained receipt a journaled decision lineage names.
 
