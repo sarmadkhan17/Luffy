@@ -43,6 +43,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import statistics
 from dataclasses import asdict, dataclass, field
 
 from trader.cognition import SCHEMA_VERSION
@@ -74,6 +75,39 @@ class Candle:
     available_ms: int
     source: str
     close_ms: int
+
+
+def volume_z(volumes) -> float | None:
+    """Signed anchor log-volume z-score against the preceding sample window.
+
+    Callers own window selection, validity and quality-status policy. Keep the
+    arithmetic order shared by Attention and attention_volume_z.v1: sample
+    stdev, then fmean, with no rounding before the final consumer trace.
+    """
+    lv = [math.log1p(v) for v in volumes]
+    hist = lv[:-1]
+    sd = statistics.stdev(hist)
+    z = (lv[-1] - statistics.fmean(hist)) / sd if sd > 0 else None
+    return z if z is not None and math.isfinite(z) else None
+
+
+def volume_measurement(ds, symbol: str, as_of: int, bars) -> float | None:
+    """Reuse only an exact volume window in this detached Dataset.
+
+    The key includes the cut, timeframe and full immutable Candle records
+    (symbol, timestamps, availability, source and values). It never trusts an
+    external WorldModel value or aliases an instrument. One latest entry per
+    symbol bounds storage across chronological replay. No cache is persisted.
+    Lightweight dataset adapters without a cache simply calculate directly.
+    """
+    cache = getattr(ds, "_volume_measurements", None)
+    key = (as_of, ds.timeframe, ds.tf_ms, tuple(bars))
+    if cache is not None and symbol in cache and cache[symbol][0] == key:
+        return cache[symbol][1]
+    value = volume_z(b.volume for b in bars)
+    if cache is not None:
+        cache[symbol] = (key, value)
+    return value
 
 
 @dataclass(frozen=True)
@@ -142,6 +176,7 @@ class Dataset:
     positioning_invalid: dict = field(default_factory=dict)   # (symbol, series) -> reason
     correlation: dict | None = None          # symbol -> CorrelationHistory (status ok)
     correlation_status: dict = field(default_factory=dict)    # symbol -> non-ok status
+    _volume_measurements: dict = field(default_factory=dict, init=False, repr=False, compare=False)
 
     def bar_asof(self, symbol: str, open_ms: int, as_of: int) -> Candle | None:
         """Latest revision of one closed bar known at `as_of`, or None."""

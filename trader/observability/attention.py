@@ -231,14 +231,16 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
     }
 
 
-def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_journal=None):
+def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_journal=None, *, _dataset=None):
     if world_model is not None:
         if not isinstance(world_model, WorldModel):
             raise TypeError("world_model must be a WorldModel or None")
         if world_model.as_of_ms != event["as_of_ms"]:
             raise ValueError("world_model cut does not match as_of")
     cfg = CognitionConfig(max_symbols=len(event["input"]["membership"]) or 1)
-    ds = load_input(event["input"])
+    # The producer may pass the same detached Dataset to share exact-window
+    # measurements. This private seam changes no captured/replay contract.
+    ds = load_input(event["input"]) if _dataset is None else _dataset
     result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model, learning_journal, event.get('governed_attention_state'), event.get('governed_world_claim_state'))
     learned = {'governed_attention_state':result['governed_attention_state']}
     if result['governed_world_claim_state']:

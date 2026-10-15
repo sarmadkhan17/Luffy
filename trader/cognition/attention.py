@@ -94,7 +94,7 @@ from hashlib import sha256
 
 from trader.cognition.contracts import (CORRELATION_BASELINE, CORRELATION_CAPTURE_CLOSES,
                                        CORRELATION_RECENT, POSITIONING_SERIES, Observation,
-                                       rnd, stable_id)
+                                       rnd, stable_id, volume_measurement)
 
 
 @dataclass(frozen=True)
@@ -296,12 +296,9 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
             rows[sym] = {"symbol": sym, "status": "degenerate", "eligible": False,
                          "reason": "unusable_return_scale", "evidence": [win.obs_id]}
             continue
-        lv = [math.log1p(b.volume) for b in bars]
-        hist = lv[-(N + 1):-1]
-        v_sd = statistics.stdev(hist)
         feats[sym] = {
             "anchor_close": closes[-1], "sigma": s_long, "ret_short": math.fsum(r[N:]),
-            "volume_z": _finite((lv[-1] - statistics.fmean(hist)) / v_sd) if v_sd > 0 else None,
+            "volume_z": volume_measurement(ds, sym, as_of, bars[-(N + 1):]),
             "vol_trans_z": _finite(math.log(s_short / s_long)
                                    / math.sqrt(1 / (2 * (S - 1)) + 1 / (2 * (N - 1)))),
             "event_ms": win.event_ms, "available_ms": win.available_ms,

@@ -11,8 +11,9 @@ Per scan member it records, in one ``WorldState``:
   anchor bar (N = Attention's baseline window), an ordinary Observation whose
   ``source_ref`` hashes the exact candle rows it copied;
 - ``volume_anomaly`` (INTRADAY, unit ``z_score``) — derived by ``perceive``
-  with PERCEPTION_NAME, whose transform is Attention's own volume_z formula
-  (``cognition/attention.py``). It is therefore the SAME existing justified
+  with PERCEPTION_NAME, whose transform uses the authoritative volume_z in
+  ``cognition/contracts.py``, shared with Attention on the exact dataset-local
+  candle window. It is therefore the SAME existing justified
   component, not a new salience number: when it is accepted it ties the
   candle ``volume_anomaly`` component exactly and never changes a rank, a
   selection or the dominant family.
@@ -35,10 +36,10 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import statistics
+from dataclasses import replace
 
 from trader.cognition.attention import CognitionConfig
-from trader.cognition.contracts import load_input
+from trader.cognition.contracts import load_input, volume_measurement, volume_z
 from trader.world import (HierarchyNode, Horizon, InputRequirement, Measurement,
                           Observation, PerceptionSpec, Quality, Scope, ScopeLevel,
                           WorldModel, WorldModelRecord, WorldState, perceive)
@@ -62,13 +63,12 @@ def _canonical(value) -> str:
 
 
 def _volume_z(inputs) -> Measurement:
-    """Attention's volume_z on the same N+1 volumes, same arithmetic order."""
-    volumes = inputs["window"].value
-    lv = [math.log1p(v) for v in volumes]
-    hist = lv[:-1]
-    v_sd = statistics.stdev(hist)
-    z = (lv[-1] - statistics.fmean(hist)) / v_sd if v_sd > 0 else None
-    if z is None or not math.isfinite(z):
+    """The authoritative numeric transform, wrapped in WorldModel quality."""
+    return _measurement(volume_z(inputs["window"].value))
+
+
+def _measurement(z) -> Measurement:
+    if z is None:
         return Measurement(None, Quality.INVALID,
                            uncertainty={"reason": "undefined_zero_or_nonfinite_variance"})
     return Measurement(z)
@@ -119,7 +119,14 @@ def _member_state(ds, sym, as_of, scan_id, spec, window):
                       unit="venue_volume", source=SOURCE,
                       source_ref=f"attention-scan:{scan_id}:closed_bars:{ref}",
                       quality=Quality.VALID, max_age_ms=tf)
-    derived = perceive(spec, WorldState(sym, as_of, (win,)))
+    # Same declared v1 perception and input provenance; only its arithmetic is
+    # shared with Attention on this exact detached window. Status/admission
+    # checks remain independent. A replay rederivation populates the same
+    # dataset-local measurement for the following Attention evaluation.
+    def measure(inputs):
+        return _measurement(volume_measurement(ds, sym, as_of, bars))
+
+    derived = perceive(replace(spec, transform=measure), WorldState(sym, as_of, (win,)))
     return WorldState(sym, as_of, (win, derived)), derived
 
 
@@ -154,11 +161,11 @@ def _counts(model: WorldModel) -> dict:
     return dict(sorted(out.items()))
 
 
-def produce(event) -> tuple[WorldModel | None, dict]:
+def produce(event, *, _dataset=None) -> tuple[WorldModel | None, dict]:
     """(model, receipt) for one captured scan event; never raises."""
     as_of = event.get("as_of_ms")
     try:
-        ds = load_input(event["input"])
+        ds = load_input(event["input"]) if _dataset is None else _dataset
         model = build(ds, as_of, event["scan_id"])
         record = WorldModelRecord.from_model(model)
     except Exception as exc:        # degrade to legacy Attention, by reason code
@@ -172,24 +179,30 @@ def evaluate(event, *, model=None, learning_journal=None):
     `model` is injectable for tests (e.g. a stale cut); by default it is
     produced from the event. A refused model yields the legacy payload."""
     from trader.observability.attention import evaluate_snapshot
+    ds = None
     if model is None:
-        model, rec = produce(event)
+        try:
+            ds = load_input(event["input"])
+        except Exception as exc:
+            rec = receipt(UNAVAILABLE, "producer_failed:" + type(exc).__name__, event.get("as_of_ms"))
+        else:
+            model, rec = produce(event, _dataset=ds)
     else:
         rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
                       _counts(model))
     if model is None:
-        return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
+        return dict(evaluate_snapshot(event, learning_journal=learning_journal, _dataset=ds), world_model=rec)
     if model.as_of_ms != event["as_of_ms"]:
         stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
         stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
         return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
     try:
-        return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
+        return dict(evaluate_snapshot(event, model, learning_journal, _dataset=ds), world_model=rec)
     except Exception as exc:        # never lose the scan to the shadow input
         failed = receipt(REFUSED, "attention_world_evaluation_failed:" + type(exc).__name__,
                          event["as_of_ms"])
         failed.update(model_id=model.model_id)
-        return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=failed)
+        return dict(evaluate_snapshot(event, learning_journal=learning_journal, _dataset=ds), world_model=failed)
 
 
 class ReplayRefused(ValueError):

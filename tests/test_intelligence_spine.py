@@ -188,10 +188,10 @@ def test_attention_world_evaluation_failure_keeps_the_legacy_scan(paths):  # noq
     event = A.capture(frames(6, now), [f"S{j}/USDT" for j in range(6)], "s1", WORLD, now)
     real = A.evaluate_snapshot
 
-    def broken(ev, world_model=None, learning_journal=None):
+    def broken(ev, world_model=None, learning_journal=None, **kwargs):
         if world_model is not None:
             raise KeyError("boom")
-        return real(ev, learning_journal=learning_journal)
+        return real(ev, learning_journal=learning_journal, **kwargs)
     with patch.object(A, "evaluate_snapshot", broken):
         payload = W.evaluate(event)
     assert payload["world_model"]["status"] == W.REFUSED
