@@ -67,19 +67,28 @@ def records(db, table):
     return [json.loads(p) for (p,) in db.execute(f'SELECT payload FROM {table} ORDER BY rowid')]
 
 
-def read_sources(path, known, limit, now_ms):
-    """Exact persisted Bank records only; a made-up chain is never an input."""
+def read_sources(path, known, limit, now_ms, known_investigations=frozenset()):
+    """Exact persisted Bank records only; a made-up chain is never an input.
+
+    A source is the case's TERMINAL research result, once per investigation.
+    Interim results of an unresolved case are retained research evidence but
+    never experiment sources: each interim update files its own Bank object
+    and every source would otherwise register a new experiment (new split
+    start) and spend its own statistical look for the same unmeasured case.
+    """
     sources, refusals = [], []
     with closing(E.readonly(path)) as db:
         db.execute('BEGIN')
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='investigation_research_records'").fetchone():
             return [], [dict(reason='no_retained_investigation_bank')]
         rows = db.execute('SELECT record_id,investigation_id,recorded_at_ms,CASE WHEN length(canonical_json)<=2097152 THEN canonical_json ELSE NULL END,canonical_sha256 '
-            'FROM investigation_research_records WHERE record_type=? ORDER BY recorded_at_ms,record_id',
-            (R.BANK_SCHEMA,))
-        selected = []
+            'FROM investigation_research_records WHERE record_type=? '
+            "AND COALESCE(json_extract(canonical_json,'$.result_reason'),'')<>? "
+            'ORDER BY recorded_at_ms,record_id', (R.BANK_SCHEMA, 'investigation_unresolved'))
+        selected, claimed = [], set(known_investigations)
         for row in rows:
-            if row[0] not in known:
+            if row[0] not in known and row[1] not in claimed:
+                claimed.add(row[1])
                 selected.append(row)
             if len(selected) >= limit:
                 break
@@ -309,7 +318,8 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                 experiment_shape_supported=0, data_insufficient=0, planner_submissions=0,
                 supported=0, unsupported=0, inconclusive=0, not_testable=0)
             known = {s['bank_id'] for s in records(db, 'bridge_sources')}
-            sources, refusals = read_sources(source_path, known, max_sources, now_ms)
+            known_cases = {s['investigation_id'] for s in records(db, 'bridge_sources')}
+            sources, refusals = read_sources(source_path, known, max_sources, now_ms, known_cases)
             for source in sources:
                 counts['eligible_research_results'] += 1
                 with db:

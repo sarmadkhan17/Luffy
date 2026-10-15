@@ -589,7 +589,14 @@ def _store(db, record, iid, key, recorded_at_ms) -> str:
 
 def research_pass(ledger_path, *, recorded_at_ms: int, max_cases: int) -> dict:
     """Bounded shadow pass: run each volume_anomaly case whose latest update
-    has no run receipt yet, oldest first, at most `max_cases`."""
+    has no run receipt yet, at most `max_cases`.
+
+    Cases with a persisted registration context are tried first (oldest
+    first, then learned priority). Legacy cases registered before contexts
+    were persisted are refused with a reason and write nothing, so they only
+    take spare slots and can never hold them ahead of newer eligible cases.
+    No context is reconstructed for them.
+    """
     if type(max_cases) is not int or max_cases < 1:
         raise ValueError("max_cases must be a positive int")
     with closing(sqlite3.connect(ledger_path, timeout=5)) as db:
@@ -601,13 +608,18 @@ def research_pass(ledger_path, *, recorded_at_ms: int, max_cases: int) -> dict:
             (SOURCE_FAMILY,)).fetchall()
         done = {k for (k,) in db.execute("SELECT record_key FROM investigation_research_records "
                                          "WHERE record_type=?", (RUN_SCHEMA,))}
-    todo = [iid for iid, latest in rows if latest and latest not in done]
+        contexted = {k for (k,) in db.execute("SELECT investigation_id FROM opportunity_contexts")} \
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='opportunity_contexts'").fetchone() \
+            else set()
+    pending = [iid for iid, latest in rows if latest and latest not in done]
+    todo = [iid for iid in pending if iid in contexted]
+    legacy = [iid for iid in pending if iid not in contexted]
     from trader.learning.consumers import retained, research_order
     from pathlib import Path
     with retained(Path(ledger_path).parent/'luffy.db') as learned:
         if learned is not None:
-            todo = research_order(learned, todo)
-    todo = todo[:max_cases]
+            todo, legacy = research_order(learned, todo), research_order(learned, legacy)
+    todo = (todo + legacy)[:max_cases]
     out = {"attempted": len(todo), "ok": 0, "refused": {}}
     for iid in todo:
         r = run(ledger_path, iid, recorded_at_ms=recorded_at_ms)
