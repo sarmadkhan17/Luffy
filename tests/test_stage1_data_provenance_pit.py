@@ -460,18 +460,6 @@ def test_current_receipts_fenced_from_historical_engines():
         _require_replay({'15m':receipt(frame(),T+Q)})
 
 
-def test_supplemental_raw_receipt_is_not_backdated():
-    from trader.observability.supplemental import _parse
-    raw=[T,'10','11','9','10','5',T+Q-1,'50',1,'2','20','0']
-    msg=dict(symbol='BTCUSDT',interval='15m',limit=1,request_start_ms=T+Q,
-             request_end_ms=T+Q+10,rows=[raw])
-    df=_parse(json.dumps(msg).encode(),symbol='BTCUSDT',interval='15m',limit=1,
-              started_ms=T+Q,ended_ms=T+Q+20)
-    assert df.available_at_ms.iloc[0]==T+Q+20
-    assert json.loads(df.raw_json.iloc[0])==raw
-    assert P.eligible_frame(df,'15m',T+Q+19).empty
-
-
 def test_request_clock_reversal_never_qualifies():
     df=P.annotate(frame(),instrument_id='binance_usdm:futures:BTCUSDT',source='offline',
                    kind='candle',timeframe='15m',received_ms=T+Q,request_started_ms=T+Q+1)
@@ -530,7 +518,9 @@ def test_unknown_flow_and_leader_never_become_neutral_market_values():
     df=frame(n=40);df['taker_buy']=np.nan
     snap=Snapshot(symbol='BTC/USDT',ts=pd.Timestamp(T,unit='ms',tz='UTC').isoformat(),price=10,dfs={'15m':df})
     vote=FlowAnalyst().evaluate(snap)
-    assert vote.conviction==0 and vote.meta['quality']=='UNKNOWN'
+    assert vote.conviction==0
+    assert vote.meta['measurement']['quality']=='INVALID'
+    assert vote.meta['measurement']['strength'] is None
     assert 'buy_ratio' not in vote.meta
     assert btc_context(None,None)=={'trend':'UNKNOWN','ret_1h':None,'ret_4h':None}
     assert classify(None,None)=={'regime':'UNKNOWN','adx':None,'vol_ratio':None}

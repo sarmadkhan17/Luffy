@@ -32,8 +32,37 @@ def admitted_requests(requests, market_snapshots, receipt):
     return out
 
 
+def admission_observations(market_snapshots, receipt, requests):
+    """Retain every admitted observation, including explicit evidence gaps.
+
+    This is a projection of the existing receipt, never candidate selection or
+    decision authority. Unavailable contexts cannot become allocator candidates.
+    """
+    if receipt is None:
+        return None
+    from trader.attention_admission import verify_receipt
+    verify_receipt(receipt)
+    observations = {}
+    coverage = {s:dict(decision_ids=[], request_ids=[], status='SNAPSHOT_UNAVAILABLE')
+                for s in receipt['admitted_symbols']}
+    for decision_id, market in market_snapshots.items():
+        context = getattr(market, 'admission_context', None)
+        if (market.symbol not in coverage or not context
+                or context.get('receipt_id') != receipt['receipt_id']):
+            raise ValueError('PORTFOLIO_ADMISSION_SNAPSHOT_MISMATCH')
+        ids = [r['candidate_id'] for r in requests if r['candidate_id'] == decision_id
+               or r['candidate_id'].startswith(decision_id + ':')]
+        observations[decision_id] = dict(symbol=market.symbol, ts=market.ts,
+            price=market.price, admission_context=context)
+        row = coverage[market.symbol]
+        row['decision_ids'].append(decision_id)
+        row['request_ids'].extend(ids)
+        row['status'] = 'REQUEST_BOUND' if row['request_ids'] else 'CONTEXT_REQUEST_UNAVAILABLE'
+    return dict(receipt_id=receipt['receipt_id'], observations=observations, coverage=coverage)
+
+
 def freeze(journal, attention, investigation, config, available_inputs=None, market_snapshots=None, holdings_market_snapshots=None, admission_receipt=None):
-    requests, snap, control, inventory, detail = capture(Path(journal),Path(attention),Path(investigation),config)
+    requests, snap, control, inventory, detail = capture(Path(journal),Path(attention),Path(investigation),config,max_contexts=None)
     # A persisted cut must still be current under the venue's own contract.
     common_factor.snapshot(Source.freeze('venue_position_snapshot',snap),
                            detail.get('read_at_ms',detail['as_of_ms']))
@@ -189,7 +218,11 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
     if holding_observations:
         holding_source=Source.freeze('held-market-observations',holding_observations)
         inputs=replace(inputs,sources=inputs.sources+(holding_source,))
-    detail.update(holdings_market_observations=holding_observations,
+    admitted_observations = admission_observations(market_snapshots, admission_receipt, requests)
+    if admitted_observations is not None:
+        inputs=replace(inputs,sources=inputs.sources+(Source.freeze('admitted-market-observations',admitted_observations),))
+    detail.update(admitted_market_observations=admitted_observations,
+        holdings_market_observations=holding_observations,
         admission_receipt_id=admission_receipt.get('receipt_id') if admission_receipt else None,
         context_count=len(contexts),candidate_count=len(candidates),
         holdings_count=len(snap['positions']),portfolio_snapshot_id=snap['snapshot_id'],

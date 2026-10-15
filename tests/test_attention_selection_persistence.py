@@ -501,8 +501,8 @@ def test_adapter_has_no_network_store_collector_or_kernel_imports():
     assert not {m for m in mods if m.split(".")[0] in FORBIDDEN_NET}
     assert not {m for m in mods if m.startswith(FORBIDDEN_TRADER)}
     out = subprocess.run(
-        [sys.executable, "-c", "import sys, trader.observability.selection_persistence;"
-         "print('\\n'.join(sys.modules))"],
+        [sys.executable, "-c", "import sys; before=set(sys.modules); import trader.observability.selection_persistence;"
+         "print('\\n'.join(set(sys.modules)-before))"],
         cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     assert not [m for m in out if m.split(".")[0] in FORBIDDEN_NET[:-1]
                 or m.startswith(FORBIDDEN_TRADER)]

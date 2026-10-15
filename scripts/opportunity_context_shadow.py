@@ -44,8 +44,12 @@ def _json(text):
 
 
 def capture(journal, attention, investigation, config, max_contexts=4):
-    """Fixed row/payload bounds and five-second SQL deadline. No history scan."""
-    if not 1 <= max_contexts <= 16:
+    """Fixed source row/payload bounds and five-second SQL deadline.
+
+    max_contexts is a preview limit only. Runtime passes None to consume all
+    authenticated current publications within the existing source bounds.
+    """
+    if max_contexts is not None and not 1 <= max_contexts <= 16:
         raise ValueError('CONTEXT_BOUND_INVALID')
     deadline = time.monotonic() + 5
     missing = []
@@ -191,7 +195,7 @@ def capture(journal, attention, investigation, config, max_contexts=4):
                         exact.append((d, sig, v))
             if exact:
                 from trader.cognition import decision_analysts as DA
-                for d, sig, v in exact[:max_contexts - len(requests)]:
+                for d, sig, v in exact[:None if max_contexts is None else max_contexts - len(requests)]:
                     # Decision-grade: the analyst roster/packets for THIS decision cycle are
                     # frozen with it. A cycle with no recorded cut supplies no analysts source,
                     # so the required role blocks instead of fabricating one.
@@ -217,7 +221,7 @@ def capture(journal, attention, investigation, config, max_contexts=4):
                 requests.append(dict(as_of_ms=cut, symbol=symbol, instrument_id=iid,
                     cycle_id=scan['scan_id'], candidate_id=scan['scan_id'] + ':' + key,
                     sources=tuple(bound), required_roles=('attention_scan',)))
-            if len(requests) >= max_contexts:
+            if max_contexts is not None and len(requests) >= max_contexts:
                 break
     else:
         missing.append('CURRENT_ATTENTION_EVIDENCE_UNAVAILABLE')

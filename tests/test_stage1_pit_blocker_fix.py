@@ -99,20 +99,22 @@ def test_future_cache_preserved_for_later(universe):
     assert ex.calls == 2
 
 
-def test_kernel_and_normal_attention_lineage(universe, tmp_path):
+def test_retained_universe_and_attention_lineage(universe, tmp_path):
     u, clock, _ = universe
     k = Kernel.__new__(Kernel)
     k.universe = u
     k._spec_rows = []
     k._attention = Collector(tmp_path, start=False, clock=lambda: clock.at)
-    members = k._scan_symbols(as_of_ms=U1)
+    members = u.symbols(as_of_ms=U1)
+    k._scan_membership_receipts = u.membership_receipts(as_of_ms=U1)
     assert members == ['BTC/USDT'], 'Kernel consumed future universe'
     assert k._attention_call('begin', {}, members, U1)
     event = k._attention.queue.get_nowait()
     assert [m['symbol'] for m in event['input']['membership']] == ['BTC/USDT']
     assert all(m['source_receipt']['available_at_ms'] <= U1 for m in event['input']['membership'])
     clock.at = U2
-    members = k._scan_symbols(as_of_ms=U2)
+    members = u.symbols(as_of_ms=U2)
+    k._scan_membership_receipts = u.membership_receipts(as_of_ms=U2)
     assert k._attention_call('begin', {}, members, U2)
     event = k._attention.queue.get_nowait()
     alt = next(m for m in event['input']['membership'] if m['symbol']=='ALT/USDT')

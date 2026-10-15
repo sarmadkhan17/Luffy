@@ -1104,14 +1104,14 @@ class Kernel:
         except Exception:
             return None
 
-    def _funding_map(self, symbols=None) -> dict[str, float]:
+    def _funding_map(self, symbols) -> dict[str, float]:
         import math
         now = int(time.time()*1000)
         cached = self._funding_cache or {}
         out = {sym:value for sym,value in cached.items()
                if (r := getattr(self,'_market_aux',{}).get('funding:'+sym))
                and 0 <= now-r['available_at_ms'] <= self._DERIVS_TTL*1000}
-        targets = self.universe.symbols() if symbols is None else symbols
+        targets = symbols
         if self.market_type == MarketType.FUTURES:
             for sym in (s for s in targets if s not in out):
                 try:
@@ -1128,13 +1128,13 @@ class Kernel:
         self._funding_cache = out
         return {s:out[s] for s in targets if s in out}
 
-    def _oi_map(self, ttl: float = 900.0, *, symbols=None) -> dict[str, dict]:
+    def _oi_map(self, ttl: float = 900.0, *, symbols) -> dict[str, dict]:
         import math
         now = time.time()
         out = {sym:value for sym,value in self._oi_cache[1].items()
                if (r := getattr(self,'_market_aux',{}).get('open_interest:'+sym))
                and 0 <= int(now*1000)-r['available_at_ms'] <= ttl*1000}
-        targets = self.universe.symbols() if symbols is None else symbols
+        targets = symbols
         if not targets: return {}
         try:
             if getattr(self, '_oi_ex', None) is None:
@@ -1969,77 +1969,6 @@ class Kernel:
         for snap in self._portfolio_market.values():
             if snap.symbol in required: self._portfolio_holdings_market[snap.symbol] = snap
         return count
-
-    def _universe_frames(self, symbols: list[str]) -> dict:
-        """{symbol: {tf: df}} for cross-sectional features.
-
-        Built at the execution timeframe ONLY, whatever the strategies
-        traded. FeatureCtx.for_symbol requires the spec's own timeframe in a
-        peer's frames and returns None otherwise, so for a 4h spec every peer
-        resolved to None, xs_rank produced an all-NaN column, and the spec
-        silently never fired — reading as "no edge" when it was never
-        evaluated. The same shape as funding specs scoring zero because no
-        derivatives reached them.
-        """
-        exec_tf = self.cfg["timeframes"]["execution"]
-        tfs = list(dict.fromkeys(
-            [exec_tf, *getattr(self, "_scan_timeframes", ())]))
-        out: dict = {}
-        for sym in symbols:
-            frames = {}
-            for tf in tfs:
-                try:
-                    from .engine.entry_authority import proposal_binding
-                    binding=proposal_binding(self.journal,sym)
-                    if binding:
-                        from .core.instrument_registry import InstrumentId
-                        iid=json.loads(binding)['record']['instrument_id']
-                        self.feed.bind_instrument(sym,InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol']))
-                    df = self.feed.fetch_ohlcv(sym, tf)
-                except Exception as e:
-                    log.warning(f"universe frame {sym} {tf}: {e}")
-                    continue
-                if df is not None and len(df):
-                    frames[tf] = df
-            if exec_tf in frames:
-                out[sym] = frames
-        return out
-
-    def _scan_symbols(self, *, as_of_ms=None) -> list[str]:
-        """Venue candidates, filtered and extended by what the book asks for.
-
-        Falls back to the plain universe whenever no spec expresses a
-        preference, so a book of legacy genomes behaves exactly as before.
-        """
-        base = self.universe.symbols() if as_of_ms is None else self.universe.symbols(as_of_ms=as_of_ms)
-        self._scan_universe_count = len(base)
-        at = int(time.time()*1000) if as_of_ms is None else as_of_ms
-        receipts = self.universe.membership_receipts(as_of_ms=at) if hasattr(self.universe, 'membership_receipts') else {}
-        self._scan_membership_receipts = receipts
-        specs = [sp for _row, sp in getattr(self, "_spec_rows", [])]
-        if not specs:
-            return base
-        if as_of_ms is not None:
-            # Live declarations have no historical version binding here.
-            # Replays use their frozen membership/spec sources; never stamp
-            # the currently installed strategy universe onto an old cut.
-            raise ValueError('historical_strategy_universe_unavailable')
-        try:
-            from .strategy.scan_plan import plan_scan
-            volumes = self.universe.volumes() if as_of_ms is None else self.universe.volumes(as_of_ms=as_of_ms)
-            plan = plan_scan(specs, base, volumes)
-        except Exception as e:
-            log.warning(f"scan plan failed, using plain universe: {e}")
-            return base
-        self._scan_plan = plan
-        self._scan_timeframes = plan.timeframes
-        merged = list(dict.fromkeys(list(plan.symbols) + self.universe.majors))
-        for sym in merged:
-            if sym not in receipts:
-                self._scan_membership_receipts[sym] = dict(source='strategy.universe.include',
-                    symbol=sym, observed_at_ms=at, available_at_ms=at, quality='VALID',
-                    strategy_ids=[sp.id for sp in specs if sym in plan.by_strategy.get(sp.id, ())])
-        return merged or base
 
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""

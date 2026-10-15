@@ -318,7 +318,6 @@ def _cycle_kernel(journal, venue, monkeypatch, market):
     k._refresh_btc_context = lambda: None
     from tests.admission_cycle_fixture import install
     install(k, [])
-    k._universe_frames = lambda _s: {}
     k._attention_call = lambda *a, **kw: None
     k._service_exposure = lambda _s, _p: 0
     k._maybe_resolve_outcomes = lambda: None

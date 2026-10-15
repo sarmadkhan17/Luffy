@@ -245,7 +245,7 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     k=object.__new__(Kernel)
     k.cfg={'timeframes':{'execution':'15m'}}
     k.population=[]
-    k.state_machine=NS(refresh=lambda:state,can_enter=lambda:state==ControlState.ACTIVE)
+    k.state_machine=NS(state=state,refresh=lambda:state,can_enter=lambda:state==ControlState.ACTIVE)
     k._fetch_balance_fresh=lambda:1000
     k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
               daily_loss_block=.05)
@@ -263,7 +263,6 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     data=frames(2)
     from tests.admission_cycle_fixture import install
     install(k,['S0/USDT','missing'],data)
-    k._universe_frames=lambda _:data
     k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
     k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
     k._order_book=lambda _:{}
@@ -307,8 +306,8 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
 def test_compiled_spec_reports_missing_and_failed_inputs(monkeypatch):
     from trader.strategy import compile as mod, library
     from tests.market_receipt_fixtures import snapshot as Snapshot
-    compiled=object.__new__(mod.CompiledStrategy)
-    compiled.spec=NS(timeframe='4h',id='fixture')
+    from tests.test_rolling import _spec
+    compiled=mod.compile_spec(_spec(id='fixture', timeframe='4h'))
     fn=compiled.to_evaluator()
     monkeypatch.setitem(library.EVALUATORS,'fixture',fn)
     genome=NS(family='fixture',params={},strategy_id='fixture')
@@ -317,7 +316,7 @@ def test_compiled_spec_reports_missing_and_failed_inputs(monkeypatch):
     assert library.evaluate(genome,Snapshot('S','now',100,{}),record) is None
     assert results==['missing_closed_timeframe']
     def broken(*a,**kw):raise RuntimeError('SECRET')
-    monkeypatch.setattr(compiled,'entries',broken)
+    monkeypatch.setattr(compiled,'entries_detail',broken)
     results.clear()
     assert library.evaluate(genome,Snapshot('S','now',100,frames(2)['S0/USDT']),record) is None
     assert results==['evaluation_failed']

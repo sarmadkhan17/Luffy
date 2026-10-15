@@ -1,0 +1,212 @@
+[
+  {
+    "n": 0,
+    "scores": false,
+    "generation": 0,
+    "receipt_id": "2486a695d4391a20f8969b043b65fb349d93868b322eace32125677393d7c385",
+    "state_sha256": "c0a078019fff8618fa77cba7b0f42644f082c100bf1760e2f1b50178d6b69ff7"
+  },
+  {
+    "n": 0,
+    "scores": false,
+    "generation": 1,
+    "receipt_id": "bb2017b8a0d7346e6fc7893b4ae114d1cb4e24cf68c7a3467962d13c6b3a1105",
+    "state_sha256": "fb7ff32366ae49bb93cff7f9e74d7db9463f188560806c305a8437f92928497b"
+  },
+  {
+    "n": 0,
+    "scores": false,
+    "generation": 2,
+    "receipt_id": "3f13ba1708f37b4ba273e5aa1074234c35695dbc90807a54cd5df0c66f88461b",
+    "state_sha256": "dbb808898a404459d310b191bfc6dfba86c50b8d67c178b493021593da508b95"
+  },
+  {
+    "n": 0,
+    "scores": true,
+    "generation": 0,
+    "receipt_id": "7fcad2bc479ba541063857c60ec73a16e8bed0e65d9afa071907335ef41787c9",
+    "state_sha256": "c0a078019fff8618fa77cba7b0f42644f082c100bf1760e2f1b50178d6b69ff7"
+  },
+  {
+    "n": 0,
+    "scores": true,
+    "generation": 1,
+    "receipt_id": "d7989ad5e709bf51a8811026d5090b6ede122b2888b874cdced3e371e47e5630",
+    "state_sha256": "fb7ff32366ae49bb93cff7f9e74d7db9463f188560806c305a8437f92928497b"
+  },
+  {
+    "n": 0,
+    "scores": true,
+    "generation": 2,
+    "receipt_id": "c983f011464a2aabba746c62f8d08d9bf961cef1d4651ee51c6e7aa5f5bbc1f7",
+    "state_sha256": "dbb808898a404459d310b191bfc6dfba86c50b8d67c178b493021593da508b95"
+  },
+  {
+    "n": 1,
+    "scores": false,
+    "generation": 0,
+    "receipt_id": "28af405afcc0e56f3dca66bcb9e2ac087b2d88c070a0b4464b8866e82fd7a978",
+    "state_sha256": "1f12cbdcf2aa72c0fa5b1485de10028807c93eb090f2977f9b2718f232c3fed1"
+  },
+  {
+    "n": 1,
+    "scores": false,
+    "generation": 1,
+    "receipt_id": "3c98b36ec370c3ee63b2ecb1d32fd111d8aa9fd426a01b04a9a9278be42f7a57",
+    "state_sha256": "c830b596d56d7cf4db1c1d5957390f961fcd2008d7e22f5b76a04dcf71abe6c8"
+  },
+  {
+    "n": 1,
+    "scores": false,
+    "generation": 2,
+    "receipt_id": "4874f909ba8976390679814d12720060334a75342140cea6165e407f82a002cb",
+    "state_sha256": "869d7b28c297008ad86c7333150780ce5535027316119b265ecfa321c1b7583d"
+  },
+  {
+    "n": 1,
+    "scores": true,
+    "generation": 0,
+    "receipt_id": "6da618d3ee337decc348d7e1915eb24a71faf762a7af190ff2eb03e8d502d983",
+    "state_sha256": "235e70c4fd22621a60af910eadd01234c69b0513c54179c004823e9cc0072821"
+  },
+  {
+    "n": 1,
+    "scores": true,
+    "generation": 1,
+    "receipt_id": "6a20e22d28e56cad0cd2e2b2c8d4a8eb45b5eb879a9fac4d835416fa8c0ffd02",
+    "state_sha256": "9f9d50d93370255aed1893c6b9bb048b28219e8d07fec90ac6e333528420a740"
+  },
+  {
+    "n": 1,
+    "scores": true,
+    "generation": 2,
+    "receipt_id": "12809922048cc708e102f6578acd9b32935c03ca01a213d0e963bf1f62ccb3ac",
+    "state_sha256": "792e7a4b85f56d3934938b0f73e6da80feb68f4202d4ad0011fcde4483c3c410"
+  },
+  {
+    "n": 12,
+    "scores": false,
+    "generation": 0,
+    "receipt_id": "17f4881f6e67d646a6a3c6b81cc684be98a7750a3d812f6da13dcdc48787ea1e",
+    "state_sha256": "912706a8b63e49bba4ecc831b6fd5dbda5b01f756094b6242a2c2d4850e2746e"
+  },
+  {
+    "n": 12,
+    "scores": false,
+    "generation": 1,
+    "receipt_id": "53d54507fb7712fe6f60378ff04cd70d2663bf979ac73546f99618616ae34f18",
+    "state_sha256": "2c91dfe3fa93ee82ac09261410cbcd85e45d20b3c690d3bdf2107fd377160ca8"
+  },
+  {
+    "n": 12,
+    "scores": false,
+    "generation": 2,
+    "receipt_id": "6dc7e564db27ba337f3b5784508eb3da97604de34513cd424c54a80e2c22593a",
+    "state_sha256": "50bf95996191cb42a78636e4c036fd40feea04d8ad856b3e8fa95d0a3b3516ad"
+  },
+  {
+    "n": 12,
+    "scores": true,
+    "generation": 0,
+    "receipt_id": "87cf10939c59b52473290a9c86f80bb12e4a53e0c20ebe1587fe627bbb08e9cf",
+    "state_sha256": "d579e4d79da32d007fd272780f0e2472a4b53ca7b723e83bc0e4efd7bf030d3f"
+  },
+  {
+    "n": 12,
+    "scores": true,
+    "generation": 1,
+    "receipt_id": "3cb4c285b3b9545dbe792dc813b1ce530c766a4c3bb19f91864682a28eab44b5",
+    "state_sha256": "48852de61708855e30d7b3eea99414be2b0cf7c55b9f6507ad4a515d3c5cd2e1"
+  },
+  {
+    "n": 12,
+    "scores": true,
+    "generation": 2,
+    "receipt_id": "37a41a01ab73f8a4e3e940cf6fcfbea23fee0396d47c851a10a199c09f7bf88a",
+    "state_sha256": "c0b34dd29236c82de4d5d87282f7d53f28e5deaca794acda02c0e40bdb8b3554"
+  },
+  {
+    "n": 30,
+    "scores": false,
+    "generation": 0,
+    "receipt_id": "4a0f17f2ca6e62f09a0a2a89ce6fbeb3fd4ecaca620f38bbdfc3a640ebc9c940",
+    "state_sha256": "912706a8b63e49bba4ecc831b6fd5dbda5b01f756094b6242a2c2d4850e2746e"
+  },
+  {
+    "n": 30,
+    "scores": false,
+    "generation": 1,
+    "receipt_id": "03aef647dd65612dca87d4c5523fef4eee8f2c698512699c6db6e8ea700825c5",
+    "state_sha256": "49576eceb8f4f6733923a072a684dd38a611ed4341542e0f8497bb72e004232d"
+  },
+  {
+    "n": 30,
+    "scores": false,
+    "generation": 2,
+    "receipt_id": "81ee5b513dddc33cab4c9b454e1b22aa32de7e1323ad157a47f2e9091f1623e8",
+    "state_sha256": "fd5e0b7e381d8c922f3b7f457a9e93857537ee5aaf6e2d44d20817db59bd794c"
+  },
+  {
+    "n": 30,
+    "scores": true,
+    "generation": 0,
+    "receipt_id": "4979ce81dd3a8027a39d5c6e44c1e94618809ebf58ba2b109f83bb62ed39017a",
+    "state_sha256": "2dd6ae4aa40f0d1fdf4064b9be78954447b766230cd0b364ecdc0b8bb4645587"
+  },
+  {
+    "n": 30,
+    "scores": true,
+    "generation": 1,
+    "receipt_id": "3fb310f8497da52ab802989d6a3573e4d74b7391e00762fd85bac750228c7556",
+    "state_sha256": "3ca7e246df3b713d95df7515321195fd61f488abb78cdb0e3ede93e142a96b02"
+  },
+  {
+    "n": 30,
+    "scores": true,
+    "generation": 2,
+    "receipt_id": "4be9846ce7d2671ba61e7dacdfbc924b24312387281019f5325262e9911466bd",
+    "state_sha256": "23aa7598376b11b9f2af8540f6dfe5a46e87bf40b8ae164d11fda386ee9e50cb"
+  },
+  {
+    "n": 439,
+    "scores": false,
+    "generation": 0,
+    "receipt_id": "38065366973bc2bbd0dbacd77cf2cac26fca615dcd4cd7f2a56cf5611463cf29",
+    "state_sha256": "912706a8b63e49bba4ecc831b6fd5dbda5b01f756094b6242a2c2d4850e2746e"
+  },
+  {
+    "n": 439,
+    "scores": false,
+    "generation": 1,
+    "receipt_id": "8b2602afcf0562db04c076ea9b68569bcde4c2be24c9e21f589dd5967883a220",
+    "state_sha256": "47582aef6ab12758d6d33ee12cd8b18e6c2f55179342ada3af3a221bae499b00"
+  },
+  {
+    "n": 439,
+    "scores": false,
+    "generation": 2,
+    "receipt_id": "c161f5c93a369305bc4742aa0cae7f55f14fcd9db9af15256268f3e5b6d04e09",
+    "state_sha256": "24d3eedd82055bed703b0468cc2265b9888bfef1b4fed1e40f331eaa1c48cb1b"
+  },
+  {
+    "n": 439,
+    "scores": true,
+    "generation": 0,
+    "receipt_id": "66da23ac8a192f5447cc0acf157748232ea80e095e55c3a2ff2eec2bcf4e3afe",
+    "state_sha256": "16947a5b2d6c92b28d3fae74b25feef383f68802ffd4db54a750e5ce812a275d"
+  },
+  {
+    "n": 439,
+    "scores": true,
+    "generation": 1,
+    "receipt_id": "18d1736ebb3c480bfb1034d5bdd3b310126806a97c2b10a9330cdf43c038f885",
+    "state_sha256": "a450916398ecbe85a550bca670c5f9a454a6761d36e33bd456c60805c89480ae"
+  },
+  {
+    "n": 439,
+    "scores": true,
+    "generation": 2,
+    "receipt_id": "5cfc3dc2e86b17da329fcabea9b89e2572bc1e24c99ea0318b29e91e967feb20",
+    "state_sha256": "fab7c646e3f6270cb6d779943080249207a5870055595fb583a05fd126aa7488"
+  }
+]

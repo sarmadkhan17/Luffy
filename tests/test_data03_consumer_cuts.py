@@ -40,17 +40,6 @@ def test_current_config_membership_not_restamped_before_observation(monkeypatch)
     assert u.membership_receipts(as_of_ms=T + Q + 10)['BTC/USDT'] == r
 
 
-def test_historical_scan_cannot_restamp_live_strategy_include(monkeypatch):
-    from trader.kernel import Kernel
-    from tests.test_rolling import _spec
-    k = Kernel.__new__(Kernel)
-    k.universe = SimpleNamespace(symbols=lambda **kw: [], membership_receipts=lambda **kw: {},
-                                 volumes=lambda **kw: {}, majors=[])
-    k._spec_rows = [(None, _spec())]
-    with pytest.raises(ValueError, match='historical_strategy_universe_unavailable'):
-        k._scan_symbols(as_of_ms=T)
-
-
 @pytest.mark.parametrize('missing', ['available_at_ms', 'observed_at_ms', 'revision_id'])
 def test_capture_partial_receipt_cannot_become_unqualified(missing):
     data = receipt(frame(), T + Q).drop(columns=[missing])
