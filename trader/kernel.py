@@ -652,14 +652,9 @@ class Kernel:
         # 2. generate replacements — from what the Researcher actually read
         added = []
         consumed = []
-        # 2a. the search's candidates go first, through the SAME admit().
-        # Closed unless research.handoff is on; and even then it reads only
-        # candidates that passed the reasoning test (phase 4).
-        if len(book) < max_book:
-            spec = self._research_handoff(analyst, book)
-            if spec is not None:
-                book.append(spec)
-                added.append(spec.name)
+        # Completed research may create a VALIDATED Factory version only.
+        # It is not a book addition, install, probation or new statistical look.
+        research_handoff = self._research_handoff(analyst, book)
         if len(book) < max_book:
             writer = SpecWriter(BrainLLM(self.cfg))
             # what the Strategist is allowed to build on: the firm's operating
@@ -707,7 +702,7 @@ class Kernel:
         if retired or added:
             self.population = self._load_population()   # hot reload
         rep = {"retired": [a["name"] for a in retired], "added": added,
-               "book": len(book), "ideas_used": consumed,
+               "book": len(book), "research_handoff": research_handoff, "ideas_used": consumed,
                "ideas_pending": len(idea_queue.pending(self.journal))}
         log.info(f"mechanism: {rep}")
         return rep
@@ -752,63 +747,95 @@ class Kernel:
         return True
 
     def _research_handoff(self, analyst, book):
-        """One `reason_passed` search candidate through `analyst.admit`.
+        """Authenticate completed predictive evidence and stop at VALIDATED.
 
-        The search never writes `strategies`; this is its only way in, and
-        it is the same gate every other proposer faces. The candidate is
-        first frozen as an immutable StrategyVersion bound to its registered
-        gate evidence; what is admitted and installed is exactly that
-        version. Returns the admitted spec, or None.
+        research.predictive_bank_path routes the existing Bank, not a new
+        research scheduler. A local state label cannot supply missing lineage
+        or pass discovery's unavailable reasoning/Gate 2 contract. This path
+        never calls Analyst, installs, starts probation or grants live authority.
         """
         rcfg = self.cfg.get("research") or {}
         if not rcfg.get("handoff", False):
             return None
+        from contextlib import closing
+        import sqlite3
+        from .research import factory_transfer as transfer, predictive_bridge
+        from .research.predictive_experiment import readonly
+        from .strategy import factory_handoff as fh
+
+        def report(status, reason_code=None, **detail):
+            result = dict(status=status, **detail)
+            if reason_code is not None:
+                result['reason_code'] = reason_code
+            kind, subject = 'research_factory_' + status.lower(), result.get('result_id', 'research')
+            # Repeated unchanged refusals are diagnostic duplicates, not new work.
+            old = self.journal.query(
+                "SELECT 1 FROM brain_events WHERE kind=? AND subject=? AND "
+                "json_extract(journal_detail_v1(detail),'$.reason_code') IS ? LIMIT 1",
+                (kind, subject, reason_code))
+            if not old:
+                self.journal.log_brain_event(kind, subject, result)
+            return result
+
+        configured = rcfg.get('predictive_bank_path')
+        if not configured:
+            return report('DEFERRED', 'research_bank_required')
         try:
-            import copy
-            from .research.ledger import Ledger
-            from .strategy import factory_handoff as fh
-            from .strategy.spec import StrategySpec
-            led = Ledger(self.journal)
-            led.ensure()
-            rows = led.candidates(state="reason_passed")
-            if not rows:
-                return None
-            cand = rows[0]
-            h, tf, geo = cand["hash"], cand["tf"], cand["geo"]
+            bank = Path(configured).resolve()
+            destination = Path(self.journal.db_path).resolve()
+        except (TypeError, ValueError, OSError):
+            return report('REFUSED', 'research_bank_path_invalid')
+        try:
+            if bank == destination or (bank.exists() and destination.exists() and bank.samefile(destination)):
+                return report('REFUSED', 'source_destination_alias')
+            if not bank.is_file():
+                return report('DEFERRED', 'research_bank_required')
+            with closing(readonly(bank)) as db:
+                rows = db.execute('SELECT id,payload FROM bridge_bank_results ORDER BY rowid').fetchall()
+        except (OSError, sqlite3.Error) as exc:
+            temporary = transfer._temporary_io(exc)
+            return report('DEFERRED' if temporary else 'REFUSED',
+                          'research_bank_unavailable' if temporary else 'research_bank_unauthenticated')
+        last, duplicate = None, None
+        # Use the Bank's append order, skipping old/refused results rather than
+        # allowing an old head or already validated version to strand new work.
+        for result_id, payload in rows:
             try:
-                ver = fh.create_version(
-                    self.journal, self.cfg,
-                    {"kind": "research_candidate", "hash": h},
-                    at_ms=int(time.time() * 1000))
-            except fh.HandoffRefused as e:
-                led.set_candidate(h, tf, geo, "refused",
-                                  reason=f"no immutable version: {e.code}")
-                return None
-            vid = ver["version_id"]
-            spec = StrategySpec.from_dict(
-                fh.load_version(self.journal, vid)["spec"])
-            from .strategy.exit_policy import bind_research
-            bind_research(spec)
-            ok, ev = analyst.admit(copy.deepcopy(spec), book)
-        except Exception as e:                          # noqa: BLE001
-            log.warning(f"research handoff failed: {e}")
-            return None
-        if not ok:
-            led.set_candidate(h, tf, geo, "refused",
-                              reason=str(ev.get("reason", ""))[:400])
-            self.journal.log_brain_event(
-                "spec_rejected", spec.id,
-                {"name": spec.name, "evidence": ev, "research_hash": h,
-                 "version_id": vid})
-            return None
-        if not self._install_spec(spec, ev, analyst,
-                                  {"research_hash": h}, version_id=vid):
-            led.set_candidate(h, tf, geo, "refused",
-                              reason=f"exact version {vid[:16]} not installed")
-            return None
-        led.set_candidate(h, tf, geo, "admitted",
-                          reason=f"analyst admitted; version {vid[:16]}")
-        return spec
+                packet = transfer.authenticate(bank, result_id)
+                result = json.loads(payload)
+                source = predictive_bridge.factory_source(result, bank)
+                if source['hash'] != packet['hash']:
+                    raise transfer.TransferRefused('research_bank_lineage_mismatch')
+                ledger = transfer.experiment_ledger_path(bank, packet['experiment_id'])
+                if ledger == destination or ledger.exists() and destination.exists() and ledger.samefile(destination):
+                    raise transfer.TransferRefused('source_destination_alias')
+                moved = transfer.transfer(self.journal, packet)
+                ver = fh.create_version(self.journal, self.cfg, source,
+                                        at_ms=int(time.time() * 1000))
+                outcome = dict(status='VALIDATED', result_id=result_id,
+                    experiment_id=packet['experiment_id'], research_hash=packet['hash'],
+                    transfer_id=packet['transfer_id'], transfer_status=moved['status'],
+                    version_id=ver['version_id'], validation_receipt_id=ver['validation_receipt_id'],
+                    outcome=ver['status'], execution_authority='NONE')
+                if ver['status'] == 'duplicate':
+                    duplicate = outcome
+                    continue
+                self.journal.log_brain_event('research_factory_validated', result_id, outcome)
+                return outcome
+            except (transfer.TransferRefused, fh.HandoffRefused) as exc:
+                temporary = exc.code in ('research_bank_required', 'experiment_ledger_missing',
+                    'research_result_not_found', 'research_bank_experiment_not_found',
+                    'research_lineage_missing', 'research_bank_result_not_found',
+                    'research_bank_unavailable', 'experiment_ledger_unavailable')
+                last = report('DEFERRED' if temporary else 'REFUSED', exc.code,
+                              result_id=result_id)
+            except (ValueError, TypeError, KeyError, OSError, sqlite3.Error) as exc:
+                last = report('DEFERRED' if isinstance(exc, (OSError, sqlite3.OperationalError)) else 'REFUSED',
+                              'research_evidence_unavailable' if isinstance(exc, (OSError, sqlite3.OperationalError))
+                              else 'research_evidence_invalid', result_id=result_id)
+        # No candidate state is poisoned by a missing transfer or by a failed
+        # attempt. Authentication and Factory revalidation are required on retry.
+        return duplicate or last or report('DEFERRED', 'research_result_unavailable')
 
     def _strategist_knowledge(self) -> dict:
         """Doctrine + the numeric coverage brief, as one prompt payload."""

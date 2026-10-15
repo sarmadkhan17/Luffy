@@ -106,8 +106,8 @@ def test_the_kernel_brain_tick_runs_no_legacy_review():
 
 # ── the search's handoff (research phase 3) ──────────────────────────────
 def test_no_research_module_writes_the_strategies_table():
-    """The search reaches the book only through kernel._research_handoff,
-    which calls analyst.admit. Reading `strategies` (seed parts, the
+    """Research handoff authenticates existing evidence and stops at Factory
+    VALIDATED; it cannot write the trading book. Reading `strategies` (seed parts, the
     incumbent's universe, the brake) is fine; writing it is a second path."""
     import pathlib
     import re
@@ -174,26 +174,26 @@ def test_a_closed_handoff_admits_nothing(tmp_path):
     assert led.candidate(c.hash)["state"] == "reason_passed"
 
 
-def test_an_open_handoff_goes_through_admit_and_nothing_else(tmp_path):
+def test_an_open_handoff_requires_bank_and_does_not_call_admit(tmp_path):
     k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True)
-    spec = k._research_handoff(analyst, [])
-    assert spec is not None and len(seen) == 1
-    assert seen[0].provenance["research_hash"] == c.hash
-    assert len(seen[0].universe["include"]) == 36
-    assert led.candidate(c.hash)["state"] == "admitted"
-    assert _states(k.journal)[spec.id] == "paper"
+    result = k._research_handoff(analyst, [])
+    assert result["status"] == "DEFERRED"
+    assert result["reason_code"] == "research_bank_required"
+    assert seen == [] and _states(k.journal) == {}
+    assert led.candidate(c.hash)["state"] == "reason_passed"
 
 
-def test_a_refused_candidate_is_recorded_and_not_installed(tmp_path):
+def test_unavailable_lineage_does_not_permanently_refuse_candidate(tmp_path):
     k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True,
                                                admit_ok=False)
-    assert k._research_handoff(analyst, []) is None
-    assert led.candidate(c.hash)["state"] == "refused"
-    assert _states(k.journal) == {}
+    assert k._research_handoff(analyst, [])["status"] == "DEFERRED"
+    assert led.candidate(c.hash)["state"] == "reason_passed"
+    assert seen == [] and _states(k.journal) == {}
 
 
-def test_only_reason_passed_candidates_are_handed_off(tmp_path):
+def test_referee_passed_label_alone_does_not_replace_authentication(tmp_path):
     k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True)
     led.set_candidate(c.hash, "4h", "fixed", "referee_passed")
-    assert k._research_handoff(analyst, []) is None
-    assert seen == []
+    assert k._research_handoff(analyst, [])["status"] == "DEFERRED"
+    assert led.candidate(c.hash)["state"] == "referee_passed"
+    assert seen == [] and _states(k.journal) == {}

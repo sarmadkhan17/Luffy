@@ -36,10 +36,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 from contextlib import closing
 from pathlib import Path
 
 SCHEMA = "research-factory-transfer.v1"
+# Only the old Kernel's exact unavailable-lineage refusal can be recovered.
+# The incoming candidate must still authenticate and match the registered gates.
+RECOVERABLE_LINEAGE_REFUSALS = frozenset((
+    "no immutable version: research_lineage_missing",
+    "no immutable version: research_bank_required",
+    "no immutable version: research_bank_result_not_found",
+    "no immutable version: research_bank_experiment_not_found",
+))
 #: the only candidate state predictive evidence qualifies in. `reason_passed`
 #: is the discovery-search state behind a gate nothing writes yet; a predictive
 #: result never claims it and is never promoted to it here.
@@ -62,6 +71,12 @@ class TransferRefused(ValueError):
 
 def _refuse(code: str):
     raise TransferRefused(code)
+
+
+def _temporary_io(exc) -> bool:
+    code = getattr(exc, "sqlite_errorcode", 0) or 0
+    return isinstance(exc, OSError) or (code & 255) in (
+        sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED, sqlite3.SQLITE_CANTOPEN, sqlite3.SQLITE_IOERR)
 
 
 def _sha(obj) -> str:
@@ -96,6 +111,8 @@ def _bank_result(bank_path, result_id: str):
         att = predictive_extensions(bank_path, first[0]["bank_id"])
     except TransferRefused:
         raise
+    except (OSError, sqlite3.Error) as exc:
+        _refuse("research_bank_unavailable" if _temporary_io(exc) else "research_bank_unauthenticated")
     except Exception:                                   # noqa: BLE001
         _refuse("research_bank_unauthenticated")
     res = [r for r in att["results"] if r["result_id"] == result_id]
@@ -176,7 +193,9 @@ def authenticate(bank_path, result_id: str) -> dict:
     # accepted only if its result is exactly the retained, replayed one
     retained = [x for x in qe.get("results") or [] if x["hash"] == h]
     path = experiment_ledger_path(bank_path, r["experiment_id"])
-    if path.is_symlink() or not path.is_file():
+    if path.is_symlink():
+        _refuse("experiment_ledger_alias")
+    if not path.is_file():
         _refuse("experiment_ledger_missing")
     try:
         with closing(readonly(path)) as led:
@@ -184,6 +203,8 @@ def authenticate(bank_path, result_id: str) -> dict:
                 "SELECT id FROM predictive_experiment_binding").fetchall()
             combo = _rows(led, "SELECT * FROM research_combos WHERE hash=?",
                           (h,))
+    except (OSError, sqlite3.Error) as exc:
+        _refuse("experiment_ledger_unavailable" if _temporary_io(exc) else "experiment_ledger_unreadable")
     except Exception:                                   # noqa: BLE001
         _refuse("experiment_ledger_unreadable")
     if bound != [(r["experiment_id"],)]:
@@ -256,9 +277,19 @@ def transfer(journal, packet: dict) -> dict:
                                    if t["tf"] == tf) if x]
         if target_cuts and packet_cuts and min(target_cuts) != min(packet_cuts):
             _refuse("frozen_cut_differs")
-        # 5. candidate and combination: identical or absent, never overwritten
+        # Filling a missing prefix below already spent later looks would
+        # retroactively change their statistical pricing, not transfer facts.
+        later = fetch("SELECT seq FROM research_tests WHERE seq>?", (seq,))
+        if later and set(want) - set(mine):
+            _refuse("budget_sequence_diverged")
+        # 5. candidate and combination: identical or absent, with one narrowly
+        # authenticated recovery of the old Kernel's missing-lineage refusal.
         cand = fetch("SELECT * FROM research_candidates WHERE hash=?", (h,))
+        recover = bool(cand and cand[0]["state"] == "refused"
+                       and cand[0]["reason"] in RECOVERABLE_LINEAGE_REFUSALS)
         if cand:
+            if cand[0]["state"] not in ("referee_passed", "reason_passed", "admitted") and not recover:
+                _refuse("candidate_conflict")
             keys = ("tf", "geo", "gate1", "gate3")
             if any(cand[0][k] != packet["candidate"][k] for k in keys):
                 _refuse("candidate_conflict")
@@ -267,6 +298,12 @@ def transfer(journal, packet: dict) -> dict:
             _refuse("combo_conflict")
 
         inserted = 0
+        if recover:
+            row = packet["candidate"]
+            columns = [k for k in row if k != "hash"]
+            c.execute("UPDATE research_candidates SET " + ','.join(k+'=?' for k in columns)
+                      + " WHERE hash=?", tuple(row[k] for k in columns) + (h,))
+            inserted += 1
         if not have:
             c.execute("INSERT INTO research_budget VALUES (?,?,?,?)",
                       tuple(packet["budget"][k]

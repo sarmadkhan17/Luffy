@@ -87,7 +87,7 @@ def _upsert(j, spec_d):
 
 
 def _install(j, version_id, at_ms=T0):
-    """What the Kernel's exact-version handoff does: install the frozen
+    """Explicit lifecycle test setup: install the frozen
     spec unchanged, then bind the install (starts probation)."""
     rec = F.load_version(j, version_id)
     _upsert(j, rec["spec"])
@@ -319,30 +319,16 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
         (F.APPROVAL_REQUIRED, F.APPROVED_FIRST_LIVE, drow["decision_id"])]
 
 
-def test_kernel_handoff_admits_exactly_the_frozen_version(tmp_path, cfg):
-    """One spec construction (factory.candidate_spec); the Kernel freezes
-    the version first and hands analyst.admit exactly that spec."""
-    from trader.kernel import Kernel
+def test_kernel_requires_authenticated_lineage_before_freezing(tmp_path, cfg):
+    """A local reason_passed label supplies neither Bank lineage nor Gate 2."""
     j, h = _journal(tmp_path, state="reason_passed")
-    seen = []
-
-    class _Analyst:
-        def admit(self, spec, book):
-            seen.append(spec.to_dict())
-            return False, {"reason": "capture only"}
-
-    cand = _row(j, "SELECT * FROM research_candidates WHERE hash=?", h)
-    built = F.candidate_spec(j, cfg, cand).to_dict()
-    k = Kernel.__new__(Kernel)
-    k.journal, k.cfg, k.notifier = j, {"research": {"handoff": True}}, None
-    assert k._research_handoff(_Analyst(), []) is None
-    vrow = _row(j, "SELECT * FROM strategy_versions")
-    frozen = F.load_version(j, vrow["version_id"])["spec"]
-    assert seen == [frozen]
-    assert {k: v2 for k, v2 in frozen.items() if k != "data_requires"} == {
-        k: v2 for k, v2 in built.items() if k != "data_requires"}
-    assert frozen["universe"]["include"] and \
-        frozen["provenance"]["research_hash"] == h
+    an = _Admitting()
+    result = _kernel(j)._research_handoff(an, [])
+    assert result["status"] == "DEFERRED"
+    assert result["reason_code"] == "research_bank_required"
+    assert an.measured == []
+    assert j.query("SELECT * FROM strategy_versions") == []
+    assert _row(j, "SELECT state FROM research_candidates")["state"] == "reason_passed"
 
 
 # ── refusals ─────────────────────────────────────────────────────────────
@@ -663,40 +649,26 @@ def _kernel(j):
     return k
 
 
-def test_kernel_installs_the_exact_version_and_starts_probation(tmp_path):
+def test_kernel_handoff_does_not_automatically_install_or_start_probation(tmp_path):
     j, h = _journal(tmp_path, state="reason_passed")
     an = _Admitting()
-    spec = _kernel(j)._research_handoff(an, [])
-    assert spec is not None and an.measured    # regimes measured on a copy
-    vrow = _row(j, "SELECT * FROM strategy_versions")
-    v = F.load_version(j, vrow["version_id"])
-    row = _row(j, "SELECT * FROM strategies WHERE id=?", v["strategy_id"])
-    installed = StrategySpec.from_json(row["spec_json"]).to_dict()
-    assert installed == v["spec"]              # regime_filter NOT replaced
-    assert installed["regime_filter"] == [] and \
-        "regime_evidence" not in installed["provenance"]
-    assert F.state_of(j, v["version_id"]) == F.SHADOW
-    F.verify_install(j, v)
-    ev = [json.loads(r["detail"]) for r in j.query(
-        "SELECT detail FROM brain_events WHERE kind='spec_admitted'")]
-    assert ev[0]["version_id"] == v["version_id"]
-    assert ev[0]["regimes_advisory_not_applied"]["fit"] == ["TRENDING_UP"]
-    assert _row(j, "SELECT state FROM research_candidates")["state"] == \
-        "admitted"
+    assert _kernel(j)._research_handoff(an, [])["status"] == "DEFERRED"
+    assert an.measured == []
+    for table in ("strategies", "strategy_versions", "strategy_version_installs",
+                  "strategy_probation_receipts", "strategy_approval_requests"):
+        assert j.query("SELECT * FROM " + table) == []
+    assert _row(j, "SELECT state FROM research_candidates")["state"] == "reason_passed"
 
 
-def test_kernel_refuses_a_timeframe_other_than_the_version(tmp_path):
+def test_kernel_refuses_a_timeframe_other_than_the_version(tmp_path, cfg):
     j, h = _journal(tmp_path, state="reason_passed")
-    assert _kernel(j)._research_handoff(_Admitting(tf="1h"), []) is None
-    vrow = _row(j, "SELECT * FROM strategy_versions")
-    assert F.state_of(j, vrow["version_id"]) == F.VALIDATED
-    assert j.query("SELECT * FROM strategies") == []      # nothing installed
-    assert F.load_version(j, vrow["version_id"])["spec"]["timeframe"] == "4h"
-    ev = json.loads(_row(j, "SELECT detail FROM brain_events WHERE "
-                            "kind='spec_install_refused'")["detail"])
-    assert ev["reason_code"] == "timeframe_differs_from_version"
-    cand = _row(j, "SELECT * FROM research_candidates")
-    assert cand["state"] == "refused" and "not installed" in cand["reason"]
+    ver = _validated(j, cfg, h)
+    spec = StrategySpec.from_dict(F.load_version(j, ver["version_id"])["spec"])
+    assert not _kernel(j)._install_spec(spec, {"chosen_timeframe": "1h"},
+        _Admitting(), {}, version_id=ver["version_id"])
+    assert F.state_of(j, ver["version_id"]) == F.VALIDATED
+    assert j.query("SELECT * FROM strategies") == []
+    assert _row(j, "SELECT state FROM research_candidates")["state"] == "reason_passed"
 
 
 def test_kernel_refuses_a_spec_that_is_not_the_frozen_one(tmp_path, cfg):
@@ -1048,7 +1020,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
 
 # ── the real identity bridge (Trade Provenance x exact version) ──────────
 def test_legacy_compiler_provenance_without_factory_identity_is_incomplete(tmp_path, cfg):
-    """Nothing hand-built: the Kernel installs the exact version, loads its
+    """The explicit lifecycle fixture installs the exact version, Kernel loads its
     population, stamps the entry identity the way it does before an order,
     the journal books the trade; missing factory version/install binding
     now makes probation incomplete despite verified compiler provenance."""
@@ -1058,7 +1030,7 @@ def test_legacy_compiler_provenance_without_factory_identity_is_incomplete(tmp_p
     from trader.core.types import Position, Side
     j, h = _journal(tmp_path, state="reason_passed")
     k = _kernel(j)
-    assert k._research_handoff(_Admitting(), []) is not None
+    _install(j, _validated(j, k.cfg, h)["version_id"])
     v = F.load_version(j, _row(j, "SELECT * FROM strategy_versions")
                        ["version_id"])
     sid = v["strategy_id"]
@@ -1110,7 +1082,7 @@ def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
     from trader.core.types import Position, Side
     j, h = _journal(tmp_path, state="reason_passed")
     k = _kernel(j)
-    k._research_handoff(_Admitting(), [])
+    _install(j, _validated(j, k.cfg, h)["version_id"])
     v = F.load_version(j, _row(j, "SELECT * FROM strategy_versions")
                        ["version_id"])
     sid, t0 = v["strategy_id"], F.verify_install(j, v)["installed_at_ms"]
@@ -1144,7 +1116,8 @@ def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
     (tmp_path / "x").mkdir()
     j2, _ = _journal(tmp_path / "x", state="reason_passed")
     k2 = _kernel(j2)
-    k2._research_handoff(_Admitting(), [])
+    h2 = _row(j2, "SELECT hash FROM research_candidates")["hash"]
+    _install(j2, _validated(j2, k2.cfg, h2)["version_id"])
     v2 = F.load_version(j2, _row(j2, "SELECT * FROM strategy_versions")
                         ["version_id"])
     # the kernel's own risk configuration is part of the version identity
