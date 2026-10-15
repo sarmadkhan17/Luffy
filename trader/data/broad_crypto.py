@@ -207,7 +207,12 @@ def observe(kernel, exposure):
     for sym in rows:
         try:
             df=kernel.feed.cached_ohlcv(sym,cfg['attention']['timeframe'],limit=153,as_of_ms=cut)
-            if df is not None: frames[sym]={cfg['attention']['timeframe']:df}
+            if df is not None:
+                frames[sym]={cfg['attention']['timeframe']:df}
+                if 'quality' in df and not df['quality'].eq('VALID').all():
+                    rows[sym]['missing_reasons'].append('retained_history_quality_unusable')
+            else:
+                rows[sym]['missing_reasons'].append('no_retained_eligible_history_at_cut')
         except Exception:
             rows[sym]['missing_reasons'].append('cached_history_unavailable')
     capture_cfg=settings(cfg['attention'])
@@ -230,4 +235,6 @@ def observe(kernel, exposure):
         source_receipts=dict(tickers=tickers,venue_metadata=markets,
                              venue_metadata_receipt=metadata_receipt,
                              request_started_ms=started, observed_at_ms=cut))
+    from .attention_history import coverage
+    observation['history_coverage'] = coverage(result, rows, result['config']['min_salience'])
     return observation,frames,memberships

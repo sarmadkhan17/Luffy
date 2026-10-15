@@ -25,7 +25,10 @@ def test_force_refreshes_the_tail_not_the_history(tmp_path):
     assert len(ex.calls) == 1, "force must re-read the tail, not re-page"
 
 
-def test_a_young_symbol_is_not_repaged_every_call(tmp_path):
+def test_a_young_symbol_is_not_repaged_every_call(tmp_path, monkeypatch):
+    # A fresh qualified closed window survives process restart without even
+    # a tail request. Freeze the boundary so this does not race a bar close.
+    monkeypatch.setattr('tests.test_feed_pagination.time.time', lambda: 1_800_000_060)
     p = tmp_path / "c.db"
     first = FakeEx(total=1500)                 # listed 1,500 bars ago
     DataFeed(exchange=first, db_path=p).fetch_ohlcv(
@@ -35,7 +38,7 @@ def test_a_young_symbol_is_not_repaged_every_call(tmp_path):
     df = DataFeed(exchange=again, db_path=p).fetch_ohlcv(
         "NEW/USDT", "15m", limit=4000)
     assert len(df) == 1500
-    assert len(again.calls) == 1, "the start of history is remembered"
+    assert len(again.calls) == 0, "fresh qualified history is reused at its known floor"
 
 
 def test_the_dashboard_charts_read_production_not_the_demo_venue():

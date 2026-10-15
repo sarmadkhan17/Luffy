@@ -1233,7 +1233,9 @@ class Kernel:
             broad_observed=len(roles.broad_crypto), peer_cohort=len(roles.peers),
             deep_admitted=len(roles.deep), event_admitted=len(roles.event),
             exploration_admitted=len(roles.exploration), exposure_required=len(roles.exposure),
-            context_anchors=list(roles.anchors))
+            context_anchors=list(roles.anchors),
+            history_coverage=receipt.get('history_coverage') if receipt else None,
+            history_preparation=getattr(self, '_history_preparation', None))
         boundaries = dict(broad_crypto=len(roles.broad_crypto),peer_cohort=len(roles.peers),
             discretionary_deep_admitted=len(deep_symbols),exposure_required=len(roles.exposure),
             execution_datafeed_available=0,snapshots_constructed=0)
@@ -1310,6 +1312,8 @@ class Kernel:
                 d = self.orchestrator.decide(snap, self.population,
                                              entry_allowed=entry_allowed,
                                              blocked_reason=blocked)
+                from .data.attention_history import decision_state
+                stats.setdefault('decision_data_states', {})[symbol] = decision_state(snap, d)
                 if learning_inputs is not None:
                     from copy import deepcopy
                     learning_inputs['snapshot'] = deepcopy(snap)
@@ -1869,6 +1873,14 @@ class Kernel:
             self._symbol_roles = A.SymbolRoles(**{k:tuple(v) for k,v in receipt['roles'].items()})
             self._admission_receipt = receipt
             self._admission_error = None
+            # Receipt is committed and verified before any history submission.
+            # Scheduling failure cannot revoke mandatory exposure protection.
+            try:
+                from .data.attention_history import prepare
+                self._history_preparation = prepare(self, receipt)
+                self.journal.log_brain_event('attention_history_preparation', 'attention', self._history_preparation)
+            except Exception as exc:
+                self._history_preparation = dict(status='REFUSED', reason=type(exc).__name__)
             return receipt, frames
         except Exception as exc:
             self._symbol_roles = A.SymbolRoles((),(),(),ANCHORS,tuple(exposure),(),())

@@ -230,6 +230,21 @@ def admit(observation, policy, state):
         degraded_state=observation['status'],fallback='rotating_valid_ticker_relevance_without_fabricated_salience',
         required_deferred=[s for s in observation.get('required_symbols',[]) if s not in chosen],
         learned_priority_influence='NONE: existing governed priorities retained for investigation only')
+    if 'history_coverage' in observation:
+        # Re-derive new diagnostics through the same evaluator; a rehashed
+        # receipt cannot turn raw counts into qualified coverage. Old receipts
+        # without this extension retain their exact historical bytes.
+        from .observability.attention import evaluate_snapshot
+        from .data.attention_history import coverage
+        measured = evaluate_snapshot(observation['attention_event'])
+        expected = coverage(measured, members, threshold)
+        if canonical(expected) != canonical(observation['history_coverage']):
+            raise ValueError('admission_history_coverage_mismatch')
+        if canonical({r['symbol']:r for r in measured['rows']}) != canonical(scores):
+            raise ValueError('admission_salience_history_mismatch')
+        receipt['history_coverage'] = observation['history_coverage']
+        for row in receipt['rows']:
+            row['data_state'] = observation['history_coverage']['rows'][row['symbol']]
     receipt['receipt_id'] = digest(receipt)
     return receipt
 

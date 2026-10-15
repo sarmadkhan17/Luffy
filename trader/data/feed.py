@@ -79,6 +79,12 @@ class DataFeed:
     """
 
     BACKGROUND_QUEUE_CAPACITY = 128
+    # One existing queue. Reserve space and service for current trading data.
+    HISTORY_QUEUE_RESERVE = 32
+    HISTORY_BATCH = 16
+    HISTORY_REQUEST_BARS = 154  # existing 153-bar broad-cache budget plus a forming bar
+    HISTORY_RETRY_MS = 300_000
+    MAX_CACHE_SERIES = 128
 
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
                  db_path=None, clock_ms=None, retrospective=None):
@@ -110,7 +116,7 @@ class DataFeed:
             if (on_demo and exchange is None and self.retrospective is None) else None
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
-        self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
+        self._cache: dict[tuple, tuple[float, pd.DataFrame]] = OrderedDict()
         self._instruments = {}
         self._db_path = str(db_path) if db_path else None   # resolved lazily
         self._local = threading.local()                     # per-thread conns
@@ -121,6 +127,9 @@ class DataFeed:
         self._acquisition_queue_lock = threading.Lock()
         self._acquisition_queue = OrderedDict()
         self._acquisition_stopping = False
+        self._acquisition_inflight = None
+        self._acquisition_outcomes = OrderedDict()
+        self._trading_burst = 0
         self._acquisition_queue_counts = {
             'accepted': 0, 'coalesced': 0, 'completed': 0,
             'skipped_fresh': 0, 'failed': 0, 'refused_full': 0,
@@ -162,6 +171,10 @@ class DataFeed:
                 'capacity': self.BACKGROUND_QUEUE_CAPACITY,
                 'pending': len(self._acquisition_queue),
                 'worker_busy': self._acquisition_lock.locked(),
+                'inflight': self._acquisition_inflight[0] if self._acquisition_inflight else None,
+                'outcomes_retained': len(self._acquisition_outcomes),
+                'outcomes': [dict(symbol=k[0], timeframe=k[1], **v)
+                             for k,v in self._acquisition_outcomes.items()],
                 'stopping': self._acquisition_stopping,
                 **self._acquisition_queue_counts,
                 'last_outcome': self._acquisition_queue_last_outcome,
@@ -172,6 +185,11 @@ class DataFeed:
         with self._acquisition_queue_lock:
             self._acquisition_stopping = True
             cancelled = len(self._acquisition_queue)
+            for key in self._acquisition_queue:
+                self._acquisition_outcomes[key] = dict(at_ms=self._clock_ms(), outcome='cancelled_shutdown')
+                self._acquisition_outcomes.move_to_end(key)
+            while len(self._acquisition_outcomes) > self.BACKGROUND_QUEUE_CAPACITY:
+                self._acquisition_outcomes.popitem(last=False)
             self._acquisition_queue.clear()
             self._acquisition_queue_counts['cancelled'] += cancelled
             self._acquisition_queue_last_outcome = 'shutdown_cancelled'
@@ -191,30 +209,42 @@ class DataFeed:
             return True
         except Exception as exc:
             with self._acquisition_queue_lock:
-                refused = len(self._acquisition_queue)
-                self._acquisition_queue.clear()
-                self._acquisition_queue_counts['failed'] += refused
+                # Retain bounded pending demand for the next start attempt.
+                self._acquisition_queue_counts['failed'] += 1
                 self._acquisition_queue_last_outcome = (
                     'worker_start_failed:' + type(exc).__name__)
                 self._acquisition_lock.release()
             log.warning('background candle worker unavailable: %s', type(exc).__name__)
             return False
 
-    def _queue_background_request(self, symbol, tf, limit, force, min_bars):
+    def _queue_background_request(self, symbol, tf, limit, force, min_bars, *, history=False):
+        """Coalesce pending AND in-flight work; history cannot fill trading reserve."""
         key = (norm_symbol(symbol), tf)
+        limit = min(int(limit), 20000)
         with self._acquisition_queue_lock:
             if self._acquisition_stopping:
                 self._acquisition_queue_counts['refused_shutdown'] += 1
                 self._acquisition_queue_last_outcome = 'refused_shutdown'
                 return False
+            inflight = self._acquisition_inflight
+            if inflight and inflight[0] == key:
+                active = inflight[1]
+                if limit <= active['limit'] and (not force or active['force']) and min_bars <= active['min_bars']:
+                    self._acquisition_queue_counts['coalesced'] += 1
+                    self._acquisition_queue_last_outcome = 'coalesced_inflight'
+                    return True
             pending = self._acquisition_queue.get(key)
             if pending is not None:
                 pending['limit'] = max(pending['limit'], min(int(limit), 20000))
                 pending['force'] = pending['force'] or bool(force)
                 pending['min_bars'] = max(pending['min_bars'], int(min_bars))
+                if not history:
+                    pending.pop('history', None)  # promotion retains one request
                 self._acquisition_queue_counts['coalesced'] += 1
                 self._acquisition_queue_last_outcome = 'coalesced'
-            elif len(self._acquisition_queue) >= self.BACKGROUND_QUEUE_CAPACITY:
+            elif len(self._acquisition_queue) >= (self.BACKGROUND_QUEUE_CAPACITY -
+                    min(self.HISTORY_QUEUE_RESERVE, self.BACKGROUND_QUEUE_CAPACITY // 4) if history
+                    else self.BACKGROUND_QUEUE_CAPACITY):
                 self._acquisition_queue_counts['refused_full'] += 1
                 self._acquisition_queue_last_outcome = 'refused_queue_full'
                 log.warning('background candle request refused: queue full (%s %s)',
@@ -226,6 +256,8 @@ class DataFeed:
                     'limit': min(int(limit), 20000),
                     'force': bool(force), 'min_bars': int(min_bars),
                 }
+                if history:
+                    self._acquisition_queue[key]['history'] = True
                 self._acquisition_queue_counts['accepted'] += 1
                 self._acquisition_queue_last_outcome = 'queued'
         self._start_background_worker()
@@ -239,7 +271,8 @@ class DataFeed:
         return (request['force'] or current is None or
                 (len(current) < min(request['limit'], 20000) and
                  not self._at_floor(request['symbol'], request['tf'], current)) or
-                ('quality' in current and current['quality'].eq('STALE').any()))
+                ('quality' in current and not current['quality'].eq('VALID').all()) or
+                not self._current_tail(current, request['tf'], min(request['min_bars'], request['limit'])))
 
     def _drain_background_queue(self):
         try:
@@ -247,9 +280,19 @@ class DataFeed:
                 with self._acquisition_queue_lock:
                     if self._acquisition_stopping or not self._acquisition_queue:
                         return
-                    _key, request = self._acquisition_queue.popitem(last=False)
+                    # At most eight trading jobs between history jobs; a trading
+                    # arrival waits behind at most one non-preemptible history job.
+                    trading = [k for k,r in self._acquisition_queue.items() if not r.get('history')]
+                    history = [k for k,r in self._acquisition_queue.items() if r.get('history')]
+                    _key = (trading[0] if trading and (self._trading_burst < 8 or not history)
+                            else history[0])
+                    request = self._acquisition_queue.pop(_key)
+                    self._trading_burst = 0 if request.get('history') else self._trading_burst + 1
+                    self._acquisition_inflight = (_key, dict(request))
+                outcome = 'failed'
                 try:
                     if not self._background_needs_data(request):
+                        outcome = 'skipped_fresh'
                         with self._acquisition_queue_lock:
                             self._acquisition_queue_counts['skipped_fresh'] += 1
                             self._acquisition_queue_last_outcome = 'skipped_fresh'
@@ -259,23 +302,41 @@ class DataFeed:
                         if stopping:
                             self._acquisition_queue_counts['cancelled'] += 1
                             self._acquisition_queue_last_outcome = 'shutdown_cancelled'
+                            outcome = 'shutdown_cancelled'
                     if stopping:
                         continue
                     self._local.acquiring = True
+                    self._local.acquisition_short = False
                     result = self.fetch_ohlcv(request['symbol'], request['tf'],
                                               request['limit'], request['force'],
                                               request['min_bars'])
                     with self._acquisition_queue_lock:
-                        outcome = 'completed' if result is not None else 'failed'
+                        outcome = 'completed' if result is not None or self._local.acquisition_short else 'failed'
                         self._acquisition_queue_counts[outcome] += 1
+                        if getattr(self._local, 'acquisition_failure', None):
+                            outcome = 'source_unavailable:' + self._local.acquisition_failure
+                        qualified = (result is not None and len(result) >= request['min_bars'] and
+                                     result['quality'].eq('VALID').all() and
+                                     self._current_tail(result, request['tf'], request['min_bars']))
+                        if outcome == 'completed' and not qualified:
+                            outcome = 'completed_unqualified_history'
                         self._acquisition_queue_last_outcome = outcome
                 except Exception as exc:
+                    outcome = 'failed:' + type(exc).__name__
                     with self._acquisition_queue_lock:
                         self._acquisition_queue_counts['failed'] += 1
                         self._acquisition_queue_last_outcome = (
                             'failed:' + type(exc).__name__)
                     log.warning('background candles unavailable: %s', type(exc).__name__)
                 finally:
+                    with self._acquisition_queue_lock:
+                        # Bounded diagnostic/cooldown cache, never candle authority.
+                        self._acquisition_outcomes[_key] = dict(
+                            at_ms=self._clock_ms(), outcome=outcome)
+                        self._acquisition_outcomes.move_to_end(_key)
+                        while len(self._acquisition_outcomes) > self.BACKGROUND_QUEUE_CAPACITY:
+                            self._acquisition_outcomes.popitem(last=False)
+                        self._acquisition_inflight = None
                     self._local.acquiring = False
                     conn = getattr(self._local, 'conn', None)
                     if conn is not None:
@@ -287,6 +348,37 @@ class DataFeed:
                 restart = bool(self._acquisition_queue) and not self._acquisition_stopping
             if restart:
                 self._start_background_worker()
+
+    @staticmethod
+    def _contiguous_tail(frame, tf, need):
+        if frame is None or len(frame) < need:
+            return False
+        opens = mp.ms(frame['ts'])[-need:]
+        return bool((np.diff(opens) == _TF_MS_SHARED[tf]).all())
+
+    def _current_tail(self, frame, tf, need):
+        return (self._contiguous_tail(frame, tf, need) and
+                self._last_ms(frame) == (self._clock_ms() // self._TF_MS[tf] - 1) * self._TF_MS[tf])
+
+    def prepare_history(self, symbol, tf='4h'):
+        """Bounded submission to DA-02; returns an explicit scheduling outcome.
+
+        The caller supplies a rotating cohort, not another backlog. Restart
+        reconstructs demand from the candle store and its durable scan cursor.
+        """
+        key = (norm_symbol(symbol), tf)
+        with self._acquisition_queue_lock:
+            previous = self._acquisition_outcomes.get(key)
+            if previous and 0 <= self._clock_ms() - previous['at_ms'] < self.HISTORY_RETRY_MS:
+                return 'retry_cooldown'
+        if not self.background_acquisition:
+            return 'refused_background_disabled'
+        if self.is_dead(key[0]):
+            return 'refused_dead_symbol'
+        accepted = self._queue_background_request(key[0], tf, self.HISTORY_REQUEST_BARS,
+                                                   False, 26, history=True)
+        return 'queued_or_coalesced' if accepted else ('refused_shutdown' if self._acquisition_stopping
+                                                      else 'deferred_queue_capacity')
 
     # ── persistent candle store ─────────────────────────────────────────
     #: seconds a statement waits on a lock before "database is locked"
@@ -531,7 +623,7 @@ class DataFeed:
         """Exchanges cap a single klines request (1000 on binanceusdm);
         walk backwards in pages until `limit` bars are assembled."""
         tf_ms = self._TF_MS[tf]
-        now_ms = int(time.time() * 1000)
+        now_ms = self._clock_ms()
         cursor = now_ms - limit * tf_ms
         rows: list = []
         for _ in range((limit + 999) // 1000 + 1):
@@ -735,7 +827,8 @@ class DataFeed:
             needs_data = (current is None or
                           (len(current) < min(limit, 20000) and
                            not self._at_floor(symbol, tf, current)) or force or
-                          ('quality' in current and current['quality'].eq('STALE').any()))
+                          ('quality' in current and not current['quality'].eq('VALID').all()) or
+                          not self._current_tail(current, tf, min(min_bars, limit)))
             if needs_data:
                 self._queue_background_request(symbol, tf, limit, force, min_bars)
             return current if current is not None and len(current) >= min_bars else None
@@ -757,19 +850,24 @@ class DataFeed:
             at = self._clock_ms()
             safe = mp.usable_current(df, tf, at, self.ttl.get(tf, 300))
             self._cache[ck] = (at / 1000, safe)
-            return safe
+            self._cache.move_to_end(ck)
+            while len(self._cache) > self.MAX_CACHE_SERIES:
+                self._cache.popitem(last=False)
+            self._local.acquisition_short = safe is not None and len(safe) < min_bars
+            return None if self._local.acquisition_short else safe
 
         hit = self._cache.get(ck)
         iid,source=self._identity(symbol)
         if hit and hit[1] is not None and ('instrument_id' not in hit[1] or
                 not hit[1]['instrument_id'].eq(iid).all() or not hit[1]['source'].eq(source).all()):
             hit=None
-        if (hit and hit[1] is not None and not force
+        if (hit and hit[1] is not None and len(hit[1]) >= min_bars and not force
                 and 0 <= now_ms / 1000 - hit[0] < self.ttl.get(tf, 300)
                 and (len(hit[1]) >= limit or self._at_floor(symbol, tf, hit[1]))):
             return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))
 
         stored = self.latest_ohlcv(symbol, tf, limit)
+        qualified = stored
         if stored is None:
             stored = self._store_load(symbol, tf, limit)  # inventory only, never qualified
         # "full" = the window asked for is stored, OR the store already
@@ -779,15 +877,28 @@ class DataFeed:
         have_full = stored is not None and len(stored) > 0 and (
             len(stored) >= limit or self._at_floor(symbol, tf, stored))
         fresh_tail = (stored is not None and
-                      now_ms - self._last_ms(stored) <=
-                      self.ttl.get(tf, 300) * 1000)
-        if have_full and fresh_tail and not force:
+                      now_ms - (self._last_ms(stored) + tf_ms) <=
+                      tf_ms + self.ttl.get(tf, 300) * 1000)
+        if (have_full and fresh_tail and qualified is not None and not force
+                and self._current_tail(qualified, tf, min(min_bars, limit))
+                and mp.usable_current(qualified, tf, now_ms, self.ttl.get(tf, 300))['quality'].eq('VALID').all()):
             return finish(stored)
 
         try:
             # force means "refresh now", not "forget the store": history
             self._local.acquisition_started_ms = self._clock_ms()
+            self._local.acquisition_failure = None
             # already on disk is extended from its tail, never re-downloaded
+            # Legacy projection rows are inventory only. Reacquire the bounded
+            # requested window when its retained provenance is incomplete or
+            # has holes; refreshing a tail cannot qualify an interior hole.
+            if (stored is not None and len(stored) > 0 and
+                    (qualified is None or not qualified['quality'].eq('VALID').all() or
+                     not self._contiguous_tail(qualified, tf, min(min_bars, limit)))):
+                raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
+                       else self._klines(symbol, tf, limit=limit))
+                new = self._received_frame(raw or [], symbol, tf)
+                return finish(self._merge_save(symbol, tf, stored, new)) if len(new) else finish(qualified)
             if stored is not None and len(stored) > 0:
                 # extend/refresh whatever is stored instead of redownloading
                 last = self._last_ms(stored)
@@ -817,13 +928,15 @@ class DataFeed:
             # cold symbol or force refresh
             raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
                    else self._klines(symbol, tf, limit=limit))
-            if not raw or len(raw) < min_bars:
+            if not raw:
+                self._local.acquisition_failure = 'empty_provider_response'
                 return finish(stored) if stored is not None else None
             new = self._received_frame(raw, symbol, tf)
             return finish(self._note_floor(symbol, tf, limit,
                                            self._merge_save(symbol, tf,
                                                             stored, new)))
         except Exception as e:
+            self._local.acquisition_failure = type(e).__name__
             if self._note_dead(symbol, e):
                 log.warning(f"ohlcv {symbol} {tf}: {e} — symbol marked dead, "
                             f"suppressing further fetches")
