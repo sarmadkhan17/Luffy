@@ -1,0 +1,220 @@
+{
+  "DA_08_STATUS": "CLOSED_OFFLINE",
+  "BASELINE": {
+    "commit": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+    "is_ancestor": true,
+    "initial_isolated_head_equals_baseline": true,
+    "source": "Read-only local clone of Opus RP-03 workspace; no source workspace edits",
+    "checkout_note": "First checkout ran out of space on /mnt/luffy-data. Task checkout moved to /tmp and made sparse; seed fixtures subsequently included."
+  },
+  "ROOT_CAUSE": [
+    "Runtime already has one discretionary admission owner: broad_crypto.observe -> attention_admission.persist -> Kernel roles.deep. Several older selection/collection APIs survived only as test-invoked executable code after Kernel integration was retired.",
+    "The proposal-only current portfolio reader reused a shadow preview reader with max_contexts=4. Authenticated publications were sliced before admission filtering. A valid current occurrence beyond the first four could therefore disappear from portfolio evidence.",
+    "Admitted snapshots without current context requests had no complete per-admission coverage projection in portfolio inputs. The capped asynchronous telemetry stream is diagnostic, and cannot replace authoritative broad admission evidence."
+  ],
+  "KEEP_REMOVE_MERGE_DECISIONS": [
+    {
+      "component": "trader/data/broad_crypto.py; trader/attention_admission.py",
+      "decision": "KEEP",
+      "role": "Runtime broad observation and the sole bounded discretionary investigation admission owner. Exact crypto identity join, source cut, 12/2/2/0 policy and persistent event/relevance/exploration state unchanged."
+    },
+    {
+      "component": "trader/data/feed.py:Universe",
+      "decision": "KEEP",
+      "role": "Still used by Kernel boot venue metadata/legacy universe filtering and analyst validation. Its top-N cohort is also a compatibility/history contract; it does not restrict broad admission. Removing it would remove distinct active callers and durable selection evidence."
+    },
+    {
+      "component": "trader/strategy/scan_plan.py; Kernel._peer_frames",
+      "decision": "KEEP",
+      "role": "Per-strategy eligibility and separate cross-sectional peer/timeframe inputs. Peer top-N is not a deep-admission quota. Peer data remains cache-only at the admission cut."
+    },
+    {
+      "component": "Kernel._scan_symbols; Kernel._universe_frames",
+      "decision": "REMOVE",
+      "role": "No production callers. Former selection and network peer-fetch paths duplicated the current broad plan and cache-only peers. Tests moved to the live peer reader or retained Universe membership API; obsolete stubs removed."
+    },
+    {
+      "component": "Kernel._funding_map; Kernel._oi_map",
+      "decision": "CONSOLIDATE_CALL_CONTRACT",
+      "role": "Require the explicit symbols already passed by the only runtime caller. Remove dormant fallback selection through Universe; source acquisition and cache behavior for actual calls unchanged."
+    },
+    {
+      "component": "trader/core/instrument_registry.py; data/registry_provider.py; data/binance_usdm_registry.py; data/registry_store.py",
+      "decision": "KEEP",
+      "role": "Canonical native identity, capability and immutable registry/universe evidence. Not an admission engine. Registry provider remains a separate bounded API with necessary identity/store tests; the disconnected Attention refresh loop is removed."
+    },
+    {
+      "component": "trader/observability/registry_selector.py; selection_persistence.py; Journal attention selection/cursor tables",
+      "decision": "KEEP_COMPATIBILITY",
+      "role": "Stable Selection/Exclusion identities, cursor CAS, durable fetch-outcome readers and immutable historical fixture reproduction. opportunity_context and opportunity_live still decode/validate these records. No automatic runtime collector invokes them."
+    },
+    {
+      "component": "RegistryAttention; RegistryRefresher; supplemental_mode; registry_settings; reason_token; supplemental.py; _supplemental_child.py; supplemental capture producer branch",
+      "decision": "REMOVE",
+      "role": "No production construction/call sites after Kernel hooks retired. Removed optional second fetch process, thread and configuration resolver plus their obsolete transport tests. Historical events replay directly from retained inputs; no database migration or old receipt rewrite."
+    },
+    {
+      "component": "data/attention_history.py and DataFeed background queue/cursors",
+      "decision": "KEEP",
+      "role": "History preparation, freshness and persistent broad exploration are data readiness scheduling, not another admission policy. Priority/exploration cursor and one bounded DA-02 queue remain independent of admission rotation."
+    },
+    {
+      "component": "Collector/attention evaluator/world model and portfolio whole-book observation",
+      "decision": "KEEP",
+      "role": "Asynchronous bounded diagnostics, pure broad statistical evidence and independent venue holdings are necessary distinct functions. No new collectors."
+    },
+    {
+      "component": "scripts/opportunity_context_shadow.capture; portfolio/current.freeze",
+      "decision": "REMOVE_RUNTIME_PREVIEW_TRUNCATION",
+      "role": "Runtime passes max_contexts=None through the existing reader. Shadow preview default remains four; source row/payload limits and five-second deadline remain. No new ranking or candidate-selection system."
+    },
+    {
+      "component": "portfolio/current.admission_observations",
+      "decision": "RETAIN_EXISTING_ADMISSION_EVIDENCE",
+      "role": "Projects the verified receipt into the existing immutable portfolio Source inputs. Every admitted symbol is recorded as REQUEST_BOUND, CONTEXT_REQUEST_UNAVAILABLE or SNAPSHOT_UNAVAILABLE. Exact receipt mismatch refuses. Missing context/economics does not create a tradable candidate."
+    },
+    {
+      "component": "Research universe and Factory handoff",
+      "decision": "KEEP_UNCHANGED",
+      "role": "Research acquisition/historical universes and exact Factory version authority have distinct contracts and owners. No RP-03, research, statistical-budget or authority edits."
+    },
+    {
+      "component": "attention.MAX_SNAPSHOT_AGE_MS",
+      "decision": "KEEP",
+      "role": "Active entry_authority.capability import. Exact existing 28,800,000 ms freshness protection retained; removal regression detected and corrected by full Risk/Execution tests. No policy change."
+    },
+    {
+      "component": "Kernel._manage_orphan_positions",
+      "decision": "REMOVE",
+      "role": "Only old tests called it. The normal cycle uses _service_exposure, which re-reads whole-book holdings, reconciles even failed snapshots, handles all trades sharing a symbol and retains marks independently of admission. Old safety tests now target that surviving path."
+    }
+  ],
+  "REDUNDANCY_REMOVED": {
+    "runtime_net_lines_removed": 818,
+    "active_provider_savings_claimed": false,
+    "explanation": "Removed code was disconnected; no measured runtime provider savings is claimed. The active correction is complete portfolio context delivery and explicit evidence coverage."
+  },
+  "ADMISSION_AND_REPLAY_PARITY": {
+    "admission_golden_cases": 30,
+    "cohorts": [
+      0,
+      1,
+      12,
+      30,
+      439
+    ],
+    "semantics": "Baseline receipt IDs and next-state hashes exact for ranked/degraded cohorts; historical v1/v2 and DA-09 receipt tests retained. Historical usable/error supplemental capture fixtures have exact evaluation equality after serialization/restart.",
+    "kernel_cycle_ast_unchanged": true,
+    "risk_execution_config_admission_broad_registry_bytes_unchanged": true,
+    "portfolio_identity_note": "New portfolio source identities honestly include admitted observation coverage. More than four authenticated contexts now reach the existing proposal-only pipeline; individual context, version, economic and Risk validation is unchanged. Historical portfolio inputs replay without migration.",
+    "observation_scenarios": 10,
+    "generations_per_scenario": 3
+  },
+  "BASELINE_VS_NEW_TESTS": {
+    "status": "PASS",
+    "baseline_initial": {
+      "passed": 513,
+      "failed": 3
+    },
+    "baseline_setup_corrections": [
+      "Include tracked data/seed_specs in sparse checkout",
+      "Measure newly imported dependencies relative to subprocess startup, so offline guard socket preload is not misattributed to the selection adapter",
+      "Migrate stale flow meta.quality assertion to analyst.measurement.v1 INVALID with null strength; no runtime analyst change"
+    ],
+    "test_retirement": "Remove test_attention_kernel_wiring transport/config/thread tests and the removed supplemental parser test. Historical replay now uses baseline-produced frozen fixtures. Peer-timeframe and Universe cut tests target surviving APIs.",
+    "additional_fixture_corrections": [
+      "Telemetry cycle fixture now exposes state_machine.state, matching the existing heartbeat read",
+      "Telemetry compiler diagnostic fixture uses an actual compiled test spec and patches entries_detail, the current invoked interface",
+      "Attention in-process API fixtures explicitly request READ_ONLY_GUI; no server started",
+      "Final feed heartbeat fixture provides state_machine.state",
+      "Orphan tests moved from superseded helper to independent exposure service"
+    ],
+    "baseline_unique_cases": 780,
+    "baseline_counts": {
+      "passed": 735,
+      "failed": 45
+    },
+    "final_unique_passing_cases": 1099,
+    "final_unresolved_failures": 0,
+    "common_baseline_final_cases": 730,
+    "baseline_only_retired_or_renamed_cases": 50,
+    "new_da08_cases": 8,
+    "reused_da09_cases": 23,
+    "method": "Incremental verification by affected source: broad run plus completed portfolio, safety, restored-bundle and final compatibility reruns. Latest passing result for each exact test ID retained. Not a second matched whole-suite run.",
+    "final_safety_rerun": "266 passed",
+    "final_remaining_compatibility_rerun": "138 passed",
+    "fresh_bundle_regressions": "31 passed",
+    "full_matrix": "All three expensive normal_hold_and_risk_block_to_learning matrix cases completed; no replay matrix deselection.",
+    "attempt_note": "The broad attempt exposed removal of the active shared capability-age constant and inherited fixture drift. Exact constant restored; every failed exact test ID has a later passing result. Raw attempt counts and baseline failure reasons retained in test evidence."
+  },
+  "REMAINING_LIMITATIONS": [
+    "Offline synthetic verification only; no provider coverage, operational readiness, deployment or integration claim.",
+    "Broad history readiness still depends on retained inputs and DA-02/DA-05 preparation. Missing inputs remain explicit, never fabricated.",
+    "Portfolio source inventory/payload/deadline protections still refuse oversized or unavailable evidence. A diagnostic coverage row is not decision or trading authority.",
+    "Old supplemental producer APIs are removed. Retained historical event/selection bytes and replay consumers remain supported.",
+    "Full repository suite is outside the targeted validation claim."
+  ],
+  "RELATED_ISSUES": {
+    "DA-09": {
+      "status_change": false,
+      "baseline_fix_ancestor": "f32726d5fa3c2a95f18636c95df3f720d51176e0",
+      "closure_bundle_sha256": "e89c91cf46deb9c270fd0110789ea5812a7b9496947d9d2a16e4f2806cee0d00",
+      "closure_runtime_diff_from_baseline": "empty",
+      "tests_reused_exactly_from": "58ffe821b277af91e7f1da75ebdadb74eb1707b7"
+    },
+    "DA-01": "Exact identity preserved; no closure/status change.",
+    "DA-02": "Single bounded preparation queue retained; no closure/status change.",
+    "DA-03": "Source availability/refusal and historical replay retained; no closure/status change.",
+    "DA-05": "Retained actual event remains 5 qualified / 407 missing / 27 stale. Synthetic 20/412/7 to 439 progression is not operational evidence. Existing PARTIAL disposition unchanged.",
+    "DA-06": "No priority redesign or status change.",
+    "DA-07": "No new collectors or status change.",
+    "RP-03": "Opus-owned workspace, research and Factory handoff untouched.",
+    "Portfolio/current evidence": "Related context completeness defect repaired offline; no related issue automatically closed."
+  },
+  "BOUNDARIES": {
+    "kernel_or_dashboard_started": false,
+    "providers_contacted": false,
+    "production_database_tracker_sdd_or_operational_state_modified": false,
+    "integrated_or_deployed": false,
+    "claude_probe": "Excluded under explicit offline/provider restriction."
+  },
+  "IMPLEMENTATION_COMMITS": [
+    "c323d1d5a9f0321e7034386a7fc4cf99a7d15402",
+    "29c1284fbfc4879530eb44ff86a3c7308da1d6dc"
+  ],
+  "FILES_CHANGED": [
+    "scripts/opportunity_context_shadow.py",
+    "tests/fixtures/da08-admission-parity.json",
+    "tests/fixtures/da08-historical-supplemental.json",
+    "tests/registry_observation_fixtures.py",
+    "tests/test_activation_risk_baseline_v2.py",
+    "tests/test_attention_kernel_wiring.py",
+    "tests/test_attention_selection_persistence.py",
+    "tests/test_attention_telemetry.py",
+    "tests/test_attention_view.py",
+    "tests/test_control_state_recovery.py",
+    "tests/test_da08_ownership.py",
+    "tests/test_da08_portfolio.py",
+    "tests/test_da09_receipt_closure.py",
+    "tests/test_data03_consumer_cuts.py",
+    "tests/test_final_audit_feed_identity.py",
+    "tests/test_orphan_positions.py",
+    "tests/test_stage1_data_provenance_pit.py",
+    "tests/test_stage1_pit_blocker_fix.py",
+    "tests/test_universe_frames_timeframes.py",
+    "trader/kernel.py",
+    "trader/observability/_supplemental_child.py",
+    "trader/observability/attention.py",
+    "trader/observability/supplemental.py",
+    "trader/portfolio/current.py",
+    "docs/superpowers/reports/2026-10-16-da08-ownership.json",
+    "docs/superpowers/reports/2026-10-16-da08-tests.json",
+    "docs/superpowers/reports/2026-10-16-da08-provenance.json"
+  ],
+  "VERIFICATION_ARTIFACTS": {
+    "tests": "2026-10-16-da08-tests.json",
+    "provenance": "2026-10-16-da08-provenance.json",
+    "graphify": "AST-only update PASS: 19735 nodes, 55532 edges. Generated graph/cache outputs cleaned; original historical graph artifacts preserved in complete Git history."
+  },
+  "CLEANUP_POLICY": "Remove all task clones, fixture databases, scratch scripts, bytecode/cache/graph products and raw test output after bundle verification. Retain only the complete bundle, structured verification/return records and checksums. Production and Opus source workspaces remain untouched."
+}

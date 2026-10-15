@@ -1,0 +1,250 @@
+{
+  "kernel_methods_changed": [
+    "_funding_map",
+    "_oi_map"
+  ],
+  "kernel_methods_removed": [
+    "_manage_orphan_positions",
+    "_scan_symbols",
+    "_universe_frames"
+  ],
+  "kernel_other_existing_methods_ast_identical": true,
+  "cycle_ast_identical": true,
+  "admission_broad_crypto_registry_risk_execution_config_bytes_identical": true,
+  "attention_evaluator_and_settings_ast_identical": true,
+  "da09_tests_exact_reuse": true,
+  "protected_sha256": {
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "trader/attention_admission.py": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+    "trader/data/broad_crypto.py": "f4e498a20edf27ada8ba302e5fbc49ee33b007d35f2d456553a151350f127321",
+    "trader/engine/risk.py": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+    "trader/engine/executor.py": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d",
+    "trader/engine/orchestrator.py": "c403944bd2f420b4ee199e4adc04b87079228411061d2fdd707b5afe5aa4c044",
+    "trader/core/instrument_registry.py": "f52be0568a7b1573a35e7df35291d3d52dcc0897667a5d8d400102c731e15908",
+    "trader/observability/registry_selector.py": "17704866cd1551a5fa822037d140202313aba52a814a020686baac3bd5471650",
+    "trader/observability/selection_persistence.py": "9941d56a51f3b1184ecf8692e834c41937f685a357b1cd89d6428b4735c04d61"
+  },
+  "shared_capability_freshness_ms": 28800000,
+  "baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "implementation_commits": [
+    "c323d1d5a9f0321e7034386a7fc4cf99a7d15402",
+    "29c1284fbfc4879530eb44ff86a3c7308da1d6dc"
+  ],
+  "portfolio_reader_delta": "Consume all authenticated current contexts within unchanged source bounds, preserve admitted observation coverage; no live trading or policy authority added",
+  "baseline_call_audit": [
+    {
+      "path": "tests/test_data03_consumer_cuts.py",
+      "line": 51,
+      "call": "k._scan_symbols"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 68,
+      "call": "S.IsolatedSource"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 80,
+      "call": "RegistryAttention"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 163,
+      "call": "S.IsolatedSource"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 210,
+      "call": "RegistryRefresher"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 224,
+      "call": "RegistryRefresher"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 247,
+      "call": "RegistryAttention"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 248,
+      "call": "RegistryRefresher"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 288,
+      "call": "RegistryAttention"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 108,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 115,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 121,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 122,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 123,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 130,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 136,
+      "call": "supplemental_mode"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 154,
+      "call": "registry_settings"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 161,
+      "call": "RegistryAttention"
+    },
+    {
+      "path": "tests/test_attention_kernel_wiring.py",
+      "line": 165,
+      "call": "RegistryAttention"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 44,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 74,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 57,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 69,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 52,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_universe_frames_timeframes.py",
+      "line": 63,
+      "call": "k._universe_frames"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 66,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 72,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 79,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 86,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 97,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_orphan_positions.py",
+      "line": 103,
+      "call": "k._manage_orphan_positions"
+    },
+    {
+      "path": "tests/test_stage1_pit_blocker_fix.py",
+      "line": 108,
+      "call": "k._scan_symbols"
+    },
+    {
+      "path": "tests/test_stage1_pit_blocker_fix.py",
+      "line": 115,
+      "call": "k._scan_symbols"
+    }
+  ],
+  "files_changed": [
+    "M\tscripts/opportunity_context_shadow.py",
+    "A\ttests/fixtures/da08-admission-parity.json",
+    "A\ttests/fixtures/da08-historical-supplemental.json",
+    "M\ttests/registry_observation_fixtures.py",
+    "M\ttests/test_activation_risk_baseline_v2.py",
+    "D\ttests/test_attention_kernel_wiring.py",
+    "M\ttests/test_attention_selection_persistence.py",
+    "M\ttests/test_attention_telemetry.py",
+    "M\ttests/test_attention_view.py",
+    "M\ttests/test_control_state_recovery.py",
+    "A\ttests/test_da08_ownership.py",
+    "A\ttests/test_da08_portfolio.py",
+    "A\ttests/test_da09_receipt_closure.py",
+    "M\ttests/test_data03_consumer_cuts.py",
+    "M\ttests/test_final_audit_feed_identity.py",
+    "M\ttests/test_orphan_positions.py",
+    "M\ttests/test_stage1_data_provenance_pit.py",
+    "M\ttests/test_stage1_pit_blocker_fix.py",
+    "M\ttests/test_universe_frames_timeframes.py",
+    "M\ttrader/kernel.py",
+    "D\ttrader/observability/_supplemental_child.py",
+    "M\ttrader/observability/attention.py",
+    "D\ttrader/observability/supplemental.py",
+    "M\ttrader/portfolio/current.py"
+  ],
+  "implementation_sha256": {
+    "scripts/opportunity_context_shadow.py": "26a72efab35d042ae510325de49ef03f10d1bf4aea09853c5b186780c11489d4",
+    "tests/fixtures/da08-admission-parity.json": "9ea50d1eeeed196dbe9211b0a104dc577bb66550c18c57c12a2a89d99a592d8e",
+    "tests/fixtures/da08-historical-supplemental.json": "76b1421efbde28181922fb3d1ad6a8d458a19fd64141273cf80b0ac3991a67cf",
+    "tests/registry_observation_fixtures.py": "138cffa09d6ab11c8881bd7ee7757ead4988e22e8808f78a4f8ea94a12cae1b1",
+    "tests/test_activation_risk_baseline_v2.py": "4a42fdfd7701e2b6e0d977ba52e46611e76cfe8f0c824ee297beab0df6e65577",
+    "tests/test_attention_selection_persistence.py": "450256815de32aae66f587a0386ee292cb6c82fde396d47f1312b81b4374d3ce",
+    "tests/test_attention_telemetry.py": "5494d64cc4448baa9556eaa552b006de7d5e5503ddedb0dec1770eff95700d16",
+    "tests/test_attention_view.py": "0fd34dcde2bd8fa3f2e6dcf163bde0c8a6a160293ae29dc13c663dc6997c939c",
+    "tests/test_control_state_recovery.py": "7606ede01dc07f9a909cc4227db57b57f5f8747bf8d13376ffab313463045d35",
+    "tests/test_da08_ownership.py": "e76e55b1c6e7ba0dd55d0fa3da0670398a5512ddd1092505b5fd76f4f5d9d484",
+    "tests/test_da08_portfolio.py": "277fa0009c5554ba355febeb8b0d994ffb8554c9bd3e15505426ad230d3b98e5",
+    "tests/test_da09_receipt_closure.py": "9b4e49fb44793ab437b7310d642d2056c55f1baad397757d179e264118c9efd9",
+    "tests/test_data03_consumer_cuts.py": "5100375a501850328a0bf451ac4a47fdeb22d1333c19d2ade536dfa455255b9d",
+    "tests/test_final_audit_feed_identity.py": "f849983b158a25907c89648891c185d4323bd09cc16c92a4aa5a7c0b60c1bfca",
+    "tests/test_orphan_positions.py": "ee219d2a3939b4db8a0b40e4ebe41958adba2eb7c1ae67cf3a1478c82e416767",
+    "tests/test_stage1_data_provenance_pit.py": "d6dbac818b871ee55fdd15d6e46c3d8f479a047200750afc7c3806d130e41842",
+    "tests/test_stage1_pit_blocker_fix.py": "75f48d33d08c643c92ce55d10791e3968b72f0452480ee73ec1ce18d8e53be46",
+    "tests/test_universe_frames_timeframes.py": "df29452e3cb6be97911597e9351e10c00e69a0cbd75837cea81b91bb2298e017",
+    "trader/kernel.py": "24d96fb8d1dc3c1cb38c4f0484d7e7482bad47bb230440020d27321a1dc12b08",
+    "trader/observability/attention.py": "00e109534642112da28f42a7fb2e6396f518e7ca9c8747be626a72acfbe02537",
+    "trader/portfolio/current.py": "d9cad50b5fe26ee0be5bd68ef36d6867aeef91e19025f6bce2d04291e577bd7f"
+  }
+}
