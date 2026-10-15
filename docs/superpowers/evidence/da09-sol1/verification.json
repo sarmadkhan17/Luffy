@@ -1,0 +1,45 @@
+{
+  "DA_09_STATUS": "CLOSED_OFFLINE",
+  "baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "existing_implementation_commit": "f32726d5fa3c2a95f18636c95df3f720d51176e0",
+  "new_runtime_implementation_commits": [],
+  "verification_commit": "58ffe821b277af91e7f1da75ebdadb74eb1707b7",
+  "baseline_passed": 330,
+  "supplemental_passed": 130,
+  "added_closure_cases": 23,
+  "total_unique_passed": 460,
+  "supplemental_deselected": 3,
+  "new_failures": [],
+  "baseline_failures": [],
+  "matched_rerun": false,
+  "comparison_method": "Unchanged baseline runtime: reuse 330 passing baseline gates; execute 130 additional unique cases; no second matched full run claimed.",
+  "protected_sha256": {
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "trader/attention_admission.py": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+    "trader/kernel.py": "b28ea02588e603d9cea2d9d47e486f1f585792c5b50ad809bb15c0fe3d1c31ca",
+    "trader/engine/orchestrator.py": "c403944bd2f420b4ee199e4adc04b87079228411061d2fdd707b5afe5aa4c044",
+    "trader/engine/risk.py": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+    "trader/engine/executor.py": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d"
+  },
+  "runtime_diff": "",
+  "closing_conditions": {
+    "original_fix_equivalence": "PASS",
+    "historical_shadow_negative_control": "PASS",
+    "historical_lock_negative_control": "PASS",
+    "multisymbol_lineage": "PASS",
+    "aborted_cycles": "PASS",
+    "concurrent_writers": "PASS",
+    "rollback_all_receipt_stages": "PASS",
+    "writer_lock_refusal": "PASS",
+    "historical_v1_and_current_v2_replay": "PASS",
+    "fresh_process_restart": "PASS",
+    "counts_and_authority": "PASS",
+    "risk_execution_and_frozen": "PASS"
+  },
+  "related_issues": {
+    "DA-01": "Status unchanged; related invariants tested, no automatic closure",
+    "DA-02": "Status unchanged; related invariants tested, no automatic closure",
+    "DA-03": "Status unchanged; related invariants tested, no automatic closure",
+    "DA-05": "PARTIAL per existing DA05_RETURN.json; status unchanged"
+  }
+}

@@ -1,0 +1,72 @@
+commit 207e424ff2c966231762562aedb256690cd04778
+Author:     Sarmad Khan <sarmadkhan17@users.noreply.github.com>
+AuthorDate: Sat Oct 10 14:08:26 2026 +0300
+Commit:     Sarmad Khan <sarmadkhan17@users.noreply.github.com>
+CommitDate: Sat Oct 10 14:08:44 2026 +0300
+
+    fix(kernel): preserve admission receipt during auxiliary projection
+
+diff --git a/tests/test_hierarchical_admission.py b/tests/test_hierarchical_admission.py
+index d5001f5..7a5be56 100644
+--- a/tests/test_hierarchical_admission.py
++++ b/tests/test_hierarchical_admission.py
+@@ -346,6 +346,42 @@ def test_actual_cycle_admits_before_deep_and_keeps_all_holdings(tmp_path,cfg,mon
+     assert not (set(k._admission_receipt['rejected_deferred'])&{c.args[0] for c in k._snapshot_for.call_args_list})
+ 
+ 
++@pytest.mark.parametrize('aux_kind', ['missing', 'available', 'future'])
++def test_actual_cycle_preserves_admission_with_market_lineage(tmp_path,cfg,monkeypatch,aux_kind):
++    """Auxiliary provenance must not replace admission before the second symbol."""
++    k=full_cycle_kernel(tmp_path,cfg,monkeypatch)
++    original=k._snapshot_for.side_effect
++    snapshots={}
++    def snapshot(symbol,**kw):
++        snap=original(symbol,**kw)
++        snap.market_provenance_parts={'as_of_ms':CUT}
++        snapshots[symbol]=snap
++        return snap
++    k._snapshot_for.side_effect=snapshot
++    k._manage_paper=Mock()
++    kinds=('order_book','funding','open_interest')
++    k._market_aux={}
++    if aux_kind!='missing':
++        for symbol in k.exchange.markets:
++            for kind in kinds:
++                k._market_aux[kind+':'+symbol]=dict(
++                    available_at_ms=CUT+(1000 if aux_kind=='future' else 0),
++                    source='TEST-ONLY:'+kind)
++    stats=k.cycle()
++    receipt=A.verify_receipt(k._admission_receipt)
++    replay=A.latest(k.journal)
++    assert A.canonical(receipt)==A.canonical(replay)
++    assert stats['deep_processed']==stats['decisions']==stats['admission']['deep_admitted']==2
++    assert stats['entries']==0 and k.state_machine.state==ControlState.FROZEN
++    assert k.orchestrator.decide.call_count==2
++    for candidate in A.candidates(replay):
++        snap=snapshots[candidate['symbol']]
++        assert snap.admission_context['investigation']==candidate
++        expected={kind:k._market_aux[kind+':'+snap.symbol] for kind in kinds} if aux_kind=='available' else {}
++        assert snap.market_provenance_parts['auxiliary']==expected
++    assert k._manage_one.call_count==15
++
++
+ @pytest.mark.parametrize('failure',['empty_tickers','stale_tickers','cursor_corrupt','admission_storage','snapshot_failure','decision_failure'])
+ def test_actual_cycle_failure_never_strands_held_symbol_15(tmp_path,cfg,monkeypatch,failure):
+     k=full_cycle_kernel(tmp_path,cfg,monkeypatch)
+diff --git a/trader/kernel.py b/trader/kernel.py
+index ab0bc1d..81224f4 100644
+--- a/trader/kernel.py
++++ b/trader/kernel.py
+@@ -1292,9 +1292,9 @@ class Kernel:
+                     if cut < lineage['as_of_ms']:
+                         stats['skips'] += 1
+                         continue
+-                    auxiliary = {kind: receipt for kind in ('order_book','funding','open_interest')
+-                                 if (receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
+-                                 and receipt['available_at_ms'] <= cut}
++                    auxiliary = {kind: aux_receipt for kind in ('order_book','funding','open_interest')
++                                 if (aux_receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
++                                 and aux_receipt['available_at_ms'] <= cut}
+                     lineage.update(as_of_ms=cut, auxiliary=auxiliary)
+                     snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
+                     snap.market_provenance_parts = lineage

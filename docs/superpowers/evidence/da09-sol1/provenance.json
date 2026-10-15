@@ -1,0 +1,23 @@
+{
+  "baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "resolutions": [
+    {
+      "original_commit": "207e424ff2c966231762562aedb256690cd04778",
+      "original_patch_sha256": "35f804f2e4345ae4cb13b14dba2f5fa20e624ded556b4e55f370c0166249b8c8",
+      "incorporated_commit": "f32726d5fa3c2a95f18636c95df3f720d51176e0",
+      "source_commit_trailer": "bf185e55b86f095b7fc44977e36c5c8ab749d69f",
+      "comparison": "cycle auxiliary assignment",
+      "ast_equal": true,
+      "ast_sha256": "aac84304d763e0fd5a39dbc3bfd809b26eebac33c9ad8a5e37a7e2bc244e23ba"
+    },
+    {
+      "original_commit": "cef02b74d1a1f5fd4b64c66301d5baa2a67b5a94",
+      "original_patch_sha256": "4d9339b56da9e143e0ffd08764416559a3e24adec72ff1fed8f586110e22e78b",
+      "incorporated_commit": "f32726d5fa3c2a95f18636c95df3f720d51176e0",
+      "source_commit_trailer": "bf185e55b86f095b7fc44977e36c5c8ab749d69f",
+      "comparison": "persist",
+      "ast_equal": true,
+      "ast_sha256": "e4023cf3783d8a6dff77cbfe9a25e9a38ce96aac9a3ad12e1a6f0b8f66e3cdcb"
+    }
+  ]
+}

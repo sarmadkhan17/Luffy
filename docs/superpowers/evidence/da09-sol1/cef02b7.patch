@@ -1,0 +1,112 @@
+commit cef02b74d1a1f5fd4b64c66301d5baa2a67b5a94
+Author:     Sarmad Khan <sarmadkhan17@users.noreply.github.com>
+AuthorDate: Sun Oct 11 02:01:55 2026 +0300
+Commit:     Sarmad Khan <sarmadkhan17@users.noreply.github.com>
+CommitDate: Sun Oct 11 02:01:55 2026 +0300
+
+    fix(admission): prepare evidence before journal writer lock
+
+diff --git a/tests/test_hierarchical_admission.py b/tests/test_hierarchical_admission.py
+index 7a5be56..76767ca 100644
+--- a/tests/test_hierarchical_admission.py
++++ b/tests/test_hierarchical_admission.py
+@@ -113,6 +113,46 @@ def test_rotation_collisions_restart_and_failed_acquisition(policy,tmp_path):
+     assert b==A.admit(o,policy,a['next_state'])
+ 
+ 
++def test_receipt_preparation_leaves_sqlite_writer_available(policy, tmp_path, monkeypatch):
++    import sqlite3
++    j = Journal(tmp_path/'preparation.db')
++    A.persist(j, observation(), policy)
++    verify = A.verify_receipt
++    probes = []
++    def checked(receipt):
++        # The independent committed safety write must remain possible during
++        # both retained-receipt verification and next-receipt verification.
++        with sqlite3.connect(j.db_path, timeout=.05) as other:
++            other.execute('BEGIN IMMEDIATE')
++            other.execute('INSERT OR REPLACE INTO state_kv VALUES (?,?)',
++                          ('__critical_storage_probe__', 'offline-test'))
++        probes.append(receipt['receipt_id'])
++        return verify(receipt)
++    monkeypatch.setattr(A, 'verify_receipt', checked)
++    result = A.persist(j, observation(), policy)
++    assert len(probes) == 2
++    assert A.latest(j)['receipt_id'] == result['receipt_id']
++    j.close()
++
++
++def test_receipt_preparation_refuses_concurrent_rotation(policy, tmp_path, monkeypatch):
++    j = Journal(tmp_path/'concurrent.db')
++    A.persist(j, observation(), policy)
++    verify = A.verify_receipt
++    winner = []
++    def checked(receipt):
++        monkeypatch.setattr(A, 'verify_receipt', verify)
++        with Journal(j.db_path) as other:
++            winner.append(A.persist(other, observation(), policy))
++        return verify(receipt)
++    monkeypatch.setattr(A, 'verify_receipt', checked)
++    with pytest.raises(ValueError, match='admission_rotation_changed_during_prepare'):
++        A.persist(j, observation(), policy)
++    assert A.latest(j)['receipt_id'] == winner[0]['receipt_id']
++    assert len(j.query("SELECT id FROM brain_events WHERE kind='attention_admission'")) == 2
++    j.close()
++
++
+ def test_exploration_no_starvation_in_stable_cohort(policy):
+     state=A.initial_state(); seen=set();o=observation(30,scores=False,relevant=False)
+     for _ in range(15):
+diff --git a/trader/attention_admission.py b/trader/attention_admission.py
+index 7342922..6333b11 100644
+--- a/trader/attention_admission.py
++++ b/trader/attention_admission.py
+@@ -241,26 +241,37 @@ def verify_receipt(receipt):
+ 
+ def persist(journal, observation, policy):
+     with journal._tx() as db:
+-        db.execute('BEGIN IMMEDIATE')
+-        row = db.execute('SELECT value FROM state_kv WHERE key=?',(STATE_KEY,)).fetchone()
++        # Verify and compute large receipts before taking SQLite's writer lock.
++        # One statement reads the pair; the committed pair is checked again
++        # under BEGIN IMMEDIATE before any evidence or rotation is written.
++        keys = (STATE_KEY, RECEIPT_KEY)
++        original = dict(db.execute('SELECT key,value FROM state_kv WHERE key IN (?,?)', keys))
+         from trader.core import journal_evidence as E
+-        previous=db.execute('SELECT value FROM state_kv WHERE key=?',(RECEIPT_KEY,)).fetchone()
+-        if row is None or previous is None:
+-            if row is not None or previous is not None or db.execute(
++        if STATE_KEY not in original or RECEIPT_KEY not in original:
++            if original or db.execute(
+                     "SELECT 1 FROM brain_events WHERE kind='attention_admission' LIMIT 1").fetchone():
+                 raise ValueError('admission_rotation_or_receipt_missing')
+             state=initial_state()
+         else:
+-            state=json.loads(row[0])
+-            prior=verify_receipt(json.loads(E.resolve(db,previous[0])))
++            state=json.loads(original[STATE_KEY])
++            prior=verify_receipt(json.loads(E.resolve(db,original[RECEIPT_KEY])))
+             if canonical(state)!=canonical(prior['next_state']):
+                 raise ValueError('admission_rotation_receipt_mismatch')
+         receipt = admit(observation,policy,state)
+         verify_receipt(receipt)
+-        from trader.core import journal_evidence as E
+-        # One cheap bounded receipt for the whole observed cohort, not deep
+-        # per-symbol Journal/learning capture. Raw tickers remain exact here.
+-        detail = E.store(db,receipt)
++        # Preserve the exact logical JSON bytes while doing encoding outside
++        # the writer lock. The existing store still verifies and retains the
++        # bounded frozen segments in the atomic transaction.
++        prepared = E.FrozenJSON(tuple(E.pieces(json.dumps(receipt))))
++        db.execute('BEGIN IMMEDIATE')
++        if dict(db.execute('SELECT key,value FROM state_kv WHERE key IN (?,?)', keys)) != original:
++            raise ValueError('admission_rotation_changed_during_prepare')
++        if not original and db.execute(
++                "SELECT 1 FROM brain_events WHERE kind='attention_admission' LIMIT 1").fetchone():
++            raise ValueError('admission_rotation_or_receipt_missing')
++        # Retain the whole cohort receipt atomically with its next rotation.
++        # Raw tickers remain exact; no per-symbol learning capture is added.
++        detail = E.store(db,prepared)
+         db.execute('INSERT INTO brain_events(ts,kind,subject,detail) VALUES(?,?,?,?)',
+             (__import__('datetime').datetime.fromtimestamp(observation['source_cut_ms']/1000,__import__('datetime').timezone.utc).isoformat(),
+              'attention_admission',receipt['receipt_id'],detail))

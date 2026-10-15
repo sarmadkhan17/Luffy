@@ -1,0 +1,43 @@
+{
+  "baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "baseline_files": [
+    "tests/test_hierarchical_admission.py",
+    "tests/test_da01_exact_identity.py",
+    "tests/test_da05_history_coverage.py",
+    "tests/test_journal_evidence_repair.py",
+    "tests/test_risk01_entry_binding.py",
+    "tests/test_risk02_exposure_feasibility.py",
+    "tests/test_entry_recovery.py",
+    "tests/test_protective_stops.py",
+    "tests/test_risk_state_persistence.py",
+    "tests/test_single_creation_path.py"
+  ],
+  "related_files": [
+    "tests/test_da09_receipt_closure.py",
+    "tests/test_data03_consumer_cuts.py",
+    "tests/test_data02_decision_lineage.py",
+    "tests/test_candle_store_transaction_safety.py",
+    "tests/test_candle_cache_reuse.py",
+    "tests/test_stage7_replay_world_closure_r2.py"
+  ],
+  "related_exclusion": "normal_hold_and_risk_block_to_learning (3 expensive inherited matrix cases; targeted remaining replay coverage completed separately)",
+  "runtime_sha256": {
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "trader/attention_admission.py": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+    "trader/kernel.py": "b28ea02588e603d9cea2d9d47e486f1f585792c5b50ad809bb15c0fe3d1c31ca",
+    "trader/engine/orchestrator.py": "c403944bd2f420b4ee199e4adc04b87079228411061d2fdd707b5afe5aa4c044",
+    "trader/engine/risk.py": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+    "trader/engine/executor.py": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d"
+  },
+  "environment": {
+    "python": "3.12.3",
+    "interpreter": "/mnt/luffy-data/luffy/production/venv/bin/python",
+    "network_guard": "sitecustomize blocks socket connect, connect_ex and create_connection; explicit fixture transport mocks only",
+    "bytecode": false,
+    "pytest_cache": false
+  },
+  "new_runtime_code": false,
+  "coverage_reuse": "Existing baseline gates are reused for the final candidate because the only source addition is tests/test_da09_receipt_closure.py. Every tracked baseline file is byte-identical before evidence reporting; no runtime code delta. The 130 supplemental gates include all 23 added test cases.",
+  "baseline_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<guard>:. <python> -m pytest tests/test_hierarchical_admission.py tests/test_da01_exact_identity.py tests/test_da05_history_coverage.py tests/test_journal_evidence_repair.py tests/test_risk01_entry_binding.py tests/test_risk02_exposure_feasibility.py tests/test_entry_recovery.py tests/test_protective_stops.py tests/test_risk_state_persistence.py tests/test_single_creation_path.py -q -p no:cacheprovider --basetemp=<scratch>/baseline --junitxml=<evidence>/baseline.xml",
+  "supplemental_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<guard>:. <python> -m pytest tests/test_da09_receipt_closure.py tests/test_data03_consumer_cuts.py tests/test_data02_decision_lineage.py tests/test_candle_store_transaction_safety.py tests/test_candle_cache_reuse.py tests/test_stage7_replay_world_closure_r2.py -k \"not normal_hold_and_risk_block_to_learning\" -q -p no:cacheprovider --basetemp=<scratch>/related --junitxml=<evidence>/related.xml"
+}
