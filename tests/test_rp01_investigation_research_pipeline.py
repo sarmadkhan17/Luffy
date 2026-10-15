@@ -45,7 +45,7 @@ def _candles(tmp_path, start):
         for sym in DISCOVERY + HELDOUT:
             db.executemany("INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                            [(sym, "4h", start + i * I.TF, 100 + i * .01, 101 + i * .01, 99 + i * .01,
-                             100.1 + i * .01, 100 + (i % 37) ** 2, 50) for i in range(1800)])
+                             100.1 + i * .01, 100 + (i % 37) ** 2, 50) for i in range(2100)])
     from tests.retained_candle_fixtures import qualify
     qualify(path)
     return path
@@ -87,7 +87,7 @@ def test_unresolved_updates_are_never_experiment_sources_or_spend_looks(paths, t
     assert len([r for r in records(dest) if r[0] == R.BANK_SCHEMA]) == 4   # interim evidence kept
     start = (case.registered_ms // I.TF + 1) * I.TF
     candles = _candles(tmp_path, start)
-    later = start + 1800 * I.TF
+    later = start + 2100 * I.TF
     monkeypatch.setattr("trader.data.feed.time.time", lambda: later / 1000)
     fake, bank = NumericalFixture("SUPPORTED"), tmp_path / "bridge.db"
     for at in (now + 2, later, later + 1):
@@ -121,7 +121,7 @@ def test_terminal_result_is_one_source_with_exact_identity_and_replays(paths, tm
     assert R.research_pass(dest, recorded_at_ms=end + 9, max_cases=8)["attempted"] == 0
     assert records(dest) == first                            # restart: nothing re-registered
     candles = _candles(tmp_path, (end // I.TF + 1) * I.TF)
-    later = (end // I.TF + 1) * I.TF + 1800 * I.TF
+    later = (end // I.TF + 1) * I.TF + 2100 * I.TF
     monkeypatch.setattr("trader.data.feed.time.time", lambda: later / 1000)
     fake, bank = NumericalFixture("SUPPORTED"), tmp_path / "bridge.db"
     original = dest.read_bytes()

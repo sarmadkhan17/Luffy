@@ -101,6 +101,17 @@ def fills_for(legs, exit_spec, risk: dict, tf: str, offset: int = 0,
     return fills, trades
 
 
+def rotation_offsets(n: int) -> int:
+    """Distinct rotation offsets a leg of `n` scored bars can carry.
+
+    The same margins `common_rotation`, `referee.consistency` and
+    `null_baseline.assess` already keep clear of the warmup at both ends. A
+    null cannot hold more distinct draws than this, however many it is asked
+    for, and an exact rotation p cannot resolve a level finer than
+    1/(offsets+1)."""
+    return max(0, (int(n) - WARMUP - 1) - (WARMUP + 1))
+
+
 def draws_for(alpha: float, cap: int) -> int | None:
     """Draws that let a p-value reach `alpha` — p >= 1/(draws+1) — with
     room for the actual to sit below a handful of draws; None when the cap
@@ -138,6 +149,13 @@ def common_rotation(legs, exit_spec, risk: dict, tf: str, equity: float,
     lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
     if hi_off <= lo_off:
         out["reason"] = f"slice too short to rotate ({n} bars)"
+        return out
+    # The rule `null_baseline.assess` already holds: fewer distinct rotations
+    # than draws is the same few nulls drawn again, a narrow null that reads
+    # as a confident one. UNTESTED, never a score.
+    if rotation_offsets(n) < int(draws):
+        out["reason"] = (f"rotation null too narrow ({rotation_offsets(n)} "
+                         f"distinct offsets < {int(draws)} draws, {n} bars)")
         return out
     rng = np.random.default_rng(seed)
     null = np.empty(int(draws))

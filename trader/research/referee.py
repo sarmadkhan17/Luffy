@@ -50,6 +50,13 @@ DEPENDENCE_DRAWS = 200
 MAX_OVERLAP = 0.6
 
 
+#: the common rotation never runs with fewer than `pn.MIN_DRAWS` draws, and a
+#: null may not hold fewer distinct offsets than draws (`null_baseline.assess`'s
+#: own rule). A held-out slice shorter than this cannot carry it, margins
+#: included — whatever level the budget later asks the look to resolve.
+ROTATION_FLOOR_BARS = 2 * (WARMUP + 1) + pn.MIN_DRAWS
+
+
 # ── held-out slices ──────────────────────────────────────────────────────
 def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
                  requires=(), paths: dict | None = None) -> Bundle:
@@ -235,8 +242,8 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
             continue
         n = len(l.df) - l.first_bar
         lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
-        if hi_off <= lo_off:
-            continue
+        if hi_off <= lo_off or pn.rotation_offsets(n) < int(draws):
+            continue            # no distinct null: the symbol carries no p
         rng = np.random.default_rng(seed)
         null = []
         for off in rng.integers(lo_off, hi_off, size=int(draws)):
@@ -439,6 +446,73 @@ def book_fills(specs, cut: int, grid_tf: str, t0: int, cfg: dict,
     return fills, notes
 
 
+def rotation_capacity(tf: str, cut: int, a_symbols, b_symbols, cfg: dict,
+                      paths: dict | None) -> dict | None:
+    """Rotation resolution of the slices `load_heldout` WOULD build, from bar
+    COUNTS only — no price is read and no look is taken.
+
+    `{"a": {sym: n}, "b": {sym: n}}` of scored bars per loadable symbol, or
+    None when the store cannot be counted (the in-function guards then
+    stand). The inclusion rules mirror `load_heldout` exactly.
+    """
+    import sqlite3
+    from contextlib import closing
+    from pathlib import Path
+    path = (paths or {}).get("candles")
+    if not path or not Path(path).exists():
+        return None
+    split = (cfg.get('research') or {}).get('predictive_split')
+    lo = int(split['start_ms']) if split else None
+    hi = int(split['end_ms']) if split else None
+    try:
+        with closing(sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro',
+                                     uri=True, timeout=1)) as db:
+            def count(sym, a, b):
+                clauses, args = ["symbol=?", "tf=?"], [sym, tf]
+                if a is not None:
+                    clauses.append("ts>=?"); args.append(int(a))
+                if b is not None:
+                    clauses.append("ts<?"); args.append(int(b))
+                return int(db.execute("SELECT COUNT(*) FROM candles WHERE "
+                                      + " AND ".join(clauses), args).fetchone()[0])
+            out = {"a": {}, "b": {}}
+            for sym in a_symbols:
+                n = count(sym, lo, int(cut))
+                if n >= slices.MIN_SLICE_BARS - WARMUP:
+                    out["a"][sym] = n
+            for sym in b_symbols:
+                at = count(sym, lo, int(cut))
+                n = count(sym, int(cut), None if hi is None else hi + 1)
+                if min(B_CONTEXT_BARS, at) < WARMUP:
+                    continue
+                if n >= slices.MIN_SLICE_BARS - WARMUP:
+                    out["b"][sym] = n
+            return out
+    except (sqlite3.Error, OSError):
+        return None
+
+
+def rotation_deferral(capacity: dict | None, draws: int) -> str | None:
+    """Why the held-out slices cannot carry the rotation null the look is
+    about to run, or None. Decided from `rotation_capacity` counts before any
+    price is read: a test that cannot be resolved is DEFERRED, never taken
+    and charged. Only rotation resolution is judged here — symbol counts and
+    trade counts keep their existing, price-dependent verdicts."""
+    if capacity is None:
+        return None
+    for part in ("a", "b"):
+        ns = capacity[part]
+        if ns and max(pn.rotation_offsets(n) for n in ns.values()) < CONSISTENCY_DRAWS:
+            return (f"held-out {part.upper()}: no symbol carries "
+                    f"{CONSISTENCY_DRAWS} distinct rotation offsets")
+    if capacity["b"]:
+        room = pn.rotation_offsets(min(capacity["b"].values()))
+        if room < int(draws):
+            return (f"common rotation needs {int(draws)} distinct offsets; "
+                    f"shortest held-out B leg carries {room}")
+    return None
+
+
 def current_cut(tf: str, discovery_symbols, paths: dict | None,
                 recorded: int) -> int:
     """The LATEST cut any discovery evaluation can have used.
@@ -501,6 +575,30 @@ def examine(c, payload: dict) -> dict:
         cut = current_cut(tf, payload["discovery_symbols"], paths,
                           int(payload["cut_ms"]))
     out = {"hash": c.hash, "looked": False}
+    # Resolvability is a property of bar counts. A test that cannot carry a
+    # distinct rotation null is deferred BEFORE any held-out price is read.
+    capacity = rotation_capacity(
+        tf, cut, payload["heldout_symbols"],
+        list(payload["discovery_symbols"]) + list(payload["heldout_symbols"]),
+        cfg, paths)
+    max_draws = payload.get("max_draws")
+    draws = int(payload["draws"])
+    if capacity is not None and capacity["b"]:
+        room = pn.rotation_offsets(min(capacity["b"].values()))
+        if payload.get("alpha") is not None and max_draws is not None:
+            fitted = pn.draws_for(float(payload["alpha"]),
+                                  min(int(max_draws), room)) \
+                if room >= pn.MIN_DRAWS else None
+            if fitted is None:
+                out["deferred"] = (f"alpha_t={float(payload['alpha']):.2e} is below "
+                                   f"what {room} distinct rotation offsets resolve")
+                return out
+            draws = fitted
+    reason = rotation_deferral(capacity, draws)
+    if reason:
+        out["deferred"] = reason
+        return out
+    payload = dict(payload, draws=int(draws))
     compiled = compile_spec(c.to_spec())
     risk = cfg.get("risk") or {}
     if getattr(compiled.spec.exit, "_exit_semantics_id", None):

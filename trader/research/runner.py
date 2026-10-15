@@ -715,10 +715,19 @@ class ResearchRunner:
             "discovery_symbols": list(disc or DISCOVERY),
             "heldout_symbols": list(held or HELDOUT),
             "draws": int(draws), "seed": int(self._r("seed")),
+            "alpha": float(alpha), "max_draws": int(self._r("referee_max_draws")),
             "book": book, "book_exit_bindings": book_exit_bindings},
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}
+        if res.ok and v.get("deferred") and not v.get("looked"):
+            # Decided from bar counts before any held-out price was read: no
+            # look is taken, no budget step is charged (cf. the alpha deferral).
+            self.ledger.set_candidate(h, tf, geo, "deferred", reason=v["deferred"])
+            self.ledger.finish_batch(bid, True, time.monotonic() - t0)
+            log.warning(f"research referee: {h} deferred — {v['deferred']}")
+            return {**out, "ok": True, "state": "deferred", "alpha": alpha}
+
         if res.ok and not v.get("error"):
             try:
                 portfolios = [v.get("rotation") or {},
@@ -753,7 +762,8 @@ class ResearchRunner:
             h, tf, geo, "gate1", float(g1["p"]), alpha, brake < 1.0,
             {"evaluated": evaluated, "cut_ms": v.get("cut_ms") or int(cut_ms),
              "a": v.get("a"), "b": v.get("b"),
-             "rotation": v.get("rotation"), "draws": draws, "t": t})
+             "rotation": v.get("rotation"),
+             "draws": (v.get("rotation") or {}).get("draws", draws), "t": t})
         g3 = v.get("gate3") or {"passed": False, "reason": "no gate3 result"}
         if not rejected:
             state, reason = "gate1_fail", \

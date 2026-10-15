@@ -135,6 +135,16 @@ def translate(h, candles_path, cfg, as_of_ms):
     if len(disc) < minimum or len(held) < null_baseline.MIN_SYMBOLS or len(later) < null_baseline.MIN_SYMBOLS:
         return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
                     reason='existing_slice_or_universe_floor', counts=counts)
+    # The frozen window can never grow, and the referee's own locked null
+    # needs distinct rotation offsets (never fewer than its draws). Every leg
+    # it would load must carry them, or the registered question could only be
+    # deferred; wait for more closed bars instead of registering it.
+    loadable = [n for s in DISCOVERY + HELDOUT
+                if (n := counts['protected_b'].get(s, 0)) >= slices.MIN_SLICE_BARS - referee.WARMUP]
+    if loadable and min(loadable) < referee.ROTATION_FLOOR_BARS:
+        return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
+                    reason='referee_rotation_floor', counts=counts,
+                    required_protected_bars=referee.ROTATION_FLOOR_BARS)
     body = dict(schema=EXPERIMENT_SCHEMA, source_hypothesis_id=h.hypothesis_id,
         hypothesis=asdict(h), predictor=list(h.predictor_definition), target=h.target_definition,
         horizon=h.horizon, direction=h.direction, timeframe='4h', geometry='fixed',

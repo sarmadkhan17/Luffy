@@ -52,13 +52,13 @@ def _build(root: Path, disposition: str) -> dict:
                     "INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                     [(sym, "4h", start + i * BT.I.TF, 100 + i * .01,
                       101 + i * .01, 99 + i * .01, 100.1 + i * .01,
-                      100 + (i % 37) ** 2, 50) for i in range(1800)])
+                      100 + (i % 37) ** 2, 50) for i in range(2100)])
         from tests.retained_candle_fixtures import qualify
         qualify(candles)
         mp.setattr("trader.data.feed.time.time",
-                   lambda: (start + 1800 * BT.I.TF) / 1000)
+                   lambda: (start + 2100 * BT.I.TF) / 1000)
         pop = (source, root / "bridge.db", candles, end + 3,
-               start + 1800 * BT.I.TF, s)
+               start + 2100 * BT.I.TF, s)
         fake = NumericalFixture(disposition)
         BT.consume(pop, fake, pop[3])
         for _ in range(6):

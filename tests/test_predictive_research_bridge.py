@@ -49,12 +49,12 @@ def population(paths, tmp_path, monkeypatch):
         for sym in DISCOVERY+HELDOUT:
             db.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)',
                 [(sym,'4h',start+i*I.TF,100+i*.01,101+i*.01,99+i*.01,100.1+i*.01,
-                  100+(i%37)**2,50) for i in range(1800)])
+                  100+(i%37)**2,50) for i in range(2100)])
     from tests.retained_candle_fixtures import qualify
     qualify(candles)
     # These artificial bars extend beyond wall time; observe at their actual fixture cut.
-    monkeypatch.setattr('trader.data.feed.time.time', lambda: (start+1800*I.TF)/1000)
-    return source, tmp_path/'bridge.db', candles, end+3, start+1800*I.TF, s
+    monkeypatch.setattr('trader.data.feed.time.time', lambda: (start+2100*I.TF)/1000)
+    return source, tmp_path/'bridge.db', candles, end+3, start+2100*I.TF, s
 
 
 class NumericalFixture:
