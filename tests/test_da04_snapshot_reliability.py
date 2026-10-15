@@ -308,3 +308,19 @@ def test_refusal_capture_failure_is_atomic(tmp_path, monkeypatch, stage):
     assert {t:journal.query('SELECT * FROM '+t) for t in tables} == before
     assert len(journal.query('SELECT * FROM learning_capture_failures')) == 1
     assert journal._conn().execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
+
+
+@pytest.mark.parametrize('stale,reason', [(False, 'insufficient_history'), (True, 'stale')])
+def test_background_short_frame_keeps_its_refusal_reason(tmp_path, monkeypatch, stale, reason):
+    f, c = feed_at(tmp_path)
+    f.fetch_ohlcv('BTC/USDT', limit=1, min_bars=1)
+    if stale: c.at += 181_000
+    f.background_acquisition = True
+    monkeypatch.setattr(f, '_start_background_worker', lambda:False)
+    k = kernel_at(tmp_path, f, c, monkeypatch)
+    count = len(f.ex.calls)
+    assert k._snapshot_for('BTC/USDT') is None
+    assert k._last_snapshot_diagnostic['reason'] == reason
+    assert k._last_snapshot_diagnostic['acquisition']['reason'] == reason
+    assert len(f.ex.calls) == count
+    assert not k._last_snapshot_feed_available

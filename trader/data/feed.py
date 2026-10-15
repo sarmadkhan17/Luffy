@@ -844,6 +844,7 @@ class DataFeed:
         self._local.acquisition_failure = None
         self._local.persistence_failure = None
         self._local.acquisition_short = False
+        self._local.frame_refusal = None
         reason = None
         try:
             result = self._fetch_ohlcv(symbol, tf, limit, force, min_bars, as_of_ms=as_of_ms)
@@ -854,6 +855,7 @@ class DataFeed:
         if reason is None:
             if result is None or result.empty:
                 reason = ('persistence_failure' if self._local.persistence_failure else
+                          self._local.frame_refusal if self._local.frame_refusal else
                           'insufficient_history' if self._local.acquisition_short else
                           'source_unavailable' if self._local.acquisition_failure else 'missing')
             elif result['quality'].eq('STALE').any():
@@ -890,6 +892,10 @@ class DataFeed:
                           not self._current_tail(current, tf, min(min_bars, limit)))
             if needs_data:
                 self._queue_background_request(symbol, tf, limit, force, min_bars)
+            if current is not None and len(current) < min_bars:
+                self._local.acquisition_short = True
+                self._local.frame_refusal = ('stale' if current['quality'].eq('STALE').any() else
+                    'invalid' if not current['quality'].eq('VALID').all() else 'insufficient_history')
             return current if current is not None and len(current) >= min_bars else None
         ck = (symbol, tf)
         tf_ms = self._TF_MS.get(tf, 900_000)
