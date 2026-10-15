@@ -1,0 +1,67 @@
+{
+  "schema": "rp03-offline-implementation.v1",
+  "requested_baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "reconciled_baseline": "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+  "root_causes": [
+    "Kernel selected only local reason_passed discovery candidates; the surviving registered predictive protocol produces referee_passed candidates in a separate experiment ledger.",
+    "Factory authenticates Bank lineage but reconstructs quantitative validation from its destination Journal, which lacked the already-spent experiment evidence.",
+    "The old Kernel permanently changed a candidate to refused on unavailable lineage and coupled handoff to Analyst, installation and deployed-book capacity."
+  ],
+  "decisions": [
+    "KEEP Opus factory_transfer.authenticate/transfer and unchanged predictive Bank replay and Factory validation contracts. The original Opus patch is preserved as a cherry-pick and its exact source commit is included under a separate provenance ref.",
+    "KEEP discovery and predictive identities and gates distinct. A reason_passed label alone cannot supply lineage or a required Gate 2. Predictive evidence remains referee_passed and never claims a discovery Gate 2.",
+    "REPLACE local label selection with authenticated immutable Bank result selection in append order; skip unsupported/refused/duplicate heads so newer qualifying work is not stranded.",
+    "TRANSFER exact registered budget, spent-look prefix, original sequence numbers, timestamps, frozen cuts, candidate and combination before invoking unchanged Factory.create_version.",
+    "KEEP every Factory validation contract; SUPPORTED alone never qualifies. Stop at VALIDATED with execution_authority NONE; no Analyst call, new evaluation, install, probation, approval, Governor action or book mutation.",
+    "DEFER missing sources and transient I/O. REFUSE stale, forged, foreign, corrupt, aliased and conflicting evidence with explicit diagnostics. No failure permanently rewrites candidate state.",
+    "RECOVER only the four exact legacy unavailable-lineage refusal reasons, after authentic Bank evidence and matching gates plus all destination conflict checks; never recover genuine Gate 2, forgery or validation failures.",
+    "REFUSE retroactive filling of a statistical prefix below already-spent later looks. Existing exact prefixes remain idempotent.",
+    "KEEP existing brain_events for diagnostic deduplication; add no authority table, queue, collector or research pipeline."
+  ],
+  "configuration": {
+    "routing_key": "research.predictive_bank_path",
+    "meaning": "Explicit path to an existing authenticated predictive Bank, never inferred from a candidate payload; no default or production config change.",
+    "production_referee": false,
+    "production_handoff": false
+  },
+  "safety": {
+    "factory_risk_execution_and_statistical_engines_unchanged": true,
+    "new_actual_statistical_looks": 0,
+    "protected_real_heldout_reads": 0,
+    "providers_or_services_started": 0,
+    "production_integration_or_database_writes": 0,
+    "tracker_or_sdd_edits": 0,
+    "automatic_execution_authority": "NONE"
+  },
+  "verification_boundaries": [
+    "Numerical fixtures and Bank/experiment/Journal databases are synthetic and isolated under task scratch directories. They establish integration and authority behavior, not a real market edge.",
+    "Offline delivery does not authorize enabling scheduling, production integration, installation, probation, approval, activation or trading.",
+    "Diverged statistical histories deliberately refuse; no remapping, re-pricing or automatic reconciliation is introduced.",
+    "The dormant discovery reasoning/Gate 2 workflow remains unavailable and cannot be enabled by this handoff."
+  ],
+  "related_issues": {
+    "DA-08": "Implementation and closure evidence preserved; regression covered. No tracker change.",
+    "DA-09": "Existing closure receipts preserved; regression covered. No tracker change.",
+    "RP-01": "Source chain and research pipeline regression covered; no automatic issue closure.",
+    "RP-05": "Question integrity and prerequisite patch reconciliation covered; no automatic issue closure.",
+    "RP-07": "Research bundle admission/control-boundary regression covered; no automatic issue closure.",
+    "DA-06": "No priority redesign.",
+    "DA-07": "No collectors added."
+  },
+  "implementation_commits": [
+    "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+    "cefd798db4497029b420b4739d836b727e262dcb",
+    "872235d71dc8feaab844d3f8601840eec531ce83"
+  ],
+  "files_changed_since_reconciled_baseline": [
+    "tests/test_rp03_kernel_handoff.py",
+    "tests/test_single_creation_path.py",
+    "tests/test_strategy_factory_handoff.py",
+    "trader/kernel.py",
+    "trader/research/factory_transfer.py"
+  ],
+  "RP_03_STATUS": "CLOSED_OFFLINE",
+  "both_kernel_defects_resolved": true,
+  "verification_report": "2026-10-16-sol1-rp03-verification.json",
+  "legacy_test_migration": "Five auto-admission/label-only expectation names changed to authenticated/no-authority expectations. Explicit Factory installation, timeframe and provenance tests retain their original contracts with manual lifecycle fixtures."
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "rp03-offline-verification.v1",
+  "status": "PASSED",
+  "reconciled_baseline": "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+  "implementation_code_commit": "cefd798db4497029b420b4739d836b727e262dcb",
+  "test_fixture_commit": "872235d71dc8feaab844d3f8601840eec531ce83",
+  "merge_commits_since_unified": 0,
+  "baseline_handoff": {
+    "passed": 83,
+    "failed": 0
+  },
+  "final_handoff": {
+    "passed": 111,
+    "failed": 0,
+    "composition": {
+      "kernel": 28,
+      "original_opus_transfer": 19,
+      "factory_and_creation": 64
+    },
+    "method": "Last verified result per case from independent bundle-restored integration run, followed by full 64-case Factory/creation rerun after the two-line empty-schema fixture correction. Runtime code unchanged by that fixture commit."
+  },
+  "baseline_caller": {
+    "passed": 104,
+    "failed": 0
+  },
+  "final_caller": {
+    "passed": 126,
+    "failed": 0
+  },
+  "paired_regression": {
+    "baseline_passed": 445,
+    "candidate_passed": 445,
+    "baseline_failed": 0,
+    "candidate_failed": 0,
+    "identical_case_ids": true,
+    "new_failures": []
+  },
+  "regression_files": [
+    "tests/test_da08_ownership.py",
+    "tests/test_da08_portfolio.py",
+    "tests/test_da09_receipt_closure.py",
+    "tests/test_rp01_investigation_research_pipeline.py",
+    "tests/test_rp05_question_integrity.py",
+    "tests/test_research_bundle_admission.py",
+    "tests/test_research_control_unavailable.py",
+    "tests/test_research_control.py",
+    "tests/test_str01_bank_lineage.py",
+    "tests/test_universal_strategy_authority.py",
+    "tests/test_str04_governor_lifecycle.py",
+    "tests/test_entry_recovery.py",
+    "tests/test_kernel_boot_recovery.py",
+    "tests/test_control_state_recovery.py",
+    "tests/test_risk01_entry_binding.py",
+    "tests/test_risk02_exposure_feasibility.py",
+    "tests/test_protective_stops.py",
+    "tests/test_execution_accounting.py",
+    "tests/test_thesis_validate_frozen.py",
+    "tests/test_qnt05_error_budget.py",
+    "tests/test_qnt04_holdout_separation.py",
+    "tests/test_research_ledger.py",
+    "tests/test_research_fdr.py",
+    "tests/test_predictive_research_bridge.py",
+    "tests/test_research_refusal_suppression.py"
+  ],
+  "statistical_budget_parity": "Exact Bank/experiment/destination spent rows and registered budget; source unchanged; original frozen cuts/sequence preserved, next look index 2. No new actual look or reset.",
+  "authority": "Only VALIDATED created; no install, probation, approval, Governor, trading or population/book mutation. Existing Factory/Risk/Execution/recovery/first-live contracts unchanged.",
+  "baseline_defects": "Both defects reproduced against 9c28002 using the same genuine synthetic Bank result. See baseline-defects.json.",
+  "environment": {
+    "python": "3.12.3",
+    "packages": {
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "scipy": "not installed (unchanged)",
+      "pytest": "9.1.1"
+    },
+    "network_guard_sha256": "a7a05ad4d5fef1a8abce8b1314ea544f422648e4ec4cee2d758f4b48f60cf2ca",
+    "network_guard": "socket connect/connect_ex/create_connection raise RP03_OFFLINE_NETWORK_FORBIDDEN",
+    "bytecode": false,
+    "pytest_cache": false,
+    "all_databases": "Synthetic, task-specific scratch/checkouts only",
+    "test_interpreter": "Read-only reuse of production virtualenv; no package installation or production code invocation"
+  },
+  "graphify": {
+    "mode": "AST-only update",
+    "result": "passed",
+    "generated_graphs_and_caches": "Restored/removed after verification; no semantic/provider calls."
+  },
+  "intermediate_fixture_failures": [
+    {
+      "case": "stale registration",
+      "reason": "Synthetic append was not committed; corrected fixture commits the later valid registration."
+    },
+    {
+      "case": "locked experiment ledger",
+      "reason": "WAL permits readers under EXCLUSIVE; fixture now uses DELETE mode to exercise a real read lock."
+    },
+    {
+      "case": "two migrated no-authority checks",
+      "reason": "Deferred handoff correctly does not initialize Factory tables; fixtures now initialize empty schema explicitly. Full corrected Factory/creation suite passes 64 cases."
+    }
+  ],
+  "unexplained_new_failures": [],
+  "independent_code_bundle_restore_and_fsck": "passed",
+  "final_bundle_integrity": "Recorded separately in bundle-verification.json after final packaging",
+  "cleanup": "All task-created checkouts, scratch databases, logs, caches, scripts and raw test outputs are removed after bundle verification. Essential structured evidence and bundle retained; actual completion recorded in cleanup.json."
+}

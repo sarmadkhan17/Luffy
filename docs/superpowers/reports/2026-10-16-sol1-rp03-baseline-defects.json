@@ -1,0 +1,15 @@
+{
+  "baseline": "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+  "synthetic_source_result_id": "814e6b0194ef5a6df08e71224292c0250a45ca2323cb45cc09573c3a591eb6ac",
+  "recognition": {
+    "source_state": "referee_passed",
+    "returned": null,
+    "factory_versions": 0
+  },
+  "unavailable_lineage": {
+    "candidate_state_after_attempt": "refused",
+    "reason": "no immutable version: research_lineage_missing",
+    "retry_state": "refused",
+    "factory_versions": 0
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "baseline": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+  "reconciled_baseline": "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+  "opus_source": "b1370628f9771d3a3c4638c71f5a4162365f8bca",
+  "opus_cherry_pick": "9c2800201b862ffb1acbc1e82f60f75e19e64c2e",
+  "opus_exact_original_patch": true,
+  "ancestry": {
+    "6bc0f4cce0360d9ab89440798376b66755b9c34e..c323d1d5": true,
+    "c323d1d5..29c1284f": true,
+    "29c1284f..0b6f6067": true,
+    "0b6f6067..9c28002": true,
+    "6bc0f4cce0360d9ab89440798376b66755b9c34e..b1370628": true
+  },
+  "merge_commits_since_unified": [],
+  "preserved_sources": [
+    {
+      "path": "config.yaml",
+      "sha256": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/strategy/factory_handoff.py",
+      "sha256": "e945ccfff69784e252733ea04d271aebdc15ed39678758c2da2b55fba566c774",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/engine/risk.py",
+      "sha256": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/engine/executor.py",
+      "sha256": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/engine/protective.py",
+      "sha256": "7f502a73453cd4dedcb895646ca09e9c6535c1336f3fc0d0afa25e0e0da3300a",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/core/instrument_registry.py",
+      "sha256": "f52be0568a7b1573a35e7df35291d3d52dcc0897667a5d8d400102c731e15908",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/research/ledger.py",
+      "sha256": "52f13f8bb8a021f07b5710283afc79ce5ddabda234ba7b441d55920599ab49f2",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/research/referee.py",
+      "sha256": "136e13d463c821a2f51f5195c74592d64e9ddd3315d97d1f2f9f304aa922879f",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/research/predictive_experiment.py",
+      "sha256": "f741fbad3a0d25d1d893d295eb6652c04071265b25c6af47012fe8164cf21c4b",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/research/predictive_bridge.py",
+      "sha256": "6626847a0d94308578e5c96b413c88bc62a000d287ad70c574f9811cf4e785f1",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/cognition/predictive_bank.py",
+      "sha256": "092a78feaca5682df60f0e7a64dbff1385a8f6e14b1dfb63351f1a8418531554",
+      "unchanged_from_reconciled_baseline": true
+    },
+    {
+      "path": "trader/attention_admission.py",
+      "sha256": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+      "unchanged_from_reconciled_baseline": true
+    }
+  ],
+  "input_bundles": [
+    {
+      "path": "/mnt/luffy-recovery/recovery/sol1-da08-evidence-20261016/DA08.bundle",
+      "sha256": "b9fec70299f2b0c16a7bf000b271134ed574c98aaab592ea3fbcace73c210bde",
+      "heads": [
+        "0b6f6067d0216f11d2b9c216207c7a610b0337d7 refs/heads/sol1-da08-offline"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/sol2-da10-rp05-final-20261015/int01-unified-final.bundle",
+      "sha256": "c85b208a7c3cf17a88cfe35d932481d7a9e0f4b460b058c17cbcad4b3db27d3f",
+      "heads": [
+        "6bc0f4cce0360d9ab89440798376b66755b9c34e refs/heads/integration"
+      ]
+    }
+  ],
+  "unified_verification_summary_sha256": "1f60d5fc9c9a22a8d6f68740f335c54aa8b7fea519d2a36e7689e8614aa4e99e",
+  "unified_prerequisite_reconciliation": {
+    "status": "PASSED",
+    "baseline": {
+      "sha": "fa41c765e7015d8ec175cbda93eb7d11a5e9b687",
+      "bundle": "final-candidate.bundle",
+      "sha256": "26ebfbb39e2eabc5488ff65e59ec5132284799db241504db3ca05db4b9599a75"
+    },
+    "candidate": {
+      "sha": "6bc0f4cce0360d9ab89440798376b66755b9c34e",
+      "bundle": "int01-unified-final.bundle",
+      "sha256": "c85b208a7c3cf17a88cfe35d932481d7a9e0f4b460b058c17cbcad4b3db27d3f",
+      "complete_history": true,
+      "independent_restore_fsck": "passed"
+    },
+    "commits": [
+      "d4cf68ce468d12ba1db35add1f1f09704a8153f6",
+      "f0bb39fbbde9cdc50c6a0c2342b5a350ecaccb9d",
+      "22777f4fb3b57e61aebf9e53b3bd4d18922bc553",
+      "6bc0f4cce0360d9ab89440798376b66755b9c34e"
+    ],
+    "merge_commits": 0,
+    "rp05_patch_equivalence": {
+      "c127d0e5": "bcc43716",
+      "9672fd20": "fa41c765"
+    },
+    "tests": {
+      "feature": {
+        "passed": 38,
+        "failed": 0
+      },
+      "replay_risk_execution": {
+        "passed": 214,
+        "failed": 0,
+        "deselected": 3
+      },
+      "matched_baseline": {
+        "passed": 390,
+        "failed": 35,
+        "deselected": 3
+      },
+      "matched_candidate": {
+        "passed": 390,
+        "failed": 35,
+        "deselected": 3
+      },
+      "matched_failure_ids_identical": true,
+      "new_failures": 0
+    },
+    "production_head": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+    "production_status_entries": 1182,
+    "cleanup": "task checkout, independent clone, test databases, caches, logs and JUnit outputs removed; report and this summary retained"
+  },
+  "prerequisite_ancestry": {
+    "d4cf68ce468d12ba1db35add1f1f09704a8153f6": true,
+    "f0bb39fbbde9cdc50c6a0c2342b5a350ecaccb9d": true,
+    "22777f4fb3b57e61aebf9e53b3bd4d18922bc553": true,
+    "6bc0f4cce0360d9ab89440798376b66755b9c34e": true,
+    "bcc43716": true,
+    "fa41c765": true
+  },
+  "implementation_code_commit": "cefd798db4497029b420b4739d836b727e262dcb",
+  "all_input_bundle_checksums_match": true,
+  "original_opus_files": {
+    "trader/research/factory_transfer.py": "0b8217081ba4cf49783e287862e4c81d9cf6e7c2",
+    "tests/test_rp03_research_factory_transfer.py": "b666938fede77235971abb707f3c22bfdb6a6c51"
+  },
+  "opus_input_parent_is_exact_unified_baseline": true,
+  "kernel_methods_changed": [
+    "_mechanism_once",
+    "_research_handoff"
+  ],
+  "other_kernel_methods_ast_identical": true,
+  "production_head_observed_final": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+  "original_opus_head_observed_final": "b1370628f9771d3a3c4638c71f5a4162365f8bca"
+}
