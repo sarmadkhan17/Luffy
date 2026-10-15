@@ -1,0 +1,509 @@
+{
+  "schema": "da04-offline-verification.v1",
+  "DA_04_STATUS": "PARTIAL",
+  "historical_56": "UNAUTHENTICATED; root cause UNKNOWN; no operational closure",
+  "implementation_commits": [
+    "d31bab4af8dfad26fe371409d131d0ba863fe050",
+    "553dc423760e1a331d107aa4ad878ea5f6e6e219"
+  ],
+  "inputs": {
+    "baseline": "2e4474899a4e26413cb22adac166ef753c12a9d7",
+    "bundles": [
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol2-da10-rp05-final-20261015/int01-unified-final.bundle",
+        "sha256": "c85b208a7c3cf17a88cfe35d932481d7a9e0f4b460b058c17cbcad4b3db27d3f",
+        "verified": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da05/DA05.bundle",
+        "sha256": "668ba963d9753dea38863ecd461ac70afb1cfebe1fcf2dd969b615d37af4c1c1",
+        "verified": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da08-evidence-20261016/DA08.bundle",
+        "sha256": "b9fec70299f2b0c16a7bf000b271134ed574c98aaab592ea3fbcace73c210bde",
+        "verified": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da09-evidence-20261016/DA09.bundle",
+        "sha256": "e89c91cf46deb9c270fd0110789ea5812a7b9496947d9d2a16e4f2806cee0d00",
+        "verified": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-rp03-evidence-20261016/RP03.bundle",
+        "sha256": "c47bfd1fcce74a9c2c27aea1799286581d1e5b46f0645c2347ae907953820220",
+        "verified": true
+      }
+    ],
+    "ancestry": {
+      "6bc0f4cc": true,
+      "0b6f6067": true,
+      "2e447489": true,
+      "f32726d5": true
+    },
+    "da05_queue_and_readiness_ast_exact": [
+      "_queue_background_request",
+      "_drain_background_queue",
+      "_background_needs_data",
+      "prepare_history",
+      "_current_tail",
+      "_contiguous_tail"
+    ],
+    "da05_history_exact": true,
+    "da05_difference": "Later retrospective reader retained in unified baseline; feed whole-file equality is not claimed",
+    "da09_tests_exact": true,
+    "da09_runtime_fix": "f32726d5; original inverse-hunk controls retained",
+    "reconciliation": "RP03 complete bundle already includes DA08 and unified; DA05 acquisition mechanisms verified equivalent; DA09 closure tests exact. No duplicate cherry-picks."
+  },
+  "scope": {
+    "base": "2e4474899a4e26413cb22adac166ef753c12a9d7",
+    "implementation": "553dc423760e1a331d107aa4ad878ea5f6e6e219",
+    "preserved": [
+      {
+        "path": "config.yaml",
+        "sha256": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+        "unchanged": true
+      },
+      {
+        "path": "trader/engine/risk.py",
+        "sha256": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+        "unchanged": true
+      },
+      {
+        "path": "trader/engine/executor.py",
+        "sha256": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d",
+        "unchanged": true
+      },
+      {
+        "path": "trader/engine/protective.py",
+        "sha256": "7f502a73453cd4dedcb895646ca09e9c6535c1336f3fc0d0afa25e0e0da3300a",
+        "unchanged": true
+      },
+      {
+        "path": "trader/engine/entry_authority.py",
+        "sha256": "454ab8212ca98f4cec286a57ddb9dde64362dd044ad818f7417b2e12cbef2dd6",
+        "unchanged": true
+      },
+      {
+        "path": "trader/engine/state.py",
+        "sha256": "3cd4c49d60cf42cc7c502c9ba28baa50ec2dd5cb16394ad1084065b5d55a578a",
+        "unchanged": true
+      },
+      {
+        "path": "trader/strategy/factory_handoff.py",
+        "sha256": "e945ccfff69784e252733ea04d271aebdc15ed39678758c2da2b55fba566c774",
+        "unchanged": true
+      },
+      {
+        "path": "trader/data/attention_history.py",
+        "sha256": "f1031c7fe1a27c60a405492f50096be211e2cf92f445e717bb82bb1865b84704",
+        "unchanged": true
+      },
+      {
+        "path": "trader/attention_admission.py",
+        "sha256": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+        "unchanged": true
+      },
+      {
+        "path": "trader/research/factory_transfer.py",
+        "sha256": "43c4f59c9bc0a8ded59c2ce0d9bfec08a2d9b81c7576011460b11743c26a28a3",
+        "unchanged": true
+      },
+      {
+        "path": "SDD.md",
+        "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+        "unchanged": true
+      },
+      {
+        "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+        "sha256": "9e5291393299441431e060c3120f0a8f0d8a4cc9060e030c4ef49abacb19e4de",
+        "unchanged": true
+      }
+    ],
+    "kernel_changed_methods": [
+      "_snapshot_for",
+      "cycle"
+    ],
+    "new_tables": 0,
+    "new_queues": 0,
+    "provider_mechanisms_added": 0,
+    "expiry_policy_changed": false,
+    "production_access": "No operational source/database mutations or service starts; dependencies read from existing venv",
+    "network_guard_sha256": "184ab400767e6fe7184e7c2d8b61e22ebd484c348061e3d9bd034025185934db",
+    "historical_56": {
+      "status": "UNAUTHENTICATED",
+      "root_cause": "UNKNOWN",
+      "mapping": "No authenticated occurrence manifest found in reconciled bundles and targeted preserved task evidence. No exhaustive search of all host artifacts claimed."
+    },
+    "production_head_observed": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+    "implementation_commits": [
+      "d31bab4af8dfad26fe371409d131d0ba863fe050",
+      "553dc423760e1a331d107aa4ad878ea5f6e6e219"
+    ]
+  },
+  "matched_regression": {
+    "cases": 828,
+    "baseline": {
+      "passed": 826,
+      "failed": 2,
+      "skipped": 0
+    },
+    "candidate": {
+      "passed": 826,
+      "failed": 2,
+      "skipped": 0
+    },
+    "new_failures": [],
+    "fixed": [],
+    "fixture_profile": "SQLite synchronous=OFF identically on baseline/candidate; default lock/restart/fault verification separate; default large runs interrupted for host I/O starvation",
+    "failure_ids_identical": true
+  },
+  "new_fixtures": {
+    "cases": 25,
+    "baseline": {
+      "passed": 2,
+      "failed": 23,
+      "skipped": 0
+    },
+    "candidate": {
+      "passed": 25,
+      "failed": 0
+    },
+    "note": "Synthetic software fault cases; diagnostic assertion failures are not independent historical incidents. Atomicity controls already pass on baseline."
+  },
+  "final_default_focused": {
+    "passed": 37,
+    "failed": 0
+  },
+  "independent_restored_default": {
+    "passed": 28,
+    "failed": 0,
+    "runtime_commit": "553dc423760e1a331d107aa4ad878ea5f6e6e219"
+  },
+  "inherited_failures": [
+    {
+      "id": "tests.test_candle_store_symbol_keys::test_cached_ohlcv_reads_through_the_same_normalisation",
+      "classification": "Legacy fixture seeds projection-only rows and expects replay qualification. Existing provenance loader refuses them; unchanged baseline/candidate failure."
+    },
+    {
+      "id": "tests.test_forming_bar_never_stored::test_incremental_fetch_re_reads_the_stored_tail",
+      "classification": "Legacy fixture seeds unqualified inventory and expects a qualified incremental since cursor. Existing acquisition reacquires the bounded window instead; unchanged baseline/candidate failure."
+    }
+  ],
+  "performance": {
+    "schema": "da04-cost.v1",
+    "profile": "default SQLite durability, no providers; synthetic 12-symbol, 40-bar frames; frozen clock",
+    "baseline": {
+      "symbols": 12,
+      "batches": 3,
+      "snapshots": 36,
+      "bars": 40,
+      "cold": {
+        "wall_seconds": 4.162176854006248,
+        "cpu_seconds": 0.9253857490000001,
+        "statements": 108,
+        "selects": 60,
+        "inserts": 24,
+        "provider_calls": 12
+      },
+      "warm": [
+        {
+          "wall_seconds": 67.06532495099236,
+          "cpu_seconds": 1.198985538,
+          "statements": 156,
+          "selects": 72,
+          "writes": 84,
+          "provider_calls": 12
+        },
+        {
+          "wall_seconds": 0.09672817900718655,
+          "cpu_seconds": 0.09605067499999986,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        },
+        {
+          "wall_seconds": 0.12203366700850893,
+          "cpu_seconds": 0.12073649200000025,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        }
+      ],
+      "median_ms_per_snapshot": 10.169472250709077,
+      "peak_rss_kib": 422868,
+      "database_bytes": 1187840
+    },
+    "candidate": {
+      "symbols": 12,
+      "batches": 3,
+      "snapshots": 36,
+      "bars": 40,
+      "cold": {
+        "wall_seconds": 0.7092006269958802,
+        "cpu_seconds": 0.6880666169999998,
+        "statements": 108,
+        "selects": 60,
+        "inserts": 24,
+        "provider_calls": 12
+      },
+      "warm": [
+        {
+          "wall_seconds": 0.898198847004096,
+          "cpu_seconds": 0.8740484149999999,
+          "statements": 156,
+          "selects": 72,
+          "writes": 84,
+          "provider_calls": 12
+        },
+        {
+          "wall_seconds": 0.10630630599916913,
+          "cpu_seconds": 0.10629078299999994,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        },
+        {
+          "wall_seconds": 0.1068870339950081,
+          "cpu_seconds": 0.10688586300000003,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        }
+      ],
+      "median_ms_per_snapshot": 8.907252832917342,
+      "peak_rss_kib": 422868,
+      "database_bytes": 1187840
+    },
+    "warm_baseline": {
+      "snapshots": 24,
+      "wall_ms_per_snapshot": 9.115076917320645,
+      "cpu_ms_per_snapshot": 9.032798625000005,
+      "writes": 0,
+      "provider_calls": 0,
+      "candle_store_selects_per_snapshot": 1
+    },
+    "warm_candidate": {
+      "snapshots": 24,
+      "wall_ms_per_snapshot": 8.883055833090717,
+      "cpu_ms_per_snapshot": 8.882360249999998,
+      "candle_store_selects_per_snapshot": 1,
+      "writes": 0,
+      "provider_calls": 0
+    },
+    "wall_delta_ms": -0.2320210842299275,
+    "wall_delta_pct": -2.5454649075866476,
+    "cold_sql_counts_equal": true,
+    "database_bytes_equal": true,
+    "limitations": [
+      "Small isolated sample, not operational latency or a significance claim",
+      "High observed host I/O pressure; cold/warmup wall times not comparable as code costs",
+      "First 12-snapshot batch expands requested window from 40 to 400; last two batches are the warmed path",
+      "No extra SQL, writes or provider requests on matched warm path; cold SQL count equal",
+      "No new queue, table, retry or frame cache; failures skip an existing extra read/floor-write attempt",
+      "Both earlier and final candidate samples preserved; observed variation is not a speedup or stable overhead claim."
+    ],
+    "receipt_payload_bytes": {
+      "with_diagnostic": 327,
+      "without_diagnostic": 200,
+      "added": 127,
+      "refusal": {
+        "as_of_ms": 1800000000000,
+        "reason": "read_failure",
+        "status": "REFUSED",
+        "symbol": "S00/USDT",
+        "timeframe": "15m"
+      }
+    },
+    "sql_trace_scope": "DataFeed candle-store connection only. The unchanged Journal proposal_binding read is included in time but not this SQL trace.",
+    "main_implementation_candidate": {
+      "symbols": 12,
+      "batches": 3,
+      "snapshots": 36,
+      "bars": 40,
+      "cold": {
+        "wall_seconds": 18.421321360001457,
+        "cpu_seconds": 0.8589575169999999,
+        "statements": 108,
+        "selects": 60,
+        "inserts": 24,
+        "provider_calls": 12
+      },
+      "warm": [
+        {
+          "wall_seconds": 132.24402143299812,
+          "cpu_seconds": 1.161957304,
+          "statements": 156,
+          "selects": 72,
+          "writes": 84,
+          "provider_calls": 12
+        },
+        {
+          "wall_seconds": 0.12205617700237781,
+          "cpu_seconds": 0.12076934900000014,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        },
+        {
+          "wall_seconds": 0.11927181200007908,
+          "cpu_seconds": 0.11876317199999997,
+          "statements": 12,
+          "selects": 12,
+          "writes": 0,
+          "provider_calls": 0
+        }
+      ],
+      "median_ms_per_snapshot": 10.171348083531484,
+      "peak_rss_kib": 422868,
+      "database_bytes": 1187840
+    },
+    "main_implementation_warm_candidate": {
+      "snapshots": 24,
+      "wall_ms_per_snapshot": 10.055332875102371,
+      "cpu_ms_per_snapshot": 9.980521708333338,
+      "writes": 0,
+      "provider_calls": 0,
+      "candle_store_selects_per_snapshot": 1
+    },
+    "source_commits": {
+      "main": "d31bab4a",
+      "final": "553dc423760e1a331d107aa4ad878ea5f6e6e219"
+    }
+  },
+  "matched_run_costs": {
+    "baseline-functional": {
+      "returncode": 1,
+      "wall_seconds": 708.1551445030054,
+      "cpu_seconds": 563.236226,
+      "peak_rss_kib": 1205196,
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_contained_background_data.py",
+        "tests/test_da05_history_coverage.py",
+        "tests/test_da08_ownership.py",
+        "tests/test_da08_portfolio.py",
+        "tests/test_da09_receipt_closure.py",
+        "tests/test_data03_consumer_cuts.py",
+        "tests/test_data04_htf_availability.py",
+        "tests/test_stage1_data_provenance_pit.py",
+        "tests/test_final_audit_feed_identity.py",
+        "tests/test_hierarchical_admission.py",
+        "tests/test_feed_pagination.py",
+        "tests/test_candle_cache_reuse.py",
+        "tests/test_candle_store_symbol_keys.py",
+        "tests/test_candle_store_transaction_safety.py",
+        "tests/test_forming_bar_never_stored.py",
+        "tests/test_stage1_pit_blocker_fix.py",
+        "tests/test_protection_snapshot.py",
+        "tests/test_risk01_entry_binding.py",
+        "tests/test_risk02_exposure_feasibility.py",
+        "tests/test_activation_risk_baseline_v2.py",
+        "tests/test_protective_stops.py",
+        "tests/test_orphan_positions.py",
+        "tests/test_control_state_recovery.py",
+        "tests/test_entry_recovery.py",
+        "tests/test_rp03_kernel_handoff.py",
+        "tests/test_rp03_research_factory_transfer.py",
+        "tests/test_strategy_factory_handoff.py",
+        "tests/test_single_creation_path.py",
+        "--basetemp=/mnt/luffy-recovery/recovery/sol1-da04-scratch-20261016/baseline-functional-fixtures",
+        "--junitxml=/mnt/luffy-recovery/recovery/sol1-da04-scratch-20261016/baseline-functional.xml",
+        "-k",
+        "not test_current_window_market_frame_is_bounded_and_replay_exact and not test_resolved_parents_remain_replayable_after_restart and not test_replay_retains_frozen_inputs_through_fresh_process"
+      ]
+    },
+    "candidate-functional": {
+      "returncode": 1,
+      "wall_seconds": 706.9935632919951,
+      "cpu_seconds": 564.111255,
+      "peak_rss_kib": 1209192,
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_contained_background_data.py",
+        "tests/test_da05_history_coverage.py",
+        "tests/test_da08_ownership.py",
+        "tests/test_da08_portfolio.py",
+        "tests/test_da09_receipt_closure.py",
+        "tests/test_data03_consumer_cuts.py",
+        "tests/test_data04_htf_availability.py",
+        "tests/test_stage1_data_provenance_pit.py",
+        "tests/test_final_audit_feed_identity.py",
+        "tests/test_hierarchical_admission.py",
+        "tests/test_feed_pagination.py",
+        "tests/test_candle_cache_reuse.py",
+        "tests/test_candle_store_symbol_keys.py",
+        "tests/test_candle_store_transaction_safety.py",
+        "tests/test_forming_bar_never_stored.py",
+        "tests/test_stage1_pit_blocker_fix.py",
+        "tests/test_protection_snapshot.py",
+        "tests/test_risk01_entry_binding.py",
+        "tests/test_risk02_exposure_feasibility.py",
+        "tests/test_activation_risk_baseline_v2.py",
+        "tests/test_protective_stops.py",
+        "tests/test_orphan_positions.py",
+        "tests/test_control_state_recovery.py",
+        "tests/test_entry_recovery.py",
+        "tests/test_rp03_kernel_handoff.py",
+        "tests/test_rp03_research_factory_transfer.py",
+        "tests/test_strategy_factory_handoff.py",
+        "tests/test_single_creation_path.py",
+        "--basetemp=/mnt/luffy-recovery/recovery/sol1-da04-scratch-20261016/candidate-functional-fixtures",
+        "--junitxml=/mnt/luffy-recovery/recovery/sol1-da04-scratch-20261016/candidate-functional.xml",
+        "-k",
+        "not test_current_window_market_frame_is_bounded_and_replay_exact and not test_resolved_parents_remain_replayable_after_restart and not test_replay_retains_frozen_inputs_through_fresh_process"
+      ]
+    }
+  },
+  "graph_verification": {
+    "command": "graphify update .",
+    "exit_code": 0,
+    "ast_uncached_files": 2178,
+    "provider_calls": 0,
+    "llm_label_suggestion_not_executed": true,
+    "log_sha256": "0c428b0b5872f10d99938cff1f5b76a141fe3648f8fbcdb204759640decab17d",
+    "generated_graph_sha256": "99da61dbc92cc50dbde9d709983b5d82a33e93d42b2767df059dd5fd142a2ef1",
+    "nodes": 25029,
+    "generated_cache_disposition": "Reverted/removed in task clone after successful AST verification, per user cleanup instruction; no generated cache added to implementation commits.",
+    "final": {
+      "command": "graphify update .",
+      "exit_code": 0,
+      "ast_uncached_files": 2179,
+      "nodes": 25032,
+      "edges": 64622,
+      "provider_calls": 0,
+      "network_guard_enabled": true,
+      "log_sha256": "2339f79245fe64c94898b96c3d2b322b8dc603276a4bca9f8597879c1b9501c6",
+      "graph_sha256": "fafc631c4598352b020eb4c26740b2c4719e9721aaf1890f8c263ac9e6d31716"
+    }
+  },
+  "safety": {
+    "provider_calls": 0,
+    "service_starts": 0,
+    "production_database_writes": 0,
+    "tracker_or_SDD_edits": 0,
+    "integration": false
+  },
+  "limitations": [
+    "Original 56 occurrences not authenticated or causally mapped",
+    "Two existing legacy-inventory assertion failures retained; all repository tests not run",
+    "Matched large logical regression uses identical synchronous=OFF fixture profile; default-durability fault/restart/refusal tests separately passed",
+    "No live coverage, provider reliability, power-loss durability or operational closure claim",
+    "DA05 retains its PARTIAL status"
+  ]
+}
