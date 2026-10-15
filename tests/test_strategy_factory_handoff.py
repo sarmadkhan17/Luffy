@@ -322,6 +322,7 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
 def test_kernel_requires_authenticated_lineage_before_freezing(tmp_path, cfg):
     """A local reason_passed label supplies neither Bank lineage nor Gate 2."""
     j, h = _journal(tmp_path, state="reason_passed")
+    F.ensure(j)  # Empty lifecycle schema; handoff must create no authority rows.
     an = _Admitting()
     result = _kernel(j)._research_handoff(an, [])
     assert result["status"] == "DEFERRED"
@@ -651,6 +652,7 @@ def _kernel(j):
 
 def test_kernel_handoff_does_not_automatically_install_or_start_probation(tmp_path):
     j, h = _journal(tmp_path, state="reason_passed")
+    F.ensure(j)  # Empty lifecycle schema; handoff must create no authority rows.
     an = _Admitting()
     assert _kernel(j)._research_handoff(an, [])["status"] == "DEFERRED"
     assert an.measured == []
