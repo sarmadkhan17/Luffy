@@ -175,7 +175,6 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     k._try_enter = Mock(return_value=True)
     k._detect_exchange_exits = Mock(return_value=0)
     k._manage_one = Mock(return_value=None)
-    k._manage_orphan_positions = Mock(return_value=0)
     k._maybe_resolve_outcomes = Mock()
     k._record_excursions = Mock()
     k._attention_call = lambda *a, **kw: None

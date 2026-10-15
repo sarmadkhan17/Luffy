@@ -44,6 +44,11 @@ def _kernel(open_symbols, universe_symbols, snap_ok=True):
     k._detect_exchange_exits = lambda sym: k.detected.append(sym) or 0
     k._snapshot_for = lambda sym, universe=None: (
         _Snap(sym) if snap_ok else None)
+    k._exposure_symbols = lambda: tuple(open_symbols)
+    k._manages_exits = lambda: True
+    k._manage_one = lambda trade, snap, score: k.exits.managed.append(trade['symbol'])
+    k._portfolio_market = {}
+    k._portfolio_holdings_market = {}
     k.cfg = {"timeframes": {"execution": "15m"}}
     return k
 
@@ -63,27 +68,27 @@ class _Snap:
 
 def test_a_position_outside_the_universe_is_still_managed():
     k = _kernel(open_symbols=["MOVR/USDT"], universe_symbols=["BTC/USDT"])
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert k.exits.managed == ["MOVR/USDT"]
 
 
 def test_its_exchange_exit_is_still_detected():
     k = _kernel(open_symbols=["MOVR/USDT"], universe_symbols=["BTC/USDT"])
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert k.detected == ["MOVR/USDT"], \
         "a stop that fired off-universe must still be reconciled"
 
 
 def test_a_scanned_symbol_is_not_managed_twice():
     k = _kernel(open_symbols=["BTC/USDT"], universe_symbols=["BTC/USDT"])
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert k.exits.managed == [] and k.detected == []
 
 
 def test_several_orphans_are_all_managed():
     k = _kernel(open_symbols=["A/USDT", "B/USDT", "C/USDT"],
                 universe_symbols=["BTC/USDT"])
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert sorted(k.exits.managed) == ["A/USDT", "B/USDT", "C/USDT"]
 
 
@@ -94,11 +99,11 @@ def test_an_unavailable_snapshot_does_not_abort_the_other_orphans():
     real = k._snapshot_for
     k._snapshot_for = lambda sym, universe=None: (
         None if sym == "DEAD/USDT" else real(sym))
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert k.exits.managed == ["B/USDT"]
 
 
 def test_no_open_trades_is_a_no_op():
     k = _kernel(open_symbols=[], universe_symbols=["BTC/USDT"])
-    k._manage_orphan_positions({"BTC/USDT"})
+    k._service_exposure({"BTC/USDT"}, {})
     assert k.exits.managed == [] and k.detected == []

@@ -79,7 +79,7 @@ def test_peer_and_telemetry_caps_never_trim_deep_or_holdings(
 
 def test_retired_executors_are_absent():
     from trader.observability import attention
-    for name in ('_scan_symbols', '_universe_frames', '_attention_supplemental_setup'):
+    for name in ('_scan_symbols', '_universe_frames', '_manage_orphan_positions', '_attention_supplemental_setup'):
         assert not hasattr(Kernel, name)
     for name in ('RegistryAttention', 'RegistryRefresher', 'supplemental_mode', 'registry_settings'):
         assert not hasattr(attention, name)

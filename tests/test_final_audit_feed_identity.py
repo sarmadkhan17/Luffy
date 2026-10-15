@@ -51,7 +51,7 @@ def test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat(tmp_path, mon
     k.feed = feed
     k.journal = Journal(tmp_path/'journal.db')
     k.journal.kv_set('control_state', 'FROZEN')
-    k.state_machine = SimpleNamespace(refresh=lambda:ControlState.FROZEN, can_enter=lambda:False)
+    k.state_machine = SimpleNamespace(state=ControlState.FROZEN, refresh=lambda:ControlState.FROZEN, can_enter=lambda:False)
     k.market_type = MarketType.FUTURES
     k.cfg = {'timeframes': {'execution':'15m'}}
     k.executor = SimpleNamespace(recover_entries=lambda:None, recovery_pending=lambda:False)

@@ -17,25 +17,25 @@ def server(tmp_path, monkeypatch):
 
 
 def test_api_disabled_auth_and_missing_store(server, tmp_path):
-    client=TestClient(server.create_app({'attention':{'enabled':False}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':False}}))
     assert client.get('/api/attention/latest').status_code==401
     r=client.get('/api/attention/latest?token=fixture-token')
     assert r.json()['status']=='disabled' and r.headers['cache-control'].startswith('no-store')
     assert not (tmp_path/'data/attention.db').exists()
-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='waiting'
 
 
 def test_api_bad_config_and_error_health(server, tmp_path):
-    client=TestClient(server.create_app({'attention':{'enabled':True,'max_symbols':-1}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True,'max_symbols':-1}}))
     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='configuration_error'
-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
     (tmp_path/'data/attention_health.json').write_text(json.dumps({'errors':1,'last_error':'worker_timeout'}))
     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='error'
 
 
 def test_learning_health_is_read_only_and_visible_when_enabled(server, tmp_path):
-    client=TestClient(server.create_app({'attention':{'enabled':True},
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True},
                                       'attention_learning':{'enabled':True}}))
     data=client.get('/api/attention/latest?token=fixture-token').json()
     assert data['learning']['status']=='unavailable'
@@ -45,7 +45,7 @@ def test_learning_health_is_read_only_and_visible_when_enabled(server, tmp_path)
 def test_recovery_visibility_is_authenticated_and_read_only(server, tmp_path):
     from trader.core.journal import Journal
     from trader.engine.recovery import KEY
-    client = TestClient(server.create_app({'attention': {'enabled': True}}))
+    client = TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention': {'enabled': True}}))
     journal = Journal(tmp_path/'data/luffy.db')
     raw = json.dumps({'id': 'intent', 'symbol': 'BTC/USDT', 'phase': 'entry',
                       'reason': 'entry_fill_unconfirmed', 'position': {'internal': 'omitted'}})
@@ -68,7 +68,7 @@ def test_admission_counts_independent_of_investigation_worker(server,tmp_path,mo
     receipt=A.persist(j,observation(),A.AdmissionPolicy(12,2,2,0))
     before=j.query('SELECT key,value FROM state_kv ORDER BY key')
     monkeypatch.setattr(server.time,'time',lambda:CUT/1000)
-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
     got=client.get('/api/attention/latest?token=fixture-token').json()
     assert got['status']=='waiting'
     assert got['admission']['status']=='current'

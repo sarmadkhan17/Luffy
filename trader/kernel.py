@@ -2040,37 +2040,6 @@ class Kernel:
         sm = getattr(self, "state_machine", None)
         return sm.manages_exits() if sm is not None else True
 
-    def _manage_orphan_positions(self, scanned: set) -> int:
-        """Manage open positions whose symbol was not scanned this cycle.
-
-        The universe rotates its alts every few hours; a position outlives
-        that rotation. Donchian Breakout Trail holds for up to 83 days, so a
-        stranded position is the expected case rather than an edge case, and
-        a stranded position is one with no trailing stop and no way to notice
-        its exchange stop already fired.
-
-        One unavailable symbol must not strand the rest, so each is isolated.
-        """
-        n = 0
-        for t in self.journal.open_trades():
-            sym = t["symbol"]
-            if sym in scanned:
-                continue
-            scanned.add(sym)          # one snapshot per symbol per cycle
-            try:
-                snap = self._snapshot_for(sym)
-                if snap is None:
-                    log.warning(f"orphan position {sym}: no snapshot — "
-                                f"cannot manage this cycle")
-                    continue
-                self._detect_exchange_exits(sym)
-                if self._manages_exits():
-                    self._manage_one(t, snap, None)
-                n += 1
-            except Exception as e:
-                log.warning(f"orphan position {sym}: {e}")
-        return n
-
     def _drain_panic(self) -> int | None:
         """Consume one accepted panic: flatten, then keep it contained.
 
