@@ -39,17 +39,20 @@ class Analyst(ABC):
             return
         @wraps(evaluate)
         def measured(self, snap):
-            inputs = self._inputs(snap)
+            # The preflight consumes availability only. _vote fingerprints the
+            # final inputs once, preserving evidence even if evaluate mutates
+            # an input. Do not cache across calls, analysts, or snapshots.
+            inputs = self._inputs(snap, fingerprint=False)
             if any(i['required'] and i['quality'] in ('MISSING', 'INVALID', 'UNSUPPORTED') for i in inputs):
                 return self._vote(self.name, snap, None, None, 'required measurement inputs unavailable')
             return evaluate(self, snap)
         cls.evaluate = measured
 
-    def _inputs(self, snap):
+    def _inputs(self, snap, *, fingerprint=True):
         inputs = []
         def add(name, value, quality, required, reason, source):
             inputs.append(dict(name=name, source=source,
-                source_ref=None if value is None else sha256(value.encode()).hexdigest(),
+                source_ref=None if value is None or not fingerprint else sha256(value.encode()).hexdigest(),
                 quality=quality, required=required, reason=reason))
         for key, columns, rows in self.frame_inputs:
             required = key not in self.optional_frame_inputs
@@ -59,7 +62,7 @@ class Analyst(ABC):
                 continue
             # CSV preserves pandas' round-trippable float representation;
             # to_json's default decimal rounding can alias distinct inputs.
-            payload = df.to_csv(index=True)
+            payload = df.to_csv(index=True) if fingerprint else None
             valid = (len(df) >= rows and all(c in df for c in columns)
                      and np.isfinite(df[list(columns)].to_numpy(dtype=float)).all())
             add(key, payload, 'UNKNOWN' if valid else 'INVALID', required,
