@@ -1,5 +1,6 @@
 """Exact-source outcome adapters and proposal-only automatic materialization."""
 from dataclasses import asdict
+from contextlib import closing
 import json
 from . import foundation as L, capture as C
 
@@ -189,13 +190,13 @@ def deliver_accounting(journal_path, artifact):
     from .capture_runtime import verified_trade
     from trader.engine.trade_accounting import verified_outcome
     receipt=verified_outcome(artifact,artifact['captured_ms'])
-    with sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as src:
+    with closing(sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=2)) as src, src:
         if not src.execute("SELECT 1 FROM sqlite_master WHERE name='learning_registrations'").fetchone():
             raise ValueError('original_registration_missing_no_backfill')
         _,reg=C.registration(src,C.trade_event(src,artifact['bookings']['trade']['decision_id'],artifact['bookings']['trade']['id']))
         row=src.execute('SELECT entry_identity_json FROM trades WHERE id=?',(artifact['bookings']['trade']['id'],)).fetchone()
         verify_trade_binding(reg,json.loads(row[0]) if row and row[0] else None,artifact['bookings']['trade'])
-    with sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=rw',uri=True,timeout=2) as db:
+    with closing(sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=rw',uri=True,timeout=2)) as db, db:
         db.row_factory=sqlite3.Row
         C.ensure(db)
         return C.safely(db,'verified-trade:'+artifact['sha256'],verified_trade,receipt)

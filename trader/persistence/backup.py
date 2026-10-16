@@ -51,6 +51,33 @@ def durable(path, raw):
     sync_dir(path.parent)
 
 
+def file_identity(path):
+    """Hash exact file bytes with bounded memory, including large SQLite stores."""
+    sha = hashlib.sha256()
+    size = 0
+    with path.open('rb') as stream:
+        while block := stream.read(1024 * 1024):
+            sha.update(block)
+            size += len(block)
+    return size, sha.hexdigest()
+
+
+def durable_copy(path, source, expected_size, expected_sha):
+    """Stream into the existing unpublished restore stage; verify before publish."""
+    sha = hashlib.sha256()
+    size = 0
+    with source.open('rb') as stream, path.open('xb') as target:
+        while block := stream.read(1024 * 1024):
+            sha.update(block)
+            size += len(block)
+            target.write(block)
+        if size != expected_size or sha.hexdigest() != expected_sha:
+            raise Refused('asset_changed_during_restore')
+        target.flush()
+        os.fsync(target.fileno())
+    sync_dir(path.parent)
+
+
 def safe_path(root, name):
     p = PurePosixPath(name)
     if not name or p.is_absolute() or '..' in p.parts or str(p) != name or '\\' in name:
@@ -323,8 +350,8 @@ class BackupSets:
                 no_config_secrets(raw, source)
                 files[asset.path] = digest(raw)
                 durable(target, raw)
-            raw = target.read_bytes()
-            entries.append(dict(**asdict(asset), size=len(raw), sha256=digest(raw), store=store,
+            size, sha = file_identity(target)
+            entries.append(dict(**asdict(asset), size=size, sha256=sha, store=store,
                                 capture_started_at=begin, capture_finished_at=self.clock()))
             interrupt('asset')
         for path, sha in files.items():
@@ -383,8 +410,8 @@ class BackupSets:
                 if (e['role'], e['kind']) != (a.role, a.kind):
                     raise Refused('asset_role_or_kind')
                 path = safe_path(generation, e['path'])
-                raw_asset = path.read_bytes()
-                if len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']:
+                size, sha = file_identity(path)
+                if size != e['size'] or sha != e['sha256']:
                     raise Refused('asset_size_or_hash_mismatch')
                 if a.kind == 'sqlite':
                     actual = metadata(path)
@@ -473,12 +500,11 @@ class BackupSets:
             for e in manifest['assets']:
                 dest = safe_path(stage, e['path'])
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                raw = safe_path(Path(generation), e['path']).read_bytes()
-                if len(raw) != e['size'] or digest(raw) != e['sha256']:
-                    raise Refused('asset_changed_during_restore')
-                durable(dest, raw)
-                if e['kind'] == 'sqlite' and any(metadata(dest)[k] != e['store'][k] for k in ('user_version', 'application_id', 'schema_sha256')):
-                    raise Refused('restored_store_invalid')
+                durable_copy(dest, safe_path(Path(generation), e['path']), e['size'], e['sha256'])
+                if e['kind'] == 'sqlite':
+                    actual = metadata(dest)
+                    if any(actual[k] != e['store'][k] for k in ('user_version', 'application_id', 'schema_sha256')):
+                        raise Refused('restored_store_invalid')
                 interrupt('asset')
             journal_asset = next((a for a in self.inventory.assets if a.role == STORES['data/luffy.db']), None)
             if journal_asset is None:
@@ -495,17 +521,17 @@ class BackupSets:
             journal.db_path = stage / journal_asset.path
             journal._local = threading.local()
             journal._write_lock = threading.Lock()
-            machine = ControlStateMachine(journal)
-            if machine.state == ControlState.ACTIVE:
-                machine.set(ControlState.FROZEN, 'supervisor', 'restore requires venue recovery')
-                machine.set(ControlState.RECOVERY, 'supervisor', 'restore requires venue recovery')
-            journal.kv_set('supervisor_status', json.dumps(dict(needs_owner=True, reasons=['restored_state_requires_recovery'],
-                           containment_owned=False, safe_to_activate=False, outcome='RECOVERING')))
-            journal.log_control_event('restore_verified', 'supervisor', detail=receipt)
-            journal._conn().close()
+            with closing(journal._conn()):
+                machine = ControlStateMachine(journal)
+                if machine.state == ControlState.ACTIVE:
+                    machine.set(ControlState.FROZEN, 'supervisor', 'restore requires venue recovery')
+                    machine.set(ControlState.RECOVERY, 'supervisor', 'restore requires venue recovery')
+                journal.kv_set('supervisor_status', json.dumps(dict(needs_owner=True, reasons=['restored_state_requires_recovery'],
+                               containment_owned=False, safe_to_activate=False, outcome='RECOVERING')))
+                journal.log_control_event('restore_verified', 'supervisor', detail=receipt)
             # Health/control files are generated, never copied from old runtime.
             receipt['restored_control_state'] = machine.state.value
-            receipt['restored_assets'] = {a.path: digest((stage / a.path).read_bytes()) for a in self.inventory.assets}
+            receipt['restored_assets'] = {a.path: file_identity(stage / a.path)[1] for a in self.inventory.assets}
             receipt.update(restore='VERIFIED_STAGED', time=self.clock())
             durable(stage / 'restore_receipt.json', canonical(receipt))
             interrupt('before_publish')

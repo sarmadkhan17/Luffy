@@ -5,6 +5,7 @@ and Risk. The ledger is separate from the trading journal. It has no Execution,
 exchange, protective-order, activation or control-plane write capability.
 """
 from dataclasses import asdict
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -29,7 +30,7 @@ class Consumer:
     def __init__(self, path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self._db() as db:
+        with closing(self._db()) as db, db:
             db.executescript(E.BLOB_SCHEMA)
             db.executescript('''
             CREATE TABLE IF NOT EXISTS state(id INTEGER PRIMARY KEY CHECK(id=1), inputs_json TEXT,
@@ -55,17 +56,23 @@ class Consumer:
 
     def evaluation(self, cut_id):
         """Exact owner/replay read of one cut; never expand other evaluations."""
-        with self._db() as db:
+        with closing(self._db()) as db, db:
             row = db.execute('SELECT payload FROM evaluations WHERE cut_id=?',(cut_id,)).fetchone()
             return _evaluation(db,cut_id,row[0]) if row else None
 
     def consume(self, current, *, processed_at=None):
+        return self._consume(current, processed_at=processed_at, serialized=False)
+
+    def _consume(self, current, *, processed_at, serialized):
         raw = gate._cut(current)
         cut = digest(raw)
-        with self._db() as db:
-            db.execute('BEGIN IMMEDIATE')
+        with closing(self._db()) as db, db:
+            if serialized:
+                db.execute('BEGIN IMMEDIATE')
             saved = db.execute('SELECT payload FROM evaluations WHERE cut_id=?', (cut,)).fetchone()
             if saved:
+                if serialized:
+                    db.rollback()
                 checked = replay(_evaluation(db,cut,saved[0]))
                 return dict(checked, duplicate=True)
             row = db.execute('SELECT inputs_json,previous_proposal_id FROM state WHERE id=1').fetchone()
@@ -87,6 +94,7 @@ class Consumer:
             stamp = int(time.time()*1000) if processed_at is None else processed_at
             if type(stamp) is not int or stamp < current.as_of_ms:
                 raise ValueError('CHECKPOINT_CLOCK_INVALID')
+            checkpoints = []
             for e in events:
                 payload = dict(schema=SCHEMA, event_id=e['event_id'], portfolio_cut_id=cut,
                     portfolio_snapshot_id=current.portfolio.snapshot_id,
@@ -94,7 +102,7 @@ class Consumer:
                     trigger_reason=e['kind'] if e['trigger'] else e['reason'], reason_codes=e['reason_codes'],
                     previous_proposal_id=previous_id, resulting_proposal_id=proposal.proposal_id if proposal else None,
                     processed_at=stamp, event=e, triggered=e['trigger'])
-                db.execute('INSERT OR IGNORE INTO checkpoints VALUES (?,?)', (e['event_id'],canonical(payload)))
+                checkpoints.append((e['event_id'],canonical(payload)))
             body = dict(schema=SCHEMA, portfolio_cut_id=cut, candidate_set_sha256=candidate_id,
                 proposal=proposal.payload() if proposal else None,
                 trade_intents=[asdict(i) for i in intents], risk_decisions=[asdict(d) for d in decisions],
@@ -102,8 +110,28 @@ class Consumer:
                 triggered=proposal is not None, execution_routed=False, real_order_submissions=0,
                 replay='PASS', duplicate=False)
             body_text = canonical(body)
-            body_detail = E.store(db,body_text) if len(body_text.encode()) > 65536 else body_text
             raw_text = canonical(raw)
+            # Reuse admission's prepare/compare boundary: pure allocation,
+            # replay and JSON work do not need SQLite writer ownership. Bind
+            # the prepared result to the exact state and checkpoint presence
+            # again before atomically appending it. On a real concurrent change,
+            # discard this preparation and use the original serialized path:
+            # no new refusal or retry policy, and no stale result is committed.
+            if not serialized:
+                db.execute('BEGIN IMMEDIATE')
+                saved = db.execute('SELECT payload FROM evaluations WHERE cut_id=?', (cut,)).fetchone()
+                if saved:
+                    db.rollback()
+                    return dict(replay(_evaluation(db,cut,saved[0])), duplicate=True)
+                changed = db.execute('SELECT inputs_json,previous_proposal_id FROM state WHERE id=1').fetchone() != row
+                if not changed:
+                    changed = tuple(e['event_id'] for e in expected_events if db.execute(
+                        'SELECT 1 FROM checkpoints WHERE event_id=?',(e['event_id'],)).fetchone()) != processed
+                if changed:
+                    db.rollback()
+                    return self._consume(current, processed_at=processed_at, serialized=True)
+            db.executemany('INSERT OR IGNORE INTO checkpoints VALUES (?,?)', checkpoints)
+            body_detail = E.store(db,body_text) if len(body_text.encode()) > 65536 else body_text
             raw_detail = E.store(db,raw_text) if len(raw_text.encode()) > 65536 else raw_text
             db.execute('INSERT INTO evaluations VALUES (?,?)', (cut,body_detail))
             db.execute('INSERT OR REPLACE INTO state VALUES (1,?,?)',

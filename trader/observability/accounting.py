@@ -8,6 +8,7 @@ never overwritten/deleted. Capacity exhaustion pauses work explicitly.
 from __future__ import annotations
 
 import argparse
+from contextlib import closing
 import fcntl
 import json
 import os
@@ -87,14 +88,14 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
     directory.mkdir(parents=True, exist_ok=True)
     if not 1 <= max_trades <= 2:
         raise ValueError('invalid_batch_limit')
-    with sqlite3.connect(directory / 'queue.db', timeout=2) as db:
+    with closing(sqlite3.connect(directory / 'queue.db', timeout=2)) as db, db:
         initialize(db)
         # At most one unfinished capture can exist under the exclusive process lock.
         for attempt in db.execute("SELECT id,trade_id,path FROM attempts WHERE status='running' LIMIT 2").fetchall():
             finish(db, attempt, now)
         capacity = MAX_JOBS - db.execute('SELECT count(*) FROM jobs').fetchone()[0]
         cursor = db.execute("SELECT value FROM meta WHERE key='cursor'").fetchone()[0]
-        with connect(journal) as src:
+        with closing(connect(journal)) as src, src:
             rows = src.execute('SELECT id,trade_id FROM trade_accounting_bookings WHERE id>? ORDER BY id LIMIT 100',
                                (cursor,)).fetchall()
         scanned = 0
@@ -117,7 +118,7 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
             if db.execute('SELECT count(*) FROM attempts').fetchone()[0] >= MAX_ATTEMPTS or used + MAX_ARTIFACT > MAX_BYTES:
                 storage_blocked = True
                 break
-            with connect(journal) as src:
+            with closing(connect(journal)) as src, src:
                 source = booking.export(src, tid)
                 trade = source['trade']
                 overlaps = [r[0] for r in src.execute(

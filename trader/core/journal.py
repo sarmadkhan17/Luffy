@@ -661,12 +661,16 @@ class Journal:
                 conn = self._conn()
                 yield conn
                 conn.commit()
-            except Exception as exc:
+            except BaseException as exc:
+                # Reuse DATA's existing rollback-or-discard cleanup. A failed
+                # rollback or process interrupt must not strand this thread's
+                # connection with SQLite writer ownership, or mask the cause.
+                if conn is not None:
+                    from ..data.sqlite_tx import abort
+                    abort(self._local, conn, 'journal')
                 from ..observability.safety import journal_failure, is_storage_error
                 if is_storage_error(exc):
                     journal_failure(self, 'write', exc)
-                if conn is not None:
-                    conn.rollback()
                 raise
 
     # -- writes ----------------------------------------------------------

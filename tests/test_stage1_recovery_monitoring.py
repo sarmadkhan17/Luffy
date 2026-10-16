@@ -386,7 +386,11 @@ def must_refuse(sets, generation):
 def test_mutant_ignoring_hash_mismatch_detected(backup):
     _, _, sets = backup; g = sets.capture()
     p = g / 'SDD.md'; raw = bytearray(p.read_bytes()); raw[0] ^= 1; p.write_bytes(raw)
-    mutated_method(sets, 'verify', "len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']", 'False')
+    source = inspect.getsource(type(sets).verify)
+    predicate = next(p for p in (
+        "size != e['size'] or sha != e['sha256']",
+        "len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']") if p in source)
+    mutated_method(sets, 'verify', predicate, 'False')
     with pytest.raises(AssertionError, match='unsafe backup accepted'):
         must_refuse(sets, g)
 

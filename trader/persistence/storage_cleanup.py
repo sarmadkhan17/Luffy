@@ -6,6 +6,7 @@ schemas are retained. No production apply entry point exists.
 """
 from __future__ import annotations
 
+from contextlib import closing
 import hashlib
 import json
 from pathlib import Path
@@ -107,6 +108,14 @@ def snapshot(source, destination):
         stat = path.stat()
         return [stat.st_size, stat.st_mtime_ns, stat.st_ino]
     paths = sorted(source.glob('*.db'))
+    # The existing copy path materializes logical file bytes, including WAL.
+    # Refuse a known impossible copy before consuming scratch space. This is
+    # a capacity check, not a reservation against concurrent external writers.
+    required = sum(item.stat().st_size for path in paths for item in
+                   [path, *(Path(str(path)+s) for s in ('-wal','-shm','-journal'))]
+                   if item.exists())
+    if required > shutil.disk_usage(copies).free:
+        raise ValueError('SNAPSHOT_SPACE_INSUFFICIENT')
     for path in paths:
         def files():
             return [path] + [Path(str(path)+suffix) for suffix in ('-wal','-shm','-journal')
@@ -316,25 +325,22 @@ def rehearse(directory, report_path, *, inventory_directory=None):
     try:
         for path in paths:
             if inventory_directory == directory:
-                disk = read_copy(path)
-                disk.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-                disk.execute('PRAGMA journal_mode=DELETE')
-                disk.close()
+                with closing(read_copy(path)) as disk:
+                    disk.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+                    disk.execute('PRAGMA journal_mode=DELETE')
             else:
                 read_normalized_copy(path).close()
             physical_hashes[path.name] = file_sha(path)
-            if path.name != 'runtime-portfolio.db':
-                db = read_normalized_copy(path)
-                baseline[path.name] = retained_inventory(db, physical_hashes[path.name])
-                root_sets[path.name] = set()
-                manifest_counts[path.name] = 'BYTE_EXACT_FILE_PRESERVED'
-            else:
-                # Only the deletion target needs an expanded root closure.
-                # Decoder lookup is database-local: main or its attached src.
-                db = read_normalized_copy(path)
-                baseline[path.name] = inventory(db)
-                root_sets[path.name], manifest_counts[path.name] = references(db)
-            db.close()
+            with closing(read_normalized_copy(path)) as db:
+                if path.name != 'runtime-portfolio.db':
+                    baseline[path.name] = retained_inventory(db, physical_hashes[path.name])
+                    root_sets[path.name] = set()
+                    manifest_counts[path.name] = 'BYTE_EXACT_FILE_PRESERVED'
+                else:
+                    # Only the deletion target needs an expanded root closure.
+                    # Decoder lookup is database-local: main or its attached src.
+                    baseline[path.name] = inventory(db)
+                    root_sets[path.name], manifest_counts[path.name] = references(db)
             (report_path/'inventory-progress.json').write_text(json.dumps(baseline, indent=2))
             print('inventoried', path.name, flush=True)
         (report_path/'inventory.json').write_text(json.dumps(baseline, indent=2))

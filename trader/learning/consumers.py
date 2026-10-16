@@ -1,5 +1,5 @@
 """Exact contextual projections at normal decision and scheduling boundaries."""
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from pathlib import Path
 import sqlite3
 import json
@@ -20,7 +20,7 @@ def retained(path):
     if not path.is_file():
         yield None
         return
-    with sqlite3.connect(path.resolve().as_uri()+'?mode=ro', uri=True, timeout=2) as db:
+    with closing(sqlite3.connect(path.resolve().as_uri()+'?mode=ro', uri=True, timeout=2)) as db, db:
         db.execute('PRAGMA query_only=ON'); db.execute('BEGIN')
         yield Reader(db)
 

@@ -399,7 +399,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                         if check.execute('SELECT id FROM predictive_experiment_binding').fetchall()!=[(ex['experiment_id'],)]:
                             raise ValueError('quantitative_store_binding')
                 else:
-                    with sqlite3.connect(numerical_path) as check:
+                    with closing(sqlite3.connect(numerical_path)) as check, check:
                         check.execute('CREATE TABLE predictive_experiment_binding(id TEXT PRIMARY KEY)')
                         check.execute('INSERT INTO predictive_experiment_binding VALUES (?)',(ex['experiment_id'],))
                 if ex.get('evaluation_version') and ex['evaluation_version'] != E.evaluation_version():

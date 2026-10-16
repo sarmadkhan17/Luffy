@@ -1,5 +1,5 @@
 """Bounded current-source reader. No venue calls or trading-journal writes."""
-from contextlib import ExitStack
+from contextlib import ExitStack, closing
 from dataclasses import replace
 import json
 from pathlib import Path
@@ -246,7 +246,7 @@ def checkpoint(journal, config, ledger=None, available_inputs=None, market_snaps
     # Deliver the exact proposal's inputs at the consuming boundary.
     import sqlite3
     from trader.learning import capture as C, capture_runtime as R
-    with sqlite3.connect(source,timeout=2) as db:
+    with closing(sqlite3.connect(source,timeout=2)) as db, db:
         db.row_factory=sqlite3.Row
         C.ensure(db)
         detail['learning_source_delivery'] = C.safely(db,'portfolio:'+result['portfolio_cut_id'],

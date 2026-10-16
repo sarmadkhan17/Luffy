@@ -5,6 +5,8 @@ are permitted only to explicitly immutable producer tables. There is no 'latest'
 resolver and no retrospective registration. Missing dependencies stay unavailable.
 """
 from dataclasses import asdict, dataclass
+from contextlib import closing
+import hashlib
 import json
 import sqlite3
 from . import foundation as L
@@ -62,7 +64,7 @@ def snapshot(db, role, value, *, source_id, version, available_ms, producer):
         raise ValueError('exact_dependency_availability_required')
     # Detach mutable caller data and address it once, including large bar sets.
     text = L.canonical(value)
-    sha = L.digest(value)
+    sha = hashlib.sha256(text.encode()).hexdigest()
     insert(db, 'learning_source_blobs', 'sha256', sha, (sha, text))
     return dict(role=role, status='AVAILABLE', reason='EXACT_CAPTURE', source_id=source_id,
         version=version, sha256=sha, available_ms=available_ms, producer=producer,
@@ -741,7 +743,7 @@ def validate_chain(body,sources,blobs):
         bundle=sources.get('execution',{})
         if bundle.get('receipt')!=cost:
             raise ValueError('paper_cost_source_bundle_unavailable')
-        with sqlite3.connect(':memory:') as db:
+        with closing(sqlite3.connect(':memory:')) as db, db:
             db.row_factory=sqlite3.Row
             P.ensure(db)
             for raw in bundle['sources'].values():

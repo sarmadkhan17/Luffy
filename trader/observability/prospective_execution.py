@@ -5,6 +5,7 @@ its actual delay and is NEVER called the book at the decision or submission.
 Storage is append-only, capped at 256 MiB; exhaustion is an explicit blocker.
 """
 import builtins
+from contextlib import closing
 import json
 import logging
 import sqlite3
@@ -102,7 +103,7 @@ class Capture:
                     self.blocked('RECORD_SIZE_BOUND_REACHED')
                     return None
                 key = digest(canonical({'kind': kind, 'body': body}))
-                with sqlite3.connect(self.path, timeout=0.1) as db:
+                with closing(sqlite3.connect(self.path, timeout=0.1)) as db, db:
                     db.executescript('''CREATE TABLE IF NOT EXISTS observations(
                       seq INTEGER PRIMARY KEY AUTOINCREMENT, observation_id TEXT UNIQUE,
                       kind TEXT NOT NULL, captured_ms INTEGER NOT NULL, body TEXT NOT NULL);
@@ -110,8 +111,13 @@ class Capture:
                       BEGIN SELECT RAISE(ABORT,'observations immutable'); END;
                     CREATE TRIGGER IF NOT EXISTS obs_no_delete BEFORE DELETE ON observations
                       BEGIN SELECT RAISE(ABORT,'observations immutable'); END;''')
-                    db.execute('INSERT OR IGNORE INTO observations(observation_id,kind,captured_ms,body) VALUES(?,?,?,?)',
-                               (key,kind,time.time_ns()//1_000_000,text))
+                    # A duplicate INSERT OR IGNORE still advances AUTOINCREMENT
+                    # and dirties sqlite_sequence. Keep retries write-free while
+                    # retaining the same immutable observation and ordering.
+                    db.execute('INSERT OR IGNORE INTO observations(observation_id,kind,captured_ms,body) '
+                               'SELECT ?,?,?,? WHERE NOT EXISTS '
+                               '(SELECT 1 FROM observations WHERE observation_id=?)',
+                               (key,kind,time.time_ns()//1_000_000,text,key))
                 return key
         except Exception as exc:
             self.blocked('STORAGE_ERROR:' + builtins.type(exc).__name__)
@@ -324,7 +330,7 @@ def replay_observations(path):
     """Read-only hash replay. Exact prospective links only; no time joins.
     Book capture delay and unconfirmed/partial outcomes retain their labels.
     """
-    with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True) as db:
+    with closing(sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True)) as db, db:
         records=[]
         for key,kind,text in db.execute('SELECT observation_id,kind,body FROM observations ORDER BY seq'):
             body=json.loads(text)
