@@ -69,41 +69,8 @@ def test_walk_forward_flags_robustness():
     assert isinstance(out["robust"], bool)
 
 
-def test_promotion_paper_to_active(tmp_path):
-    from trader.core.journal import Journal
-    j = Journal(tmp_path / "j.db")
-    j.query("INSERT INTO strategies (id,name,kind,params,state,description,"
-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
-            "parent_id,created_at,stats_json) VALUES ('s1','T','ema_trend',"
-            "'{}','paper','d','seed','hyp','inv','[]','[\"futures\"]',0,'',"
-            "'2026-08-01T00:00:00+00:00','{}')")
-    # 15 winners → must promote
-    for i in range(15):
-        p = Position(id=f"p{i}", symbol="X/USDT", side=Side.LONG,
-                     amount=1, entry_price=100, notional_usdt=100,
-                     strategy_id="s1", market_type="futures")
-        j.add_trade(p)
-        j.close_trade(f"p{i}", 105, 5.0, "tp_fill")
-    actions = promotion.evaluate_population(j)
-    assert any(a["to"] == "active" for a in actions)
 
 
-def test_demote_on_consecutive_losses(tmp_path):
-    from trader.core.journal import Journal
-    j = Journal(tmp_path / "j.db")
-    j.query("INSERT INTO strategies (id,name,kind,params,state,description,"
-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
-            "parent_id,created_at,stats_json) VALUES ('s2','T','ema_trend',"
-            "'{}','active','d','seed','hyp','inv','[]','[\"futures\"]',0,'',"
-            "'2026-08-01T00:00:00+00:00','{}')")
-    for i in range(6):
-        p = Position(id=f"q{i}", symbol="Y/USDT", side=Side.LONG,
-                     amount=1, entry_price=100, notional_usdt=100,
-                     strategy_id="s2", market_type="futures")
-        j.add_trade(p)
-        j.close_trade(f"q{i}", 95, -5.0, "sl_fill")
-    actions = promotion.evaluate_population(j)
-    assert any(a["to"] == "demoted" for a in actions)
 
 
 def test_strategist_review_trigger(tmp_path):

@@ -66,13 +66,33 @@ def established_capacity(j, config, v, monkeypatch):
 
 
 def test_original_mechanism_admission_bypass_submits_nothing(tmp_path, monkeypatch):
+    """An admitted spec is installed only as an exact paper version; it has
+    no live authority and the Executor submits nothing for it."""
+    from trader.strategy import qualification as Q
     j = Journal(tmp_path/'mechanism.db')
     spec = proposal('dynamic','Dynamic')
+    spec.universe = {'include': ['BTC/USDT'], 'exclude': []}
+    cfg_ = load_config()
+    evidence = {'recent': {'recent_days': 90, 'window_days': 90, 'trades': 30,
+        'pooled_pf': 2.0, 'winrate': .5, 'pnl': 10.0,
+        'per_symbol': {'BTC/USDT': {'trades': 30, 'pf': 2.0, 'pnl': 10.0, 'wr': .5}}},
+        'null_consistency_p': .001, 'null_symbols': 5,
+        'null_dependence': {'common_rotation': {'p': .001}},
+        'redundancy': {'max_overlap': .1, 'twin': ''}}
     class Analyst:
         def __init__(self, *a): pass
         def review_deployed(self, book): return []
         def flush_health_observations(self): return True
-        def admit(self, proposed, book): return True, {'recent':{'pooled_pf':2,'trades':30}}
+        def qualify(self, proposed, book):
+            probe = StrategySpec.from_dict(proposed.to_dict())
+            q = Q.build(spec_id=probe.id, timeframe=probe.timeframe,
+                evaluated_spec_sha256=F._frozen_spec(probe)[1],
+                declared_universe=probe.universe, declared_regime_filter=list(probe.regime_filter),
+                exit_semantics_id=__import__('trader.strategy.exit_policy', fromlist=['x']).EXIT_SEMANTICS_ID,
+                ev=evidence, th=Q.thresholds(cfg_),
+                run={'contract':'quant-contract.v1','spec_digest':'a','data_digest':'b',
+                     'config_digest':'c','engine_digest':'d','identity':'e'})
+            return True, {'chosen_timeframe': probe.timeframe, 'recent': evidence['recent']}, q
         def set_measured_regimes(self, spec): return []
     class Writer:
         def __init__(self, *a): pass
@@ -81,7 +101,7 @@ def test_original_mechanism_admission_bypass_submits_nothing(tmp_path, monkeypat
     monkeypatch.setattr('trader.brain.spec_writer.SpecWriter', Writer)
     monkeypatch.setattr('trader.brain.llm.BrainLLM', lambda *a: None)
     k = Kernel.__new__(Kernel)
-    k.journal, k.cfg, k.feed, k.notifier = j, load_config(), None, None
+    k.journal, k.cfg, k.feed, k.notifier = j, cfg_, None, None
     monkeypatch.setattr(k, '_strategist_knowledge', lambda: {})
     monkeypatch.setattr(k, '_load_population', lambda: [])
     F.ensure(j)
@@ -89,15 +109,16 @@ def test_original_mechanism_admission_bypass_submits_nothing(tmp_path, monkeypat
     rep = k._mechanism_once()
     assert rep['added'] == ['Dynamic']
     assert j.list_specs()[0][0]['state'] == 'paper'
-    assert not F.versioned(j, spec.id)
+    assert F.versioned(j, spec.id)
     venue = Venue()
     ex = Executor(venue, j, k.cfg, MarketType.FUTURES)
     d = Decision('d','c','BTC/USDT',Action.BUY,1,.5,.8,[],[])
     assert ex.open(d,2,2,95,110,spec.id,spec.name) is None
-    assert 'VERSIONED_AUTHORITY_REQUIRED' in d.skip_reason
+    assert 'version_not_live_authorized' in d.skip_reason
     assert venue.sent == []
     # Even direct state mutation cannot create authority.
-    with j._tx() as db: db.execute("UPDATE strategies SET state='active' WHERE id=?", (spec.id,))
+    with pytest.raises(sqlite3.IntegrityError):
+        with j._tx() as db: db.execute("UPDATE strategies SET state='active' WHERE id=?", (spec.id,))
     assert ex.open(d,2,2,95,110,spec.id,spec.name) is None
     assert venue.sent == []
 

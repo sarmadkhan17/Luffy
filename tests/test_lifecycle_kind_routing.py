@@ -47,17 +47,6 @@ def _row(j, sid):
     return j.query("SELECT * FROM strategies WHERE id=?", (sid,))[0]
 
 
-def test_genome_rows_still_evaluate_normally(tmp_path):
-    """The legacy path must keep working for the rows it owns."""
-    j = Journal(tmp_path / "j.db")
-    _mk(j, "g_paper", "paper")
-    _losses(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES)
-
-    actions = promotion.evaluate_population(j)
-
-    assert any(a["id"] == "g_paper" and a["to"] == "retired"
-               for a in actions), actions
-    assert _row(j, "g_paper")["state"] == "retired"
 
 
 def test_spec_rows_are_ignored_by_legacy_lifecycle(tmp_path):
@@ -69,7 +58,7 @@ def test_spec_rows_are_ignored_by_legacy_lifecycle(tmp_path):
     """
     j = Journal(tmp_path / "j.db")
     _mk(j, "s_paper", "paper", kind="spec")
-    _losses(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES)
+    _losses(j, "s_paper", 6)
 
     actions = promotion.evaluate_population(j)
 
@@ -82,19 +71,6 @@ def test_spec_rows_are_ignored_by_legacy_lifecycle(tmp_path):
     assert not [e for e in events if e["kind"] == "statistical_transition"], events
 
 
-def test_spec_and_genome_coexist_in_one_sweep(tmp_path):
-    """The filter must be per-row, not abort the sweep."""
-    j = Journal(tmp_path / "j.db")
-    _mk(j, "s_paper", "paper", kind="spec")
-    _mk(j, "g_paper", "paper")
-    _losses(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES)
-    _losses(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES)
-
-    actions = promotion.evaluate_population(j)
-
-    assert {a["id"] for a in actions} == {"g_paper"}, actions
-    assert _row(j, "s_paper")["state"] == "paper"
-    assert _row(j, "g_paper")["state"] == "retired"
 
 
 def test_existing_retired_spec_rows_are_not_mutated(tmp_path):
@@ -107,7 +83,7 @@ def test_existing_retired_spec_rows_are_not_mutated(tmp_path):
     j = Journal(tmp_path / "j.db")
     stats = '{"trades": 6, "wins": 0, "pnl_usdt": -69.3361, "pf": 0.0}'
     _mk(j, "auth_donchian_breakout_trail", "retired", kind="spec", stats=stats)
-    _losses(j, "auth_donchian_breakout_trail", promotion.DEMOTE_CONSEC_LOSSES)
+    _losses(j, "auth_donchian_breakout_trail", 6)
     before = _row(j, "auth_donchian_breakout_trail")
 
     promotion.evaluate_population(j)
@@ -119,7 +95,7 @@ def test_retired_genome_rows_are_also_left_alone(tmp_path):
     """Unchanged pre-existing behaviour: retired is terminal for genomes too."""
     j = Journal(tmp_path / "j.db")
     _mk(j, "g_dead", "retired", retire_reason="measured: PF 0.41")
-    _losses(j, "g_dead", promotion.DEMOTE_CONSEC_LOSSES)
+    _losses(j, "g_dead", 6)
     before = _row(j, "g_dead")
 
     promotion.evaluate_population(j)

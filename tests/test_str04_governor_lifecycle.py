@@ -69,8 +69,7 @@ def test_every_nonfactory_state_writer_is_legacy_only_and_guarded():
     found = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                    if pat.search(p.read_text()))
     assert found == ["brain/strategist.py", "brain/tv.py", "core/journal.py",
-                     "kernel.py", "strategy/factory_handoff.py",
-                     "strategy/promotion.py"]
+                     "kernel.py", "strategy/factory_handoff.py"]
 
 
 def test_database_refuses_every_ungoverned_write_to_a_versioned_strategy(world):

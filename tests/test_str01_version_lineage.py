@@ -61,7 +61,7 @@ def test_only_factory_handoff_writes_strategy_versions():
 
 def test_all_version_writers_inside_factory_go_through_insert_version():
     src = (ROOT / "trader/strategy/factory_handoff.py").read_text()
-    assert len(re.findall(r"_insert_version\(c, rec, at_ms\)", src)) == 2
+    assert len(re.findall(r"_insert_version\(c, rec, at_ms\)", src)) == 3
     assert len(re.findall(r'_insert\(c, "strategy_versions"', src)) == 1
 
 

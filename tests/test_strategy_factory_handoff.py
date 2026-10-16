@@ -273,7 +273,7 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
     assert prec["excluded_trades"] == []
     assert [t["id"] for t in prec["trades"]] == [f"t{i}" for i in range(15)]
     assert prec["policy"] == {"source": "config.yaml strategies.*",
-                              "min_trades": 15, "min_winrate": 0.4,
+                              "min_trades": 10, "min_winrate": 0.4,
                               "min_profit_factor": 1.15,
                               "winrate_policy": __import__("trader.engine.paper_cost_evidence", fromlist=["WIN_RATE_POLICY"]).WIN_RATE_POLICY}
 
@@ -666,8 +666,8 @@ def test_kernel_refuses_a_timeframe_other_than_the_version(tmp_path, cfg):
     j, h = _journal(tmp_path, state="reason_passed")
     ver = _validated(j, cfg, h)
     spec = StrategySpec.from_dict(F.load_version(j, ver["version_id"])["spec"])
-    assert not _kernel(j)._install_spec(spec, {"chosen_timeframe": "1h"},
-        _Admitting(), {}, version_id=ver["version_id"])
+    assert not _kernel(j)._install_version(spec, {"chosen_timeframe": "1h"},
+        _Admitting(), {}, ver["version_id"])
     assert F.state_of(j, ver["version_id"]) == F.VALIDATED
     assert j.query("SELECT * FROM strategies") == []
     assert _row(j, "SELECT state FROM research_candidates")["state"] == "reason_passed"
@@ -678,30 +678,28 @@ def test_kernel_refuses_a_spec_that_is_not_the_frozen_one(tmp_path, cfg):
     v = _validated(j, cfg, h)
     spec = StrategySpec.from_dict(F.load_version(j, v["version_id"])["spec"])
     spec.exit.stop = {"kind": "atr", "mult": 4.0}
-    ok = _kernel(j)._install_spec(
+    ok = _kernel(j)._install_version(
         spec, {"chosen_timeframe": spec.timeframe}, _Admitting(), {},
-        version_id=v["version_id"])
+        v["version_id"])
     assert ok is False and j.query("SELECT * FROM strategies") == []
     assert F.state_of(j, v["version_id"]) == F.VALIDATED
 
 
-def test_unversioned_install_keeps_its_existing_behavior(tmp_path):
-    """Strategist-admitted specs have no frozen version; their admission
-    path is unchanged by this package."""
+def test_a_strategy_without_a_backtest_pass_is_not_installed(tmp_path):
+    """There is no unversioned paper path: the only admission is a Backtest
+    PASS bound to an exact version (`_qualified_install`)."""
     j = Journal(tmp_path / "j.db")
     spec = StrategySpec(
         id="s1", name="Plain spec", thesis="t" * 90, invalidation="i" * 40,
         provenance={}, universe={}, timeframe="4h", direction="long",
         entry_long="close > 0", entry_short="", filters=[], exit=ExitSpec(),
         regime_filter=[], markets=["futures"])
-    ok = _kernel(j)._install_spec(
-        spec, {"chosen_timeframe": "1h", "recent": {"pooled_pf": 1.2,
-                                                    "trades": 20}},
-        _Admitting(), {})
-    assert ok is True
-    stored = StrategySpec.from_json(_row(j, "SELECT spec_json FROM "
-                                            "strategies")["spec_json"])
-    assert stored.timeframe == "1h" and stored.regime_filter == ["TRENDING_UP"]
+    from trader.kernel import Kernel
+    assert not hasattr(Kernel, "_install_spec")
+    assert _kernel(j)._qualified_install(
+        spec, {"chosen_timeframe": "4h"}, {"recent": {"per_symbol": {}}},
+        _Admitting(), {}) is False
+    assert j.query("SELECT * FROM strategies") == []
 
 
 # ── probation bound to the exact version ─────────────────────────────────
@@ -928,7 +926,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     code = src.split('"""', 2)[2]
     writes = set(re.findall(r"\b(?:INSERT\s+(?:OR\s+\w+\s+)?INTO|UPDATE|"
                             r"DELETE\s+FROM)\s+(\w+)", code, re.I))
-    assert writes - {"ON","OF","strategies"} <= set(F._TABLES), writes
+    assert writes - {"ON","OF","strategies"} <= set(F._IMMUTABLE), writes
     assert set(re.findall(r'_insert\(c, "(\w+)"', code)) <= set(F._TABLES)
     for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
                 "create_order", "executor", "orchestrator", "notifier"):
@@ -1003,14 +1001,15 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                          and isinstance(g, ast.FunctionDef))}
     assert users == {"_research_handoff", "_install_version",
                      "_load_spec_population", "_try_enter", "_manage_one", "_mechanism_once",
-                     "_install_spec", "_manage_paper", "_compile_population_spec"}, users
+                     "_qualified_install", "_manage_paper", "_compile_population_spec"}, users
     for name in ("_load_spec_population", "_try_enter"):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= {
             "versioned", "live_entry_block", "load_version", "verify_validation", "verify_install",
             "resolve_current_install"}, name
-    for name, allowed in (("_install_spec", {"versioned"}),
+    for name, allowed in (("_qualified_install", {"versioned", "create_version",
+                                                  "load_version", "HandoffRefused"}),
                           ("_compile_population_spec", {"versioned", "resolve_current_install"}),
                           ("_manage_paper", {"state_of", "evaluate_probation", "SHADOW"})):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name == name)

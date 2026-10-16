@@ -84,11 +84,11 @@ def test_spec_state_is_never_changed_by_legacy_lifecycle(tmp_path):
     """
     j = Journal(tmp_path / "j.db")
     _mk(j, "s_lose", "paper", kind="spec")
-    _close(j, "s_lose", promotion.DEMOTE_CONSEC_LOSSES, -5)
+    _close(j, "s_lose", 6, -5)
     _mk(j, "s_win", "paper", kind="spec")
-    _close(j, "s_win", promotion.PROMOTE_MIN_TRADES, +5)
+    _close(j, "s_win", 15, +5)
     _mk(j, "s_active", "active", kind="spec")
-    _close(j, "s_active", promotion.DEMOTE_CONSEC_LOSSES, -5)
+    _close(j, "s_active", 6, -5)
 
     before = {s: _row(j, s) for s in ("s_lose", "s_win", "s_active")}
     actions = promotion.evaluate_population(j)
@@ -107,43 +107,8 @@ def test_spec_state_is_never_changed_by_legacy_lifecycle(tmp_path):
             if e["kind"] == "statistical_transition"]
 
 
-def test_genome_rows_behave_exactly_as_before(tmp_path):
-    """Every legacy branch still fires, with provenance, for genomes."""
-    j = Journal(tmp_path / "j.db")
-    _mk(j, "g_retire", "paper")
-    _close(j, "g_retire", promotion.DEMOTE_CONSEC_LOSSES, -5)
-    _mk(j, "g_promote", "paper")
-    _close(j, "g_promote", promotion.PROMOTE_MIN_TRADES, +5)
-    _mk(j, "g_demote", "active")
-    _close(j, "g_demote", promotion.DEMOTE_CONSEC_LOSSES, -5)
-
-    promotion.evaluate_population(j)
-
-    assert _row(j, "g_retire")["state"] == "retired"
-    assert _row(j, "g_promote")["state"] == "active"
-    assert _row(j, "g_demote")["state"] == "demoted"
-    for sid in ("g_retire", "g_promote", "g_demote"):
-        assert _row(j, sid)["retire_reason"], sid
-        assert _stats(j, sid)["trades"] > 0, sid
 
 
-def test_mixed_sweep(tmp_path):
-    """Spec and genome with identical records, in one pass."""
-    j = Journal(tmp_path / "j.db")
-    _mk(j, "s_paper", "paper", kind="spec")
-    _mk(j, "g_paper", "paper")
-    _close(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
-    _close(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
-
-    actions = promotion.evaluate_population(j)
-
-    assert {a["id"] for a in actions} == {"g_paper"}, actions
-    # identical evidence, opposite governance
-    assert _row(j, "s_paper")["state"] == "paper"
-    assert _row(j, "g_paper")["state"] == "retired"
-    # ...but both observed
-    assert _stats(j, "s_paper") == _stats(j, "g_paper")
-    assert _stats(j, "s_paper")["trades"] == promotion.DEMOTE_CONSEC_LOSSES
 
 
 def test_retired_rows_still_frozen(tmp_path):
