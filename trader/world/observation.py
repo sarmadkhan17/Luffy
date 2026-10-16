@@ -223,29 +223,3 @@ class Observation:
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-
-
-class SnapshotObservation:
-    """A narrow, read-only bridge for the legacy in-memory Snapshot price."""
-
-    @staticmethod
-    def price(snapshot: Any, *, timeframe: str, source_ref: str) -> Observation:
-        from datetime import datetime, timezone
-
-        captured = datetime.fromisoformat(snapshot.ts.replace("Z", "+00:00"))
-        if captured.tzinfo is None:
-            raise ValueError("Snapshot.ts must include a timezone")
-        observed_ms = int(captured.astimezone(timezone.utc).timestamp() * 1000)
-        return Observation(
-            instrument=snapshot.symbol,
-            timestamp_ms=observed_ms,
-            observed_at_ms=observed_ms,
-            timeframe=timeframe,
-            kind="price",
-            value=snapshot.price,
-            unit="quote_currency",
-            source="legacy_snapshot",
-            source_ref=source_ref,
-            quality=Quality.SUSPECT,
-            uncertainty={"reason": "source event and availability timestamps absent from Snapshot"},
-        )

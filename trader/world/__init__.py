@@ -1,6 +1,6 @@
 """Shared point-in-time observation and world-state contracts."""
 
-from .observation import Observation, ObservationIdentity, Quality, SnapshotObservation
+from .observation import Observation, ObservationIdentity, Quality
 from .perception import (
     AmbiguousInputError, InputRequirement, Measurement, MissingInputError,
     PerceptionInputError, PerceptionSpec, perceive,
@@ -16,7 +16,7 @@ from .replay import WorldHistory, WorldModelRecord, reconstruct_world_model
 __all__ = [
     "AmbiguousInputError", "InputRequirement", "Measurement", "MissingInputError",
     "Observation", "ObservationIdentity", "PerceptionInputError", "PerceptionSpec",
-    "Quality", "SnapshotObservation", "WorldState", "HierarchyNode", "Horizon",
+    "Quality", "WorldState", "HierarchyNode", "Horizon",
     "Scope", "ScopeLevel", "WorldModel", "perceive",
     "EvidenceRef", "RelationshipCollection", "RelationshipCoordinate",
     "RelationshipState",

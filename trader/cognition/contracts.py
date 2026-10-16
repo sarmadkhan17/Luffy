@@ -44,7 +44,7 @@ import hashlib
 import json
 import math
 import statistics
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict as to_dict, dataclass, field
 
 from trader.cognition import SCHEMA_VERSION
 
@@ -239,10 +239,6 @@ class Outcome:
     status: str              # confirmed | falsified | not_testable | measured | unresolved
     measurement: dict
     schema_version: str = SCHEMA_VERSION
-
-
-def to_dict(rec) -> dict:
-    return asdict(rec)
 
 
 def is_timestamp(v) -> bool:

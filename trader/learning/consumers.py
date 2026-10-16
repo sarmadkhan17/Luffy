@@ -102,11 +102,6 @@ def evidence_factor(vote):
     return learned['value']['reliability'] if learned else 1.0
 
 
-def attention_order(journal, ranked, timeframe):
-    return T.priority_order(journal, L.Target.ATTENTION, ranked,
-                            lambda symbol: attention_context(symbol, timeframe))
-
-
 def research_order(journal, items, subject_for=lambda item:item):
     return T.priority_order(journal, L.Target.RESEARCH, items,
                             lambda item:research_context(subject_for(item)))
