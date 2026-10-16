@@ -1,10 +1,17 @@
-"""Stage-5 handoff: referee-passed candidate -> first-live eligibility.
+"""Stage-5 handoff: validated strategy -> first-live eligibility.
 
 SDD v3.2 §14.2 names one path:
 
-    research -> spec -> validation/referee -> freeze immutable spec + evidence
-    receipt -> shadow/paper -> approval required -> owner approval for the
-    exact version/hash -> active
+    spec -> validation -> freeze immutable spec + evidence receipt ->
+    shadow/paper -> approval required -> owner approval for the exact
+    version/hash -> active
+
+Validation has exactly one authoritative form per version. A created
+strategy is validated by its Backtest PASS (`qualification`: the Analyst's
+existing admission decision measured under the Factory exit semantics). A
+research candidate that carries a registered Referee look is a second source of
+the same receipt, retained for research lineage; the Referee is not a
+prerequisite for paper probation.
 
 Factory proposers can install exact immutable versions for paper probation.
 Unversioned proposals remain research/paper only. Eligibility is read-only;
@@ -29,6 +36,7 @@ from datetime import datetime, timezone
 from ..engine.paper_exit_evidence import canonical
 from ..engine.state import OWNER_ACTORS
 from . import capacity as cap
+from . import qualification as Q
 from .compile import compile_spec
 from .promotion import stats_of
 from .spec import StrategySpec
@@ -108,6 +116,10 @@ CAPACITY = cap.CONTRACT_REF
 _TABLES = ("strategy_versions", "strategy_validation_receipts",
            "strategy_version_installs", "strategy_probation_receipts", "strategy_approval_requests",
            "strategy_approval_decisions", "strategy_version_events", "strategy_governor_events")
+# Immutable like the rest, but not part of the eligibility table check: an
+# absent deployment authorization is the normal, disabled state.
+_IMMUTABLE = _TABLES + ("strategy_first_live_deployments",)
+DEPLOY_SCHEMA = "strategy-first-live-deployment-authorization.v1"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS strategy_versions (
@@ -177,12 +189,16 @@ CREATE TABLE IF NOT EXISTS strategy_version_events (
 CREATE TABLE IF NOT EXISTS strategy_governor_events(
  seq INTEGER PRIMARY KEY AUTOINCREMENT, version_id TEXT NOT NULL,
  to_state TEXT NOT NULL, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS strategy_first_live_deployments(
+ version_id TEXT PRIMARY KEY REFERENCES strategy_versions(version_id),
+ canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL,
+ recorded_at_ms INTEGER NOT NULL);
 """ + "".join(
     f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}
 BEGIN SELECT RAISE(ABORT, '{t} is immutable'); END;
 CREATE TRIGGER IF NOT EXISTS {t}_no_delete BEFORE DELETE ON {t}
 BEGIN SELECT RAISE(ABORT, '{t} is immutable'); END;
-""" for t in _TABLES)
+""" for t in _IMMUTABLE)
 
 
 AUTHORITY_GUARDS = """
@@ -194,6 +210,9 @@ BEFORE INSERT ON strategy_approval_requests WHEN strategy_approval_write() != 1
 BEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END;
 CREATE TRIGGER IF NOT EXISTS approval_decision_insert_authority
 BEFORE INSERT ON strategy_approval_decisions WHEN strategy_approval_write() != 1
+BEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END;
+CREATE TRIGGER IF NOT EXISTS first_live_deployment_insert_authority
+BEFORE INSERT ON strategy_first_live_deployments WHEN strategy_approval_write() != 1
 BEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END;
 CREATE TRIGGER IF NOT EXISTS version_lifecycle_authority
 BEFORE INSERT ON strategy_version_events
@@ -700,7 +719,10 @@ def _version_row(rec: dict, at_ms: int) -> dict:
 def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
     """One immutable strategy version + its validation receipt, VALIDATED.
 
-    `source` is {"kind": "research_candidate", "hash": <candidate hash>}.
+    `source` is {"kind": "backtest_qualification", "spec": <frozen spec dict>,
+    "qualification": <Analyst-built Backtest PASS record>} for a created
+    strategy, or {"kind": "research_candidate", "hash": <candidate hash>} for a
+    research candidate carrying a registered Referee look.
     Retrying is idempotent (same version_id, "duplicate"); nothing stored is
     ever rewritten."""
     ensure(journal)
@@ -712,6 +734,8 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
         _refuse("predictive_edge_not_established"
                 if rec.get("predictive_edge_established") is not True
                 else "not_a_referee_candidate")
+    if kind == Q.SOURCE_KIND:
+        return _create_from_qualification(journal, cfg, source, at_ms=at_ms)
     if kind != "research_candidate" or not source.get("hash"):
         _refuse("not_a_referee_candidate")
     h = source["hash"]
@@ -766,6 +790,130 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
     return {"status": v_out, "version_id": vid, "spec_hash": spec_hash,
             "strategy_id": rec["strategy_id"],
             "validation_receipt_id": receipt["receipt_id"]}
+
+
+# ── 1b. Backtest PASS -> immutable version + validation receipt ──────────
+def _qualification_evidence(q: dict) -> dict:
+    """What a qualification receipt binds: ids and hashes only."""
+    return {"exit_semantics_id": q["exit_semantics_id"],
+            "qualification_id": q["qualification_id"],
+            "evaluated_spec_sha256": q["evaluated_spec_sha256"],
+            "run_identity": q["run"]["identity"], "timeframe": q["timeframe"]}
+
+
+def _check_qualified_spec(spec_d: dict, q: dict) -> None:
+    """The frozen spec is the spec the Backtest PASS evaluated, up to exactly
+    two declared freezes: the universe becomes the markets that were scored
+    (when the writer named none), and the unmeasured regime guess is dropped
+    because the backtest never applied it. Anything else is another strategy."""
+    uni = spec_d.get("universe") or {}
+    declared = q["declared_universe"]
+    scored = sorted(q["recent"]["per_symbol"])
+    include = list(uni.get("include") or [])
+    if declared["include"]:
+        if include != declared["include"] \
+                or not set(declared["include"]) <= set(scored):
+            _refuse("qualified_universe_not_evidenced")
+    elif sorted(include) != scored:
+        _refuse("qualified_universe_not_evidenced")
+    if list(uni.get("exclude") or []) != declared["exclude"]:
+        _refuse("qualified_universe_changed")
+    if spec_d.get("regime_filter") != []:
+        _refuse("qualified_regime_filter_unmeasured")
+    if spec_d.get("timeframe") != q["timeframe"]:
+        _refuse("qualified_timeframe_differs")
+    evaluated = copy.deepcopy(spec_d)
+    evaluated["universe"] = {**uni, "include": declared["include"],
+                             "exclude": declared["exclude"]}
+    evaluated["regime_filter"] = list(q["declared_regime_filter"])
+    try:
+        _, h = _frozen_spec(StrategySpec.from_dict(evaluated))
+    except (TypeError, ValueError, KeyError):
+        _refuse("qualified_spec_unreadable")
+    if h != q["evaluated_spec_sha256"]:
+        _refuse("qualified_spec_not_evaluated_spec")
+
+
+def _create_from_qualification(journal, cfg: dict, source: dict, *,
+                               at_ms: int) -> dict:
+    try:
+        q = Q.verify(source.get("qualification"))
+        Q.require_configured_strictness(q, cfg)
+    except Q.QualificationRefused as e:
+        _refuse(e.code)
+    spec_in = source.get("spec")
+    if not isinstance(spec_in, dict):
+        _refuse("qualified_spec_missing")
+    from .exit_policy import EXIT_SEMANTICS_ID, unsupported
+    try:
+        spec = StrategySpec.from_dict(spec_in)
+    except (TypeError, ValueError, KeyError):
+        _refuse("qualified_spec_unreadable")
+    bad = unsupported(spec.exit)
+    if bad:
+        _refuse("unsupported_versioned_exit:" + bad)
+    if q["exit_semantics_id"] != EXIT_SEMANTICS_ID:
+        _refuse("qualification_exit_semantics_mismatch")
+    spec_d, spec_hash = _frozen_spec(spec)
+    _check_qualified_spec(spec_d, q)
+    ids = _qualification_evidence(q)
+    r = q["recent"]
+    quant = {**ids, "verdict": q["verdict"], "scope": q["scope"],
+             "thresholds": q["thresholds"], "trades": r["trades"],
+             "pooled_pf": r["pooled_pf"], "window_days": r["window_days"]}
+    research = {"origin": "backtest_qualification",
+                "qualification_id": q["qualification_id"],
+                "spec_id": q["spec_id"]}
+    rec = _version_record(
+        spec_d["id"], spec_d, spec_hash, None,
+        {"kind": Q.SOURCE_KIND, "id": q["qualification_id"]}, ids,
+        _lineage(spec_d, _jsha(cfg.get("risk")), research, quant, None))
+    vid = rec["version_id"]
+    r_ident = {"schema": RECEIPT_SCHEMA, "version_id": vid,
+               "strategy_id": rec["strategy_id"], "spec_hash": spec_hash,
+               "evidence": ids}
+    receipt = {**r_ident, "receipt_id": _jsha(r_ident),
+               "qualification": q,
+               "semantics": ("this exact version may enter paper probation "
+                             "because its Backtest PASS re-derives from the "
+                             "recorded evidence; no live, allocation or "
+                             "order authority")}
+    r_text = canonical(receipt)
+    with journal._tx() as c:
+        _begin(c)
+        v_out = _insert_version(c, rec, at_ms)
+        if v_out == "conflict":
+            _refuse("version_conflict")
+        r_out, _ = _insert(c, "strategy_validation_receipts", "receipt_id",
+                           {"receipt_id": receipt["receipt_id"],
+                            "version_id": vid,
+                            "canonical_sha256": _sha(r_text),
+                            "canonical_json": r_text,
+                            "recorded_at_ms": int(at_ms)})
+        if r_out == "conflict":
+            _refuse("validation_receipt_conflict")
+        _transition(c, vid, VALIDATED, "backtest_qualification_bound",
+                    receipt["receipt_id"], "factory", at_ms)
+    return {"status": v_out, "version_id": vid, "spec_hash": spec_hash,
+            "strategy_id": rec["strategy_id"],
+            "validation_receipt_id": receipt["receipt_id"]}
+
+
+def _verify_qualification(version: dict, rec: dict) -> dict:
+    """The stored receipt's Backtest PASS, re-derived and re-bound to this
+    version. Pure over the stored records: moving data or a changed config
+    cannot silently revoke, and nothing can silently grant, a PASS."""
+    q = rec.get("qualification")
+    try:
+        Q.verify(q)
+    except Q.QualificationRefused as e:
+        _refuse(e.code)
+    if _qualification_evidence(q) != rec["evidence"] \
+            or version["source"]["id"] != q["qualification_id"]:
+        _refuse("validation_evidence_changed")
+    _check_qualified_spec(version["spec"], q)
+    return rec
+
 
 
 def derive_version(journal, parent_version_id: str, spec: StrategySpec, *,
@@ -892,8 +1040,12 @@ def verify_exit_binding(journal, version: dict) -> dict:
 
 
 def verify_validation(journal, version: dict) -> dict:
-    """Admission/approval also revalidate the current research ledger."""
+    """Admission/approval re-derive the one validation this version carries:
+    its Backtest PASS from the stored numbers, or its registered research look
+    from the current ledger."""
     rec = verify_exit_binding(journal, version)
+    if version["source"]["kind"] == Q.SOURCE_KIND:
+        return _verify_qualification(version, rec)
     now = gate_evidence(journal, version["source"]["id"])
     if _receipt_evidence(now) != rec["evidence"] \
             or rec["evidence"] != version["evidence_ids"]:
@@ -1685,11 +1837,76 @@ def versioned(journal, strategy_id: str) -> bool:
                               "strategy_id=? LIMIT 1", (strategy_id,)))
 
 
-def live_entry_block(journal, strategy_id: str) -> str | None:
+def record_first_live_deployment(journal, cfg: dict, version_id: str, *,
+                                 actor: str, at_ms: int) -> dict:
+    """The owner's separate deployment authorization for real first-live
+    execution of one exact, already-approved version.
+
+    Approving a version (`record_owner_decision`) makes it eligible; it does
+    not turn real execution on. This receipt is that second, explicit owner act.
+    It binds the exact owner decision and the Risk configuration in force, is
+    immutable, and is checked again on every entry (`live_entry_block`). No
+    caller in the Kernel, Dashboard or learning writes it: until the owner
+    records one, real execution of every version stays disabled."""
+    ensure(journal)
+    if actor not in OWNER_ACTORS:
+        _refuse("actor_not_owner")
+    v = load_version(journal, version_id)
+    req = approval_request(journal, version_id)
+    if req is None:
+        _refuse("approval_request_missing")
+    drow = _one(journal, "SELECT * FROM strategy_approval_decisions WHERE "
+                "request_id=?", (req["request_id"],))
+    d = _load(drow) if drow else None
+    if d is None or d["decision"] != "APPROVED" or d["actor"] not in OWNER_ACTORS:
+        _refuse("owner_approval_missing")
+    ident = {"schema": DEPLOY_SCHEMA, "version_id": version_id,
+             "spec_hash": v["spec_hash"], "request_id": req["request_id"],
+             "decision_id": d["decision_id"], "actor": actor,
+             "risk_sha256": _jsha((cfg or {}).get("risk")),
+             "authorized_at_ms": int(at_ms)}
+    rec = {**ident, "deployment_id": _jsha(ident),
+           "grants": ("real first-live entries of this exact version only, "
+                      "each still subject to the full live safety chain")}
+    text = canonical(rec)
+    with _approval_write(journal), journal._tx() as c:
+        _begin(c)
+        old = c.execute("SELECT canonical_json FROM "
+                        "strategy_first_live_deployments WHERE version_id=?",
+                        (version_id,)).fetchone()
+        if old is not None:
+            if json.loads(old[0])["deployment_id"] != rec["deployment_id"]:
+                _refuse("deployment_already_recorded")
+            return {"status": "duplicate", "deployment_id": rec["deployment_id"]}
+        c.execute("INSERT INTO strategy_first_live_deployments(version_id, "
+                  "canonical_json, canonical_sha256, recorded_at_ms) "
+                  "VALUES (?,?,?,?)", (version_id, text, _sha(text), int(at_ms)))
+    return {"status": "inserted", "deployment_id": rec["deployment_id"]}
+
+
+def _deployment(journal, version_id: str) -> dict | None:
+    names = {r["name"] for r in journal.query(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    if "strategy_first_live_deployments" not in names:
+        return None
+    row = _one(journal, "SELECT * FROM strategy_first_live_deployments "
+               "WHERE version_id=?", (version_id,))
+    return _load(row) if row else None
+
+
+def live_entry_block(journal, strategy_id: str, *, cfg: dict | None = None
+                     ) -> str | None:
     """Fail closed for every entry without explicit immutable authority.
 
-    Factory activation is lifecycle authority only in this package. Real
-    first-live execution remains disabled, including for ACTIVE versions.
+    None (entry may proceed to Risk, EntryAuthority and Execution) requires
+    ALL of: the exact approved version Governor-activated; the owner's
+    separate deployment authorization receipt for it
+    (`record_first_live_deployment`); control ACTIVE; and a complete re-verification, now, of the evidence chain
+    the Governor activated on (validation, install, probation, exact owner
+    approval and configuration, current ESTABLISHED capacity, required
+    inputs). Anything missing or stale is a HOLD with a stable reason; the
+    strategy keeps paper-trading. This is a safety fence, never a performance
+    gate, and it does not size or place anything.
     Historical exceptions require an exact explicit grandfather receipt.
     """
     try:
@@ -1718,7 +1935,7 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
         if projection_gap(journal, vid):
             return "version_projection_diverged"
         if st in ("ACTIVE", "REACTIVATED"):
-            return "version_first_live_execution_not_enabled"
+            return _first_live_hold(journal, vid, cfg)
         if st != APPROVED_FIRST_LIVE:
             return f"version_not_live_authorized:{st}"
         names = {r["name"] for r in journal.query(
@@ -1731,6 +1948,49 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
         return "version_first_live_activation_absent"
     except Exception as e:                              # noqa: BLE001
         return f"version_authority_unreadable:{type(e).__name__}"
+
+
+def _first_live_hold(journal, version_id: str, cfg: dict | None) -> str | None:
+    """HOLD reason for a Governor-ACTIVE version, or None when every
+    first-live prerequisite re-verifies now."""
+    dep = _deployment(journal, version_id)
+    if dep is None:
+        return "version_first_live_execution_not_enabled"
+    if cfg is None:
+        return "version_first_live_configuration_unavailable"
+    v = load_version(journal, version_id)
+    req = approval_request(journal, version_id)
+    drow = _one(journal, "SELECT decision_id FROM strategy_approval_decisions "
+                "WHERE request_id=?", (req["request_id"],)) if req else None
+    if (drow is None or dep.get("decision_id") != drow["decision_id"]
+            or dep.get("spec_hash") != v["spec_hash"]
+            or dep.get("risk_sha256") != _jsha(cfg.get("risk"))):
+        return "version_first_live_deployment_authorization_stale"
+    from ..core.types import ControlState
+    if journal.kv_get("control_state", None) != ControlState.ACTIVE.value:
+        return "version_first_live_control_not_active"
+    history = [e for e in governor_events(journal, version_id)
+               if e["schema"] == GOVERNOR_SCHEMA]
+    last = next((e for e in reversed(history)
+                 if e["to_state"] in ("ACTIVE", "REACTIVATED")), None)
+    if last is None:
+        return "version_first_live_activation_absent"
+    allocation = last.get("allocation")
+    if isinstance(allocation, bool) or not isinstance(allocation, (int, float)) \
+            or not math.isfinite(allocation) or not 0 < allocation <= (
+                last.get("allocation_ceiling") or 0):
+        return "version_first_live_allocation_unbounded"
+    if last.get("risk_sha256") != _jsha(cfg.get("risk")):
+        return "version_first_live_risk_configuration_changed"
+    elig = eligible_for_first_live(
+        journal, version_id, cfg=cfg, _governor_resume=True,
+        available_inputs=last.get("available_inputs"),
+        capacity_receipt_id=last.get("capacity_receipt_id"),
+        research_bank_path=(cfg.get("research") or {}).get(
+            "predictive_bank_path"))
+    if not elig.eligible:
+        return "version_first_live_hold:" + ",".join(elig.reasons[:3])
+    return None
 
 
 # One post-validation lifecycle authority. These receipts govern lifecycle and

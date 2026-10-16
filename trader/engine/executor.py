@@ -78,6 +78,7 @@ class Executor:
         capture = for_journal(journal)
         self.ex = ObservedExchange(exchange,capture) if capture else exchange
         self.journal = journal
+        self.cfg = cfg
         self.market_type = market_type
         self.risk_manager = risk_manager
         from .risk import policy_from_config
@@ -151,7 +152,7 @@ class Executor:
             log.warning(f"ENTRY REFUSED {decision.symbol}: {decision.skip_reason}")
             return None
         from ..strategy import factory_handoff as fh
-        blocked = fh.live_entry_block(self.journal, strategy_id)
+        blocked = fh.live_entry_block(self.journal, strategy_id, cfg=self.cfg)
         if blocked:
             decision.skip_reason = f"version fence: {blocked}"
             decision.reason_codes = [rc.VERSIONED_AUTHORITY_REQUIRED if blocked == "VERSIONED_AUTHORITY_REQUIRED"

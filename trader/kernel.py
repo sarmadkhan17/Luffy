@@ -682,7 +682,7 @@ class Kernel:
                                                  detail={"trace": trace})
                         consumed.append(iid)
                     break
-                ok, ev = analyst.admit(spec, book)
+                ok, ev, qualification = analyst.qualify(spec, book)
                 if iid:
                     idea_queue.mark_consumed(
                         self.journal, iid,
@@ -694,7 +694,8 @@ class Kernel:
                         "spec_rejected", spec.id,
                         {"name": spec.name, "evidence": ev, "idea": iid})
                     continue
-                if not self._install_spec(spec, ev, analyst, {"idea": iid}):
+                if not self._qualified_install(spec, ev, qualification,
+                                               analyst, {"idea": iid}):
                     continue
                 book.append(spec)
                 added.append(spec.name)
@@ -707,44 +708,52 @@ class Kernel:
         log.info(f"mechanism: {rep}")
         return rep
 
-    def _install_spec(self, spec, ev: dict, analyst, extra: dict,
-                      version_id: str | None = None) -> bool:
-        """Everything that follows an Analyst admission, whoever proposed.
+    def _qualified_install(self, spec, ev: dict, qualification: dict,
+                           analyst, extra: dict) -> bool:
+        """CREATE -> BACKTEST PASS -> exact paper install, the one admission
+        path for a created strategy.
 
-        With `version_id` the spec is a frozen StrategyVersion and is
-        installed exactly (`_install_version`); True when it was installed."""
-        if version_id is not None:
-            return self._install_version(spec, ev, analyst, extra, version_id)
+        The Analyst's Backtest PASS (`qualification`) is bound to the exact
+        frozen spec as an immutable Factory version, which is then installed
+        for paper probation. Only two things are frozen beyond what the
+        backtest measured, both declared in the receipt: the universe becomes
+        the markets that were actually scored when the writer named none, and
+        the writer's unmeasured regime guess is dropped (the backtest never
+        applied it). A spec that cannot become a version is not installed;
+        there is no unversioned paper path to fall back to."""
+        import copy
         from .strategy import factory_handoff as fh
+        from .strategy.spec import StrategySpec
         if fh.versioned(self.journal, spec.id):
+            # An edit of a versioned strategy is a derived version with its
+            # own validation; it never inherits or replaces an existing one.
             self.journal.log_brain_event("spec_install_refused", spec.id,
                 {"reason_code": "VERSIONED_AUTHORITY_REQUIRED", **extra})
             return False
-        # regime_filter as written is a guess; measure it before the
-        # orchestrator starts gating live signals on it
-        spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
-        rf = analyst.set_measured_regimes(spec)
-        # TradingView second opinion — ADVISORY. It is recorded next
-        # to the spec and never blocks admission; see
-        # Analyst.confirm_on_tv for why a TV gate would be wrong.
-        if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
-            try:
-                ev["tv"] = analyst.confirm_on_tv(spec)
-            except Exception as e:
-                log.debug(f"tv confirmation skipped: {e}")
-        self.journal.upsert_spec(spec, state="paper")
-        self.journal.log_brain_event(
-            "spec_admitted", spec.id,
-            {"name": spec.name, "evidence": ev, "regimes": rf, **extra,
-             "execution_authority": "RESEARCH_PAPER_ONLY_LEGACY",
-             "live_block_reason": "VERSIONED_AUTHORITY_REQUIRED"})
-        if self.notifier:
-            self.notifier.send(
-                f"\U0001f9ec New strategy: {spec.name} "
-                f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
-                f"recent PF {ev['recent']['pooled_pf']} over "
-                f"{ev['recent']['trades']} trades \u2192 paper")
-        return True
+        frozen = copy.deepcopy(spec)
+        frozen.timeframe = ev.get("chosen_timeframe", spec.timeframe)
+        universe = dict(frozen.universe or {})
+        if not universe.get("include"):
+            universe["include"] = sorted(qualification["recent"]["per_symbol"])
+        frozen.universe = universe
+        frozen.regime_filter = []
+        try:
+            ver = fh.create_version(
+                self.journal, self.cfg,
+                {"kind": "backtest_qualification", "spec": frozen.to_dict(),
+                 "qualification": qualification},
+                at_ms=int(time.time() * 1000))
+            installed = StrategySpec.from_dict(
+                fh.load_version(self.journal, ver["version_id"])["spec"])
+        except fh.HandoffRefused as e:
+            self.journal.log_brain_event(
+                "spec_install_refused", spec.id,
+                {"name": spec.name, "reason_code": e.code, "evidence": ev,
+                 **extra})
+            log.warning(f"spec {spec.id} qualified but not versioned: {e.code}")
+            return False
+        return self._install_version(installed, ev, analyst, extra,
+                                     ver["version_id"])
 
     def _research_handoff(self, analyst, book):
         """Authenticate completed predictive evidence and stop at VALIDATED.
@@ -1493,7 +1502,7 @@ class Kernel:
         # real order path only when exact-version first-live eligible (never
         # today); the executor re-checks at submission
         from .strategy import factory_handoff as fh
-        blocked = fh.live_entry_block(self.journal, top_strategy)
+        blocked = fh.live_entry_block(self.journal, top_strategy, cfg=self.cfg)
         if blocked:
             # A separate capability with no venue handle. The live fence and
             # return value stay unchanged: a paper entry is never a live fill.

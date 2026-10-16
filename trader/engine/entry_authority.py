@@ -455,7 +455,7 @@ def submit(executor, permission, decision, amount, atr, stop, target,
             raise ValueError('control_state_unverified')
         if executor.market_type.value != 'futures':
             raise ValueError('entry_exposure_model_unsupported')
-        if factory_handoff.live_entry_block(executor.journal, strategy_id):
+        if factory_handoff.live_entry_block(executor.journal, strategy_id, cfg=getattr(executor, "cfg", None)):
             raise ValueError('version_not_live_authorized')
         with manager._durable_hold() as conn:
             if conn is None:
@@ -495,7 +495,7 @@ def submit(executor, permission, decision, amount, atr, stop, target,
             else:
                 validate(executor, permission, decision, amount, atr, stop, target,
                          strategy_id, identity, reference, conn)
-                if factory_handoff.live_entry_block(executor.journal, strategy_id):
+                if factory_handoff.live_entry_block(executor.journal, strategy_id, cfg=getattr(executor, "cfg", None)):
                     raise ValueError('version_not_live_authorized')
                 try:
                     order = executor.ex.create_order(decision.symbol, 'market',

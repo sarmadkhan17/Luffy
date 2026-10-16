@@ -183,11 +183,8 @@ research:                        # the search — docs/superpowers/specs/
   handoff: false
 
 strategies:
-  max_active: 6                  # concurrently active strategies
-  # NOT IMPLEMENTED — nothing reads this key. TradingView confirmation is
-  # ADVISORY and runs via Analyst.confirm_on_tv(); it never gates admission.
-  # Left here so the intent is visible, but do not read it as a guarantee.
-  tv_validation: true
+  # TradingView confirmation is ADVISORY (Analyst.confirm_on_tv) and never
+  # gates admission; these keys only parameterize scripts/validate_population.py.
   tv_interval: 1h
   tv_period: 1y
   tv_min_oos_trades: 5
@@ -201,11 +198,13 @@ strategies:
   # 0.0 = measure and report only. Raise to gate (0.90 = beat 90% of its own
   # rotations). Nothing in the book currently clears 0.80.
   gauntlet_min_null_percentile: 0.0
-  paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
+  # ── paper probation: the only performance gate between a Backtest PASS and
+  # an owner approval request. Counts closed paper trades of the EXACT
+  # installed version with complete identity, cost and exit evidence; ten
+  # trades alone never pass — win rate and net profit factor must also hold.
+  paper_probation_trades: 10
   paper_min_winrate: 0.40
   paper_min_profit_factor: 1.15
-  auto_demote_drawdown_pct: 8.0  # NOT IMPLEMENTED — retirement is decided by
-                                 # decay_floor_pf below, not by drawdown
   # bars of 15m history each gauntlet backtest pulls (0 = everything cached).
   # Was hardcoded to 2900 (~30d). candles.db now holds ~20k bars (~209d), but
   # the backtester costs ~1.9 ms/bar/symbol, so a full 20k x 5-symbol run is

@@ -28,9 +28,8 @@ log = logging.getLogger(__name__)
 
 TIMEFRAMES = ("15m", "1h", "4h")
 
-#: two strategies firing on the same bars in the same direction are one
-#: strategy wearing two names, however well each backtests alone
-MAX_SIGNAL_OVERLAP = 0.6
+#: owned by the qualification record, which re-derives the verdict from it
+from ..strategy.qualification import MAX_SIGNAL_OVERLAP  # noqa: E402
 
 
 def signal_overlap(a_long, a_short, b_long, b_short) -> float:
@@ -62,7 +61,7 @@ class Analyst:
         #: it is admitted. 0.01 is conventional, not fitted: the measured
         #: false-positive rate on uniform percentiles is 0.1-0.4%.
         self.null_max_p = float(
-            (cfg.get("strategy") or {}).get("select_null_max_p", 0.01))
+            (cfg.get("strategies") or {}).get("select_null_max_p", 0.01))
 
     # ── data ─────────────────────────────────────────────────────────────
     def frames(self, tf: str, extra: tuple = ()) -> dict:
@@ -122,6 +121,14 @@ class Analyst:
     def _scfg(self) -> dict:
         return self.cfg.get("strategies", {}) or {}
 
+    def _compile(self, probe: StrategySpec):
+        """Compile for evidence. Under `qualify` the spec is measured with the
+        Factory exit semantics the paper/live engine will actually run, so the
+        backtest describes the exact strategy that is later installed. Every
+        other caller keeps the legacy simulator."""
+        return compile_spec(
+            probe, exit_semantics_id=getattr(self, "_exit_semantics_id", None))
+
     # ── selection ────────────────────────────────────────────────────────
     def evaluate(self, spec: StrategySpec,
                  timeframes=TIMEFRAMES) -> tuple[bool, dict]:
@@ -147,7 +154,7 @@ class Analyst:
                 results[tf] = {"untested": True, "reason": f"missing: {gaps}"}
                 continue
             try:
-                compiled = compile_spec(probe)
+                compiled = self._compile(probe)
             except Exception as e:
                 results[tf] = {"error": str(e)}
                 continue
@@ -188,7 +195,7 @@ class Analyst:
         probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
         frames, btc, derivs_for, risk = self._ctx(tf, probe)
         try:
-            compiled = compile_spec(probe)
+            compiled = self._compile(probe)
         except Exception as e:
             return {"error": str(e)}
         st = rolling.rolling_windows(
@@ -233,7 +240,7 @@ class Analyst:
         probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
         frames, btc, derivs_for, risk = self._ctx(tf, probe)
         try:
-            compiled = compile_spec(probe)
+            compiled = self._compile(probe)
         except Exception as e:
             return {"error": str(e), "fit": [], "declared": spec.regime_filter}
         s = self._scfg()
@@ -292,7 +299,7 @@ class Analyst:
         universe = {s: {tf: frames[s]} for s in syms
                     if frames[s] is not None}
         try:
-            cand = compile_spec(
+            cand = self._compile(
                 StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
             a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
                                       derivs=derivs_for(sym),
@@ -366,6 +373,50 @@ class Analyst:
                            f"symbols (p={p:.2g} > {self.null_max_p})"}
         return True, ev
 
+    def qualify(self, spec: StrategySpec,
+                book: list) -> tuple[bool, dict, dict | None]:
+        """The Backtest PASS for a created strategy.
+
+        This is `admit` — the same recent-profitability gate, dependence-aware
+        rotation null and redundancy check — run once under the Factory exit
+        semantics the paper/live engine will execute, so the evidence describes
+        the strategy that is later installed rather than the legacy simulator's
+        reading of it. A pass is returned as a canonical qualification record
+        (`strategy.qualification`); a refusal carries `admit`'s own reason.
+        Nothing is installed or written here."""
+        from ..strategy import exit_policy, factory_handoff as fh, qualification
+        bad = exit_policy.unsupported(spec.exit)
+        if bad:
+            return False, {"spec": spec.id, "untested": True,
+                           "reason": f"unsupported_versioned_exit:{bad}"}, None
+        self._exit_semantics_id = exit_policy.EXIT_SEMANTICS_ID
+        try:
+            ok, ev = self.admit(spec, book)
+            if not ok:
+                return False, ev, None
+            tf = ev["chosen_timeframe"]
+            probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
+            frames, _btc, _derivs, risk = self._ctx(tf, probe)
+            evaluated = fh._frozen_spec(probe)[1]
+            th = qualification.thresholds(self.cfg)
+            if th["null_max_p"] != self.null_max_p:
+                return False, {"spec": spec.id, "untested": True,
+                               "reason": "qualification_threshold_mismatch"}, None
+            run = spec_evidence.quant_contract.run_identity(
+                probe, frames, risk)
+            rec = qualification.build(
+                spec_id=spec.id, timeframe=tf, evaluated_spec_sha256=evaluated,
+                declared_universe=probe.universe or {},
+                declared_regime_filter=list(probe.regime_filter or []),
+                exit_semantics_id=exit_policy.EXIT_SEMANTICS_ID,
+                ev=ev, th=th, run=run)
+            return True, ev, rec
+        except qualification.QualificationRefused as e:
+            return False, {"spec": spec.id, "reason": e.code,
+                           "untested": True}, None
+        finally:
+            self._exit_semantics_id = None
+
     def _null_evidence(self, spec: StrategySpec, tf: str) -> dict:
         """One timing hypothesis, one common-calendar joint control receipt."""
         from ..research import portfolio_null as pn
@@ -375,7 +426,7 @@ class Analyst:
         from ..world.context import load_context
         try:
             probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
-            compiled = compile_spec(probe)
+            compiled = self._compile(probe)
             frames, btc, derivs_for, risk = self._ctx(tf, probe)
             universe = {s: {tf: f} for s, f in frames.items()
                         if not s.startswith("_") and f is not None}
@@ -416,7 +467,7 @@ class Analyst:
         out: dict = {}
         try:
             probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
-            compiled = compile_spec(probe)
+            compiled = self._compile(probe)
             frames, btc, derivs_for, risk = self._ctx(tf, probe)
             # a cross-sectional feature needs the rest of the book; without
             # `universe` xs_rank/breadth/dispersion evaluate to NaN and the

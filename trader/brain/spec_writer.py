@@ -87,13 +87,20 @@ _MEASURED = """What measurement has already established here — do not re-litig
   reversion on 15m bars is the most heavily mined space there is; assume it is
   arbitraged unless you have a reason it is not.
 - The one mechanism that beat both its rotation null AND an always-long/
-  always-short control did so with NO fixed target, an ATR trailing stop, a
-  long hold, and BOTH directions enabled. Long alone won 2 of 5 yearly windows
-  and short alone 3 of 5; only the pair won 4 of 5, because the two legs are
-  anti-correlated across regimes. A one-directional trend rule is usually a
-  market-direction bet wearing a strategy's clothes.
+  always-short control did so with NO fixed target, a long hold, and BOTH
+  directions enabled. Long alone won 2 of 5 yearly windows and short alone 3
+  of 5; only the pair won 4 of 5, because the two legs are anti-correlated
+  across regimes. A one-directional trend rule is usually a market-direction
+  bet wearing a strategy's clothes.
 - A fixed target amputates the fat right tail a continuation mechanism lives
-  on. If your thesis is that a move persists, do not cap it.
+  on. If your thesis is that a move persists, use `target: none` and a long
+  `time.max_bars` rather than capping it.
+- Exits are executed by the Factory's closed-bar exit engine, and your
+  strategy is backtested under exactly that engine. It supports: a stop
+  (`atr` or `pct`), a target (`rr`, `atr`, `pct` or `none`), NO trailing stop
+  (`trail` must be `{"kind":"none"}`), NO signal exit, and a time limit
+  `time.max_bars` between 1 and 500. Anything else cannot be tested and is
+  refused before it is evaluated.
 - 4h beat 1h on every mechanism tested, because cost is charged per round trip.
 - Declare `universe`: a liquidity floor is part of the strategy. The largest
   single loss on record (-$199.24) was taken on a market too thin for any
@@ -149,9 +156,10 @@ def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
         '  "regime_filter": ["TRENDING_UP"|"TRENDING_DOWN"|"RANGING"|"VOLATILE"],\n'
         '  "universe": {"include": [], "exclude": [],\n'
         '               "min_volume_usdt": 100000000},\n'
-        '  "exit": {"stop": {"kind":"atr","mult":2.5},\n'
-        '           "target": {"kind":"rr","v":3.0} | {"kind":"none"},\n'
-        '           "trail": {"kind":"atr","mult":3.0,"arm_at_r":1.0},\n'
+        '  "exit": {"stop": {"kind":"atr","mult":2.5} | {"kind":"pct","v":2.0},\n'
+        '           "target": {"kind":"rr","v":3.0} | {"kind":"atr","mult":4.0}'
+        ' | {"kind":"pct","v":5.0} | {"kind":"none"},\n'
+        '           "trail": {"kind":"none"},\n'
         '           "time": {"max_bars": 200}}\n'
         "}")
 
