@@ -364,3 +364,16 @@ def test_research_numeric_binding_scope_closes_and_commits_without_running_resea
     assert_closed(connections)
     with closing(original(path)) as db:
         assert db.execute('select * from predictive_experiment_binding').fetchall()==([] if failure else [('exact',)])
+
+
+@pytest.mark.parametrize('duplicate',[True,False])
+def test_execution_retry_uses_no_writer_but_new_evidence_keeps_lock_boundary(tmp_path,duplicate):
+    cap=P.Capture(tmp_path/'p.db');body={'value':1};identity=cap.write('note',body)
+    with closing(sqlite3.connect(cap.path)) as other:
+        other.execute('BEGIN IMMEDIATE')
+        try:
+            got=cap.write('note',body if duplicate else {'value':2})
+            assert got==(identity if duplicate else None)
+        finally:other.rollback()
+    with closing(sqlite3.connect(cap.path)) as db:
+        assert db.execute('select count(*) from observations').fetchone()[0]==1

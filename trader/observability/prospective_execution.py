@@ -111,6 +111,8 @@ class Capture:
                       BEGIN SELECT RAISE(ABORT,'observations immutable'); END;
                     CREATE TRIGGER IF NOT EXISTS obs_no_delete BEFORE DELETE ON observations
                       BEGIN SELECT RAISE(ABORT,'observations immutable'); END;''')
+                    if db.execute('SELECT 1 FROM observations WHERE observation_id=?',(key,)).fetchone():
+                        return key  # Immutable retry: no SQLite writer needed.
                     # A duplicate INSERT OR IGNORE still advances AUTOINCREMENT
                     # and dirties sqlite_sequence. Keep retries write-free while
                     # retaining the same immutable observation and ordering.
