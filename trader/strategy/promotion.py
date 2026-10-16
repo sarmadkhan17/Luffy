@@ -1,29 +1,29 @@
-"""Strategy lifecycle genetics — statistical promotion/demotion.
+"""Closed-trade statistics for strategies: arithmetic and observation only.
 
-Deterministic, instant, no LLM required (REQUIREMENTS §6):
-  PAPER → ACTIVE   when ≥15 trades, winrate ≥40%, PF ≥1.15
-  ACTIVE/DEMOTED → DEMOTED  on 6 consecutive losses or PF<0.85 over ≥20
-  DEMOTED → RETIRED after 14 days without recovery
-The Strategist (LLM) may overrule upward with written rationale only.
+This module does not promote, demote or retire anything. Promotion is the
+Factory lifecycle: Backtest PASS -> the configured paper
+probation (`strategies.paper_probation_trades` / `paper_min_winrate` /
+`paper_min_profit_factor`, counted per exact installed version) -> exact owner
+approval -> Governor. Retirement of a deployed spec is `analyst.review_deployed`
+and the Governor. The legacy genome rules that used to live here (15 trades,
+6 consecutive losses, PF 0.85 over 20, 14 days demoted) could not mutate any
+state — every transition was refused for lack of replay-verified learning
+authority (`refuse_legacy_learning`) — and a second, different probation
+threshold beside the configured one is a conflict rather than a safeguard, so
+they are removed.
+
+What remains is consumed: `stats_of` is the probation arithmetic;
+`evaluate_population` keeps the persisted `stats_json` blob that the dashboard
+and the vault read fresh.
 """
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
 
 from ..core.journal import Journal
-from ..core.types import StrategyState
 
 log = logging.getLogger(__name__)
-
-PROMOTE_MIN_TRADES = 15
-PROMOTE_MIN_WINRATE = 0.40
-PROMOTE_MIN_PF = 1.15
-DEMOTE_CONSEC_LOSSES = 6
-DEMOTE_MAX_PF = 0.85
-DEMOTE_MIN_TRADES = 20
-RETIRE_DEMOTED_DAYS = 14
 
 
 def _stats_for(journal: Journal, strategy_id: str) -> dict:
@@ -52,120 +52,22 @@ def stats_of(closed: list) -> dict:
 
 
 def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
-    """Run deterministic lifecycle rules; persist state changes + events."""
-    actions = []
+    """Refresh each live strategy's persisted statistics. Never changes state.
+
+    Returns no actions; the signature is kept for the brain tick and the
+    Strategist's deterministic fallback, which report whatever it returns."""
     for row in journal.list_strategies():
-        sid, state = row["id"], row["state"]
-        if state == "retired":
+        if row["state"] == "retired":
             continue
-        # The branches below are the LEGACY GENOME lifecycle rules.
-        # `list_strategies()` applies no kind filter, so without this they also
-        # swept `kind='spec'` rows — and on 2026-09-20 retired the Donchian
-        # spec on 6 closed trades while 6 winners sat open, with no
-        # retire_reason written. Specs retire through
-        # analyst.review_deployed -> rolling.has_decayed, which scores pooled
-        # backtested evidence on the spec's own universe and treats too few
-        # recent trades as idle, not decay.
-        # OBSERVED, NOT GOVERNED: a spec still has its stats blob refreshed at
-        # the foot of this loop — the dashboard and the vault read it — it is
-        # only excluded from every branch that can change state.
-        # See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
-        observe_only = row["kind"] == "spec"
-        st = _stats_for(journal, sid)
-
-        def transition(new_state: str, reason: str):
-            if new_state == state:
-                return          # no-op: don't spam events/alerts each cycle
-            # State, its timestamp and its REASON land in ONE statement inside
-            # ONE transaction, so a row can never carry a changed state without
-            # the provenance that explains it. Donchian was retired here on
-            # 2026-09-20 with an empty retire_reason and had to be traced by
-            # elimination against the other writers; this is that gap closed.
-            # `retire_reason` is the existing state-change reason column —
-            # tv.py already wrote demotion verdicts into it, and
-            # scripts/repair_proxy_demotions.py reads it on demoted rows.
-            # `AND state=?` makes the write deterministic on the shared WAL:
-            # if another writer moved the row first, this transition does not
-            # fire at all rather than clobbering it, and no event is emitted.
-            # Raw legacy trade statistics cannot authorize lifecycle mutation.
-            from ..learning.foundation import refuse_legacy_learning
-            try:
-                refuse_legacy_learning("legacy_population_transition")
-            except ValueError as exc:
-                log.warning(str(exc))
-                return
-            with journal._tx() as c:
-                changed = c.execute(
-                    "UPDATE strategies SET state=?, state_changed_at=?, "
-                    "retire_reason=? WHERE id=? AND state=?",
-                    (new_state, datetime.now(timezone.utc).isoformat(),
-                     reason, sid, state)).rowcount
-            if not changed:
-                log.warning(f"STRATEGY {row['name']}: {state} → {new_state} "
-                            f"skipped — row is no longer in state '{state}'")
-                return
-            journal.log_brain_event(
-                "statistical_transition", sid,
-                {"from": state, "to": new_state, "reason": reason,
-                 "trades": st["trades"], "pf": round(st["pf"], 2),
-                 "winrate": round(st["winrate"], 3)})
-            log.warning(f"STRATEGY {row['name']}: {state} → {new_state} ({reason})")
-            actions.append({"strategy": row["name"], "id": sid,
-                            "from": state, "to": new_state, "reason": reason})
-
-        if observe_only:
-            pass                # no legacy lifecycle branch may run on a spec
-        elif state == "paper":
-            if st["trades"] >= PROMOTE_MIN_TRADES and \
-                    st["winrate"] >= PROMOTE_MIN_WINRATE and \
-                    st["pf"] >= PROMOTE_MIN_PF:
-                from .legacy_authority import grandfathered
-                if grandfathered(journal, sid):
-                    transition("active", f"probation passed: WR {st['winrate']:.0%}, "
-                                         f"PF {st['pf']:.2f}")
-                # Otherwise retain paper state; statistics cannot mint authority.
-            # demotion must be reachable at ANY trade count — previously this
-            # was nested under `trades >= PROMOTE_MIN_TRADES`, so a paper
-            # strategy bleeding 14 straight losses could never be retired.
-            elif st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES or (
-                    st["trades"] >= DEMOTE_MIN_TRADES and st["pf"] < DEMOTE_MAX_PF):
-                transition("retired", f"failed probation: PF {st['pf']:.2f}, "
-                                      f"WR {st['winrate']:.0%}, "
-                                      f"{st['trades']} trades")
-        elif state in ("active", "demoted"):
-            if st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES:
-                transition("demoted", f"{st['consecutive_losses']} consecutive losses")
-            elif st["trades"] >= DEMOTE_MIN_TRADES and st["pf"] < DEMOTE_MAX_PF \
-                    and state != "demoted":
-                transition("demoted", f"PF decayed to {st['pf']:.2f} "
-                                      f"over {st['trades']} trades")
-            elif state == "demoted":
-                # measure from WHEN IT WAS DEMOTED, not from birth — using
-                # created_at made a strategy demoted late in its life
-                # instantly retire-eligible.
-                since = row.get("state_changed_at") or row["created_at"]
-                demoted_at = datetime.fromisoformat(since)
-                if demoted_at.tzinfo is None:
-                    demoted_at = demoted_at.replace(tzinfo=timezone.utc)
-                age_days = (datetime.now(timezone.utc) - demoted_at).days
-                if age_days > RETIRE_DEMOTED_DAYS and st["pf"] < PROMOTE_MIN_PF:
-                    transition("retired", f"no recovery in {age_days}d "
-                                          f"since demotion")
-        # Refresh the persisted stats blob either way — for governed genomes
-        # and for observed specs alike. `query()` does not commit, so this
-        # write used to ride on whatever _tx() happened to follow it; a sweep
-        # that produced no transition could leave it uncommitted.
+        st = _stats_for(journal, row["id"])
+        # `query()` does not commit, so the refresh goes through `_tx()`.
         with journal._tx() as c:
             c.execute("UPDATE strategies SET stats_json=? WHERE id=?",
                       (json.dumps({"trades": st["trades"], "wins": st["wins"],
                                    "pnl_usdt": round(st["pnl"], 4),
-                                   "pf": round(min(st["pf"], 99), 3)}), sid))
-
-    if actions and notifier:
-        msg = "\n".join(f"{a['strategy']}: {a['from']}→{a['to']} — {a['reason']}"
-                        for a in actions)
-        notifier.send(f"🧬 Strategy lifecycle:\n{msg}")
-    return actions
+                                   "pf": round(min(st["pf"], 99), 3)}),
+                       row["id"]))
+    return []
 
 
 def population_snapshot(journal: Journal) -> list[dict]:
