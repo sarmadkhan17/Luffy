@@ -1,8 +1,14 @@
-"""Immutable paper economic evidence, never a synthetic cost model.
+"""Immutable paper economic evidence.
 
-Source validators are code-owned adapters, not config switches. Only a public
-no-funding-crossing adapter is registered. Account fill fees do not prove
-hypothetical paper fees; reference fills do not prove execution costs. Tests alone register fixture authorities.
+Source validators are code-owned adapters, not config switches. Two are
+registered: a public no-funding-crossing funding adapter, and the labelled
+ESTIMATE of commission and slippage that the exact version's Backtest PASS
+already charged (`quant_contract.cost_model`). The estimate is the owner's
+chosen paper cost source (SOL1 closure); it is never presented as venue
+economics. Account fill fees do not prove hypothetical paper fees, reference
+fills do not prove execution costs, and the model's flat funding fallback is
+deliberately not used: funding comes only from the funding evidence below, so
+it cannot be counted twice. Tests alone register fixture authorities.
 Digests prove frozen internal consistency, not external venue authenticity.
 """
 from datetime import datetime
@@ -18,7 +24,70 @@ TABLE = 'versioned_paper_cost_receipts'
 SOURCES = 'versioned_paper_cost_sources'
 # A future adapter must validate source authority/time scope; execution adapters
 # must also establish an already validated method, size coverage and freshness.
-SOURCE_VALIDATORS = {FUNDING_METHOD: validate_no_crossing}
+ESTIMATE_METHOD = 'LUFFY_BACKTEST_COST_MODEL_ESTIMATE_V1'
+ESTIMATE_VERSION = 'paper-cost-model-estimate.v1'
+ESTIMATE_LABEL = 'ESTIMATED_MODEL_NOT_VENUE_ACTUAL'
+
+
+def _estimate_body(bound, kind, model, entry_atr, qualification_id):
+    """Pure re-derivation of one estimate source from its declared inputs.
+
+    Backtest definitions reused verbatim (quant_contract.DEFINITIONS):
+    slippage = slippage_atr_frac x ATR(signal bar), paid adversely on entry and
+    again on exit; fees = taker_fee_pct/100 x executable price x quantity per
+    leg. The paper fill is the bare decision reference, so slippage enters once,
+    as an adjustment to that fill (see leg_cost); funding is not modelled here.
+    """
+    if kind not in ('commission', 'slippage') or model.get('basis') != 'ESTIMATED_MODEL':
+        raise ValueError('estimate_model_invalid')
+    fee_pct, frac = number(model['taker_fee_pct']), number(model['slippage_atr_frac'])
+    atr = number(entry_atr)
+    if fee_pct < 0 or frac < 0 or atr <= 0 or not qualification_id:
+        raise ValueError('estimate_inputs_invalid')
+    sign = 1 if bound['side'] == 'long' else -1
+    body = dict(method=ESTIMATE_METHOD, kind=kind, currency='USDT',
+                version=ESTIMATE_VERSION, captured_ms=bound['exit']['time_ms'],
+                binding=bound)
+    calc = {}
+    for leg, adverse in (('entry', sign), ('exit', -sign)):
+        fill = number(bound[leg]['fill'])
+        if kind == 'commission':
+            body[leg] = dict(rate=fee_pct / 100, classification='taker')
+            calc[leg] = dict(rate=fee_pct / 100, fill=fill,
+                             formula='rate x executable_price x quantity (executable price from the slippage estimate)')
+        else:
+            body[leg] = dict(executable_price=fill + adverse * frac * atr)
+            calc[leg] = dict(fill=fill, adverse_direction=adverse, atr=atr,
+                             slippage_atr_frac=frac,
+                             formula='fill + adverse_direction x slippage_atr_frac x ATR')
+    body['provenance'] = dict(
+        label=ESTIMATE_LABEL, cost_model=dict(model), qualification_id=qualification_id,
+        entry_atr=atr, atr_basis='ATR(14) through the signal bar, as frozen in the trade exit state',
+        calculation=calc,
+        assumptions=['commission is the taker rate on both legs; maker rebates are not assumed',
+                     'slippage is adverse on both legs and scales with signal-bar ATR',
+                     'the backtest flat funding fallback is not applied; funding is separate evidence',
+                     'an estimate of the backtest model, not a venue schedule or fill'])
+    body['source_id'] = digest(canonical(body))
+    return body
+
+
+def estimate_source(bound, kind, model, entry_atr, qualification_id):
+    return _estimate_body(bound, kind, model, entry_atr, qualification_id)
+
+
+def validate_estimate(source):
+    try:
+        p = source['provenance']
+        expected = _estimate_body(source['binding'], source['kind'], p['cost_model'],
+                                  p['entry_atr'], p['qualification_id'])
+        return source == expected
+    except (KeyError, ValueError, TypeError, ArithmeticError):
+        return False
+
+
+SOURCE_VALIDATORS = {FUNDING_METHOD: validate_no_crossing,
+                     ESTIMATE_METHOD: validate_estimate}
 WIN_RATE_POLICY = {'basis': 'NET', 'source':
     'versioned probation _assess at 1ab0da0; versioned-paper-probation-truth-fix-r1'}
 
@@ -247,6 +316,49 @@ def build(db, bound, source_ids=None):
                 net_pnl_status='ESTABLISHED' if complete else 'UNAVAILABLE')
 
 
+def estimate_context(journal, trade, version):
+    """(cost_model, entry_atr, qualification_id) for one paper trade, read from
+    the exact version's verified Backtest PASS and the trade's own frozen exit
+    state. Refuses, never defaults, when either is unavailable (a Referee-sourced
+    version carries no backtest cost model, nor does a legacy PASS without one)."""
+    from ..strategy import factory_handoff as F, qualification as Q, exit_policy as E
+    try:
+        q = F.verify_validation(journal, version).get('qualification')
+        if not q:
+            raise ValueError('cost_model_source_unavailable')
+        model = Q.cost_model_of(q)
+        policy, _ = E.decode(json.loads(trade['entry_identity_json'])['exit_state'])
+        return model, number(policy.entry_atr), q['qualification_id']
+    except Q.QualificationRefused as exc:
+        raise ValueError(exc.code) from exc
+    except F.HandoffRefused as exc:
+        raise ValueError('cost_model_validation_unverified') from exc
+
+
+def estimate_ids(db, bound, context):
+    """Freeze the two estimate sources for this trade and return their ids."""
+    model, atr, qid = context
+    ids = {}
+    for kind in ('commission', 'slippage'):
+        source = estimate_source(bound, kind, model, atr, qid)
+        freeze_source(db, source)
+        ids[kind] = source['source_id']
+    return ids
+
+
+def finalize_estimated(db, trade, version, install, context, funding_source_id=None):
+    """The one production finalizer: estimated commission and slippage from the
+    exact version's PASS cost model, plus funding only from funding evidence.
+    Without a usable context the receipt records every dimension UNAVAILABLE."""
+    ensure(db)
+    ids = {}
+    if context is not None:
+        ids = estimate_ids(db, binding(trade, version, install), context)
+    if funding_source_id:
+        ids['funding'] = funding_source_id
+    return finalize(db, trade, version, install, ids or None)
+
+
 def finalize(db, trade, version, install, source_ids=None):
     ensure(db)
     body = build(db,binding(trade,version,install),source_ids)
@@ -275,6 +387,15 @@ def verify(journal, trade, version, install):
     bound = binding(trade,version,install)
     if body['binding'] != bound:
         raise ValueError('cost_receipt_binding_differs')
+    for kind in ('commission', 'slippage'):
+        sid = (body.get('source_ids') or {}).get(kind)
+        src = journal.query(f'SELECT canonical_json FROM {SOURCES} WHERE source_id=?', (sid,)) if sid else []
+        if src and json.loads(src[0]['canonical_json']).get('method') == ESTIMATE_METHOD:
+            # The estimate must be the exact version's own PASS model and this
+            # trade's own frozen ATR, not merely internally consistent.
+            p = json.loads(src[0]['canonical_json'])['provenance']
+            if (p['cost_model'], p['entry_atr'], p['qualification_id']) != estimate_context(journal, trade, version):
+                raise ValueError('cost_estimate_inputs_differ')
     # Access the Journal's existing connection through the read query protocol.
     class Reader:
         def execute(self, sql, params):

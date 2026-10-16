@@ -410,7 +410,7 @@ class Analyst:
                 declared_universe=probe.universe or {},
                 declared_regime_filter=list(probe.regime_filter or []),
                 exit_semantics_id=exit_policy.EXIT_SEMANTICS_ID,
-                ev=ev, th=th, run=run)
+                ev=ev, th=th, run=run, risk_cfg=risk)
             return True, ev, rec
         except qualification.QualificationRefused as e:
             return False, {"spec": spec.id, "reason": e.code,

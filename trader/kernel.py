@@ -1736,7 +1736,17 @@ class Kernel:
             return []
         # No account, reconciliation, control, protective-order or venue
         # capability is available to this runner.
-        closed = self._paper_executor().manage(snap)
+        executor = self._paper_executor()
+        closed = executor.manage(snap)
+        # Futures trades wait for their funding interval to be proven. Public
+        # history only, bounded per call and throttled; failure leaves them pending.
+        now = time.monotonic()
+        if now - getattr(self, "_paper_cost_at", -1e9) >= 60:
+            self._paper_cost_at = now
+            try:
+                closed = list(closed) + executor.complete_costs()
+            except Exception as e:
+                log.warning("paper cost completion deferred: %s", e)
         if closed:
             from .strategy import factory_handoff as fh
             versions = set()

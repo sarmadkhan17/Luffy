@@ -829,6 +829,10 @@ def test_real_engine_issues_a_reproducible_backtest_pass(engine_pass, tmp_path):
     again = quant_contract.run_identity(
         probe, a._ctx(TF, probe)[0], a._ctx(TF, probe)[3])
     assert again["identity"] == q["run"]["identity"]
+    # the PASS names the exact (estimated) cost model the backtest charged
+    risk = a._ctx(TF, probe)[3]
+    assert Q.cost_model_of(q) == quant_contract.cost_model(risk)
+    assert q["cost_model"]["basis"] == "ESTIMATED_MODEL"
     # and it becomes a version through the Factory with the engine's own cfg
     j = _journal(tmp_path)
     frozen = copy.deepcopy(spec)

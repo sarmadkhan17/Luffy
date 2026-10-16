@@ -1267,8 +1267,21 @@ def _paper_cost_evidence(journal, trade: dict, version: dict) -> dict:
     try:
         return C.verify(journal, trade, version,
                         verify_install(journal, version, current=False))
-    except (ValueError, TypeError, KeyError, OverflowError, AttributeError):
-        return {"net_pnl_status": "UNAVAILABLE", "reason": "COST_RECEIPT_MISSING_OR_INVALID"}
+    except (ValueError, TypeError, KeyError, OverflowError, AttributeError) as exc:
+        # no receipt yet is PENDING (blocks the assessment); anything else is a
+        # receipt that does not verify and is never counted or skipped.
+        reason = ("COST_RECEIPT_PENDING" if str(exc) == "cost_receipt_missing"
+                  else "COST_RECEIPT_MISSING_OR_INVALID")
+        return {"net_pnl_status": "UNAVAILABLE", "reason": reason}
+
+
+def _cost_refused(trade: dict) -> bool:
+    """A verified, immutable receipt that records the cost evidence as
+    UNAVAILABLE (e.g. a funding event inside the interval). The trade is
+    reported and left out of the count; it is never priced by assumption."""
+    ev = trade["cost_evidence"]
+    return (ev.get("net_pnl_status") == "UNAVAILABLE"
+            and bool(ev.get("receipt_sha256")) and ev.get("known_costs_complete") is False)
 
 
 def _economic_costs(trade: dict, version: dict, evidence: dict):
@@ -1354,6 +1367,12 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
     if not trade_identity_available(journal):
         return {**base, "status": P_IDENTITY_UNAVAILABLE}
     trades, excluded = _probation_trades(journal, v, since_ms, at_ms)
+    excluded += [{"id": t["id"], "reason": "cost_evidence_refused",
+                  "receipt_sha256": t["cost_evidence"]["receipt_sha256"],
+                  "dimensions": {k: d.get("reason") for k, d in t["cost_evidence"]["dimensions"].items()
+                                 if d.get("status") not in ("ESTABLISHED", "NOT_APPLICABLE")}}
+                 for t in trades if _cost_refused(t)]
+    trades = [t for t in trades if not _cost_refused(t)]
     base.update(excluded_trades=excluded, trades=trades, trades_sha256=_jsha(trades))
     if any(e['reason'] == 'exit_semantics_evidence_unproven' for e in excluded):
         return {**base, 'status': P_EXIT_INCOMPLETE}

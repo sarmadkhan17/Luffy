@@ -95,7 +95,8 @@ def _clean_symbols(per_symbol: dict) -> dict:
 
 def build(*, spec_id: str, timeframe: str, evaluated_spec_sha256: str,
           declared_universe: dict, declared_regime_filter: list,
-          exit_semantics_id: str, ev: dict, th: dict, run: dict) -> dict:
+          exit_semantics_id: str, ev: dict, th: dict, run: dict,
+          risk_cfg: dict | None = None) -> dict:
     """The record for a PASSED admission. `ev` is `Analyst.admit`'s evidence.
 
     The verdict is not copied from `ev`: it is derived from the numbers by
@@ -133,6 +134,14 @@ def build(*, spec_id: str, timeframe: str, evaluated_spec_sha256: str,
             "engine_digest", "identity")},
         "verdict": PASS,
     }
+    if risk_cfg is not None:
+        # The labelled ESTIMATE the backtest charged. Paper cost evidence reuses
+        # exactly this model, so it is recorded with the raw inputs whose
+        # digest the run identity already pins (`verify` re-derives it).
+        from . import quant_contract as qc
+        raw = {k: risk_cfg.get(k) for k in qc._CFG_KEYS}
+        rec["cost_config"] = raw
+        rec["cost_model"] = qc.cost_model(risk_cfg)
     rec["qualification_id"] = digest(rec)
     verify(rec)
     return rec
@@ -201,4 +210,33 @@ def verify(rec: dict) -> dict:
     ov = (rec.get("redundancy") or {}).get("max_overlap")
     if not _finite(ov) or ov > th["max_signal_overlap"]:
         _refuse("qualification_signal_overlap")
+    if "cost_model" in rec or "cost_config" in rec:
+        cost_model_of(rec)
     return rec
+
+
+def cost_model_of(rec: dict) -> dict:
+    """The backtest's cost model, re-derived from the raw inputs the run
+    identity pins. A record without it (or with an inconsistent one) gives no
+    paper cost estimate: the model is never assumed or defaulted here."""
+    from . import quant_contract as qc
+    raw, model = rec.get("cost_config"), rec.get("cost_model")
+    if not isinstance(raw, dict) or not isinstance(model, dict):
+        _refuse("qualification_cost_model_missing")
+    if set(raw) != set(qc._CFG_KEYS):
+        _refuse("qualification_cost_config_malformed")
+    try:
+        digest_of_raw = qc._digest(raw)
+        derived = qc.cost_model({k: v for k, v in raw.items() if v is not None})
+    except (TypeError, ValueError):
+        _refuse("qualification_cost_model_malformed")
+    if digest_of_raw != (rec.get("run") or {}).get("config_digest"):
+        _refuse("qualification_cost_config_not_run_config")
+    if derived != model:
+        _refuse("qualification_cost_model_differs")
+    if model.get("basis") != qc.COST_BASIS:
+        _refuse("qualification_cost_basis")
+    if not all(_finite(model.get(k)) and model[k] >= 0 for k in
+               ("taker_fee_pct", "slippage_atr_frac")):
+        _refuse("qualification_cost_rates_invalid")
+    return model

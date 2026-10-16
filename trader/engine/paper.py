@@ -233,6 +233,61 @@ class PaperExecutor:
                 reference=dict(price=price,observed_at=at,basis='decision_snapshot_price')))
         return ident
 
+    def pending_cost_trades(self, limit=8):
+        return self.journal.query(
+            f"SELECT t.* FROM {TABLE} t WHERE t.status='closed' AND t.market_type='futures' "
+            f"AND NOT EXISTS(SELECT 1 FROM {C.TABLE} r WHERE r.trade_id=t.id) "
+            "ORDER BY t.closed_at, t.id LIMIT ?", (limit,))
+
+    def complete_costs(self, *, fetch=None, clock=None, limit=2):
+        """Finalize closed futures trades whose cost receipt is pending.
+
+        Funding comes only from the existing public historical funding evidence
+        and only its no-crossing proof is accepted. A funding event inside or on
+        the edge of the interval makes the cost receipt UNAVAILABLE (recorded,
+        immutable), because the paper ledger holds no event-time position basis;
+        the trade is then excluded from probation, never priced by assumption.
+        A fetch failure leaves the trade pending and is retried. Returns the
+        ids finalized in this call."""
+        from ..observability import funding_events as FE
+        done = []
+        for trade in self.pending_cost_trades(limit):
+            try:
+                v = F.load_version(self.journal, trade['version_id'])
+                inst = F.verify_install(self.journal, v, current=False)
+                bound = C.binding(trade, v, inst)
+            except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+                continue
+            funding_id, permanent = None, False
+            symbol = trade['symbol'].split(':')[0].replace('/', '')
+            try:
+                kw = {k: v for k, v in (('fetch', fetch), ('clock', clock)) if v}
+                receipt = FE.lookup(symbol, bound['entry']['time_ms'], bound['exit']['time_ms'], **kw)
+                source = FE.no_crossing_source(bound, receipt, venue_symbol=symbol,
+                                               environment=trade['venue_environment'])
+            except ValueError as exc:
+                if str(exc) not in ('FUNDING_BOUNDARY_TIMING_UNPROVEN',
+                                    'FUNDING_POSITION_NOTIONAL_BASIS_UNAVAILABLE',
+                                    'funding_market_environment_unproven'):
+                    continue
+                permanent = True
+            except Exception:
+                continue
+            try:
+                context = C.estimate_context(self.journal, trade, v)
+            except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+                context = None
+            with self.journal._tx() as c:
+                c.execute('BEGIN IMMEDIATE')
+                if c.execute(f'SELECT 1 FROM {C.TABLE} WHERE trade_id=?', (trade['id'],)).fetchone():
+                    continue
+                if not permanent:
+                    C.freeze_source(c, source)
+                    funding_id = source['source_id']
+                C.finalize_estimated(c, trade, v, inst, context, funding_id)
+            done.append(trade['id'])
+        return done
+
     def manage(self, snap):
         """Consume the shared completed-bar transitions; book isolated fills."""
         closed = []
@@ -247,6 +302,12 @@ class PaperExecutor:
                 raise ValueError('paper_exit_identity_differs')
             spec = StrategySpec.from_dict(v['spec'])
             funding_work.append(original)
+            # Resolved before the write transaction; a failure never blocks an
+            # exit, it only leaves the trade's cost evidence refused.
+            try:
+                cost_context = C.estimate_context(self.journal, original, v)
+            except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+                cost_context = None
             with self.journal._tx() as c:
                 c.execute('BEGIN IMMEDIATE')
                 p = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (original['id'],)).fetchone())
@@ -282,7 +343,11 @@ class PaperExecutor:
                                    iso(state.last_bar_ms+policy.step_ms),result.reason,
                                    'recorded_canonical_observation',px,p['id']))
                         completed = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (p['id'],)).fetchone())
-                        C.finalize(c, completed, v, inst)
+                        if completed['market_type'] != 'futures':
+                            C.finalize_estimated(c, completed, v, inst, cost_context)
+                        # A futures trade is finalized by complete_costs once its
+                        # funding interval is proven; until then it has no receipt
+                        # and cannot count toward probation.
                         closed.append(p['id'])
                         break
         if self.capture:
