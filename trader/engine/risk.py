@@ -190,6 +190,7 @@ class RiskManager:
         self.taker_fee = float(r.get("taker_fee_pct", 0.05)) / 100.0
 
         self.journal = journal
+        self.cfg = cfg
         self._day_key: str | None = None
         self._day_start_equity: float | None = None
         self._peak_equity: float | None = None

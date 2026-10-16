@@ -571,9 +571,10 @@ def test_each_missing_or_stale_prerequisite_is_a_hold(tmp_path, cfg,
         monkeypatch.setattr(time, "time", lambda: NOW / 1000 + 3 * 86400)
     if hold == "capacity_missing_receipt":
         with j._tx() as db:
-            db.execute("DROP TRIGGER IF EXISTS strategy_governor_events_no_update")
-            db.execute("UPDATE strategy_governor_events SET canonical_json="
-                       "replace(canonical_json, ?, 'missing') ", (rid,))
+            # live capacity is the latest recorded receipt, not the one the
+            # Governor activated under: a corrupt one is a hold
+            db.execute("DROP TRIGGER strategy_capacity_receipts_no_update")
+            db.execute("UPDATE strategy_capacity_receipts SET canonical_sha256='corrupt'")
     if hold == "risk_config_changed":
         changed = copy.deepcopy(cfg)
         changed["risk"]["leverage"] = int(changed["risk"]["leverage"]) + 1

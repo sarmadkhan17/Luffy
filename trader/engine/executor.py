@@ -199,9 +199,13 @@ class Executor:
             params["reduceOnly"] = False
         from .entry_authority import positive, submit
         try:
-            positive(amount)
+            requested_amount = positive(amount)
             amount = quantize(self.ex, sym, amount)
-            positive(amount)
+            # Lot rounding may only shrink an entry. A venue helper that rounds
+            # up would exceed the size Risk and the approved allocation allowed.
+            if positive(amount) > requested_amount:
+                decision.skip_reason = 'entry_quantization_enlarged_size'
+                return None
         except (ValueError, TypeError, OverflowError):
             decision.skip_reason = 'entry_numeric_invalid'
             return None

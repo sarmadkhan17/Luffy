@@ -1599,6 +1599,27 @@ class Kernel:
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
+        # The approved per-version allocation is a share of Risk's own size.
+        # It is applied here so the request is already within it; the final
+        # Risk authorization and the Executor each re-derive it independently.
+        from .engine.entry_authority import allocated, current_allocation
+        try:
+            alloc = current_allocation(self.journal, self.cfg, top_strategy)
+            if alloc is not None:
+                scaled = float(allocated(sizing.amount, alloc["fraction"]))
+                ratio = scaled / sizing.amount
+                sizing.amount = scaled
+                sizing.size_usdt *= ratio
+                sizing.risk_usdt = (sizing.risk_usdt or 0.0) * ratio
+                if scaled <= 0 or scaled * snap.price / self.risk.leverage < float(
+                        self.cfg["risk"].get("min_notional_usdt", 10)):
+                    d.skip_reason = "risk: allocation-sized below min notional"
+                    d.reason_codes = [rc.ALLOCATION_SIZED_BELOW_MIN_NOTIONAL]
+                    return False
+        except ValueError as e:
+            d.skip_reason = f"version fence: {e}"
+            d.reason_codes = [rc.VERSION_NOT_LIVE_AUTHORIZED]
+            return False
         identity, reference = self._entry_provenance(d, snap, top_strategy, exec_tf)
         if versioned_binding:
             if identity.get('status') != 'VERIFIED':

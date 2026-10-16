@@ -452,3 +452,33 @@ def test_a_resealed_cost_model_is_not_the_runs_cost_model(cfg, mutate, code):
     with pytest.raises(Q.QualificationRefused) as e:
         Q.verify(_resealed(q, mutate))
     assert e.value.code == code
+
+
+def test_paper_estimates_never_establish_live_venue_economics_or_capacity(tmp_path, cfg):
+    """The estimate is a labelled paper cost source and nothing else. Passing
+    probation on it leaves live venue-cost and capacity evidence missing, which
+    stays its own live-readiness refusal."""
+    import inspect
+    from trader.portfolio import economics
+    from trader.strategy import capacity
+    r = Run(tmp_path, cfg)
+    run_outcomes(r, ["win"] * 7 + ["loss"] * 3)
+    a = r.assess()
+    assert a["status"] == F.P_SATISFIED
+    d = F.record_owner_decision(r.j, cfg, a["request_id"], "APPROVED",
+                                actor="operator", decided_at_ms=T0 + 31 * DAY)
+    assert d and F.state_of(r.j, r.vid) == F.APPROVED_FIRST_LIVE
+    # approved and paper-passed, yet not live: no capacity, no activation, no deployment
+    elig = F.eligible_for_first_live(r.j, r.vid, cfg=cfg, available_inputs=None,
+                                     capacity_receipt_id=None)
+    assert not elig.eligible and "capacity_receipt_not_asserted" in elig.reasons
+    assert F.live_entry_block(r.j, r.v["strategy_id"], cfg=cfg) == "version_capacity_not_established"
+    # forward economics keep requiring a calibrated cost-scope bridge; none is
+    # registered, and the paper estimate is registered in no live path
+    assert economics.COST_SCOPE_MODELS == {}
+    assert "paper_cost" not in inspect.getsource(capacity)
+    assert "ESTIMATE" not in inspect.getsource(capacity)
+    rec = r.receipt(r.ids[0])
+    src = json.loads(r.j.query(f"SELECT canonical_json FROM {C.SOURCES} WHERE source_id=?",
+                               (rec["source_ids"]["commission"],))[0]["canonical_json"])
+    assert src["provenance"]["label"] == "ESTIMATED_MODEL_NOT_VENUE_ACTUAL"

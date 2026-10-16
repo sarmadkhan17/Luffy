@@ -53,6 +53,7 @@ RISK_HALT = "risk_halt"                              # RiskError raised by check
 # ── kernel._try_enter ───────────────────────────────────────────────────
 STOP_ATR_UNAVAILABLE = "stop_atr_unavailable"        # spec-frame bars absent or ATR ≤ 0
 META_SIZE_BELOW_MIN_NOTIONAL = "meta_size_below_min_notional"
+ALLOCATION_SIZED_BELOW_MIN_NOTIONAL = "allocation_sized_below_min_notional"
 
 # ── executor.open / submission fence ────────────────────────────────────
 SUBMISSION_RECOVERY_PENDING = "submission_recovery_pending"

@@ -1969,6 +1969,55 @@ def live_entry_block(journal, strategy_id: str, *, cfg: dict | None = None
         return f"version_authority_unreadable:{type(e).__name__}"
 
 
+def _latest_established_capacity(journal, version_id: str, spec_hash: str):
+    """Id of the newest ESTABLISHED capacity receipt recorded for this exact
+    version, or None. Whether it is still current is `check_current`'s call."""
+    if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND "
+                         "name=?", (cap.TABLE,)):
+        return None
+    rows = journal.query(
+        f"SELECT receipt_id FROM {cap.TABLE} WHERE version_id=? AND spec_hash=? "
+        "AND status=? ORDER BY as_of_ms DESC, recorded_at_ms DESC, receipt_id "
+        "LIMIT 1", (version_id, spec_hash, cap.ESTABLISHED))
+    return rows[0]["receipt_id"] if rows else None
+
+
+def _active_governor_event(journal, version_id: str) -> dict | None:
+    """The version's latest Governor activation (ACTIVE or REACTIVATED)."""
+    history = [e for e in governor_events(journal, version_id)
+               if e["schema"] == GOVERNOR_SCHEMA]
+    return next((e for e in reversed(history)
+                 if e["to_state"] in ("ACTIVE", "REACTIVATED")), None)
+
+
+def live_allocation(journal, strategy_id: str, cfg: dict | None) -> dict | None:
+    """The approved allocation fraction that bounds one live entry.
+
+    None for a strategy outside the Factory (a grandfathered legacy grant has
+    no per-version allocation). For a Factory strategy it is the Governor's
+    current ACTIVE/REACTIVATED allocation of the exact installed version, and
+    only while `live_entry_block` re-verifies every first-live prerequisite;
+    otherwise it refuses. The fraction is a share of the size Risk itself
+    approves for the entry: it can shrink that size, never enlarge it."""
+    if not versioned(journal, strategy_id):
+        return None
+    blocked = live_entry_block(journal, strategy_id, cfg=cfg)
+    if blocked:
+        _refuse(f"version_not_live_authorized:{blocked}")
+    vid = resolve_current_install(journal, strategy_id)["version_id"]
+    last = _active_governor_event(journal, vid)
+    if last is None:
+        _refuse("version_first_live_activation_absent")
+    fraction, ceiling = last.get("allocation"), last.get("allocation_ceiling")
+    if (isinstance(fraction, bool) or not isinstance(fraction, (int, float))
+            or isinstance(ceiling, bool) or not isinstance(ceiling, (int, float))
+            or not math.isfinite(fraction) or not 0 < fraction <= ceiling <= 1):
+        _refuse("version_first_live_allocation_unbounded")
+    return {"version_id": vid, "fraction": repr(float(fraction)),
+            "ceiling": repr(float(ceiling)),
+            "governor_event_sha256": _sha(canonical(last))}
+
+
 def _first_live_hold(journal, version_id: str, cfg: dict | None) -> str | None:
     """HOLD reason for a Governor-ACTIVE version, or None when every
     first-live prerequisite re-verifies now."""
@@ -1988,23 +2037,27 @@ def _first_live_hold(journal, version_id: str, cfg: dict | None) -> str | None:
     from ..core.types import ControlState
     if journal.kv_get("control_state", None) != ControlState.ACTIVE.value:
         return "version_first_live_control_not_active"
-    history = [e for e in governor_events(journal, version_id)
-               if e["schema"] == GOVERNOR_SCHEMA]
-    last = next((e for e in reversed(history)
-                 if e["to_state"] in ("ACTIVE", "REACTIVATED")), None)
+    last = _active_governor_event(journal, version_id)
     if last is None:
         return "version_first_live_activation_absent"
     allocation = last.get("allocation")
     if isinstance(allocation, bool) or not isinstance(allocation, (int, float)) \
-            or not math.isfinite(allocation) or not 0 < allocation <= (
-                last.get("allocation_ceiling") or 0):
+            or not math.isfinite(allocation) or not 0 < allocation <= min(
+                last.get("allocation_ceiling") or 0, 1):
         return "version_first_live_allocation_unbounded"
     if last.get("risk_sha256") != _jsha(cfg.get("risk")):
         return "version_first_live_risk_configuration_changed"
+    # Capacity is re-evaluated at use (SDD: it is never frozen with the
+    # version): the latest recorded ESTABLISHED receipt must describe NOW. The
+    # receipt the Governor activated under only proves activation was sound;
+    # it is superseded by the first newer account observation.
+    receipt_id = _latest_established_capacity(journal, version_id, v["spec_hash"])
+    if receipt_id is None:
+        return "version_capacity_not_established"
     elig = eligible_for_first_live(
         journal, version_id, cfg=cfg, _governor_resume=True,
         available_inputs=last.get("available_inputs"),
-        capacity_receipt_id=last.get("capacity_receipt_id"),
+        capacity_receipt_id=receipt_id,
         research_bank_path=(cfg.get("research") or {}).get(
             "predictive_bank_path"))
     if not elig.eligible:

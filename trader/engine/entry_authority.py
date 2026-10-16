@@ -6,7 +6,7 @@ UNKNOWN permission/leverage/freshness cannot authorize exposure.
 """
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_DOWN
 import hashlib
 import json
 import math
@@ -52,6 +52,30 @@ def positive(value, *, zero=False):
 def exact_number(value, *, zero=False):
     text = format(positive(value, zero=zero), 'f')
     return text.rstrip('0').rstrip('.') if '.' in text else text
+
+
+ALLOCATION_PLACES = Decimal('1E-8')
+
+
+def allocated(base, fraction):
+    """The share of Risk's own approved size an approved allocation permits.
+
+    Exact decimal arithmetic rounded DOWN, and the fraction must lie in (0, 1],
+    so the result can never exceed `base`."""
+    f, b = positive(fraction), positive(base)
+    if f > 1:
+        raise ValueError('allocation_fraction_invalid')
+    return (b * f).quantize(ALLOCATION_PLACES, rounding=ROUND_DOWN)
+
+
+def current_allocation(journal, cfg, strategy_id):
+    """None outside the Factory; else the exact version's live allocation, or a
+    refusal when the version is not live-authorized right now."""
+    from ..strategy import factory_handoff as fh
+    try:
+        return fh.live_allocation(journal, strategy_id, cfg)
+    except fh.HandoffRefused as exc:
+        raise ValueError('version_not_live_authorized') from exc
 
 
 def register_capability(journal, snapshot, instrument_id, *, execution_symbol,
@@ -336,7 +360,16 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
                     int(manager.journal.query("SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]['n']), 'futures')
         if not result.ok:
             raise ValueError('risk_entry_refused:' + result.reason)
-        allowed = min(positive(requested), positive(result.amount))
+        # The approved per-version allocation is a share of the size Risk
+        # itself computed for this entry; it can only shrink it. Rounded down.
+        alloc = current_allocation(manager.journal, getattr(manager, 'cfg', None), strategy_id)
+        base = positive(result.amount)
+        limit = base if alloc is None else allocated(base, alloc['fraction'])
+        if limit <= 0:
+            raise ValueError('risk_entry_refused:allocation_rounds_to_zero')
+        allowed = min(positive(requested), limit)
+        if alloc is not None and float(allowed) * price / manager.leverage < manager.min_notional:
+            raise ValueError('risk_entry_refused:allocation_below_min_notional')
         check_bracket(cap, allowed, reference['price'], manager.leverage)
         if allowed * positive(reference['price']) / positive(manager.leverage) > available:
             raise ValueError('risk_available_margin_exceeded')
@@ -346,6 +379,7 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
         raw.update(allowed=str(allowed), risk_policy_id=manager.policy()['digest'],
                    account_id=account_id, book_id=digest(positions), risk_issuer=manager._identity,
                    control_intent_id=control_id,
+                   allocation=None if alloc is None else dict(alloc, base=str(base), limit=str(limit)),
                    risk_result='RESIZE' if allowed < positive(requested) else 'ALLOW',
                    decision_time_ms=int(time.time()*1000),
                    risk_release=release.as_dict(),
@@ -386,6 +420,20 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
             raise ValueError('risk_intent_or_capability_mismatch')
     if positive(amount) > positive(raw['allowed']):
         raise ValueError('risk_size_exceeded')
+    # Revalidated against the Governor's CURRENT allocation of the exact
+    # version, not the one the permission was issued under: a reduction after
+    # authorization still binds, and no other version's allocation can serve.
+    alloc = current_allocation(executor.journal, getattr(executor, 'cfg', None), strategy_id)
+    issued = raw.get('allocation')
+    if alloc is None:
+        if issued is not None:
+            raise ValueError('allocation_binding_differs')
+    else:
+        if (issued is None or issued['version_id'] != alloc['version_id']
+                or issued['ceiling'] != alloc['ceiling']):
+            raise ValueError('allocation_binding_differs')
+        if positive(amount) > min(allocated(issued['base'], alloc['fraction']), positive(raw['allowed'])):
+            raise ValueError('allocation_ceiling_exceeded')
     q = positive(amount); price = positive(reference['price']); positive(q*price)
     check_bracket(cap, q, price, executor.leverage)
     constraints = cap['record']['constraints']
