@@ -295,7 +295,7 @@ def test_a_replaced_store_file_reopens_admission(rig):
 
 def test_a_contract_change_reopens_admission(rig, monkeypatch):
     def bump(r, e):
-        monkeypatch.setattr(refusal, "CONTRACT", "rp07.refusal.v2")
+        monkeypatch.setattr(refusal, "CONTRACT", refusal.CONTRACT + ".changed")
     assert _reopens(rig, bump) == 2
 
 
@@ -454,3 +454,25 @@ def test_skipped_steps_do_not_touch_the_stamp_between_checks(rig, monkeypatch):
     clock.t += 100
     r.step()
     assert calls == [1]
+
+
+def test_request_churn_has_a_bounded_cache_and_eviction_reprobes():
+    cache = refusal.Refusals()
+    adm = {"deterministic": True, "reason": "insufficient_replay_history"}
+    for i in range(refusal.MAX_SLOTS * 3):
+        assert cache.record(i, "same", [1], adm)
+    assert len(cache) == refusal.MAX_SLOTS
+    assert cache.decide(0, "same", lambda: [1]) is None
+    assert cache.decide(refusal.MAX_SLOTS * 3 - 1, "same", lambda: [1])
+
+
+def test_stamp_reads_a_literal_sqlite_path_with_uri_delimiters(tmp_path):
+    path = tmp_path / "candles?#.db"
+    _store(path, ["BTC/USDT"])
+    assert refusal.stamp(str(path), TF, ["BTC/USDT"]) is not None
+
+
+def test_a_changed_discovery_window_reopens_admission(rig):
+    def change(r, env):
+        r.cfg["research"]["predictive_split"] = {"start_ms": 0, "end_ms": STEP * 500}
+    assert _reopens(rig, change) == 2

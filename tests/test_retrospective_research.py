@@ -207,3 +207,13 @@ def test_original_discovery_bar_threshold_is_preserved(discovery,closed_bars):
     assert coverage(['4h'],feed=feed)['4h'][sym]==closed_bars
     b=ev.load_bundle('4h',[sym],cfg,paths=cfg['research']['paths'])
     assert len(b.frames[sym])==closed_bars
+
+
+def test_short_retrospective_bundle_refuses_before_missing_dependency(discovery):
+    cfg, symbols = discovery
+    p = Part("ema", "state", "ema", "close > ema(20)", "close < ema(20)")
+    out = job.evaluate_job({"tf": "4h", "symbols": symbols[:1], "cfg": cfg,
+        "paths": cfg["research"]["paths"], "requires": ["open_interest"],
+        "combos": [Combination((p,), "4h", "trail").as_dict()], "min_symbols": 16})
+    assert out["admission"]["reason"] == job.INSUFFICIENT_SYMBOL_COVERAGE
+    assert out["done"] == 0

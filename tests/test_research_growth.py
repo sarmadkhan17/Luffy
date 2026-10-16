@@ -20,7 +20,7 @@ from trader.research import growth
 def _res(p=0.01, pct=20.0, verdict="scored", testable=True, trades=100):
     return {"consistency_p": p, "portfolio": {"total_pct": pct},
             "verdict": verdict, "testable": testable, "trades": trades,
-            "scored_symbols": 8}
+            "scored_symbols": 8, "parts": ["a", "b"]}
 
 
 def test_a_scored_testable_rule_with_signal_carries_information():
@@ -118,3 +118,19 @@ def test_an_empty_rule_is_pruned_without_pretending_to_be_evidence():
         subset_results=None)
     assert verdict == "prune"
     assert "no trades" in reason
+
+
+def test_partial_ablations_do_not_establish_a_survivor():
+    child = _res(p=.001, pct=30)
+    subs = {"a": _res(p=.01, pct=20)}
+    verdict, reason, abl = growth.decide(child, subset_results=subs)
+    assert verdict == "grow" and "incomplete" in reason
+    assert set(abl) == {"a"}
+    subs["b"] = _res(p=.02, pct=25)
+    assert growth.decide(child, subset_results=subs)[0] == "survivor"
+
+
+def test_an_unrelated_ablation_cannot_complete_a_rule():
+    child = _res(p=.001, pct=30)
+    subs = {"a": _res(p=.01, pct=20), "unrelated": _res(p=.02, pct=25)}
+    assert growth.decide(child, subset_results=subs)[0] == "grow"

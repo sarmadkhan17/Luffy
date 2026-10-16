@@ -293,3 +293,30 @@ def test_a_non_control_batch_carries_the_discovery_floor(tmp_path, covered):
                       ["BTC/USDT"] * 16, [])
     assert run.payloads[-1]["min_symbols"] == 16
     assert out["ok"] is False and "min_discovery_symbols=16" in out["error"]
+
+
+def test_missing_drop_diagnosis_is_unknown_not_deterministic():
+    from types import SimpleNamespace
+    bundle = SimpleNamespace(frames={}, requested=("A", "B"), dropped={
+        "A": {"reason": "short_history"}}, tf="4h", cut=0)
+    result = job.admit_bundle(bundle, 2)
+    assert result["unknown_symbols"] == ["B"]
+    assert result["deterministic"] is False
+
+
+def test_short_bundle_skips_auxiliary_loads_and_keeps_typed_refusal(
+        reads, tmp_path, monkeypatch):
+    from trader.data.references import RefStore
+    from trader.data.derivatives import DerivFeed
+    for symbol in SYMS:
+        reads[symbol] = "none"
+    def forbidden(*a, **kw):
+        pytest.fail("auxiliary read for already refused candle bundle")
+    monkeypatch.setattr(RefStore, "load", forbidden)
+    monkeypatch.setattr(DerivFeed, "__init__", forbidden)
+    monkeypatch.setattr(ev, "load_world", lambda paths, requires, cut:
+                        None if "world" not in requires else forbidden())
+    result = job.evaluate_job(_payload(tmp_path, min_symbols=5,
+        requires=["ohlcv", "ref:vix", "funding", "world"]))
+    assert result["admission"]["reason"] == job.INSUFFICIENT_REPLAY_HISTORY
+    assert result["done"] == 0

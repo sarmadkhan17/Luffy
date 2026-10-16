@@ -26,11 +26,16 @@ import logging
 import os
 import sqlite3
 import time
+from collections import OrderedDict
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 #: bump when what a refusal means changes
-CONTRACT = "rp07.refusal.v1"
+CONTRACT = "rp07.refusal.v2"
+
+# Eviction costs a fresh probe; request churn must not grow process memory.
+MAX_SLOTS = 64
 
 #: a suppressed bundle is probed by a real child at least this often, stamp
 #: or no stamp. Below 3600 s so one step of slack still lands inside the hour.
@@ -49,7 +54,8 @@ SUPPRESSIBLE = ("insufficient_replay_history", "insufficient_symbol_coverage")
 #: of them is a change of contract even when no constant was bumped.
 _CODE = ("trader/research/evaluate.py", "trader/research/job.py",
          "trader/research/slices.py", "trader/data/market_provenance.py",
-         "trader/data/feed.py", "trader/research/refusal.py")
+         "trader/data/feed.py", "trader/research/refusal.py",
+         "trader/strategy/spec_evidence.py", "trader/core/types.py")
 
 
 def _root() -> str:
@@ -113,8 +119,9 @@ def stamp(path: str, tf: str, symbols) -> list | None:
     if not keys:
         return None
     try:
-        con = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=2.0)
-    except sqlite3.Error:
+        con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro",
+                              uri=True, timeout=2.0)
+    except (OSError, ValueError, sqlite3.Error):
         return None
     try:
         sql = _STAMP_SQL.format(q=",".join("?" * len(keys)))
@@ -186,7 +193,8 @@ def identity(cfg: dict, tf: str, round_: str, floor_key: str, floor: int,
            "cap_ms": None if cap_ms is None else int(cap_ms),
            "cut_ms": None if cut_ms is None else int(cut_ms),
            "source": _file_identity(path),
-           "retrospective": (cfg.get("research") or {}).get("retrospective")}
+           "retrospective": (cfg.get("research") or {}).get("retrospective"),
+           "predictive_split": (cfg.get("research") or {}).get("predictive_split")}
     return hashlib.sha256(json.dumps(doc, sort_keys=True).encode()
                           ).hexdigest()
 
@@ -199,7 +207,7 @@ class Refusals:
         self._clock = clock
         self.reprobe_s = float(reprobe_s)
         self.stamp_check_s = float(stamp_check_s)
-        self._by_slot: dict = {}
+        self._by_slot: OrderedDict = OrderedDict()
 
     @staticmethod
     def slot(tf, round_, floor_key, symbols) -> tuple:
@@ -220,6 +228,9 @@ class Refusals:
             self.clear(slot)
             return False
         now = self._clock()
+        self.clear(slot)
+        while len(self._by_slot) >= MAX_SLOTS:
+            self._by_slot.popitem(last=False)
         self._by_slot[slot] = {"identity": ident, "stamp": st,
                                "reason": adm["reason"],
                                "loaded": adm.get("loaded_symbols"),
@@ -249,5 +260,6 @@ class Refusals:
                 self.clear(slot)
                 return None
             e["checked_at"] = now
+        self._by_slot.move_to_end(slot)
         e["suppressed"] += 1
         return e

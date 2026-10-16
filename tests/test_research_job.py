@@ -13,6 +13,7 @@ and the planner offers them again.
 import sqlite3
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from trader.core.child import run_child
@@ -36,6 +37,8 @@ def store(tmp_path):
         "CREATE TABLE candles (symbol TEXT NOT NULL, tf TEXT NOT NULL, "
         "ts INTEGER NOT NULL, open REAL, high REAL, low REAL, close REAL, "
         "volume REAL, taker_buy REAL, PRIMARY KEY (symbol, tf, ts))")
+    from trader.data import market_provenance as provenance
+    provenance.init(con)
     rng = np.random.default_rng(7)
     for i in range(5):
         px, rows = 100.0, []
@@ -46,6 +49,18 @@ def store(tmp_path):
                          px * 0.996, px, 10.0, 5.0))
         con.executemany("INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                         rows)
+        # These are generated bars, with explicitly simulated receipt-at-close
+        # clocks. Plain candle inventory alone cannot establish replay input.
+        frame = pd.DataFrame(rows, columns=["symbol", "tf", "ts", "open", "high",
+                                           "low", "close", "volume", "taker_buy"])
+        frame["ts"] = pd.to_datetime(frame["ts"], unit="ms", utc=True)
+        retained = provenance.annotate(
+            frame, instrument_id=f"binance_usdm:futures:S{i}USDT",
+            source="rp07:synthetic-fixture", kind="candle", received_ms=900 * TF_MS,
+            timeframe="4h", request_id=f"synthetic-{i}")
+        retained["observed_at_ms"] = retained["event_time_ms"] + TF_MS
+        retained["available_at_ms"] = retained["observed_at_ms"]
+        provenance.append(con, f"candle:S{i}/USDT:4h", retained)
     con.commit()
     con.close()
     return db

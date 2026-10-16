@@ -95,8 +95,14 @@ def is_transient_read_error(exc: BaseException) -> bool:
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),
                 heldout_symbols=(), paths: dict | None = None,
-                cap_ms: int | None = None) -> Bundle:
-    """Read the stores, cut at the discovery boundary, build the context."""
+                cap_ms: int | None = None,
+                min_symbols: int | None = None) -> Bundle:
+    """Read the stores, cut at the discovery boundary, build the context.
+
+    With a caller's symbol floor, a short candle bundle omits auxiliary
+    reads. The child still returns the existing admit_bundle diagnosis;
+    this shortcut neither scores nor admits that incomplete bundle.
+    """
     from ..data.derivatives import DerivFeed
     from ..data.feed import DataFeed
     from ..data.references import RefStore
@@ -112,7 +118,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         if not isinstance(retrospective, dict) or not retrospective:
             raise ValueError('explicit retrospective research requires a nonempty dataset contract')
         return _retrospective_bundle(tf, symbols, cfg, requires,
-                                     heldout_symbols, paths, cap_ms)
+                                     heldout_symbols, paths, cap_ms, min_symbols)
     feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
     full = {}
     dropped = {}
@@ -167,6 +173,8 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
             dropped[sym] = {"reason": "frames_error",
                             "error": f"{type(e).__name__}: {e}"[:200]}
     disc = {s: d for s, d in disc.items() if s in sym_frames}
+    if min_symbols is not None and len(disc) < int(min_symbols):
+        requires = ("ohlcv",)
 
     derivs = {}
     first_obs: dict = {}
@@ -241,7 +249,8 @@ def authenticated_discovery_contract(cfg, tf, cap_ms=None):
     return contract
 
 
-def _retrospective_bundle(tf, symbols, cfg, requires, heldout_symbols, paths, cap_ms):
+def _retrospective_bundle(tf, symbols, cfg, requires, heldout_symbols, paths, cap_ms,
+                          min_symbols=None):
     """Discovery prices are selected before the SQL read; mirrors are counts only."""
     import hashlib
     import json
@@ -291,6 +300,8 @@ def _retrospective_bundle(tf, symbols, cfg, requires, heldout_symbols, paths, ca
                     counts[part][sym] = int(meta["bars"])
             except (ValueError, sqlite3.Error):
                 continue
+    if min_symbols is not None and len(frames) < int(min_symbols):
+        requires = ("ohlcv",)
     derivs, first_obs = {sym: {} for sym in frames}, {}
     dfeed, store = None, None
     derivative_requirements = [r for r in requires if r in spec_evidence._SERIES_FOR]

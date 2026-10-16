@@ -127,8 +127,16 @@ def decide(child, parent=None, subset_results: dict | None = None,
         ok, _why = earns_place(child, res)
         if not ok:
             weak.append(key)
-    if subset_results and not weak:
+    # A partial map proves only the removals that were actually measured.
+    # In particular, seeded pairs may lack the standalone seed's result.
+    # Keep the existing growth path open so needs_ablation can request it.
+    parts = child.get("parts") or []
+    complete = (len(parts) >= 2 and len(set(parts)) == len(parts)
+                and set(subset_results or {}) == set(parts))
+    if subset_results and not weak and complete:
         return "survivor", "every part earns its place", abl
+    if subset_results and not weak and not complete:
+        return "grow", "carries information; incomplete one-part ablations", abl
     if weak:
         return "grow", (f"carries information, but these parts do not earn "
                         f"their place: {sorted(weak)}"), abl

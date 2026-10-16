@@ -103,6 +103,10 @@ def admit_bundle(b, floor: int) -> dict:
                      if d.get("reason") not in DETERMINISTIC_DROPS
                      and not (d.get("reason") == "read_error"
                               and d.get("transient")))
+    # No diagnosis for a missing requested symbol is not proof of absent
+    # history. A partial/older loader must remain retryable.
+    unknown = sorted(set(unknown) | (set(b.requested or b.frames)
+                                    - set(b.frames) - set(dropped)))
     if loaded >= floor:
         reason = ADMITTED
     elif transient and loaded + len(transient) >= floor:
@@ -174,7 +178,8 @@ def evaluate_job(payload: dict) -> dict:
                        heldout_symbols=tuple(
                            payload.get("heldout_symbols") or ()),
                        paths=payload.get("paths"),
-                       cap_ms=payload.get("spent_cut_ms"))
+                       cap_ms=payload.get("spent_cut_ms"),
+                       min_symbols=payload.get("min_symbols"))
     admission = None
     if payload.get("min_symbols") is not None:
         admission = admit_bundle(b, payload["min_symbols"])
