@@ -48,12 +48,12 @@ employees:
   - name: Strategist
     title: Strategist
     reports_to: Manager
-    wraps: [trader.brain.strategist, trader.brain.spec_writer]
+    wraps: [trader.brain.spec_writer]
     authors: [strategy]
     status_source: events
-    events: [review_complete, proposal_accepted, retire, mutate, keep_verdict]
+    events: [spec_write_failed, spec_admitted, spec_rejected]
     category: RESEARCH
-    desc: Reviews the strategy book; promotes and demotes.
+    desc: Writes strategy specifications from queued ideas and measured coverage.
 
   - name: Strategy Analyst
     title: Strategy Analyst

@@ -97,27 +97,6 @@ def test_background_spec_writer_and_pine_template_fallback(offline, monkeypatch,
     assert refine_with_llm(genome, "retained template", llm) == ("retained template", False)
 
 
-@pytest.mark.parametrize("permissive_availability", [False, True])
-def test_background_legacy_review_uses_deterministic_fallback(offline, tmp_path, monkeypatch, permissive_availability):
-    from trader.brain.strategist import Strategist
-
-    cfg, llm, _ = offline
-    journal = Journal(tmp_path / "review.db")
-    review = Strategist(journal, cfg)
-    review.llm = llm
-    if permissive_availability:
-        monkeypatch.setattr(BrainLLM, "available", property(lambda self: True))
-    monkeypatch.setattr(review, "should_review", lambda: (True, "offline proof"))
-    monkeypatch.setattr(review, "_population_report", lambda: [{"id": "legacy"}])
-    monkeypatch.setattr(review, "_build_prompt", lambda *a: "offline review")
-    monkeypatch.setattr("trader.strategy.promotion.evaluate_population", lambda *a: [])
-    monkeypatch.setattr("trader.brain.strategist.Vault.run_full_refresh", lambda *a: None)
-    result = review.review()
-    assert result["reviewed"] is True
-    event = journal.query("SELECT detail FROM brain_events WHERE kind='review_complete'")[0]
-    assert json.loads(event["detail"])["llm"] is False
-
-
 def test_kernel_background_generation_records_refusal_without_send(offline, tmp_path, monkeypatch):
     from trader.kernel import Kernel
 

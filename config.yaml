@@ -404,7 +404,7 @@ brain:
                                        # generate/retire loop is mechanism.*
   daily_token_budget: 200000
   # Reserved daily slices (tokens). A listed purpose spends only its own
-  # slice; unlisted purposes (strategist, tv, legacy_review, misc) share what
+  # slice; unlisted purposes (tv, misc) share what
   # is left of daily_token_budget. `research` is held for the research
   # pipeline's Reason step so no other consumer can starve it.
   purpose_budgets:

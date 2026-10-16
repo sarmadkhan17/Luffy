@@ -53,7 +53,8 @@ def test_author_for_reverse_lookup():
 def test_owner_for_reverse_lookup():
     org = Org.load()
     assert org.owner_for("trader.engine.risk") == "Risk Officer"
-    assert org.owner_for("trader.brain.strategist") == "Strategist"
+    assert org.owner_for("trader.brain.spec_writer") == "Strategist"
+    assert org.owner_for("trader.brain.strategist") is None
     assert org.owner_for("trader.knowledge.vault") == "Librarian"
     assert org.owner_for("trader.engine.orchestrator") == "Manager"
     assert org.owner_for("trader.nonexistent") is None
