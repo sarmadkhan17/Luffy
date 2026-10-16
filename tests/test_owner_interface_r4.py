@@ -48,32 +48,35 @@ def check_admitted_unhalt_superseded_by_newer_halt(world, monkeypatch):
     """Astra W1: admit UNHALT → pause before OwnerService → newer HALT → release."""
     journal, venue = world
     k = _active(journal, venue, monkeypatch)
-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
-    svc(k).execute(req("halt"))
-    k.notifier.chat_id = "1"
-    replies = []
-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    s = svc(k)
-    real_execute, paused, go = s.execute, threading.Event(), threading.Event()
+    try:
+        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+        svc(k).execute(req("halt"))
+        k.notifier.chat_id = "1"
+        replies = []
+        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+        s = svc(k)
+        real_execute, paused, go = s.execute, threading.Event(), threading.Event()
 
-    def execute(r, **kw):
-        if r.operation == "unhalt":
-            paused.set()
-            go.wait(5)                 # admitted + reserved, not yet executing
-        return real_execute(r, **kw)
-    monkeypatch.setattr(s, "execute", execute)
-    k._tg_dispatch("/unhalt", "https://x", tg_update())
-    assert paused.wait(3)
-    k._tg_dispatch("/halt", "https://x", tg_update())     # newer hold (same-state owner hold)
-    assert _wait(lambda: any(r == "😴 HALTED." for r in replies))
-    go.set()
-    assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
-    _drain_workers(k)
-    assert _state(journal) == "HALTED"                      # the newer hold is kept
-    assert any("superseded_by_newer_intent" in r for r in replies)
-    res = _count(journal, "owner_recovery_result")[-1]
-    assert res["status"] == "REFUSED" and res["reasons"] == ["superseded_by_newer_intent"]
-    assert venue.mutations == []
+        def execute(r, **kw):
+            if r.operation == "unhalt":
+                paused.set()
+                go.wait(5)                 # admitted + reserved, not yet executing
+            return real_execute(r, **kw)
+        monkeypatch.setattr(s, "execute", execute)
+        k._tg_dispatch("/unhalt", "https://x", tg_update())
+        assert paused.wait(3)
+        k._tg_dispatch("/halt", "https://x", tg_update())     # newer hold (same-state owner hold)
+        assert _wait(lambda: any(r == "😴 HALTED." for r in replies))
+        go.set()
+        assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
+        _drain_workers(k)
+        assert _state(journal) == "HALTED"                      # the newer hold is kept
+        assert any("superseded_by_newer_intent" in r for r in replies)
+        res = _count(journal, "owner_recovery_result")[-1]
+        assert res["status"] == "REFUSED" and res["reasons"] == ["superseded_by_newer_intent"]
+        assert venue.mutations == []
+    finally:
+        _drain_workers(k)
 
 
 def test_w1_admitted_unhalt_superseded_by_newer_halt(world, monkeypatch):

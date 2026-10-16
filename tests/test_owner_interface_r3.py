@@ -59,56 +59,62 @@ def check_queued_recovery_cannot_outlive_newer_halt(world, monkeypatch):
     """Astra W1: RESUME blocked in its venue check → UNHALT → HALT → release."""
     journal, venue = world
     k = _active(journal, venue, monkeypatch)
-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
-    s = svc(k)
-    s.execute(req("freeze"))
-    k.notifier.chat_id = "1"
-    replies = []
-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    in_check, release = threading.Event(), threading.Event()
+    try:
+        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+        s = svc(k)
+        s.execute(req("freeze"))
+        k.notifier.chat_id = "1"
+        replies = []
+        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+        in_check, release = threading.Event(), threading.Event()
 
-    def venue_check():
-        in_check.set()
-        release.wait(5)
-    venue.on_positions = venue_check
-    k._tg_dispatch("/resume", "https://x", tg_update())
-    assert in_check.wait(3)
-    k._tg_dispatch("/unhalt", "https://x", tg_update())
-    k._tg_dispatch("/halt", "https://x", tg_update())
-    assert _wait(lambda: _state(journal) == "HALTED")
-    release.set()
-    assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
-    time.sleep(0.2)
-    _drain_workers(k)
-    assert _state(journal) == "HALTED"                      # the newer HALT holds
-    assert len(_count(journal, "owner_recovery_requested")) == 1   # UNHALT never ran
-    assert any("recovery_in_progress" in r for r in replies)
-    refused = [r for r in _audit(journal) if r["operation"] == "unhalt"]
-    assert refused and json.loads(refused[0]["reasons"]) == ["recovery_in_progress"]
-    return k
+        def venue_check():
+            in_check.set()
+            release.wait(5)
+        venue.on_positions = venue_check
+        k._tg_dispatch("/resume", "https://x", tg_update())
+        assert in_check.wait(3)
+        k._tg_dispatch("/unhalt", "https://x", tg_update())
+        k._tg_dispatch("/halt", "https://x", tg_update())
+        assert _wait(lambda: _state(journal) == "HALTED")
+        release.set()
+        assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
+        time.sleep(0.2)
+        _drain_workers(k)
+        assert _state(journal) == "HALTED"                      # the newer HALT holds
+        assert len(_count(journal, "owner_recovery_requested")) == 1   # UNHALT never ran
+        assert any("recovery_in_progress" in r for r in replies)
+        refused = [r for r in _audit(journal) if r["operation"] == "unhalt"]
+        assert refused and json.loads(refused[0]["reasons"]) == ["recovery_in_progress"]
+        return k
+    finally:
+        _drain_workers(k)
 
 
 def check_blocked_reply_never_delays_halt(world, monkeypatch):
     """Astra W1: a /status whose reply hangs must not hold a later /halt."""
     journal, venue = world
     k = _active(journal, venue, monkeypatch)
-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
-    k.notifier.chat_id = "1"
-    stuck = threading.Event()
-
-    def post(*a, **kw):
-        if kw["json"]["text"].startswith("state="):
-            stuck.wait(5)                                   # Telegram API hanging
-    monkeypatch.setattr("requests.post", post)
-    t0 = time.monotonic()
-    k._tg_dispatch("/status", "https://x", tg_update())
-    time.sleep(0.1)
-    k._tg_dispatch("/halt", "https://x", tg_update())
     try:
-        assert _wait(lambda: _state(journal) == "HALTED", 1.0)
-        assert time.monotonic() - t0 < 1.0
+        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+        k.notifier.chat_id = "1"
+        stuck = threading.Event()
+
+        def post(*a, **kw):
+            if kw["json"]["text"].startswith("state="):
+                stuck.wait(5)                                   # Telegram API hanging
+        monkeypatch.setattr("requests.post", post)
+        t0 = time.monotonic()
+        k._tg_dispatch("/status", "https://x", tg_update())
+        time.sleep(0.1)
+        k._tg_dispatch("/halt", "https://x", tg_update())
+        try:
+            assert _wait(lambda: _state(journal) == "HALTED", 1.0)
+            assert time.monotonic() - t0 < 1.0
+        finally:
+            stuck.set()
+            _drain_workers(k)
     finally:
-        stuck.set()
         _drain_workers(k)
 
 

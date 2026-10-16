@@ -280,34 +280,37 @@ def check_telegram_duplicate_before_execution(world, monkeypatch):
     """A redelivered update while the original is reserved but not yet executing."""
     journal, venue = world
     k = _active(journal, venue, monkeypatch)
-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
-    s = svc(k)
-    s.execute(req("halt"))
-    k.notifier.chat_id = "1"
-    replies = []
-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    real_execute, gate, paused = s.execute, threading.Event(), threading.Event()
+    try:
+        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+        s = svc(k)
+        s.execute(req("halt"))
+        k.notifier.chat_id = "1"
+        replies = []
+        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+        real_execute, gate, paused = s.execute, threading.Event(), threading.Event()
 
-    def execute(r, **kw):
-        if r.operation == "unhalt":
-            paused.set()
-            gate.wait(5)
-        return real_execute(r, **kw)
-    monkeypatch.setattr(s, "execute", execute)
-    upd = tg_update()
-    k._tg_dispatch("/unhalt", "https://x", upd)
-    assert paused.wait(3)
-    k._tg_dispatch("/unhalt", "https://x", upd)          # redelivery of the same update
-    assert _wait(lambda: any("still running" in r for r in replies))
-    assert not any("refused" in r for r in replies)
-    gate.set()
-    assert _wait(lambda: _state(journal) == "ACTIVE")
-    _drain_workers(k)
-    k._tg_workers = {}
-    assert len(_count(journal, "owner_recovery_requested")) == 1
-    k._tg_dispatch("/unhalt", "https://x", upd)          # after the final result
-    _drain_workers(k)
-    assert replies[-1] == "🙂 ACTIVE — fresh recovery check proved safe."
+        def execute(r, **kw):
+            if r.operation == "unhalt":
+                paused.set()
+                gate.wait(5)
+            return real_execute(r, **kw)
+        monkeypatch.setattr(s, "execute", execute)
+        upd = tg_update()
+        k._tg_dispatch("/unhalt", "https://x", upd)
+        assert paused.wait(3)
+        k._tg_dispatch("/unhalt", "https://x", upd)          # redelivery of the same update
+        assert _wait(lambda: any("still running" in r for r in replies))
+        assert not any("refused" in r for r in replies)
+        gate.set()
+        assert _wait(lambda: _state(journal) == "ACTIVE")
+        _drain_workers(k)
+        k._tg_workers = {}
+        assert len(_count(journal, "owner_recovery_requested")) == 1
+        k._tg_dispatch("/unhalt", "https://x", upd)          # after the final result
+        _drain_workers(k)
+        assert replies[-1] == "🙂 ACTIVE — fresh recovery check proved safe."
+    finally:
+        _drain_workers(k)
 
 
 def test_w3_ipc_duplicate_before_claim(tmp_path, monkeypatch):
