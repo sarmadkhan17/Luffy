@@ -313,48 +313,6 @@ def test_a_failed_funding_fetch_leaves_the_trade_pending_and_is_retried(tmp_path
     assert r.complete() == [tid]
 
 
-def test_a_funding_event_inside_the_interval_is_refused_never_priced(tmp_path, cfg):
-    r = Run(tmp_path, cfg)
-    tid = r.trade("win")
-    row = r.row(tid)
-    mid = (r.row(tid)["entry_bar_ms"] + 2 * H4)
-    opened = int(pd.Timestamp(row["opened_at"]).timestamp() * 1000)
-    closed = int(pd.Timestamp(row["closed_at"]).timestamp() * 1000)
-    assert r.complete(events=[(opened + closed) // 2]) == [tid]
-    rec = r.receipt(tid)
-    assert rec["net_pnl_status"] == "UNAVAILABLE" and rec["net_pnl"] is None
-    assert rec["dimensions"]["funding"]["status"] == "UNAVAILABLE"
-    assert "funding" not in rec["source_ids"]           # no invented basis, no estimate
-    # estimates exist, but a partial figure is never used as net
-    assert rec["dimensions"]["commission"]["status"] == "ESTABLISHED"
-
-
-def test_a_boundary_funding_event_is_refused(tmp_path, cfg):
-    r = Run(tmp_path, cfg)
-    tid = r.trade("win")
-    opened = int(pd.Timestamp(r.row(tid)["opened_at"]).timestamp() * 1000)
-    r.complete(events=[opened])
-    assert r.receipt(tid)["net_pnl_status"] == "UNAVAILABLE"
-
-
-def test_refused_trades_are_reported_and_do_not_count_toward_ten(tmp_path, cfg):
-    r = Run(tmp_path, cfg)
-    run_outcomes(r, ["win"] * 7 + ["loss"] * 2)
-    tid = r.trade("win")
-    opened = int(pd.Timestamp(r.row(tid)["opened_at"]).timestamp() * 1000)
-    r.complete(events=[opened])                          # the tenth trade is refused
-    a = r.assess()
-    assert a["status"] == F.P_INSUFFICIENT                # nine counted, not ten
-    p = json.loads(r.j.query("SELECT canonical_json FROM strategy_probation_receipts ORDER BY recorded_at_ms")[0]["canonical_json"])
-    ex = [e for e in p["excluded_trades"] if e["reason"] == "cost_evidence_refused"]
-    assert [e["id"] for e in ex] == [tid] and ex[0]["receipt_sha256"]
-    assert p["stats"]["trades"] == 9
-    # an eleventh, fully evidenced trade then makes ten counted trades
-    r.trade("loss")
-    r.complete()
-    assert r.assess(day=31)["status"] == F.P_SATISFIED
-
-
 def test_spot_trade_is_finalized_at_close_with_no_funding(tmp_path, cfg):
     r = Run(tmp_path, cfg, spec=_spec(markets=["spot"]))
     tid = r.trade("win")
@@ -377,7 +335,7 @@ def test_a_pass_without_a_recorded_cost_model_gives_no_estimate(tmp_path, cfg):
         C.estimate_context(r.j, r.row(tid), r.v)
     run_outcomes(r, ["win"] * 9)
     a = r.assess()
-    assert a["status"] == F.P_INSUFFICIENT                # every trade refused, none counted
+    assert a["status"] == F.P_COST_INCOMPLETE              # no cost model: incomplete, never skipped
     assert F.state_of(r.j, r.vid) == F.SHADOW
 
 

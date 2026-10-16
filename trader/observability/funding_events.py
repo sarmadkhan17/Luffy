@@ -2,8 +2,11 @@
 
 Inclusive API boundaries are queried so an event exactly at either trade
 boundary can be refused. No schedule (including eight-hour spacing) is assumed.
-Only no-crossing proof can currently enter the paper cost protocol: the paper
-ledger has no frozen event-time mark/notional authority for crossed events.
+A no-crossing proof prices an interval at zero funding. An interval with
+events strictly inside it is priced only from those published events: the
+published rate and the mark price published in the same row, applied to the
+paper position's frozen quantity (see `crossing_source`). An event exactly on
+either boundary is never priced: whether the position was held is unproven.
 """
 import hashlib
 import json
@@ -19,6 +22,7 @@ def digest(body):
 
 SCHEMA = 'binance-funding-interval.v1'
 METHOD = 'BINANCE_PUBLIC_NO_FUNDING_CROSSING_V1'
+CROSSING_METHOD = 'BINANCE_PUBLIC_FUNDING_EVENTS_PUBLISHED_MARK_BASIS_V1'
 ENDPOINT = 'https://fapi.binance.com/fapi/v1/fundingRate'
 DOC = 'https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data'
 LIMIT = 1000
@@ -146,6 +150,80 @@ def validate_no_crossing(source):
     try:
         p = source['provenance']
         expected = no_crossing_source(source['binding'], p['receipt'],
+            venue_symbol=p['venue_symbol'], environment=p['environment'])
+        return source == expected
+    except (KeyError, ValueError, TypeError, ArithmeticError):
+        return False
+
+
+def _positive_decimal(text):
+    try:
+        value = Decimal(text)
+    except (ArithmeticError, TypeError, ValueError):
+        raise ValueError('FUNDING_POSITION_NOTIONAL_BASIS_UNAVAILABLE') from None
+    if not value.is_finite() or value <= 0:
+        raise ValueError('FUNDING_POSITION_NOTIONAL_BASIS_UNAVAILABLE')
+    return value
+
+
+def crossing_source(bound, receipt, *, venue_symbol, environment):
+    """Funding events strictly inside the paper interval, priced from published
+    evidence only: rate x published mark x frozen paper quantity (long pays a
+    positive rate, short is paid), the arithmetic `paper_cost_evidence.funding_cost`
+    applies. No schedule is assumed, no flat fallback is used, and an event on
+    either boundary, or one without a published mark, is refused."""
+    if (environment != 'production' or bound.get('venue_environment') != environment
+            or bound['market_type'] != 'futures'):
+        raise ValueError('funding_market_environment_unproven')
+    if bound['instrument'].split(':')[0].replace('/', '') != venue_symbol:
+        raise ValueError('funding_instrument_differs')
+    if (receipt['symbol'] != venue_symbol or receipt['open_ms'] != bound['entry']['time_ms']
+            or receipt['close_ms'] != bound['exit']['time_ms']):
+        raise ValueError('funding_binding_differs')
+    events = replay(receipt)
+    if (receipt.get('crossed_events') != [e for e in events if receipt['open_ms'] < e['timestamp_ms'] < receipt['close_ms']]
+            or receipt.get('boundary_events') != [e for e in events if e['timestamp_ms'] in (receipt['open_ms'], receipt['close_ms'])]):
+        raise ValueError('funding_event_partition_differs')
+    if events != receipt['events'] or receipt['receipt_id'] != digest(
+            {k: v for k, v in receipt.items() if k != 'receipt_id'}):
+        raise ValueError('funding_receipt_replay_differs')
+    if receipt['boundary_events']:
+        raise ValueError('FUNDING_BOUNDARY_TIMING_UNPROVEN')
+    crossed = receipt['crossed_events']
+    if not crossed:
+        raise ValueError('funding_no_event_use_no_crossing_source')
+    quantity = bound['entry']['quantity']
+    priced = []
+    for e in crossed:
+        rate = Decimal(e['published_rate'])
+        mark = _positive_decimal(e['published_mark_price'])
+        priced.append(dict(
+            timestamp_ms=e['timestamp_ms'], instrument=bound['instrument'],
+            rate=float(rate), position_basis_price=float(mark), quantity=quantity,
+            published_rate=e['published_rate'], published_mark_price=e['published_mark_price'],
+            basis_provenance=dict(
+                basis='MARK_PRICE_PUBLISHED_IN_THE_SAME_FUNDING_RATE_ROW',
+                position='FROZEN_ISOLATED_PAPER_QUANTITY_HELD_THROUGH_THE_EVENT',
+                source_endpoint=e['source_endpoint'], response_sha256=e['response_sha256'])))
+    body = dict(method=CROSSING_METHOD, kind='funding', currency='USDT', version=SCHEMA,
+        captured_ms=receipt['pages'][-1]['received_ms'], binding=bound,
+        provenance=dict(endpoint=ENDPOINT, docs=DOC, receipt=receipt,
+                        environment=environment, venue_symbol=venue_symbol,
+                        label='ESTIMATED_FROM_PUBLISHED_RATE_AND_MARK_NOT_VENUE_ACTUAL',
+                        assumptions=['the isolated paper position is held, at its frozen quantity, through every event strictly inside the interval',
+                                     'the mark price is the one published in the same funding row, not the backtest exit price and not a flat 8h fallback',
+                                     'a long pays a positive rate and a short is paid; the sign is applied once by the cost receipt',
+                                     'an event exactly at entry or exit is refused, never priced']),
+        interval_complete=True, events=priced,
+        timing_semantics='Inclusive historical API interval; every event lies strictly inside the paper interval and none on either boundary')
+    body['source_id'] = digest(body)
+    return body
+
+
+def validate_crossing(source):
+    try:
+        p = source['provenance']
+        expected = crossing_source(source['binding'], p['receipt'],
             venue_symbol=p['venue_symbol'], environment=p['environment'])
         return source == expected
     except (KeyError, ValueError, TypeError, ArithmeticError):

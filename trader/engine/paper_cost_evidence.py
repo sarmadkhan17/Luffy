@@ -17,7 +17,8 @@ import math
 import sqlite3
 
 from .paper_exit_evidence import canonical, digest
-from trader.observability.funding_events import METHOD as FUNDING_METHOD, validate_no_crossing
+from trader.observability.funding_events import (METHOD as FUNDING_METHOD, validate_no_crossing,
+    CROSSING_METHOD as FUNDING_CROSSING_METHOD, validate_crossing)
 
 SCHEMA = 'versioned-paper-cost-receipt.v1'
 TABLE = 'versioned_paper_cost_receipts'
@@ -87,6 +88,7 @@ def validate_estimate(source):
 
 
 SOURCE_VALIDATORS = {FUNDING_METHOD: validate_no_crossing,
+                     FUNDING_CROSSING_METHOD: validate_crossing,
                      ESTIMATE_METHOD: validate_estimate}
 WIN_RATE_POLICY = {'basis': 'NET', 'source':
     'versioned probation _assess at 1ab0da0; versioned-paper-probation-truth-fix-r1'}

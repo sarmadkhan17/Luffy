@@ -239,18 +239,29 @@ class PaperExecutor:
             f"AND NOT EXISTS(SELECT 1 FROM {C.TABLE} r WHERE r.trade_id=t.id) "
             "ORDER BY t.closed_at, t.id LIMIT ?", (limit,))
 
+    def funding_lookup_admitted(self):
+        """The one switch for this executor's public network request: the owner
+        can turn the funding-history lookup off, in which case every futures
+        trade stays PENDING (probation INCOMPLETE_COST_EVIDENCE), never skipped.
+        No LLM provider, credential, account or order endpoint is reachable."""
+        return (self.cfg.get('paper_cost') or {}).get('funding_history_lookup', True) is True
+
     def complete_costs(self, *, fetch=None, clock=None, limit=2):
         """Finalize closed futures trades whose cost receipt is pending.
 
-        Funding comes only from the existing public historical funding evidence
-        and only its no-crossing proof is accepted. A funding event inside or on
-        the edge of the interval makes the cost receipt UNAVAILABLE (recorded,
-        immutable), because the paper ledger holds no event-time position basis;
-        the trade is then excluded from probation, never priced by assumption.
+        Funding comes only from the existing public historical funding evidence.
+        No event strictly inside the interval is a zero-funding proof; events
+        strictly inside are priced from their published rate and mark on the
+        trade's frozen quantity (an estimate, labelled as such). An event on the
+        edge of the interval, a missing mark, or an unproven position basis makes
+        the receipt UNAVAILABLE (recorded, immutable) and probation
+        INCOMPLETE_COST_EVIDENCE; such a trade is never dropped or guessed.
         A fetch failure leaves the trade pending and is retried. Returns the
         ids finalized in this call."""
         from ..observability import funding_events as FE
         done = []
+        if not self.funding_lookup_admitted():
+            return done
         for trade in self.pending_cost_trades(limit):
             try:
                 v = F.load_version(self.journal, trade['version_id'])
@@ -261,10 +272,15 @@ class PaperExecutor:
             funding_id, permanent = None, False
             symbol = trade['symbol'].split(':')[0].replace('/', '')
             try:
+                exposure = json.loads(trade['entry_identity_json']).get('paper_exposure') or {}
+                if (trade['venue_environment'] != 'production' or exposure.get('environment') != 'production'
+                        or exposure.get('quantity') != trade['amount']):
+                    raise ValueError('funding_market_environment_unproven')
                 kw = {k: v for k, v in (('fetch', fetch), ('clock', clock)) if v}
                 receipt = FE.lookup(symbol, bound['entry']['time_ms'], bound['exit']['time_ms'], **kw)
-                source = FE.no_crossing_source(bound, receipt, venue_symbol=symbol,
-                                               environment=trade['venue_environment'])
+                make = (FE.no_crossing_source if not receipt['crossed_events'] and not receipt['boundary_events']
+                        else FE.crossing_source)
+                source = make(bound, receipt, venue_symbol=symbol, environment=trade['venue_environment'])
             except ValueError as exc:
                 if str(exc) not in ('FUNDING_BOUNDARY_TIMING_UNPROVEN',
                                     'FUNDING_POSITION_NOTIONAL_BASIS_UNAVAILABLE',
