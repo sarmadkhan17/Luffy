@@ -482,3 +482,45 @@ def test_paper_estimates_never_establish_live_venue_economics_or_capacity(tmp_pa
     src = json.loads(r.j.query(f"SELECT canonical_json FROM {C.SOURCES} WHERE source_id=?",
                                (rec["source_ids"]["commission"],))[0]["canonical_json"])
     assert src["provenance"]["label"] == "ESTIMATED_MODEL_NOT_VENUE_ACTUAL"
+
+
+def test_a_stored_estimated_receipt_replays_identically_from_its_frozen_sources(tmp_path, cfg):
+    import sqlite3
+    r = Run(tmp_path, cfg, spec=_spec(markets=["spot"]))
+    tid = r.trade("win")
+    row = r.j.query(f"SELECT * FROM {C.TABLE} WHERE trade_id=?", (tid,))[0]
+    body = json.loads(row["canonical_json"])
+    ids = body["source_ids"]
+    assert set(ids) >= {"commission", "slippage"}
+    fresh = sqlite3.connect(":memory:")
+    fresh.row_factory = sqlite3.Row
+    C.ensure(fresh)
+    for sid in ids.values():
+        src = r.j.query(f"SELECT canonical_json FROM {C.SOURCES} WHERE source_id=?", (sid,))[0]
+        C.freeze_source(fresh, json.loads(src["canonical_json"]))
+    assert C.build(fresh, body["binding"], ids) == body
+
+
+def test_kernel_paper_loop_completes_costs_and_reaches_probation_pass(tmp_path, cfg, monkeypatch):
+    """The only production wiring: Kernel._manage_paper -> complete_costs ->
+    evaluate_probation. Only the public funding fetch and clock are injected."""
+    from trader.kernel import Kernel
+    import functools
+    real = FE.lookup
+    monkeypatch.setattr(FE, "lookup", functools.partial(real, fetch=fetch_of(()), clock=lambda: NOW))
+    r = Run(tmp_path, cfg)
+    for o in ["win"] * 7 + ["loss"] * 3:
+        r.trade(o)
+    assert F.state_of(r.j, r.vid) == F.SHADOW
+    k = Kernel.__new__(Kernel)
+    k.journal, k.cfg, k._paper = r.j, cfg, r.paper
+    snap = snapshot(r.frame())
+    snap.ts = iso(T0 + 30 * DAY)
+    done = []
+    for _ in range(10):
+        k._paper_cost_at = -1e9
+        done += k._manage_paper(snap)
+        if F.state_of(r.j, r.vid) != F.SHADOW:
+            break
+    assert sorted(done) == sorted(r.ids)
+    assert F.state_of(r.j, r.vid) == F.APPROVAL_REQUIRED

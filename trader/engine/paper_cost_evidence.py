@@ -389,7 +389,7 @@ def verify(journal, trade, version, install):
         raise ValueError('cost_receipt_binding_differs')
     for kind in ('commission', 'slippage'):
         sid = (body.get('source_ids') or {}).get(kind)
-        src = journal.query(f'SELECT canonical_json FROM {SOURCES} WHERE source_id=?', (sid,)) if sid else []
+        src = journal.query(f'SELECT * FROM {SOURCES} WHERE source_id=?', (sid,)) if sid else []
         if src and json.loads(src[0]['canonical_json']).get('method') == ESTIMATE_METHOD:
             # The estimate must be the exact version's own PASS model and this
             # trade's own frozen ATR, not merely internally consistent.

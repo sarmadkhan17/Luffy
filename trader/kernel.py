@@ -745,7 +745,7 @@ class Kernel:
                 at_ms=int(time.time() * 1000))
             installed = StrategySpec.from_dict(
                 fh.load_version(self.journal, ver["version_id"])["spec"])
-        except fh.HandoffRefused as e:
+        except Exception as e:
             self.journal.log_brain_event(
                 "spec_install_refused", spec.id,
                 {"name": spec.name, "reason_code": e.code, "evidence": ev,
@@ -1673,7 +1673,7 @@ class Kernel:
         try:
             v = fh.load_version(self.journal, version_id)
             fh.verify_validation(self.journal, v)
-        except fh.HandoffRefused as e:
+        except Exception as e:
             return refuse(e.code)
         if fh.state_of(self.journal, version_id) != fh.VALIDATED:
             return refuse("version_not_validated",
@@ -1694,7 +1694,7 @@ class Kernel:
             inst = fh.record_exact_install(self.journal, version_id,
                                            mode="paper",
                                            at_ms=int(time.time() * 1000))
-        except fh.HandoffRefused as e:
+        except Exception as e:
             # The row is only a projection of the same version authority.
             fh.retire_version(self.journal,version_id,fh.RETIRED,
                 reason_code='exact_install_refused:' + e.code,actor='strategy_governor',at_ms=int(time.time()*1000))
@@ -1759,13 +1759,15 @@ class Kernel:
         # capability is available to this runner.
         executor = self._paper_executor()
         closed = executor.manage(snap)
+        completed = []
         # Futures trades wait for their funding interval to be proven. Public
         # history only, bounded per call and throttled; failure leaves them pending.
         now = time.monotonic()
         if now - getattr(self, "_paper_cost_at", -1e9) >= 60:
             self._paper_cost_at = now
             try:
-                closed = list(closed) + executor.complete_costs()
+                completed = executor.complete_costs()
+                closed = list(closed) + completed
             except Exception as e:
                 log.warning("paper cost completion deferred: %s", e)
         if closed:
@@ -1777,7 +1779,19 @@ class Kernel:
             for version_id in versions:
                 if fh.state_of(self.journal, version_id) == fh.SHADOW:
                     observed_ms = int(dt.datetime.fromisoformat(snap.ts).timestamp()*1000)
-                    fh.evaluate_probation(self.journal, self.cfg, version_id, at_ms=observed_ms)
+                    if completed:
+                        # The candle time repeats every cycle; a probation receipt
+                        # is keyed by its evaluation time, so a later completion
+                        # must be evaluated at a later observation time.
+                        last = getattr(self, "_probation_at", {})
+                        observed_ms = max(observed_ms, int(time.time()*1000),
+                                          last.get(version_id, 0) + 1)
+                        last[version_id] = observed_ms
+                        self._probation_at = last
+                    try:
+                        fh.evaluate_probation(self.journal, self.cfg, version_id, at_ms=observed_ms)
+                    except Exception as e:
+                        log.warning("probation evaluation refused for %s: %s", version_id, e)
         return closed
 
 

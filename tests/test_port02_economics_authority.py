@@ -34,7 +34,9 @@ def test_production_registries_are_empty_and_only_funding_adapter_is_registered(
         'from trader.portfolio import economics as e; from trader.engine import paper_cost_evidence as p;'
         'print(len(e.GROSS_MODELS),len(e.RESERVE_MODELS),len(e.COST_SCOPE_MODELS),sorted(p.SOURCE_VALIDATORS))'],
         text=True).strip()
-    assert out == f"0 0 0 ['{METHOD}']"
+    # The funding adapter plus the owner-approved, labelled cost-model estimate
+    # (paper evidence only; the portfolio economics registries stay empty).
+    assert out == f"0 0 0 ['{METHOD}', 'LUFFY_BACKTEST_COST_MODEL_ESTIMATE_V1']"
 
 
 @pytest.mark.parametrize('field,value', [
