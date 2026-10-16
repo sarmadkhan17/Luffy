@@ -126,8 +126,9 @@ class Analyst:
         Factory exit semantics the paper/live engine will actually run, so the
         backtest describes the exact strategy that is later installed. Every
         other caller keeps the legacy simulator."""
-        return compile_spec(
-            probe, exit_semantics_id=getattr(self, "_exit_semantics_id", None))
+        bound = getattr(self, "_exit_semantics_id", None)
+        return compile_spec(probe) if bound is None else compile_spec(
+            probe, exit_semantics_id=bound)
 
     # ── selection ────────────────────────────────────────────────────────
     def evaluate(self, spec: StrategySpec,

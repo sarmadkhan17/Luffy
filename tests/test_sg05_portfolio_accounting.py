@@ -253,10 +253,27 @@ def test_statistical_policy_and_frozen_evidence_unchanged():
     # byte-level guards for statistical policy, configuration and evidence.
     paths = ['trader/strategy/vector_backtest.py',
              'trader/research/combo.py','trader/research/fdr.py',
-             'trader/research/thresholds.py','config.yaml','docs/tracker',
+             'trader/research/thresholds.py','docs/tracker',
              'docs/superpowers/evidence','docs/superpowers/specs']
     paths.remove('trader/strategy/vector_backtest.py')
     subprocess.run(['git','diff','--exit-code','fc6c0b2','--',*paths],check=True,capture_output=True)
+    # config.yaml: the research budget, the risk policy and every strategies
+    # key are pinned; only the owner-authorized lifecycle edits may differ
+    # (ten-trade probation, three unread keys removed).
+    import yaml
+    then = yaml.safe_load(subprocess.check_output(
+        ['git','show','fc6c0b2:config.yaml'], text=True))
+    now = yaml.safe_load(Path(__file__).resolve().parents[1]
+                         .joinpath('config.yaml').read_text())
+    for section in then:
+        if section != 'strategies':
+            assert now[section] == then[section], section
+    assert set(now) == set(then)
+    lifecycle = {'paper_probation_trades', 'tv_validation',
+                 'auto_demote_drawdown_pct', 'max_active'}
+    assert {k: v for k, v in now['strategies'].items() if k not in lifecycle} \
+        == {k: v for k, v in then['strategies'].items() if k not in lifecycle}
+    assert now['strategies']['paper_probation_trades'] == 10
     before = subprocess.check_output(
         ['git','show','fc6c0b2:trader/strategy/vector_backtest.py'], text=True)
     after = Path(__file__).resolve().parents[1].joinpath(

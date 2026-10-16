@@ -25,7 +25,13 @@ def _p():
 
 
 def test_the_example_no_longer_anchors_on_a_dead_trail():
-    assert '"trail": {"kind":"none"}' not in _p()
+    """The dead shape was a fixed RR target with a 32-bar hold. The Factory
+    exit engine now supports no trailing stop at all, so the prompt must say
+    so rather than teach a trail it would refuse, and must not anchor on the
+    old geometry."""
+    p = _p()
+    assert '"max_bars": 32' not in p
+    assert "NO trailing stop" in p and '"kind":"atr","mult":3.0,"arm_at_r"' not in p
 
 
 def test_the_prompt_teaches_that_a_rotation_null_is_the_bar():
