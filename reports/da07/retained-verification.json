@@ -1,0 +1,43 @@
+{
+  "retained_blobs_verified": 77,
+  "historical_attention": "EXACT rows, observations, market, selection",
+  "matched_parity": {
+    "admission_receipt": true,
+    "analyst_votes": true,
+    "attention_market": true,
+    "attention_rows": true,
+    "decisions": true,
+    "persisted": true
+  },
+  "baseline_tests": "135 pass + 2 expected duplicate-work failures",
+  "new_tests": "137 pass",
+  "csv_calls": [
+    224,
+    112
+  ],
+  "csv_bytes": [
+    53915820,
+    26957910
+  ],
+  "median_ms": [
+    2192.904493014794,
+    1205.3101449855603
+  ],
+  "speedup": 1.8193694810733256,
+  "historical_no_eligible_strategy": [
+    "MOVR/USDT",
+    "QNT/USDT"
+  ],
+  "historical_selected": [
+    "RLC/USDT"
+  ],
+  "no_eligible_analyst_median_ms": {
+    "before": 251.85995901119895,
+    "after": 144.90121800918132
+  },
+  "limitations": [
+    "No historical per-stage wall timings retained; timestamp gaps are not CPU timings.",
+    "Historical original decisions are evidence only. Current baseline/new replay uses empty population and empty local governance; strategy behavior is covered by matched regression suites.",
+    "Historical scan uses the legacy 16-member diagnostic subset, not the later 12-slot policy. No historical 12-slot receipt retained."
+  ]
+}

@@ -1,0 +1,39 @@
+Use an isolated clone of DA07.bundle, with existing requirements.txt dependencies.
+No credentials, providers, production databases or running services are required.
+
+Verify retained evidence without any writes:
+  python reports/da07/verify_evidence.py
+
+Fresh historical Attention/blob verification (writes reports/da06/verification.json):
+  PYTHONPATH=. python reports/da06/verify.py
+
+Fresh retained replay (writes fresh-* outputs under reports/da06):
+  mkdir -p .da06-tmp
+  PYTHONPATH=. python reports/da06/replay.py fresh --repeat 1
+Compare fresh-outputs.json to reports/da07/candidate-replay-outputs.json.
+The original DA-06 before/after verification also stays intact.
+
+Fresh zero-attempt suite, from each of two isolated checkouts, one pinned to
+e703494f18cee5117dfcad9fb353bc4c90620606 and one at the DA-07 bundle head:
+  python - <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+files = json.loads(Path('reports/da07/safe-suite.json').read_text())
+subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p',
+    'tests.stage1_pit_offline_plugin', '-p', 'no:cacheprovider', *files,
+    '-k', 'not unknown_flow_and_leader_never_become_neutral_market_values',
+    '--basetemp=.da07-test-temp'], check=True)
+PY
+Copy safe-suite.json from DA-07 into the baseline evidence directory first.
+
+Original broad suite: safe-suite.json modules plus tests/test_spec_evidence.py,
+tests/test_ref_evidence.py, tests/test_scout_upgrades.py, with no -k exclusion.
+It yields 308 passes/8 inherited failures on each side and is invalidated by
+two denied checkout-default derivs.db accesses; do not call it green.
+Separate consumer suite uses tests/test_research_evaluate.py,
+tests/test_research_control.py, tests/test_attention_telemetry.py and
+-k 'not real_kernel_cycle', with the same offline plugin: 44 passes and one
+inherited fixture failure on each side. No Kernel or Dashboard was started.
+
+Remove only generated test/replay outputs and temp directories after replay;
+preserve the bundled evidence. Retained XML/logs record the executed campaigns.

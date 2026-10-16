@@ -1,0 +1,155 @@
+{
+  "label": "da07-baseline",
+  "repeat": 1,
+  "median_ms": 822.6580519985873,
+  "per_symbol_median_ms": {
+    "AAVE/USDT": 39.659953996306285,
+    "AVAX/USDT": 43.20181600633077,
+    "BNB/USDT": 41.99748099199496,
+    "BTC/USDT": 47.648313018726185,
+    "DOGE/USDT": 41.07660401496105,
+    "ETH/USDT": 40.69600600632839,
+    "FIL/USDT": 45.55902900756337,
+    "HYPE/USDT": 45.14877402107231,
+    "LINK/USDT": 54.70637901453301,
+    "MOVR/USDT": 44.726447988068685,
+    "NEAR/USDT": 42.83718598890118,
+    "QNT/USDT": 40.68586599896662,
+    "RLC/USDT": 95.7119750091806,
+    "SOL/USDT": 43.63025599741377,
+    "SUI/USDT": 54.318298993166536,
+    "TAO/USDT": 43.65680500632152
+  },
+  "csv_calls": 112,
+  "csv_bytes": 26957910,
+  "csv_ms": 593.8588579010684,
+  "analyst_evaluations": 112,
+  "historical_scan": "scan_78513e8e21a148388868f783ce7cce34",
+  "historical_selected": [
+    "RLC/USDT"
+  ],
+  "historical_no_eligible_strategy": [
+    "MOVR/USDT",
+    "QNT/USDT"
+  ],
+  "historical_symbol_refusals": [
+    "MOVR/USDT",
+    "QNT/USDT",
+    "RLC/USDT"
+  ],
+  "historical_attention_row_differences": [
+    {
+      "symbol": "AAVE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "AVAX/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "BNB/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "BTC/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "DOGE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "ETH/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "FIL/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "HYPE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "LINK/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "MOVR/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "NEAR/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "QNT/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "RLC/USDT",
+      "fields": [
+        "history"
+      ]
+    },
+    {
+      "symbol": "SOL/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "SUI/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "TAO/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    }
+  ],
+  "historical_market_equal": true,
+  "exact_synthetic_12_slot_receipt": true
+}

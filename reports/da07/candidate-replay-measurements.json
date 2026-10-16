@@ -1,0 +1,293 @@
+{
+  "label": "da07",
+  "repeat": 1,
+  "analyst_batch_ms": [
+    799.5313710125629
+  ],
+  "median_ms": 799.5313710125629,
+  "per_symbol_median_ms": {
+    "AAVE/USDT": 40.92102701542899,
+    "AVAX/USDT": 47.02472599456087,
+    "BNB/USDT": 61.24833700596355,
+    "BTC/USDT": 48.552100983215496,
+    "DOGE/USDT": 43.7068959872704,
+    "ETH/USDT": 42.89148698444478,
+    "FIL/USDT": 51.51366599602625,
+    "HYPE/USDT": 43.87622099602595,
+    "LINK/USDT": 43.035624985350296,
+    "MOVR/USDT": 41.9044480076991,
+    "NEAR/USDT": 47.298138990299776,
+    "QNT/USDT": 65.13703998643905,
+    "RLC/USDT": 109.71893498208374,
+    "SOL/USDT": 47.94391299947165,
+    "SUI/USDT": 43.19816900533624,
+    "TAO/USDT": 43.33236801903695
+  },
+  "csv_calls": 112,
+  "csv_bytes": 26957910,
+  "csv_ms": 623.0291172105353,
+  "analyst_evaluations": 112,
+  "historical_scan": "scan_78513e8e21a148388868f783ce7cce34",
+  "historical_selected": [
+    "RLC/USDT"
+  ],
+  "historical_no_eligible_strategy": [
+    "MOVR/USDT",
+    "QNT/USDT"
+  ],
+  "historical_symbol_refusals": [
+    "MOVR/USDT",
+    "QNT/USDT",
+    "RLC/USDT"
+  ],
+  "historical_summary": [
+    {
+      "symbol": "AAVE/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "AVAX/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "BNB/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "BTC/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "DOGE/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "ETH/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "FIL/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "HYPE/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "LINK/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "MOVR/USDT",
+      "no_eligible_strategy": true,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 0,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "NEAR/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "QNT/USDT",
+      "no_eligible_strategy": true,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 0,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "RLC/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 1,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "SOL/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "SUI/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    },
+    {
+      "symbol": "TAO/USDT",
+      "no_eligible_strategy": false,
+      "analyst_votes": 7,
+      "strategy_evaluator_calls": 2,
+      "action": "HOLD",
+      "entry_allowed": false
+    }
+  ],
+  "historical_attention_row_differences": [
+    {
+      "symbol": "AAVE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "AVAX/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "BNB/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "BTC/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "DOGE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "ETH/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "FIL/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "HYPE/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "LINK/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "MOVR/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "NEAR/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "QNT/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "RLC/USDT",
+      "fields": [
+        "history"
+      ]
+    },
+    {
+      "symbol": "SOL/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "SUI/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    },
+    {
+      "symbol": "TAO/USDT",
+      "fields": [
+        "history",
+        "components"
+      ]
+    }
+  ],
+  "historical_market_equal": true,
+  "exact_synthetic_12_slot_receipt": true,
+  "limits": [
+    "No historical per-stage wall timings retained; timestamp gaps are not CPU timings.",
+    "Historical original decisions are evidence only. Current baseline/new replay uses empty population and empty local governance; strategy behavior is covered by matched regression suites.",
+    "Historical scan uses the legacy 16-member diagnostic subset, not the later 12-slot policy. No historical 12-slot receipt retained."
+  ]
+}

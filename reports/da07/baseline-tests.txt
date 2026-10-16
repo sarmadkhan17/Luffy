@@ -1,0 +1,260 @@
+.....................................................FFFF............... [ 22%]
+.......FF.F............................................................. [ 45%]
+........................................................................ [ 68%]
+............F........................................................... [ 91%]
+............................                                             [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 2 denied attempts; campaign invalid: ['derivs.db']
+
+=================================== FAILURES ===================================
+___________________ test_load_refs_returns_only_what_exists ____________________
+
+    def test_load_refs_returns_only_what_exists():
+>       out = spec_evidence.load_refs(["ohlcv", "ref:spx", "ref:dxy"],
+                                      _Store({"spx": _days("2024-01-01", 3)}))
+
+tests/test_ref_evidence.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+requires = ['ohlcv', 'ref:spx', 'ref:dxy']
+store = <tests.test_ref_evidence._Store object at 0x7481d398da30>
+as_of_ms = None
+
+    def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
+        """{reference key: frame} for every `ref:<key>` a spec requires."""
+        keys = [r.split(":", 1)[1] for r in requires or ()
+                if isinstance(r, str) and r.startswith("ref:")]
+        if not keys:
+            return {}
+        if store is None:
+            from ..data.references import RefStore
+            store = RefStore()
+        out = {}
+        for k in keys:
+>           df = store.load(k, as_of_ms=as_of_ms)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: _Store.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:59: TypeError
+_____________________ test_an_absent_reference_is_untested _____________________
+
+    def test_an_absent_reference_is_untested():
+        spec = types.SimpleNamespace(data_requires=["ohlcv", "ref:spx"])
+>       gaps = spec_evidence.missing_data(spec, ["BTC/USDT"],
+                                          frames={"BTC/USDT": _days("2021-01-01", 900)},
+                                          ref_store=_Store({}))
+
+tests/test_ref_evidence.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/strategy/spec_evidence.py:152: in missing_data
+    refs = load_refs(ref_needed, ref_store) if ref_needed else {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+requires = ['ref:spx']
+store = <tests.test_ref_evidence._Store object at 0x7481d398fec0>
+as_of_ms = None
+
+    def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
+        """{reference key: frame} for every `ref:<key>` a spec requires."""
+        keys = [r.split(":", 1)[1] for r in requires or ()
+                if isinstance(r, str) and r.startswith("ref:")]
+        if not keys:
+            return {}
+        if store is None:
+            from ..data.references import RefStore
+            store = RefStore()
+        out = {}
+        for k in keys:
+>           df = store.load(k, as_of_ms=as_of_ms)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: _Store.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:59: TypeError
+_____________ test_a_short_reference_is_untested_with_its_coverage _____________
+
+    def test_a_short_reference_is_untested_with_its_coverage():
+        spec = types.SimpleNamespace(data_requires=["ohlcv", "ref:spx_1h"])
+>       gaps = spec_evidence.missing_data(
+            spec, ["BTC/USDT"], frames={"BTC/USDT": _days("2021-01-01", 1800)},
+            ref_store=_Store({"spx_1h": _days("2024-09-01", 700)}))
+
+tests/test_ref_evidence.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/strategy/spec_evidence.py:152: in missing_data
+    refs = load_refs(ref_needed, ref_store) if ref_needed else {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+requires = ['ref:spx_1h']
+store = <tests.test_ref_evidence._Store object at 0x7481d398df40>
+as_of_ms = None
+
+    def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
+        """{reference key: frame} for every `ref:<key>` a spec requires."""
+        keys = [r.split(":", 1)[1] for r in requires or ()
+                if isinstance(r, str) and r.startswith("ref:")]
+        if not keys:
+            return {}
+        if store is None:
+            from ..data.references import RefStore
+            store = RefStore()
+        out = {}
+        for k in keys:
+>           df = store.load(k, as_of_ms=as_of_ms)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: _Store.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:59: TypeError
+_______________ test_a_reference_spanning_the_frame_is_testable ________________
+
+    def test_a_reference_spanning_the_frame_is_testable():
+        spec = types.SimpleNamespace(data_requires=["ohlcv", "ref:spx"])
+>       gaps = spec_evidence.missing_data(
+            spec, ["BTC/USDT"], frames={"BTC/USDT": _days("2021-01-01", 900)},
+            ref_store=_Store({"spx": _days("2016-01-01", 4000)}))
+
+tests/test_ref_evidence.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/strategy/spec_evidence.py:152: in missing_data
+    refs = load_refs(ref_needed, ref_store) if ref_needed else {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+requires = ['ref:spx']
+store = <tests.test_ref_evidence._Store object at 0x7481d398c0b0>
+as_of_ms = None
+
+    def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
+        """{reference key: frame} for every `ref:<key>` a spec requires."""
+        keys = [r.split(":", 1)[1] for r in requires or ()
+                if isinstance(r, str) and r.startswith("ref:")]
+        if not keys:
+            return {}
+        if store is None:
+            from ..data.references import RefStore
+            store = RefStore()
+        out = {}
+        for k in keys:
+>           df = store.load(k, as_of_ms=as_of_ms)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: _Store.load() got an unexpected keyword argument 'as_of_ms'
+
+trader/strategy/spec_evidence.py:59: TypeError
+______________________ test_refit_and_apply_recalibrates _______________________
+
+    def test_refit_and_apply_recalibrates():
+        import tempfile, pathlib
+        from trader.core.journal import Journal
+        j = Journal(pathlib.Path(tempfile.mkdtemp()) / "cal.db")
+        # fake resolved votes: high-z votes wrong 80% (overconfident scout)
+        rows = []
+        for i in range(100):
+            z_conv = 0.6 if i % 2 == 0 else 0.2
+            correct = (i % 10 < 2) if z_conv == 0.6 else (i % 10 < 6)
+            rows.append((z_conv, 1.0 if correct else 0.0))
+        import json as _json
+        j.query("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
+                "market_type,mode) VALUES ('c','t','S',1,'RANGING',0,'NEUTRAL',"
+                "'futures','live')")
+        j.query("INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,"
+                "threshold,confidence) VALUES ('base','c','t','S','BUY',0.3,"
+                "0.24,0.5)")
+        def ins(idx_r):
+            idx, r = idx_r
+            cid = f"c{idx}"
+            j.query("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
+                    "market_type,mode) VALUES (?,'t','S',1,'RANGING',0,'NEUTRAL',"
+                    "'futures','live')", (cid,))
+            j.query("INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,"
+                    "confidence,rationale,meta) VALUES (?,'t','S','scout','long',"
+                    "?,?,'r','{}')", (cid, r[0], r[1]))
+            did = f"d{idx}"
+            j.query(
+                "INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,"
+                "threshold,confidence) VALUES (?,?,'t','S','BUY',0.3,0.24,0.5)",
+                (did, cid))
+            j.query(
+                "INSERT INTO outcomes(decision_id,cycle_id,symbol,ts,action,"
+                "entry_price,resolved_at,fwd_ret_1h,fwd_ret_4h,fwd_ret_24h,"
+                "correct_1h,correct_4h,correct_24h) VALUES "
+                "(?,?,\"S\",'t','BUY',1,'now',0,0,0,NULL,?,NULL)",
+                (did, cid, r[1]))
+        for i, r in enumerate(rows):
+            ins((i, r))
+        # fix convictions so z matches intended magnitudes
+>       state = refit(j, min_samples=60)
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_scout_upgrades.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/agents/calibration.py:81: in refit
+    refuse_legacy_learning("calibration")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+consumer = 'calibration'
+
+    def refuse_legacy_learning(consumer):
+        """Legacy statistics have no verified replay/proposal authority adapter.
+    
+        Even a complete receipt cannot authorize an unregistered weight/confidence
+        rule. Keep these writers closed until an explicit integration is verified.
+        Descriptive collection and existing stored state remain available.
+        """
+>       raise ValueError(f'replay_complete_learning_authority_required:{consumer}')
+E       ValueError: replay_complete_learning_authority_required:calibration
+
+trader/learning/foundation.py:583: ValueError
+_____________________ test_positioning_fades_crowded_longs _____________________
+
+    def test_positioning_fades_crowded_longs():
+        a = PositioningAnalyst()
+        snap = _snap()
+        a.set_context("ETH/USDT", funding_rate=0.0008,
+                      oi={"now": 1e6, "chg_24h": 0.10})
+        v = a.evaluate(snap)
+>       assert v.side == Side.SHORT and v.conviction <= -0.3
+E       AssertionError: assert (<Side.SHORT: 'short'> == <Side.SHORT: 'short'>
+E         
+E           short and -0.17 <= -0.3)
+E        +  where -0.17 = Vote(agent='positioning', symbol='ETH/USDT', side=<Side.SHORT: 'short'>, conviction=-0.17, confidence=0.39999999999999...e long; OI building ++10% into the crowd', 'schema': 'analyst.measurement.v1'}}, ts='2026-10-16T18:28:52.105832+00:00').conviction
+
+tests/test_scout_upgrades.py:106: AssertionError
+___________________ test_positioning_detects_short_covering ____________________
+
+    def test_positioning_detects_short_covering():
+        a = PositioningAnalyst()
+        snap = _snap(price=2000.0)
+        snap.dfs["1h"] = _df(np.linspace(2000, 2300, 120), tf="1h")  # >2% last 24h
+        a.set_context("ETH/USDT", funding_rate=0.0001,
+                      oi={"now": 1e6, "chg_24h": -0.12})
+        v = a.evaluate(snap)   # price rose while OI fell
+>       assert "short-covering" in v.rationale and v.conviction < 0
+E       AssertionError: assert ('short-covering' in 'positioning quiet')
+E        +  where 'positioning quiet' = Vote(agent='positioning', symbol='ETH/USDT', side=<Side.FLAT: 'flat'>, conviction=0.0, confidence=0.3, rationale='posi...fied.'], 'rationale': 'positioning quiet', 'schema': 'analyst.measurement.v1'}}, ts='2026-10-16T18:28:52.130827+00:00').rationale
+
+tests/test_scout_upgrades.py:124: AssertionError
+_______ test_unknown_flow_and_leader_never_become_neutral_market_values ________
+
+    def test_unknown_flow_and_leader_never_become_neutral_market_values():
+        from trader.agents.flow import FlowAnalyst
+        from trader.agents.regime import btc_context,classify
+        from trader.core.types import Snapshot
+        df=frame(n=40);df['taker_buy']=np.nan
+        snap=Snapshot(symbol='BTC/USDT',ts=pd.Timestamp(T,unit='ms',tz='UTC').isoformat(),price=10,dfs={'15m':df})
+        vote=FlowAnalyst().evaluate(snap)
+>       assert vote.conviction==0 and vote.meta['quality']=='UNKNOWN'
+                                      ^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'quality'
+
+tests/test_stage1_data_provenance_pit.py:490: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_ref_evidence.py::test_load_refs_returns_only_what_exists - ...
+FAILED tests/test_ref_evidence.py::test_an_absent_reference_is_untested - Typ...
+FAILED tests/test_ref_evidence.py::test_a_short_reference_is_untested_with_its_coverage
+FAILED tests/test_ref_evidence.py::test_a_reference_spanning_the_frame_is_testable
+FAILED tests/test_scout_upgrades.py::test_refit_and_apply_recalibrates - Valu...
+FAILED tests/test_scout_upgrades.py::test_positioning_fades_crowded_longs - A...
+FAILED tests/test_scout_upgrades.py::test_positioning_detects_short_covering
+FAILED tests/test_stage1_data_provenance_pit.py::test_unknown_flow_and_leader_never_become_neutral_market_values
+8 failed, 308 passed in 37.55s

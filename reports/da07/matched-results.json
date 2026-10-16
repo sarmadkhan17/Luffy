@@ -1,0 +1,48 @@
+{
+  "base": "e703494f18cee5117dfcad9fb353bc4c90620606",
+  "regressions": {
+    "main": {
+      "matched": true,
+      "passed": 308,
+      "failures": [
+        "tests.test_ref_evidence::test_load_refs_returns_only_what_exists",
+        "tests.test_ref_evidence::test_an_absent_reference_is_untested",
+        "tests.test_ref_evidence::test_a_short_reference_is_untested_with_its_coverage",
+        "tests.test_ref_evidence::test_a_reference_spanning_the_frame_is_testable",
+        "tests.test_scout_upgrades::test_refit_and_apply_recalibrates",
+        "tests.test_scout_upgrades::test_positioning_fades_crowded_longs",
+        "tests.test_scout_upgrades::test_positioning_detects_short_covering",
+        "tests.test_stage1_data_provenance_pit::test_unknown_flow_and_leader_never_become_neutral_market_values"
+      ]
+    },
+    "consumers": {
+      "matched": true,
+      "passed": 44,
+      "failures": [
+        "tests.test_attention_telemetry::test_compiled_spec_reports_missing_and_failed_inputs"
+      ]
+    }
+  },
+  "replay_equal": {
+    "admission_receipt": true,
+    "analyst_votes": true,
+    "attention_market": true,
+    "attention_rows": true,
+    "decisions": true,
+    "persisted": true
+  },
+  "source_files_identical": 310,
+  "limits": [
+    "Main exploratory campaigns invalidated by two denied checkout-default derivs.db reads per side; no database was opened.",
+    "Consumer campaigns: zero network and store attempts, one inherited fixture failure per side.",
+    "Replay uses retained 16-symbol input with empty strategy population; historical Attention evaluated separately by its exact version."
+  ],
+  "safe_suite": {
+    "baseline_passed": 276,
+    "candidate_passed": 276,
+    "deselected_per_side": 1,
+    "network_attempts": 0,
+    "store_attempts": 0,
+    "matched": true
+  }
+}

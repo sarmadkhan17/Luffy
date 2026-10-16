@@ -1,0 +1,18 @@
+[
+  "tests/test_cognition_attention.py",
+  "tests/test_da06_input_work.py",
+  "tests/test_derivatives.py",
+  "tests/test_features_deriv_extra.py",
+  "tests/test_final_audit_macro_time.py",
+  "tests/test_hierarchical_admission.py",
+  "tests/test_macro_guard.py",
+  "tests/test_pit_alignment.py",
+  "tests/test_real_funding.py",
+  "tests/test_ref_live.py",
+  "tests/test_ref_recorder.py",
+  "tests/test_ref_sources.py",
+  "tests/test_reference_store.py",
+  "tests/test_scan_plan.py",
+  "tests/test_stage1_data_provenance_pit.py",
+  "tests/test_wrld01_measurements.py"
+]

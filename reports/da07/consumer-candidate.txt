@@ -1,0 +1,32 @@
+.......................................F.....                            [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_____________ test_compiled_spec_reports_missing_and_failed_inputs _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e6aff3ffe0>
+
+    def test_compiled_spec_reports_missing_and_failed_inputs(monkeypatch):
+        from trader.strategy import compile as mod, library
+        from tests.market_receipt_fixtures import snapshot as Snapshot
+        compiled=object.__new__(mod.CompiledStrategy)
+        compiled.spec=NS(timeframe='4h',id='fixture')
+        fn=compiled.to_evaluator()
+        monkeypatch.setitem(library.EVALUATORS,'fixture',fn)
+        genome=NS(family='fixture',params={},strategy_id='fixture')
+        results=[]
+        def record(reason,exc=None): results.append(reason)
+        assert library.evaluate(genome,Snapshot('S','now',100,{}),record) is None
+>       assert results==['missing_closed_timeframe']
+E       AssertionError: assert ['evaluation_failed'] == ['missing_closed_timeframe']
+E         
+E         At index 0 diff: 'evaluation_failed' != 'missing_closed_timeframe'
+E         Use -v to get more diff
+
+tests/test_attention_telemetry.py:320: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.strategy.library:library.py:325 strategy fixture (fixture) error: 'types.SimpleNamespace' object has no attribute 'to_dict'
+=========================== short test summary info ============================
+FAILED tests/test_attention_telemetry.py::test_compiled_spec_reports_missing_and_failed_inputs
+1 failed, 44 passed, 32 deselected in 10.39s
