@@ -495,9 +495,3 @@ attention:
 # Forward shadow forecasts only; independent watchdog consumer, never admission.
 attention_learning:
   enabled: true
-
-paper_cost:
-  funding_history_lookup: true     # owner switch for the one public GET that completes futures paper
-                                   # cost receipts (fapi.binance.com fundingRate, no credentials).
-                                   # false = no request; trades stay pending and probation reports
-                                   # INCOMPLETE_COST_EVIDENCE. Never an LLM, account or order call.

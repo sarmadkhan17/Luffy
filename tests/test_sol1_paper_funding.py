@@ -242,6 +242,11 @@ def test_funding_requests_respect_the_existing_controls(tmp_path, cfg, monkeypat
     assert r.complete(fetch=rows_fetch(mid_event(), calls)) == [] and calls == []
     assert r.receipt(tid) is None and r.assess()["status"] == F.P_COST_INCOMPLETE
     r.paper.cfg = cfg
+    # the stop file beside the database does the same without touching config.yaml
+    stop = r.j.db_path.parent / r.paper.STOP_FILE
+    stop.write_text("off")
+    assert r.complete(fetch=rows_fetch(mid_event(), calls)) == [] and calls == []
+    stop.unlink()
     # admitted: exactly one bounded GET to the documented public endpoint, nothing else
     from trader.brain import llm
     monkeypatch.setattr(llm.Brain if hasattr(llm, "Brain") else llm, "__init__",

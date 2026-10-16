@@ -239,12 +239,20 @@ class PaperExecutor:
             f"AND NOT EXISTS(SELECT 1 FROM {C.TABLE} r WHERE r.trade_id=t.id) "
             "ORDER BY t.closed_at, t.id LIMIT ?", (limit,))
 
+    STOP_FILE = 'paper-funding-lookup.off'
+
     def funding_lookup_admitted(self):
-        """The one switch for this executor's public network request: the owner
-        can turn the funding-history lookup off, in which case every futures
-        trade stays PENDING (probation INCOMPLETE_COST_EVIDENCE), never skipped.
-        No LLM provider, credential, account or order endpoint is reachable."""
-        return (self.cfg.get('paper_cost') or {}).get('funding_history_lookup', True) is True
+        """The one switch for this executor's public network request. The owner
+        turns the lookup off by creating `<data dir>/paper-funding-lookup.off`
+        (the existing watchdog.off style; config.yaml's pinned sections are not
+        extended) or by setting `paper_cost.funding_history_lookup: false`. Every
+        futures trade then stays PENDING (probation INCOMPLETE_COST_EVIDENCE),
+        never skipped. No LLM provider, credential, account or order endpoint is
+        reachable from here."""
+        if (self.cfg.get('paper_cost') or {}).get('funding_history_lookup', True) is not True:
+            return False
+        path = getattr(self.journal, 'db_path', None)
+        return not (path is not None and (path.parent / self.STOP_FILE).exists())
 
     def complete_costs(self, *, fetch=None, clock=None, limit=2):
         """Finalize closed futures trades whose cost receipt is pending.

@@ -32,3 +32,10 @@ Per-file pytest, baseline `56325a6` vs final head: 389/392 files; 252 failing/er
 - Futures cost completion uses public funding-history GETs (bounded, throttled; injected in tests).
 - Nothing writes `record_first_live_deployment`.
 - Trailing stops unsupported; `graphify` not run.
+
+## Addendum — funding-crossing paper trades (follow-up from `4a712cd`)
+- A trade with funding events strictly inside its paper interval is now priced, not excluded: `funding_events.crossing_source` (method `BINANCE_PUBLIC_FUNDING_EVENTS_PUBLISHED_MARK_BASIS_V1`, labelled `ESTIMATED_FROM_PUBLISHED_RATE_AND_MARK_NOT_VENUE_ACTUAL`) records each event's published rate and the mark published in the same row, on the trade's frozen quantity; the existing `funding_cost` applies `side x rate x mark x quantity` once (long pays a positive rate). No flat 8h fallback, no backtest exit-price basis, no double counting with commission/slippage.
+- Refused, never guessed: an event exactly on entry/exit, a missing/non-positive/non-numeric mark, a non-production or quantity-mismatched exposure. The receipt records funding UNAVAILABLE.
+- Probation: the `cost_evidence_refused` exclusion is removed. Any closed trade lacking complete net-cost evidence (pending, refused, no cost model) makes the assessment `INCOMPLETE_COST_EVIDENCE`; no population is selected.
+- Network: the only request is the existing `FE.lookup` public GET (fapi.binance.com fundingRate, no credentials, bounded). It is skipped before any request unless the trade is production-proven and the owner has not disabled it (`<data dir>/paper-funding-lookup.off`, or `paper_cost.funding_history_lookup: false`). `config.yaml` is unchanged (its sections are byte-pinned by `test_sg05`). The `brain.enabled` / `research.referee|handoff` controls gate LLM and research providers and are unrelated to this public venue endpoint; no LLM code is reachable from the lookup.
+- Operational blocker: a trade whose funding cannot be priced blocks that version's probation permanently (immutable receipt); the remedy is a new version, not an exclusion.
