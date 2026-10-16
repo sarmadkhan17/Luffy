@@ -1,0 +1,825 @@
+{
+  "input-and-scope": {
+    "baseline": "37383dcf6545490587ba31db35d56ed4e45a61bc",
+    "implementation": "eff6fdc3a969ad08873a1b66711f413a6d96b005",
+    "bundles": [
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol2-da10-rp05-final-20261015/int01-unified-final.bundle",
+        "sha256": "c85b208a7c3cf17a88cfe35d932481d7a9e0f4b460b058c17cbcad4b3db27d3f",
+        "verified": true,
+        "actual_sha256": "c85b208a7c3cf17a88cfe35d932481d7a9e0f4b460b058c17cbcad4b3db27d3f",
+        "complete_history": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da05/DA05.bundle",
+        "sha256": "668ba963d9753dea38863ecd461ac70afb1cfebe1fcf2dd969b615d37af4c1c1",
+        "verified": true,
+        "actual_sha256": "668ba963d9753dea38863ecd461ac70afb1cfebe1fcf2dd969b615d37af4c1c1",
+        "complete_history": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da08-evidence-20261016/DA08.bundle",
+        "sha256": "b9fec70299f2b0c16a7bf000b271134ed574c98aaab592ea3fbcace73c210bde",
+        "verified": true,
+        "actual_sha256": "b9fec70299f2b0c16a7bf000b271134ed574c98aaab592ea3fbcace73c210bde",
+        "complete_history": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da09-evidence-20261016/DA09.bundle",
+        "sha256": "e89c91cf46deb9c270fd0110789ea5812a7b9496947d9d2a16e4f2806cee0d00",
+        "verified": true,
+        "actual_sha256": "e89c91cf46deb9c270fd0110789ea5812a7b9496947d9d2a16e4f2806cee0d00",
+        "complete_history": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-rp03-evidence-20261016/RP03.bundle",
+        "sha256": "c47bfd1fcce74a9c2c27aea1799286581d1e5b46f0645c2347ae907953820220",
+        "verified": true,
+        "actual_sha256": "c47bfd1fcce74a9c2c27aea1799286581d1e5b46f0645c2347ae907953820220",
+        "complete_history": true
+      },
+      {
+        "path": "/mnt/luffy-recovery/recovery/sol1-da04-evidence-20261016/DA04.bundle",
+        "sha256": "998c7f38bb6e373d55983bc4f44c56d6694765c4d7150d765dd62a447d9d2be9",
+        "actual_sha256": "998c7f38bb6e373d55983bc4f44c56d6694765c4d7150d765dd62a447d9d2be9",
+        "verified": true,
+        "complete_history": true
+      }
+    ],
+    "ancestry": {
+      "6bc0f4cce0360d9ab89440798376b66755b9c34e": true,
+      "0b6f6067d0216f11d2b9c216207c7a610b0337d7": true,
+      "2e4474899a4e26413cb22adac166ef753c12a9d7": true,
+      "f32726d5fa3c2a95f18636c95df3f720d51176e0": true,
+      "d31bab4af8dfad26fe371409d131d0ba863fe050": true,
+      "553dc423760e1a331d107aa4ad878ea5f6e6e219": true,
+      "37383dcf6545490587ba31db35d56ed4e45a61bc": true
+    },
+    "da05_methods_exact_at_pre_da04": [
+      "_queue_background_request",
+      "_drain_background_queue",
+      "_background_needs_data",
+      "prepare_history",
+      "_current_tail",
+      "_contiguous_tail"
+    ],
+    "da04_feed_preserved_exact": true,
+    "da05_history_exact": true,
+    "da09_tests_exact": true,
+    "changes": [
+      "trader/cognition/contracts.py",
+      "trader/learning/consumers.py",
+      "trader/world/__init__.py",
+      "trader/world/observation.py"
+    ],
+    "preserved_sha256": {
+      "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+      "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+      "docs/tracker/LUFFY_Product_Tracker_v1.yaml": "9e5291393299441431e060c3120f0a8f0d8a4cc9060e030c4ef49abacb19e4de",
+      "trader/kernel.py": "c5515a43593bf9a515774162d72b13eeb84bf439736964b36cd24f005614a749",
+      "trader/engine/risk.py": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+      "trader/engine/executor.py": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d",
+      "trader/engine/protective.py": "7f502a73453cd4dedcb895646ca09e9c6535c1336f3fc0d0afa25e0e0da3300a",
+      "trader/engine/state.py": "3cd4c49d60cf42cc7c502c9ba28baa50ec2dd5cb16394ad1084065b5d55a578a",
+      "trader/engine/entry_authority.py": "454ab8212ca98f4cec286a57ddb9dde64362dd044ad818f7417b2e12cbef2dd6",
+      "trader/attention_admission.py": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+      "trader/observability/investigation.py": "7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde",
+      "trader/observability/investigation_research.py": "dbea77ebc44d69bd4517e96dd86a5e59f0deb07775eabb24ddebefb376c04aa8",
+      "trader/research/predictive_bridge.py": "6626847a0d94308578e5c96b413c88bc62a000d287ad70c574f9811cf4e785f1",
+      "trader/research/factory_transfer.py": "43c4f59c9bc0a8ded59c2ce0d9bfec08a2d9b81c7576011460b11743c26a28a3",
+      "trader/strategy/factory_handoff.py": "e945ccfff69784e252733ea04d271aebdc15ed39678758c2da2b55fba566c774"
+    },
+    "source_reduction": {
+      "trader/cognition/contracts.py": {
+        "before": {
+          "lines": 485,
+          "bytes": 18645,
+          "classes": 9,
+          "functions": 16,
+          "ast_nodes": 3440
+        },
+        "after": {
+          "lines": 481,
+          "bytes": 18605,
+          "classes": 9,
+          "functions": 15,
+          "ast_nodes": 3429
+        }
+      },
+      "trader/learning/consumers.py": {
+        "before": {
+          "lines": 166,
+          "bytes": 6932,
+          "classes": 2,
+          "functions": 19,
+          "ast_nodes": 1042
+        },
+        "after": {
+          "lines": 161,
+          "bytes": 6735,
+          "classes": 2,
+          "functions": 18,
+          "ast_nodes": 1011
+        }
+      },
+      "trader/world/__init__.py": {
+        "before": {
+          "lines": 26,
+          "bytes": 1324,
+          "classes": 0,
+          "functions": 0,
+          "ast_nodes": 73
+        },
+        "after": {
+          "lines": 26,
+          "bytes": 1280,
+          "classes": 0,
+          "functions": 0,
+          "ast_nodes": 71
+        }
+      },
+      "trader/world/observation.py": {
+        "before": {
+          "lines": 251,
+          "bytes": 10401,
+          "classes": 4,
+          "functions": 14,
+          "ast_nodes": 1675
+        },
+        "after": {
+          "lines": 225,
+          "bytes": 9388,
+          "classes": 3,
+          "functions": 13,
+          "ast_nodes": 1562
+        }
+      }
+    },
+    "network_guard_sha256": "e83ab133d761778ad83559e9139f92537e6ea46c47edba16e4e1f275c347778e"
+  },
+  "parity": {
+    "canonical_bytes_equal": true,
+    "sha256": "62504f7d2843093e8acf3470ecf604a75053299b6cf273994b14ba50a0e28703",
+    "comparison_bytes": 577159,
+    "cases": [
+      "chronological",
+      "flat",
+      "future_available",
+      "hole",
+      "late_arrival_replay",
+      "late_cut",
+      "missing_anchor",
+      "serialization",
+      "valid",
+      "wrong_instrument"
+    ],
+    "baseline_world_record_replayed_in_fresh_candidate_process": true,
+    "record_id": "world.replay.record.v1:6383459ed1024d8be0fac54a4dca7975d089107f2ea19f8072f98793deac7ea9",
+    "asdict_is_canonical_stdlib": true,
+    "detachment_and_precision_verified": true
+  },
+  "performance": {
+    "baseline": {
+      "label": "baseline",
+      "parity_sha256": "62504f7d2843093e8acf3470ecf604a75053299b6cf273994b14ba50a0e28703",
+      "case_hashes": {
+        "valid": "ffa1173411b8267d707c45c1d6b16265e636eef20c9f24e7cb4730176d00ab39",
+        "missing_anchor": "f9ad4b48dd8851f7135455a86adaa36be3c0b0716071466021d562cef125cb1a",
+        "hole": "0248c895b4a348e167998b8b072839a9b25937db0c98380e1cef6e9e4638b158",
+        "flat": "209f636129718c85eb4be7a78431827c43c2a866ce36d45c9c2c67f919274a45",
+        "future_available": "f9ad4b48dd8851f7135455a86adaa36be3c0b0716071466021d562cef125cb1a",
+        "wrong_instrument": "e1e19d9000f55a8f49de7b9613d3f2660630e2559832c25dfff005feb5fed21e",
+        "late_cut": "6407108a622ee630b7aae37c67ec3da4a7109b3300b042f955fb21e251558fe1",
+        "chronological": "bc840d62283869fb48a98fab8886f7ef47523e494575e9e043db5283084ed253",
+        "late_arrival_replay": "16099b02608d8a3774bd23d6e34cbfc84c225358c951242265cb4cad41728abd",
+        "serialization": "3d814beb6cfe4aecdb570b119401614b8de679c8340b67dcf91cf75c74e1f1be"
+      },
+      "serialization": {
+        "iterations": 10000,
+        "repeats": 7,
+        "wall_ns_median": 61821.3365,
+        "cpu_ns_median": 53202.2616,
+        "wall_ns_samples": [
+          98400.8491,
+          123341.3906,
+          114548.6033,
+          61821.3365,
+          53211.2275,
+          55377.0847,
+          50464.6347
+        ],
+        "cpu_ns_samples": [
+          51061.9606,
+          56915.4053,
+          53817.4614,
+          52848.955,
+          53202.2616,
+          55231.724,
+          49088.3544
+        ]
+      },
+      "processing": {
+        "iterations": 20,
+        "repeats": 7,
+        "wall_ns_median": 12070424.75,
+        "cpu_ns_median": 11752660.65,
+        "wall_ns_samples": [
+          9523609.8,
+          9477682.95,
+          11808032.4,
+          12070424.75,
+          13639575.3,
+          14191671.8,
+          17604210.2
+        ],
+        "cpu_ns_samples": [
+          9522891.55,
+          9475004.15,
+          11752660.65,
+          11920949.5,
+          12265397.6,
+          12251741.9,
+          10716613.55
+        ]
+      },
+      "scan_bytes": 63922,
+      "world_record_bytes": 15951,
+      "observation_bytes": 34118
+    },
+    "candidate": {
+      "label": "candidate",
+      "parity_sha256": "62504f7d2843093e8acf3470ecf604a75053299b6cf273994b14ba50a0e28703",
+      "case_hashes": {
+        "valid": "ffa1173411b8267d707c45c1d6b16265e636eef20c9f24e7cb4730176d00ab39",
+        "missing_anchor": "f9ad4b48dd8851f7135455a86adaa36be3c0b0716071466021d562cef125cb1a",
+        "hole": "0248c895b4a348e167998b8b072839a9b25937db0c98380e1cef6e9e4638b158",
+        "flat": "209f636129718c85eb4be7a78431827c43c2a866ce36d45c9c2c67f919274a45",
+        "future_available": "f9ad4b48dd8851f7135455a86adaa36be3c0b0716071466021d562cef125cb1a",
+        "wrong_instrument": "e1e19d9000f55a8f49de7b9613d3f2660630e2559832c25dfff005feb5fed21e",
+        "late_cut": "6407108a622ee630b7aae37c67ec3da4a7109b3300b042f955fb21e251558fe1",
+        "chronological": "bc840d62283869fb48a98fab8886f7ef47523e494575e9e043db5283084ed253",
+        "late_arrival_replay": "16099b02608d8a3774bd23d6e34cbfc84c225358c951242265cb4cad41728abd",
+        "serialization": "3d814beb6cfe4aecdb570b119401614b8de679c8340b67dcf91cf75c74e1f1be"
+      },
+      "serialization": {
+        "iterations": 10000,
+        "repeats": 7,
+        "wall_ns_median": 53702.4704,
+        "cpu_ns_median": 48328.5143,
+        "wall_ns_samples": [
+          45886.7338,
+          51659.4449,
+          53702.4704,
+          68592.5092,
+          56129.7871,
+          54582.7453,
+          48525.4622
+        ],
+        "cpu_ns_samples": [
+          42135.0716,
+          44824.5384,
+          46661.281,
+          49270.0324,
+          51429.7167,
+          52557.6312,
+          48328.5143
+        ]
+      },
+      "processing": {
+        "iterations": 20,
+        "repeats": 7,
+        "wall_ns_median": 10040326.7,
+        "cpu_ns_median": 10001814.0,
+        "wall_ns_samples": [
+          9283638.25,
+          10518205.05,
+          10040326.7,
+          8848919.95,
+          9573099.95,
+          10373597.6,
+          10991177.6
+        ],
+        "cpu_ns_samples": [
+          9091259.7,
+          10185385.2,
+          10001814.0,
+          8833870.25,
+          9541555.6,
+          10008311.1,
+          10362804.1
+        ]
+      },
+      "scan_bytes": 63922,
+      "world_record_bytes": 15951,
+      "observation_bytes": 34118
+    },
+    "limits": [
+      "Synthetic software workloads only; six symbols per scan, 4 records per serialization batch.",
+      "Seven sequential repetitions per version under concurrent host load; no statistical significance or speedup claim.",
+      "Same wire bytes and retained evidence; dormant removals have zero normal-path serialization savings.",
+      "SnapshotObservation and attention_order had zero executable production call sites in repository."
+    ],
+    "scan_bytes_equal": true,
+    "observation_bytes_equal": true,
+    "world_record_bytes_equal": true
+  },
+  "static-audit": {
+    "removed_names_executable_references": [],
+    "canonical_serializer": "dataclasses.asdict imported as cognition.contracts.to_dict",
+    "protected_scope": "Only four source files differ from DA04; all validation, strategy, admission, Risk, Execution, state and recovery files retain baseline bytes.",
+    "asdict_copy_semantics": "nested detachment verified in the differential cases",
+    "new_test_files": 0,
+    "test_assertions_modified": 0
+  },
+  "test-results": {
+    "baseline": {
+      "counts": {
+        "passed": 963,
+        "failed": 4,
+        "error": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "5603e2474a3554f2bd271a26e760ca22f82763ebb71058de0b0536843e28dbea",
+      "run": {
+        "label": "baseline",
+        "returncode": 1,
+        "wall_seconds": 1165.8747840319993,
+        "command": [
+          "/mnt/luffy-data/luffy/production/venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/test_wm01_volume_reuse.py",
+          "tests/test_wrld01_measurements.py",
+          "tests/test_wrld04_claim_history.py",
+          "tests/test_wrld05_normal_context.py",
+          "tests/test_wrld07_relationship_state.py",
+          "tests/test_intelligence_spine.py",
+          "tests/test_stage7_replay_world_closure_r2.py",
+          "tests/test_cognition_attention.py",
+          "tests/test_cognition_contracts.py",
+          "tests/test_cognition_replay.py",
+          "tests/test_attention_telemetry.py",
+          "tests/test_attention_learning.py",
+          "tests/test_attention_selection_persistence.py",
+          "tests/test_attention_view.py",
+          "tests/test_final_audit_attention_allocation_time.py",
+          "tests/test_final_audit_learning_time.py",
+          "tests/test_real_learning_integration.py",
+          "tests/test_normal_learning_loop_closure.py",
+          "tests/test_learning_application.py",
+          "tests/test_learning_foundation.py",
+          "tests/test_legacy_learning_replay_gate.py",
+          "tests/test_market_investigation.py",
+          "tests/test_investigation_consumer.py",
+          "tests/test_investigation_memory.py",
+          "tests/test_investigation_state_feedback.py",
+          "tests/test_investigation_view.py",
+          "tests/test_investigation_research_family.py",
+          "tests/test_rp01_investigation_research_pipeline.py",
+          "tests/test_hierarchical_admission.py",
+          "tests/test_opportunity_context.py",
+          "tests/test_opportunity_live_integration.py",
+          "tests/test_control_state_recovery.py",
+          "tests/test_entry_recovery.py",
+          "tests/test_protective_stops.py",
+          "tests/test_risk01_entry_binding.py",
+          "tests/test_risk02_exposure_feasibility.py",
+          "tests/test_single_creation_path.py",
+          "tests/test_strategy_factory_handoff.py",
+          "tests/test_da04_snapshot_reliability.py",
+          "--basetemp=/mnt/luffy-recovery/recovery/sol1-wm03-scratch/baseline-tmp/pytest",
+          "--junitxml=/mnt/luffy-recovery/recovery/sol1-wm03-scratch/baseline.xml"
+        ]
+      },
+      "case_count": 967,
+      "case_manifest_sha256": "60c0d5eb8cf925b6c74f7d076b833feca9bad6eb2f5727a29b83298aa0b7ff8b",
+      "failures": {
+        "tests.test_cognition_contracts::test_cognition_imports_only_stdlib_and_itself": {
+          "status": "failed",
+          "seconds": 0.032,
+          "type": null,
+          "message": "AssertionError: attention.py imports trader.learning.consumers\nassert 'trader.learning.consumers' in {'__future__', 'argparse', 'base64', 'dataclasses', 'datetime', 'hashlib', ...}",
+          "trace_sha256": "fc2c22916cb42a1e1f5af986f68d181f817d5a58eddb9f38296e44a970e99625"
+        },
+        "tests.test_investigation_consumer::test_capacity_retention_and_diagnostic_bounds": {
+          "status": "failed",
+          "seconds": 0.348,
+          "type": null,
+          "message": "ValueError: max() iterable argument is empty",
+          "trace_sha256": "bf1679adc2fbfa64beea9c68265dba3a7c5e74db5d357c15b73ec828cf8346f4"
+        },
+        "tests.test_investigation_consumer::test_reader_rejects_oversized_source_and_does_not_create_missing_file": {
+          "status": "failed",
+          "seconds": 0.277,
+          "type": null,
+          "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'source_payload_bound'\n  Actual message: 'SOURCE_PAYLOAD_BOUND_EXCEEDED'",
+          "trace_sha256": "7cf5a95084b3628e445435fa8ecd7623f1d634cd03bc2759116fbe2e5eba7fc1"
+        },
+        "tests.test_investigation_view::test_authenticated_missing_readonly_endpoint": {
+          "status": "failed",
+          "seconds": 0.002,
+          "type": null,
+          "message": "ValueError: dashboard.startup_mode must explicitly be READ_ONLY_GUI or LIVE",
+          "trace_sha256": "a848427e5c026e192d046610de9ba0afdffd92b7e21bce945ce4a37a044a6b6c"
+        }
+      },
+      "per_module_counts": {
+        "tests.test_wm01_volume_reuse": {
+          "passed": 18
+        },
+        "tests.test_wrld01_measurements": {
+          "passed": 30
+        },
+        "tests.test_wrld04_claim_history": {
+          "passed": 8
+        },
+        "tests.test_wrld05_normal_context": {
+          "passed": 29
+        },
+        "tests.test_wrld07_relationship_state": {
+          "passed": 54
+        },
+        "tests.test_intelligence_spine": {
+          "passed": 26
+        },
+        "tests.test_stage7_replay_world_closure_r2": {
+          "passed": 14
+        },
+        "tests.test_cognition_attention": {
+          "passed": 30
+        },
+        "tests.test_cognition_contracts": {
+          "passed": 10,
+          "failed": 1
+        },
+        "tests.test_cognition_replay": {
+          "passed": 21
+        },
+        "tests.test_attention_telemetry": {
+          "passed": 50
+        },
+        "tests.test_attention_learning": {
+          "passed": 11
+        },
+        "tests.test_attention_selection_persistence": {
+          "passed": 58
+        },
+        "tests.test_attention_view": {
+          "passed": 5
+        },
+        "tests.test_final_audit_attention_allocation_time": {
+          "passed": 2
+        },
+        "tests.test_final_audit_learning_time": {
+          "passed": 2
+        },
+        "tests.test_real_learning_integration": {
+          "passed": 17
+        },
+        "tests.test_normal_learning_loop_closure": {
+          "passed": 37
+        },
+        "tests.test_learning_application": {
+          "passed": 32
+        },
+        "tests.test_learning_foundation": {
+          "passed": 18
+        },
+        "tests.test_legacy_learning_replay_gate": {
+          "passed": 11
+        },
+        "tests.test_market_investigation": {
+          "passed": 15
+        },
+        "tests.test_investigation_consumer": {
+          "passed": 11,
+          "failed": 2
+        },
+        "tests.test_investigation_memory": {
+          "passed": 18
+        },
+        "tests.test_investigation_state_feedback": {
+          "passed": 21
+        },
+        "tests.test_investigation_view": {
+          "failed": 1,
+          "passed": 1
+        },
+        "tests.test_investigation_research_family": {
+          "passed": 15
+        },
+        "tests.test_rp01_investigation_research_pipeline": {
+          "passed": 3
+        },
+        "tests.test_hierarchical_admission": {
+          "passed": 56
+        },
+        "tests.test_opportunity_context": {
+          "passed": 75
+        },
+        "tests.test_opportunity_live_integration": {
+          "passed": 24
+        },
+        "tests.test_control_state_recovery": {
+          "passed": 21
+        },
+        "tests.test_entry_recovery": {
+          "passed": 25
+        },
+        "tests.test_protective_stops": {
+          "passed": 23
+        },
+        "tests.test_risk01_entry_binding": {
+          "passed": 19
+        },
+        "tests.test_risk02_exposure_feasibility": {
+          "passed": 64
+        },
+        "tests.test_single_creation_path": {
+          "passed": 11
+        },
+        "tests.test_strategy_factory_handoff": {
+          "passed": 53
+        },
+        "tests.test_da04_snapshot_reliability": {
+          "passed": 25
+        }
+      }
+    },
+    "candidate": {
+      "counts": {
+        "passed": 963,
+        "failed": 4,
+        "error": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "9b9c0e1b524fd1f75ce3bfa752d7b702d644883f425384fcf53d6282a9b606fe",
+      "run": {
+        "label": "candidate",
+        "returncode": 1,
+        "wall_seconds": 1166.2485115419986,
+        "command": [
+          "/mnt/luffy-data/luffy/production/venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/test_wm01_volume_reuse.py",
+          "tests/test_wrld01_measurements.py",
+          "tests/test_wrld04_claim_history.py",
+          "tests/test_wrld05_normal_context.py",
+          "tests/test_wrld07_relationship_state.py",
+          "tests/test_intelligence_spine.py",
+          "tests/test_stage7_replay_world_closure_r2.py",
+          "tests/test_cognition_attention.py",
+          "tests/test_cognition_contracts.py",
+          "tests/test_cognition_replay.py",
+          "tests/test_attention_telemetry.py",
+          "tests/test_attention_learning.py",
+          "tests/test_attention_selection_persistence.py",
+          "tests/test_attention_view.py",
+          "tests/test_final_audit_attention_allocation_time.py",
+          "tests/test_final_audit_learning_time.py",
+          "tests/test_real_learning_integration.py",
+          "tests/test_normal_learning_loop_closure.py",
+          "tests/test_learning_application.py",
+          "tests/test_learning_foundation.py",
+          "tests/test_legacy_learning_replay_gate.py",
+          "tests/test_market_investigation.py",
+          "tests/test_investigation_consumer.py",
+          "tests/test_investigation_memory.py",
+          "tests/test_investigation_state_feedback.py",
+          "tests/test_investigation_view.py",
+          "tests/test_investigation_research_family.py",
+          "tests/test_rp01_investigation_research_pipeline.py",
+          "tests/test_hierarchical_admission.py",
+          "tests/test_opportunity_context.py",
+          "tests/test_opportunity_live_integration.py",
+          "tests/test_control_state_recovery.py",
+          "tests/test_entry_recovery.py",
+          "tests/test_protective_stops.py",
+          "tests/test_risk01_entry_binding.py",
+          "tests/test_risk02_exposure_feasibility.py",
+          "tests/test_single_creation_path.py",
+          "tests/test_strategy_factory_handoff.py",
+          "tests/test_da04_snapshot_reliability.py",
+          "--basetemp=/mnt/luffy-recovery/recovery/sol1-wm03-scratch/candidate-tmp/pytest",
+          "--junitxml=/mnt/luffy-recovery/recovery/sol1-wm03-scratch/candidate.xml"
+        ]
+      },
+      "case_count": 967,
+      "case_manifest_sha256": "4f0512d0e951a5046aafa18dfc8f03e58a7cebd3e085ff3877b926a550530cae",
+      "failures": {
+        "tests.test_cognition_contracts::test_cognition_imports_only_stdlib_and_itself": {
+          "status": "failed",
+          "seconds": 0.014,
+          "type": null,
+          "message": "AssertionError: attention.py imports trader.learning.consumers\nassert 'trader.learning.consumers' in {'__future__', 'argparse', 'base64', 'dataclasses', 'datetime', 'hashlib', ...}",
+          "trace_sha256": "fc2c22916cb42a1e1f5af986f68d181f817d5a58eddb9f38296e44a970e99625"
+        },
+        "tests.test_investigation_consumer::test_capacity_retention_and_diagnostic_bounds": {
+          "status": "failed",
+          "seconds": 0.388,
+          "type": null,
+          "message": "ValueError: max() iterable argument is empty",
+          "trace_sha256": "549d10e25e6ee0a6b8397bc1696c260d33b26e388c2e5dd7622df9bfe4c859a2"
+        },
+        "tests.test_investigation_consumer::test_reader_rejects_oversized_source_and_does_not_create_missing_file": {
+          "status": "failed",
+          "seconds": 0.348,
+          "type": null,
+          "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'source_payload_bound'\n  Actual message: 'SOURCE_PAYLOAD_BOUND_EXCEEDED'",
+          "trace_sha256": "b6b90f4ad6b6d73fe880cf12c1e3dac5a6d5d10a9fff9016e6d95fc21d695fcf"
+        },
+        "tests.test_investigation_view::test_authenticated_missing_readonly_endpoint": {
+          "status": "failed",
+          "seconds": 0.002,
+          "type": null,
+          "message": "ValueError: dashboard.startup_mode must explicitly be READ_ONLY_GUI or LIVE",
+          "trace_sha256": "5c90a722a0705ed628bbc9a03977c8ccd1d321b37137ba162e8ec6ab45c6fe16"
+        }
+      },
+      "per_module_counts": {
+        "tests.test_wm01_volume_reuse": {
+          "passed": 18
+        },
+        "tests.test_wrld01_measurements": {
+          "passed": 30
+        },
+        "tests.test_wrld04_claim_history": {
+          "passed": 8
+        },
+        "tests.test_wrld05_normal_context": {
+          "passed": 29
+        },
+        "tests.test_wrld07_relationship_state": {
+          "passed": 54
+        },
+        "tests.test_intelligence_spine": {
+          "passed": 26
+        },
+        "tests.test_stage7_replay_world_closure_r2": {
+          "passed": 14
+        },
+        "tests.test_cognition_attention": {
+          "passed": 30
+        },
+        "tests.test_cognition_contracts": {
+          "passed": 10,
+          "failed": 1
+        },
+        "tests.test_cognition_replay": {
+          "passed": 21
+        },
+        "tests.test_attention_telemetry": {
+          "passed": 50
+        },
+        "tests.test_attention_learning": {
+          "passed": 11
+        },
+        "tests.test_attention_selection_persistence": {
+          "passed": 58
+        },
+        "tests.test_attention_view": {
+          "passed": 5
+        },
+        "tests.test_final_audit_attention_allocation_time": {
+          "passed": 2
+        },
+        "tests.test_final_audit_learning_time": {
+          "passed": 2
+        },
+        "tests.test_real_learning_integration": {
+          "passed": 17
+        },
+        "tests.test_normal_learning_loop_closure": {
+          "passed": 37
+        },
+        "tests.test_learning_application": {
+          "passed": 32
+        },
+        "tests.test_learning_foundation": {
+          "passed": 18
+        },
+        "tests.test_legacy_learning_replay_gate": {
+          "passed": 11
+        },
+        "tests.test_market_investigation": {
+          "passed": 15
+        },
+        "tests.test_investigation_consumer": {
+          "passed": 11,
+          "failed": 2
+        },
+        "tests.test_investigation_memory": {
+          "passed": 18
+        },
+        "tests.test_investigation_state_feedback": {
+          "passed": 21
+        },
+        "tests.test_investigation_view": {
+          "failed": 1,
+          "passed": 1
+        },
+        "tests.test_investigation_research_family": {
+          "passed": 15
+        },
+        "tests.test_rp01_investigation_research_pipeline": {
+          "passed": 3
+        },
+        "tests.test_hierarchical_admission": {
+          "passed": 56
+        },
+        "tests.test_opportunity_context": {
+          "passed": 75
+        },
+        "tests.test_opportunity_live_integration": {
+          "passed": 24
+        },
+        "tests.test_control_state_recovery": {
+          "passed": 21
+        },
+        "tests.test_entry_recovery": {
+          "passed": 25
+        },
+        "tests.test_protective_stops": {
+          "passed": 23
+        },
+        "tests.test_risk01_entry_binding": {
+          "passed": 19
+        },
+        "tests.test_risk02_exposure_feasibility": {
+          "passed": 64
+        },
+        "tests.test_single_creation_path": {
+          "passed": 11
+        },
+        "tests.test_strategy_factory_handoff": {
+          "passed": 53
+        },
+        "tests.test_da04_snapshot_reliability": {
+          "passed": 25
+        }
+      }
+    },
+    "new_failures": [],
+    "fixed": [],
+    "inherited_failures": [
+      "tests.test_cognition_contracts::test_cognition_imports_only_stdlib_and_itself",
+      "tests.test_investigation_consumer::test_capacity_retention_and_diagnostic_bounds",
+      "tests.test_investigation_consumer::test_reader_rejects_oversized_source_and_does_not_create_missing_file",
+      "tests.test_investigation_view::test_authenticated_missing_readonly_endpoint"
+    ],
+    "focused_subgroup": {
+      "baseline": {
+        "passed": 245,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "candidate": {
+        "passed": 245,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      }
+    },
+    "fixture_profile": "Default SQLite durability on both versions; no synchronous override.",
+    "same_failure_ids": true,
+    "network_guard": "Audit hook denies socket.connect/getaddrinfo/bind, including inherited subprocesses; tests use synthetic inputs and fake providers.",
+    "same_failure_messages": true,
+    "failure_classification": {
+      "tests.test_cognition_contracts::test_cognition_imports_only_stdlib_and_itself": "Existing Attention import of trader.learning.consumers violates the old package-isolation allowlist. Required learning integration is preserved.",
+      "tests.test_investigation_consumer::test_capacity_retention_and_diagnostic_bounds": "Unchanged capacity/retention fixture reaches max() over an empty dossiers result. Same baseline/candidate failure; no separate causal diagnosis claimed.",
+      "tests.test_investigation_consumer::test_reader_rejects_oversized_source_and_does_not_create_missing_file": "Existing fail-closed reader emits SOURCE_PAYLOAD_BOUND_EXCEEDED; legacy test regex expects source_payload_bound.",
+      "tests.test_investigation_view::test_authenticated_missing_readonly_endpoint": "Existing Dashboard fixture omits required explicit dashboard.startup_mode. No server starts."
+    }
+  },
+  "graph-verification": {
+    "command": "graphify update .",
+    "exit_code": 0,
+    "mode": "AST-only",
+    "uncached_files": 2180,
+    "nodes": 25027,
+    "edges": 64608,
+    "communities": 1118,
+    "graph_sha256": "c82d374647b0b56dc32ed9ea712101f631f5db6995b0eb0719ba21b85e7f4889",
+    "log_sha256": "3b9d8a29277c3a72f6827de1c892ed893981be37fa23a39b5e977a06ed05a886",
+    "provider_calls": 0,
+    "label_suggestion_executed": false,
+    "cache_disposition": "Remove generated graph/cache changes before preservation, per mandatory cleanup."
+  },
+  "status": "CLOSED_OFFLINE",
+  "safety": {
+    "provider_calls": 0,
+    "operational_service_starts": 0,
+    "production_edits": 0,
+    "integration": false,
+    "deployment": false,
+    "statistical_budget_spending": 0
+  }
+}
