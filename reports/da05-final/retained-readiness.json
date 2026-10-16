@@ -1,0 +1,242 @@
+{
+  "status": "OPERATIONAL_VERIFICATION_REQUIRED",
+  "event_2338": {
+    "cut_ms": 1791679020317,
+    "members": 439,
+    "status_counts": {
+      "missing": 407,
+      "stale": 27,
+      "ok": 5
+    },
+    "rows_exact": true,
+    "receipt_exact": true,
+    "receipt_id": "582e37df84dffa658c2d5c0fb1f1d74929c23312c8e174ec7329dc379bedb653"
+  },
+  "da06_retained_scan": {
+    "scan_id": "scan_78513e8e21a148388868f783ce7cce34",
+    "hash_verified_source_blobs": 77,
+    "source": {
+      "attention_db_sha256": "40161f8eb6fafdf30e7ad27c6f7f2a1ffd81b9a94f9c74f48739624876dfa4e5",
+      "attention_mode": "copied DB + copied WAL; no source SQLite open",
+      "mode": "ro immutable base pages; excludes WAL",
+      "path": "/mnt/luffy-data/luffy/production/data/luffy.db"
+    },
+    "snapshots": [
+      {
+        "symbol": "AAVE/USDT",
+        "source_cut_ms": 1791242659234,
+        "source_blob_sha256": "4fc09c11eddbfe975bea058cb25516725dedc05e29180d4e75e855f03c0d872e",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "AVAX/USDT",
+        "source_cut_ms": 1791242664490,
+        "source_blob_sha256": "c46b929ace439addbf402e70df018622234379cdcf774d2c2ee4fab01d6fec18",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "BNB/USDT",
+        "source_cut_ms": 1791242668260,
+        "source_blob_sha256": "ef66c589e18d41eca8fcb686f260fbece34d46d263f89de78ad210033752e773",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "BTC/USDT",
+        "source_cut_ms": 1791242673100,
+        "source_blob_sha256": "f2ad606c2fbabc0092e9d5ca7d13f23b6f40bb21f89a6d29b2c04d5dc2908b5a",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "DOGE/USDT",
+        "source_cut_ms": 1791242675487,
+        "source_blob_sha256": "0030c5f7daa779d466b039a394ca2135df47ccaca1f6b0af3a007d6bd1b3800f",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "ETH/USDT",
+        "source_cut_ms": 1791242678898,
+        "source_blob_sha256": "239c696c3faff357b69a5513b220d517b944520015fd6ec84e49e3b12e6ade47",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "FIL/USDT",
+        "source_cut_ms": 1791242682425,
+        "source_blob_sha256": "08778c9eda59b32c6d029171494297e8281fa2d47ed410e51db48a0188e5f3f3",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "HYPE/USDT",
+        "source_cut_ms": 1791242690500,
+        "source_blob_sha256": "bd6bcb8c82bb6ed95c4726ccf43c5ac60e1a63619992eb3591a61b1ddea9aca7",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "LINK/USDT",
+        "source_cut_ms": 1791242699955,
+        "source_blob_sha256": "2ba00403d643fdc8496e89f76c37aaaf6c290e536745878b99fcbb2b247fb2cb",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "MOVR/USDT",
+        "source_cut_ms": 1791242706710,
+        "source_blob_sha256": "cc8f1284c765a866f07f5e990809e13a17fd9b64251bf4305278144a901883c1",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": false,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "NEAR/USDT",
+        "source_cut_ms": 1791242712420,
+        "source_blob_sha256": "005f62c3a2f0e7ba2b6a8cd157fa1edb023b7b07aaa31bb75c72d29f6ee331d9",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "QNT/USDT",
+        "source_cut_ms": 1791242719304,
+        "source_blob_sha256": "49b3e282e841aad8ebaffc4eb3f45be9584d95e5e3c94fbd0b6b2112808df300",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": false,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "RLC/USDT",
+        "source_cut_ms": 1791242726522,
+        "source_blob_sha256": "8d9cdd95aeefe90158d87d52292b14f2efb4a31b838999b03bb360cb4de55ec8",
+        "bars": 400,
+        "current_frame_status": "valid",
+        "declared_include_member": false,
+        "enough_bars_for_donchian_100": true,
+        "last_long": true,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Complete numerical window; off-strategy eligibility is still binding."
+      },
+      {
+        "symbol": "SOL/USDT",
+        "source_cut_ms": 1791242736606,
+        "source_blob_sha256": "6eb4077675ef6338d1df4ce64d49e133c8c1ed98c38026810c16ab95f5c85074",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "SUI/USDT",
+        "source_cut_ms": 1791242746121,
+        "source_blob_sha256": "0e2bec258c8da900a33d3b5f7bff67c7b4091f5b9b52149b5ed1155f44bec213",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      },
+      {
+        "symbol": "TAO/USDT",
+        "source_cut_ms": 1791242760021,
+        "source_blob_sha256": "ac0fba37c22124bf8939229ff176e0d032a6b1ff2e4a6b72876beebdd1a7b876",
+        "bars": 16,
+        "current_frame_status": "valid",
+        "declared_include_member": true,
+        "enough_bars_for_donchian_100": false,
+        "last_long": false,
+        "last_short": false,
+        "missing_declared_dependency": [],
+        "interpretation": "Insufficient lookback is a false/nonfinite predicate, not proof of an evaluated opportunity."
+      }
+    ],
+    "sufficient_eligible_snapshots": 0
+  },
+  "limitations": [
+    "Two historical packets at different cuts; neither proves current full-market coverage.",
+    "The retained strategy definition is used only as a numerical/input and declared-include probe; no lifecycle or admission decision is replayed.",
+    "No missing bars, availability clocks, funding or other dependencies are fabricated.",
+    "No strategy output is required merely because input data is complete."
+  ]
+}

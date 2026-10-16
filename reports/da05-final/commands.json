@@ -1,0 +1,74 @@
+{
+  "interpreter": "/mnt/luffy-data/luffy/production/venv/bin/python",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "reports/da05-final:."
+  },
+  "pytest_args": [
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "offline_guard"
+  ],
+  "baseline_head": "571cf562ff86d7cbe415801dc5b5d459a695e9a7",
+  "implementation_head": "519baea203fd1bac6698354df3806261c8e8464a",
+  "baseline_main": [
+    "tests/test_da05_history_coverage.py",
+    "tests/test_att03_warmup.py",
+    "tests/test_da04_snapshot_reliability.py"
+  ],
+  "baseline_regression": [
+    "tests/test_feed_pagination.py",
+    "tests/test_forming_bar_never_stored.py",
+    "tests/test_candle_store_transaction_safety.py",
+    "tests/test_stage1_data_provenance_pit.py",
+    "tests/test_hierarchical_admission.py",
+    "tests/test_compile.py",
+    "tests/test_cognition_attention.py",
+    "tests/test_attention_telemetry.py",
+    "tests/test_da06_input_work.py"
+  ],
+  "final": [
+    "tests/test_da05_history_coverage.py",
+    "tests/test_att03_warmup.py",
+    "tests/test_da04_snapshot_reliability.py",
+    "tests/test_feed_pagination.py",
+    "tests/test_forming_bar_never_stored.py",
+    "tests/test_candle_store_transaction_safety.py",
+    "tests/test_stage1_data_provenance_pit.py",
+    "tests/test_hierarchical_admission.py",
+    "tests/test_compile.py",
+    "tests/test_cognition_attention.py",
+    "tests/test_attention_telemetry.py",
+    "tests/test_da06_input_work.py",
+    "tests/test_da05_final_readiness.py"
+  ],
+  "baseline_and_final_read_only": [
+    "tests/test_retrospective_feed.py"
+  ],
+  "matched_controls": [
+    "tests/test_da05_final_readiness.py"
+  ],
+  "smoke_restore": [
+    "tests/test_da05_final_readiness.py",
+    "tests/test_retrospective_feed.py"
+  ],
+  "metric_command": [
+    "python",
+    "reports/da05-final/measure.py",
+    "RECOVERY_SCRATCH",
+    "OUTPUT_JSON"
+  ],
+  "retained_command": [
+    "python",
+    "reports/da05-final/retained_readiness.py",
+    "OUTPUT_JSON"
+  ],
+  "verification_command": [
+    "python",
+    "reports/da05-final/verify.py"
+  ],
+  "scope": "All basetemps and output files under the task recovery directory; no provider/production write/kernel start",
+  "note": "The original 50-case baseline was run with its tests own offline fixtures; subsequent whole selections additionally load the global socket-denying plugin. No network-capable provider was invoked."
+}

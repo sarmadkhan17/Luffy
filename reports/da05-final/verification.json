@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "baseline_old_passed": 324,
+  "baseline_old_failed": 1,
+  "final_unique_passed": 344,
+  "final_inherited_failed": 1,
+  "matched_old_case_statuses_exact": true,
+  "new_controls_baseline": {
+    "passed": 7,
+    "failed": 13
+  },
+  "new_controls_final_passed": 20,
+  "final_targeted_passed": 61,
+  "read_only_feed_tests_baseline_and_final": 6,
+  "inherited_failures": [
+    "tests.test_forming_bar_never_stored::test_incremental_fetch_re_reads_the_stored_tail"
+  ],
+  "runtime_changed_files": [
+    "trader/data/feed.py"
+  ],
+  "original_439_cohort_progress_and_acquisition_budget_exact": true,
+  "retained_event_and_receipt_exact": true,
+  "retained_source_hashes_verified": 77,
+  "operational_status": "OPERATIONAL_VERIFICATION_REQUIRED"
+}

@@ -1,0 +1,39 @@
+{
+  "baseline": "571cf562ff86d7cbe415801dc5b5d459a695e9a7",
+  "input_bundles": [
+    {
+      "path": "/mnt/luffy-recovery/recovery/sol1-da10-full-evidence-20261016/DA10_FULL.bundle",
+      "sha256": "fd2ef4a5330ef374cfc33f31b8ed07f193a0de0ae3856ee77c1bfb6b2cc5fc47"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/sol1-da05/DA05.bundle",
+      "sha256": "668ba963d9753dea38863ecd461ac70afb1cfebe1fcf2dd969b615d37af4c1c1"
+    }
+  ],
+  "ancestors_verified": [
+    "78e25833c8358e783006ebbbabbba47a9f93261c",
+    "cb15d7c5c97427cb2c399515662b161c88855a79",
+    "f3ed34aa2fc99f7459308448651a67582e80c63b",
+    "596f9f17c9da466aed0b28aba0da47f44f303671",
+    "22777f4"
+  ],
+  "original_da05": "ec75bd6e4a551621c52529b111bd87e0ab17fff0",
+  "integrated_da05": "22777f4",
+  "da05_methods_ast_exact": [
+    "prepare_history",
+    "_queue_background_request",
+    "_start_background_worker",
+    "_background_needs_data",
+    "_contiguous_tail",
+    "_current_tail",
+    "background_acquisition_health",
+    "cancel_background_acquisition"
+  ],
+  "da05_files_exact": [
+    "trader/data/attention_history.py",
+    "tests/test_da05_history_coverage.py"
+  ],
+  "drain_difference": "Inherited DA04 persistence/acquisition failure diagnostics retained; fairness and limits unchanged",
+  "original_feed_whole_file_equality": false,
+  "reason": "Later DA04, WM03 and DA10 fixes preserved; no duplicate cherry-pick"
+}

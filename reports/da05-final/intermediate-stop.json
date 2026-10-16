@@ -1,0 +1,6 @@
+{
+  "only_task_pytest": [
+    640544
+  ],
+  "reason": "Source changed for legacy-floor recovery; exclude interrupted intermediate run and rerun final full selection"
+}

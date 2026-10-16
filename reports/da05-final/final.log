@@ -1,0 +1,52 @@
+..........................................................F............. [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+........................................................................ [ 84%]
+...................................................                      [100%]
+=================================== FAILURES ===================================
+_______________ test_incremental_fetch_re_reads_the_stored_tail ________________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/final/test_incremental_fetch_re_read0')
+
+    def test_incremental_fetch_re_reads_the_stored_tail(tmp_path):
+        """`since` must cover the newest stored bar, not start past it.
+    
+        Starting at `last + tf_ms` is what made the freeze permanent: the one
+        bar that could be wrong was the one bar never requested again.
+        """
+        now = _now_ms()
+        bar_ts = _last_closed(now)
+        feed = FakeFeed(tmp_path / "c.db", now_ms=now)
+        _seed(feed, "BTC/USDT", "4h", _rows(bar_ts - 9 * TF_MS, 10))
+    
+        stored = feed._store_load("BTC/USDT", "4h", 100)
+        last_ms = int(stored["ts"].iloc[-1].timestamp() * 1000)
+    
+        feed.script = _rows(bar_ts - 9 * TF_MS, 10)
+        feed.calls.clear()
+        feed._cache.clear()
+        feed.fetch_ohlcv("BTC/USDT", "4h", limit=10, min_bars=1)
+    
+        assert feed.calls, "an incremental refresh must actually hit the venue"
+        since = feed.calls[-1]
+>       assert since is not None and since <= last_ms, (
+            f"since={since} starts after the newest stored bar {last_ms}, so "
+            "that bar can never be corrected once written")
+E       AssertionError: since=None starts after the newest stored bar 1792152000000, so that bar can never be corrected once written
+E       assert (None is not None)
+
+tests/test_forming_bar_never_stored.py:163: AssertionError
+=============================== warnings summary ===============================
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:137: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    return next(self.gen)
+
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:144: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_forming_bar_never_stored.py::test_incremental_fetch_re_reads_the_stored_tail
+1 failed, 338 passed, 3 warnings in 511.56s (0:08:31)

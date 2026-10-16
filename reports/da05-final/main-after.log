@@ -1,0 +1,5 @@
+.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/construction.py:616: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+1 passed in 209.50s (0:03:29)

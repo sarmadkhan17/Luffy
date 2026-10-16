@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="14" time="87.302" timestamp="2026-10-16T20:20:31.521981+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-400-1600-4h]" time="2.348"><failure message="assert 246 == 400&#10; +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  5062.0 2026...027-01-15 00:00:00+00:00\n245    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio0')
+initial = 154, target = 400, available = 1600, tf = '4h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 246 == 400
+E            +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  5062.0 2026...027-01-15 00:00:00+00:00\n245    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[300-400-1600-4h]" time="2.740"><failure message="assert 300 == 400&#10; +  where 300 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4900.0 2026...027-01-15 00:00:00+00:00\n299    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[300 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio1')
+initial = 300, target = 400, available = 1600, tf = '4h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 300 == 400
+E            +  where 300 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4900.0 2026...027-01-15 00:00:00+00:00\n299    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[300 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[399-400-1600-4h]" time="1.784"><failure message="assert 399 == 400&#10; +  where 399 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4603.0 2026...027-01-15 00:00:00+00:00\n398    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[399 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio2')
+initial = 399, target = 400, available = 1600, tf = '4h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 399 == 400
+E            +  where 399 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4603.0 2026...027-01-15 00:00:00+00:00\n398    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[399 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-1000-1600-4h]" time="3.325"><failure message="assert 846 == 1000&#10; +  where 846 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  3262.0 2026...027-01-15 00:00:00+00:00\n845    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[846 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio3')
+initial = 154, target = 1000, available = 1600, tf = '4h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 846 == 1000
+E            +  where 846 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  3262.0 2026...027-01-15 00:00:00+00:00\n845    1800000000000     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[846 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-400-250-4h]" time="2.198"><failure message="assert 246 == 250&#10; +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  1012.0 2026...027-01-15 00:00:00+00:00\n245    1800000000000     FINAL  ...  1747.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio4')
+initial = 154, target = 400, available = 250, tf = '4h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 246 == 250
+E            +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  1012.0 2026...027-01-15 00:00:00+00:00\n245    1800000000000     FINAL  ...  1747.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-400-1600-1h]" time="1.902"><failure message="assert 246 == 400&#10; +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  5062.0 2027...027-01-15 06:00:00+00:00\n245    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[246 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_expand_qualified_attentio5')
+initial = 154, target = 400, available = 1600, tf = '1h'
+
+    @pytest.mark.parametrize('initial,target,available,tf', [
+        (154,400,1600,'4h'), (300,400,1600,'4h'),
+        (399,400,1600,'4h'), (154,1000,1600,'4h'),
+        (154,400,250,'4h'), (154,400,1600,'1h'),
+        (154,1500,1600,'4h'),  # existing paged expansion is a positive control
+        (154,154,1600,'4h'),   # existing fresh reuse is a positive control
+    ])
+    def test_expand_qualified_attention_window_to_requested_depth(tmp_path, initial, target, available, tf):
+        v = Venue(available)
+        path = tmp_path/'candles.db'
+        f = DataFeed(exchange=v, db_path=path, clock_ms=lambda:v.now)
+        try:
+            before = f.fetch_ohlcv('S00/USDT', tf, initial, min_bars=26)
+            old_ids = set(before.revision_id)
+            result = f.fetch_ohlcv('S00/USDT', tf, target, min_bars=26)
+            expected = min(target, available)
+&gt;           assert len(result) == expected
+E           assert 246 == 400
+E            +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  5062.0 2027...027-01-15 06:00:00+00:00\n245    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[246 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:87: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-1500-1600-4h]" time="7.812" /><testcase classname="tests.test_da05_final_readiness" name="test_expand_qualified_attention_window_to_requested_depth[154-154-1600-4h]" time="1.328" /><testcase classname="tests.test_da05_final_readiness" name="test_admission_warmup_deep_acquisition_and_existing_evaluator" time="17.204"><failure message="AssertionError: assert (Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00.001000+00:00', price=579.9000000000001, dfs={'1h':      available_..._open_ms': 1799985600000, 'missing_open_ms': [], 'available_at_ms': 1800000000000, 'eligible_at_ms': 1800000000000}}}}) is not None and 246 == 400)&#10; +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000001     FINAL  ...  5062.0 2026...027-01-15 00:00:00+00:00\n245    1800000000001     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_admission_warmup_deep_acq0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7c36a9123410&gt;
+
+    def test_admission_warmup_deep_acquisition_and_existing_evaluator(tmp_path, monkeypatch):
+        v = Venue()
+        k, compiled = kernel(tmp_path, monkeypatch, v)
+        tasks = scheduler(monkeypatch)
+        f = k.feed
+        try:
+            f.fetch_ohlcv('S00/USDT','4h',154,min_bars=26)
+            f.background_acquisition = True
+            f._acquisition_lock.acquire()
+            receipt, _ = k._admission_plan()
+            assert receipt and 'S00/USDT' in receipt['admitted_symbols']
+            assert len(receipt['observation']['rows']) == 4
+            assert receipt['history_coverage']['counts']['decision_ready'] == 0
+            assert receipt['capacity_used'] &lt;= 12
+            frozen = A.canonical(receipt)
+            v.now += 1  # later acquisition must not qualify the frozen earlier cut
+            assert k._candidate_snapshot_for('S00/USDT', receipt, {}) is None
+            drain(f, tasks)
+            snap = k._candidate_snapshot_for('S00/USDT', receipt, {})
+&gt;           assert snap is not None and len(snap.dfs['4h']) == 400
+E           AssertionError: assert (Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00.001000+00:00', price=579.9000000000001, dfs={'1h':      available_..._open_ms': 1799985600000, 'missing_open_ms': [], 'available_at_ms': 1800000000000, 'eligible_at_ms': 1800000000000}}}}) is not None and 246 == 400)
+E            +  where 246 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1800000000001     FINAL  ...  5062.0 2026...027-01-15 00:00:00+00:00\n245    1800000000001     FINAL  ...  5797.0 2027-01-15 04:00:00+00:00\n\n[246 rows x 23 columns])
+
+tests/test_da05_final_readiness.py:142: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_missing_four_hour_evidence_never_becomes_ready[unavailable]" time="7.582" /><testcase classname="tests.test_da05_final_readiness" name="test_missing_four_hour_evidence_never_becomes_ready[short]" time="8.332"><failure message="AssertionError: assert (Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00+00:00', price=579.9000000000001, dfs={'1h':      available_at_ms b...niverse_listing_receipts': FrozenJSON(segments=('{}',)), 'universe_membership_receipts': FrozenJSON(segments=('{}',))}) is not None and '4h' not in {'1h':      available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4600...27-01-15 06:00:00+00:00\n399    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[400 rows x 23 columns]})&#10; +  where {'1h':      available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4600...27-01-15 06:00:00+00:00\n399    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[400 rows x 23 columns]} = Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00+00:00', price=579.9000000000001, dfs={'1h':      available_at_ms b...niverse_listing_receipts': FrozenJSON(segments=('{}',)), 'universe_membership_receipts': FrozenJSON(segments=('{}',))}).dfs">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/controls-before-corrected/test_missing_four_hour_evidenc1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7c36a90f2ae0&gt;
+case = 'short'
+
+    @pytest.mark.parametrize('case', ['unavailable','short','stale'])
+    def test_missing_four_hour_evidence_never_becomes_ready(tmp_path, monkeypatch, case):
+        v = Venue(20 if case == 'short' else 1600)
+        k, compiled = kernel(tmp_path, monkeypatch, v)
+        try:
+            if case == 'stale':
+                k.feed.fetch_ohlcv('S00/USDT','4h',400,min_bars=26)
+                v.now += 1_800_001
+            if case in ('stale','unavailable'): v.unavailable.add('4h')
+            # Other intervals remain available. An execution snapshot cannot
+            # stand in for a missing declared strategy timeframe.
+            if case == 'short':
+                k.feed.fetch_ohlcv('S00/USDT','4h',400,min_bars=26)
+                v.count = 1600
+                v.unavailable.add('4h')
+            snap = k._snapshot_for('S00/USDT')
+&gt;           assert snap is not None and '4h' not in snap.dfs
+E           AssertionError: assert (Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00+00:00', price=579.9000000000001, dfs={'1h':      available_at_ms b...niverse_listing_receipts': FrozenJSON(segments=('{}',)), 'universe_membership_receipts': FrozenJSON(segments=('{}',))}) is not None and '4h' not in {'1h':      available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4600...27-01-15 06:00:00+00:00\n399    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[400 rows x 23 columns]})
+E            +  where {'1h':      available_at_ms bar_state  ...  volume                        ts\n0      1800000000000     FINAL  ...  4600...27-01-15 06:00:00+00:00\n399    1800000000000     FINAL  ...  5797.0 2027-01-15 07:00:00+00:00\n\n[400 rows x 23 columns]} = Snapshot(symbol='S00/USDT', ts='2027-01-15T08:00:00+00:00', price=579.9000000000001, dfs={'1h':      available_at_ms b...niverse_listing_receipts': FrozenJSON(segments=('{}',)), 'universe_membership_receipts': FrozenJSON(segments=('{}',))}).dfs
+
+tests/test_da05_final_readiness.py:178: AssertionError</failure></testcase><testcase classname="tests.test_da05_final_readiness" name="test_missing_four_hour_evidence_never_becomes_ready[stale]" time="10.181" /><testcase classname="tests.test_da05_final_readiness" name="test_retained_event_2338_replays_without_promoting_coverage" time="6.939" /><testcase classname="tests.test_da05_final_readiness" name="test_retained_da06_snapshots_do_not_establish_missing_strategy_history" time="4.085" /></testsuite></testsuites>

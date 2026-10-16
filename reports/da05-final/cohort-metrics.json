@@ -1,0 +1,814 @@
+{
+  "after_status_counts": {
+    "ok": 439
+  },
+  "before_status_counts": {
+    "missing": 412,
+    "ok": 20,
+    "stale": 7
+  },
+  "cache_series": 128,
+  "candle_db_bytes": 85962752,
+  "cohort": 439,
+  "cpu_seconds": 209.576692119,
+  "cycles": 112,
+  "historical_attention_exact": true,
+  "historical_receipt_exact": true,
+  "max_requested_bars": 1000,
+  "peak_rss_kib": 328036,
+  "queue_health": {
+    "accepted": 788,
+    "cancelled": 0,
+    "capacity": 128,
+    "coalesced": 0,
+    "completed": 261,
+    "failed": 0,
+    "inflight": null,
+    "last_outcome": "skipped_fresh",
+    "outcomes": [
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S361/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S362/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S363/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S364/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S365/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S366/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S367/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S368/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S000/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S001/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S002/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S369/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S370/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S371/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S372/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S373/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S374/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S375/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S376/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S003/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S004/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S377/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S378/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S379/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S380/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S381/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S382/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S383/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S384/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S005/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S006/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S007/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S385/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S386/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S387/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S388/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S389/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S390/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S391/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S392/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S008/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S437/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S393/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S394/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S395/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S396/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S397/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S398/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S399/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S400/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S438/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S401/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S402/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S403/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S404/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S405/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S406/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S407/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S408/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S409/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S410/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S411/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S412/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S413/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S414/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S415/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S416/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S417/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S418/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S419/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S420/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S421/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S422/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S423/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S424/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S425/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S426/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S427/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S428/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S429/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S430/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S431/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S432/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S433/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S434/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S435/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S436/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S009/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S010/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S011/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S012/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S013/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S014/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S015/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S016/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S017/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S018/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S019/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S020/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S021/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S022/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S023/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S024/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S025/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S026/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S027/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S028/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S029/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S030/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S031/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S032/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S033/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S034/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S035/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S036/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S037/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S038/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S039/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S040/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S041/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S042/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S043/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S044/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S045/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S046/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S047/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S048/USDT",
+        "timeframe": "4h"
+      },
+      {
+        "at_ms": 1800000060000,
+        "outcome": "skipped_fresh",
+        "symbol": "S049/USDT",
+        "timeframe": "4h"
+      }
+    ],
+    "outcomes_retained": 128,
+    "pending": 0,
+    "refused_full": 0,
+    "refused_shutdown": 0,
+    "skipped_fresh": 527,
+    "stopping": false,
+    "worker_busy": true
+  },
+  "queue_max_pending": 16,
+  "ranking_eligible_after": 439,
+  "ranking_eligible_after_56": 431,
+  "ranking_eligible_before": 20,
+  "source_requests": 419,
+  "submission_ms_max": 6468.779085989809,
+  "symbols_acquired": 419,
+  "wall_seconds": 301.8342737350031
+}

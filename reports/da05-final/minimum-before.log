@@ -1,0 +1,46 @@
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+_____ test_failed_refresh_preserves_minimum_and_retains_short_history[26] ______
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/minimum-before/test_failed_refresh_preserves_1')
+minimum = 26
+
+    @pytest.mark.parametrize('minimum', [10,26,30])
+    def test_failed_refresh_preserves_minimum_and_retains_short_history(tmp_path, minimum):
+        v = Venue(20)
+        f = DataFeed(exchange=v,db_path=tmp_path/'candles.db',clock_ms=lambda:v.now)
+        try:
+            assert f.fetch_ohlcv('S00/USDT','4h',400,min_bars=26) is None
+            original = f.db.execute('SELECT revision_id FROM market_revisions ORDER BY revision_id').fetchall()
+            v.unavailable.add('4h')
+            result = f.fetch_ohlcv('S00/USDT','4h',400,min_bars=minimum,force=True)
+>           assert (result is None) == (minimum > 20)
+E           assert (    available_at_ms bar_state  ...  volume                        ts\n0     1800000000000     FINAL  ...  1000.0 2027-0... 2027-01-15 00:00:00+00:00\n19    1800000000000     FINAL  ...  1057.0 2027-01-15 04:00:00+00:00\n\n[20 rows x 23 columns] is None) == (26 > 20)
+
+tests/test_da05_final_readiness.py:116: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.data.feed:feed.py:1011 ohlcv S00/USDT 4h: synthetic source unavailable
+_____ test_failed_refresh_preserves_minimum_and_retains_short_history[30] ______
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/minimum-before/test_failed_refresh_preserves_2')
+minimum = 30
+
+    @pytest.mark.parametrize('minimum', [10,26,30])
+    def test_failed_refresh_preserves_minimum_and_retains_short_history(tmp_path, minimum):
+        v = Venue(20)
+        f = DataFeed(exchange=v,db_path=tmp_path/'candles.db',clock_ms=lambda:v.now)
+        try:
+            assert f.fetch_ohlcv('S00/USDT','4h',400,min_bars=26) is None
+            original = f.db.execute('SELECT revision_id FROM market_revisions ORDER BY revision_id').fetchall()
+            v.unavailable.add('4h')
+            result = f.fetch_ohlcv('S00/USDT','4h',400,min_bars=minimum,force=True)
+>           assert (result is None) == (minimum > 20)
+E           assert (    available_at_ms bar_state  ...  volume                        ts\n0     1800000000000     FINAL  ...  1000.0 2027-0... 2027-01-15 00:00:00+00:00\n19    1800000000000     FINAL  ...  1057.0 2027-01-15 04:00:00+00:00\n\n[20 rows x 23 columns] is None) == (30 > 20)
+
+tests/test_da05_final_readiness.py:116: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.data.feed:feed.py:1011 ohlcv S00/USDT 4h: synthetic source unavailable
+=========================== short test summary info ============================
+FAILED tests/test_da05_final_readiness.py::test_failed_refresh_preserves_minimum_and_retains_short_history[26]
+FAILED tests/test_da05_final_readiness.py::test_failed_refresh_preserves_minimum_and_retains_short_history[30]
+2 failed, 1 passed, 14 deselected in 10.83s

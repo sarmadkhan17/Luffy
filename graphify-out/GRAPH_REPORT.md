@@ -1,41 +1,41 @@
-# Graph Report - sol1-da10-full-20261016  (2026-10-16)
+# Graph Report - sol1-da05-final-20261016  (2026-10-16)
 
 ## Corpus Check
-- 2844 files · ~7,275,127 words
+- 2853 files · ~7,280,958 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 175 file(s) not represented in the graph (top: .jsonl 63, .xml 62, (none) 12)
 
 ## Summary
-- 25157 nodes · 65008 edges · 1109 communities (920 shown, 189 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 5550 edges (avg confidence: 0.92)
+- 25202 nodes · 65172 edges · 1150 communities (948 shown, 202 thin omitted)
+- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 5565 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `596f9f17`
+- Built from commit: `519baea2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- kernel.py
+- types.py
 - m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py
 - ExitSpec
 - parse
 - test_pit_dataset.py
 - test_attention_telemetry.py
 - certify_box_canaries.py
-- StrategySpec
+- Analyst
 - Kernel
-- ._mechanism_once
+- consistency_p
 - observability/investigation.py
 - test_qnt02_null_controls.py
 - test_gate2_calibrate_studentized.py
 - RefStore
 - m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py
 - test_outcome_backfill.py
-- test_m32_categorical_estimand_spec.py
-- capture_runtime.py
+- _metric
+- capture.py
 - features.py
-- norm_symbol
+- plan_scan
 - test_owner_interface.py
 - m32_scheme_d_qualification_20260922/qualify.py
 - m32_search.py
@@ -43,12 +43,12 @@
 - cognition_coverage_audit.py
 - test_m32_qualification.py
 - compile_spec
-- numpy
+- spec_evidence.py
 - certify_hit_miss_taylor.py
 - test_cognition_coverage_audit.py
 - run_replication.py
 - test_activation_risk_baseline_v2.py
-- contracts.py
+- cognition/attention.py
 - test_excursion.py
 - m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py
 - OwnerService
@@ -56,29 +56,29 @@
 - Ledger
 - parts_for
 - test_idea_pipeline.py
-- meta_label.py
+- features_deriv.py
 - Combination
 - test_stage1_data_provenance_pit.py
 - sim.py
 - load_bundle
 - certify_remaining.py
-- test_research_combo.py
+- LUFFY-OWNER-RECOVERY-RISK-HALT-GUARD-V1
 - replace
 - certify_p6_c4_taylor.py
 - candidate_dossier.py
 - m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py
 - test_capture_emergency_whole_accounting_cli.py
-- test_activation_risk_baseline.py
+- test_research_bundle_admission.py
 - server.py
 - m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py
 - FeatureCtx
 - test_cognition_replay.py
 - test_rent_keeper.py
-- Action
+- test_strategy_signal_gate.py
 - test_thesis_validate_frozen.py
 - open_stops
 - test_trade_provenance.py
-- test_sg05_portfolio_accounting.py
+- evaluate.py
 - DataFeed
 - thesis_validate_frozen.py
 - test_exchange_exit_is_size_aware.py
@@ -89,30 +89,30 @@
 - test_native_exit_provenance.py
 - test_numeric_harvester.py
 - Communities (437 total, 109 thin omitted)
-- test_postmortem.py
-- portfolio/economics.py
+- assess_health
+- test_owner_interface_r5.py
 - test_spec_arm_at_r_is_honoured.py
-- hashlib
+- subprocess
 - test_analyst_tv_and_vault.py
 - test_candidate_dossier.py
 - test_rent.py
-- predictive_receipt.py
+- test_qnt05_error_budget.py
 - test_gate2_calibrate_stationary.py
 - test_manual_close.py
 - gate2_calibrate_studentized.py
 - gate2_calibrate_synthetic.py
 - test_derivatives.py
 - Items
-- current_truth.py
+- estimate
 - test_entry_geometry_end_to_end.py
 - gate2_calibrate_stationary.py
-- thesis.py
+- test_str04_governor_lifecycle.py
 - test_crawler.py
-- test_entry_recovery.py
-- Journal
+- test_stage8_owner_os.py
+- SOL2 — attention_selections review
 - certify_population_taylor.py
 - m32_scheme_d_validation_bundle_20260921/runner/preflight.py
-- 1. Requirement matrix (owner §1–24)
+- Org
 - certify_p6_c3_taylor.py
 - test_m32_validation_bundle_v4.py
 - build_historical_pit_dataset.py
@@ -121,74 +121,74 @@
 - test_gate2_calibrate_synthetic.py
 - m32_scheme_d_validation.py
 - test_rolling.py
-- capture.py
+- walk_table
 - m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py
 - generate_truth_package.py
 - Communities (380 total, 151 thin omitted)
-- compare
+- world_producer.py
 - certify_p4_reduced_taylor.py
 - certify_p7c4_persistence.py
 - test_research_ledger.py
-- test_spec_frame_geometry.py
+- SpecExit
 - m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py
 - test_orphan_positions.py
 - ResearchRunner
-- test_single_creation_path.py
-- LUFFY-OWNER-FRONTEND-V2.1 — focused correction pass
+- entry_authority.py
+- NewsGuard
 - Communities (267 total, 37 thin omitted)
-- SpecExit
-- test_owner_interface_r5.py
+- test_spec_exits_are_honoured.py
+- test_qnt04_holdout_separation.py
 - certify_batch.py
 - ExitEngine
 - evaluate_population
-- ._fetch_calendar
-- Trader.md
+- WorldModel
+- Company.md
 - alpha_at
 - cognition_history.py
 - collector_health.py
 - verify_truth_package.py
-- trader_strategy
+- test_str03_approval_binding.py
 - test_current_truth_contract.py
 - unknown
 - test_da10_remaining_storage.py
-- test_m32_validation_bundle_v3.py
+- usePreview
 - Supervisor
-- Status
-- dataclasses
+- da10-full/offline_guard.py
+- allocator.py
 - LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS)
 - test_company.py
 - m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py
-- pandas
-- build_company
-- OwnerRequest
+- test_research_thresholds.py
+- j
+- observability/preflight.py
 - publish
-- Side
+- test_exits.py
 - test_predictive_research_bridge.py
-- factory_handoff.py
+- load_version
 - FastMetric
-- test_scraper_sources.py
+- Scraper
 - test_deep_token_cap.py
 - Librarian
 - test_research_control_unavailable.py
 - load_input
 - m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py
-- test_whole_trade_accounting.py
+- test_conversion_evidence.py
 - test_exit_ab_shadow_paths.py
-- test_normal_learning_loop_closure.py
+- factory_handoff.py
 - LUFFY-FRONTEND-COMPLETION-M3: final product and visual completion
-- trader_cognition
-- .basis
+- population.py
+- DerivFeed
 - Exit Animations
 - test_protective_stops.py
 - test_basis_and_mcp.py
 - Luffy — owner end goal (authoritative requirements)
-- test_str04_governor_lifecycle.py
+- test_risk02_exposure_feasibility.py
 - m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py
 - Quality
 - digest
 - test_universe_frames_timeframes.py
-- M3.2 Scheme D — actual-statistic synthetic validation protocol
-- freeze_package.py
+- Overview.tsx
+- ._mechanism_once
 - live.ts
 - 2026-09-18/manifest.json
 - 2026-09-19/manifest.json
@@ -196,14 +196,14 @@
 - NEXT_SESSION.md
 - test_research_growth.py
 - test_rp03_kernel_handoff.py
-- Harvester
+- Coinalyze
 - m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py
-- exit_ab_shadow.py
+- test_wrld05_normal_context.py
 - Aggressor_Divergence_At_Highs.md
-- RiskManager
+- A. Read-only capability design (blocker 1)
 - m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py
-- Luffy — repository guidance
-- m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py
+- CLAUDE.md
+- fractions
 - 1. Collector (`trader/observability/collector.py`, `worker.py`)
 - What You Must Do When Invoked
 - ControlState
@@ -511,29 +511,29 @@
 - M3.2 Scheme D actual-statistic validation — pre-RNG correction
 - Check-now: active window, old window, investigations, accounting
 - verify_certificates.py
-- Candidate thesis + gate-2 design — final offline report
+- evaluate
 - watchdog.sh
-- hook_link
-- test_features.py
-- Env
-- evidence_capture.py
+- compare
+- test_research_control.py
+- test_accounting_worker.py
+- Source
 - test_owner_interface_boundary.py
 - LUFFY_Official_Solution_Design_v3.md
 - owner_reads.py
-- Genome
+- test_single_creation_path.py
 - SDD.md
 - restart.sh
 - test_dec01_opportunity_context.py
 - m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py
-- test_scout_upgrades.py
+- m32_protocol.py
 - M3.2 scheme D independent-seed replication — 2026-09-19
 - ArithmeticToken
-- append
-- test_forming_bar_never_stored.py
+- cognition/investigation.py
+- FakeFeed
 - tv_login.sh
 - test_protection_snapshot.py
 - owner_api.py
-- Source
+- decision_analysts.py
 - generate_certificates.py
 - M3.1-H historical PIT slice — September 19, 2026
 - Typed outcomes and retained memory replay
@@ -549,32 +549,32 @@
 - test_dsl_ref.py
 - journal_evidence.py
 - m32_scheme_d_validation_bundle_20260921/build_bundle.py
-- Proposed next M8.1 slice: explicit conversion evidence
+- M8.1 actual conversion evidence: bounded capture and explicit attribution limit
 - test_hierarchical_admission.py
 - Luffy intelligence — investigations that change with evidence
-- LUFFY-ACTIVATION-AND-RISK-BASELINE-HARDENING-V2
-- Scraper
+- LUFFY-CANDLE-STORE-TRANSACTION-SAFETY-DEPLOYMENT-V1
+- Host
 - 30. Step-by-Step Engineering Delivery Plan
 - 13. Quantitative Research Framework
 - 30. Step-by-Step Engineering Delivery Plan
 - conversion_evidence.py
-- Authorizer
+- test_emergency_whole_accounting.py
 - Luffy intelligence — demo-first priorities
 - certify_p5_c4_taylor.py
-- Attention collector errors and watchdog gaps — diagnosis, September 18, 2026
+- ._conn
 - Performance
 - Luffy delivery roadmap
-- Research.tsx
+- OperationsLog.tsx
 - Gate-2 stationary-bootstrap independent review — 2026-09-16
-- Collector
+- test_risk01_entry_binding.py
 - Evidence.tsx
 - 33. Target Capability Acceptance Gates
 - 33. Target Capability Acceptance Gates
-- estimate
+- run
 - Declared population collection delivery
 - test_owner_reads_m2.py
 - Graph Report - trader  (2026-09-19)
-- graphify reference: extra exports and benchmark
+- test_real_timers_retain_truthful_observations_until_verified_exit
 - test_spec_writer.py
 - Cognition coverage audit — 2026-09-15
 - certify_p7c4_h24.py
@@ -582,29 +582,29 @@
 - 2. Owner Decisions That Are Binding
 - 35. Astra Deep-Analysis Assignments Before Final Current-State Freeze
 - LUFFY — Build Roadmap
-- .decide
+- Strategy-first decision core + the Researcher
 - 2. Owner Decisions That Are Binding
-- test_opportunity_live_integration.py
+- BrainLLM
 - test_stage1_entry_authority.py
 - test_owner_frontend_api.py
 - Codex: Documentation, examples & Motion UI search
 - Gate-2 independent review — 2026-09-16
 - test_execution_accounting.py
-- test_macro_guard.py
+- MacroGuard
 - 28. Testing and Validation Architecture
 - 7. Market Perception Layer
 - 28. Testing and Validation Architecture
 - 7. Market Perception Layer
-- cognition/investigation.py
+- test_trade_booking.py
 - M3.2 synthetic block-null calibration — September 19
-- world/replay.py
-- test_control_state_recovery.py
+- test_da04_snapshot_reliability.py
+- test_exe07_execution_quality.py
+- Journal
 - pytest
-- .from_dict
 - Gate-2 stationary calibration — 2026-09-16
 - Gate-2 studentized calibration — 2026-09-16
 - Gate-2 synthetic calibration — 2026-09-16
-- test_strategy_blend.py
+- Collector
 - Roadmap baseline and planning handoff
 - trade_provenance.py
 - certify_categorical.py
@@ -614,15 +614,15 @@
 - 16. Global Capital Allocation and Portfolio Optimization
 - m32_scheme_d_host_qualification_v4_20260923/qualify.py
 - graphify reference: query, path, explain
-- _metric
+- Luffy delivery checklist — canonical status
 - test_m32_shard_layer.py
 - test_m32_pilot_v4.py
 - Gate-2 inference requirements after the stationary experiment
 - Gate-2 next-session handoff — 2026-09-16
-- M8.1 normal booking provenance and demo rollout
-- bench_sharding.py
+- append
+- test_res08_governed_bridge.py
 - M3.1 prospective population producer
-- MacroGuard
+- test_historical_outcome_capture.py
 - Exit geometry OOS comparison — 25% peak-profit giveback
 - Gate-2 stationary bootstrap/HAC calibration — frozen offline experiment
 - Gate-2 studentized calibration — new offline protocol
@@ -642,19 +642,19 @@
 - VWAP Extreme Fade
 - Durable entry exposure recovery
 - Luna session handoff — candidate 55243573515adc3b
-- BrainLLM
-- foundation.py
-- M8.1 bounded accounting capture and retry worker
+- ChatEngine
+- digest
+- test_chat_agent.py
 - vwap_fade variant (1.5957)
-- test_ref_sources.py
+- m32_scheme_d_validation_bundle_20260921/runner/acceptance.py
 - test_research_refusal_suppression.py
 - Map of Content
 - 15. Opportunity and Expression Decision
-- 17. Deterministic Risk Authority
+- test_str01_version_lineage.py
 - 18. Execution Architecture
-- 22. AI / LLM Architecture
+- dispatch.py
 - 23. External Systems, MCPs and Tools
-- market_provenance.py
+- test_postmortem.py
 - skills/motion/best-practices/index.md
 - 15. Opportunity and Expression Decision
 - 17. Deterministic Risk Authority
@@ -663,25 +663,25 @@
 - 23. External Systems, MCPs and Tools
 - t
 - MOC.md
-- evaluate_existing.py
+- Cognition historical replay — 2026-09-15 run
 - test_real_funding.py
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
-- world_producer.py
+- File Structure
 - convert_vault_to_atomic.py
 - package.json
 - GraphView.tsx
 - test_pine_spec.py
-- test_run01_instance_identity.py
+- inspect
 - test_owner_recovery_risk_guard.py
 - test_storage_cleanup.py
 - ema_trend variant (20.0)
-- 19. Outcome, Attribution and Replay
+- LUFFY single-owner tracker — second review (incident and blocker reconciliation)
 - 20. Memory Architecture
-- 32. Three-File Project Control Plane
+- evaluate_existing.py
 - 8. Attention Engine
-- 9. Hierarchical World Model
-- after_own_hold
+- evaluate
+- 2. Searchable feature and state space
 - test_attention_selection_persistence.py
 - 20. Memory Architecture
 - 32. Three-File Project Control Plane
@@ -691,8 +691,8 @@
 - vwap_fade variant (2.5)
 - graphify reference: GitHub clone and cross-repo merge
 - m32_scheme_d_validation_bundle_v2_20260921/runner/acceptance.py
-- test_owner_interface_r6.py
-- test_declared_population.py
+- build_pit_dataset.py
+- learning.py
 - Strategist
 - Cognition historical replay — retrospective slice (2026-09-15)
 - .claude/CLAUDE.md
@@ -808,56 +808,56 @@
 - VWAP fade variant 2.5.md
 - VWAP fade variant parameters.md
 - README.md
-- types.py
+- test_spec_population.py
 - BB 2.5σ Band Fade
 - BB 3σ Exhaustion Fade
 - transition
 - M3.1 classification-neutral cohort and coverage review
-- sqlite_tx.py
+- universe.py
 - ema_trend harvested
-- CompiledStrategy
+- .from_dict
 - ema_trend variant (22.0)
 - Usage
 - RSI Exhaustion Reclaim
 - test_learning_application.py
-- strategy_weights
+- test_strategy_blend.py
 - LUFFY-TRADE-HISTORY-PAGING-R1
 - vwap_fade variant (1.9493)
 - P6/C4 Reduced Taylor/Moment Certificate — Frozen Acceptance
-- safe_fill
+- test_lot_step_quantization.py
 - record_refusal.py
 - paper_cost_evidence.py
-- test_collector_recovery.py
+- test_dashboard_readiness.py
 - P5/C3 Population-Majority Certificate — Frozen Acceptance
 - test_candle_store_transaction_safety.py
 - investigation_research.py
 - test_m32_host_qualification_v4.py
 - Luffy.tsx
-- protection_snapshot.py
+- ProtectionMonitor
 - test_strategy_health_observation.py
 - test_scraper_research_stream.py
-- venue_reads.py
+- GetOnlySession
 - M3.2 shard layer hardening (D1–D3), September 22
 - LUFFY_Product_Tracker_v1.md
-- net_score
+- publish
 - referee.py
 - capacity.py
 - M3.1 cut and M8.1 review — September 19, 2026
 - test_first_boot_admission.py
-- P7/C4 Persistence Truth Certificate — Frozen Acceptance
-- test_bootstrap_contract.py
+- test_acc01_venue_authority.py
+- test_launch_preflight.py
 - opportunity_context.py
-- Offline cognition — first slice (2026-09-15)
+- test_typed_outcomes.py
 - intake.json
 - Auction Market Theory / Wyckoff
 - m32_scheme_d_sharding_20260921/shard_layer.py
 - run_all.sh
 - make_app
 - Market Microstructure
-- test_data06_universe_truth.py
-- test_wrld05_normal_context.py
-- journal.py
-- queries.py
+- c
+- test_admission_null_gate.py
+- _Ex
+- 1. Requirement matrix (owner §1–24)
 - EMA Stack Pullback
 - Absorption.md
 - Aggressor Flow.md
@@ -874,210 +874,210 @@
 - sweep_reversal variant (v2)
 - CognitionConfig
 - test_owner_reads.py
-- test_sg06_da_integration.py
-- child.py
-- Host
+- test_outcome_24h_upgrade.py
+- cognition/memory.py
+- Knowledge.tsx
 - P4/C3 and P4/C4 reduced categorical certificate
 - test_d3_publication_order_is_fsync_files_fsync_dirs_rename_fsync_verify_manifest
 - test_venue_reads.py
 - test_m32_shard_layer_v4.py
-- test_dashboard_readiness.py
+- test_stage1_recovery_monitoring.py
 - attention_admission.py
 - test_investigation_state_feedback.py
 - json
-- active_setter_inventory.py
-- WorldModel
+- Inventory
+- execution_evidence.py
 - replay_integrator.py
-- fractions
-- entry_authority.py
-- test_stage1_recovery_monitoring.py
+- m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py
+- meta_label.py
+- Refused
 - targets.py
 - readContracts.ts
-- predictive_experiment.py
+- factory_transfer.py
 - test_da05_history_coverage.py
 - spec_writer.py
 - test_stage1_pit_blocker_fix.py
-- health_observation.py
-- test_att03_warmup.py
+- Sweep
+- world/replay.py
 - M8.1 whole-trade reconciliation and completeness gates
 - evaluate_pilot.py
 - P5/C3 Hit/Miss Majority and Macro-F1 Certificate — Frozen Acceptance
 - P6/C3 Reduced Taylor/Moment Certificate — Frozen Acceptance
 - WorldModelRecord
 - rounds
-- learning/runtime.py
+- Harvester
 - TickPrecision
 - qualify_v4.py
 - test_decision_sources.py
-- VenueTarget
-- selection_persistence.py
-- test_ref_evidence.py
+- _Client
+- is_canonical_instrument_id
+- C4Model
 - m3-capture.spec.ts
-- A. Read-only capability design (blocker 1)
-- performance_multiplier
-- test_historical_outcome_capture.py
-- main
+- LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 2 (Astra's confirmed blockers)
+- ast
+- Trades.tsx
+- random
 - @playwright/test
 - test_current_truth_integration.py
-- Overview.tsx
+- MCPClient
 - predictive.py
-- registry_provider.py
-- trader_observability
+- test_qnt08_admission_boundary.py
+- test_market_investigation.py
 - persistence/storage_cleanup.py
-- evidence.py
-- test_str01_version_lineage.py
+- load_frames
+- test_bootstrap_contract.py
 - control-checks.json
-- BinanceUsdmRegistryProvider
+- test_org_vault.py
 - approvals.py
-- dispatch.py
+- test_trade_attribution.py
 - ArithmeticToken
 - test_current_truth_completion_clock.py
 - test_runtime_portfolio_integration.py
-- Global Constraints
+- regime_series
 - RegistryRefresher
 - replay_categorical.py
 - LUFFY — Product, Behaviour & GUI Tracker
-- Diagnostics.tsx
+- test_spec_signals_on_closed_bars.py
 - test_da01_exact_identity.py
-- M3.2 pre-RNG truth package (v4), September 21
+- 2026-09-21-m32-pre-rng-truth-package.md
 - test_observation_first_cycle.py
-- test_negative_control_w5_w11_are_caught
+- OpportunityContext
 - test_wrld04_claim_history.py
-- da10-full/measure.py
-- _kernel_stub
-- test_observer_attention_repair.py
-- test_phase1_brain.py
-- MacroGuard Agent Implementation Plan
+- bench_trade_history.py
+- trade_history.py
+- observer
+- now_utc
+- .skills/motion/best-practices/index.md
 - LUFFY-OWNER-FRONTEND-V2
-- Sweep
-- main
-- runtime_inputs
+- net_score
+- add
+- predictive_receipt.py
 - replay_batch.py
 - observability/positioning.py
 - test_strategy_health_kernel_persistence.py
-- registry_store.py
-- Sol1: unreadable research questions review
+- RiskManager
+- SOL1 research_registrations review — 2026-10-11
 - ATT-03 — existing Attention values calibration review
 - Motion for React
 - predictive_bridge.py
 - UI/UX Pro Max - Design Intelligence
-- Trades.tsx
+- Luffy — repository guidance
 - Exit A/B shadow: virtual path updater
 - test_final_audit_llm_reservation.py
 - test_m32_block_calibration.py
-- test_owner_telegram_binding.py
-- test_real_timers_retain_truthful_observations_until_verified_exit
-- consumers.py
+- tg_update
+- main
+- test_whole_trade_accounting.py
 - depth_evidence.py
-- .long
+- EntryRecovery
 - flint
 - OWNER-FRONTEND-V1 — F1 routing correction
-- tracker.ts
+- Tracker.tsx
 - test_review03_prospective_execution.py
 - refusal.py
-- m32_scheme_d_pilot_20260922/run_pilot.py
+- Host
 - [SOL-2][RES-05] BLOCKED — structured research persistence
 - read_prod_fee.py
 - 25.3 Navigation contracts
 - 35. Developer Component Contracts
-- _KV
-- test_m32_validation_bundle_v2.py
-- RecordingLock
+- test_margin_caps.py
+- trade_page
+- M1 implementation plan — persistent market investigations
 - signal_occurrence_observation.py
-- RecordingVenue
-- M8.1 actual conversion evidence: bounded capture and explicit attribution limit
+- Reads
+- ._tg_dispatch
 - Dots handoff — LUFFY tracker-based work
 - LUFFY single owner tracker priority audit
-- test_review03_flatten_panic_contract.py
+- test_reconcile.py
 - Universal rules (all platforms)
 - compilerOptions
 - _Groups
 - Pre-Delivery Checklist (canonical — the only one)
 - Quick Reference
 - M3.2 Scheme D validation bundle, revision 3 (RNG-free), September 21
-- test_final_audit_macro_time.py
-- test_m32_remaining_categorical_kernels.py
+- ObservedExchange
+- Host
 - replay_p7c4_h24.py
 - _corr_synth.py
-- Start the next Luffy session here
-- ProtectionMonitor
-- SOL1 research_registrations review — 2026-10-11
+- Session start
+- LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 3 (Astra's R2 blockers)
+- merge_and_check.py
 - SOL2 — next three tables: lead integration
 - M8.1 emergency fill accounting — bounded delivery
-- Gap register: exactly one classification per gap
+- Final-review completion (A–D)
 - Natural accounting and in-window evidence continuation
-- OwnerControls.tsx
+- pending.ts
 - trade-history.spec.ts
-- test_verified_outcome_producers.py
+- test_review03_accounting_classification.py
 - M3.2 Scheme-D v4 shard integration
-- Stage7 real learning authority and consumer integration R1
+- test_features_shape.py
 - [SOL-2][RES-08] governed experiment and Research Bank proof
 - ATT-01 — closure (architecture/offline scope)
-- authority_cost_fixtures.py
+- RelationshipState
 - Collector recovery and a separate prospective window
-- test_data01_canonical_identity.py
+- Gate-2 synthetic calibration protocol
 - Stage3 question-driven research router R1
-- refuse_legacy_learning
+- M3.2 conditioning-scheme comparison — SYNTHETIC ONLY (2026-09-19)
 - Stage7 normal replay and WorldModel consumer closure R2
 - M3.2 Scheme-D validation bundle v4
 - LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
 - random
 - M3.2 future sampling and null proposal
-- test_taker_buy_real.py
-- Check-now: active window, investigations, accounting (18:46 UTC)
+- M3.2 historical pattern search protocol — frozen design
+- Host
 - M3.2 Scheme D validation bundle (RNG-free), September 21
 - [SOL-2][RES-07] engineering proof
-- DATA-03 final validation
-- _FailOn
+- Reproducers and changes
+- DeterministicStub
 - P5/C4 Reduced Taylor/Moment Certificate — Frozen Acceptance
 - _run_polled
-- test_market_data_is_production.py
-- resolve_pending
+- Motion for React
+- JFake
 - M3.1 pre-window coverage review — September 16, 21:40 UTC
 - M3.2 optimized exact-equivalent metric, September 21
 - M3.2 host / filesystem qualification (RNG-free), September 22
-- LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
+- Dashboard access and usable investigation memory
 - Stage8 owner OS blocker fix R1
-- Stage1 recovery/monitoring R1 blocker fixes
+- DeterministicStub
 - Sol2: research_unreadable_plans review
 - WM-03 complete offline observation simplification
-- test_a_profitable_tv_run_agrees
+- test_empty_regime_filter.py
 - [SOL-2][WRLD-03] evidence and dependency map
-- datetime
-- test_backfill_pulls_coarser_periods_and_skips_funding
+- build_run
+- api
 - 4.1 Canonical component map
 - Part A: necessity and connections
 - Venue
 - verify_campaign.py
-- M3.2 Scheme D validation bundle, revision 2 (RNG-free), September 21
+- Candidate thesis + gate-2 design — final offline report
 - M3.2 Scheme-D v4 fast benchmark
 - M3.2 Scheme-D v4 host qualification
 - Stage1 data provenance/PIT R1 blocker fix
-- Context
-- Forward loop continuation: independent verification and recovery review
-- glacier-corrections.spec.ts
-- FastWorkload
-- QualificationError
+- StrategySpec
+- DATA-06 — current-build closure (account eligibility explicitly UNKNOWN)
+- Graph Report - trader  (2026-09-19)
+- 13. Quantitative Research Framework
+- flock_peer
 - FastWorkload
 - test_tool_constructs_no_random_generator_reads_no_authorization_and_touches_no_protocol_file
 - _sha
 - Controlled demo sample — existing Luffy execution and accounting
-- M3.2 evidence machinery corrections — September 19, 2026
+- _receipt_observation
 - _Journal
-- M3.2 Scheme D deterministic sharding / resume layer (bundle v3), September 21
+- test_features_classic.py
 - graphify reference: incremental update and cluster-only
 - playwright.config.ts
-- Depth Analyst.md
-- Harvester.md
-- Positioning Analyst.md
-- Structure Analyst.md
-- Stub Analyst.md
-- offline_guard.py
+- test_final_audit_macro_time.py
+- versioned_strategies
+- auth_with
+- Motion for Vue
+- M8.1 emergency whole-accounting and native exit provenance: bounded manual slice
+- DATA-05 — append-only revisions and exact-cut truth
 - graphify reference: transcribe video and audio
-- journal
-- drop
-- guard
-- test_import_collision_regression_both_orders
+- .ensure
+- test_review03_stop_fallback.py
+- test_features_deriv_extra.py
+- seal
 - run-focused.sh
 - 2026-10-02-stage7-verified-outcome-producer-integration-r1.md
 - 2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
@@ -1112,105 +1112,146 @@
 - persistence/__init__.py
 - divs
 - nq
-- offline
-- db
-- protocol
+- test_llm_purpose_budget.py
+- OWN-02 typed owner authority evidence map
+- test_ref_sources.py
+- _Deriv
+- to_interval
+- consumers.py
+- opportunity_live.py
+- OWN-03 approval boundary evidence
+- OWN-04 declared and observed state
+- [SOL-1][QNT-08] canonical CLOSED
+- [SOL-2][RES-03] Governed source registry — CLOSED offline
+- [SOL-2][RES-04] CLOSED — architecture/offline preprocessing
+- Handoff — owner end goal now governs
+- Risk Officer.md
+- test_series_map_covers_registry.py
+- history
+- Venue
+- HandoffRefused
+- B. Kernel cadence design
+- _FailOn
+- _KV
+- verify
+- DemoEx
+- LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
+- LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1
+- ATT-03 — warm-up history and existing ranking audit
+- mnt_luffy_recovery_recovery_sol1_da10_full_20261016_reports_da10_full_init_py
+- _Risk
+- test_review03_stage5_start.py
+- da05-final/verify.py
+- ._install_spec
+- _membership
+- ATT-03 owner current-build scope decision
+- Stub Analyst.md
+- evaluator
+- test_wrong_authorization_fields_are_refused
+- da05-final/offline_guard.py
+- _Exec
+- guard
+- test_leverage_observation_older_than_account_bound_refused
+- Deadline
+- test_valid_authorization_reaches_seed_registry_only_after_every_check
+- test_p1_cannot_enter_power_or_fdr_evaluation
+- test_account_producer_uses_exact_execution_credential_context
 
 ## God Nodes (most connected - your core abstractions)
 1. `Journal` - 746 edges
 2. `Communities (437 total, 109 thin omitted)` - 329 edges
-3. `StrategySpec` - 238 edges
+3. `StrategySpec` - 242 edges
 4. `Kernel` - 236 edges
 5. `ControlState` - 235 edges
 6. `Communities (267 total, 37 thin omitted)` - 231 edges
 7. `Communities (380 total, 151 thin omitted)` - 230 edges
-8. `DataFeed` - 220 edges
-9. `compile_spec()` - 197 edges
+8. `DataFeed` - 229 edges
+9. `compile_spec()` - 202 edges
 10. `Items` - 180 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `J. Fixture isolation` --references--> `ContractViolation`  [INFERRED]
   docs/superpowers/reports/2026-09-28-owner-frontend-live-binding-v1.md → frontend/src/adapters/live.ts
-- `11.3 Definitions` --references--> `signed()`  [INFERRED]
-  docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md → frontend/src/views/Overview.tsx
-- `14. Required pre-run freeze` --references--> `signed()`  [INFERRED]
-  docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md → frontend/src/views/Overview.tsx
-- `Persistence proofs` --references--> `S`  [INFERRED]
-  docs/superpowers/reports/2026-09-21-m32-pre-rng-truth-package.md → frontend/src/views/Strategies.tsx
 - `3a. The signed contrast` --references--> `S`  [INFERRED]
   docs/superpowers/specs/2026-09-16-gate2-prediction-test.md → frontend/src/views/Strategies.tsx
+- `The one thing that is easy to get wrong` --references--> `kind()`  [INFERRED]
+  .claude/skills/motion/css-spring/index.md → scripts/m32_categorical_equivalence_20260920/certify_categorical.py
+- `Rule Categories by Priority` --references--> `product()`  [INFERRED]
+  frontend/.skills/ui-ux-pro-max/SKILL.md → scripts/m32_categorical_equivalence_20260920/replay_categorical.py
+- `Step 3: Supplement with Detailed Searches (as needed)` --references--> `product()`  [INFERRED]
+  frontend/.skills/ui-ux-pro-max/SKILL.md → scripts/m32_categorical_equivalence_20260920/replay_categorical.py
 
 ## Import Cycles
-- 3-file cycle: `trader/learning/capture.py -> trader/observability/investigation_research.py -> trader/learning/capture_runtime.py -> trader/learning/capture.py`
 - 3-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/portfolio/economics.py -> trader/engine/paper_cost_evidence.py`
 - 3-file cycle: `trader/strategy/compile.py -> trader/strategy/dsl.py -> trader/strategy/spec_evidence.py -> trader/strategy/compile.py`
+- 3-file cycle: `trader/learning/capture.py -> trader/observability/investigation_research.py -> trader/learning/capture_runtime.py -> trader/learning/capture.py`
 - 3-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/observation.py -> trader/core/types.py`
 - 4-file cycle: `trader/observability/learning.py -> trader/observability/population.py -> trader/observability/memory.py -> trader/observability/outcomes.py -> trader/observability/learning.py`
-- 4-file cycle: `trader/research/evaluate.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/portfolio_null.py -> trader/research/evaluate.py`
-- 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/model.py -> trader/learning/foundation.py -> trader/core/types.py`
 - 4-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
 - 4-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
 - 4-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/portfolio/opportunity_live.py -> trader/portfolio/economics.py -> trader/engine/paper_cost_evidence.py`
+- 4-file cycle: `trader/research/evaluate.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/portfolio_null.py -> trader/research/evaluate.py`
+- 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/replay.py -> trader/world/observation.py -> trader/core/types.py`
+- 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/model.py -> trader/learning/foundation.py -> trader/core/types.py`
 - 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/model.py -> trader/learning/targets.py -> trader/core/types.py`
 - 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/model.py -> trader/world/observation.py -> trader/core/types.py`
-- 4-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/replay.py -> trader/world/observation.py -> trader/core/types.py`
-- 5-file cycle: `trader/research/evaluate.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/predictive_receipt.py -> trader/research/portfolio_null.py -> trader/research/evaluate.py`
-- 5-file cycle: `trader/research/evaluate.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/predictive_receipt.py -> trader/research/predictive_experiment.py -> trader/research/evaluate.py`
-- 5-file cycle: `trader/research/evaluate.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/predictive_receipt.py -> trader/research/referee.py -> trader/research/evaluate.py`
-- 5-file cycle: `trader/research/evaluate.py -> trader/strategy/spec_evidence.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/research/portfolio_null.py -> trader/research/evaluate.py`
-- 5-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/replay.py -> trader/world/model.py -> trader/learning/foundation.py -> trader/core/types.py`
-- 5-file cycle: `trader/core/types.py -> trader/world/context.py -> trader/world/model.py -> trader/learning/foundation.py -> trader/learning/targets.py -> trader/core/types.py`
 - 5-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture.py -> trader/learning/decision_sources.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
+- 5-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture.py -> trader/observability/investigation_research.py -> trader/learning/capture_runtime.py -> trader/portfolio/economics.py -> trader/engine/paper_cost_evidence.py`
+- 5-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/learning/capture.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
+- 5-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/portfolio/allocator.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
+- 5-file cycle: `trader/engine/paper_cost_evidence.py -> trader/learning/capture_runtime.py -> trader/portfolio/opportunity_live.py -> trader/strategy/compile.py -> trader/strategy/factory_handoff.py -> trader/engine/paper_cost_evidence.py`
+- 5-file cycle: `trader/core/journal.py -> trader/learning/capture.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/strategy/promotion.py -> trader/core/journal.py`
+- 5-file cycle: `trader/core/journal.py -> trader/learning/capture_runtime.py -> trader/learning/foundation.py -> trader/strategy/factory_handoff.py -> trader/strategy/promotion.py -> trader/core/journal.py`
 
-## Communities (1109 total, 189 thin omitted)
+## Communities (1150 total, 202 thin omitted)
 
-### Community 0 - "kernel.py"
-Cohesion: 0.05
-Nodes (64): ABC, parametrize, DA-06: avoid duplicate frame serialization without stale evidence., snap(), test_direct_vote_and_precise_frame_changes_never_reuse_preflight_digest(), test_final_evidence_reflects_mutation_inside_custom_evaluator(), test_preflight_serializes_no_frames_and_final_vote_hashes_once(), test_static_validation_cannot_publish_weights() (+56 more)
+### Community 0 - "types.py"
+Cohesion: 0.01
+Nodes (342): ABC, Task 11: Port the eight families to seed specs, Task 2: Series-valued indicators, What this plan deliberately does not do, Task 4 — candidate selection, Task 7 — runner, planner, child, Feature library, Migration — build parallel, cut over on evidence (+334 more)
 
 ### Community 1 - "m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py"
 Cohesion: 0.06
-Nodes (65): acceptance_evaluators(), approx(), authorization_records_fail_closed(), benchmark_core_with_stub(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer() (+57 more)
+Nodes (59): acceptance_evaluators(), approx(), authorization_records_fail_closed(), benchmark_core_with_stub(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer() (+51 more)
 
 ### Community 2 - "ExitSpec"
-Cohesion: 0.03
-Nodes (141): Data and feature invariants, The search, File Structure, Global Constraints, Task 10: Engine equivalence — same signals in, same trades out, Task 11: Port the eight families to seed specs, Task 12: Speed benchmark, Task 13: Derivatives and flow feed (+133 more)
+Cohesion: 0.05
+Nodes (80): The search, Changes from the plan, each for a measured reason, Execution record (2026-09-14), Open decision (operator), Task 10 — measure on the real store, then deploy, Task 1 — measured, Task 1 — the common-rotation null, Task 2 — held-out slices (+72 more)
 
 ### Community 3 - "parse"
-Cohesion: 0.03
-Nodes (131): Constant, The strategy language, test_htf_reads_hour_close_before_hour_available(), Task 2: Sequence — setups are events, not levels, Task 7: Cross-sectional features, Task 4: `ref(key, expr)` in the rule language, 8. Deferred by design — pick up when the above is done, Input contract (`cognition.input.v1`) (+123 more)
+Cohesion: 0.05
+Nodes (92): Constant, The strategy language, test_htf_reads_hour_close_before_hour_available(), Task 2: Sequence — setups are events, not levels, Task 7: Cross-sectional features, Task 4: `ref(key, expr)` in the rule language, 8. Deferred by design — pick up when the above is done, Input contract (`cognition.input.v1`) (+84 more)
 
 ### Community 4 - "test_pit_dataset.py"
 Cohesion: 0.11
 Nodes (60): _bar(), built(), _chain_declaration(), chained(), _clock(), counterfactual(), declaration(), delayed_pair() (+52 more)
 
 ### Community 5 - "test_attention_telemetry.py"
-Cohesion: 0.04
-Nodes (86): event(), frames(), parametrize, Synthetic-only observability checks. No venue or trading DB access., test_age_prune_and_size_bound(), test_bad_receipt_callback_does_not_change_strategy_result(), test_capture_freezes_closed_bars_and_observed_availability(), test_compiled_spec_reports_missing_and_failed_inputs() (+78 more)
+Cohesion: 0.03
+Nodes (111): evaluate(), frozen_observation(), inputs(), offline(), fixture, ATT-03 source-cut warm-up and existing-policy ranking; synthetic offline only., test_date_advance_cannot_invent_history_or_finalize_partial_bar(), test_existing_ranking_ties_no_forced_selection_and_no_learned_override() (+103 more)
 
 ### Community 6 - "certify_box_canaries.py"
 Cohesion: 0.13
-Nodes (55): A(), adaptive_checkpoint(), bisect(), bounded_remainder(), c3_adaptive(), current(), fill_band(), c3_band() (+47 more)
+Nodes (56): heapq, A(), adaptive_checkpoint(), bisect(), bounded_remainder(), c3_adaptive(), current(), fill_band() (+48 more)
 
-### Community 7 - "StrategySpec"
-Cohesion: 0.04
-Nodes (79): dict, Task 8 — the handoff (built, closed), 6. Three of four live specs are gated to unproven regimes, Decisions taken (I chose; say if you disagree), Known-good invariants — do not break, Luffy — next session handoff, MCP, Pipeline — BUILT 2026-08-31 (+71 more)
+### Community 7 - "Analyst"
+Cohesion: 0.08
+Nodes (21): 6. Three of four live specs are gated to unproven regimes, Decisions taken (I chose; say if you disagree), Admission must record whether a candidate beats its own signals.…, test_admission_evidence_carries_a_null_percentile_field(), test_it_does_not_mutate_the_evidence_it_was_given(), test_no_null_measurements_records_none_rather_than_a_guess(), test_the_original_evidence_is_preserved(), The regression that matters: `Analyst._null_percentiles` evaluated specs with… (+13 more)
 
 ### Community 8 - "Kernel"
-Cohesion: 0.03
-Nodes (50): Task 6: Live — a reference spec can signal, Deployment (requires separate operational authorization), B. Kernel cadence design, MISSING_IMPLEMENTATION, DATA-03 direct consumer inventory, A stored spec must enter the runtime population only via compilation., test_specs_are_not_also_loaded_as_evaluatorless_legacy_genomes(), Replace editor content deterministically and VERIFY. keyboard.insert_text is… (+42 more)
+Cohesion: 0.05
+Nodes (34): Task 6: Live — a reference spec can signal, DATA-03 direct consumer inventory, A stored spec must enter the runtime population only via compilation., test_specs_are_not_also_loaded_as_evaluatorless_legacy_genomes(), test_current_path_has_no_legacy_weight_or_meta_model_calls(), Replace editor content deterministically and VERIFY. keyboard.insert_text is…, Fail fast with the compiler's own message instead of wasting an add-to-chart +…, editor_text() (+26 more)
 
-### Community 9 - "._mechanism_once"
-Cohesion: 0.06
-Nodes (34): A contamination to respect, Decisions (made here, with reasons), Files, Research pipeline — Phase 3: the referee — Implementation Plan, Risks, State at start (measured 2026-09-14), What the top survivors change about this phase, Build order (+26 more)
+### Community 9 - "consistency_p"
+Cohesion: 0.07
+Nodes (39): Deviations from the spec, with the measurement behind each, Global Constraints, Research pipeline — Phase 2: the search — Implementation Plan, Task 15 — measured on the real store (2026-09-13), What Phase 2 deliberately does not do, What was measured before writing this plan (2026-09-11), Decision taken: option 3 (2026-09-15), Every window carries its own control (+31 more)
 
 ### Community 10 - "observability/investigation.py"
 Cohesion: 0.03
-Nodes (116): now(), main(), build(), canonical(), persist(), ValueError, Durable end-to-end intelligence trace — intelligence-trace.v1. One immutable…, The trace of one registration from the records it holds; pure. (+108 more)
+Nodes (122): 4. Reproduction (isolated; existing failure only), now(), digest(), build(), canonical(), persist(), ValueError, Durable end-to-end intelligence trace — intelligence-trace.v1. One immutable… (+114 more)
 
 ### Community 11 - "test_qnt02_null_controls.py"
-Cohesion: 0.06
-Nodes (56): entries(), The fixed Donchian-breakout-trail mechanism, run on arbitrary OHLC frames.…, risk_cfg(), run_one(), entries(), fixture, A strategy must beat its own signals fired at a random time. The gauntlet…, Rotating an all-true array returns the same array, so the null is the strategy.… (+48 more)
+Cohesion: 0.07
+Nodes (50): entries(), fixture, A strategy must beat its own signals fired at a random time. The gauntlet…, Rotating an all-true array returns the same array, so the null is the strategy.…, The null for a test-half PF must come from the test half., Three consecutive signals must stay three consecutive signals, or the null…, test_a_rule_that_is_always_on_cannot_beat_its_own_rotation(), test_assess_measures_the_null_on_the_requested_slice() (+42 more)
 
 ### Community 12 - "test_gate2_calibrate_studentized.py"
 Cohesion: 0.10
@@ -1218,83 +1259,83 @@ Nodes (11): fixture(), literal_moments(), parametrize, Synthetic-only checks: no
 
 ### Community 13 - "RefStore"
 Cohesion: 0.06
-Nodes (50): Deviations from the spec, with the measurement behind each, Global Constraints, Research pipeline — Phase 1: the pieces — Implementation Plan, Task 1: The reference registry and its store, Task 2: The source fetchers, Task 3: The alt index and `refresh_all`, Task 7: The recorder, its config, and the first backfill, Task 8: Record it, verify everything, restart (+42 more)
+Nodes (48): Deviations from the spec, with the measurement behind each, Global Constraints, Research pipeline — Phase 1: the pieces — Implementation Plan, Task 1: The reference registry and its store, Task 2: The source fetchers, Task 3: The alt index and `refresh_all`, Task 7: The recorder, its config, and the first backfill, Task 8: Record it, verify everything, restart (+40 more)
 
 ### Community 14 - "m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py"
-Cohesion: 0.08
-Nodes (53): apply_injection(), assert_environment(), assert_equivalence_gate(), assert_isolation(), Authorization, authorize(), benchmark_world(), bundle_sha256() (+45 more)
+Cohesion: 0.07
+Nodes (57): actual_statistics(), apply_injection(), assert_environment(), assert_equivalence_gate(), assert_isolation(), Authorization, authorize(), benchmark_world() (+49 more)
 
 ### Community 15 - "test_outcome_backfill.py"
-Cohesion: 0.08
-Nodes (48): _frame(), _Journal, The 24-hour horizon must actually be reachable. An outcome row was written as…, An ungraded horizon is honest; a guessed one is poison., A SELL that preceded a fall is correct, not incorrect., _row(), test_a_frame_that_does_not_reach_the_horizon_stays_ungraded(), test_a_missing_frame_is_skipped_not_crashed() (+40 more)
+Cohesion: 0.14
+Nodes (33): _candles(), _decide(), _frames(), journal(), fixture, Backfilling the starved learning loop. The journal holds ~111k decisions and…, A score near zero is noise, not a prediction. Grading it would bury the real…, Those are already scheduled by the orchestrator. (+25 more)
 
-### Community 16 - "test_m32_categorical_estimand_spec.py"
-Cohesion: 0.10
-Nodes (34): analytic_argmax(), analytic_macro_f1_lift(), _case(), _first_encounter_majority(), _ids(), load_spec(), _macro_f1(), AssertionError (+26 more)
+### Community 16 - "_metric"
+Cohesion: 0.06
+Nodes (46): Latest: M3.2 optimized exact-equivalent metric, September 21, Latest: M3.2 phase-90 benchmark done, September 21, Session update — September 21, M3.2 optimized exact-equivalent metric, Session update — September 21, M3.2 phase-90 benchmark, M3.2 Scheme D phase-90 optimized benchmark (bundle v3), September 21, Estimand (unchanged), Frozen decision, P7/C4 Persistence Truth Certificate — Frozen Acceptance (+38 more)
 
-### Community 17 - "capture_runtime.py"
-Cohesion: 0.03
-Nodes (97): base64, Decision and outcome sources, LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1, Prospective acceptance, Real read-only shadow, Validation and next gap, Part A, Part B (+89 more)
+### Community 17 - "capture.py"
+Cohesion: 0.02
+Nodes (173): Capture and replay, Event coverage and truthful limits, Real inventory, Recovery final verification, Stage 7 historical outcome capture R1, Validation and remaining implementation, Decision and outcome sources, LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1 (+165 more)
 
 ### Community 18 - "features.py"
 Cohesion: 0.06
-Nodes (58): _Feed, Every derivative a feature can require must be loadable, or it is invisible.…, test_an_absent_account_ratio_is_untested_not_scored(), test_the_account_ratio_loads(), _atr_pct_rank(), _bars_since(), _bb_lower(), _bb_pctb() (+50 more)
+Nodes (58): _atr_pct_rank(), _bars_since(), _bb_lower(), _bb_pctb(), _bb_upper(), _body_frac(), _btc(), _btc_aligned() (+50 more)
 
-### Community 19 - "norm_symbol"
-Cohesion: 0.07
-Nodes (48): A strategy is only evaluated on the markets it was validated on. Donchian…, The venue quotes `XAU/USDT:USDT` where the spec names `XAU/USDT`., `include` remains a decision, not a suggestion: a named symbol is in even when…, A spec that names nothing behaves exactly as before — the legacy genomes must…, Same shape as the regime filter, where an empty set meant NO regimes and…, _Spec, test_a_declared_include_is_the_universe_not_an_addition(), test_an_empty_include_keeps_the_liquidity_filtered_universe() (+40 more)
+### Community 19 - "plan_scan"
+Cohesion: 0.08
+Nodes (44): verify(), A strategy is only evaluated on the markets it was validated on. Donchian…, The venue quotes `XAU/USDT:USDT` where the spec names `XAU/USDT`., `include` remains a decision, not a suggestion: a named symbol is in even when…, A spec that names nothing behaves exactly as before — the legacy genomes must…, Same shape as the regime filter, where an empty set meant NO regimes and…, _Spec, test_a_declared_include_is_the_universe_not_an_addition() (+36 more)
 
 ### Community 20 - "test_owner_interface.py"
-Cohesion: 0.06
-Nodes (94): Revision 3 — second review blockers (R3-W1…W4), W (revision 2). Blocker → fix → regression test → negative control, _active(), _audit(), _bind_tester(), _count(), parametrize, check_blocked_reply_never_delays_halt() (+86 more)
+Cohesion: 0.03
+Nodes (201): Revision 3 — second review blockers (R3-W1…W4), Revision 4 — third review blockers (R4-W1…W5), W (revision 2). Blocker → fix → regression test → negative control, A. Existing control contract used, socket, stat, _active(), _audit() (+193 more)
 
 ### Community 21 - "m32_scheme_d_qualification_20260922/qualify.py"
-Cohesion: 0.07
-Nodes (72): errno, canon(), check_atomic_publish(), check_bindings(), check_blas(), check_canary_fixture(), check_cpu(), check_environment_gate() (+64 more)
+Cohesion: 0.08
+Nodes (71): canon(), check_atomic_publish(), check_bindings(), check_bit_identity(), check_blas(), check_canary_fixture(), check_cpu(), check_environment_gate() (+63 more)
 
 ### Community 22 - "m32_search.py"
-Cohesion: 0.05
-Nodes (76): 10. Ablation and falsification, 11. Stopping rules, 12. Candidate freeze format, 13. Exact gate into prospective shadow validation, 4. Outcomes, selected/ignored/skips/failures, 5. Support and sample rules, 7. Baselines and nulls, 8. Multiple testing and fixed search budget (+68 more)
+Cohesion: 0.10
+Nodes (41): 13. Exact gate into prospective shadow validation, 8. Multiple testing and fixed search budget, 9. Ranking metric, main(), test_forecast_persistence_path_and_pattern_identity_preserved(), test_pattern_id_is_canonical_and_allow_list_is_exact(), allowed_atom(), canonical_pattern() (+33 more)
 
 ### Community 23 - "dataset.py"
-Cohesion: 0.09
-Nodes (46): _accounting(), _actual(), build(), capture_receipt(), _case_row(), _check_features(), _check_manifest(), _counterfactual_row() (+38 more)
+Cohesion: 0.08
+Nodes (49): Community 51 - "Cognition Replay PIT", Community 57 - "test_cognition_replay.py", _accounting(), _actual(), build(), drop(), capture_receipt(), _case_row() (+41 more)
 
 ### Community 24 - "cognition_coverage_audit.py"
-Cohesion: 0.10
-Nodes (48): Review clarifications (Luna assessment, Codex disposition), AuditError, build_plan(), build_repaired(), check_destination(), compare(), _compare_overlap(), _dump_json() (+40 more)
+Cohesion: 0.09
+Nodes (51): Review clarifications (Luna assessment, Codex disposition), AuditError, build_plan(), build_repaired(), check_destination(), compare(), _compare_overlap(), _dump_json() (+43 more)
 
 ### Community 25 - "test_m32_qualification.py"
 Cohesion: 0.06
-Nodes (36): qualify, combined(), ctx_for(), fake_receipt(), parametrize, skipif, Guard the RNG-free host / filesystem qualification tool for the hardened M3.2…, A layer whose publish is non-exclusive must be caught: swap in a publisher that… (+28 more)
+Nodes (37): qualify, combined(), ctx_for(), fake_receipt(), parametrize, skipif, Guard the RNG-free host / filesystem qualification tool for the hardened M3.2…, A layer whose publish is non-exclusive must be caught: swap in a publisher that… (+29 more)
 
 ### Community 26 - "compile_spec"
-Cohesion: 0.04
-Nodes (127): Actual gaps and changes, Authority outcomes, Historical intended minimum comparison, Historical recovery (committed objects only), Isolation and ancestry gate, One unchanged deterministic contract, Replay, lifecycle and legacy, [SOL-1][EXE-04][EXIT-PARITY-R1] CLOSED (+119 more)
+Cohesion: 0.05
+Nodes (101): Actual gaps and changes, Authority outcomes, Historical intended minimum comparison, Historical recovery (committed objects only), Isolation and ancestry gate, One unchanged deterministic contract, Replay, lifecycle and legacy, [SOL-1][EXE-04][EXIT-PARITY-R1] CLOSED (+93 more)
 
-### Community 27 - "numpy"
+### Community 27 - "spec_evidence.py"
 Cohesion: 0.03
-Nodes (159): Task 15: Kernel recorder thread, Task 6: Supply the universe at every call site, Task 5: Evidence can see references, 7. Data that unlocks 11 untested mechanisms, numpy, main(), Analyst session: design genomes, optimize genes on stored candles, rank by out-…, collect() (+151 more)
+Nodes (153): Task 6: Supply the universe at every call site, Task 5: Evidence can see references, `ref(key, expr)` — any indicator, on any reference, Community 40 - "Admission Null Recording", Community 49 - "Analyst", Community 49 - "Analyst", collect(), load_spec() (+145 more)
 
 ### Community 28 - "certify_hit_miss_taylor.py"
 Cohesion: 0.15
 Nodes (29): A(), abs_upper(), Band, bisect(), cdf(), Certifier, checkpoint(), Deadline (+21 more)
 
 ### Community 29 - "test_cognition_coverage_audit.py"
-Cohesion: 0.07
-Nodes (39): email, http_client, io, Unsigned GET, no redirects, no environment proxies, bounded read., urllib_transport(), baseline(), Clock, do_fetch() (+31 more)
+Cohesion: 0.06
+Nodes (39): email, http_client, io, Unsigned GET, no redirects, no environment proxies, bounded read., urllib_transport(), no_network(), fixture, baseline() (+31 more)
 
 ### Community 30 - "run_replication.py"
-Cohesion: 0.13
-Nodes (25): canon(), die(), frozen_expectations(), git(), import_frozen_sim(), jdefault(), main(), M3.2 scheme D coverage_class_confounding independent-seed replication.… (+17 more)
+Cohesion: 0.22
+Nodes (19): canon(), die(), frozen_expectations(), git(), import_frozen_sim(), jdefault(), main(), M3.2 scheme D coverage_class_confounding independent-seed replication.… (+11 more)
 
 ### Community 31 - "test_activation_risk_baseline_v2.py"
-Cohesion: 0.03
-Nodes (108): K. Negative controls, PRE_START_TEST_BLOCKER, V2: the V1 line regex is retired; the AST inventory is the one scanner., test_every_kernel_active_setter_is_inventoried(), assert_inventory(), check_cross_connection_write_serialized(), set_fenced(), check_history_floor_ignores_malformed_rows() (+100 more)
+Cohesion: 0.02
+Nodes (209): A. Risk-proof identity mechanism, B. First-init marker contract, C. Corruption-latch behavior, D. Hardened repair_baseline contract, E. ACTIVE inventory strategy, F. Rollback corrupt-state rule and runbook, G. Stale-Risk race results, H. Full first-init results (+201 more)
 
-### Community 32 - "contracts.py"
-Cohesion: 0.06
-Nodes (57): Bounded exact-cut inventory for retained anchor derivatives; no label inference., basket_reference(), _correlation(), correlation_change(), out(), add(), _finite(), _participation() (+49 more)
+### Community 32 - "cognition/attention.py"
+Cohesion: 0.07
+Nodes (49): basket_reference(), _correlation(), correlation_change(), out(), add(), _finite(), _participation(), endpoint() (+41 more)
 
 ### Community 33 - "test_excursion.py"
 Cohesion: 0.08
@@ -1302,59 +1343,59 @@ Nodes (59): _bars(), _bars_for(), _iso(), _journal_with_closed_trade(), Intrabar
 
 ### Community 34 - "m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py"
 Cohesion: 0.07
-Nodes (54): acceptance_evaluators(), approx(), authorization_records_fail_closed(), benchmark_core_with_stub(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer() (+46 more)
+Nodes (53): acceptance_evaluators(), approx(), authorization_records_fail_closed(), benchmark_core_with_stub(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer() (+45 more)
 
 ### Community 35 - "OwnerService"
-Cohesion: 0.04
-Nodes (65): A. Control-path inventory (after revision 2), R5-N. Exact changed files (revision 5), Revision 4 — third review blockers (R4-W1…W5), Root cause and narrow fix, B. Exact request flow, C. Trade identity / freshness protection, D. Confirmation UX, E. Idempotency behavior (+57 more)
+Cohesion: 0.03
+Nodes (85): O. Dashboard deployment status, E. Owner-control binding, A. Control-path inventory (after revision 2), B. Contract (`trader/owner/contract.py`, wire v2), R5-E. W3 reservation / admission model, R5-N. Exact changed files (revision 5), Root cause and narrow fix, B. Exact request flow (+77 more)
 
 ### Community 36 - "TVHarness"
 Cohesion: 0.09
-Nodes (24): _harness(), TV Harness unit tests — pure logic, no browser, no network., 2026-08 free plan: only Total PnL + Max drawdown (+ dash winrate)., test_budget_gate_blocks(), test_cache_roundtrip(), test_evaluate_manifest_verdict_logic(), test_parse_metrics_extracts_core_fields(), test_parse_metrics_free_plan_key_stats() (+16 more)
+Nodes (20): _harness(), TV Harness unit tests — pure logic, no browser, no network., 2026-08 free plan: only Total PnL + Max drawdown (+ dash winrate)., test_budget_gate_blocks(), test_cache_roundtrip(), test_evaluate_manifest_verdict_logic(), test_parse_metrics_extracts_core_fields(), test_parse_metrics_free_plan_key_stats() (+12 more)
 
 ### Community 37 - "Ledger"
 Cohesion: 0.04
-Nodes (76): 8. Reserve before read, durably, Community 17 - "Research Runner Loop", Community 16 - "test_research_runner.py", Community 16 - "Ledger", numerical(), test_shape_leakage_and_factory_bypass_refused(), _measure(), run() (+68 more)
+Nodes (70): Task 3 — LORD++ and the ledger sequence, 8. Reserve before read, durably, test_shape_leakage_and_factory_bypass_refused(), test_draws_follow_the_level_and_defer_past_the_cap(), _control_result(), reply(), _measured(), _passing() (+62 more)
 
 ### Community 38 - "parts_for"
-Cohesion: 0.09
-Nodes (44): Task 3: The vocabulary — every part, and its mirror, Community 158 - "Research Threshold Gauges", Community 42 - "Research Planner Queue", Community 140 - "test_research_thresholds.py", Community 29 - "parts_for", Community 140 - "test_research_thresholds.py", Community 29 - "test_research_planner.py", _candidate() (+36 more)
+Cohesion: 0.07
+Nodes (51): File structure, Task 10: The ledger — every combination, every look, kept or not, Task 11: The planner — what to evaluate next, Task 15: Measure it on the real store, then let the kernel run it, Task 1: The store carries the universes the test needs, Task 2: One definition of the two exit geometries, Task 3: The vocabulary — every part, and its mirror, Task 4: Slices — one calendar cut the search cannot see past (+43 more)
 
 ### Community 39 - "test_idea_pipeline.py"
-Cohesion: 0.10
-Nodes (52): _idea(), journal(), fixture, Researcher -> Strategist: the idea queue that connects the two halves. Before…, `SpecWriter._prompt` reads source/title/text; `write()` stamps idea_id and url…, The regression item 0 names: write() was called with no idea=., Otherwise the same dud idea is retried every 3h forever., What `harvest_idea` rows looked like before the queue existed: a title and a… (+44 more)
+Cohesion: 0.08
+Nodes (55): _FakeWriter, _idea(), journal(), _kernel_stub(), fixture, Researcher -> Strategist: the idea queue that connects the two halves. Before…, `SpecWriter._prompt` reads source/title/text; `write()` stamps idea_id and url…, A Kernel carrying only what `_mechanism_once` touches. (+47 more)
 
-### Community 40 - "meta_label.py"
-Cohesion: 0.17
-Nodes (20): test_meta_features_shape_and_size_bounds(), _brier(), features(), _fit(), _frac_from_votes(), _hour_feats(), judge(), load() (+12 more)
+### Community 40 - "features_deriv.py"
+Cohesion: 0.10
+Nodes (34): Community 53 - "Z-Score Missing NaN", register, A z-score of data that does not exist is NaN, never zero. `zscore_series` ended…, Analyst scoring cannot carry NaN; do not change it underneath them., Zero variance means undefined, not average., test_a_flat_series_has_no_defined_z_score(), test_real_values_are_unchanged_by_the_strict_variant(), test_taker_buy_is_nan_when_the_column_is_absent() (+26 more)
 
 ### Community 41 - "Combination"
-Cohesion: 0.03
-Nodes (118): Task 12: The child job — heavy work, niced, time-boxed, read-only, Task 14: Looking at it from outside, and calibrating it on known answers, Task 6: A combination, its canonical hash, and the spec it becomes, Community 48 - "Research Control Windows", read(), test_unpowered_window_never_reads_no_edge_and_unscored_stays_unlabelled(), covered(), evaluations() (+110 more)
+Cohesion: 0.04
+Nodes (103): Task 14: Looking at it from outside, and calibrating it on known answers, Task 6: A combination, its canonical hash, and the spec it becomes, Task 9: Every window carries its own control, Community 116 - "Research Ledger Tests", Community 110 - "test_research_ledger.py", Community 110 - "test_research_ledger.py", test_a_non_control_batch_carries_the_discovery_floor(), Does the search find an edge that IS there, and refuse one that is not? A… (+95 more)
 
 ### Community 42 - "test_stage1_data_provenance_pit.py"
-Cohesion: 0.03
-Nodes (143): Consumer map before changes, Cross-tracker impact — read-only, DATA-03 — consumer source-cut audit, Final consumer classifications, Reproducers and changes, Validation, Cross-tracker impact after engineering closure (read-only), DATA-04 — native and aggregated higher-timeframe availability (+135 more)
+Cohesion: 0.04
+Nodes (111): Consumer map before changes, Cross-tracker impact after engineering closure (read-only), DATA-04 — native and aggregated higher-timeframe availability, Demonstrated gaps and bounded changes, Existing evidence mapped before implementation, Required negative proof, Validation, DATA-04 final validation (+103 more)
 
 ### Community 43 - "sim.py"
-Cohesion: 0.09
-Nodes (34): Availability, BH m=384, q=.05 resolution (analytic), Checks (checks.json, all pass), Conclusion and recommendation, Design (as prespecified), Invalid designs — refused before randomization, 2000/2000 in all four schemes, 0 draws, M3.2 conditioning-scheme comparison — SYNTHETIC ONLY (2026-09-19), Null size — tested worlds / 2000 (rate, Wilson 95%) (+26 more)
+Cohesion: 0.16
+Nodes (24): itertools, Lightweight independent checks (not broad tests). Writes checks.json…, with_clock(), _ar(), availability(), bh_reject(), block_means(), center() (+16 more)
 
 ### Community 44 - "load_bundle"
 Cohesion: 0.03
-Nodes (115): pytest_sessionstart(), connect(), Read-only discovery verification; never spends a ledger or held-out look. Run…, Check actual source-backed features; preserve the original discovery window., sha256(), verify(), verify_dependency_features(), execute() (+107 more)
+Nodes (97): pytest_sessionstart(), connect(), Read-only discovery verification; never spends a ledger or held-out look. Run…, Check actual source-backed features; preserve the original discovery window., sha256(), verify(), verify_dependency_features(), execute() (+89 more)
 
 ### Community 45 - "certify_remaining.py"
-Cohesion: 0.06
-Nodes (54): run(), main(), A(), abs_upper(), Band, bisect(), C3Model, C4Model (+46 more)
+Cohesion: 0.14
+Nodes (32): A(), abs_upper(), Band, bisect(), cdf(), Certifier, class_probs(), classify() (+24 more)
 
-### Community 46 - "test_research_combo.py"
-Cohesion: 0.05
-Nodes (67): Community 116 - "Research Ledger Tests", Community 110 - "test_research_ledger.py", Community 110 - "test_research_ledger.py", _c(), A combination is a SET of AND-ed parts under a canonical hash. `and` is…, A later `if c not in seen: seen.add(c)` must deduplicate by identity. The…, test_a_combination_compiles_into_a_valid_spec(), test_a_combination_may_not_exceed_six_parts() (+59 more)
+### Community 46 - "LUFFY-OWNER-RECOVERY-RISK-HALT-GUARD-V1"
+Cohesion: 0.04
+Nodes (44): D. First-init vs corrupt-state contract, E. Durable evidence and marker used, G. First-initialization result, I. Previously-approved-entry result, L. Focused test totals, P. Remaining blockers, B. Boot/recovery matrix (`tests/test_kernel_boot_recovery.py`), D. Mixed-version recovery (51101d0 unchanged) (+36 more)
 
 ### Community 47 - "replace"
-Cohesion: 0.05
-Nodes (111): Offline comparison of actual pre-R3 allocator bytes to current R2 replay., install_models(), fast_portfolio_connections(), test_concurrent_same_portfolio_cut_returns_exact_duplicate(), race(), test_portfolio_concurrent_change_preserves_serialized_results(), race(), test_portfolio_duplicate_replay_needs_no_writer_lock() (+103 more)
+Cohesion: 0.04
+Nodes (161): Offline comparison of actual pre-R3 allocator bytes to current R2 replay., binding(), frozen(), install_models(), model(), Explicit TEST-ONLY adapters. Never imported by production code., test_portfolio_concurrent_change_preserves_serialized_results(), cmp() (+153 more)
 
 ### Community 48 - "certify_p6_c4_taylor.py"
 Cohesion: 0.17
@@ -1362,63 +1403,63 @@ Nodes (26): A(), abs_upper(), Band, bisect(), cdf(), Certifier, checkpoint(), De
 
 ### Community 49 - "candidate_dossier.py"
 Cohesion: 0.07
-Nodes (44): 3. How it was validated — and why a new helper exists, _authorizer(), build(), connect_readonly(), DossierError, _evidence(), execute(), _gauge_exprs() (+36 more)
+Nodes (45): 3. How it was validated — and why a new helper exists, _authorizer(), build(), connect_readonly(), DossierError, _evidence(), execute(), _gauge_exprs() (+37 more)
 
 ### Community 50 - "m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py"
-Cohesion: 0.08
-Nodes (43): acceptance_evaluators(), approx(), authorization_records_fail_closed(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer(), config_matches_runner_and_design() (+35 more)
+Cohesion: 0.10
+Nodes (41): acceptance_evaluators(), approx(), authorization_records_fail_closed(), bh_exact_with_refusals_in_denominator(), calibration_excludes_refused_marginal_worlds(), check(), class_edges_half_open_integer(), config_matches_runner_and_design() (+33 more)
 
 ### Community 51 - "test_capture_emergency_whole_accounting_cli.py"
-Cohesion: 0.11
-Nodes (37): canonical_journal_symbol(), main(), Read-only demo whole-trade capture for a FLAT emergency exit, from the…, Journal/intent symbols are stored slash-form with no venue futures suffix (e.g.…, One coherent read of trades/execution_accounting/state_kv. Returns…, scan_overlap(), db(), make_intent() (+29 more)
+Cohesion: 0.12
+Nodes (35): canonical_journal_symbol(), Journal/intent symbols are stored slash-form with no venue futures suffix (e.g.…, One coherent read of trades/execution_accounting/state_kv. Returns…, scan_overlap(), db(), make_intent(), fixture, scan_overlap() is the CLI's own read-only, malformed/truncation-aware journal… (+27 more)
 
-### Community 52 - "test_activation_risk_baseline.py"
+### Community 52 - "test_research_bundle_admission.py"
 Cohesion: 0.05
-Nodes (95): _activations(), _boot(), check_corrupt_active_kernel_contained(), check_corrupt_contained_everywhere(), _check_corrupt_strict(), check_macro_breach_contained(), check_macro_newer_intent_wins(), _check_macro_stale() (+87 more)
+Nodes (63): Task 12: The child job — heavy work, niced, time-boxed, read-only, multiprocessing, _boom(), _double(), _hard_exit(), _niceness(), Heavy research work runs in a supervised child, never in the kernel. The…, _sleep() (+55 more)
 
 ### Community 53 - "server.py"
 Cohesion: 0.02
-Nodes (79): asyncio, A. Imported frontend source, B. Live bootstrap contract, D. LUFFY chat binding, F. Knowledge binding, G. Live System binding, H. Other routes, I. Auth / session (+71 more)
+Nodes (103): A. Imported frontend source, B. Live bootstrap contract, D. LUFFY chat binding, F. Knowledge binding, H. Other routes, I. Auth / session, J. Fixture isolation, K. Performance (+95 more)
 
 ### Community 54 - "m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py"
-Cohesion: 0.07
-Nodes (60): block_map(), actual_statistics(), apply_injection(), assert_environment(), assert_equivalence_gate(), assert_isolation(), Authorization, authorize() (+52 more)
+Cohesion: 0.08
+Nodes (55): actual_statistics(), apply_injection(), assert_environment(), assert_equivalence_gate(), assert_isolation(), Authorization, authorize(), benchmark_world() (+47 more)
 
 ### Community 55 - "FeatureCtx"
 Cohesion: 0.03
-Nodes (113): Deliberately NOT in this plan, Done when, Feature layer: vocabulary + cross-sectional context — Implementation Plan, File Structure, Global Constraints, Task 1: Bar shape and participation, Task 3: Classic indicators, Task 5: Widen FeatureCtx — plumbing only, no behaviour change (+105 more)
+Nodes (63): Deliberately NOT in this plan, Done when, Feature layer: vocabulary + cross-sectional context — Implementation Plan, File Structure, Global Constraints, Task 1: Bar shape and participation, Task 3: Classic indicators, Task 4: Derivative structure (+55 more)
 
 ### Community 56 - "test_cognition_replay.py"
 Cohesion: 0.12
 Nodes (53): Acceptance → tests, broad(), hyps(), isolated(), obs(), one_decision(), Attention and framing on synthetic fixtures: broad move vs isolated divergence…, Every symbol climbs +1%/bar for the last five bars, volume triples on the… (+45 more)
 
 ### Community 57 - "test_rent_keeper.py"
-Cohesion: 0.08
-Nodes (35): Task 4: Wire it in: config, kernel thread, `/rent`, GraphQL, Manager card, 2. The rent thread — `Kernel._rent_loop`, daemon `rent-check`, Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, Graph Freshness, Graph Report - trader  (2026-09-19), Hyperedges (group relationships) (+27 more)
+Cohesion: 0.05
+Nodes (56): Global Constraints, Luffy Pays Rent Implementation Plan, Task 1: The rent ledger (pure), Task 2: The executor books the fill, not a guess, Task 4: Wire it in: config, kernel thread, `/rent`, GraphQL, Manager card, Priority 3 — simplification candidates (nothing refactored), Agents Command Deck — Design Spec, Architecture (+48 more)
 
-### Community 58 - "Action"
-Cohesion: 0.10
-Nodes (46): Historical arithmetic compatibility; never current entry authority., _sig(), test_low_conviction_votes_excluded_and_floor_applies(), test_more_opposing_signals_keep_lowering_it(), test_opposing_signal_lowers_agreement(), test_short_side_symmetry(), _vote(), _apply() (+38 more)
+### Community 58 - "test_strategy_signal_gate.py"
+Cohesion: 0.17
+Nodes (24): _apply(), _orc(), parametrize, Historical fc6c0b2 compatibility; flags here do not restore live voting., Exactly what decide() runs — the real function, not a copy of it., Long and short must survive the gate identically — a gate that quietly favours…, The live failure: Donchian at 0.60 confidence scored 0.2454 against a 0.2629…, _sig() (+16 more)
 
 ### Community 59 - "test_thesis_validate_frozen.py"
 Cohesion: 0.20
 Nodes (33): _dossier(), _freeze(), parametrize, Path, Regression tests for the offline frozen-dossier thesis validator. Every test…, Write a dossier directory whose manifest hashes what is on disk., Rewrite dossier.json and repair the manifest, as a tamperer would., The whole point: identity/evidence untouched, manifest repaired, only… (+25 more)
 
 ### Community 60 - "open_stops"
-Cohesion: 0.12
-Nodes (20): F. Protective / reconciliation matrix, A. Snapshot contract, D. API / read contract, E. Mutation-safety results, G. Frontend truth result, H. Performance, J. Negative controls, L. Exact changed files (+12 more)
+Cohesion: 0.10
+Nodes (18): F. Protective / reconciliation matrix, E. Mutation-safety results, G. Frontend truth result, H. Performance, J. Negative controls, L. Exact changed files, LUFFY-PROTECTION-SNAPSHOT-R1 — read-only kernel protection snapshot, test_malformed_stop_snapshot_is_not_absence() (+10 more)
 
 ### Community 61 - "test_trade_provenance.py"
-Cohesion: 0.06
-Nodes (68): admit(), _bind_entry_fills(), _contents(), decision(), _entry(), env(), executor_for(), _fail_close_provenance() (+60 more)
-
-### Community 62 - "test_sg05_portfolio_accounting.py"
 Cohesion: 0.08
-Nodes (51): heapq, _fills(), A diversified mechanism must be judged as a portfolio, not symbol by symbol.…, Ten signals open on the same bar; a 4-position cap takes 4., test_a_flat_edge_compounds_upward(), test_a_freed_slot_is_reusable(), test_drawdown_is_measured_from_the_running_peak(), test_empty_input_is_not_a_crash() (+43 more)
+Nodes (64): backfill(), admit(), _bind_entry_fills(), _contents(), decision(), _entry(), _fail_close_provenance(), flaky() (+56 more)
+
+### Community 62 - "evaluate.py"
+Cohesion: 0.06
+Nodes (68): 6. Evidence-access audit — A and B, separately, _fills(), A diversified mechanism must be judged as a portfolio, not symbol by symbol.…, Ten signals open on the same bar; a 4-position cap takes 4., test_a_flat_edge_compounds_upward(), test_a_freed_slot_is_reusable(), test_drawdown_is_measured_from_the_running_peak(), test_empty_input_is_not_a_crash() (+60 more)
 
 ### Community 63 - "DataFeed"
-Cohesion: 0.04
-Nodes (47): test_future_cached_observation_is_returned_after_clock_step(), test_stale_feed_fallback_has_no_quality_envelope(), D. Contention results, Time and bar semantics, DA-04 snapshot reliability — offline evidence, Data layer — derivatives and flow, deepen(), main() (+39 more)
+Cohesion: 0.02
+Nodes (109): test_future_cached_observation_is_returned_after_clock_step(), test_stale_feed_fallback_has_no_quality_envelope(), D. Contention results, DA-04 snapshot reliability — offline evidence, Data layer — derivatives and flow, measure(), deepen(), History already in candles.db is never downloaded again. Two paths re-paged the… (+101 more)
 
 ### Community 64 - "thesis_validate_frozen.py"
 Cohesion: 0.11
@@ -1429,8 +1470,8 @@ Cohesion: 0.09
 Nodes (20): _Ex, _Executor, _Feed, _Journal, _kernel(), _Notifier, A stop that fills is a stop that filled, even if a coin is left behind.…, A venue holding 607 against a journalled 607.73 is the same position; booking… (+12 more)
 
 ### Community 66 - "ideas.py"
-Cohesion: 0.13
-Nodes (24): Task 1: The idea queue carries a stream label, html, _j(), The queue serves two consumers now, so an item has to say which it is for., record() should accept a plain string (not a tuple) as a single stream., Regression: kernel.py._mechanism_once() (lines 343-345, 350-353) was calling…, A dual-stream item should only disappear from the stream that consumed it., For backwards compatibility: a consumption row with no stream should suppress… (+16 more)
+Cohesion: 0.11
+Nodes (31): html, _j(), The queue serves two consumers now, so an item has to say which it is for., record() should accept a plain string (not a tuple) as a single stream., Regression: kernel.py._mechanism_once() (lines 343-345, 350-353) was calling…, A dual-stream item should only disappear from the stream that consumed it., For backwards compatibility: a consumption row with no stream should suppress…, test_kernel_strategist_consumption_preserves_research_stream() (+23 more)
 
 ### Community 67 - "m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py"
 Cohesion: 0.09
@@ -1445,56 +1486,56 @@ Cohesion: 0.18
 Nodes (26): A(), acb_factor(), acb_membership(), class_probs(), classify(), frozen(), integrate_native(), outer() (+18 more)
 
 ### Community 70 - "test_native_exit_provenance.py"
-Cohesion: 0.05
-Nodes (37): artifact(), clean_scan(), intent(), fixture, parametrize, Synthetic venue receipts only; never observed trading performance., A caller that forgets (or fails) to compute the overlap scan must never see…, reassess() (+29 more)
+Cohesion: 0.09
+Nodes (19): artifact(), fixture, parametrize, Synthetic algo-order/actual-order/fill mapping only; no exchange access., reassess(), reference(), test_canonical_id_accepts_positive_integers_and_digit_strings(), test_canonical_id_rejects_non_positive_non_integer_values() (+11 more)
 
 ### Community 71 - "test_numeric_harvester.py"
-Cohesion: 0.06
-Nodes (48): _Client, _days(), _Deriv, _h(), journal(), _markets_payload(), fixture, The Harvester — the numeric half of research. The Scraper reads prose, the… (+40 more)
+Cohesion: 0.11
+Nodes (27): _days(), _h(), journal(), fixture, The Harvester — the numeric half of research. The Scraper reads prose, the…, With a key, the thin series get filled from a source that keeps them., derivs.db holds 4-5 years of Binance-native funding; Coinalyze offers 334 days.…, 8000 bars x 15m = 83.3 days; the gate wants 90% of it. (+19 more)
 
 ### Community 72 - "Communities (437 total, 109 thin omitted)"
 Cohesion: 0.01
 Nodes (316): Communities (437 total, 109 thin omitted), Community 0 - "Backtest Engine Equivalence", Community 100 - "Company Org Registry", Community 101 - "PIT Population Integration", Community 102 - "Replayable Outcome Records", Community 103 - "Collector Queue Health", Community 104 - "Gate2 Synthetic Calibration", Community 105 - "Gate2 Stationary Calibration Tests" (+308 more)
 
-### Community 73 - "test_postmortem.py"
-Cohesion: 0.06
-Nodes (43): Task 4: Remove the LLM Theorist and the dead rules module, _Journal, The Theorist without an LLM: is each live strategy still inside the envelope it…, _spec(), test_a_spec_with_a_validated_rate_gets_a_health_verdict(), test_a_strategy_performing_as_validated_reads_consistent(), test_a_young_strategy_reads_insufficient_not_broken(), test_an_unchanged_book_writes_no_note() (+35 more)
+### Community 73 - "assess_health"
+Cohesion: 0.11
+Nodes (26): Is this strategy still doing what it was validated to do? The governing premise…, 3 losses from 3 at a 37% win rate happens ~25% of the time., 2 wins in 60 at a validated 37% is not bad luck., Doing better than validated is not a fault; it is still worth seeing., The number quoted must be the chance of doing THIS BADLY or worse., test_a_handful_of_losses_is_not_yet_evidence_of_breakage(), test_a_long_run_far_below_the_validated_rate_is_diverged(), test_an_impossible_expected_rate_does_not_crash() (+18 more)
 
-### Community 74 - "portfolio/economics.py"
-Cohesion: 0.07
-Nodes (63): decimal, binding(), frozen(), model(), Explicit TEST-ONLY adapters. Never imported by production code., adapters(), changed(), _DBReader (+55 more)
+### Community 74 - "test_owner_interface_r5.py"
+Cohesion: 0.06
+Nodes (55): R5-B. Owner-intent identity strategy, R5-C. W2 cross-tab persistence design (option B, no lease), R5-D. Two-tab browser results, R5-F. Crash / idempotency matrix, R5-G. Audit-buffer bound fix, R5-H. Focused test results, R5-I. Full-suite comparison, R5-J. Negative controls (the seven required, plus extras) (+47 more)
 
 ### Community 75 - "test_spec_arm_at_r_is_honoured.py"
 Cohesion: 0.15
 Nodes (22): _donchian_spec(), _engine(), parametrize, A spec's declared trail arming point must be the one the engine arms at. The…, Its declared value and the old hardcoded default coincide, so wiring the field…, No change to trail width, stop geometry or hold., `{"kind": "none"}` carries no trail to arm; the default stands., Run one manage() cycle at `r_now` and report the stop move, if any. Everything… (+14 more)
 
-### Community 76 - "hashlib"
+### Community 76 - "subprocess"
 Cohesion: 0.03
-Nodes (125): BaseModel, collections, copy, Publish engineering evidence/control plane only after every final check passes., Reproduce control checks without runtime or external calls., Accounting correction consistency; no runtime/provider operations., load(), Validate DEC-01 row contract, scope, counts, strict loads and bundle hashes. (+117 more)
+Nodes (117): BaseModel, collections, Reproduce control checks without runtime or external calls., Accounting correction consistency; no runtime/provider operations., load(), Validate DEC-01 row contract, scope, counts, strict loads and bundle hashes., Authorized DEC-01 control-plane reconciliation; no implementation edits., load() (+109 more)
 
 ### Community 77 - "test_analyst_tv_and_vault.py"
-Cohesion: 0.09
-Nodes (24): analyst(), fixture, The Analyst's TradingView leg, and the Librarian's spec cards. `to_pine()`…, The point of the correction: combine the set, do not pick one., One source of truth: no second ordering nothing consumes., No spec_json means a legacy genome — leave its rendering alone., Both the vault card and the strategy blender read…, Unproven is not the same as unmeasured — keep what was measured. (+16 more)
+Cohesion: 0.08
+Nodes (25): analyst(), fixture, The Analyst's TradingView leg, and the Librarian's spec cards. `to_pine()`…, The point of the correction: combine the set, do not pick one., One source of truth: no second ordering nothing consumes., No spec_json means a legacy genome — leave its rendering alone., Both the vault card and the strategy blender read…, Unproven is not the same as unmeasured — keep what was measured. (+17 more)
 
 ### Community 78 - "test_candidate_dossier.py"
-Cohesion: 0.13
-Nodes (36): Astra review finding: prose promoted by a true number (fixed), all_bytes(), codes(), good_thesis(), pred(), parametrize, Path, Candidate dossier + thesis contract — temporary databases only, no network. (+28 more)
+Cohesion: 0.06
+Nodes (72): Astra review finding: prose promoted by a true number (fixed), integral(), all_bytes(), codes(), ctx(), db(), good_thesis(), make_db() (+64 more)
 
 ### Community 79 - "test_rent.py"
 Cohesion: 0.11
 Nodes (27): Task 3: The rent keeper (tally, daily line, weekly verdict), Testing, _dt(), Ledger, parametrize, The rent ledger: the week's net income, read off the venue. The journal booked…, Binance semantics: startTime/endTime inclusive, oldest first, capped at limit., _row() (+19 more)
 
-### Community 80 - "predictive_receipt.py"
-Cohesion: 0.14
-Nodes (28): db(), _led(), _look(), fixture, QNT-05: the error budget is registered, retained, and cannot be reset. Negative…, test_alpha_for_a_given_step_never_rises_without_a_rejection(), test_config_change_cannot_reset_registered_parameters(), test_deferred_candidate_cannot_be_reset_to_a_free_look_by_rename() (+20 more)
+### Community 80 - "test_qnt05_error_budget.py"
+Cohesion: 0.29
+Nodes (14): db(), _led(), _look(), fixture, QNT-05: the error budget is registered, retained, and cannot be reset. Negative…, test_alpha_for_a_given_step_never_rises_without_a_rejection(), test_config_change_cannot_reset_registered_parameters(), test_deferred_candidate_cannot_be_reset_to_a_free_look_by_rename() (+6 more)
 
 ### Community 81 - "test_gate2_calibrate_stationary.py"
-Cohesion: 0.10
-Nodes (12): fixture(), literal_moments(), parametrize, Synthetic-only checks: no production loaders, stores or runtime imports., test_entry_block_ignores_exit_and_keeps_empty_calendar_blocks(), test_floors_and_zero_variance_fail_closed(), test_generator_determinism_and_valid_partition(), test_lag_zero_reduces_to_paired_cluster_se_and_iid_sampler() (+4 more)
+Cohesion: 0.09
+Nodes (13): fixture(), literal_moments(), parametrize, Synthetic-only checks: no production loaders, stores or runtime imports., test_entry_block_ignores_exit_and_keeps_empty_calendar_blocks(), test_floors_and_zero_variance_fail_closed(), test_generator_determinism_and_valid_partition(), test_invalid_resamples_keep_full_denominator_and_threshold() (+5 more)
 
 ### Community 82 - "test_manual_close.py"
 Cohesion: 0.13
-Nodes (25): _DashboardClose, _Executor, _Feed, _kernel(), _mutation(), _Notifier, _queued(), An operator must be able to close one position by hand. /panic flattens… (+17 more)
+Nodes (25): _Executor, _Feed, journal(), _kernel(), _mutation(), _Notifier, fixture, _queued() (+17 more)
 
 ### Community 83 - "gate2_calibrate_studentized.py"
 Cohesion: 0.12
@@ -1505,104 +1546,104 @@ Cohesion: 0.13
 Nodes (27): binomial_bounds(), bootstrap(), Cohort, contrasts(), diagnostic_cell(), draws_for(), family_levels(), fractional() (+19 more)
 
 ### Community 85 - "test_derivatives.py"
-Cohesion: 0.06
-Nodes (29): _df(), feed(), fixture, The recorder runs in the live kernel. A dead endpoint must never raise into the…, Coarse history and fine recent data must merge, not collide., One call caps at 1000 rows (<1 year at 8h settlement) while the candle store…, A server returning the same window forever must not spin., The backfill floor is the frame the spec is scored over, not a fixed number of… (+21 more)
+Cohesion: 0.05
+Nodes (35): check(), f(), _df(), feed(), fixture, The recorder runs in the live kernel. A dead endpoint must never raise into the…, Funding already has years at its native cadence; the 30-day-window series are…, Coarse history and fine recent data must merge, not collide. (+27 more)
 
 ### Community 86 - "Items"
 Cohesion: 0.01
 Nodes (180): ACC-01 — Make venue receipts authoritative for monetary and exposure facts., ACC-02 — Preserve exact entry/exit/partial/funding/fee lineage., ACC-03 — Report actual versus derived economics explicitly., ATT-01 — Choose where to investigate from eligible universe and real triggers., ATT-02 — Complete scan/cause capture through the real worker and source reader., ATT-03 — Distinguish warm-up from errors and prioritize without invented salience., ATT-04 — Hierarchical deterministic crypto admission before expensive discretionary processing; independent safety/exposure service., BKP-01 — Preserve a dependency-complete critical backup set. (+172 more)
 
-### Community 87 - "current_truth.py"
-Cohesion: 0.05
-Nodes (62): C. Persistence design, Backend contracts (as corrected), Coordinator completion verification, Files, Final blocker: read-completion clock (reproduced by the reviewer), Final naming correction: current account status, Final-review completion (A–D), LUFFY-CURRENT-TRUTH-CONTRACT-R1 (+54 more)
+### Community 87 - "estimate"
+Cohesion: 0.10
+Nodes (31): Final correction boundary verification, Final Opus corrections (2026-09-30), Graphify, Tests (exact), Transient disk exhaustion (candid), _q(), test_valuation_any_gap_makes_total_unavailable_never_partial(), test_valuation_complete_long_and_short() (+23 more)
 
 ### Community 88 - "test_entry_geometry_end_to_end.py"
-Cohesion: 0.14
-Nodes (18): _bars(), _D, _Exec, _journal(), _kernel(), fixture, _try_enter must hand the executor the spec's stop, not the config's. The unit…, Sizing a 4h stop off 15m bars is how this broke. Do not fall back. (+10 more)
+Cohesion: 0.29
+Nodes (13): _bars(), _D, _kernel(), _try_enter must hand the executor the spec's stop, not the config's. The unit…, Sizing a 4h stop off 15m bars is how this broke. Do not fall back., Flat closes with a fixed true range, so ATR is exactly atr_pts., _Snap, test_a_missing_spec_frame_refuses_the_entry_rather_than_guessing() (+5 more)
 
 ### Community 89 - "gate2_calibrate_stationary.py"
 Cohesion: 0.11
 Nodes (31): binomial_bounds(), bootstrap(), Cohort, contrasts(), diagnostic_cell(), draws_for(), family_levels(), fractional() (+23 more)
 
-### Community 90 - "thesis.py"
-Cohesion: 0.13
-Nodes (27): integral(), test_interval_relation_edges(), _against(), bound(), canonical_observation(), _check_claim(), _condition(), _date_ms() (+19 more)
+### Community 90 - "test_str04_governor_lifecycle.py"
+Cohesion: 0.06
+Nodes (42): test_all_five_current_events_bind_exact_historical_owner(), parametrize, STR-04: the Strategy Governor is the sole lifecycle authority. Offline,…, Static map of writers of strategies.state outside the Governor. Each is a…, _row_state(), _snap(), test_changed_semantics_need_a_new_version_not_a_state_edit(), test_database_refuses_every_ungoverned_write_to_a_versioned_strategy() (+34 more)
 
 ### Community 91 - "test_crawler.py"
 Cohesion: 0.12
-Nodes (25): Implementation and existing boundaries, Deep crawler tests — pure logic, no network., _fetch refuses off-allowlist URLs unless vouched by an aggregator., test_allowed_domain(), test_extract_links_filters_and_resolves(), test_html_to_text_strips_chrome(), test_normalize_strips_fragment_and_case(), test_passages_chunk_and_score() (+17 more)
+Nodes (24): Deep crawler tests — pure logic, no network., _fetch refuses off-allowlist URLs unless vouched by an aggregator., test_allowed_domain(), test_extract_links_filters_and_resolves(), test_html_to_text_strips_chrome(), test_normalize_strips_fragment_and_case(), test_passages_chunk_and_score(), test_seen_doc_dedupe() (+16 more)
 
-### Community 92 - "test_entry_recovery.py"
-Cohesion: 0.06
-Nodes (50): _child_hold_fence(), _child_hold_fence_then_persist(), _child_transition(), _entries(), _events(), parametrize, Final entry boundary vs control-state transitions (SDD v3.2 §27). Once FROZEN /…, test_active_still_enters() (+42 more)
+### Community 92 - "test_stage8_owner_os.py"
+Cohesion: 0.16
+Nodes (20): parametrize, OWN-03 offline regressions: routine work cannot create owner approval loops., test_expired_request_and_rejected_decision_grant_no_authority(), test_routine_action_cannot_be_registered_as_approval_class(), proposal(), parametrize, Stage8 offline proof. Temporary journals, fake retrieval, no venue calls., request() (+12 more)
 
-### Community 93 - "Journal"
-Cohesion: 0.02
-Nodes (88): Task 2: Read-only journal tools + schemas, C. Overview binding, B. Migration benchmark (isolated synthetic journal), C. Test reruns (isolated snapshot; the real `knowledge/` is untouched), Coordinator final boundary verification, Corrections to earlier limitations, Final closure evidence (2026-09-30, closure worker), Acceptance evidence (+80 more)
+### Community 93 - "SOL2 — attention_selections review"
+Cohesion: 0.09
+Nodes (17): Acceptance evidence, Package return, Real shadow, Stage6 normal source integration R1, SOL2 attention_cursor review — 2026-10-11, SOL2 — attention_selections review, Focused verification, Read-only storage and historical evidence (+9 more)
 
 ### Community 94 - "certify_population_taylor.py"
 Cohesion: 0.19
 Nodes (28): A(), abs_upper(), Band, bisect(), bounded(), cdf(), centered_first(), Certifier (+20 more)
 
 ### Community 95 - "m32_scheme_d_validation_bundle_20260921/runner/preflight.py"
-Cohesion: 0.10
-Nodes (35): acceptance_evaluators(), approx(), authorization_records_fail_closed(), bh_exact_with_refusals_in_denominator(), check(), config_matches_runner_and_design(), DeterministicStub, effect_assignment_table_matches_pinned_sets() (+27 more)
+Cohesion: 0.13
+Nodes (33): acceptance_evaluators(), approx(), authorization_records_fail_closed(), bh_exact_with_refusals_in_denominator(), check(), config_matches_runner_and_design(), effect_assignment_table_matches_pinned_sets(), exclusive_create_behaviour() (+25 more)
 
-### Community 96 - "1. Requirement matrix (owner §1–24)"
-Cohesion: 0.05
-Nodes (42): 1. Requirement matrix (owner §1–24), 2. Logging and diagnostics inventory, 3. Bottlenecks, ranked by owner value and dependency, 5. Limitations of this audit, Luffy — current capability and logging audit against the owner end goal, 11b. State contract, test_the_manager_no_longer_wraps_the_judge(), Org registry tests — the company directory loaded from org.yaml. The org is a… (+34 more)
+### Community 96 - "Org"
+Cohesion: 0.08
+Nodes (24): importlib, The LLM Judge is gone. 56 of its 58 reviews applied nothing; its promote/demote…, test_config_carries_no_judge_cadence(), test_the_manager_no_longer_wraps_the_judge(), Org registry tests — the company directory loaded from org.yaml. The org is a…, test_all_returns_manager_first(), test_analysts_appended_from_code(), test_analysts_from_code_standalone() (+16 more)
 
 ### Community 97 - "certify_p6_c3_taylor.py"
 Cohesion: 0.13
-Nodes (44): test_parent_pairwise_counterexample_and_fixed_receipt(), s(), A(), abs_upper(), analytic_hit_kernel(), Band, base_outer(), bisect() (+36 more)
+Nodes (42): A(), abs_upper(), analytic_hit_kernel(), Band, base_outer(), bisect(), cdf(), Certifier (+34 more)
 
 ### Community 98 - "test_m32_validation_bundle_v4.py"
 Cohesion: 0.15
 Nodes (17): Guard the RNG-free M3.2 validation bundle REVISION 4: the 2026-09-20 pre-RNG…, Use the MAX threshold in each scenario's rule list (P4/P5/P6 have >1…, _run(), test_boundary_wilson_upper_fails_at_exact_point_threshold(), test_empty_and_all_refused_cells_fail(), test_null_cell_gates_unaffected(), test_p1_p3_role_calibration_and_cell_plan_kind_perturbed_null(), test_p2_p4_p5_p6_power_and_fdr_gates_intact() (+9 more)
 
 ### Community 99 - "build_historical_pit_dataset.py"
-Cohesion: 0.15
-Nodes (29): _accept(), _artifact(), load_receipts(), main(), Build an immutable historical PIT dataset artifact from retained receipts. The…, _sha256(), _store(), _valid_local() (+21 more)
+Cohesion: 0.14
+Nodes (30): Exact reuse and new implementation boundary, _accept(), _artifact(), load_receipts(), main(), Build an immutable historical PIT dataset artifact from retained receipts. The…, _sha256(), _store() (+22 more)
 
 ### Community 100 - "test_m32_correction.py"
 Cohesion: 0.08
-Nodes (51): Defects corrected, Run the read-only M3.2 corrective sufficiency audit; never run search., execution(), parametrize, Synthetic evidence-boundary tests; no search or venue calls., regime_row(), row(), test_accounting_deduplicates_trade_across_rows_sequences_and_stores() (+43 more)
+Nodes (52): Defects corrected, Run the read-only M3.2 corrective sufficiency audit; never run search., execution(), parametrize, Synthetic evidence-boundary tests; no search or venue calls., regime_row(), row(), test_accounting_deduplicates_trade_across_rows_sequences_and_stores() (+44 more)
 
 ### Community 101 - "m32_block_calibration.py"
 Cohesion: 0.15
 Nodes (20): Batch, _bh(), dependency_components(), union(), experiment(), generate(), permutations(), Pure synthetic laboratory for the UNFROZEN 28-day M3.2 block proposal. No… (+12 more)
 
 ### Community 102 - "test_gate2_calibrate_synthetic.py"
-Cohesion: 0.13
-Nodes (9): ast, fixture(), parametrize, Synthetic-only checks: no production loaders, stores or runtime imports., test_entry_block_ignores_exit_and_keeps_empty_calendar_blocks(), test_floors_and_zero_variance_fail_closed(), test_generator_determinism_and_valid_partition(), test_unknown_and_incomplete_are_neither_arm() (+1 more)
+Cohesion: 0.14
+Nodes (8): fixture(), parametrize, Synthetic-only checks: no production loaders, stores or runtime imports., test_entry_block_ignores_exit_and_keeps_empty_calendar_blocks(), test_floors_and_zero_variance_fail_closed(), test_generator_determinism_and_valid_partition(), test_unknown_and_incomplete_are_neither_arm(), test_whole_block_bootstrap_matches_literal_reference()
 
 ### Community 103 - "m32_scheme_d_validation.py"
 Cohesion: 0.06
-Nodes (74): A. The interrupted broad run's 8 failures and 4 collection errors, main(), Run the fixed tiny phase-90 Scheme D actual-statistic benchmark., test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification(), test_no_pilot_run_or_verdict_exists(), test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification(), n0_strata(), parametrize (+66 more)
+Nodes (71): A. The interrupted broad run's 8 failures and 4 collection errors, main(), Run the fixed tiny phase-90 Scheme D actual-statistic benchmark., n0_strata(), parametrize, test_actual_statistic_harness_calls_all_384_imported_statistics(), test_bh_keeps_refusals_in_384_denominator(), test_fixed_384_hypothesis_family_and_labels() (+63 more)
 
 ### Community 104 - "test_rolling.py"
-Cohesion: 0.06
-Nodes (61): Stage 7 learning closed-loop foundation R1, QNT-06: insufficient statistical power is UNTESTED, distinct from FAIL/PASS.…, _rv(), test_adequate_sample_is_judged_pass_or_fail_never_untested(), test_empty_sample_is_untested_not_fail_or_pass(), test_idle_decay_is_not_decay_and_not_fail(), test_insufficient_samples_are_untested_with_declared_requirement(), test_sufficiency_state_is_recomputed_identically_on_retry() (+53 more)
-
-### Community 105 - "capture.py"
 Cohesion: 0.05
-Nodes (80): Closure of the four Astra R3 gaps, Limits (stated, not hidden), Stage7 normal learning loop closure R1, Validation, SOL2 — research_unreadable_bank_objects, mnt_luffy_recovery_recovery_sol1_da10_full_20261016_reports_da10_full_init_py, attach(), chain_event() (+72 more)
+Nodes (66): Stage 7 learning closed-loop foundation R1, live_specs(), main(), Path, _ro(), chain(), fixture, QNT-06: insufficient statistical power is UNTESTED, distinct from FAIL/PASS.… (+58 more)
+
+### Community 105 - "walk_table"
+Cohesion: 0.05
+Nodes (51): Actual gaps and reproduced baseline, Change and proof, Existing implementation mapped first, [SOL-1][QNT-03] dependence and contributor lineage, Validation and limits, Task 5 — gate 1, 6. Gate-2 design — what the spec settles, 10. Fail-closed surface (+43 more)
 
 ### Community 106 - "m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py"
-Cohesion: 0.06
-Nodes (63): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+55 more)
+Cohesion: 0.10
+Nodes (43): actual_statistics(), apply_injection(), assert_environment(), assert_isolation(), Authorization, authorize(), bundle_sha256(), cell_plan() (+35 more)
 
 ### Community 107 - "generate_truth_package.py"
-Cohesion: 0.13
-Nodes (33): assess(), c0_witness(), canonical(), composition(), convolve(), dyadic(), frac_of(), frozen_kernel_evidence() (+25 more)
+Cohesion: 0.09
+Nodes (38): assess(), c0_witness(), canonical(), composition(), convolve(), dyadic(), frac_of(), frozen_kernel_evidence() (+30 more)
 
 ### Community 108 - "Communities (380 total, 151 thin omitted)"
 Cohesion: 0.01
-Nodes (220): Communities (380 total, 151 thin omitted), Community 0 - "What You Must Do When Invoked", Community 100 - "test_analyst_tv_and_vault.py", Community 101 - "test_gate2_calibrate_stationary.py", Community 102 - "test_lot_step_quantization.py", Community 103 - "sys", Community 104 - "pine_spec.py", Community 105 - "test_dsl_ref.py" (+212 more)
+Nodes (221): Communities (380 total, 151 thin omitted), Community 0 - "What You Must Do When Invoked", Community 100 - "test_analyst_tv_and_vault.py", Community 101 - "test_gate2_calibrate_stationary.py", Community 102 - "test_lot_step_quantization.py", Community 103 - "sys", Community 104 - "pine_spec.py", Community 105 - "test_dsl_ref.py" (+213 more)
 
-### Community 109 - "compare"
-Cohesion: 0.47
-Nodes (6): _cli(), compare(), test_cli_crash_and_restart_then_merge_matches_sequential(), test_cli_sigkill_mid_shard_then_restart_matches_sequential(), test_sharded_merge_reproduces_sequential_runner_exactly(), test_two_concurrent_dynamic_workers_never_duplicate_a_shard()
+### Community 109 - "world_producer.py"
+Cohesion: 0.07
+Nodes (42): Producers, consumers and meanings, Producers, consumers, persistence, replay and decisions, test_world_state_refuses_future_and_quality_survives(), test_world_producer_to_normal_attention_consumer(), build(), _canonical(), _counts(), evaluate() (+34 more)
 
 ### Community 110 - "certify_p4_reduced_taylor.py"
 Cohesion: 0.22
@@ -1616,9 +1657,9 @@ Nodes (33): Pair, A(), _alpha_task(), hermite(), integrand(), norm_integrand(), 
 Cohesion: 0.11
 Nodes (17): led(), fixture, The ledger is what keeps the search honest. Every combination it ever evaluated…, `_grow_children` takes `parents[:beam]` off this ordering; two rows tied on…, Phase 2 proposes nothing. The handoff into _mechanism_once is phase 3, and…, The live database already held `research_gauges` rows written before…, _res(), test_a_result_round_trips() (+9 more)
 
-### Community 113 - "test_spec_frame_geometry.py"
-Cohesion: 0.24
-Nodes (17): _kernel_stub(), An ATR multiple is meaningless without the bar it was measured on. Every ATR in…, Legacy genomes were tuned on the execution frame. Leave them there., Only the two collaborators _protection_for touches., The regression, in the numbers that produced it. BTC/USDT on 2026-09-02: ATR…, _spec(), test_a_15m_atr_would_have_given_a_stop_five_times_too_tight(), test_a_no_target_spec_journals_no_target() (+9 more)
+### Community 113 - "SpecExit"
+Cohesion: 0.17
+Nodes (22): test_spec_exit_reads_its_timeframe_and_geometry_from_a_real_spec(), _kernel_stub(), An ATR multiple is meaningless without the bar it was measured on. Every ATR in…, Legacy genomes were tuned on the execution frame. Leave them there., Only the two collaborators _protection_for touches., The regression, in the numbers that produced it. BTC/USDT on 2026-09-02: ATR…, _spec(), test_a_15m_atr_would_have_given_a_stop_five_times_too_tight() (+14 more)
 
 ### Community 114 - "m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py"
 Cohesion: 0.12
@@ -1629,52 +1670,52 @@ Cohesion: 0.13
 Nodes (13): _Exits, _Journal, _kernel(), A position must be managed even after its symbol leaves the universe. Exit…, One dead symbol must not strand every other position behind it., _Snap, test_a_position_outside_the_universe_is_still_managed(), test_a_scanned_symbol_is_not_managed_twice() (+5 more)
 
 ### Community 116 - "ResearchRunner"
-Cohesion: 0.07
-Nodes (34): test_examine_refuses_a_spent_rule_without_a_look(), The CLI's exit code and its behaviour on an empty ledger. Task 15 scripts…, A stand-down report carries no `ok` key at all and is not a failure., Thresholds are frozen once measured, deliberately: a stored hash carries a…, A legacy-accounting row is invalid, not superseded: `--rekey` drops it…, test_measure_refuses_a_horizon_that_already_holds_scored_combos(), test_measure_rekey_archives_then_proceeds(), test_once_exits_0_when_the_step_ran_and_succeeded() (+26 more)
+Cohesion: 0.08
+Nodes (30): The CLI's exit code and its behaviour on an empty ledger. Task 15 scripts…, A stand-down report carries no `ok` key at all and is not a failure., Thresholds are frozen once measured, deliberately: a stored hash carries a…, A legacy-accounting row is invalid, not superseded: `--rekey` drops it…, test_measure_refuses_a_horizon_that_already_holds_scored_combos(), test_measure_rekey_archives_then_proceeds(), test_once_exits_0_when_the_step_ran_and_succeeded(), test_once_exits_0_when_the_step_stands_down() (+22 more)
 
-### Community 117 - "test_single_creation_path.py"
-Cohesion: 0.14
-Nodes (19): Task 6: Delete the orphaned Proposer, _handoff_kernel(), _NoLLM, One creation path: Scraper queues -> Strategist writes a spec -> Analyst…, Research handoff authenticates existing evidence and stops at Factory…, It had no caller after 2026-09-11; a module that writes strategies and is…, _row(), _states() (+11 more)
+### Community 117 - "entry_authority.py"
+Cohesion: 0.03
+Nodes (109): collections_abc, decimal, Contract and reuse, Architecture and evidence, Decision, Part A — whole subsystem, Part B — per file (126), Part C — financial safety contracts (+101 more)
 
-### Community 118 - "LUFFY-OWNER-FRONTEND-V2.1 — focused correction pass"
-Cohesion: 0.07
-Nodes (30): Task 4: Add macro_guard config section, H. Tests, A. Backend source of truth, B. Exact state model, C. Frontend placement, D. Missing / stale semantics, G. Exact changed files, H. Remaining limitations (not blockers) (+22 more)
+### Community 118 - "NewsGuard"
+Cohesion: 0.05
+Nodes (46): File Map, MacroGuard Agent Implementation Plan, Task 1: Write failing tests for MacroGuard, Task 2: Implement MacroGuard, Task 3: Wire MacroGuard into kernel, Task 4: Add macro_guard config section, Task 5: Reactivate RSI Exhaustion Reclaim + annotate macro-cluster trades, Task 6: Write vault postmortem for macro cluster (+38 more)
 
 ### Community 119 - "Communities (267 total, 37 thin omitted)"
 Cohesion: 0.01
-Nodes (219): Communities (267 total, 37 thin omitted), Community 0 - "What You Must Do When Invoked", Community 100 - "test_analyst_tv_and_vault.py", Community 101 - "test_gate2_calibrate_stationary.py", Community 102 - "test_lot_step_quantization.py", Community 103 - "pathlib", Community 104 - "test_research_evaluate.py", Community 105 - "test_dsl_ref.py" (+211 more)
+Nodes (220): Communities (267 total, 37 thin omitted), Community 0 - "What You Must Do When Invoked", Community 100 - "test_analyst_tv_and_vault.py", Community 101 - "test_gate2_calibrate_stationary.py", Community 102 - "test_lot_step_quantization.py", Community 103 - "pathlib", Community 104 - "test_research_evaluate.py", Community 105 - "test_dsl_ref.py" (+212 more)
 
-### Community 120 - "SpecExit"
-Cohesion: 0.14
-Nodes (19): 11. Latent defect: spec `arm_at_r` is not wired through, _engine(), The geometry a spec was validated with must be the geometry it trades.…, 500 bars at 4h is 2000 hours, not 500 * 15/60 = 125., Closing half at 1.5R on a strategy whose edge is the fat right tail removes…, Genome params are 15m bars by construction; do not break them., test_a_fifteen_minute_spec_still_converts_correctly(), test_a_spec_with_a_target_still_takes_its_partial() (+11 more)
+### Community 120 - "test_spec_exits_are_honoured.py"
+Cohesion: 0.23
+Nodes (13): _engine(), The geometry a spec was validated with must be the geometry it trades.…, 500 bars at 4h is 2000 hours, not 500 * 15/60 = 125., Closing half at 1.5R on a strategy whose edge is the fat right tail removes…, Genome params are 15m bars by construction; do not break them., test_a_fifteen_minute_spec_still_converts_correctly(), test_a_spec_with_a_target_still_takes_its_partial(), test_a_spec_with_no_target_takes_no_partial_profit() (+5 more)
 
-### Community 121 - "test_owner_interface_r5.py"
-Cohesion: 0.05
-Nodes (60): R5-F. Crash / idempotency matrix, R5-G. Audit-buffer bound fix, R5-J. Negative controls (the seven required, plus extras), _abuf(), _activations_after(), check_a_recovery_paused_then_panic(), check_all_in_flight(), check_b_panic_just_before_cas() (+52 more)
+### Community 121 - "test_qnt04_holdout_separation.py"
+Cohesion: 0.18
+Nodes (20): base_cut_bar(), _bundle(), led(), fixture, QNT-04: discovery / held-out separation and spent-holdout permanence. Negative…, Same seeded walk every time; optionally rewrite bars from `tamper_from` on (a…, Rewriting every price after the cut leaves discovery untouched., _same() (+12 more)
 
 ### Community 122 - "certify_batch.py"
 Cohesion: 0.15
 Nodes (33): A(), BatchIntegrator, raw(), outer(), reduced(), fn(), inner(), fn() (+25 more)
 
 ### Community 123 - "ExitEngine"
-Cohesion: 0.14
-Nodes (11): 10. RESOLVED — FIL/USDT +1R trailing anomaly, Community 176 - "Stop Move Safety", Community 169 - "test_stop_move_safety.py", test_a_trade_no_spec_owns_names_no_frame(), datetime_from(), ExitEngine, hours_since(), Returns reason string if a closing action fired, else None. (+3 more)
+Cohesion: 0.09
+Nodes (20): 10. RESOLVED — FIL/USDT +1R trailing anomaly, 11. Latent defect: spec `arm_at_r` is not wired through, 2. Closed vs open trade evidence, 3. Intrabar MFE/MAE reconstruction summary, 3b. Geometry mismatch: `arm_at_r` cannot produce the first ratchet, 4. Closed-only vs all-entry mark-to-market, 5. Why closed-only sampling is exit-policy contaminated, 7. Correct spec retirement path and its evidence requirements (+12 more)
 
 ### Community 124 - "evaluate_population"
-Cohesion: 0.05
-Nodes (76): 6. Legacy genome lifecycle incorrectly touching `kind='spec'`, parametrize, Legacy labels cannot write learning authority, even after repeated calls., test_direct_legacy_save_refuses(), test_kernel_legacy_decay_cannot_retire(), test_legacy_losses_cannot_mutate_lifecycle(), test_legacy_model_writers_preserve_existing_bytes(), test_registered_decay_rejects_incomplete_before_evaluator() (+68 more)
+Cohesion: 0.06
+Nodes (75): parametrize, Legacy labels cannot write learning authority, even after repeated calls., test_direct_legacy_save_refuses(), test_kernel_legacy_decay_cannot_retire(), test_legacy_losses_cannot_mutate_lifecycle(), test_legacy_model_writers_preserve_existing_bytes(), _losses(), _mk() (+67 more)
 
-### Community 125 - "._fetch_calendar"
-Cohesion: 0.10
-Nodes (13): Self-Review, datetime, Exception, One good fetch should cover the week, restarts included., A day-old calendar still lists today's events; nothing beats it except a fresh…, Paid endpoint. Date and time are separate, and in Eastern Time., Keyless. One ISO field carrying its own offset — no ET guessing., Parse Finnhub date+time (ET) → UTC datetime, or None if unparseable. (+5 more)
+### Community 125 - "WorldModel"
+Cohesion: 0.09
+Nodes (21): Demonstrated gaps and changes, world_fixture(), test_forged_world_model_identities_are_refused(), test_world_model_reference_only_when_supplied(), measured_source(), ClaimCollection, ObservationQuery, EffectiveClaim (+13 more)
 
-### Community 126 - "Trader.md"
+### Community 126 - "Company.md"
 Cohesion: 0.05
-Nodes (35): Company, Team, Files here, Flow Analyst, Wraps, Files here, Manager, Wraps (+27 more)
+Nodes (38): Company, Team, Depth Analyst, Files here, Wraps, Files here, Flow Analyst, Wraps (+30 more)
 
 ### Community 127 - "alpha_at"
-Cohesion: 0.09
-Nodes (27): Task 3 — LORD++ and the ledger sequence, Approval boundary, Frozen experiment, Gate-2 synthetic calibration protocol, Generators and known answers, Power and diagnostics, Selection and shared stream, Statistic and precision (+19 more)
+Cohesion: 0.14
+Nodes (19): LORD++ and the forward brake., All nulls: every rejection is false, so FDR = P(any rejection)., test_a_mix_controls_fdr_and_keeps_power(), test_alpha_by_hand(), test_alpha_never_exceeds_the_target(), test_brake(), test_gamma_sums_to_at_most_one(), test_pure_noise_rarely_discovers() (+11 more)
 
 ### Community 128 - "cognition_history.py"
 Cohesion: 0.10
@@ -1685,44 +1726,40 @@ Cohesion: 0.16
 Nodes (18): bound_snapshot(), code_hash(), identity(), integer(), ValueError, Strict, scan-bound collector receipts. No trading authority or source writes., Retain generation transitions; append gap receipts, never rewrite a scan., Scheduled pass health: completed persistence, not a live daemon claim. (+10 more)
 
 ### Community 130 - "verify_truth_package.py"
-Cohesion: 0.15
-Nodes (31): ball(), c0_witness_ok(), cls_of(), convolve(), digest(), dy(), expected_persistence(), Fail (+23 more)
+Cohesion: 0.11
+Nodes (37): build(), main(), Path, Freeze (or --check) the complete M3.2 pre-RNG truth package. Runs the…, sha(), tracked(), ball(), c0_witness_ok() (+29 more)
 
-### Community 131 - "trader_strategy"
-Cohesion: 0.05
-Nodes (92): Independent stored-chain restart and approval immutability observation., Independent canonical proof; only synthetic journals under luffy-pytest., Read-only implementation audit; synthetic journals expose approved pre-ACTIVE…, _account_obs(), _inputs(), _iso(), _market(), _open() (+84 more)
+### Community 131 - "test_str03_approval_binding.py"
+Cohesion: 0.07
+Nodes (60): fixture, world(), _approved(), _identity(), _iso(), _journal(), Closed trades; with the provenance column, each carries the entry identity of…, A trade-entry-identity.v1 body as trade_provenance.entry_identity writes it for… (+52 more)
 
 ### Community 132 - "test_current_truth_contract.py"
 Cohesion: 0.03
-Nodes (146): E. Durable evidence and marker used, E. Proof no control authority was added, Schema / migration, account_observation(), news_guard_state(), Write the one evidence row as the kernel's publisher would (same schema)., A kernel _risk_step account_observation record (fresh venue read at `at`)., A NewsGuard record as the kernel publishes it (QUIET or ARMED). (+138 more)
+Nodes (147): E. Proof no control authority was added, Schema / migration, account_observation(), news_guard_state(), A kernel _risk_step account_observation record (fresh venue read at `at`)., A NewsGuard record as the kernel publishes it (QUIET or ARMED)., A kernel cycle risk_assessment record (RISK_FIXTURE_CFG limits)., The kernel's current-truth records: account observation, News Guard and Risk… (+139 more)
 
 ### Community 133 - "unknown"
-Cohesion: 0.07
-Nodes (34): 10. Family-level statements (symbolic only), 11. Provenance of every assumption, 12. Preregistration checklist for a future session, 13. Status and successor step, 14. Practical decision framing (user steering, recorded), 1. Sample metric preserved; population target specified below, 2. Sampling units and the block vector, 3. Population target — and an open ambiguity that needs authorization (+26 more)
+Cohesion: 0.08
+Nodes (33): 10. Family-level statements (symbolic only), 11. Provenance of every assumption, 12. Preregistration checklist for a future session, 13. Status and successor step, 14. Practical decision framing (user steering, recorded), 1. Sample metric preserved; population target specified below, 2. Sampling units and the block vector, 3. Population target — and an open ambiguity that needs authorization (+25 more)
 
 ### Community 134 - "test_da10_remaining_storage.py"
-Cohesion: 0.08
-Nodes (26): assert_closed(), offline(), fixture, parametrize, DA-10 bounded storage regressions; real SQLite, synthetic data, no providers., test_accounting_delivery_closes_and_commits_or_refuses(), delivered(), test_backup_and_restore_never_materialize_whole_databases() (+18 more)
+Cohesion: 0.05
+Nodes (40): Changes versus v2 (v2 semantics preserved: I1-I8, class edges, I3, I6, truth package), assert_closed(), fast_portfolio_connections(), fast(), offline(), fixture, parametrize, DA-10 bounded storage regressions; real SQLite, synthetic data, no providers. (+32 more)
 
-### Community 135 - "test_m32_validation_bundle_v3.py"
-Cohesion: 0.32
-Nodes (4): Guard the RNG-free M3.2 validation bundle REVISION 3: hash binding, recorded…, _sha(), test_manifest_binds_files_pins_and_frozen_truth(), test_v2_v1_untouched_and_v3_supersedes_with_fast_metric_bound()
+### Community 135 - "usePreview"
+Cohesion: 0.10
+Nodes (35): D. Frontend UX (Trades → Trade book), Badge(), EvidenceDescription(), EvidenceDetails(), Freshness(), Panel(), QueryState(), fieldValue() (+27 more)
 
 ### Community 136 - "Supervisor"
 Cohesion: 0.03
-Nodes (93): A. Kernel ACTIVE-path inventory, B. MacroGuard fix, C. Spot resume fix, F. Corrupt-state matrix, H. Cadence result, J. Baseline-preservation result, K. Rollback regression, LUFFY-ACTIVATION-AND-RISK-BASELINE-HARDENING-V1 (+85 more)
+Nodes (103): A. Kernel ACTIVE-path inventory, B. MacroGuard fix, C. Spot resume fix, F. Corrupt-state matrix, H. Cadence result, J. Baseline-preservation result, K. Rollback regression, LUFFY-ACTIVATION-AND-RISK-BASELINE-HARDENING-V1 (+95 more)
 
-### Community 137 - "Status"
-Cohesion: 0.06
-Nodes (72): A. Existing control contract used, hmac, secrets, socket, stat, struct, test_read_only_gateway_cannot_call_ipc(), _dashboard_app() (+64 more)
-
-### Community 138 - "dataclasses"
+### Community 138 - "allocator.py"
 Cohesion: 0.04
-Nodes (110): dataclasses, Opt-in metadata-only runtime attribution; configured workers stay enabled. Wall…, B. Current DEMO blocker table, Verify existing producer objects, not just newly calculated hashes., semantic(), inventory(), main(), One bounded read-only runtime checkpoint; proposal ledger only, no requests. (+102 more)
+Nodes (99): Opt-in metadata-only runtime attribution; configured workers stay enabled. Wall…, B. Current DEMO blocker table, Verify existing producer objects, not just newly calculated hashes., semantic(), inventory(), main(), One bounded read-only runtime checkpoint; proposal ledger only, no requests., run() (+91 more)
 
 ### Community 139 - "LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS)"
-Cohesion: 0.05
-Nodes (37): O. Dashboard deployment status, E. Owner-control binding, B. Contract (`trader/owner/contract.py`, wire v2), C. IPC (`trader/owner/ipc.py`), D. Authorization, E. Idempotency and crash behaviour, F–I. Adapters, J. Chat safety (+29 more)
+Cohesion: 0.08
+Nodes (24): C. IPC (`trader/owner/ipc.py`), D. Authorization, E. Idempotency and crash behaviour, F–I. Adapters, K. Cross-process safety, L. Audit / secret boundary, LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS), M. Performance (isolated; `scripts/bench_owner_interface.py`) (+16 more)
 
 ### Community 140 - "test_company.py"
 Cohesion: 0.18
@@ -1732,41 +1769,41 @@ Nodes (13): _company(), Company cockpit data — build_company() derives live pe
 Cohesion: 0.13
 Nodes (34): check_config(), check_environment(), check_equivalence_reproduction(), check_fast_metric_artifacts(), check_git_and_hashes(), check_independent_equivalence_probe(), check_isolation_and_rng(), check_preflight() (+26 more)
 
-### Community 142 - "pandas"
-Cohesion: 0.09
-Nodes (33): pandas, requests, book(), _entries(), _frame(), fixture, A spec whose features need context must not silently score zero. `xs_rank`,…, `screen_mechanisms.py` is the discovery tool. It produced every 'nothing… (+25 more)
+### Community 142 - "test_research_thresholds.py"
+Cohesion: 0.20
+Nodes (18): _ctx(), A threshold is a percentile of the quantity's OWN distribution, and a gauge…, breadth(close > ema(50)) evaluates its inner boolean; the OUTER value is a…, `min`/`max` are what `vocab.parts_for` uses to drop an unattainable cut — a `<`…, test_a_boolean_expression_still_measures(), test_a_gauge_finite_on_a_minority_of_the_slice_is_not_usable(), test_a_gauge_that_is_never_finite_is_not_usable(), test_a_usable_gauge_reports_its_observed_range() (+10 more)
 
-### Community 143 - "build_company"
-Cohesion: 0.09
-Nodes (32): Entry-path audit, Finalization R1, Gap classification and next package, LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1, Test repairs and negative controls, Verification, Priority 3 — simplification candidates (nothing refactored), Agents Command Deck — Design Spec (+24 more)
+### Community 143 - "j"
+Cohesion: 0.38
+Nodes (7): j(), quantize(), fixture, world(), act(), gov(), risk()
 
-### Community 144 - "OwnerRequest"
-Cohesion: 0.06
-Nodes (44): main(), cycle(), run_cycles(), pct(), Isolated Owner Interface benchmark (temp journal + temp socket; no production…, summary(), Live-contract fixture for the owner frontend: a temporary ROOT with a seeded…, test_k2_requests_cannot_carry_a_principal() (+36 more)
+### Community 144 - "observability/preflight.py"
+Cohesion: 0.08
+Nodes (41): RuntimeError, No dedicated read credentials configured., Dedicated read credentials overlap trading credentials., A read-only key, or nothing. The trading key is never used here. No in-process…, The IP's aggregate request weight is too high for an optional read., _read_credentials(), ReadCredentialsMissing, ReadCredentialsSeparation (+33 more)
 
 ### Community 145 - "publish"
-Cohesion: 0.05
-Nodes (77): Actual gap and change, RES-01 — supported event to typed research question, Validation and limits, episodes(), fixture(), no_network(), publish(), fixture (+69 more)
+Cohesion: 0.06
+Nodes (76): Validation and limits, episodes(), fixture(), no_network(), publish(), fixture, parametrize, Synthetic forward forecasts; no sockets, journal, or research evaluation. (+68 more)
 
-### Community 146 - "Side"
-Cohesion: 0.05
-Nodes (59): journal_with_book(), Path, Measure the read-only protection snapshot (R2): duration, requests and request…, FakeEx, FakeExec, make_engine(), make_trade(), ExitEngine ladder tests — deterministic scenarios, fake exchange. (+51 more)
+### Community 146 - "test_exits.py"
+Cohesion: 0.21
+Nodes (10): FakeEx, FakeExec, make_engine(), make_trade(), ExitEngine ladder tests — deterministic scenarios, fake exchange., test_flip_exit_on_hard_opposite_score(), test_no_premature_action(), test_time_stop_closes_stale_loser() (+2 more)
 
 ### Community 147 - "test_predictive_research_bridge.py"
-Cohesion: 0.04
-Nodes (79): test_persisted_adversarial_and_revision(), qualify(), Synthetic FIRST-USE receipt clocks; never infer them for production history., Retain deterministic artificial receipts for explicitly generated test bars.…, Frozen numerical research retains exact PIT revisions and stable bytes., test_legacy_unqualified_projection_stays_unknown_without_mutating_snapshot(), test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate(), paths() (+71 more)
+Cohesion: 0.06
+Nodes (52): consume(), NumericalFixture, population(), fixture, parametrize, Normal consumer acceptance and authority refusals. All evidence is synthetic.…, Synthetic measured readings, never claimed to be real profitable edge., saved() (+44 more)
 
-### Community 148 - "factory_handoff.py"
-Cohesion: 0.05
-Nodes (133): [SOL-1][STR-01] canonical CLOSED, test_versioned_board_reuses_authority_and_never_writes(), versioned_strategies(), approval(), canonical(), Return the verified digest, or refuse without rewriting historical data., verify(), unsupported() (+125 more)
+### Community 148 - "load_version"
+Cohesion: 0.08
+Nodes (74): [SOL-1][STR-01] canonical CLOSED, canonical(), eligible_for_portfolio_comparison(), approval_request(), _approval_write(), _begin(), candidate_spec(), _check_registered_look() (+66 more)
 
 ### Community 149 - "FastMetric"
-Cohesion: 0.10
-Nodes (26): main(), all_perms(), compare(), full_fixture(), make(), Deterministic bit-exact equivalence suite: FastMetric vs the production…, run(), section_adversarial() (+18 more)
+Cohesion: 0.08
+Nodes (34): main(), block_map(), all_perms(), compare(), full_fixture(), make(), Deterministic bit-exact equivalence suite: FastMetric vs the production…, run() (+26 more)
 
-### Community 150 - "test_scraper_sources.py"
+### Community 150 - "Scraper"
 Cohesion: 0.07
-Nodes (31): Agent contracts, Analyst — adjudicate, Harvester — the numbers, Librarian — record everything, Researcher — NEW, sits above the Strategist, Risk Officer — size and protect, Scraper — the outside world, nothing else, Strategist — numbers only, expresses rather than discovers (+23 more)
+Nodes (30): Task 4: Route both streams into the queue, Scraper — the outside world, nothing else, test_the_strategy_screen_would_have_discarded_that_finding(), FakeLLM, _idea(), Scraper source-widening tests: prefilter screen, param repair, Atom parsing,…, /ideas/ is people predicting; /scripts/ is the Pine library., One creation path. The Scraper queues; the Strategist writes. (+22 more)
 
 ### Community 151 - "test_deep_token_cap.py"
 Cohesion: 0.23
@@ -1778,39 +1815,39 @@ Nodes (3): Files here, Librarian, Wraps
 
 ### Community 153 - "test_research_control_unavailable.py"
 Cohesion: 0.07
-Nodes (54): get(), fn(), target(), _controls(), _drive(), led(), _measure(), fixture (+46 more)
+Nodes (56): get(), fn(), target(), numerical(), _controls(), _drive(), led(), _measure() (+48 more)
 
 ### Community 154 - "load_input"
-Cohesion: 0.12
-Nodes (27): _bar(), no_network(), fixture, Offline cognition contracts: input validation, closed-bar and as-of rules,…, Regression: the open interval and its closing revision were unioned, so a…, _raw(), test_a_later_closing_revision_removes_the_member_only_once_known(), test_bar_usable_only_once_closed_and_available() (+19 more)
+Cohesion: 0.08
+Nodes (37): 4. Recommended next slice — milestone 1 (**not implemented on this pass**), Delivery and boundaries, Verification and measured overhead, WM-01 — offline volume calculation reuse, Feature vocabulary, _bar(), Offline cognition contracts: input validation, closed-bar and as-of rules,…, Regression: the open interval and its closing revision were unioned, so a… (+29 more)
 
 ### Community 155 - "m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py"
 Cohesion: 0.15
 Nodes (26): build_artifacts(), canon(), compute_projection(), config(), covariance_psd(), effect_table(), environment_lock(), equivalence_receipt() (+18 more)
 
-### Community 156 - "test_whole_trade_accounting.py"
-Cohesion: 0.07
-Nodes (41): parametrize, Synthetic evidence only; Binance order status cannot prove cashflow attribution., setup(), test_actual_order_observed_but_never_inferred_attribution(), test_bounded_unique_requests_before_network(), test_error_redaction_and_allowlisted_raw_fields(), test_invalid_conversion_cannot_be_observed_or_accepted(), test_missing_history_is_not_a_manual_override() (+33 more)
+### Community 156 - "test_conversion_evidence.py"
+Cohesion: 0.20
+Nodes (13): parametrize, Synthetic evidence only; Binance order status cannot prove cashflow attribution., setup(), test_actual_order_observed_but_never_inferred_attribution(), test_bounded_unique_requests_before_network(), test_error_redaction_and_allowlisted_raw_fields(), test_invalid_conversion_cannot_be_observed_or_accepted(), test_missing_history_is_not_a_manual_override() (+5 more)
 
 ### Community 157 - "test_exit_ab_shadow_paths.py"
-Cohesion: 0.22
-Nodes (29): bars_from(), flat_then(), _ledger(), parametrize, The frozen exit A/B protocol's virtual path geometry. ``record`` writes an…, A is the live geometry; it must agree bar-for-bar with ``_trade``, which is the…, Declared 4h versions, one per (open, high, low, close) row., 21 quiet bars then ``moves``. The entry bar is the last quiet one, so ATR(14)… (+21 more)
+Cohesion: 0.09
+Nodes (54): activate(), atr_of(), chain_hash(), collect(), contiguous_series(), _gap(), init_db(), latest_complete() (+46 more)
 
-### Community 158 - "test_normal_learning_loop_closure.py"
-Cohesion: 0.06
-Nodes (54): Task 4 — candidate selection, Task 7 — runner, planner, child, checkpoint_stage(), every_kind(), evidence_consumer(), consume(), evidence_of(), forward_outcome() (+46 more)
+### Community 158 - "factory_handoff.py"
+Cohesion: 0.09
+Nodes (41): Return the verified digest, or refuse without rewriting historical data., verify(), unsupported(), bind_research(), Strict whitelist; extra keys are declared unsupported, never ignored., Transient adapter routing; never changes the serialized StrategySpec. Factory…, unsupported(), _assess() (+33 more)
 
 ### Community 159 - "LUFFY-FRONTEND-COMPLETION-M3: final product and visual completion"
-Cohesion: 0.11
-Nodes (22): B. Route matrix, C. Connected workflows (all exact recorded ids), A. Status, C. Routes, D. Truth preservation, E. Evidence routing (historical evidence preserved), F. MUST FIX: mobile LUFFY conversation (coordinator review), G. Commands (from `frontend/`) (+14 more)
-
-### Community 160 - "trader_cognition"
-Cohesion: 0.05
-Nodes (60): 4. Reproduction (isolated; existing failure only), 1. Integrity, _accept_dataset(), cli_manifest(), cmd_build(), cmd_freeze(), from_archive(), from_store() (+52 more)
-
-### Community 161 - ".basis"
 Cohesion: 0.09
-Nodes (25): Data files, What measurement established (do not re-litigate), Task 14: Derivative features and point-in-time alignment, Task 4: Derivative structure, Open — needs you, The data, not the test, Community 132 - "Harvester Data Coverage", Community 95 - "Basis MCP Client" (+17 more)
+Nodes (21): A. M2_STATUS: PASS, B. Route matrix, C. Connected workflows (all exact recorded ids), E. Evidence / provenance behaviour, F. Kernel-owned evidence still unavailable, G. Performance / bounded reads, H. Tests, J. Blockers remaining for M3 (+13 more)
+
+### Community 160 - "population.py"
+Cohesion: 0.10
+Nodes (29): Accounting (M8.1, queue mode=ro, 18:48 UTC), Active window (Sep 18 04:00 → Sep 19 04:00 UTC, open), Check-now: active window, investigations, accounting (18:46 UTC), Independent runtime and preservation verification, Session error: unintended legacy script execution, strategy state corrected, Status, Underlying investigations (`data/investigation.db`, mode=ro, 18:48:37 UTC), main() (+21 more)
+
+### Community 161 - "DerivFeed"
+Cohesion: 0.03
+Nodes (78): Data and feature invariants, CLAUDE.md, Commands, Control states, Daemon threads, Data files, Environment, Known-good invariants — do not break (+70 more)
 
 ### Community 162 - "Exit Animations"
 Cohesion: 0.29
@@ -1821,44 +1858,44 @@ Cohesion: 0.09
 Nodes (28): _algo(), FakeEx, _normalized_stop(), parametrize, Binance books a reduceOnly stop as an ALGO order, not an ordinary one.…, The nine SUI stops: position long gone, stops still armed., Stale stops from earlier ratchets sit below the live one. They are still armed,…, If the journal lost the id, the stop on the venue is the only thing standing… (+20 more)
 
 ### Community 164 - "test_basis_and_mcp.py"
-Cohesion: 0.07
-Nodes (34): _feed(), fake_get(), _kline(), Basis, and the kernel's own MCP client. `basis` was registered as a feature…, Not every server wraps a single reply in SSE., Binance kline row — index 6 is closeTime, index 4 is close., perp 101 against spot 100 is a +1% basis., An inner join: half a basis is not a basis. (+26 more)
+Cohesion: 0.11
+Nodes (24): _feed(), fake_get(), _kline(), Basis, and the kernel's own MCP client. `basis` was registered as a feature…, Not every server wraps a single reply in SSE., Binance kline row — index 6 is closeTime, index 4 is close., perp 101 against spot 100 is a +1% basis., An inner join: half a basis is not a basis. (+16 more)
 
 ### Community 165 - "Luffy — owner end goal (authoritative requirements)"
 Cohesion: 0.06
 Nodes (32): 10. World model, 11. Automatic pattern discovery, 12. Surprise drives curiosity, 13. Attention itself learns, 14. Strategy emergence, 15. Strategy population, 16. Direction and expression, 17. Portfolio intelligence (+24 more)
 
-### Community 166 - "test_str04_governor_lifecycle.py"
-Cohesion: 0.06
-Nodes (42): test_all_five_current_events_bind_exact_historical_owner(), parametrize, STR-04: the Strategy Governor is the sole lifecycle authority. Offline,…, Static map of writers of strategies.state outside the Governor. Each is a…, _row_state(), _snap(), test_changed_semantics_need_a_new_version_not_a_state_edit(), test_database_refuses_every_ungoverned_write_to_a_versioned_strategy() (+34 more)
+### Community 166 - "test_risk02_exposure_feasibility.py"
+Cohesion: 0.04
+Nodes (74): scripts, test_portfolio_bounded_cases_keep_exact_latest_updates(), test_zero_inventory_read_only_shadow(), _journal(), fixture, Regression: ``record`` must name its columns and leave ``status`` defaulted.…, _receipts(), staged() (+66 more)
 
 ### Community 167 - "m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py"
 Cohesion: 0.15
 Nodes (26): build_artifacts(), canon(), compute_projection(), config(), covariance_psd(), effect_table(), environment_lock(), equivalence_receipt() (+18 more)
 
 ### Community 168 - "Quality"
-Cohesion: 0.05
-Nodes (58): Producers, consumers, persistence, replay and decisions, Execute with a baseline or fixed trader package on PYTHONPATH., test_world_state_refuses_future_and_quality_survives(), ClaimEvidenceRef, _evidence(), Immutable world-state claims with exact, point-in-time evidence references., Shared point-in-time observation and world-state contracts., Immutable hierarchy and horizon index around point-in-time WorldStates. Higher… (+50 more)
+Cohesion: 0.06
+Nodes (43): Public retained WorldModel source, under one read-only transaction. Retention…, read_world_history(), _canonical(), ClaimEvidenceRef, ClaimEvidenceType, _evidence(), Any, Enum (+35 more)
 
 ### Community 169 - "digest"
-Cohesion: 0.03
-Nodes (104): Delivered, Docs changed in this pass, Exact next work, M8.1 emergency whole-accounting and native exit provenance: bounded manual slice, Parallel M3.1 population state (unrelated to this slice, recorded for continuity), Runtime and live evidence, backfill(), _check_copy() (+96 more)
+Cohesion: 0.08
+Nodes (44): Part B, Part C, Part D - fixes, Subsystem review 03 - accounting_observer (agent 3), Tests, test_captured_execution_quality_cannot_change_predictive_confidence(), test_execution_quality_is_separate_and_replay_bound(), test_outcome_sources_cannot_gain_authority_by_rehashing() (+36 more)
 
 ### Community 170 - "test_universe_frames_timeframes.py"
 Cohesion: 0.24
 Nodes (10): _Feed, _kernel(), Live cache-only peer reads cover every strategy timeframe at the admission cut., Analysts and the orchestrator still read the execution frame., test_each_timeframe_is_fetched_once_per_symbol(), test_no_strategy_timeframes_still_yields_the_execution_frame(), test_peers_are_built_at_every_timeframe_the_book_trades(), test_several_strategy_timeframes_are_all_covered() (+2 more)
 
-### Community 171 - "M3.2 Scheme D — actual-statistic synthetic validation protocol"
-Cohesion: 0.06
-Nodes (34): 10.1 Draws (original Scheme D sampling, preserved), 10.2 P-values, 10.3 Rationale for B, 10. Draws, p-values, and B rationale, 11.1 Injections, 11.2 Analytic truth table (required before outcomes), 11.3 Definitions, 11. Injections, analytic truth, and definitions (+26 more)
+### Community 171 - "Overview.tsx"
+Cohesion: 0.05
+Nodes (62): K. Frontend freshness (blocker 11), 10.1 Draws (original Scheme D sampling, preserved), 10.2 P-values, 10.3 Rationale for B, 10. Draws, p-values, and B rationale, 11.1 Injections, 11.2 Analytic truth table (required before outcomes), 11.3 Definitions (+54 more)
 
-### Community 172 - "freeze_package.py"
-Cohesion: 0.43
-Nodes (6): build(), main(), Path, Freeze (or --check) the complete M3.2 pre-RNG truth package. Runs the…, sha(), tracked()
+### Community 172 - "._mechanism_once"
+Cohesion: 0.05
+Nodes (35): Global Constraints, Research pipeline — Phase 0: groundwork — Implementation Plan, Task 1: Admission refuses an untestable spec, Task 5: Remove the LLM Judge; `/judge` reads the post-mortem, Task 7: A kernel-owned, low-priority child-process runner, Task 8: Record it, verify everything, restart, A contamination to respect, Decisions (made here, with reasons) (+27 more)
 
 ### Community 173 - "live.ts"
 Cohesion: 0.04
-Nodes (79): I. Changed files (this package only), ActivityEvent, ChatTurn, Consulted, Freshness, GraphNode, LiveOverview, LogTail (+71 more)
+Nodes (80): I. Changed files (this package only), ActivityEvent, ChatTurn, Consulted, Freshness, GraphNode, LiveOverview, LogTail (+72 more)
 
 ### Community 174 - "2026-09-18/manifest.json"
 Cohesion: 0.18
@@ -1872,45 +1909,49 @@ Nodes (10): data/authored_specs/negative_funding_squeeze.json, ast_hash, mtime, 
 Cohesion: 0.18
 Nodes (10): data/authored_specs/negative_funding_squeeze.json, ast_hash, mtime, seen, semantic_hash, data/authored_specs/oi_leverage_buildup_fade.json, ast_hash, mtime (+2 more)
 
+### Community 177 - "NEXT_SESSION.md"
+Cohesion: 0.07
+Nodes (28): Concrete changes, Deployment and actual runtime, Evidence and limits, M8.1 normal booking provenance and demo rollout, Next exact work, Read-only owner export and replay, Delivered and deployed, Evidence and limits (+20 more)
+
 ### Community 178 - "test_research_growth.py"
-Cohesion: 0.06
-Nodes (51): Deviations from the spec, with the measurement behind each, File structure, Global Constraints, Research pipeline — Phase 2: the search — Implementation Plan, Self-review, Task 10: The ledger — every combination, every look, kept or not, Task 11: The planner — what to evaluate next, Task 13: The runner, the kernel thread, and the config block (+43 more)
+Cohesion: 0.11
+Nodes (34): Self-review, Task 13: The runner, the kernel thread, and the config block, When does a part earn its place? The measurement this encodes: every filter…, `carry`: PF holds, p identical, CAGR 17.3 -> 7.6., If removing a part makes the rule untestable, the part is doing the work that…, _res(), test_a_child_that_does_not_beat_its_parent_is_pruned(), test_a_part_must_improve_both_measures() (+26 more)
 
 ### Community 179 - "test_rp03_kernel_handoff.py"
-Cohesion: 0.10
-Nodes (55): tests, count(), events(), kernel(), no_authority(), parametrize, Real synthetic Bank -> authenticated transfer -> Kernel/Factory boundary. No…, test_conflicting_destination_refuses_before_factory() (+47 more)
+Cohesion: 0.09
+Nodes (57): tests, count(), events(), kernel(), no_authority(), parametrize, Real synthetic Bank -> authenticated transfer -> Kernel/Factory boundary. No…, test_conflicting_destination_refuses_before_factory() (+49 more)
 
-### Community 180 - "Harvester"
-Cohesion: 0.08
-Nodes (17): test_no_key_means_unavailable(), test_no_key_returns_an_empty_frame_not_an_error(), Harvester, Fill the series Binance truncates, from a source that keeps them. No-op without…, {series: {symbols, rows, days}} folded across symbols., What the Strategist is allowed to build on. `usable` are the series with enough…, The brief as one prompt-sized paragraph for the Strategist., Numeric data acquisition and the coverage brief. (+9 more)
+### Community 180 - "Coinalyze"
+Cohesion: 0.17
+Nodes (8): test_no_key_means_unavailable(), test_no_key_returns_an_empty_frame_not_an_error(), api_key(), Coinalyze, DataFrame, Read-only client. Absent key => `available` is False and every fetch returns an…, {'BTC/USDT': <the Binance market row>} for perpetuals. Binance-only by…, One series in the DerivFeed frame shape, in OUR units. `years` is a request,…
 
 ### Community 181 - "m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py"
 Cohesion: 0.16
 Nodes (27): check_config(), check_environment(), check_git_and_hashes(), check_isolation_and_rng(), check_preflight(), check_psd(), check_tables(), check_v2_semantics() (+19 more)
 
-### Community 182 - "exit_ab_shadow.py"
-Cohesion: 0.12
-Nodes (27): activate(), atr_of(), chain_hash(), collect(), contiguous_series(), _gap(), init_db(), latest_complete() (+19 more)
+### Community 182 - "test_wrld05_normal_context.py"
+Cohesion: 0.10
+Nodes (32): Closure impact, Existing evidence mapped first, Normal caller paths proved, [SOL-2][WRLD-05] normal typed WorldModel context closure, Tests and checks, test_analyst_producer_forwards_common_slice_context_and_funding(), test_relationship_versions_and_expiry_used_at_exact_cut(), parametrize (+24 more)
 
 ### Community 183 - "Aggressor_Divergence_At_Highs.md"
 Cohesion: 0.10
 Nodes (23): Aggressor Divergence At Highs, Aggressor Divergence At Highs, Live record, Logic, Aggressor Thrust Breakout, Aggressor Thrust Breakout, Live record, Logic (+15 more)
 
-### Community 184 - "RiskManager"
-Cohesion: 0.02
-Nodes (90): D. First-init vs corrupt-state contract, G. First-initialization result, I. Previously-approved-entry result, L. Focused test totals, P. Remaining blockers, C. Corruption-latch behavior, B. Boot/recovery matrix (`tests/test_kernel_boot_recovery.py`), D. Mixed-version recovery (51101d0 unchanged) (+82 more)
+### Community 184 - "A. Read-only capability design (blocker 1)"
+Cohesion: 0.08
+Nodes (22): A. Read-only capability design (blocker 1), Q. Exact changed files (this revision), C. Backend implementation, _observer(), test_journal_reads_cannot_write(), test_nc_mutation_capable_callback_and_wrapped_read(), read(), wrapped() (+14 more)
 
 ### Community 185 - "m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py"
 Cohesion: 0.16
 Nodes (20): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+12 more)
 
-### Community 186 - "Luffy — repository guidance"
-Cohesion: 0.05
-Nodes (32): graphify, Graphify cost control, Repository guidance, Commands, graphify, Graphify cost control, Luffy memory lookup, Luffy memory lookup (+24 more)
+### Community 186 - "CLAUDE.md"
+Cohesion: 0.08
+Nodes (14): graphify, Graphify cost control, Repository guidance, Candidate dossier and thesis contract — report, Files, Tests, Verdict and admission blockers, Worked discovery artifact (candidate `55243573515adc3b`) (+6 more)
 
-### Community 187 - "m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py"
-Cohesion: 0.15
-Nodes (20): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+12 more)
+### Community 187 - "fractions"
+Cohesion: 0.14
+Nodes (16): fractions, dyadic(), interval(), main(), overlaps(), Fraction, Deterministically compare the P6/C3 primary and higher-precision replay., dyadic() (+8 more)
 
 ### Community 188 - "1. Collector (`trader/observability/collector.py`, `worker.py`)"
 Cohesion: 0.08
@@ -1922,7 +1963,7 @@ Nodes (24): For /graphify add and --watch, For /graphify query, For the commit h
 
 ### Community 190 - "ControlState"
 Cohesion: 0.03
-Nodes (120): held(), test_set_takes_the_same_fence_file(), test_partial_intent_appearing_during_risk_release_is_refused_at_activation_cas(), risk_release(), _ActivatingResume, The pre-gateway ChatEngine.handle (regex → set state) fails chat safety., A resurrected set_control_state-style gateway fails the authority check., test_dashboard_owner_gateway_holds_no_authority() (+112 more)
+Nodes (110): held(), R5-A. W1 panic ordering fix, Confirmed defects, main(), cycle(), hammer(), R(), run_cycles() (+102 more)
 
 ### Community 191 - "test_stop_move_safety.py"
 Cohesion: 0.21
@@ -1930,19 +1971,19 @@ Nodes (13): _engine(), _Ex, _Journal, Moving a stop must never leave the positio
 
 ### Community 192 - "test_owner_recovery.py"
 Cohesion: 0.04
-Nodes (116): tarfile, __exit__(), test_rollback_repaired_verified_frozen_loads_in_51101d0(), j(), test_portfolio_pure_preparation_does_not_own_writer(), probe(), _rev3_drain_start_watermark(), drain() (+108 more)
+Nodes (108): tarfile, release(), test_unreadable_risk_state_fails_closed_without_latch(), check_cleared_fault_activates(), check_concurrent_frozen_wins(), check_fault_remains_contained(), check_fault_remains_contained_after(), check_stale_safe_cannot_authorize() (+100 more)
 
 ### Community 193 - "test_review06_strategy_selection.py"
 Cohesion: 0.10
-Nodes (46): analyst(), decide(), run(), no_network(), fixture, parametrize, SG-06 owner-authorized mechanics. Synthetic, offline, no edge/venue proof., sig() (+38 more)
+Nodes (45): analyst(), decide(), run(), no_network(), fixture, parametrize, SG-06 owner-authorized mechanics. Synthetic, offline, no edge/venue proof., sig() (+37 more)
 
 ### Community 194 - "M3.1 fresh forward-window preparation — September 19, 2026"
 Cohesion: 0.33
 Nodes (5): Exact status, Fresh preparation, M3.1 fresh forward-window preparation — September 19, 2026, M3.2 gate, Next task
 
 ### Community 195 - "test_strategy_factory_handoff.py"
-Cohesion: 0.04
-Nodes (113): parametrize, OWN-03 offline regressions: routine work cannot create owner approval loops., test_expired_request_and_rejected_decision_grant_no_authority(), test_routine_action_cannot_be_registered_as_approval_class(), test_routine_question_cannot_satisfy_missing_first_live_approval(), run_a(), _earlier_look(), _patch_look() (+105 more)
+Cohesion: 0.07
+Nodes (77): test_routine_question_cannot_satisfy_missing_first_live_approval(), test_completed_history_cannot_hide_pending_first_live_and_all_pending_are_pageable(), test_configuration_invalidation_is_consumed_by_factory(), test_factory_request_reuses_exact_version_and_policy_staleness(), test_native_factory_decision_configuration_is_bound_and_legacy_missing_refuses(), installed(), fixture, _src() (+69 more)
 
 ### Community 196 - "m32_scheme_d_validation_bundle_20260921/verify_bundle.py"
 Cohesion: 0.16
@@ -3140,61 +3181,61 @@ Nodes (8): Accounting (M8.1, queue mode=ro, 12:46:41 UTC), Active window (Sep 18
 Cohesion: 0.24
 Nodes (15): convolve(), digest(), expected(), expected_persistence_correlations(), frac(), label(), main(), probs() (+7 more)
 
-### Community 495 - "Candidate thesis + gate-2 design — final offline report"
-Cohesion: 0.18
-Nodes (10): 1. What was produced, 2. Validation status, 4. Tests actually run in the final pass, 5. Correction to the brief: config membership is not historical membership, 7. Blockers — nothing can pass today, 8. What changed on disk, Candidate thesis + gate-2 design — final offline report, Novelty — what is and is not claimed (+2 more)
+### Community 495 - "evaluate"
+Cohesion: 0.08
+Nodes (39): _ctx(), Sequence features — a setup is an event followed by a condition., Never-true is unknown, not zero., A pivot at bar i needs n later bars to confirm, so it cannot be visible at i —…, NaN input means unknown condition, so output must be NaN., NaN input means unknown condition, so output must be NaN., test_bars_since_counts_from_the_last_true_bar(), test_bars_since_is_nan_before_the_condition_has_ever_been_true() (+31 more)
 
 ### Community 496 - "watchdog.sh"
 Cohesion: 1.00
 Nodes (3): act(), say(), watchdog.sh script
 
-### Community 497 - "hook_link"
-Cohesion: 0.14
-Nodes (13): freeze_identity(), hook_link(), linked(), legacy_publish_pid_only(), Path, The pre-hardening algorithm (temp name = PID only, plain open): kept here to…, Two workers on different hosts / containers that happen to share host name, PID…, Run ``action`` once, just before the first ``os.link`` (host A is paused… (+5 more)
+### Community 497 - "compare"
+Cohesion: 0.11
+Nodes (19): _cli(), compare(), freeze_identity(), hook_link(), linked(), legacy_publish_pid_only(), Path, The pre-hardening algorithm (temp name = PID only, plain open): kept here to… (+11 more)
 
-### Community 498 - "test_features.py"
-Cohesion: 0.04
-Nodes (68): Task 2: Series-valued indicators, Feature library, Numeric literals are genes, for free, Feature vocabulary, ctx(), df(), fixture, `ctx.btc.get(tf) or ctx.btc.get('15m')` raises ValueError on a DataFrame. The… (+60 more)
+### Community 498 - "test_research_control.py"
+Cohesion: 0.07
+Nodes (35): Community 48 - "Research Control Windows", test_unpowered_window_never_reads_no_edge_and_unscored_stays_unlabelled(), _Journal, A gate that cannot see the incumbent inside a window cannot refute a challenger…, Just enough journal to answer the one query control.py makes., 8 symbols cannot reach p<0.01 at all, so a control run on them would read as…, `label()` used to hardcode 0.01 while `powered()` took `max_p` from config — a…, 100 bars of 4h is ~17 days; the same duration at 1h is 400 bars. (+27 more)
 
-### Community 499 - "Env"
-Cohesion: 0.10
-Nodes (27): attempts(), fixture, parametrize, Synthetic off-path lifecycle tests; no observed performance claims., run(), setup(), test_capacity_pauses_without_discarding_or_network(), test_cli_deadline_health_and_no_import() (+19 more)
+### Community 499 - "test_accounting_worker.py"
+Cohesion: 0.15
+Nodes (22): attempts(), fixture, parametrize, Synthetic off-path lifecycle tests; no observed performance claims., run(), setup(), test_capacity_pauses_without_discarding_or_network(), test_cli_deadline_health_and_no_import() (+14 more)
 
-### Community 500 - "evidence_capture.py"
-Cohesion: 0.09
-Nodes (39): gather(), Path, test_shadow_read_only_and_exact_snapshot_chain(), reader(), database(), test_missing_database_never_created(), test_shadow_never_manufactures_opportunities_from_versions(), test_shadow_read_only_empty_actual_version_set() (+31 more)
+### Community 500 - "Source"
+Cohesion: 0.03
+Nodes (154): main(), Bounded read-only current-book context, using the existing candidate reader., run(), capture(), _json(), main(), Bounded current-evidence Stage-6 shadow. No venue calls or Journal writes., Fixed source row/payload bounds and five-second SQL deadline. max_contexts is a… (+146 more)
 
 ### Community 501 - "test_owner_interface_boundary.py"
-Cohesion: 0.04
-Nodes (40): L. Audit / secret boundary, _controls(), _files(), _imports(), _journal(), _journal_mem(), _meta_fails_open(), _mutant_no_idempotency() (+32 more)
+Cohesion: 0.03
+Nodes (61): fixture, Telegram is an Owner Interface adapter: it builds a typed request and renders…, test_spot_adapter_holds_no_safety_logic(), _chk_stale_proof(), fixture, world(), world(), _chat_is_the_identity() (+53 more)
 
 ### Community 502 - "LUFFY_Official_Solution_Design_v3.md"
-Cohesion: 0.11
-Nodes (17): 10. Hypothesis and Predictive Opportunity Engine, 11. Critic / Falsification System, 1. System Mission / End Goal, 21. Learning Architecture, 24. Monitoring and Alerts, 25. Operator Interface and Explainability, 26. Security and Control Boundaries, 27. Backup, Recovery and Versioning (+9 more)
+Cohesion: 0.05
+Nodes (39): 10. Hypothesis and Predictive Opportunity Engine, 11. Critic / Falsification System, 17.1 Hard responsibilities, 17.2 Capital-preservation mode, 17.3 Partial conviction, 17.4 Risk-limit changes, 17. Deterministic Risk Authority, 19.1 Outcome recording (+31 more)
 
 ### Community 503 - "owner_reads.py"
-Cohesion: 0.06
-Nodes (93): Architecture and source map, Correction pass (Astra's three blockers), Final correction (existence vs display cap), test_latest_matches_beyond_the_newest_500(), test_old_journal_exact_reads_are_unavailable_not_500(), test_recognize_resolves_ids_beyond_any_row_window(), filesystems(), Path (+85 more)
+Cohesion: 0.05
+Nodes (110): Architecture and source map, Correction pass (Astra's three blockers), Final correction (existence vs display cap), JSONResponse, test_latest_matches_beyond_the_newest_500(), test_old_journal_exact_reads_are_unavailable_not_500(), test_recognize_resolves_ids_beyond_any_row_window(), filesystems() (+102 more)
 
-### Community 504 - "Genome"
-Cohesion: 0.07
-Nodes (45): Done criteria, Strategy Foundation Implementation Plan, What this plan deliberately does not do, Migration — build parallel, cut over on evidence, Out of scope (next specs), Strategy Generation Rebuild — Design, The compiler — three targets, The DSL (+37 more)
+### Community 504 - "test_single_creation_path.py"
+Cohesion: 0.09
+Nodes (23): Open faults, Task 6: Delete the orphaned Proposer, _handoff_kernel(), _NoLLM, One creation path: Scraper queues -> Strategist writes a spec -> Analyst…, Research handoff authenticates existing evidence and stops at Factory…, It had no caller after 2026-09-11; a module that writes strategies and is…, _row() (+15 more)
 
 ### Community 505 - "SDD.md"
 Cohesion: 0.10
 Nodes (19): 10. Hypothesis and Predictive Opportunity Engine, 11. Critic / Falsification System, 1. System Mission / End Goal, 21. Learning Architecture, 24.1 Supervisor, 24. Monitoring and Alerts, 26. Security and Control Boundaries, 27. Backup, Recovery and Versioning (+11 more)
 
 ### Community 507 - "test_dec01_opportunity_context.py"
-Cohesion: 0.03
-Nodes (89): Offline reconciliation proof of the exact normal empty-registry receipt., test_exact_production_unavailable_receipt_and_reload(), Control-review probes run against pinned PORT-04 source, with offline fixtures…, test_actual_checkpoint_delivers_persisted_relationships(), scripts, bind_market(), test_portfolio_bounded_cases_keep_exact_latest_updates(), test_nonempty_shadow_uses_bridge_and_sql_write_denial() (+81 more)
+Cohesion: 0.06
+Nodes (51): Offline reconciliation proof of the exact normal empty-registry receipt., test_exact_production_unavailable_receipt_and_reload(), costed(), build(), Ctx, frozen_context(), iso(), packet() (+43 more)
 
 ### Community 508 - "m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py"
 Cohesion: 0.15
 Nodes (24): importlib_metadata, platform, build_artifacts(), canon(), config(), covariance_psd(), effect_table(), environment_lock() (+16 more)
 
-### Community 509 - "test_scout_upgrades.py"
-Cohesion: 0.08
-Nodes (43): A full NewsGuard record drives decide() exactly like the old {active, why}., test_orchestrator_uses_the_guard_record_unchanged(), Behaviour, not source lines: an UNCERTAIN-but-active record changes decide() by…, test_news_uncertain_dampening_is_applied_exactly_once_by_behaviour(), _df(), _feed(), _orch(), Scout upgrade tests: calibration, positioning, depth, news guard, BTC context,… (+35 more)
+### Community 509 - "m32_protocol.py"
+Cohesion: 0.11
+Nodes (24): main(), Validate the frozen M3.2 input and print a zero-search manifest., test_artifact_is_not_mutated(), test_common_cuts_use_pit_clock_or_known_clock(), test_loader_refuses_other_path_and_modified_copy(), test_locked_artifact_and_zero_search_manifest(), test_numeric_bins_ignore_missing_without_fabricating_zero(), test_support_counts_episodes_and_dependence_groups() (+16 more)
 
 ### Community 510 - "M3.2 scheme D independent-seed replication — 2026-09-19"
 Cohesion: 0.20
@@ -3204,25 +3245,25 @@ Nodes (9): Decision, Independent root audit, M3.2 scheme D independent-seed repl
 Cohesion: 0.20
 Nodes (5): ArithmeticToken, ndarray, Deterministic arithmetic stand-in for a generator (no randomness anywhere)., Same call shape as ``SeedRegistry.generator``; returns tokens, refuses…, StubRegistry
 
-### Community 512 - "append"
-Cohesion: 0.07
-Nodes (21): Tail, observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped(), State, observe(), drain_storage() (+13 more)
+### Community 512 - "cognition/investigation.py"
+Cohesion: 0.12
+Nodes (35): is_timestamp(), advance(), Alternative, correlation_description(), correlation_evidence(), _correlation_outcome(), Dimension, encode() (+27 more)
 
-### Community 513 - "test_forming_bar_never_stored.py"
-Cohesion: 0.17
-Nodes (18): FakeFeed, _last_closed(), _now_ms(), The candle store holds CLOSED bars. A forming bar is not a bar. `fetch_ohlcv`…, The live failure, end to end: a truncated bar must not survive. Fetch once…, `since` must cover the newest stored bar, not start past it. Starting at `last…, Live corruption ran four bars deep, so a one-bar overlap is not enough. Every…, Open time of the newest 4h bar that has already closed. (+10 more)
+### Community 513 - "FakeFeed"
+Cohesion: 0.15
+Nodes (17): FakeFeed, _last_closed(), _now_ms(), The live failure, end to end: a truncated bar must not survive. Fetch once…, `since` must cover the newest stored bar, not start past it. Starting at `last…, Live corruption ran four bars deep, so a one-bar overlap is not enough. Every…, Open time of the newest 4h bar that has already closed., Put rows on disk exactly as the old code left them. Deliberately not via… (+9 more)
 
 ### Community 516 - "test_protection_snapshot.py"
-Cohesion: 0.06
-Nodes (83): C. Coherent observation mechanism (blocker 3), E. Reconciliation-cleanliness semantics (blocker 5), F. Persistence generation and order (blocker 6), L. Timeout / shutdown (blocker 13), N. Negative controls (blocker 15), Correction: what the observation proves (was "held throughout"), Mutants (source mutated, targeted test run, source restored byte-identical), Blocker 2: timestamp validation (+75 more)
+Cohesion: 0.11
+Nodes (46): E. Reconciliation-cleanliness semantics (blocker 5), N. Negative controls (blocker 15), Blocker 2: timestamp validation, _cell_ok(), _db_state(), _protected(), parametrize, LUFFY-PROTECTION-SNAPSHOT-R2: read-only protection evidence in every state.… (+38 more)
 
 ### Community 517 - "owner_api.py"
-Cohesion: 0.05
-Nodes (95): JSONResponse, Response, test_owner_generic_freshness_rejects_future_heartbeat(), test_protection_without_venue_snapshot_stays_unavailable(), JournalRead, Read-only projection regressions: absent checks are not mismatches., test_46_hour_old_proof_is_only_historical(), test_current_missing_checks_remain_unknown() (+87 more)
-
-### Community 518 - "Source"
 Cohesion: 0.04
-Nodes (79): Package return, Real shadow, Source delivery, Stage6 normal source integration R1, itertools, test_missing_context_and_snapshot_remain_explicit_and_identity_bound(), analyze(), bundle() (+71 more)
+Nodes (100): research_next_questions audit — 2026-10-11, Response, test_owner_generic_freshness_rejects_future_heartbeat(), test_protection_without_venue_snapshot_stays_unavailable(), read_then_swap(), JournalRead, Read-only projection regressions: absent checks are not mismatches., test_46_hour_old_proof_is_only_historical() (+92 more)
+
+### Community 518 - "decision_analysts.py"
+Cohesion: 0.27
+Nodes (10): analyze(), bundle(), _canonical(), _entry(), iso_ms(), DEC-01 analyst evidence for one decision-grade Opportunity Context. Pure and…, Exact epoch milliseconds of a timezone-aware ISO timestamp., The frozen source payload. `packets` are Measurement.to_dict() records. (+2 more)
 
 ### Community 522 - "generate_certificates.py"
 Cohesion: 0.29
@@ -3233,8 +3274,8 @@ Cohesion: 0.40
 Nodes (4): Boundary, Deliverable, Evidence, M3.1-H historical PIT slice — September 19, 2026
 
 ### Community 524 - "Typed outcomes and retained memory replay"
-Cohesion: 0.06
-Nodes (28): Continuation delivered, Dashboard access and usable investigation memory, Final-source verification and operational facts, Memory: implemented and tested; runtime adapter deployed, Next exact task, Owner access: implemented, tested and deployed, Tools and troubleshooting, Declared forward experiment caller (+20 more)
+Cohesion: 0.09
+Nodes (21): Declared forward experiment caller, Evidence and deployment, Implemented behavior, M2 case producers and forward non-trade caller, Maturity and next exact work, Subsequent work, Delivered behavior, Exact outcomes and next task (+13 more)
 
 ### Community 525 - "LUFFY — Requirements Specification v1.0 (FROZEN)"
 Cohesion: 0.12
@@ -3245,12 +3286,12 @@ Cohesion: 0.06
 Nodes (99): assigned_shards(), audit(), _blas_identity(), bootstrap_provider(), canon(), _check_published(), check_receipt_line(), collect_provenance() (+91 more)
 
 ### Community 527 - "Post-publication accounting review — September 17, 2026"
-Cohesion: 0.18
-Nodes (11): 1. Accounting for `pos_05a5e8f981` is complete, 2. Runtime — verification completed, gap root cause unresolved, 4. Tests, 5. Artifacts, 6. Unresolved, and the next exact work, 7. Statements of record, Attempt timeline, Complete economics (venue-observed, demo) (+3 more)
+Cohesion: 0.12
+Nodes (16): 1. Accounting for `pos_05a5e8f981` is complete, 2. Runtime — verification completed, gap root cause unresolved, 3. M3.1 population coverage and replay review, 4. Tests, 5. Artifacts, 6. Unresolved, and the next exact work, 7. Statements of record, Attempt timeline (+8 more)
 
 ### Community 528 - "test_trade_history.py"
-Cohesion: 0.06
-Nodes (55): test_strategy_board_aggregates_per_strategy_and_skips_unknown(), test_cache_failure_never_falls_back_and_memory_is_bounded(), test_cache_rejects_continuously_moving_source(), test_cache_reuses_snapshot_and_invalidates_all_source_changes(), read(), test_cache_serializes_concurrent_builds(), add(), api() (+47 more)
+Cohesion: 0.16
+Nodes (18): F. Performance, _canon(), _fields(), parametrize, Keyset trade history (owner frontend): ordering, no duplicate/gap, concurrency,…, _raw(), test_cursor_decoding_is_strict_and_fails_closed(), test_http_rejects_mangled_cursor_with_zero_rows() (+10 more)
 
 ### Community 529 - "test_naked_position_is_rearmed.py"
 Cohesion: 0.08
@@ -3258,83 +3299,83 @@ Nodes (30): list, _Journal, _pos(), Reconcile must notice a position with no sto
 
 ### Community 530 - "test_intelligence_spine.py"
 Cohesion: 0.06
-Nodes (82): test_investigation_registered_research_chain_captured(), _bar(), publish(), parametrize, LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1. observation -> WorldModel ->…, A verifying record that the stored candles do not produce is refused., Persist one scan through the real Store (what the worker child runs)., Scan rows without the WorldModel attribution fields. (+74 more)
+Nodes (85): qualify(), Retain deterministic artificial receipts for explicitly generated test bars.…, test_investigation_registered_research_chain_captured(), publish(), parametrize, LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1. observation -> WorldModel ->…, A verifying record that the stored candles do not produce is refused., Persist one scan through the real Store (what the worker child runs). (+77 more)
 
 ### Community 531 - "reconcile_futures"
 Cohesion: 0.04
-Nodes (78): DeadTicker, _evidence(), NoQuote, ACC-01: venue receipts stay authoritative; local estimates stay labelled;…, receipts(), test_adoption_with_venue_price_records_venue_source(), test_adoption_without_venue_entry_price_records_unknown(), test_alignment_estimate_is_labelled_and_history_is_append_only() (+70 more)
+Nodes (60): D. API / read contract, Possible improvements (not demonstrated as live defects), Other changes, _Ex, _ExWithFills, _fresh_read(), _journal(), Boot-time alignment must be durable before reconcile goes to the network.… (+52 more)
 
 ### Community 532 - "M3.1 window-close review — September 18, 2026"
-Cohesion: 0.15
-Nodes (13): 2. At-cut view vs capture view, 3. Collection coverage over the full frozen window, 4. M3.1 coverage acceptance: not accepted, 5. M8.1: read-only queue and journal check, 6. Tests and validation, 7. Artifacts (new; nothing pre-existing overwritten), 8. Exact next step, 9. Statements of record (+5 more)
+Cohesion: 0.14
+Nodes (14): 1. Integrity, 2. At-cut view vs capture view, 3. Collection coverage over the full frozen window, 4. M3.1 coverage acceptance: not accepted, 5. M8.1: read-only queue and journal check, 6. Tests and validation, 7. Artifacts (new; nothing pre-existing overwritten), 8. Exact next step (+6 more)
 
 ### Community 533 - "Host"
-Cohesion: 0.06
-Nodes (17): execute(), Host, main(), Same orchestrator exercised end-to-end by fake host fixtures., observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped() (+9 more)
+Cohesion: 0.07
+Nodes (16): execute(), main(), Same orchestrator exercised end-to-end by fake host fixtures., observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped(), State (+8 more)
 
 ### Community 534 - "test_dsl_ref.py"
-Cohesion: 0.31
-Nodes (12): _bars(), _eval(), parametrize, ref(key, expr): any indicator, on any reference market, point-in-time. A base…, S&P bar stamped D0 13:30 is known at D1 13:30 — not before., test_a_close_only_reference_has_no_high(), test_a_daily_close_is_invisible_until_it_is_known(), test_a_dead_feed_reads_nan() (+4 more)
+Cohesion: 0.27
+Nodes (13): _bars(), _eval(), parametrize, ref(key, expr): any indicator, on any reference market, point-in-time. A base…, S&P bar stamped D0 13:30 is known at D1 13:30 — not before., test_a_close_only_reference_has_no_high(), test_a_daily_close_is_invisible_until_it_is_known(), test_a_dead_feed_reads_nan() (+5 more)
 
 ### Community 535 - "journal_evidence.py"
-Cohesion: 0.11
-Nodes (26): ctypes, Table decisions and consumer correction, failed(), parametrize, test_codec_matches_installed_zlib_and_rejects_corruption(), decompress(), Bounded zlib.v1 operations without a scheduling handoff per small chunk. PyDLL…, _blob() (+18 more)
+Cohesion: 0.05
+Nodes (57): ctypes, dump(), migrate(), protect_source(), q(), Offline, space-guarded exact journal migration. Never opens production. A new…, space(), update_digest() (+49 more)
 
 ### Community 536 - "m32_scheme_d_validation_bundle_20260921/build_bundle.py"
 Cohesion: 0.17
 Nodes (22): build_artifacts(), canon(), config(), covariance_psd(), effect_table(), environment_lock(), exact_entry(), factor_covariance_exact_matches() (+14 more)
 
-### Community 537 - "Proposed next M8.1 slice: explicit conversion evidence"
-Cohesion: 0.33
-Nodes (5): Acceptance before deployment, Preserved controls and next action, Problem and proposed boundary, Proposed implementation boundaries, Proposed next M8.1 slice: explicit conversion evidence
+### Community 537 - "M8.1 actual conversion evidence: bounded capture and explicit attribution limit"
+Cohesion: 0.15
+Nodes (11): Acceptance before deployment, Preserved controls and next action, Problem and proposed boundary, Proposed implementation boundaries, Proposed next M8.1 slice: explicit conversion evidence, Delivered, Exact next work, M8.1 actual conversion evidence: bounded capture and explicit attribution limit (+3 more)
 
 ### Community 538 - "test_hierarchical_admission.py"
-Cohesion: 0.04
-Nodes (98): attention(), ATT-01: attention picks where to investigate from real typed triggers; offline., test_candidates_grant_no_trade_or_size_authority(), test_deterministic_replay_reproduces_selection_and_reasons(), test_event_creates_ranked_typed_candidates_subset_of_eligible(), test_incomplete_observation_refuses_instead_of_empty(), test_no_receipt_is_unavailable_not_zero(), test_tampered_receipt_cannot_yield_candidates() (+90 more)
+Cohesion: 0.05
+Nodes (72): test_parent_pairwise_counterexample_and_fixed_receipt(), s(), ATT-01: attention picks where to investigate from real typed triggers; offline., test_candidates_grant_no_trade_or_size_authority(), test_deterministic_replay_reproduces_selection_and_reasons(), test_event_creates_ranked_typed_candidates_subset_of_eligible(), test_incomplete_observation_refuses_instead_of_empty(), test_no_receipt_is_unavailable_not_zero() (+64 more)
 
 ### Community 539 - "Luffy intelligence — investigations that change with evidence"
-Cohesion: 0.07
-Nodes (27): Boundaries, Forecast publication and measurement rules, Inputs and records for M1.1, Investigation behavior for M1.2–M1.3, M1 implementation plan — persistent market investigations, Ordered implementation tasks, Result the owner should receive, Review and completion evidence (+19 more)
+Cohesion: 0.17
+Nodes (11): 1. Ask a question that matches the observation, 2. Keep an investigation open and update it honestly, 3. Choose the next evidence, including choosing to wait, 4. Turn outcomes into usable memory, Acceptance: demonstrate intelligence, not just passing schemas, Architecture and ownership, Evidence for choosing this slice, Frozen measurement contract for the first prototype (+3 more)
 
-### Community 540 - "LUFFY-ACTIVATION-AND-RISK-BASELINE-HARDENING-V2"
-Cohesion: 0.05
-Nodes (34): A. Risk-proof identity mechanism, B. First-init marker contract, D. Hardened repair_baseline contract, E. ACTIVE inventory strategy, F. Rollback corrupt-state rule and runbook, G. Stale-Risk race results, H. Full first-init results, I. Repair concurrency/audit results (+26 more)
+### Community 540 - "LUFFY-CANDLE-STORE-TRANSACTION-SAFETY-DEPLOYMENT-V1"
+Cohesion: 0.33
+Nodes (5): Change, LUFFY-CANDLE-STORE-TRANSACTION-SAFETY-DEPLOYMENT-V1, Monitoring (`cycles.txt`), Pre-deploy recheck (twice; `venue_pre.json`, `venue_pre2.json`), Timeline
 
-### Community 541 - "Scraper"
+### Community 541 - "Host"
 Cohesion: 0.08
-Nodes (21): Deliberately NOT in this plan, Done when, File Structure, Global Constraints, Scraper: the outside world, done right — Implementation Plan, Task 2: A scorer for research prose, Task 4: Route both streams into the queue, Task 5: Delete Job B (+13 more)
+Nodes (15): execute(), Host, main(), Same orchestrator exercised end-to-end by fake host fixtures., observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped() (+7 more)
 
 ### Community 542 - "30. Step-by-Step Engineering Delivery Plan"
 Cohesion: 0.17
 Nodes (12): 30. Step-by-Step Engineering Delivery Plan, Stage 0 - Establish Official Control Plane, Stage 10 - Advanced Capabilities Only When Earned, Stage 1 - Safety and Truth Foundation, Stage 2 - Unified Measurement and World Model, Stage 3 - Attention and Research Intelligence, Stage 4 - Quant Research and Falsification Engine, Stage 5 - Strategy Factory and Lifecycle (+4 more)
 
 ### Community 543 - "13. Quantitative Research Framework"
-Cohesion: 0.07
-Nodes (30): 1. I4 — "degenerate" statistic (protocol-substantive clarification), 2. Other owner decisions recorded (no protocol text changes), 3. Class-edge conformance correction, 4. Boundaries, M3.2 Scheme D validation — owner clarifications I1–I8 (addendum), 13.10 Ablation and parameter stability, 13.11 Statistical power, 13.1 Core return definitions (+22 more)
+Cohesion: 0.13
+Nodes (15): 3. Class-edge conformance correction, 13.6 Empirical p-value, 13.10 Ablation and parameter stability, 13.11 Statistical power, 13.1 Core return definitions, 13.2 Profit factor, 13.3 Expectancy, 13.4 Drawdown (+7 more)
 
 ### Community 544 - "30. Step-by-Step Engineering Delivery Plan"
 Cohesion: 0.17
 Nodes (12): 30. Step-by-Step Engineering Delivery Plan, Stage 0 - Establish Official Control Plane, Stage 10 - Advanced Capabilities Only When Earned, Stage 1 - Safety and Truth Foundation, Stage 2 - Unified Measurement and World Model, Stage 3 - Attention and Research Intelligence, Stage 4 - Quant Research and Falsification Engine, Stage 5 - Strategy Factory and Lifecycle (+4 more)
 
 ### Community 545 - "conversion_evidence.py"
-Cohesion: 0.17
-Nodes (14): test_real_balance_paths_record_basis_and_completion(), lots(), fixture, A source that answers with no high-impact US events is a quiet week, and must…, A cache from last week guards nothing. If it is the only thing we have, the…, test_a_genuinely_quiet_week_is_not_reported_as_blind(), test_an_all_past_cache_is_not_mistaken_for_a_quiet_week(), amount() (+6 more)
-
-### Community 546 - "Authorizer"
 Cohesion: 0.09
-Nodes (20): test_openclaw_conversation_makes_zero_control_requests(), _code(), _msg(), _oc(), Astra L: a displayed 'Confirm HALT' must never execute a resume., Astra K/L: no cross-provider, cross-sender or re-bound confirmation., test_r2_confirmation_expires(), test_r_whatsapp_openclaw_duplicate_messages_execute_once() (+12 more)
+Nodes (24): Task 5: Verify on the real system, and record it, test_real_balance_paths_record_basis_and_completion(), _guard_ff(), A guard whose only calendar source is the ForexFactory feed., country is 'USD' not 'US', impact is 'High' not 'high', and the date carries…, German data at the same instant must not halt a crypto book., Well past the post-event window, trading resumes., The kernel restarts often. Refetching from scratch every time is how the feed… (+16 more)
+
+### Community 546 - "test_emergency_whole_accounting.py"
+Cohesion: 0.12
+Nodes (18): artifact(), clean_scan(), intent(), fixture, parametrize, Synthetic venue receipts only; never observed trading performance., A caller that forgets (or fails) to compute the overlap scan must never see…, reassess() (+10 more)
 
 ### Community 547 - "Luffy intelligence — demo-first priorities"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): Claude handoff boundaries, Current evidence (read-only snapshot, 2026-09-15 ~15:10 UTC), Definition of useful progress, First deliverable: a candidate dossier and a strict thesis contract, Luffy intelligence — demo-first priorities, Outcome to build toward, Priority 1 — candidate reasoning tied to testable decisions, Priority 2 — explain every trade and every wait (+2 more)
 
 ### Community 548 - "certify_p5_c4_taylor.py"
 Cohesion: 0.21
 Nodes (31): A(), abs_upper(), cdf(), centered_moments(), class_probs(), classify(), density(), dyadic() (+23 more)
 
-### Community 549 - "Attention collector errors and watchdog gaps — diagnosis, September 18, 2026"
-Cohesion: 0.18
-Nodes (11): 1. Verdicts and evidence class, 2. Failure and recovery sequence (UTC, Sep 17), 3. Watchdog gaps, 5. Contract defects that inform the proposal, 6. Unknown, 7. M8.1 refresh (read-only, 01:37 UTC), 8. Artifacts, 9. Next step (+3 more)
+### Community 549 - "._conn"
+Cohesion: 0.08
+Nodes (21): 1. Verdicts and evidence class, 2. Failure and recovery sequence (UTC, Sep 17), 3. Watchdog gaps, 5. Contract defects that inform the proposal, 6. Unknown, 7. M8.1 refresh (read-only, 01:37 UTC), 8. Artifacts, 9. Next step (+13 more)
 
 ### Community 550 - "Performance"
 Cohesion: 0.20
@@ -3344,21 +3385,21 @@ Nodes (10): Animating via `transform` vs independent transforms, Animation best 
 Cohesion: 0.20
 Nodes (10): Component responsibilities, Contracts between components, Delivery sequence and dependencies, Final product acceptance, Luffy delivery roadmap, Owner requirement coverage, Progress and change control, Target architecture (+2 more)
 
-### Community 552 - "Research.tsx"
-Cohesion: 0.05
-Nodes (72): Card(), CardHead(), cmp(), Col, DataTable(), DetailPanel(), KV(), clockLabel() (+64 more)
+### Community 552 - "OperationsLog.tsx"
+Cohesion: 0.04
+Nodes (85): ControlOperation, ControlResult, Position, Card(), CardHead(), cmp(), Col, DataTable() (+77 more)
 
 ### Community 553 - "Gate-2 stationary-bootstrap independent review — 2026-09-16"
 Cohesion: 0.20
 Nodes (9): Design assessment before implementation, Final independent verification, Gate-2 stationary-bootstrap independent review — 2026-09-16, Implementation checks requested, Implementation review before calibration, Interim completed-cell verification, Prespecified challenges and limitations, Recommended charged statistic (+1 more)
 
-### Community 554 - "Collector"
-Cohesion: 0.10
-Nodes (12): SOL2: attention_fetch_outcomes review, main(), test_queue_full_and_mutation_are_visible_without_storage(), test_strategy_receipts_distinguish_swallowed_errors(), fail(), test_kernel_collector_worker_child_maintains_the_world_model(), test_retained_universe_and_attention_lineage(), Collector (+4 more)
+### Community 554 - "test_risk01_entry_binding.py"
+Cohesion: 0.14
+Nodes (26): check_account_changed(), check_expired_capability(), check_not_issued_by_this_risk(), check_stale_permission(), _entries(), go(), mutated(), parametrize (+18 more)
 
 ### Community 555 - "Evidence.tsx"
-Cohesion: 0.06
-Nodes (110): B. Shared product system, D. Frontend UX (Trades → Trade book), unprovenEdges(), kinds, NeedsYou(), decide(), OwnerEvidence(), Distribution() (+102 more)
+Cohesion: 0.08
+Nodes (75): B. Shared product system, unprovenEdges(), kinds, NeedsYou(), decide(), OwnerEvidence(), Distribution(), Figure() (+67 more)
 
 ### Community 556 - "33. Target Capability Acceptance Gates"
 Cohesion: 0.20
@@ -3368,25 +3409,25 @@ Nodes (10): 33.1 Autonomous market discovery, 33.2 Autonomous research, 33.3 Wor
 Cohesion: 0.20
 Nodes (10): 33.1 Autonomous market discovery, 33.2 Autonomous research, 33.3 World model, 33.4 Quant referee, 33.5 Strategy autonomy, 33.6 Portfolio optimizer, 33.7 Risk/execution safety, 33.8 Learning (+2 more)
 
-### Community 558 - "estimate"
+### Community 558 - "run"
 Cohesion: 0.13
-Nodes (24): _q(), test_valuation_any_gap_makes_total_unavailable_never_partial(), test_valuation_complete_long_and_short(), test_valuation_quote_uses_ticker_time_and_age(), test_valuation_zero_pnl_is_a_real_zero_and_no_positions_is_zero(), _trade(), _feed_with(), A DataFeed whose market-data exchange and time.time are scripted. (+16 more)
+Nodes (9): Authority and control plane, Mandatory PIT inventory, Reproducible evidence, Stage1 recovery/monitoring R1 blocker fixes, Strict heartbeat contract, fds(), run(), size() (+1 more)
 
 ### Community 559 - "Declared population collection delivery"
 Cohesion: 0.40
 Nodes (5): Coverage, accounting and frozen windows, Declared population collection delivery, Exact next steps, Guarded deployment and rollback, Implementation and review
 
 ### Community 560 - "test_owner_reads_m2.py"
-Cohesion: 0.09
-Nodes (40): chat(), _chat_mentions(), fields(), get(), _note(), _note_mentions(), parametrize, Owner frontend M2: connected evidence reads in trader/dashboard/owner_reads.py… (+32 more)
+Cohesion: 0.08
+Nodes (43): chat(), _chat_mentions(), fields(), get(), _note(), _note_mentions(), parametrize, Owner frontend M2: connected evidence reads in trader/dashboard/owner_reads.py… (+35 more)
 
 ### Community 561 - "Graph Report - trader  (2026-09-19)"
-Cohesion: 0.18
-Nodes (10): Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, Graph Freshness, Graph Report - trader  (2026-09-19), Hyperedges (group relationships), Import Cycles, Knowledge Gaps (+2 more)
+Cohesion: 0.17
+Nodes (11): Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, God Nodes (most connected - your core abstractions), Graph Freshness, Graph Report - trader  (2026-09-19), Hyperedges (group relationships), Import Cycles (+3 more)
 
-### Community 562 - "graphify reference: extra exports and benchmark"
-Cohesion: 0.10
-Nodes (16): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000) (+8 more)
+### Community 562 - "test_real_timers_retain_truthful_observations_until_verified_exit"
+Cohesion: 0.09
+Nodes (24): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000) (+16 more)
 
 ### Community 563 - "test_spec_writer.py"
 Cohesion: 0.13
@@ -3416,25 +3457,25 @@ Nodes (9): 35. Astra Deep-Analysis Assignments Before Final Current-State Freeze
 Cohesion: 0.22
 Nodes (8): LUFFY — Build Roadmap, Phase 0 — Skeleton (days 1–2), Phase 1 — Trade & Record · GOES LIVE (days 3–7), Phase 2 — Learn (week 2), Phase 3 — Research (week 3), Phase 4 — Become Jarvis (week 4), Phase 5 — Trust & Scale (ongoing), Salvaged patterns from the old project
 
-### Community 570 - ".decide"
+### Community 570 - "Strategy-first decision core + the Researcher"
 Cohesion: 0.10
-Nodes (21): What Luffy is, Attribution (D9), Governing principle, Known risks, Migration: the blend is temporary, Out of scope, Safeguards, Settings changed (+13 more)
+Nodes (19): Agent contracts, Analyst — adjudicate, Attribution (D9), Governing principle, Harvester — the numbers, Known risks, Librarian — record everything, Migration: the blend is temporary (+11 more)
 
 ### Community 571 - "2. Owner Decisions That Are Binding"
 Cohesion: 0.20
 Nodes (10): 2.1 Objective, 2.2 Market scope, 2.3 Capital range, 2.4 Autonomy, 2.5 Architecture and production-code changes, 2.6 Risk authority, 2.7 Research/data spending, 2.8 Machine learning (+2 more)
 
-### Community 572 - "test_opportunity_live_integration.py"
-Cohesion: 0.05
-Nodes (93): main(), Bounded read-only current-book context, using the existing candidate reader., run(), capture(), _json(), main(), Bounded current-evidence Stage-6 shadow. No venue calls or Journal writes., Fixed source row/payload bounds and five-second SQL deadline. max_contexts is a… (+85 more)
+### Community 572 - "BrainLLM"
+Cohesion: 0.14
+Nodes (13): The firm, The idea queue, Task 2: Every LLM call carries a purpose, under its own budget, LLM removals, offline(), fixture, parametrize, test_background_spec_writer_and_pine_template_fallback() (+5 more)
 
 ### Community 573 - "test_stage1_entry_authority.py"
-Cohesion: 0.03
-Nodes (126): ccxt, Offline normal entry caller with a partial intent appearing between durable…, permission(), fixture, setup(), _entries(), _open(), EXE-01: retries, timeouts, redelivery and restart never duplicate new exposure.… (+118 more)
+Cohesion: 0.06
+Nodes (53): permission(), test_real_venue_rejection_binds_reason_and_exact_ids(), The leverage the sizing math assumes must be the leverage the venue uses.…, test_entry_never_mutates_venue_leverage(), test_sizing_leverage_must_equal_the_venue_observation(), test_margin_observation_missing_or_stale_refused(), test_stale_leverage_observation_refused(), call() (+45 more)
 
 ### Community 574 - "test_owner_frontend_api.py"
 Cohesion: 0.05
-Nodes (44): I. Changed files, I. Focused tests, K. Live compatibility and remaining blocker, add_history(), close_trade(), insert_trade(), _iso(), protection_snapshot() (+36 more)
+Nodes (46): I. Changed files, I. Focused tests, K. Live compatibility and remaining blocker, fastapi, fastapi_responses, http_cookies, add_history(), close_trade() (+38 more)
 
 ### Community 575 - "Codex: Documentation, examples & Motion UI search"
 Cohesion: 0.25
@@ -3445,12 +3486,12 @@ Cohesion: 0.25
 Nodes (7): Assessment of the proposed next experiment, Final completed-run review, Frozen-run interim verification, Gate-2 independent review — 2026-09-16, Reviewer and scope, Revised implementation review before calibration, Verification and findings
 
 ### Community 577 - "test_execution_accounting.py"
-Cohesion: 0.14
-Nodes (27): main(), fills(), History, parametrize, Exact recovery accounting: synthetic venue evidence, no exchange access., raw_fills(), record(), test_archive_and_release_are_one_transaction() (+19 more)
+Cohesion: 0.15
+Nodes (26): fills(), History, parametrize, Exact recovery accounting: synthetic venue evidence, no exchange access., raw_fills(), record(), test_archive_and_release_are_one_transaction(), fail_after_insert() (+18 more)
 
-### Community 578 - "test_macro_guard.py"
-Cohesion: 0.10
-Nodes (21): _guard_ff(), _guard_with_403(), _isolate_calendar_cache(), fixture, Tests for MacroGuard — economic calendar hard-freeze agent., Finnhub's economic calendar is a paid endpoint; a free key 403s., With every source dead, the state must not read as 'no active event window' —…, requests puts the full URL — including ?token= — in its error text. (+13 more)
+### Community 578 - "MacroGuard"
+Cohesion: 0.06
+Nodes (40): Self-Review, _cfg(), _event(), _guard_with_403(), _isolate_calendar_cache(), _mock_response(), fixture, Tests for MacroGuard — economic calendar hard-freeze agent. (+32 more)
 
 ### Community 579 - "28. Testing and Validation Architecture"
 Cohesion: 0.25
@@ -3468,29 +3509,29 @@ Nodes (8): 28.1 Unit tests, 28.2 Property/invariant tests, 28.3 Integration test
 Cohesion: 0.25
 Nodes (8): 7.1 Price/structure, 7.2 Momentum/trend, 7.3 Value/mean reversion, 7.4 Volatility, 7.5 Flow / market microstructure, 7.6 Positioning/derivatives, 7.7 Cross-market context, 7. Market Perception Layer
 
-### Community 583 - "cognition/investigation.py"
-Cohesion: 0.12
-Nodes (32): advance(), Alternative, correlation_description(), correlation_evidence(), _correlation_outcome(), Dimension, encode(), InputBar (+24 more)
+### Community 583 - "test_trade_booking.py"
+Cohesion: 0.13
+Nodes (29): main(), _fill(), _row(), test_a_partial_then_a_close_totals_to_the_venue(), test_an_unreadable_venue_leaves_the_trade_open_and_says_so(), test_the_exit_is_booked_at_the_fill_not_the_hint(), parametrize, Booking receipts are durable evidence, not inferred complete trade outcomes. (+21 more)
 
 ### Community 584 - "M3.2 synthetic block-null calibration — September 19"
 Cohesion: 0.15
 Nodes (13): BH over the 384-member family (250 worlds, 2000 draws), Changes required before any freeze, Invalid-design refusals (1000/1000 each, 0 null draws), M3.2 synthetic block-null calibration — September 19, Missingness, Power by effect (lab, family 1, unadjusted p≤.05, 1000 worlds), Run, Scope and caveats (read first) (+5 more)
 
-### Community 585 - "world/replay.py"
-Cohesion: 0.23
-Nodes (22): ClaimEvidenceType, Enum, str, Enum, str, ScopeLevel, EvidenceRef, _claim() (+14 more)
+### Community 585 - "test_da04_snapshot_reliability.py"
+Cohesion: 0.09
+Nodes (37): con(), feed_at(), kernel_at(), parametrize, Deterministic offline snapshot faults; no Kernel boot or real providers., Symbols, test_background_short_frame_keeps_its_refusal_reason(), test_corrupt_read_is_invalid_without_reacquisition() (+29 more)
 
-### Community 586 - "test_control_state_recovery.py"
-Cohesion: 0.12
-Nodes (23): E. Entry safety (real `Executor.open`, the final entry boundary), hammer(), R(), _at(), journal(), fixture, parametrize, RECOVERY control state (SDD v3.2 §27): no new entries; exits, protection and… (+15 more)
+### Community 586 - "test_exe07_execution_quality.py"
+Cohesion: 0.29
+Nodes (21): db(), fill(), leg(), one(), fixture, parametrize, q(), EXE-07: execution-quality timing and actual venue costs bind the exact action.… (+13 more)
 
-### Community 587 - "pytest"
-Cohesion: 0.03
-Nodes (93): Offline characterization of closure blockers; passes document defects. These…, test_completed_request_repeats_after_restart(), test_executor_accepts_without_risk_decision(), test_non_authoritative_equity_can_still_size(), test_nonfinite_entry_price_is_not_refused(), Test evidence, Suggested Questions, importlib (+85 more)
+### Community 587 - "Journal"
+Cohesion: 0.01
+Nodes (287): ccxt, Offline characterization of closure blockers; passes document defects. These…, test_completed_request_repeats_after_restart(), test_executor_accepts_without_risk_decision(), test_non_authoritative_equity_can_still_size(), test_nonfinite_entry_price_is_not_refused(), Test evidence, 5. The analyst's toolbox (read-only) (+279 more)
 
-### Community 588 - ".from_dict"
-Cohesion: 0.04
-Nodes (77): Actual authority path, Authoritative objects and precise gaps, Baseline / isolation, Reproducible live-boundary counterexamples, Required matrix assessment, [SOL-1][EXE-04] BLOCKED — approved exit-plan authority audit, Validation and boundaries, _install() (+69 more)
+### Community 588 - "pytest"
+Cohesion: 0.01
+Nodes (179): ccxt_base_errors, copy, cprofile, dataclasses, 3a. What price the exit engine actually evaluates, Bounded exact-cut inventory for retained anchor derivatives; no label inference., Verify fixed policy, frozen observations and fresh-process replay; no live data., Actual authority path (+171 more)
 
 ### Community 589 - "Gate-2 stationary calibration — 2026-09-16"
 Cohesion: 0.29
@@ -3504,21 +3545,21 @@ Nodes (6): Gate-2 studentized calibration — 2026-09-16, Measured size, Power a
 Cohesion: 0.29
 Nodes (6): Deliverables and verification, Gate-2 synthetic calibration — 2026-09-16, Measured false-pass behavior, Power and minimum detectable effects, Review and handoff, Selection, family error and limits
 
-### Community 592 - "test_strategy_blend.py"
-Cohesion: 0.18
-Nodes (14): Weighted combination of the active strategy set. The orchestrator already…, The documented property: at n == prior, evidence counts half., test_a_regime_it_loses_in_cuts_it(), test_a_regime_the_strategy_pays_in_lifts_it(), test_evidence_for_another_regime_does_not_transfer(), test_no_measured_evidence_is_neutral(), test_shrinkage_is_worth_half_at_the_prior(), test_too_few_windows_is_not_evidence() (+6 more)
+### Community 592 - "Collector"
+Cohesion: 0.11
+Nodes (10): SOL2: attention_fetch_outcomes review, main(), test_strategy_receipts_distinguish_swallowed_errors(), fail(), test_worker_sqlite_diagnostics_retain_codes_without_messages(), Collector, Exception, Allowlisted class/reason only; never stores stderr or arbitrary messages. (+2 more)
 
 ### Community 593 - "Roadmap baseline and planning handoff"
 Cohesion: 0.29
 Nodes (7): Current read-only snapshot, Honest completion baseline, Next exact task, Planning deliverables, Priority correction, Roadmap baseline and planning handoff, Validation of this planning delivery
 
 ### Community 594 - "trade_provenance.py"
-Cohesion: 0.06
-Nodes (71): db(), fill(), leg(), one(), fixture, parametrize, q(), EXE-07: execution-quality timing and actual venue costs bind the exact action.… (+63 more)
+Cohesion: 0.05
+Nodes (64): _check_copy(), dry_run(), _DryRun, main(), Exception, Path, RuntimeError, Link historical booking receipts to trade_legs / trade_fills — deterministic… (+56 more)
 
 ### Community 595 - "certify_categorical.py"
-Cohesion: 0.30
-Nodes (23): a(), boxes(), cdf(), classify(), dyadic(), factor_product(), frozen(), inner_cluster() (+15 more)
+Cohesion: 0.23
+Nodes (29): a(), boxes(), categorical_targets(), cdf(), classify(), cluster(), cluster_counts(), composition() (+21 more)
 
 ### Community 596 - "12. Autonomous Research Intelligence"
 Cohesion: 0.29
@@ -3538,23 +3579,23 @@ Nodes (8): 16.1 Opportunity score, 16.2 Common-factor exposure, 16.3 Capacity, 1
 
 ### Community 600 - "m32_scheme_d_host_qualification_v4_20260923/qualify.py"
 Cohesion: 0.08
-Nodes (70): benchmark_binding(), bindings(), calibration_binding_problems(), canon(), check_atomic_publish(), check_bindings(), check_bit_identity(), check_blas() (+62 more)
+Nodes (58): errno, benchmark_binding(), bindings(), calibration_binding_problems(), canon(), check_bindings(), check_bit_identity(), check_blas() (+50 more)
 
 ### Community 601 - "graphify reference: query, path, explain"
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
-### Community 602 - "_metric"
-Cohesion: 0.04
-Nodes (47): Latest: M3.2 deterministic sharding / resume layer, September 21, Latest: M3.2 host / filesystem qualification tool, September 22, Latest: M3.2 optimized exact-equivalent metric, September 21, Latest: M3.2 P4/C3 and P4/C4 reduced certificates, September 21, Latest: M3.2 P5/C3 hit/miss and macro-F1 freeze, September 21, Latest: M3.2 P5/C3 population-majority freeze, September 20, Latest: M3.2 P5/C4 full reduced certificate, September 21, Latest: M3.2 P6/C3 full reduced certificate, September 21 (+39 more)
+### Community 602 - "Luffy delivery checklist — canonical status"
+Cohesion: 0.09
+Nodes (22): Current board, Luffy delivery checklist — canonical status, M0 — Bounded foundations already delivered, M10 — Integrated autonomous demo acceptance and owner operations, M1 — Investigations that change with evidence, M2 — Outcomes become usable memory, M3 — Automatic patterns produce mechanical strategy candidates, M4 — Honest validation and an evolving strategy population (+14 more)
 
 ### Community 603 - "test_m32_shard_layer.py"
 Cohesion: 0.07
 Nodes (58): shard_fixture, shard_layer, completed_run(), Crash, _frozen_child(), _init_worker(), make_ctx(), _merge_child() (+50 more)
 
 ### Community 604 - "test_m32_pilot_v4.py"
-Cohesion: 0.06
-Nodes (54): recorder(), hook(), Not wired / limits, read(), checked(), auth_with(), build_run(), evaluator() (+46 more)
+Cohesion: 0.15
+Nodes (11): _p6(), Guard the frozen M3.2 Scheme-D v4 pilot preparation…, _refusal(), _t1(), test_evaluator_signs_come_from_hash_bound_truth_table_and_require_analytic_non_null(), test_family_means_are_reported_but_never_decide(), test_no_pilot_run_or_verdict_exists(), test_pilot_plan_refuses_p1_tagged_power() (+3 more)
 
 ### Community 605 - "Gate-2 inference requirements after the stationary experiment"
 Cohesion: 0.33
@@ -3564,21 +3605,21 @@ Nodes (5): Assumptions that a useful mean-contrast test needs, Gate-2 inference 
 Cohesion: 0.33
 Nodes (5): Continuation prompt, Gate-2 next-session handoff — 2026-09-16, Minimal read order for the next session, Next work, Roles and token efficiency
 
-### Community 607 - "M8.1 normal booking provenance and demo rollout"
-Cohesion: 0.33
-Nodes (6): Concrete changes, Deployment and actual runtime, Evidence and limits, M8.1 normal booking provenance and demo rollout, Next exact work, Read-only owner export and replay
+### Community 607 - "append"
+Cohesion: 0.10
+Nodes (18): Tail, observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped(), State, observe(), drain_storage() (+10 more)
 
-### Community 608 - "bench_sharding.py"
-Cohesion: 0.15
-Nodes (12): layer_overhead(), main(), project(), Path, Non-inferential scaling / overhead benchmark of the shard layer (RNG-free…, Per-world cost of the layer (fsynced line, per-line validation, completion)…, run_workers(), installed() (+4 more)
+### Community 608 - "test_res08_governed_bridge.py"
+Cohesion: 0.16
+Nodes (19): test_persisted_adversarial_and_revision(), base(), case(), completed(), copy_db(), cycle(), fixture, parametrize (+11 more)
 
 ### Community 609 - "M3.1 prospective population producer"
 Cohesion: 0.33
 Nodes (5): Behavior and boundaries, Deployment and actual runtime, M2.1 and next exact task, M3.1 prospective population producer, Tests and retained evidence
 
-### Community 610 - "MacroGuard"
-Cohesion: 0.21
-Nodes (12): _cfg(), _event(), _mock_response(), Network errors should NOT trigger a freeze (fail-open)., Build a fake Finnhub event N minutes from now (ET = UTC-4)., TestMacroGuardCaching, TestMacroGuardDisabled, TestMacroGuardFetchError (+4 more)
+### Community 610 - "test_historical_outcome_capture.py"
+Cohesion: 0.12
+Nodes (23): run(), chain(), finish(), parametrize, Synthetic prospective integration only; no network or production writes., test_actual_risk_block_receipt_can_complete_without_confidence_change(), test_automatic_forward_resolver_keeps_closed_postdecision_bars(), test_capture_does_not_mutate_strategy_risk_trading_or_control() (+15 more)
 
 ### Community 611 - "Exit geometry OOS comparison — 25% peak-profit giveback"
 Cohesion: 0.33
@@ -3594,7 +3635,7 @@ Nodes (5): Boundaries, Fixed experiment and precision, Gate-2 studentized calibr
 
 ### Community 614 - "Graph Report - trader  (2026-09-18)"
 Cohesion: 0.17
-Nodes (11): Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, Graph Freshness, Graph Report - trader  (2026-09-18), Hyperedges (group relationships), Import Cycles, Knowledge Gaps (+3 more)
+Nodes (11): Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, God Nodes (most connected - your core abstractions), Graph Freshness, Graph Report - trader  (2026-09-18), Hyperedges (group relationships), Import Cycles (+3 more)
 
 ### Community 615 - "14. Strategy Architecture"
 Cohesion: 0.33
@@ -3617,12 +3658,12 @@ Cohesion: 0.24
 Nodes (16): context(), _json(), load_layer(), main(), pilot_plan(), PilotError, Path, RuntimeError (+8 more)
 
 ### Community 620 - "Shell.tsx"
-Cohesion: 0.05
-Nodes (46): Correction pass (Astra's three blockers), LUFFY-FRONTEND-COMPLETION-M1 — route delivery + core read paths, Read contracts (`trader/dashboard/owner_reads.py`), Root cause, Still unavailable (kernel-owned evidence not recorded), Tests, VisualBoundary, client (+38 more)
+Cohesion: 0.04
+Nodes (46): Correction pass (Astra's three blockers), LUFFY-FRONTEND-COMPLETION-M1 — route delivery + core read paths, Read contracts (`trader/dashboard/owner_reads.py`), Root cause, Still unavailable (kernel-owned evidence not recorded), Tests, fixtureAdapter, VisualBoundary (+38 more)
 
 ### Community 621 - "graphql_schema.py"
-Cohesion: 0.03
-Nodes (101): DataLoader, CLAUDE.md, Commands, Control states, Daemon threads, Environment, Journal schema, Known-good invariants — do not break (+93 more)
+Cohesion: 0.02
+Nodes (133): asyncio, DataLoader, Journal schema, Task 2: Read-only journal tools + schemas, Task 3: A data-only post-mortem and a read-only doctrine loader, 3. Bottlenecks, ranked by owner value and dependency, 5. Limitations of this audit, Luffy — current capability and logging audit against the owner end goal (+125 more)
 
 ### Community 622 - "Breakout-Retest"
 Cohesion: 0.67
@@ -3641,44 +3682,44 @@ Cohesion: 0.67
 Nodes (3): Genes, Liquidity Sweep Reversal, Live record
 
 ### Community 626 - "test_opportunity_context.py"
-Cohesion: 0.07
-Nodes (67): _bound_kw(), _full(), _inv_dict(), _ledger_entry(), _mutations(), parametrize, SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1. One immutable, versioned Opportunity…, Round-trip every input through its persisted form and rebuild. (+59 more)
+Cohesion: 0.08
+Nodes (57): _bound_kw(), _full(), _inv_dict(), _ledger_entry(), _mutations(), parametrize, SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1. One immutable, versioned Opportunity…, Round-trip every input through its persisted form and rebuild. (+49 more)
 
 ### Community 627 - "VWAP Extreme Fade"
 Cohesion: 0.67
 Nodes (3): Genes, Live record, VWAP Extreme Fade
 
 ### Community 628 - "Durable entry exposure recovery"
-Cohesion: 0.40
-Nodes (5): Deployment and final handoff, Durable entry exposure recovery, Implemented behavior, Scope and remaining limitations, Verification
+Cohesion: 0.20
+Nodes (8): Deployment and final handoff, Durable entry exposure recovery, Implemented behavior, Scope and remaining limitations, Verification, Forward loop continuation: independent verification and recovery review, Recovery findings and bounded next implementation, Verified runtime
 
 ### Community 629 - "Luna session handoff — candidate 55243573515adc3b"
 Cohesion: 0.40
 Nodes (4): Current state, Luna session handoff — candidate 55243573515adc3b, New-session prompt, Unfinished items
 
-### Community 630 - "BrainLLM"
-Cohesion: 0.03
-Nodes (87): Open faults, File Structure, Global Constraints, Risks & checks, Self-Review, Talk to Luffy — Intelligent Voice Analyst Implementation Plan, Task 1: `BrainLLM.chat_tools()` + configurable base_url, Task 3: `AnalystAgent` tool-calling loop (+79 more)
-
-### Community 631 - "foundation.py"
+### Community 630 - "ChatEngine"
 Cohesion: 0.06
-Nodes (48): Acceptance and review, Application contract, Evidence and forbidden effects, Owning authority and receipts, Real read-only shadow, Stage 7 learning application integration R1, All consumers and execution ownership, Cost and historical compatibility (+40 more)
+Nodes (35): File Structure, Global Constraints, Risks & checks, Self-Review, Talk to Luffy — Intelligent Voice Analyst Implementation Plan, Task 1: `BrainLLM.chat_tools()` + configurable base_url, Task 3: `AnalystAgent` tool-calling loop, Task 4: Wire `AnalystAgent` into `ChatEngine` (+27 more)
 
-### Community 632 - "M8.1 bounded accounting capture and retry worker"
-Cohesion: 0.40
-Nodes (5): Delivered and deployed, Evidence and limits, M8.1 bounded accounting capture and retry worker, Next work, Scheduled opening and maturity review — September 17 00:01 UTC
+### Community 631 - "digest"
+Cohesion: 0.05
+Nodes (45): Acceptance and review, Application contract, Evidence and forbidden effects, Owning authority and receipts, Real read-only shadow, Stage 7 learning application integration R1, All consumers and execution ownership, Cost and historical compatibility (+37 more)
+
+### Community 632 - "test_chat_agent.py"
+Cohesion: 0.12
+Nodes (21): _cfg(), _FakeClient, _FakeMsg, _isolate_budget(), _journal(), _msg(), Tests for the Talk-to-Luffy analyst: tools, agent loop, ops intercept., Yields a scripted sequence of assistant messages. (+13 more)
 
 ### Community 633 - "vwap_fade variant (1.5957)"
 Cohesion: 0.67
 Nodes (3): Genes, Live record, vwap_fade variant (1.5957)
 
-### Community 634 - "test_ref_sources.py"
-Cohesion: 0.22
-Nodes (3): Each reference source, parsed from a recorded payload shape — no network., test_binance_klines_pages_forward_until_the_venue_runs_dry(), test_yahoo_parses_bars_and_drops_an_unmeasured_close()
+### Community 634 - "m32_scheme_d_validation_bundle_20260921/runner/acceptance.py"
+Cohesion: 0.15
+Nodes (20): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+12 more)
 
 ### Community 635 - "test_research_refusal_suppression.py"
 Cohesion: 0.05
-Nodes (47): Child, Clock, _control_batch(), env(), _exec(), _measure(), fixture, parametrize (+39 more)
+Nodes (46): Child, Clock, _control_batch(), env(), _exec(), _measure(), fixture, parametrize (+38 more)
 
 ### Community 636 - "Map of Content"
 Cohesion: 0.40
@@ -3688,29 +3729,29 @@ Nodes (5): Company, Daily, Map of Content, Strategies, Theories
 Cohesion: 0.40
 Nodes (5): 15.1 Required economic edge, 15.2 Confidence decomposition, 15.3 Position expression, 15.4 Cash, 15. Opportunity and Expression Decision
 
-### Community 638 - "17. Deterministic Risk Authority"
-Cohesion: 0.40
-Nodes (5): 17.1 Hard responsibilities, 17.2 Capital-preservation mode, 17.3 Partial conviction, 17.4 Risk-limit changes, 17. Deterministic Risk Authority
+### Community 638 - "test_str01_version_lineage.py"
+Cohesion: 0.15
+Nodes (26): _derive(), _new(), _plant(), _plant_raw(), parametrize, STR-01: one immutable typed StrategySpec/StrategyVersion lineage.…, _refused(), _set() (+18 more)
 
 ### Community 639 - "18. Execution Architecture"
 Cohesion: 0.40
 Nodes (5): 18.1 Venue truth, 18.2 Protection, 18.3 Idempotency, 18.4 Execution-quality model, 18. Execution Architecture
 
-### Community 640 - "22. AI / LLM Architecture"
-Cohesion: 0.40
-Nodes (5): 22.1 Good LLM uses, 22.2 Bad LLM uses, 22.3 Cost hierarchy, 22.4 Budgeting, 22. AI / LLM Architecture
+### Community 640 - "dispatch.py"
+Cohesion: 0.12
+Nodes (27): checkpoint_isolated(), describe(), dispatch_evidence(), dispatch_pending(), dispatchable(), ensure(), evaluate(), _evaluate_rule() (+19 more)
 
 ### Community 641 - "23. External Systems, MCPs and Tools"
 Cohesion: 0.40
 Nodes (5): 23.1 Venue adapters, 23.2 Research/data sources, 23.3 MCP policy, 23.4 Engineering tools, 23. External Systems, MCPs and Tools
 
-### Community 642 - "market_provenance.py"
-Cohesion: 0.06
-Nodes (53): ccxt_base_errors, con(), feed_at(), kernel_at(), parametrize, Deterministic offline snapshot faults; no Kernel boot or real providers., Symbols, test_background_short_frame_keeps_its_refusal_reason() (+45 more)
+### Community 642 - "test_postmortem.py"
+Cohesion: 0.13
+Nodes (16): Task 4: Remove the LLM Theorist and the dead rules module, _Journal, The Theorist without an LLM: is each live strategy still inside the envelope it…, _spec(), test_a_spec_with_a_validated_rate_gets_a_health_verdict(), test_a_strategy_performing_as_validated_reads_consistent(), test_a_young_strategy_reads_insufficient_not_broken(), test_an_unchanged_book_writes_no_note() (+8 more)
 
 ### Community 643 - "skills/motion/best-practices/index.md"
-Cohesion: 0.14
-Nodes (11): `animate`, API guidance, Easing, Importing, Motion (Vanilla JS / HTML / TypeScript), API guidance, Component Integration, Importing (+3 more)
+Cohesion: 0.24
+Nodes (5): `animate`, API guidance, Easing, Importing, Motion (Vanilla JS / HTML / TypeScript)
 
 ### Community 644 - "15. Opportunity and Expression Decision"
 Cohesion: 0.22
@@ -3740,9 +3781,9 @@ Nodes (22): t(), 12.1 Type-I / global null, 12.2 FDR, 12.3 Marginal p calibratio
 Cohesion: 0.15
 Nodes (8): Behavioral Momentum, Rules derived, Cross-Asset Rotation, Measured driver, Guards, Statistical Mean Reversion, Liquidity Sweep Reversal, VWAP Extreme Fade
 
-### Community 651 - "evaluate_existing.py"
-Cohesion: 0.11
-Nodes (26): Assumptions and limitations, Baselines (descriptive only), Cognition historical replay — 2026-09-15 run, Command, Decisions, Findings (hand-written, from manifest.json per-symbol coverage), Identity, Recommendation (+18 more)
+### Community 651 - "Cognition historical replay — 2026-09-15 run"
+Cohesion: 0.17
+Nodes (11): Assumptions and limitations, Baselines (descriptive only), Cognition historical replay — 2026-09-15 run, Command, Decisions, Findings (hand-written, from manifest.json per-symbol coverage), Identity, Recommendation (+3 more)
 
 ### Community 652 - "test_real_funding.py"
 Cohesion: 0.14
@@ -3756,9 +3797,9 @@ Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and wat
 Cohesion: 0.50
 Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
 
-### Community 655 - "world_producer.py"
-Cohesion: 0.10
-Nodes (30): Delivery and boundaries, Producers, consumers and meanings, Verification and measured overhead, WM-01 — offline volume calculation reuse, Signed anchor log-volume z-score against the preceding sample window. Callers…, Reuse only an exact volume window in this detached Dataset. The key includes…, volume_measurement(), volume_z() (+22 more)
+### Community 655 - "File Structure"
+Cohesion: 0.20
+Nodes (9): Deliberately NOT in this plan, Done when, File Structure, Global Constraints, Scraper: the outside world, done right — Implementation Plan, Task 1: The idea queue carries a stream label, Task 2: A scorer for research prose, Task 5: Delete Job B (+1 more)
 
 ### Community 656 - "convert_vault_to_atomic.py"
 Cohesion: 0.42
@@ -3774,15 +3815,15 @@ Nodes (46): GraphData, GraphEdge, Lens, Scenario, delay(), FIXTURE_TIME, gate(),
 
 ### Community 659 - "test_pine_spec.py"
 Cohesion: 0.06
-Nodes (61): test_a_ref_spec_is_not_translatable_to_pine(), FakeLLM, _genome(), parametrize, Pine Forge tests — generation, folds, lint gate, LLM-refine safety., Regression: params={} once baked literal 'None' into the Pine source…, test_all_families_forge_and_lint(), test_empty_params_fall_back_to_defaults() (+53 more)
+Nodes (60): test_a_ref_spec_is_not_translatable_to_pine(), FakeLLM, _genome(), parametrize, Pine Forge tests — generation, folds, lint gate, LLM-refine safety., Regression: params={} once baked literal 'None' into the Pine source…, test_all_families_forge_and_lint(), test_empty_params_fall_back_to_defaults() (+52 more)
 
-### Community 660 - "test_run01_instance_identity.py"
-Cohesion: 0.06
-Nodes (65): fcntl, test_dirty_revision_and_conflicting_kernel_refuse(), test_failed_attempt_real_lock_still_refuses_second_holder(), fixture, world(), heartbeat(), process(), fixture (+57 more)
+### Community 660 - "inspect"
+Cohesion: 0.09
+Nodes (39): process(), fixture, test_absent_identity_does_not_create_artifacts(), test_pid_reuse_and_missing_identity_are_unknown(), git_repo(), spawn(), test_duplicate_launch_refused(), test_legacy_unlocked_kernel_blocks_start() (+31 more)
 
 ### Community 661 - "test_owner_recovery_risk_guard.py"
-Cohesion: 0.05
-Nodes (86): C. Repeated boot, test_first_initialization_needs_no_owner(), _path_boot(), test_rollback_blocked_without_verified_risk(), _entry_probe(), _kernel(), _protected(), Kernel.boot()/run() integration with the real Supervisor recovery pass.… (+78 more)
+Cohesion: 0.04
+Nodes (102): C. Repeated boot, _path_boot(), test_rollback_blocked_without_verified_risk(), _entry_probe(), _kernel(), _protected(), fixture, Kernel.boot()/run() integration with the real Supervisor recovery pass.… (+94 more)
 
 ### Community 662 - "test_storage_cleanup.py"
 Cohesion: 0.16
@@ -3792,33 +3833,33 @@ Nodes (17): fixture_db(), plan(), Deletion safety: unique/uncertain evidence sur
 Cohesion: 0.50
 Nodes (3): ema_trend variant (20.0), Genes, Live record
 
-### Community 664 - "19. Outcome, Attribution and Replay"
-Cohesion: 0.50
-Nodes (4): 19.1 Outcome recording, 19.2 Attribution, 19.3 Replay / digital twin, 19. Outcome, Attribution and Replay
+### Community 664 - "LUFFY single-owner tracker — second review (incident and blocker reconciliation)"
+Cohesion: 0.08
+Nodes (22): Cross-lane dependencies / integration risks, Not changed, with evidence, Review 03 remediation — Execution, Prospective Evidence, Accounting Observer, Test evidence, A. Final priority counts, C. Recent incident reconciliation, D. Misclassified or excessive blockers, E. Essential intelligence gaps (+14 more)
 
 ### Community 665 - "20. Memory Architecture"
 Cohesion: 0.50
 Nodes (4): 20.1 Semantic knowledge, 20.2 Exact retrieval first, 20.3 Failed knowledge, 20. Memory Architecture
 
-### Community 666 - "32. Three-File Project Control Plane"
-Cohesion: 0.50
-Nodes (4): 32. Three-File Project Control Plane, `NEXT.yaml`, `SDD.md`, `STATE.yaml`
+### Community 666 - "evaluate_existing.py"
+Cohesion: 0.13
+Nodes (23): Attention (formulas in `attention.py` docstring), Hypotheses (templates in `hypotheses.py`), Known limitations, Offline cognition — first slice (2026-09-15), Outcomes and replay, Reconciliation with REQUIREMENTS.md, Records (all carry `schema_version: cognition.v1`), What this slice is not (+15 more)
 
 ### Community 667 - "8. Attention Engine"
 Cohesion: 0.50
 Nodes (4): 8.1 Event-driven triggers, 8.2 Priority, 8.3 Cost control, 8. Attention Engine
 
-### Community 668 - "9. Hierarchical World Model"
-Cohesion: 0.50
-Nodes (4): 9.1 World-state dimensions, 9.2 Confidence, 9.3 Strategy access, 9. Hierarchical World Model
+### Community 668 - "evaluate"
+Cohesion: 0.12
+Nodes (22): C. Coherent observation mechanism (blocker 3), _obs(), Astra's case: q=1 with no stop, then q=2 with a q=1 stop., Astra R2 repro: ordinary-order reads are inside the bracket now., A mid-snapshot re-arm: without the journal bracket this reads VERIFIED., _supervisor(), test_a_snapshot_starts_then_supervisor_starts(), test_b_supervisor_starts_then_snapshot_defers() (+14 more)
 
-### Community 669 - "after_own_hold"
-Cohesion: 0.20
-Nodes (12): 2. Searchable feature and state space, Forecast state atoms, Investigation states and transitions, Journal states, Sequence atoms, release(), after_own_hold(), fenced() (+4 more)
+### Community 669 - "2. Searchable feature and state space"
+Cohesion: 0.17
+Nodes (11): 2. Searchable feature and state space, Forecast state atoms, Investigation states and transitions, Journal states, Sequence atoms, BTC Rotation Momentum, Live record, Logic (+3 more)
 
 ### Community 670 - "test_attention_selection_persistence.py"
-Cohesion: 0.10
-Nodes (56): Focused verification, Read-only storage and historical evidence, SOL2 attention table integration review — 2026-10-11, _assert_refused_cursor_conflict(), cid(), _imports(), parametrize, Attention selection and its cursor commit together; fetch outcomes never move… (+48 more)
+Cohesion: 0.11
+Nodes (55): _assert_refused_cursor_conflict(), cid(), db(), _imports(), fixture, parametrize, Attention selection and its cursor commit together; fetch outcomes never move…, Another connection holding the write lock blocks the CAS read, so the compared… (+47 more)
 
 ### Community 671 - "20. Memory Architecture"
 Cohesion: 0.50
@@ -3848,13 +3889,13 @@ Nodes (3): Genes, Live record, vwap_fade variant (2.5)
 Cohesion: 0.15
 Nodes (20): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+12 more)
 
-### Community 679 - "test_owner_interface_r6.py"
-Cohesion: 0.14
-Nodes (17): existing(), check_telegram_unknown(), parametrize, R6: a delivery's failed reservation is not a terminal outcome for its ID.…, reservation_race(), fail_one_write(), lookup(), test_negative_control_reservation_failure() (+9 more)
+### Community 679 - "build_pit_dataset.py"
+Cohesion: 0.19
+Nodes (18): _accept_dataset(), cli_manifest(), cmd_build(), cmd_freeze(), from_archive(), from_store(), _hash(), main() (+10 more)
 
-### Community 680 - "test_declared_population.py"
-Cohesion: 0.24
-Nodes (17): bars(), config(), decl(), test_capacity_never_truncates(), test_consumers_see_whole_universe(), test_errors_stale_missing_and_retry(), fetch(), test_failure_invalidates_previous_success() (+9 more)
+### Community 680 - "learning.py"
+Cohesion: 0.13
+Nodes (27): bars(), config(), decl(), test_capacity_never_truncates(), test_consumers_see_whole_universe(), test_errors_stale_missing_and_retry(), fetch(), test_failure_invalidates_previous_success() (+19 more)
 
 ### Community 681 - "Strategist"
 Cohesion: 0.67
@@ -3864,9 +3905,9 @@ Nodes (3): Files here, Strategist, Wraps
 Cohesion: 0.25
 Nodes (7): Cognition historical replay — retrospective slice (2026-09-15), Inputs and bounds, Outputs (refused unless the output dir is absent or empty; files opened `x`), Reproducibility, Store access, Universe rule, What it claims, and what it does not
 
-### Community 796 - "types.py"
-Cohesion: 0.05
-Nodes (47): Explicit frozen admission seam for legacy state/telemetry cycle fixtures. These…, _hold_decision(), _mk_journal(), _mk_vote(), _orch(), Phase-0 brain-reconnect regression tests. Covers the four critical repairs: 1.…, Parent rows for a HOLD decision (outcomes FK requires them)., One cycle + one directional decision + one resolved outcome. (+39 more)
+### Community 796 - "test_spec_population.py"
+Cohesion: 0.17
+Nodes (12): journal(), fixture, The migration must be additive — legacy rows keep working., _spec(), test_legacy_genome_rows_are_not_returned_as_specs(), test_measured_regime_filter_survives_the_roundtrip(), test_spec_column_is_added_to_an_existing_table(), test_spec_roundtrips_through_the_journal() (+4 more)
 
 ### Community 797 - "BB 2.5σ Band Fade"
 Cohesion: 0.67
@@ -3877,24 +3918,24 @@ Cohesion: 0.67
 Nodes (3): BB 3σ Exhaustion Fade, Genes, Live record
 
 ### Community 799 - "transition"
-Cohesion: 0.11
-Nodes (16): How you work, MotionScore reviewer, Voice, When you are the right tool, API guidance, Importing, Motion for React, MotionValues (+8 more)
+Cohesion: 0.22
+Nodes (8): How you work, MotionScore reviewer, Voice, When you are the right tool, 1. Exact retirement trigger, 3. Pattern representation, React Patterns, transition()
 
 ### Community 800 - "M3.1 classification-neutral cohort and coverage review"
-Cohesion: 0.33
+Cohesion: 0.29
 Nodes (6): Actual UTC, collection and maturity, Delivered behavior, Evidence, M3.1 classification-neutral cohort and coverage review, Next exact work, Owner access correction
 
-### Community 801 - "sqlite_tx.py"
-Cohesion: 0.11
-Nodes (28): A. Exact transaction-cleanup defect, B. Exact production-code changes, E. Connection-reset behaviour, F. Duplicate / partial-write safety, G. Focused test totals, Heartbeat (item 9), I–M. Returns, Live-cycle relevance (item 8), retained evidence only (+20 more)
+### Community 801 - "universe.py"
+Cohesion: 0.14
+Nodes (14): Bring 1h and 15m up to the universes the search is scored on. Idempotent:…, A horizon may only be searched if its universe can carry the test.…, A locked store or a schema change must read as 'we could not look', never as…, Only `sqlite3.Error` reads as 'the store could not be read' — anything else is…, The horizon the book already trades. If this regresses, the candle store lost…, _store_counts(), test_a_locked_store_is_reported_as_unavailable_not_as_empty(), test_a_non_sql_failure_is_not_swallowed_into_the_skip_signal() (+6 more)
 
 ### Community 802 - "ema_trend harvested"
 Cohesion: 0.67
 Nodes (3): ema_trend harvested, Genes, Live record
 
-### Community 803 - "CompiledStrategy"
+### Community 803 - ".from_dict"
 Cohesion: 0.15
-Nodes (12): Community 167 - "Closed Bar Spec Signals", Community 162 - "test_spec_signals_on_closed_bars.py", Community 162 - "test_spec_signals_on_closed_bars.py", CompiledStrategy, check_context(), _evaluate(), feature_contract_sha256(), A callable with the EXACT signature library.evaluate() dispatches to:… (+4 more)
+Nodes (20): Reproduce the existing static guard using unchanged HEAD writer bytes. This is…, test_unchanged_head_static_guard(), _install(), The existing paper install primitive (Journal.upsert_spec)., What the Kernel's exact-version handoff does: install the frozen spec…, _upsert(), dump(), first() (+12 more)
 
 ### Community 804 - "ema_trend variant (22.0)"
 Cohesion: 0.67
@@ -3910,15 +3951,15 @@ Nodes (3): Genes, Live record, RSI Exhaustion Reclaim
 
 ### Community 807 - "test_learning_application.py"
 Cohesion: 0.04
-Nodes (47): Acceptance findings, Actual implementation gap, Closed loop, Coverage, readiness and remaining evidence, Stage 7 implementation closure R1, Validation, Reader, run() (+39 more)
+Nodes (49): Acceptance findings, Actual implementation gap, Closed loop, Coverage, readiness and remaining evidence, Stage 7 implementation closure R1, Validation, Reader, run() (+41 more)
 
-### Community 808 - "strategy_weights"
-Cohesion: 0.16
-Nodes (13): End to end: what the Analyst measures is what the orchestrator weighs., test_stored_regime_evidence_does_not_reactivate_historical_weighting(), _J, The whole point: combine the set, do not pick a winner. Even a poor performer…, Journal stub: closed trades per strategy., _S, test_a_broken_journal_degrades_to_neutral_weights(), test_every_weight_stays_inside_the_bounds() (+5 more)
+### Community 808 - "test_strategy_blend.py"
+Cohesion: 0.06
+Nodes (48): Legacy adaptation, Lineage and authority, Normal source capture and runtime application, Owners and normal consumers, Real read-only shadow, Review disposition, Stage7 real learning authority and consumer integration R1, Validation (+40 more)
 
 ### Community 809 - "LUFFY-TRADE-HISTORY-PAGING-R1"
-Cohesion: 0.22
-Nodes (8): A. Cursor contract, B. Ordering identity, E. Concurrency results, F. Performance, G. Tests, H. Remaining blockers and caveats, LUFFY-TRADE-HISTORY-PAGING-R1, Summary
+Cohesion: 0.25
+Nodes (7): A. Cursor contract, B. Ordering identity, E. Concurrency results, G. Tests, H. Remaining blockers and caveats, LUFFY-TRADE-HISTORY-PAGING-R1, Summary
 
 ### Community 810 - "vwap_fade variant (1.9493)"
 Cohesion: 0.67
@@ -3928,9 +3969,9 @@ Nodes (3): Genes, Live record, vwap_fade variant (1.9493)
 Cohesion: 0.40
 Nodes (4): Frozen decision, Independent higher-precision replay, P6/C4 Reduced Taylor/Moment Certificate — Frozen Acceptance, Primary certificate
 
-### Community 812 - "safe_fill"
-Cohesion: 0.04
-Nodes (42): Possible improvements (not demonstrated as live defects), Other changes, Out of scope, Lock, _open(), Every quantity sent to the venue must be a whole lot, and the journal must…, Spot books, tests and backtests hand in plain fakes; quantization must degrade…, The regression itself: open, take a half, close the rest — the reduce-only… (+34 more)
+### Community 812 - "test_lot_step_quantization.py"
+Cohesion: 0.18
+Nodes (15): lots(), _open(), fixture, Every quantity sent to the venue must be a whole lot, and the journal must…, Spot books, tests and backtests hand in plain fakes; quantization must degrade…, The regression itself: open, take a half, close the rest — the reduce-only…, Rounding 0.4 lots down to 0 would be an order the venue rejects — and, if it…, _reduce_only() (+7 more)
 
 ### Community 813 - "record_refusal.py"
 Cohesion: 0.50
@@ -3938,14 +3979,14 @@ Nodes (4): main(), Path, Record the bounded rigorous batch attempt as a fail-clo
 
 ### Community 814 - "paper_cost_evidence.py"
 Cohesion: 0.08
-Nodes (42): cost_source(), _err(), binding(), build(), ensure(), finalize(), freeze_source(), funding_cost() (+34 more)
+Nodes (40): complete_test_cost_evidence(), finalize_test_costs(), freeze_complete(), TEST-ONLY frozen authoritative fixtures; never imported by production. These…, register_test_cost_evidence(), test_sources(), cost_source(), TEST-ONLY frozen authoritative fixtures; never imported by production.… (+32 more)
 
-### Community 815 - "test_collector_recovery.py"
-Cohesion: 0.20
-Nodes (16): collector(), cycle(), failure(), Recovery contract and adversarial temporal/identity tests; no live data., test_actual_child_and_thread_publish_bound_receipt(), test_capture_failure_has_sequence_and_invalidates_certificate(), test_empty_child_response_classification_and_hash_mismatch(), test_gap_transition_deduplicates_and_retains_restart() (+8 more)
+### Community 815 - "test_dashboard_readiness.py"
+Cohesion: 0.11
+Nodes (24): check(), mutate(), parametrize, OBS-02 fixtures: real RUN-01 lock/proc identity, real heartbeat and observer.…, read(), test_absent_identity_refuses_without_creating_runtime_files(), test_actual_cycle_publishes_boot_and_stop_truth_after_statistics(), test_actual_kernel_boot_marks_complete_only_after_success() (+16 more)
 
 ### Community 816 - "P5/C3 Population-Majority Certificate — Frozen Acceptance"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Certified intervals, Deterministic checkpoint and refinement receipt, Frozen decision, P5/C3 Population-Majority Certificate — Frozen Acceptance, Verified SHA-256 identities
 
 ### Community 817 - "test_candle_store_transaction_safety.py"
@@ -3953,20 +3994,20 @@ Cohesion: 0.08
 Nodes (55): C. Failure-injection results (`tests/test_candle_store_transaction_safety.py`), H. Negative-control results, _bars(), _batch_absent_then_fresh_write(), _can_read(), _can_write(), _CloseFault, _contained() (+47 more)
 
 ### Community 818 - "investigation_research.py"
-Cohesion: 0.11
-Nodes (41): Existing evidence mapped first, Added acceptance proof, Demonstrated gap and bounded fix, Evidence mapped before changes, RES-02 — generated questions to justified source routes, Validation and scope, retained(), build_bank() (+33 more)
+Cohesion: 0.09
+Nodes (47): Actual gap and change, Existing evidence mapped first, RES-01 — supported event to typed research question, Added acceptance proof, Demonstrated gap and bounded fix, Evidence mapped before changes, RES-02 — generated questions to justified source routes, Validation and scope (+39 more)
 
 ### Community 819 - "test_m32_host_qualification_v4.py"
-Cohesion: 0.07
-Nodes (36): Q(), combined(), ctx_for(), fake_receipt(), parametrize, skipif, Guard the RNG-free host / filesystem qualification tool bound to the v4 M3.2…, A layer whose publish is non-exclusive must be caught: swap in a publisher that… (+28 more)
+Cohesion: 0.06
+Nodes (37): Q(), combined(), ctx_for(), fake_receipt(), parametrize, skipif, Guard the RNG-free host / filesystem qualification tool bound to the v4 M3.2…, A layer whose publish is non-exclusive must be caught: swap in a publisher that… (+29 more)
 
 ### Community 820 - "Luffy.tsx"
-Cohesion: 0.07
-Nodes (35): accountLabel(), dashboardLabel(), ProviderTruth(), RuntimeLabels(), useRuntimeTruth(), recordHref(), RecordKind, refKind() (+27 more)
+Cohesion: 0.08
+Nodes (40): Avatar(), RequestState, corePresentation, LuffyCore(), ChangeValue(), DataBar(), GlacierMotion, RouteReveal() (+32 more)
 
-### Community 821 - "protection_snapshot.py"
-Cohesion: 0.07
-Nodes (43): snapshot(), Changed files in R4, Event, loop_latency(), main(), measure(), observer(), one() (+35 more)
+### Community 821 - "ProtectionMonitor"
+Cohesion: 0.10
+Nodes (20): snapshot(), Changed files in R3 (on top of R2), Event, loop_latency(), main(), measure(), observer(), one() (+12 more)
 
 ### Community 822 - "test_strategy_health_observation.py"
 Cohesion: 0.12
@@ -3976,29 +4017,29 @@ Nodes (53): _analyst(), _baseline(), _frame(), _obs(), strategy-health-observati
 Cohesion: 0.15
 Nodes (16): Task 3: Point the Scraper at TradingView Scripts, Two consumers, two screens. A finding is not a setup., Verify that STRATEGY and RESEARCH constants exist, are distinct, and both are…, Verify that DEFAULT_STREAM points to the STRATEGY constant., A trade setup routes to the strategy stream via the named constant., A research finding routes to the research stream via the named constant., test_a_finding_routes_to_the_research_stream(), test_a_setup_routes_to_the_strategy_stream() (+8 more)
 
-### Community 824 - "venue_reads.py"
-Cohesion: 0.05
-Nodes (41): B. Exchange client / threading design (blocker 2), P. Deployment recommendation, HTTPAdapter, PermissionError, requests_adapters, GetOnlyAdapter, GetOnlySession, _Guard (+33 more)
+### Community 824 - "GetOnlySession"
+Cohesion: 0.11
+Nodes (15): B. Exchange client / threading design (blocker 2), HTTPAdapter, PermissionError, GetOnlyAdapter, GetOnlySession, _Guard, guarded_client(), RateGuard (+7 more)
 
 ### Community 825 - "M3.2 shard layer hardening (D1–D3), September 22"
 Cohesion: 0.40
 Nodes (4): Fixes, M3.2 shard layer hardening (D1–D3), September 22, Still open (not defects fixed here), Verification
 
 ### Community 826 - "LUFFY_Product_Tracker_v1.md"
-Cohesion: 0.05
-Nodes (30): ACC-01 / ACC-02 dependency closure, ACC-03 economics closure and GUI-01 impact, Accounting truth follow-up — CLOSED offline, DEC-01 canonical CLOSED, Demonstrated compiler defect and correction, SOL-1 — DEC-01 dependency-chain mapping, DEC-02 canonical CLOSED, GUI-01 functional/offline Overview closure (+22 more)
+Cohesion: 0.08
+Nodes (17): ACC-01 / ACC-02 dependency closure, ACC-03 economics closure and GUI-01 impact, Accounting truth follow-up — CLOSED offline, DEC-01 canonical CLOSED, Demonstrated compiler defect and correction, SOL-1 — DEC-01 dependency-chain mapping, DEC-02 canonical CLOSED, GUI-01 functional/offline Overview closure (+9 more)
 
-### Community 827 - "net_score"
-Cohesion: 0.30
-Nodes (14): Historical arithmetic compatibility; never current entry authority., 0.186 was below every threshold the live system produces., Abstention is not an opinion; disagreement is., _sig(), test_a_lone_strategy_signal_can_clear_a_typical_threshold(), test_an_agreeing_analyst_still_raises_the_score(), test_an_opposing_analyst_still_counts_against(), test_analyst_only_scoring_is_unchanged_when_all_have_conviction() (+6 more)
+### Community 827 - "publish"
+Cohesion: 0.10
+Nodes (11): Read-only status for the Owner Interface. No venue calls., execute(), Host, main(), Single attempt; inert host fixtures exercise every lifecycle branch., record_fence(), publish(), Bounded live read and committed write, never a full integrity scan. (+3 more)
 
 ### Community 828 - "referee.py"
-Cohesion: 0.02
-Nodes (163): Actual gaps and reproduced baseline, Change and proof, Existing implementation mapped first, [SOL-1][QNT-03] dependence and contributor lineage, Validation and limits, Decision taken: option 3 (2026-09-15), Execution record (2026-09-14), Open decision (operator) (+155 more)
+Cohesion: 0.04
+Nodes (92): 4. The null: a common-calendar non-overlapping block (cluster) bootstrap, 4a. Why not a label permutation, 4b. The design — and its correct name, 4c. Minimum evidence — design choices, not proofs, pickle, frame(), legs_planted(), legs_shared_rule() (+84 more)
 
 ### Community 829 - "capacity.py"
-Cohesion: 0.06
-Nodes (63): enum, Exception, RiskError, datetime, Read-only owner projections. No lifecycle, provider or control operations., runtime_truth(), load_json(), _account() (+55 more)
+Cohesion: 0.07
+Nodes (54): enum, _account(), _bars_frame(), _bounds(), build(), canonical(), CapacityRefused, check_current() (+46 more)
 
 ### Community 830 - "M3.1 cut and M8.1 review — September 19, 2026"
 Cohesion: 0.33
@@ -4008,21 +4049,21 @@ Nodes (5): M3.1, M3.1 cut and M8.1 review — September 19, 2026, M8.1, Remainin
 Cohesion: 0.11
 Nodes (38): phase_a(), transport(), deny_network(), empty_receipt(), InventoryHTTP, fixture, parametrize, OBS-05 no-receipt correction: fake signed HTTP, no live venue/services. (+30 more)
 
-### Community 832 - "P7/C4 Persistence Truth Certificate — Frozen Acceptance"
-Cohesion: 0.29
-Nodes (6): Estimand (unchanged), Frozen decision, P7/C4 Persistence Truth Certificate — Frozen Acceptance, Reduction, Result, Runs
+### Community 832 - "test_acc01_venue_authority.py"
+Cohesion: 0.13
+Nodes (17): DeadTicker, _evidence(), NoQuote, ACC-01: venue receipts stay authoritative; local estimates stay labelled;…, receipts(), test_adoption_with_venue_price_records_venue_source(), test_adoption_without_venue_entry_price_records_unknown(), test_alignment_estimate_is_labelled_and_history_is_append_only() (+9 more)
 
-### Community 833 - "test_bootstrap_contract.py"
-Cohesion: 0.05
-Nodes (53): InertHost, no_network(), phase_b(), protection(), fixture, parametrize, OBS-05: temporary local stores/lock holders and inert launch seams only., test_absent_live_heartbeat_alone_is_deferred_not_waived() (+45 more)
+### Community 833 - "test_launch_preflight.py"
+Cohesion: 0.12
+Nodes (30): test_original_cold_deadlock_is_reproduced_then_contained(), collect(), deny_network(), good_facts(), fixture, parametrize, OBS-01: local fixtures only, with no real launcher or network capability., Actual restart.sh + actual preflight CLI; every operational command is a stub. (+22 more)
 
 ### Community 834 - "opportunity_context.py"
 Cohesion: 0.12
-Nodes (40): _allocation(), _any(), _attention(), _bad(), canonical(), _canonical_instrument(), _check_body(), by_cut() (+32 more)
+Nodes (39): _allocation(), _any(), _attention(), _bad(), _canonical_instrument(), _check_body(), by_cut(), _eq() (+31 more)
 
-### Community 835 - "Offline cognition — first slice (2026-09-15)"
-Cohesion: 0.12
-Nodes (13): 4. Recommended next slice — milestone 1 (**not implemented on this pass**), F. Tests / results, Attention (formulas in `attention.py` docstring), Known limitations, Offline cognition — first slice (2026-09-15), Outcomes and replay, Reconciliation with REQUIREMENTS.md, Records (all carry `schema_version: cognition.v1`) (+5 more)
+### Community 835 - "test_typed_outcomes.py"
+Cohesion: 0.08
+Nodes (22): main(), ro(), verify(), _bar(), decision(), forecast(), fixture, parametrize (+14 more)
 
 ### Community 836 - "intake.json"
 Cohesion: 0.04
@@ -4037,28 +4078,24 @@ Cohesion: 0.06
 Nodes (96): assigned_shards(), audit(), _blas_identity(), bootstrap_provider(), canon(), _check_published(), check_receipt_line(), collect_provenance() (+88 more)
 
 ### Community 840 - "make_app"
-Cohesion: 0.05
-Nodes (65): fastapi_testclient, FakeChat, make_app(), (app, journal, gateway) with every production seam replaced., provenance(), Economics boundary tests: no venue or Kernel execution., test_estimates_cashflow_and_derived_coverage_stay_separate(), test_missing_fills_and_excursion_cannot_borrow_journal_numbers() (+57 more)
+Cohesion: 0.07
+Nodes (48): FakeChat, make_app(), (app, journal, gateway) with every production seam replaced., parametrize, Accounting consumer regressions for 8867794 metadata; fixtures only., test_derived_estimate_remains_estimated_and_separate(), test_each_unknown_marker_overrides_numeric_zero(), test_tampered_early_receipt_cannot_disappear_after_fifty_later_legs() (+40 more)
 
 ### Community 841 - "Market Microstructure"
 Cohesion: 0.67
 Nodes (3): Market Microstructure, Open questions, What we measure
 
-### Community 842 - "test_data06_universe_truth.py"
+### Community 842 - "c"
+Cohesion: 0.05
+Nodes (74): Protocol, _body(), Offline fixtures for registry metadata contracts., _symbol(), journal(), offline(), provider(), fetch() (+66 more)
+
+### Community 843 - "test_admission_null_gate.py"
 Cohesion: 0.20
-Nodes (23): _body(), Offline fixtures for registry metadata contracts., _symbol(), DATA-06: tradable instruments come from connected venue truth, with explicit…, snap(), test_attention_subset_is_distinct_from_the_tradable_universe(), test_corrupt_stored_snapshot_is_detected(), test_every_unselected_usdt_ticker_has_an_explicit_reason() (+15 more)
+Nodes (17): dict, _admit_with(), _analyst(), _Cfg, Admission judges a spec over ITS universe, and refuses a spec that beats its…, 2026-09-11: spec_funding_filtered_trend_pullback was admitted on 20 trades with…, _spec(), test_a_spec_that_declares_nothing_asks_for_nothing_extra() (+9 more)
 
-### Community 843 - "test_wrld05_normal_context.py"
-Cohesion: 0.08
-Nodes (43): Closure impact, Demonstrated gaps and changes, Existing evidence mapped first, Normal caller paths proved, [SOL-2][WRLD-05] normal typed WorldModel context closure, Tests and checks, pickle, QNT-03: offline pseudo-replication, exact relationships and restart proofs. (+35 more)
-
-### Community 844 - "journal.py"
-Cohesion: 0.03
-Nodes (60): logging, load_frames(), main(), Grade the near-threshold HOLDs the live sampler discarded. Run explicitly —…, {symbol: ohlcv frame} straight from the persistent candle cache., main(), _ms(), Set every trade's realized P&L to the venue's own figure. The journal computed… (+52 more)
-
-### Community 845 - "queries.py"
-Cohesion: 0.21
-Nodes (14): research_next_questions audit — 2026-10-11, read_then_swap(), _frontmatter(), _receipt(), enrich(), Evidence/chronology/code lenses over the existing vault and record readers. No…, _time(), captured() (+6 more)
+### Community 845 - "1. Requirement matrix (owner §1–24)"
+Cohesion: 0.18
+Nodes (8): 1. Requirement matrix (owner §1–24), The search: generate combinations, score them, keep what pays. This thread owns…, Path, Write one node per employee + the org chart into `00 Company/`. The org chart…, The mechanism, as the compiled spec describes itself. Returns "" for genome…, Link daily notes into a prev/next spine. A daily otherwise touches nothing but…, Strategy note stems mentioned in free text. Autopsy bodies are LLM prose, so…, Vault
 
 ### Community 846 - "EMA Stack Pullback"
 Cohesion: 0.67
@@ -4069,115 +4106,115 @@ Cohesion: 0.67
 Nodes (3): Genes, Live record, sweep_reversal variant (v2)
 
 ### Community 860 - "CognitionConfig"
-Cohesion: 0.06
-Nodes (44): capture(), digest(), evaluate_snapshot(), _history(), _number(), _provenance(), Bounded snapshot adapter around the offline attention evaluator. Only…, off | manual | registry. Key absent: a supplemental_symbol means manual, none… (+36 more)
+Cohesion: 0.05
+Nodes (48): capture(), digest(), evaluate_snapshot(), _history(), _number(), _provenance(), Bounded snapshot adapter around the offline attention evaluator. Only…, off | manual | registry. Key absent: a supplemental_symbol means manual, none… (+40 more)
 
 ### Community 861 - "test_owner_reads.py"
-Cohesion: 0.07
-Nodes (34): httpx, test_api_replayed_leg_does_not_promote_whole_trade_accounting(), _add_decisions(), _concurrent_timings(), run(), _count_vote_reads(), _fills_evidence(), _lineage() (+26 more)
-
-### Community 862 - "test_sg06_da_integration.py"
-Cohesion: 0.08
-Nodes (38): History already in candles.db is never downloaded again. Two paths re-paged the…, The chart endpoint's fetch_ohlcv WRITES the shared store, so it must read…, test_a_young_symbol_is_not_repaged_every_call(), test_force_refreshes_the_tail_not_the_history(), test_the_dashboard_charts_read_production_not_the_demo_venue(), _queued_feed(), Offline queue invariants for contained candle acquisition., test_busy_worker_retains_cold_timeframes_in_fifo_order() (+30 more)
-
-### Community 863 - "child.py"
-Cohesion: 0.21
-Nodes (15): multiprocessing, _boom(), _double(), _hard_exit(), _niceness(), Heavy research work runs in a supervised child, never in the kernel. The…, _sleep(), test_a_child_past_its_deadline_is_killed() (+7 more)
-
-### Community 864 - "Host"
 Cohesion: 0.06
-Nodes (16): execute(), Host, main(), Same orchestrator exercised end-to-end by fake host fixtures., observe(), drain_storage(), Continue actual host-side observations after a drain timeout; no repair/restart., retain_until_stopped() (+8 more)
+Nodes (49): httpx, provenance(), Economics boundary tests: no venue or Kernel execution., test_api_replayed_leg_does_not_promote_whole_trade_accounting(), test_estimates_cashflow_and_derived_coverage_stay_separate(), test_missing_fills_and_excursion_cannot_borrow_journal_numbers(), test_nonfinite_derived_value_is_unknown(), test_nonfinite_monetary_evidence_is_not_a_venue_number() (+41 more)
+
+### Community 862 - "test_outcome_24h_upgrade.py"
+Cohesion: 0.19
+Nodes (15): _frame(), _Journal, The 24-hour horizon must actually be reachable. An outcome row was written as…, An ungraded horizon is honest; a guessed one is poison., A SELL that preceded a fall is correct, not incorrect., _row(), test_a_frame_that_does_not_reach_the_horizon_stays_ungraded(), test_a_missing_frame_is_skipped_not_crashed() (+7 more)
+
+### Community 863 - "cognition/memory.py"
+Cohesion: 0.12
+Nodes (21): assessed_from_dict(), AssessedMemory, case_from_dict(), CaseMemory, Versioned investigation memory. Non-economic observations, never admission…, Concrete later evidence request, with an explicit no-memory comparator., Verify a terminal not_testable closure against its frozen registration; never…, Exact-key recall frozen at registration. Context only: no counter_test, no… (+13 more)
+
+### Community 864 - "Knowledge.tsx"
+Cohesion: 0.20
+Nodes (16): claimOf(), col(), cut(), FocusStrip(), GLAB, grp(), KL, Knowledge() (+8 more)
 
 ### Community 865 - "P4/C3 and P4/C4 reduced categorical certificate"
 Cohesion: 0.40
 Nodes (4): Independent replay (384 bits), P4/C3 and P4/C4 reduced categorical certificate, Primary certificates (224 bits), Runtime and scope
 
 ### Community 866 - "test_d3_publication_order_is_fsync_files_fsync_dirs_rename_fsync_verify_manifest"
-Cohesion: 0.33
-Nodes (6): test_d3_publication_order_is_fsync_files_fsync_dirs_rename_fsync_verify_manifest(), fsync(), path_of(), rename(), test_atomic_restore_target_race_refused(), race()
+Cohesion: 0.67
+Nodes (3): test_d3_publication_order_is_fsync_files_fsync_dirs_rename_fsync_verify_manifest(), fsync(), path_of()
 
 ### Community 867 - "test_venue_reads.py"
-Cohesion: 0.08
-Nodes (27): J. Aggregate venue request budget (blocker 10), Q1. Reachable signed mutation transport → fixed by removing the credential, not by a better guard, Runtime activation of the snapshot monitor is not authorized: the kernel…, The trading key is never used for the snapshot. No read key → the reader is not…, _real_observer(), test_kernel_does_not_activate_the_protection_monitor(), test_without_read_only_key_the_monitor_publishes_unreadable(), Env (+19 more)
+Cohesion: 0.06
+Nodes (34): J. Aggregate venue request budget (blocker 10), P. Deployment recommendation, Q1. Reachable signed mutation transport → fixed by removing the credential, not by a better guard, Runtime activation of the snapshot monitor is not authorized: the kernel…, The trading key is never used for the snapshot. No read key → the reader is not…, _real_observer(), test_kernel_does_not_activate_the_protection_monitor(), test_snapshot_dependencies_have_no_mutation_authority() (+26 more)
 
 ### Community 868 - "test_m32_shard_layer_v4.py"
-Cohesion: 0.07
-Nodes (31): compare(), completed_run(), Crash, fresh_v4_layer(), make_ctx(), BaseException, fixture, Path (+23 more)
+Cohesion: 0.06
+Nodes (34): compare(), completed_run(), Crash, fresh_v4_layer(), make_ctx(), BaseException, fixture, parametrize (+26 more)
 
-### Community 869 - "test_dashboard_readiness.py"
+### Community 869 - "test_stage1_recovery_monitoring.py"
 Cohesion: 0.04
-Nodes (68): H. Validation receipt, parametrize, Phase startup and authority boundaries; fixture stores only, no venue/provider…, test_every_action_rejected_before_gateway_provider_or_handler(), test_live_missing_kernel_still_refuses(), test_mode_must_be_explicit(), test_read_only_direct_start_without_kernel(), test_tracker_and_truth_available_without_kernel() (+60 more)
+Nodes (66): probe(), Backup and restore contract, Critical inventory and replay boundary, Stage1 recovery and monitoring foundation R1, Storage and monitoring boundary, Validation and real-world classification, Independent local safety pass; no Journal initialization or venue calls., safety_check() (+58 more)
 
 ### Community 870 - "attention_admission.py"
-Cohesion: 0.11
-Nodes (29): bisect, AdmissionPolicy, admit(), candidates(), canonical(), digest(), initial_state(), latest() (+21 more)
+Cohesion: 0.10
+Nodes (34): bisect, AdmissionPolicy, admit(), candidates(), canonical(), digest(), initial_state(), latest() (+26 more)
 
 ### Community 871 - "test_investigation_state_feedback.py"
 Cohesion: 0.13
 Nodes (37): assert_closed_retry(), blocked_first_execution(), cases(), closing_ledger(), decisions(), exported(), open_symbols(), population_config() (+29 more)
 
 ### Community 872 - "json"
-Cohesion: 0.02
-Nodes (129): argparse, builtins, concurrent_futures, contextlib, cprofile, Read-only baseline defect probes; success means the existing defect reproduced.…, Offline frozen regression matrix; no kernel, venue, provider or deployment…, Reproduce the existing static guard using unchanged HEAD writer bytes. This is… (+121 more)
+Cohesion: 0.01
+Nodes (274): argparse, builtins, concurrent_futures, contextlib, datetime, Read-only baseline defect probes; success means the existing defect reproduced.…, Offline normal entry caller with a partial intent appearing between durable…, Publish engineering evidence/control plane only after every final check passes. (+266 more)
 
-### Community 873 - "active_setter_inventory.py"
-Cohesion: 0.09
-Nodes (23): _arg(), _call_name(), _const_str(), Inventory, load(), _Module, _parsed(), Path (+15 more)
+### Community 873 - "Inventory"
+Cohesion: 0.17
+Nodes (10): _arg(), _call_name(), _const_str(), Inventory, _Module, The argument bound to parameter `name` / position `index`, if any., The argument node(s) in the new-state position of a setter call., (key node, value node) of a state_kv write with bound parameters. (+2 more)
 
-### Community 874 - "WorldModel"
-Cohesion: 0.07
-Nodes (24): world_fixture(), consumer_case(), no_network(), fixture, R4 reproductions through persisted normal adapters, never source priming., test_failed_terminal_delivery_cannot_fall_back_to_scan(), test_parent_provenance_is_verified_beyond_the_outer_manifest_hash(), test_world_producer_to_normal_attention_consumer() (+16 more)
+### Community 874 - "execution_evidence.py"
+Cohesion: 0.22
+Nodes (17): _action(), _dec(), executed_orders(), _has(), _instrument(), _json(), measure(), _pos() (+9 more)
 
 ### Community 875 - "replay_integrator.py"
 Cohesion: 0.16
 Nodes (32): A(), BatchIntegrator, raw(), outer(), reduced(), fn(), inner(), fn() (+24 more)
 
-### Community 876 - "fractions"
-Cohesion: 0.21
-Nodes (13): fractions, dyadic(), interval(), main(), overlaps(), Fraction, Deterministically compare the P6/C3 primary and higher-precision replay., dyadic() (+5 more)
+### Community 876 - "m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py"
+Cohesion: 0.15
+Nodes (20): bootstrap_upper(), calibration_pass(), _cdf_numerator_le(), cp_band_contains(), evaluate_cell(), fdr_pass(), overall(), power_pass() (+12 more)
 
-### Community 877 - "entry_authority.py"
-Cohesion: 0.04
-Nodes (91): collections_abc, probe(), Architecture and evidence, Account eligibility semantics, Closing-condition proof, DATA-06 — current-build closure (account eligibility explicitly UNKNOWN), Future live gap (mandatory before any ACTIVE trading), Tests (recorded at 91fab98) (+83 more)
+### Community 877 - "meta_label.py"
+Cohesion: 0.17
+Nodes (20): test_meta_features_shape_and_size_bounds(), _brier(), features(), _fit(), _frac_from_votes(), _hour_feats(), judge(), load() (+12 more)
 
-### Community 878 - "test_stage1_recovery_monitoring.py"
-Cohesion: 0.04
-Nodes (98): Backup and restore contract, Critical inventory and replay boundary, Stage1 recovery and monitoring foundation R1, Storage and monitoring boundary, Validation and real-world classification, Independent local safety pass; no Journal initialization or venue calls., safety_check(), test_independent_observer_resolves_cold_cycle_condition_only_for_current_boot() (+90 more)
+### Community 878 - "Refused"
+Cohesion: 0.11
+Nodes (44): retained(), test_absent_consumed_retained_input_refuses_default_backup(), test_default_inventory_restores_exact_consumed_ewa_input(), test_manual_or_later_inventory_omission_cannot_bypass_dependency(), backup(), test_accounting_detached_artifacts_mandatory(), test_incomplete_inventory_cannot_claim_complete(), test_pit_config_missing_but_ledger_remains_refuses() (+36 more)
 
 ### Community 879 - "targets.py"
-Cohesion: 0.08
-Nodes (29): Existing selection contract, Fresh validation, OUT-03 dependency impact (read-only), [SOL-2][WRLD-06] Historical learned revisions, AllocationBound, ClaimConfidence, compare_and_apply(), Context (+21 more)
+Cohesion: 0.07
+Nodes (31): Existing selection contract, Fresh validation, OUT-03 dependency impact (read-only), [SOL-2][WRLD-06] Historical learned revisions, AllocationBound, ClaimConfidence, compare_and_apply(), Context (+23 more)
 
 ### Community 880 - "readContracts.ts"
 Cohesion: 0.07
-Nodes (34): any(), bool(), Check, controlEvents, decision, diagnostics, economicField, edge (+26 more)
+Nodes (35): any(), bool(), Check, controlEvents, decision, diagnostics, economicField, edge (+27 more)
 
-### Community 881 - "predictive_experiment.py"
-Cohesion: 0.08
-Nodes (37): test_legacy_replay_preserves_payload_but_cannot_certify_new_unbound_result(), predictive_extensions(), Verified predictive attachments to retained Research Bank sources. Separate…, Read immutable predictive attachments without rewriting a v1 Bank object.…, authenticate(), _bank_result(), _cut(), experiment_ledger_path() (+29 more)
+### Community 881 - "factory_transfer.py"
+Cohesion: 0.09
+Nodes (30): Acceptance evidence, LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1, Normal architecture, Protected quantitative path and authority, Read-only real shadow, test_legacy_replay_preserves_payload_but_cannot_certify_new_unbound_result(), predictive_extensions(), Read immutable predictive attachments without rewriting a v1 Bank object.… (+22 more)
 
 ### Community 882 - "test_da05_history_coverage.py"
-Cohesion: 0.12
-Nodes (32): drain(), feed_at(), offline(), fixture, Offline full-cohort repair, queue fairness and provenance proofs. The requested…, scan(), scheduler(), seed() (+24 more)
+Cohesion: 0.14
+Nodes (30): test_admission_warmup_deep_acquisition_and_existing_evaluator(), drain(), feed_at(), offline(), fixture, Offline full-cohort repair, queue fairness and provenance proofs. The requested…, scan(), scheduler() (+22 more)
 
 ### Community 883 - "spec_writer.py"
 Cohesion: 0.11
 Nodes (24): The brief tells the Strategist which series are deep enough to score. Smuggling…, test_prompt_carries_the_data_brief_verbatim(), test_prompt_without_a_brief_is_unchanged(), test_prompt_teaches_cross_vs_level(), _p(), The Strategist must be told what measurement established. Two things in the…, PF alone cannot separate edge from drift; the number makes that concrete., test_a_declared_universe_reaches_the_spec() (+16 more)
 
 ### Community 884 - "test_stage1_pit_blocker_fix.py"
-Cohesion: 0.08
-Nodes (23): assert_basis_max_with_reversed_derivation_clock(), assert_historical_membership(), basis_feed(), BasisTransport, mutant(), no_connections(), fixture, parametrize (+15 more)
+Cohesion: 0.05
+Nodes (34): test_current_config_membership_not_restamped_before_observation(), test_universe_rollback_cannot_publish_volume_before_request(), assert_basis_max_with_reversed_derivation_clock(), assert_historical_membership(), basis_feed(), BasisTransport, mutant(), no_connections() (+26 more)
 
-### Community 885 - "health_observation.py"
-Cohesion: 0.09
-Nodes (32): test_history_and_research_readers_keep_existing_events_unchanged(), test_changing_an_exit_changes_health_fingerprint(), test_health_fingerprint_ignores_provenance_and_prose(), test_pf_sentinels_are_interpretable(), classify(), _clean(), coverage(), _declared() (+24 more)
+### Community 885 - "Sweep"
+Cohesion: 0.06
+Nodes (31): Purpose, writers and readers, test_changing_an_exit_changes_health_fingerprint(), test_health_fingerprint_ignores_provenance_and_prose(), classify(), _clean(), code_manifest(), coverage(), _declared() (+23 more)
 
-### Community 886 - "test_att03_warmup.py"
-Cohesion: 0.29
-Nodes (14): evaluate(), frozen_observation(), inputs(), offline(), fixture, ATT-03 source-cut warm-up and existing-policy ranking; synthetic offline only., test_date_advance_cannot_invent_history_or_finalize_partial_bar(), test_existing_ranking_ties_no_forced_selection_and_no_learned_override() (+6 more)
+### Community 886 - "world/replay.py"
+Cohesion: 0.33
+Nodes (17): EvidenceRef, _canonical(), _claim(), _claim_ref(), _evidence_ref(), _identity(), _node(), _object() (+9 more)
 
 ### Community 887 - "M8.1 whole-trade reconciliation and completeness gates"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Delivered behavior, Evidence and deployment, Exact remaining work and scheduled observation, Legacy P&L consumer review, M8.1 whole-trade reconciliation and completeness gates
 
 ### Community 888 - "evaluate_pilot.py"
@@ -4193,128 +4230,128 @@ Cohesion: 0.40
 Nodes (4): Frozen decision, Independent higher-precision replay, P6/C3 Reduced Taylor/Moment Certificate — Frozen Acceptance, Primary certificate
 
 ### Community 891 - "WorldModelRecord"
-Cohesion: 0.13
-Nodes (35): prospective(), fixture, test_forged_world_model_identities_are_refused(), test_world_model_reference_only_when_supplied(), test_world_cut_and_instrument_fail_closed(), world(), measured_source(), evidence() (+27 more)
+Cohesion: 0.18
+Nodes (26): evidence(), measurement(), model(), parametrize, WRLD-07 bounded relationship versions and negative proofs (offline)., relationship(), test_bad_evidence_cannot_become_valid_by_high_confidence(), test_beta_is_bounded_and_method_bound() (+18 more)
 
 ### Community 892 - "rounds"
 Cohesion: 0.40
 Nodes (5): _max_deadline(), fixture, Two resolved forecast rounds, so a symbol can have a chronological pair., _resolved(), rounds()
 
-### Community 893 - "learning/runtime.py"
-Cohesion: 0.19
-Nodes (13): checkpoint(), _checkpoint(), decode(), enqueue(), ensure(), evidence_from_body(), insert_proposal(), Bounded deterministic queue/checkpoint. No venue, LLM or policy invention. (+5 more)
+### Community 893 - "Harvester"
+Cohesion: 0.13
+Nodes (11): Surprising Connections (you probably didn't know these), Harvester, Fill the series Binance truncates, from a source that keeps them. No-op without…, {series: {symbols, rows, days}} folded across symbols., What the Strategist is allowed to build on. `usable` are the series with enough…, The brief as one prompt-sized paragraph for the Strategist., Numeric data acquisition and the coverage brief., How long the Analyst's backtest frame actually is. The coverage gate is not a… (+3 more)
 
 ### Community 894 - "TickPrecision"
-Cohesion: 0.06
-Nodes (20): D. Protection semantics (blocker 4), Blocker 1: deadline enforcement, Corrected wording, LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 4 (Astra's two R3 blockers), Unchanged, still outstanding (the gate, after package approval), SimReads, _decimals(), fixture (+12 more)
+Cohesion: 0.13
+Nodes (9): A. Snapshot contract, D. Protection semantics (blocker 4), SimReads, protection_match(), ProtectionMatch, Decide if one normalized venue stop protects the current venue position. Price…, Authoritative price tick per market, from exchangeInfo PRICE_FILTER. Pure data.…, True/False when the tick is known; None when it is not. (+1 more)
 
 ### Community 895 - "qualify_v4.py"
-Cohesion: 0.24
-Nodes (13): canon(), check_own_hash_bindings(), check_v3_untouched(), main(), RuntimeError, QualificationError, ``scripts/m32_scheme_d_sharding_20260921/`` and the v3 bundle must be byte-…, Deterministic hash-and-wiring qualification for the v4 M3.2 Scheme D shard… (+5 more)
+Cohesion: 0.16
+Nodes (19): canon(), check_equivalence_gate_static(), check_fixture_canary(), check_own_hash_bindings(), check_v3_untouched(), _load_isolated(), main(), Path (+11 more)
 
 ### Community 896 - "test_decision_sources.py"
-Cohesion: 0.24
-Nodes (16): run(), chain(), parametrize, Prospective source binding through actual producers; no orders/network., Final acceptance path: no manual source-link insertion at any stage., resolve(), test_current_state_does_not_change_history_and_restart_is_deterministic(), test_direct_existing_forward_outcome_resolver() (+8 more)
+Cohesion: 0.12
+Nodes (19): run(), run(), chain(), parametrize, Prospective source binding through actual producers; no orders/network., Final acceptance path: no manual source-link insertion at any stage., resolve(), test_current_state_does_not_change_history_and_restart_is_deterministic() (+11 more)
 
-### Community 897 - "VenueTarget"
-Cohesion: 0.25
-Nodes (8): provider(), fetch(), test_environment_identity_cannot_be_mixed(), test_failed_refresh_is_recorded_without_a_snapshot(), test_recorder_failure_never_changes_the_refresh_result(), HttpResponse, Explicit request target: ``scheme://host[:port]`` plus declared environment., VenueTarget
+### Community 897 - "_Client"
+Cohesion: 0.16
+Nodes (14): _Client, _markets_payload(), /future-markets returns one row per exchange per market. Bybit sorts before…, A Coinalyze whose HTTP layer is a canned dict, so resolution and unit handling…, Better no series than another venue's book stored under our key., Coinalyze serves funding in percent and derivs.db stores a fraction: measured…, Measured ratio against the stored Binance series is 0.9998 — same quantity,…, Coinalyze's long/short is Binance's globalLongShortAccountRatio (corr +1.0000,… (+6 more)
 
-### Community 898 - "selection_persistence.py"
-Cohesion: 0.20
-Nodes (14): test_journal_primitive_reports_conflict_without_writing(), test_supplied_selection_id_must_match_payload(), Exclusion, Selection, _check_selection(), _digest(), _from_canonical(), _is_ms() (+6 more)
+### Community 898 - "is_canonical_instrument_id"
+Cohesion: 0.12
+Nodes (23): is_canonical_instrument_id(), True when `value` is exactly what some `InstrumentId.value` produces. The…, _check_int(), Exclusion, ValueError, The comparison boundary between the strategy scan and the registry. Only the…, Choose at most one supplemental observation candidate. Pure., The inputs cannot be judged at all; nothing is selected. (+15 more)
 
-### Community 899 - "test_ref_evidence.py"
-Cohesion: 0.24
-Nodes (10): _days(), A spec built on a reference must be scored with it, or refused UNTESTED. The…, _spec(), _Store, test_a_reference_spanning_the_frame_is_testable(), test_a_short_reference_is_untested_with_its_coverage(), test_an_absent_reference_is_untested(), test_load_refs_returns_only_what_exists() (+2 more)
+### Community 899 - "C4Model"
+Cohesion: 0.16
+Nodes (7): C3Model, C4Model, Model, Frozen kernel functions. Cell C3: one field f = a g + c z per cluster (three…, (pop, hit, miss) kernels of the focal group with the given counts., f = a g + c z ; p_k = Phi((f - t_k)/s)., Sector 0 uses factor x, sector 1 uses f = -x/2 + sqrt(3) y/2.
 
 ### Community 900 - "m3-capture.spec.ts"
-Cohesion: 0.10
-Nodes (13): ev(), fixtures, routes, report, out(), READY, shootElement(), routes (+5 more)
-
-### Community 901 - "A. Read-only capability design (blocker 1)"
-Cohesion: 0.06
-Nodes (32): A. Read-only capability design (blocker 1), G. Publication-failure behavior (blocker 7), H. Journal-contention behavior (blocker 8), LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 2 (Astra's confirmed blockers), M. Exact focused-test manifest and results (blocker 14), O. Remaining blockers and residuals, Q. Exact changed files (this revision), C. Backend implementation (+24 more)
-
-### Community 902 - "performance_multiplier"
-Cohesion: 0.19
-Nodes (14): An untraded strategy is not punished — it is simply unproven., Two lucky trades are not evidence. Shrinkage toward neutral is what stops the…, If one factor alone saturates, every strong strategy collapses to the same…, Unrealized P&L is not a result., test_a_losing_record_cuts_the_weight(), test_a_single_factor_cannot_pin_the_weight_at_the_ceiling(), test_a_tiny_sample_barely_moves_the_weight(), test_a_winning_record_lifts_the_weight() (+6 more)
-
-### Community 903 - "test_historical_outcome_capture.py"
-Cohesion: 0.12
-Nodes (23): run(), chain(), finish(), parametrize, Synthetic prospective integration only; no network or production writes., test_actual_risk_block_receipt_can_complete_without_confidence_change(), test_automatic_forward_resolver_keeps_closed_postdecision_bars(), test_capture_does_not_mutate_strategy_risk_trading_or_control() (+15 more)
-
-### Community 904 - "main"
 Cohesion: 0.08
-Nodes (19): main(), emit(), tx(), wrap(), run(), check_equivalence_gate_static(), check_fixture_canary(), _load_isolated() (+11 more)
+Nodes (16): E. Evidence routing (historical evidence preserved), L. Changed files, ev(), fixtures, routes, fixtures, routes, report (+8 more)
+
+### Community 901 - "LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 2 (Astra's confirmed blockers)"
+Cohesion: 0.12
+Nodes (25): F. Persistence generation and order (blocker 6), G. Publication-failure behavior (blocker 7), H. Journal-contention behavior (blocker 8), L. Timeout / shutdown (blocker 13), LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 2 (Astra's confirmed blockers), M. Exact focused-test manifest and results (blocker 14), O. Remaining blockers and residuals, Q3. Timeout/publication race → fixed by a single publisher (+17 more)
+
+### Community 902 - "ast"
+Cohesion: 0.14
+Nodes (14): ast, load(), _parsed(), Path, AST inventory of every code path that can persist control_state=ACTIVE. LUFFY-…, One function (or the module): its own calls/assignments, collected once., How a caller binds this scope's parameter `p` (name, index)., Every function scope (nested and methods included) plus the module. (+6 more)
+
+### Community 903 - "Trades.tsx"
+Cohesion: 0.27
+Nodes (17): base(), dur(), hue(), loadAll(), MON, money(), num(), opened() (+9 more)
+
+### Community 904 - "random"
+Cohesion: 0.14
+Nodes (11): random, RuntimeError, RNG-attempt guard for the M3.2 v4 sharding integration tests and the v4…, Raised the instant a guarded scope attempts to construct or draw from a random…, Counts and fails closed on numpy/stdlib/OS random-number construction and…, Replace a *module*-level attribute (never a C-extension type's own…, Called by a defensive wrapper around any production/validation entry point…, RNGGuard (+3 more)
 
 ### Community 905 - "@playwright/test"
-Cohesion: 0.17
-Nodes (10): calls(), H, LIVE, login(), state(), ROUTES, ROUTES, ROUTES (+2 more)
+Cohesion: 0.15
+Nodes (11): calls(), H, LIVE, login(), state(), ROUTES, ROUTES, ROUTES (+3 more)
 
 ### Community 906 - "test_current_truth_integration.py"
-Cohesion: 0.08
-Nodes (22): _Explodes, legacy(), _now(), old_db(), fixture, parametrize, _quote(), LUFFY-CURRENT-TRUTH-CONTRACT-R1 final-review integration gaps (A–C). A legacy… (+14 more)
+Cohesion: 0.09
+Nodes (21): _Explodes, legacy(), _now(), old_db(), fixture, parametrize, _quote(), LUFFY-CURRENT-TRUTH-CONTRACT-R1 final-review integration gaps (A–C). A legacy… (+13 more)
 
-### Community 907 - "Overview.tsx"
-Cohesion: 0.12
-Nodes (29): K. Frontend freshness (blocker 11), Marks, OverviewData, ProtectionStatus, applyProtectionExpiry(), expireOverviewTelemetry(), age(), base() (+21 more)
+### Community 907 - "MCPClient"
+Cohesion: 0.20
+Nodes (8): test_a_json_rpc_error_is_raised_not_returned(), test_text_of_concatenates_text_content_blocks(), MCPClient, MCPError, RuntimeError, Concatenate the text blocks of a tools/call result., One session against one Streamable-HTTP MCP server. Sessions are re-established…, Pull the JSON-RPC frame for `want_id` out of an SSE body.
 
 ### Community 908 - "predictive.py"
+Cohesion: 0.17
+Nodes (22): Actual gap mapped first, Change, Control and successor impact, Offline proof, [SOL-2][RES-05] CLOSED — result-to-next-question persistence, canonical(), digest(), hypothesis_from_dict() (+14 more)
+
+### Community 909 - "test_qnt08_admission_boundary.py"
+Cohesion: 0.20
+Nodes (17): _earlier_look(), _patch_look(), parametrize, QNT-08: quantitative Referee admission is distinct from every downstream…, A look on the same tf that fixed an earlier cut (seq before ours)., _refused(), test_admission_grants_no_order_capital_or_owner_authority(), test_fake_candidate_without_any_look_is_refused() (+9 more)
+
+### Community 910 - "test_market_investigation.py"
 Cohesion: 0.08
-Nodes (36): Acceptance evidence, LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1, Normal architecture, Protected quantitative path and authority, Read-only real shadow, Actual gap mapped first, Change, Control and successor impact (+28 more)
-
-### Community 909 - "registry_provider.py"
-Cohesion: 0.15
-Nodes (13): Protocol, Fetcher, FetchError, _no_constant(), _NoRedirect, _parse(), Exception, Read-only producer of RegistrySnapshot from public Binance USD-M exchangeInfo.… (+5 more)
-
-### Community 910 - "trader_observability"
-Cohesion: 0.03
-Nodes (84): 3. M3.1 population coverage and replay review, Cohort and reconciliation — `scripts.capture_pit_population`, 11:15:51 UTC, Coverage gaps — explicitly recorded, not waived, Maturity — `scripts.verify_memory_outcomes`, 11:15:16.650 UTC, What this does not establish, db(), Reader, run() (+76 more)
+Nodes (37): main(), register(), later(), parametrize, Synthetic chronological tests; no profitability or predictive validation., resolved(), test_consumer_chronology_restart_export_and_retention(), test_delayed_arrival_and_retrieval_capacity() (+29 more)
 
 ### Community 911 - "persistence/storage_cleanup.py"
 Cohesion: 0.15
-Nodes (23): Rehearse DA-10 on identified isolated copies; never apply to production., apply_copy(), blob_digest(), digest_row(), guard_copy(), inventory(), portfolio_candidates(), quote() (+15 more)
+Nodes (24): Rehearse DA-10 on identified isolated copies; never apply to production., struct, apply_copy(), blob_digest(), digest_row(), guard_copy(), inventory(), portfolio_candidates() (+16 more)
 
-### Community 912 - "evidence.py"
-Cohesion: 0.09
-Nodes (25): Existing research pipeline, Offline retrospective market history, Selecting a dataset, Strategy consumers and dependencies, Verification, runpy, load(), main() (+17 more)
+### Community 912 - "load_frames"
+Cohesion: 0.13
+Nodes (16): Existing research pipeline, Offline retrospective market history, Selecting a dataset, Strategy consumers and dependencies, Verification, Task 12: Speed benchmark, backtest_bars(), backtest_symbols() (+8 more)
 
-### Community 913 - "test_str01_version_lineage.py"
-Cohesion: 0.15
-Nodes (26): _derive(), _new(), _plant(), _plant_raw(), parametrize, STR-01: one immutable typed StrategySpec/StrategyVersion lineage.…, _refused(), _set() (+18 more)
+### Community 913 - "test_bootstrap_contract.py"
+Cohesion: 0.06
+Nodes (25): InertHost, no_network(), phase_b(), protection(), fixture, parametrize, OBS-05: temporary local stores/lock holders and inert launch seams only., test_absent_live_heartbeat_alone_is_deferred_not_waived() (+17 more)
 
 ### Community 914 - "control-checks.json"
 Cohesion: 0.07
 Nodes (27): all_178_existing_rows_semantically_and_byte_preserved, all_existing_dependency_edges_preserved, canonical_base, committed_bytes_verified, dependencies, PORT-02, RISK-02, STR-02 (+19 more)
 
-### Community 915 - "BinanceUsdmRegistryProvider"
-Cohesion: 0.20
-Nodes (7): BinanceUsdmRegistryProvider, Immutable record of one refresh attempt, successful or not., Synchronous public exchangeInfo -> RegistrySnapshot producer., Provenance of the refresh that produced ``latest()``., Provenance of the most recent refresh attempt, including failures., RegistryRefreshProvenance, RegistryRefreshResult
+### Community 915 - "test_org_vault.py"
+Cohesion: 0.22
+Nodes (9): Knowledge-graph integration — employees become vault nodes. Verifies…, StubJournal, test_daily_review_signed_by_manager(), test_incident_note_signed_by_theorist(), test_moc_has_company_section(), test_runtime_vault_bootstrap_preserves_source_and_survives_restart(), test_seed_company_writes_chart_and_nodes(), test_strategy_note_carries_author() (+1 more)
 
 ### Community 916 - "approvals.py"
-Cohesion: 0.31
-Nodes (13): binding(), canonical(), decide(), digest(), ensure(), propose(), ValueError, Exact owner decisions, through OwnerService only; never executes a proposal.… (+5 more)
+Cohesion: 0.25
+Nodes (18): binding(), canonical(), decide(), digest(), ensure(), exists(), items(), propose() (+10 more)
 
-### Community 917 - "dispatch.py"
-Cohesion: 0.12
-Nodes (27): checkpoint_isolated(), describe(), dispatch_evidence(), dispatch_pending(), dispatchable(), ensure(), evaluate(), _evaluate_rule() (+19 more)
+### Community 917 - "test_trade_attribution.py"
+Cohesion: 0.29
+Nodes (12): _D, A trade belongs to the strategy that proposed its direction.…, The regression: 0.9 SELL outranked 0.6 BUY on a BUY trade., Unversioned historical decisions retain fc6c0b2 ownership., The gate should have refused this entry; if one arrives anyway it is not…, _sig(), test_a_louder_signal_on_the_other_side_takes_no_credit(), test_historical_matching_confidence_owner_is_preserved() (+4 more)
 
 ### Community 918 - "ArithmeticToken"
-Cohesion: 0.12
-Nodes (10): ArithmeticToken, installed(), ndarray, RNG-free, non-inferential fixtures for the M3.2 v4 shard layer. Copied…, Open the FastMetric gate (RNG-free, hash-level); optionally stub BH so fixtures…, Deterministic arithmetic stand-in for a generator (no randomness anywhere)., Same call shape as ``SeedRegistry.generator``; returns tokens, refuses…, Deterministic stand-in so fixtures exercise non-zero R/V/true-discovery paths… (+2 more)
+Cohesion: 0.20
+Nodes (5): ArithmeticToken, ndarray, Deterministic arithmetic stand-in for a generator (no randomness anywhere)., Same call shape as ``SeedRegistry.generator``; returns tokens, refuses…, StubRegistry
 
 ### Community 919 - "test_current_truth_completion_clock.py"
 Cohesion: 0.14
 Nodes (20): _Clock, frozen(), _KV, _produce(), datetime, fixture, parametrize, Final blocker: a successful venue read's completion time is its source time,… (+12 more)
 
 ### Community 920 - "test_runtime_portfolio_integration.py"
-Cohesion: 0.15
-Nodes (25): book(), make(), fixture, TEST-ONLY sources; no synthetic pass claims real allocation readiness., result(), test_atomic_checkpoint_rollback_on_risk_failure(), test_established_heat_margin_and_exposure_reach_common_factor(), test_exact_event_once_restart_checkpoint_and_replay() (+17 more)
-
-### Community 921 - "Global Constraints"
 Cohesion: 0.18
-Nodes (10): Global Constraints, Luffy Pays Rent Implementation Plan, Task 1: The rent ledger (pure), Task 2: The executor books the fill, not a guess, Task 5: Verify on the real system, and record it, The kernel restarts often. Refetching from scratch every time is how the feed…, A guard that retries a dead feed every cycle earns itself a 429., test_a_restart_reuses_the_cached_calendar() (+2 more)
+Nodes (22): book(), fixture, TEST-ONLY sources; no synthetic pass claims real allocation readiness., result(), test_atomic_checkpoint_rollback_on_risk_failure(), test_established_heat_margin_and_exposure_reach_common_factor(), test_exact_event_once_restart_checkpoint_and_replay(), test_exact_lifecycle_transition_is_consumed_once() (+14 more)
+
+### Community 921 - "regime_series"
+Cohesion: 0.29
+Nodes (12): _frame(), parametrize, The live gate and the measured regime_filter must mean the same thing, or a…, test_only_known_labels_are_emitted(), test_series_covers_the_whole_frame(), test_series_last_value_matches_the_live_classifier(), test_short_frame_returns_empty(), test_trending_frame_is_mostly_trending() (+4 more)
 
 ### Community 923 - "replay_categorical.py"
 Cohesion: 0.24
@@ -4324,65 +4361,65 @@ Nodes (25): A(), cluster_integral(), comp(), digest(), endpoint(), grid(), hclus
 Cohesion: 0.08
 Nodes (25): ATT-03 owner current-build scope decision, Change Log, Control-plane metadata repair (2026-10-06), Current owner release decision (2026-10-06), Historical Defects, Historical terminal update (PERF-03, 2026-10-06), Latest Observation, LUFFY — Product, Behaviour & GUI Tracker (+17 more)
 
-### Community 925 - "Diagnostics.tsx"
-Cohesion: 0.17
-Nodes (19): collectorTruth(), DiagnosticLevel, Evidence, needsYouCount(), reconciliationTruth(), recoveryTruth(), supervisorFreshness(), age() (+11 more)
+### Community 925 - "test_spec_signals_on_closed_bars.py"
+Cohesion: 0.22
+Nodes (17): _breakout_spec(), _closed_end(), _forming_end(), _frame(), DataFrame, Snapshot, A spec signals on a CLOSED bar, the way it was validated. `to_evaluator` read…, The fix must not silence the real thing. (+9 more)
 
 ### Community 926 - "test_da01_exact_identity.py"
 Cohesion: 0.22
 Nodes (22): frozen(), market(), new_observation(), project(), fixture, parametrize, DA-01 exact native identity, frozen-input and historical replay proofs., test_blacklist_and_account_masks_preserve_precedence() (+14 more)
 
-### Community 927 - "M3.2 pre-RNG truth package (v4), September 21"
-Cohesion: 0.18
-Nodes (9): M3.2 pre-RNG truth package (v4), September 21, Persistence proofs, Remaining unresolved, Resolution (same day): the nine kernels are certified, Verification, What was merged, Independent replay, Remaining P5/C3 and P6/C4 categorical kernels — Frozen Acceptance (+1 more)
+### Community 927 - "2026-09-21-m32-pre-rng-truth-package.md"
+Cohesion: 0.40
+Nodes (3): Independent replay, Remaining P5/C3 and P6/C4 categorical kernels — Frozen Acceptance, Results (primary 224-bit, order 14, axis 80; replay 384-bit, order 16, axis 82, reversed inner traversal)
 
 ### Community 928 - "test_observation_first_cycle.py"
 Cohesion: 0.21
 Nodes (22): boot(), collector(), fixture, parametrize, OBS-03 metadata-only fixtures; no Kernel, Dashboard, providers or subprocesses., Execute only retained emit() against an inert FD; never import Kernel., read(), row() (+14 more)
 
-### Community 929 - "test_negative_control_w5_w11_are_caught"
-Cohesion: 0.18
-Nodes (8): parametrize, Revision-2 dispatch: recovery queued without admission, reads on the…, _rev2_dispatch(), _rev2_panic_drain(), test_negative_control_w1_rev2_dispatch_is_caught(), test_negative_control_w3_rev2_panic_drain_is_caught(), test_negative_control_w4_is_caught(), test_negative_control_w5_w11_are_caught()
+### Community 929 - "OpportunityContext"
+Cohesion: 0.22
+Nodes (14): _rehashed(), test_from_json_accepts_only_the_exact_contract(), test_from_json_rejects_noncanonical_text_and_wrong_id(), test_from_json_shares_registry_mapping_and_family_catalog_checks(), test_from_json_verifies_identity(), canonical(), _context_id(), OpportunityContext (+6 more)
 
 ### Community 930 - "test_wrld04_claim_history.py"
-Cohesion: 0.13
-Nodes (27): Demonstrated gap and bounded fix, Dependency result, Proof mapping, [SOL-2][WRLD-04] Claim evidence and version history, Validation, Closing-condition proof, claimed(), Future learned revisions through real application, WorldModel and replay. (+19 more)
+Cohesion: 0.11
+Nodes (30): Demonstrated gap and bounded fix, Dependency result, Proof mapping, [SOL-2][WRLD-04] Claim evidence and version history, Validation, Closing-condition proof, Execute with a baseline or fixed trader package on PYTHONPATH., claimed() (+22 more)
 
-### Community 931 - "da10-full/measure.py"
+### Community 931 - "bench_trade_history.py"
+Cohesion: 0.24
+Nodes (12): body_bytes(), build(), cursor_at(), measure(), plan(), Path, Measure keyset trade-history pages (owner frontend) on a large temporary…, Wall time of one complete newest-first traversal. (+4 more)
+
+### Community 932 - "trade_history.py"
+Cohesion: 0.17
+Nodes (14): base64, binascii, _b64(), CursorError, decode_cursor(), encode_cursor(), ValueError, Trade history pages for the owner frontend: keyset, read-only, bounded. Order:… (+6 more)
+
+### Community 933 - "observer"
+Cohesion: 0.26
+Nodes (11): database(), observer(), test_deployed_zero_timeout_refuses_legitimate_writer(), test_live_probe_does_not_scan_integrity_and_keeps_prior_status(), execute(), test_persistent_busy_remains_unresolved_and_blocks(), test_real_contention_commits_after_legitimate_writer_releases(), test_storage_failure_and_commit_failure_never_claim_success() (+3 more)
+
+### Community 934 - "now_utc"
 Cohesion: 0.06
-Nodes (36): binascii, m(), The history check at the deepest page: stream-hash the consumed range., gc, fds(), Bounded offline SQLite/storage measurements on recovery scratch only., run(), size() (+28 more)
+Nodes (59): _hold_decision(), _mk_journal(), _mk_vote(), _orch(), Phase-0 brain-reconnect regression tests. Covers the four critical repairs: 1.…, Parent rows for a HOLD decision (outcomes FK requires them)., One cycle + one directional decision + one resolved outcome., _seed_hold() (+51 more)
 
-### Community 932 - "_kernel_stub"
-Cohesion: 0.20
-Nodes (5): _FakeWriter, _kernel_stub(), A Kernel carrying only what `_mechanism_once` touches., No ideas must not stop generation — the Strategist falls back to inventing,…, test_mechanism_still_runs_with_an_empty_queue()
-
-### Community 933 - "test_observer_attention_repair.py"
-Cohesion: 0.18
-Nodes (19): database(), fresh_monitor(), observer(), parametrize, Live monitoring separates committed durability, contention and maintenance., Real imports in a fresh interpreter, with fixture-only I/O and no egress., test_deployed_zero_timeout_refuses_legitimate_writer(), test_disabled_provider_zero_attempts_in_fresh_fixture() (+11 more)
-
-### Community 934 - "test_phase1_brain.py"
-Cohesion: 0.15
-Nodes (21): _assert_writer_refuses(), _journal(), Phase-1 quantitative core regression tests. EWA: retired fold/recovery…, Put a hand-built EWA state on disk for blended_weights to read., No agent out-performed any other, so nothing should move. EWA weights are…, Equal priors, unequal scores → the stronger expert gains share., One agent's score in isolation is not evidence about the others. A…, Label quality cannot replace registered replay authority for fitting. (+13 more)
-
-### Community 935 - "MacroGuard Agent Implementation Plan"
-Cohesion: 0.22
-Nodes (8): File Map, MacroGuard Agent Implementation Plan, Task 1: Write failing tests for MacroGuard, Task 2: Implement MacroGuard, Task 3: Wire MacroGuard into kernel, Task 5: Reactivate RSI Exhaustion Reclaim + annotate macro-cluster trades, Task 6: Write vault postmortem for macro cluster, Task 7: Add FINNHUB_API_KEY to environment docs
+### Community 935 - ".skills/motion/best-practices/index.md"
+Cohesion: 0.17
+Nodes (8): CSS or Motion, Animation best practices, Choosing a tool, Platform-specific rules, If the Motion MCP server is unavailable, Motion, Tiers, Upgrading Motion
 
 ### Community 936 - "LUFFY-OWNER-FRONTEND-V2"
 Cohesion: 0.10
 Nodes (19): A. Overall frontend status, B. Overview, C. Trades, D. Research, F. LUFFY, G. Operations, H. Live System, I. Knowledge (+11 more)
 
-### Community 937 - "Sweep"
-Cohesion: 0.11
-Nodes (12): Purpose, writers and readers, code_manifest(), _Disabled, _error(), open_sweep(), Stand-in when telemetry setup failed: every call is a no-op., A Sweep, or a disabled no-op when any part of setup (uuid, clock, spec ids)…, One review_deployed() invocation. In-loop methods only append raw facts to… (+4 more)
+### Community 937 - "net_score"
+Cohesion: 0.30
+Nodes (14): Historical arithmetic compatibility; never current entry authority., 0.186 was below every threshold the live system produces., Abstention is not an opinion; disagreement is., _sig(), test_a_lone_strategy_signal_can_clear_a_typical_threshold(), test_an_agreeing_analyst_still_raises_the_score(), test_an_opposing_analyst_still_counts_against(), test_analyst_only_scoring_is_unchanged_when_all_have_conviction() (+6 more)
 
-### Community 938 - "main"
-Cohesion: 0.24
-Nodes (5): main(), emit(), tx(), wrap(), run()
+### Community 938 - "add"
+Cohesion: 0.20
+Nodes (14): test_strategy_board_aggregates_per_strategy_and_skips_unknown(), add(), expected(), datetime, test_backdated_insert_behind_the_cursor_is_reported_not_silently_skipped(), test_close_while_paging_keeps_identity_and_position(), test_http_contract_pages_through_everything(), test_http_reports_history() (+6 more)
 
-### Community 939 - "runtime_inputs"
-Cohesion: 0.22
-Nodes (8): Capture and replay, Event coverage and truthful limits, Real inventory, Recovery final verification, Stage 7 historical outcome capture R1, Validation and remaining implementation, Called before deciding, never when replaying historical rows., runtime_inputs()
+### Community 939 - "predictive_receipt.py"
+Cohesion: 0.38
+Nodes (11): binding(), build(), check_measured(), Content-bound RES-08 receipts around the registered quantitative machinery. No…, Worker timing is not scientific evidence or a new result version., semantic(), snapshot(), step() (+3 more)
 
 ### Community 940 - "replay_batch.py"
 Cohesion: 0.36
@@ -4396,33 +4433,33 @@ Nodes (8): attach(), Bounded read-only capture of recorded derivatives positioni
 Cohesion: 0.17
 Nodes (16): fixture, parametrize, The real mechanism review persists health without granting retirement authority., records(), reject_observation_writes(), review(), make_analyst(), test_completed_review_flushes_before_propagating_later_failure() (+8 more)
 
-### Community 943 - "registry_store.py"
-Cohesion: 0.24
-Nodes (19): _canon(), ensure(), _env(), load_untradeable(), _ms(), ValueError, Durable, append-only history of public venue registry truth and universe…, Persist one RegistrySnapshot exactly; idempotent per snapshot_id. (+11 more)
+### Community 943 - "RiskManager"
+Cohesion: 0.02
+Nodes (96): 2. Logging and diagnostics inventory, Runtime boundary, Risk bootstrap, exact remaining procedure (RISK-03), Suggested Questions, Initialized in this process, then the durable row vanishes: corrupt., Once latched, only repair_baseline() clears it — not a later valid blob., test_corrupt_latch_survives_a_valid_looking_rewrite(), test_first_init_never_from_fallback_or_unusable_equity() (+88 more)
 
-### Community 944 - "Sol1: unreadable research questions review"
-Cohesion: 0.11
-Nodes (15): Disk gate and preservation, Independent storage and authority verification, Integration and validation, Sol1: next three research tables — integration, Comparison and whole-table decision, Exact schema and every column, Final validation, Real resource costs and limits (+7 more)
+### Community 944 - "SOL1 research_registrations review — 2026-10-11"
+Cohesion: 0.06
+Nodes (29): Disk gate and preservation, Independent storage and authority verification, Integration and validation, Sol1: next three research tables — integration, Table decisions and consumer correction, Actual resource costs, CLOSURE, COMMIT (+21 more)
 
 ### Community 945 - "ATT-03 — existing Attention values calibration review"
-Cohesion: 0.11
-Nodes (16): ATT-03 — existing Attention values calibration review, Checks and scope, Exact components, values and origins, Exact remaining evidence and owner boundary, Fixed offline experiments, Frozen retained evidence, What the measurements support, ATT-03 owner current-build scope decision (+8 more)
+Cohesion: 0.25
+Nodes (7): ATT-03 — existing Attention values calibration review, Checks and scope, Exact components, values and origins, Exact remaining evidence and owner boundary, Fixed offline experiments, Frozen retained evidence, What the measurements support
 
 ### Community 946 - "Motion for React"
-Cohesion: 0.11
-Nodes (16): `AnimatePresence`, API guidance, Drag to reorder, Height to and from `auto`, Importing, Layout animations, Motion for React, MotionValues (+8 more)
+Cohesion: 0.17
+Nodes (12): `AnimatePresence`, API guidance, Drag to reorder, Height to and from `auto`, Importing, Layout animations, Motion for React, MotionValues (+4 more)
 
 ### Community 947 - "predictive_bridge.py"
-Cohesion: 0.18
-Nodes (16): Proof mapping, append(), classify(), cycle(), measured_run(), factory_source(), feedback(), main() (+8 more)
+Cohesion: 0.20
+Nodes (15): append(), classify(), cycle(), measured_run(), factory_source(), feedback(), main(), prior_classification() (+7 more)
 
 ### Community 948 - "UI/UX Pro Max - Design Intelligence"
 Cohesion: 0.11
 Nodes (17): Before Delivering App UI, Example Workflow, If a search returns 0 results, Output Formats, Query Contract, Rule Categories by Priority, Running the search tool, Step 1: Analyze User Requirements (+9 more)
 
-### Community 949 - "Trades.tsx"
-Cohesion: 0.14
-Nodes (28): Avatar(), RequestState, corePresentation, LuffyCore(), ChangeValue(), DataBar(), GlacierMotion, RouteReveal() (+20 more)
+### Community 949 - "Luffy — repository guidance"
+Cohesion: 0.18
+Nodes (11): Commands, graphify, Graphify cost control, Luffy memory lookup, Luffy memory lookup, Luffy — repository guidance, Purpose and boundaries, Read on demand (+3 more)
 
 ### Community 950 - "Exit A/B shadow: virtual path updater"
 Cohesion: 0.25
@@ -4436,25 +4473,25 @@ Nodes (16): test_disabled_provider_makes_zero_attempts_and_leaves_ledger_exact()
 Cohesion: 0.18
 Nodes (12): lab(), parametrize, Synthetic tests only; never import a market-data loader or search runner., test_384_family_reports_adjusted_power_and_resolution(), test_cross_block_links_and_footprints_merge_never_split(), test_future_outcome_and_unknowns_cannot_silently_become_valid(), test_invalid_process_refuses_before_any_draw(), test_missingness_uses_fixed_complete_data_effect_scale() (+4 more)
 
-### Community 953 - "test_owner_telegram_binding.py"
-Cohesion: 0.25
-Nodes (16): _audit(), kernel(), fixture, parametrize, Telegram owner binding for a group chat (config.yaml…, Only message.from.id is the identity: owner ids placed anywhere else in the…, _section(), send() (+8 more)
+### Community 953 - "tg_update"
+Cohesion: 0.10
+Nodes (33): existing(), check_telegram_unknown(), parametrize, R6: a delivery's failed reservation is not a terminal outcome for its ID.…, reservation_race(), fail_one_write(), lookup(), run_a() (+25 more)
 
-### Community 954 - "test_real_timers_retain_truthful_observations_until_verified_exit"
-Cohesion: 0.54
-Nodes (8): test_real_timers_retain_truthful_observations_until_verified_exit(), observe(), retention_sleep(), rows(), run(), start(), timers_start(), wait_for()
+### Community 954 - "main"
+Cohesion: 0.07
+Nodes (37): A. Exact transaction-cleanup defect, B. Exact production-code changes, E. Connection-reset behaviour, F. Duplicate / partial-write safety, G. Focused test totals, Heartbeat (item 9), I–M. Returns, Live-cycle relevance (item 8), retained evidence only (+29 more)
 
-### Community 955 - "consumers.py"
-Cohesion: 0.06
-Nodes (33): apply(), decide(), Adaptive branch of the single LearningApplication authority., apply(), apply_with_rules(), _decision(), ensure(), prepare_captured() (+25 more)
+### Community 955 - "test_whole_trade_accounting.py"
+Cohesion: 0.23
+Nodes (14): parametrize, Synthetic venue receipts, never observed trading performance., reassess(), test_captured_availability_not_query_cutoff(), test_missing_or_conflicting_fill_evidence_refuses(), test_non_usdt_fees_preserve_currency_and_unknown_conversion(), test_positive_funding_is_income(), test_publication_frontier_missing_cannot_assert_zero() (+6 more)
 
 ### Community 956 - "depth_evidence.py"
-Cohesion: 0.18
-Nodes (16): connect(), DepthRejected, _level(), observe(), Connection, Decimal, ValueError, Public order-book depth observations for capacity evidence (shadow only).… (+8 more)
+Cohesion: 0.10
+Nodes (27): connect(), DepthRejected, _level(), observe(), Connection, Decimal, ValueError, Public order-book depth observations for capacity evidence (shadow only).… (+19 more)
 
-### Community 957 - ".long"
-Cohesion: 0.29
-Nodes (6): BTC Rotation Momentum, Live record, Logic, Funding Price Divergence, Live record, Logic
+### Community 957 - "EntryRecovery"
+Cohesion: 0.24
+Nodes (5): EntryRecovery, OrderEvidenceMismatch, ValueError, Only the order this action submitted may resolve it. The venue echo must…, read()
 
 ### Community 958 - "flint"
 Cohesion: 0.22
@@ -4464,9 +4501,9 @@ Nodes (15): flint, A(), density(), factor(), integrate(), macro(), main(), membe
 Cohesion: 0.12
 Nodes (14): Bundle impact, Integration boundary, Measurement scope, OWNER-FRONTEND-V1 — F1 routing correction, Preservation and intended commit set, Review findings and closure evidence, Validation and reproducibility, Visual references applied (+6 more)
 
-### Community 960 - "tracker.ts"
-Cohesion: 0.29
-Nodes (8): obj(), parseTracker(), strings(), text(), TRACKER_STATUSES, TrackerData, TrackerRow, TrackerStatus
+### Community 960 - "Tracker.tsx"
+Cohesion: 0.21
+Nodes (13): obj(), parseTracker(), strings(), text(), TRACKER_STATUSES, TrackerData, TrackerRow, TrackerStatus (+5 more)
 
 ### Community 961 - "test_review03_prospective_execution.py"
 Cohesion: 0.16
@@ -4476,17 +4513,17 @@ Nodes (9): _body(), FakeEx, _obs(), parametrize, Review-03 (execution_observatio
 Cohesion: 0.18
 Nodes (13): candle_path(), code_identity(), _file_identity(), identity(), Remember — in this process only — that a bundle was refused for a reason that…, Per requested series: (revisions, first/last event, newest receipt,…, Detect projection changes using inventory and file metadata only. Legacy…, Everything a refusal was reached under, except the data stamp. A control and a… (+5 more)
 
-### Community 963 - "m32_scheme_d_pilot_20260922/run_pilot.py"
-Cohesion: 0.48
-Nodes (6): context(), load_layer(), main(), Path, Authorization-gated launcher for the frozen M3.2 pilot. This adapter leaves…, sha256_file()
+### Community 963 - "Host"
+Cohesion: 0.18
+Nodes (4): run(), Host, main(), log()
 
 ### Community 964 - "[SOL-2][RES-05] BLOCKED — structured research persistence"
-Cohesion: 0.11
-Nodes (12): Actual gap and change, Build policy and cross-tracker impact, Existing implementation mapped, OWN-02 typed owner authority evidence map, First-look cut limitation and assessment, [SOL-1][QNT-08] canonical CLOSED, Verification and preserved scope, Demonstrated gap and change (+4 more)
+Cohesion: 0.33
+Nodes (5): Demonstrated gap and change, Existing evidence mapped before changes, [SOL-2][RES-05] BLOCKED — structured research persistence, Verification and control, Why RES-05 remains BLOCKED
 
 ### Community 965 - "read_prod_fee.py"
-Cohesion: 0.21
-Nodes (12): credentials(), declared_symbols(), _get(), main(), measure(), Read Binance PRODUCTION futures commission rates for the declared universe. The…, The read-only production key, or SystemExit naming what is missing., The production fee reader: no network, no credentials leaked. (+4 more)
+Cohesion: 0.19
+Nodes (13): hmac, credentials(), declared_symbols(), _get(), main(), measure(), Read Binance PRODUCTION futures commission rates for the declared universe. The…, The read-only production key, or SystemExit naming what is missing. (+5 more)
 
 ### Community 966 - "25.3 Navigation contracts"
 Cohesion: 0.13
@@ -4496,37 +4533,45 @@ Nodes (15): 25.1 Frontend technology lock, 25.2 Rendering/resource rule, 25.3 Na
 Cohesion: 0.13
 Nodes (15): 35.10 Supervisor, 35.11 Research / Experiment / Validator, 35.12 Strategy Builder / Governor, 35.13 Learning, 35.14 Owner Interface, 35.1 Attention, 35.2 Analysts, 35.3 Strategy Runtime (+7 more)
 
-### Community 969 - "test_m32_validation_bundle_v2.py"
-Cohesion: 0.38
-Nodes (4): Guard the RNG-free M3.2 validation bundle REVISION 2: hash binding, recorded…, _sha(), test_manifest_binds_files_pins_and_frozen_truth(), test_v1_untouched_and_superseded_and_addendum_bound()
+### Community 968 - "test_margin_caps.py"
+Cohesion: 0.31
+Nodes (13): _entry(), _pos(), Risk sizing must cap notional and margin, not only distance-to-stop. `amount =…, The cap must bind on pathologies, not on ordinary sizing., Eight tight-stopped positions must not need more margin than exists., Capping margin must not quietly enlarge a position., _rm(), test_a_normal_atr_stop_is_left_alone() (+5 more)
+
+### Community 969 - "trade_page"
+Cohesion: 0.20
+Nodes (13): _close(), _pages(), test_astra_cancellation_is_reported_although_counts_match(), test_change_in_unread_range_is_not_a_history_change(), test_empty_history(), test_filter_membership_change_is_reported_both_directions(), test_journal_fields_pass_through_unchanged_and_nothing_is_derived(), test_non_canonical_trailing_bits_are_rejected() (+5 more)
+
+### Community 970 - "M1 implementation plan — persistent market investigations"
+Cohesion: 0.22
+Nodes (9): Boundaries, Forecast publication and measurement rules, Inputs and records for M1.1, Investigation behavior for M1.2–M1.3, M1 implementation plan — persistent market investigations, Ordered implementation tasks, Result the owner should receive, Review and completion evidence (+1 more)
 
 ### Community 971 - "signal_occurrence_observation.py"
+Cohesion: 0.16
+Nodes (17): _classify(), _decode_codes(), _decode_executed(), _decode_signals(), observe(), observe_journal(), _occurrence(), Repeated-rejection observation per strategy-signal-occurrence.v1. A read-only,… (+9 more)
+
+### Community 972 - "Reads"
+Cohesion: 0.06
+Nodes (26): I. Cadence (blocker 9), Blocker 1: deadline enforcement, Changed files in R4, Corrected wording, LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 4 (Astra's two R3 blockers), Unchanged, still outstanding (the gate, after package approval), _cadence(), _decimals() (+18 more)
+
+### Community 973 - "._tg_dispatch"
 Cohesion: 0.20
-Nodes (14): _classify(), _decode_codes(), _decode_executed(), _decode_signals(), observe(), observe_journal(), _occurrence(), Repeated-rejection observation per strategy-signal-occurrence.v1. A read-only,… (+6 more)
-
-### Community 972 - "RecordingVenue"
-Cohesion: 0.09
-Nodes (11): I. Cadence (blocker 9), Replays venue truth; records every call that could change it., RecordingVenue, _cadence(), FakeClock, The detector: R1's completion + interval schedule fails the cadence test., The venue itself (the kernel's exchange view). Supervisor/reconcile use it., test_cadence_is_fixed_start_not_completion_plus_interval() (+3 more)
-
-### Community 973 - "M8.1 actual conversion evidence: bounded capture and explicit attribution limit"
-Cohesion: 0.33
-Nodes (6): Delivered, Exact next work, M8.1 actual conversion evidence: bounded capture and explicit attribution limit, Provider limit (verified documentation, not a live transaction), Subsequent owner-authorized endpoint checks — September 17 00:31 UTC, Validation and runtime
+Nodes (6): recover(), reply(), run(), This kernel's OwnerService (lazy: test kernels skip __init__)., Default Telegram owner identity: the configured chat id when it is a private…, Telegram never makes containment wait, and never queues recovery. Every owner…
 
 ### Community 974 - "Dots handoff — LUFFY tracker-based work"
-Cohesion: 0.14
-Nodes (12): Adoption and next-task boundary, Dots handoff — LUFFY tracker-based work, Engineering discipline after import, Latest result, not a new run, One active item and the next candidate, Permission boundary, Start here, VM connection guide (official documentation checked 2026-10-05) (+4 more)
+Cohesion: 0.22
+Nodes (8): Adoption and next-task boundary, Dots handoff — LUFFY tracker-based work, Engineering discipline after import, Latest result, not a new run, One active item and the next candidate, Permission boundary, Start here, VM connection guide (official documentation checked 2026-10-05)
 
 ### Community 975 - "LUFFY single owner tracker priority audit"
 Cohesion: 0.14
 Nodes (13): A Complete priority distribution, B Category distribution, Blocker review register, C Actual activation gates and uncertain safety evidence, Complete classification register, D False or excessive blocker candidates, E Essential intelligence gap, Evidence and identity (+5 more)
 
-### Community 976 - "test_review03_flatten_panic_contract.py"
-Cohesion: 0.08
-Nodes (26): R5-A. W1 panic ordering fix, R. Changed files (package; `graphify-out/` excluded), C-1 — what changed (`trader/engine/reconcile.py`), Cross-lane contract (Sol1 — Kernel/Safety), Cross-lane dependencies / integration risks, Review 03 remediation — Execution, Prospective Evidence, Accounting Observer, Test evidence, Verdicts (+18 more)
+### Community 976 - "test_reconcile.py"
+Cohesion: 0.12
+Nodes (26): C-1 — what changed (`trader/engine/reconcile.py`), _ex_position(), FakeExchange, LiveBook, make_journal(), _pos(), Reconciliation + flatten tests against a scripted fake exchange., Stateful fake: create_order changes the venue position like a venue. (+18 more)
 
 ### Community 977 - "Universal rules (all platforms)"
-Cohesion: 0.14
-Nodes (14): Accessibility, Animating via `transform` vs independent transforms, Animation best practices, API best practice, Choosing a tool, Design, Execution speed, Generated code (+6 more)
+Cohesion: 0.18
+Nodes (11): Accessibility, Animating via `transform` vs independent transforms, API best practice, Design, Execution speed, Generated code, MotionValues, Performance (+3 more)
 
 ### Community 978 - "compilerOptions"
 Cohesion: 0.14
@@ -4541,72 +4586,68 @@ Cohesion: 0.15
 Nodes (12): 10. Charts & Data (LOW), 1. Accessibility (CRITICAL), 2. Touch & Interaction (CRITICAL), 3. Performance (HIGH), 4. Style Selection (HIGH), 5. Layout & Responsive (HIGH), 6. Typography & Color (MEDIUM), 7. Animation (MEDIUM) (+4 more)
 
 ### Community 982 - "M3.2 Scheme D validation bundle, revision 3 (RNG-free), September 21"
-Cohesion: 0.33
-Nodes (6): Changes versus v2 (v2 semantics preserved: I1-I8, class edges, I3, I6, truth package), Compute projection (measured single core, fixed synthetic fixture; linear scaling), Limits, M3.2 Scheme D validation bundle, revision 3 (RNG-free), September 21, Verification, fast()
-
-### Community 983 - "test_final_audit_macro_time.py"
-Cohesion: 0.27
-Nodes (7): event(), parametrize, test_clock_rollback_during_successful_refresh_does_not_publish_calendar(), rollback(), test_future_calendar_failed_refresh_never_uses_future_receipt(), test_successful_empty_calendar_retains_truthful_receipt(), test_valid_calendar_and_state_keep_original_receipt_when_republished()
-
-### Community 984 - "test_m32_remaining_categorical_kernels.py"
 Cohesion: 0.40
-Nodes (3): _iv(), Guard the nine remaining P5/C3 and P6/C4 categorical kernel certificates., test_nine_kernels_certified_and_replayed()
+Nodes (4): Compute projection (measured single core, fixed synthetic fixture; linear scaling), Limits, M3.2 Scheme D validation bundle, revision 3 (RNG-free), September 21, Verification
+
+### Community 983 - "ObservedExchange"
+Cohesion: 0.21
+Nodes (5): environment(), ObservedExchange, observed(), Transparent observation of EXISTING calls. Original results/exceptions are…, Known public endpoint host only; no keys, current flag or symbol inference.
 
 ### Community 985 - "replay_p7c4_h24.py"
 Cohesion: 0.44
 Nodes (11): a(), bounds(), cdf(), main(), p(), primary_contains(), arb, Fraction (+3 more)
 
 ### Community 986 - "_corr_synth.py"
-Cohesion: 0.27
-Nodes (11): candidate_steps(), closes(), frame(), peer_steps(), publish(), Synthetic exact-grid 4h frames for the correlation-change tests (no network)., Closes whose successive ratios are exact powers of two, so negated steps give…, Tracks the market over the 120-return baseline, independent over the most… (+3 more)
+Cohesion: 0.24
+Nodes (12): candidate_steps(), closes(), frame(), peer_steps(), publish(), Synthetic exact-grid 4h frames for the correlation-change tests (no network)., Closes whose successive ratios are exact powers of two, so negated steps give…, Tracks the market over the 120-return baseline, independent over the most… (+4 more)
 
-### Community 987 - "Start the next Luffy session here"
-Cohesion: 0.40
-Nodes (5): Budget and work discipline, Pasteable continuation request, Read in this order, Session end, Start the next Luffy session here
+### Community 987 - "Session start"
+Cohesion: 0.08
+Nodes (24): Budget and work discipline, Latest: M3.2 deterministic sharding / resume layer, September 21, Latest: M3.2 host / filesystem qualification tool, September 22, Latest: M3.2 P4/C3 and P4/C4 reduced certificates, September 21, Latest: M3.2 P5/C3 hit/miss and macro-F1 freeze, September 21, Latest: M3.2 P5/C3 population-majority freeze, September 20, Latest: M3.2 P5/C4 full reduced certificate, September 21, Latest: M3.2 P6/C3 full reduced certificate, September 21 (+16 more)
 
-### Community 988 - "ProtectionMonitor"
+### Community 988 - "LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 3 (Astra's R2 blockers)"
 Cohesion: 0.13
-Nodes (12): Budget note (Astra N), Changed files in R3 (on top of R2), Correction: post-bracket overlap contract, LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 3 (Astra's R2 blockers), Q2. Second-observation validation loss → fixed, Q3. Timeout/publication race → fixed by a single publisher, Remaining blockers / gate items, ProtectionMonitor (+4 more)
+Nodes (14): Budget note (Astra N), Correction: post-bracket overlap contract, Correction: what the observation proves (was "held throughout"), LUFFY-PROTECTION-SNAPSHOT-R1 — Revision 3 (Astra's R2 blockers), Mutants (source mutated, targeted test run, source restored byte-identical), Q2. Second-observation validation loss → fixed, Remaining blockers / gate items, Astra R2 repro: P1 one BTC long q=1; P2 two BTC rows (q=2, q=1). (+6 more)
 
-### Community 989 - "SOL1 research_registrations review — 2026-10-11"
-Cohesion: 0.18
-Nodes (11): Actual resource costs, CLOSURE, COMMIT, FIX, ISSUE, Readers and all inventoried consumers, SCHEMA, SOL1 research_registrations review — 2026-10-11 (+3 more)
+### Community 989 - "merge_and_check.py"
+Cohesion: 0.26
+Nodes (10): frozen_spec(), kernel_id_of(), cls(), dy(), float_estimate(), iv(), main(), overlap() (+2 more)
 
 ### Community 990 - "SOL2 — next three tables: lead integration"
-Cohesion: 0.18
-Nodes (7): Disk gate, preservation and log diagnosis, Final verification, Independent storage and authority checks, Proven offline correction and integration, Schema and table decisions, SOL2 — next three tables: lead integration, Sol2 — research_unreadable_runs review
+Cohesion: 0.14
+Nodes (9): Disk gate, preservation and log diagnosis, Final verification, Independent storage and authority checks, Proven offline correction and integration, Schema and table decisions, SOL2 — next three tables: lead integration, SOL2 — research_archive review (2026-10-11), Sol2 — research_unreadable_runs review (+1 more)
 
 ### Community 991 - "M8.1 emergency fill accounting — bounded delivery"
 Cohesion: 0.40
 Nodes (4): Capture, replay and evidence, Deployment and remaining work, M8.1 emergency fill accounting — bounded delivery, Problem and resulting behavior
 
-### Community 992 - "Gap register: exactly one classification per gap"
-Cohesion: 0.20
-Nodes (9): Decision and next package, DEPLOYMENT_NOT_PERFORMED, Gap register: exactly one classification per gap, Implemented capability and component verdicts, LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1, NEEDS_REAL_RUNTIME_EVIDENCE, NEEDS_REAL_VENUE_EVIDENCE, POLICY_NOT_CONFIGURED (+1 more)
+### Community 992 - "Final-review completion (A–D)"
+Cohesion: 0.09
+Nodes (17): Final-review completion (A–D), Decision and next package, DEPLOYMENT_NOT_PERFORMED, Gap register: exactly one classification per gap, Implemented capability and component verdicts, LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1, MISSING_IMPLEMENTATION, NEEDS_REAL_RUNTIME_EVIDENCE (+9 more)
 
 ### Community 993 - "Natural accounting and in-window evidence continuation"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Exact next work and limits, M3.1 capture and maturity, M8.1 natural evidence and runtime, Narrow repair and validation, Natural accounting and in-window evidence continuation
 
-### Community 994 - "OwnerControls.tsx"
-Cohesion: 0.10
-Nodes (25): ControlOperation, ControlResult, PendingRequest, Position, create(), DEFINITIVE, entries(), find() (+17 more)
+### Community 994 - "pending.ts"
+Cohesion: 0.16
+Nodes (16): PendingRequest, create(), DEFINITIVE, entries(), find(), memory, newId(), PREFIX (+8 more)
 
 ### Community 995 - "trade-history.spec.ts"
 Cohesion: 0.27
 Nodes (6): book(), next(), openTrades(), paging(), previous(), symbols()
 
-### Community 996 - "test_verified_outcome_producers.py"
-Cohesion: 0.05
-Nodes (36): main(), main(), Read-only demo conversion evidence; a proposed join never proves attribution., _db_path(), main(), Path, Rebuild the candle store from production public data. Why this exists…, Compare the rebuilt tail against a fresh production pull. (+28 more)
+### Community 996 - "test_review03_accounting_classification.py"
+Cohesion: 0.29
+Nodes (8): _db(), _finish(), parametrize, Accounting worker: permanent-evidence classification and bounded error text., test_conflict_jobs_are_not_selected_as_due(), test_conflict_reason_is_still_retried_inside_the_budget(), test_conflict_reason_leaves_the_due_queue_after_the_budget(), test_transient_reasons_are_never_terminal()
 
 ### Community 997 - "M3.2 Scheme-D v4 shard integration"
 Cohesion: 0.22
 Nodes (6): Bindings, Evidence, M3.2 Scheme-D v4 shard integration, Owner decision on preparation exception, Remaining blockers (nothing below is authorized), What changed
 
-### Community 998 - "Stage7 real learning authority and consumer integration R1"
-Cohesion: 0.22
-Nodes (8): Legacy adaptation, Lineage and authority, Normal source capture and runtime application, Owners and normal consumers, Real read-only shadow, Review disposition, Stage7 real learning authority and consumer integration R1, Validation
+### Community 998 - "test_features_shape.py"
+Cohesion: 0.33
+Nodes (12): _ctx(), _f(), Bar shape and participation — what a candle says beyond its close., Nine bars at 1.0 then one at 3.0: mean over the last ten is 1.2, so the…, Missing information is NaN. A fabricated 0.0 reads as a real reading., test_a_flat_range_gives_nan_not_a_fabricated_zero(), test_body_frac_is_one_for_a_marubozu_and_zero_for_a_doji(), test_dd_from_high_is_zero_at_a_new_high_and_negative_below() (+4 more)
 
 ### Community 999 - "[SOL-2][RES-08] governed experiment and Research Bank proof"
 Cohesion: 0.22
@@ -4616,25 +4657,25 @@ Nodes (7): Closure and successor boundary, Demonstrated gaps and changes, Exact 
 Cohesion: 0.22
 Nodes (7): ATT-01 — closure (architecture/offline scope), Closing-condition proof, Failure/regression proof, Limits, Tests (run at reconciliation, 2026-10-06), event -> receipt -> persisted/replayed receipt -> typed candidates -> consumer…, test_normal_cycle_delivers_same_candidates_to_downstream_consumer()
 
-### Community 1001 - "authority_cost_fixtures.py"
-Cohesion: 0.36
-Nodes (7): complete_test_cost_evidence(), finalize_test_costs(), freeze_complete(), TEST-ONLY frozen authoritative fixtures; never imported by production. These…, register_test_cost_evidence(), test_sources(), TEST-ONLY frozen authoritative fixtures; never imported by production.…
+### Community 1001 - "RelationshipState"
+Cohesion: 0.26
+Nodes (4): _canonical(), Any, Legacy/unbounded evidence is replayable, never inferred current., RelationshipState
 
 ### Community 1002 - "Collector recovery and a separate prospective window"
 Cohesion: 0.40
 Nodes (5): Collector recovery and a separate prospective window, Coverage and accounting limits, Delivered engineering, Guarded deployment, Runtime observation and next step
 
-### Community 1003 - "test_data01_canonical_identity.py"
-Cohesion: 0.28
-Nodes (6): _both(), _iid(), parametrize, DATA-01: a digest-valid capability whose revision or market/settlement/contract…, _rewrite(), test_incompatible_identity_fails_closed()
+### Community 1003 - "Gate-2 synthetic calibration protocol"
+Cohesion: 0.25
+Nodes (7): Approval boundary, Frozen experiment, Gate-2 synthetic calibration protocol, Generators and known answers, Power and diagnostics, Selection and shared stream, Statistic and precision
 
 ### Community 1004 - "Stage3 question-driven research router R1"
-Cohesion: 0.40
-Nodes (4): Acceptance evidence, Completion boundary, Resource and recovery behavior, Stage3 question-driven research router R1
+Cohesion: 0.33
+Nodes (5): Acceptance evidence, Completion boundary, Implementation and existing boundaries, Resource and recovery behavior, Stage3 question-driven research router R1
 
-### Community 1005 - "refuse_legacy_learning"
-Cohesion: 0.39
-Nodes (8): _load(), maybe_update(), Online expert aggregation — EWA (exponentially weighted average). Replaces…, Fold every newly-resolved outcome into the expert weights. Cursor = last…, _save(), update(), Legacy statistics have no verified replay/proposal authority adapter. Even a…, refuse_legacy_learning()
+### Community 1005 - "M3.2 conditioning-scheme comparison — SYNTHETIC ONLY (2026-09-19)"
+Cohesion: 0.17
+Nodes (11): Availability, BH m=384, q=.05 resolution (analytic), Checks (checks.json, all pass), Conclusion and recommendation, Design (as prespecified), Invalid designs — refused before randomization, 2000/2000 in all four schemes, 0 draws, M3.2 conditioning-scheme comparison — SYNTHETIC ONLY (2026-09-19), Null size — tested worlds / 2000 (rate, Wilson 95%) (+3 more)
 
 ### Community 1006 - "Stage7 normal replay and WorldModel consumer closure R2"
 Cohesion: 0.40
@@ -4646,7 +4687,7 @@ Nodes (8): Files and hashes, Implemented correction, M3.2 Scheme-D validation bu
 
 ### Community 1008 - "LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1"
 Cohesion: 0.29
-Nodes (6): A–Q acceptance proofs, Actual caller audit, Authority, limits and control plane, Contract and reuse, LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1, Recorded verification
+Nodes (6): A–Q acceptance proofs, Actual caller audit, Authority, limits and control plane, LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1, Recorded verification, Time and bar semantics
 
 ### Community 1009 - "random"
 Cohesion: 0.25
@@ -4656,29 +4697,21 @@ Nodes (4): test_stationary_sampler_forced_paths_and_uniform_marginals(), random(
 Cohesion: 0.40
 Nodes (5): Calibration and freeze gate, Exact candidate sampling design for validation, Exact null contract to implement and calibrate before any freeze, M3.2 future sampling and null proposal, Why the current design cannot be certified
 
-### Community 1011 - "test_taker_buy_real.py"
-Cohesion: 0.36
-Nodes (7): taker_buy must be a measurement, not a candle-shape proxy. `taker_buy` was…, ccxt-style kline rows. Width 12 = raw Binance (taker-buy at index 9)., Missing information is NaN, never a fabricated default. A synthesised value…, _rows(), test_frame_still_yields_the_ohlcv_contract(), test_real_taker_buy_is_used_when_the_venue_publishes_it(), test_taker_buy_is_nan_when_the_venue_does_not_publish_it()
-
-### Community 1012 - "Check-now: active window, investigations, accounting (18:46 UTC)"
-Cohesion: 0.29
-Nodes (7): Accounting (M8.1, queue mode=ro, 18:48 UTC), Active window (Sep 18 04:00 → Sep 19 04:00 UTC, open), Check-now: active window, investigations, accounting (18:46 UTC), Independent runtime and preservation verification, Session error: unintended legacy script execution, strategy state corrected, Status, Underlying investigations (`data/investigation.db`, mode=ro, 18:48:37 UTC)
+### Community 1011 - "M3.2 historical pattern search protocol — frozen design"
+Cohesion: 0.17
+Nodes (11): 10. Ablation and falsification, 11. Stopping rules, 12. Candidate freeze format, 1. Locked input and boundaries, 4. Outcomes, selected/ignored/skips/failures, 5. Support and sample rules, 6. Common calendar and regime cuts, 7. Baselines and nulls (+3 more)
 
 ### Community 1013 - "M3.2 Scheme D validation bundle (RNG-free), September 21"
-Cohesion: 0.33
+Cohesion: 0.29
 Nodes (6): Authorization record (owner-created, not created here), Contents (13 manifest-bound files), Limits stated plainly, M3.2 Scheme D validation bundle (RNG-free), September 21, Owner-review items (config `interpretations_flagged_for_owner_review`), Results
 
 ### Community 1014 - "[SOL-2][RES-07] engineering proof"
-Cohesion: 0.29
-Nodes (5): Actual gap and change, RES-08 impact and boundary, [SOL-2][RES-07] engineering proof, Validation, [SOL-1][RES-07] canonical CLOSED
-
-### Community 1015 - "DATA-03 final validation"
-Cohesion: 0.29
-Nodes (4): DATA-03 final validation, Final source-cut/admission controls, Readers, alignment, engine gates and outcome backfill, World replay, historical capture and decision sources
-
-### Community 1016 - "_FailOn"
 Cohesion: 0.25
-Nodes (3): _FailOn, Connection proxy that raises on the first statement containing `needle`., test_failure_after_selection_insert_rolls_back_both()
+Nodes (6): Actual gap and change, Proof mapping, RES-08 impact and boundary, [SOL-2][RES-07] engineering proof, Validation, [SOL-1][RES-07] canonical CLOSED
+
+### Community 1015 - "Reproducers and changes"
+Cohesion: 0.15
+Nodes (9): Cross-tracker impact — read-only, DATA-03 — consumer source-cut audit, Final consumer classifications, Reproducers and changes, Validation, DATA-03 final validation, Final source-cut/admission controls, Readers, alignment, engine gates and outcome backfill (+1 more)
 
 ### Community 1017 - "P5/C4 Reduced Taylor/Moment Certificate — Frozen Acceptance"
 Cohesion: 0.40
@@ -4688,37 +4721,29 @@ Nodes (4): Independent higher-precision replay, P5/C4 Reduced Taylor/Moment Cert
 Cohesion: 0.29
 Nodes (7): fresh_preflight_report(), fixture, Path, Run a subprocess without any single blocking call longer than ``poll`` seconds., Copy only the v4 bundle dir (mutable); symlink the immutable sibling deps its…, _run_polled(), scoped_v4_copy()
 
-### Community 1019 - "test_market_data_is_production.py"
+### Community 1019 - "Motion for React"
 Cohesion: 0.29
-Nodes (6): Market data must come from the production public API, never the demo venue.…, Injection is how backtests and tests supply their own data source; silently…, The regression that poisoned the candle store: kernel.py built one demo…, test_an_explicitly_injected_exchange_is_honoured(), test_datafeed_defaults_to_production_public_data_on_demo(), test_kernel_does_not_hand_its_demo_trading_venue_to_the_feed()
-
-### Community 1020 - "resolve_pending"
-Cohesion: 0.09
-Nodes (22): test_normal_outcome_capture_nullable_metadata_and_bad_capture_isolation(), _df(), JFake, make_orch(), Phase 1 tests: orchestrator aggregation, outcome resolution, executor wiring., _seed_decision(), test_blocked_entry_sets_skip_reason(), test_outcome_resolution_math() (+14 more)
+Nodes (7): API guidance, Importing, Motion for React, MotionValues, Radix Integration, React Patterns, `useTransform`
 
 ### Community 1021 - "M3.1 pre-window coverage review — September 16, 21:40 UTC"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Capture and reconciliation, Exact outcomes and validation, M3.1 pre-window coverage review — September 16, 21:40 UTC, Natural scheduling, runtime and owner access, Next exact work
 
 ### Community 1022 - "M3.2 optimized exact-equivalent metric, September 21"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Approach, Benchmark (fixed synthetic full-geometry fixture, 384 hypotheses, single core), Equivalence (bit level: None <-> untestable, otherwise identical float64 bit patterns), M3.2 optimized exact-equivalent metric, September 21, Practicality
 
 ### Community 1023 - "M3.2 host / filesystem qualification (RNG-free), September 22"
 Cohesion: 0.33
 Nodes (5): Caveats found while building, Checks per host (`host --dir <target mount>`), M3.2 host / filesystem qualification (RNG-free), September 22, Result: `sarmad-VMware-Virtual-Platform` (this development VM), target `/home/sarmad/trader/data` (ext4, `/dev/sda2`), Verdict
 
-### Community 1024 - "LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1"
-Cohesion: 0.33
-Nodes (4): Authority and activation, Current evidence and validation, Entry and lifecycle path audit, LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
+### Community 1024 - "Dashboard access and usable investigation memory"
+Cohesion: 0.12
+Nodes (14): Continuation delivered, Dashboard access and usable investigation memory, Final-source verification and operational facts, Memory: implemented and tested; runtime adapter deployed, Next exact task, Owner access: implemented, tested and deployed, Tools and troubleshooting, Acceptance limitation: M1.5 remains partial (+6 more)
 
 ### Community 1025 - "Stage8 owner OS blocker fix R1"
 Cohesion: 0.33
 Nodes (5): Authored/surgically changed files, Control plane and boundaries, Four defects and fixes, Stage8 owner OS blocker fix R1, Validation
-
-### Community 1026 - "Stage1 recovery/monitoring R1 blocker fixes"
-Cohesion: 0.33
-Nodes (5): Authority and control plane, Mandatory PIT inventory, Reproducible evidence, Stage1 recovery/monitoring R1 blocker fixes, Strict heartbeat contract
 
 ### Community 1027 - "Sol2: research_unreadable_plans review"
 Cohesion: 0.33
@@ -4728,33 +4753,41 @@ Nodes (5): Cost, history and verification limits, Every column, Mandatory writer
 Cohesion: 0.33
 Nodes (5): Authority and parity, Lineage and scope, Measured reduction and costs, Regression and preservation, WM-03 complete offline observation simplification
 
+### Community 1029 - "test_empty_regime_filter.py"
+Cohesion: 0.30
+Nodes (10): _G, An empty regime filter means EVERY regime, not none. `if snap.regime not in…, The regression itself: the book's only strategy must be evaluable., test_a_missing_attribute_is_treated_as_unrestricted(), test_a_populated_filter_still_restricts(), test_an_empty_filter_admits_every_regime(), test_several_named_regimes_are_all_admitted(), test_the_live_spec_is_reachable_in_every_regime() (+2 more)
+
 ### Community 1030 - "[SOL-2][WRLD-03] evidence and dependency map"
 Cohesion: 0.33
 Nodes (5): Actual gap and change, Evidence mapped before changes, Impact check, [SOL-2][WRLD-03] evidence and dependency map, Validation
 
-### Community 1031 - "datetime"
-Cohesion: 0.05
-Nodes (27): datetime, GateEnv, LUFFY-PROTECTION-SNAPSHOT-R1 venue gate (evaluation only). Uses the worktree's…, map_hashes(), GOV-07 read-only evidence mapping; never launch, signal, fetch or alter runtime., sha(), dotenv, fastapi (+19 more)
+### Community 1031 - "build_run"
+Cohesion: 0.24
+Nodes (11): build_run(), Real v4 layer init/work(2 static workers)/merge over synthetic receipts -- no…, _refused(), test_evaluator_cli_writes_verdict_once(), test_evaluator_go_on_clean_synthetic_run(), test_evaluator_refuses_missing_or_tampered_shard(), test_evaluator_refuses_missing_provenance(), test_evaluator_refuses_run_bound_to_wrong_prespec_or_layer() (+3 more)
 
-### Community 1032 - "test_backfill_pulls_coarser_periods_and_skips_funding"
-Cohesion: 0.40
-Nodes (5): check(), f(), Funding already has years at its native cadence; the 30-day-window series are…, test_backfill_pulls_coarser_periods_and_skips_funding(), rec()
+### Community 1032 - "api"
+Cohesion: 0.18
+Nodes (9): test_cache_failure_never_falls_back_and_memory_is_bounded(), test_cache_rejects_continuously_moving_source(), test_cache_reuses_snapshot_and_invalidates_all_source_changes(), read(), test_cache_serializes_concurrent_builds(), api(), book(), open_book() (+1 more)
 
 ### Community 1033 - "4.1 Canonical component map"
 Cohesion: 0.33
 Nodes (6): 4.1 Canonical component map, 4.2 Canonical live decision path, 4. Target Architecture at a Glance, Owner/UI/knowledge components, Research/Learning components, Trading Core components
 
 ### Community 1034 - "Part A: necessity and connections"
-Cohesion: 0.08
-Nodes (29): Issues, Part A: necessity and connections, Part B: per-file table, Part C: contract verification, Part D: changes and tests, Subsystem review 03: execution_observation (Prospective Execution Evidence), Not changed, with evidence, _kernel() (+21 more)
+Cohesion: 0.10
+Nodes (23): Issues, Part A: necessity and connections, Part B: per-file table, Part C: contract verification, Part D: changes and tests, Subsystem review 03: execution_observation (Prospective Execution Evidence), Verdicts, Legacy diagnostic thread; external observer owns death detection. Caller… (+15 more)
+
+### Community 1035 - "Venue"
+Cohesion: 0.17
+Nodes (5): test_nonfinite_raw_response_still_captures_retry(), test_retention_budget_and_redacted_failure(), test_saturated_history_is_split_without_timestamp_skips(), test_saturated_parent_conflicts_with_child_refuse(), Venue
 
 ### Community 1036 - "verify_campaign.py"
-Cohesion: 0.33
-Nodes (5): main(), Offline verifier for recorded node coverage and exact-base failure equality., read(), test_unchanged_head_static_guard(), head_read()
+Cohesion: 0.40
+Nodes (4): main(), Offline verifier for recorded node coverage and exact-base failure equality., read(), head_read()
 
-### Community 1037 - "M3.2 Scheme D validation bundle, revision 2 (RNG-free), September 21"
-Cohesion: 0.50
-Nodes (4): Changes versus v1 (only these three, plus the recorded decisions), Limits unchanged from v1, M3.2 Scheme D validation bundle, revision 2 (RNG-free), September 21, Verification
+### Community 1037 - "Candidate thesis + gate-2 design — final offline report"
+Cohesion: 0.18
+Nodes (10): 1. What was produced, 2. Validation status, 4. Tests actually run in the final pass, 5. Correction to the brief: config membership is not historical membership, 7. Blockers — nothing can pass today, 8. What changed on disk, Candidate thesis + gate-2 design — final offline report, Novelty — what is and is not claimed (+2 more)
 
 ### Community 1038 - "M3.2 Scheme-D v4 fast benchmark"
 Cohesion: 0.40
@@ -4768,25 +4801,25 @@ Nodes (4): Bindings, Capacity / authorization interpretation, M3.2 Scheme-D v4 h
 Cohesion: 0.40
 Nodes (4): Basis provenance and real path, Future universe cache, Stage1 data provenance/PIT R1 blocker fix, Verification
 
-### Community 1041 - "Context"
-Cohesion: 0.40
-Nodes (5): 1. Novelty is destroyed at intake, by instruction, 2. There is no artifact worth calling a strategy, 3. The inputs can only yield already-known strategies, Context, Intended outcome
+### Community 1041 - "StrategySpec"
+Cohesion: 0.08
+Nodes (41): Task 8 — the handoff (built, closed), 1. Novelty is destroyed at intake, by instruction, 2. There is no artifact worth calling a strategy, 3. The inputs can only yield already-known strategies, Context, Intended outcome, Out of scope (next specs), Strategy Generation Rebuild — Design (+33 more)
 
-### Community 1042 - "Forward loop continuation: independent verification and recovery review"
-Cohesion: 0.50
-Nodes (3): Forward loop continuation: independent verification and recovery review, Recovery findings and bounded next implementation, Verified runtime
+### Community 1042 - "DATA-06 — current-build closure (account eligibility explicitly UNKNOWN)"
+Cohesion: 0.18
+Nodes (10): recorder(), hook(), Account eligibility semantics, DATA-06 — current-build closure (account eligibility explicitly UNKNOWN), Future live gap (mandatory before any ACTIVE trading), Not wired / limits, Tests (recorded at 91fab98), read() (+2 more)
 
-### Community 1044 - "FastWorkload"
-Cohesion: 0.40
-Nodes (3): FastWorkload, One production-size token world (real ``generate_world`` on arithmetic tokens,…, _role_tput()
+### Community 1043 - "Graph Report - trader  (2026-09-19)"
+Cohesion: 0.18
+Nodes (10): Ambiguous Edges - Review These, Community Hubs (Navigation), Corpus Check, God Nodes (most connected - your core abstractions), Graph Freshness, Graph Report - trader  (2026-09-19), Hyperedges (group relationships), Import Cycles (+2 more)
 
-### Community 1045 - "QualificationError"
-Cohesion: 0.40
-Nodes (5): mount_of(), RuntimeError, QualificationError, The mount (fstype, source, options) holding ``path`` from /proc/self/mountinfo…, _unescape()
+### Community 1044 - "13. Quantitative Research Framework"
+Cohesion: 0.18
+Nodes (11): 13.10 Ablation and parameter stability, 13.11 Statistical power, 13.1 Core return definitions, 13.2 Profit factor, 13.3 Expectancy, 13.4 Drawdown, 13.5 Null models, 13.7 Cross-market dependence (+3 more)
 
-### Community 1046 - "FastWorkload"
-Cohesion: 0.40
-Nodes (3): check_bit_identity(), FastWorkload, One production-size token world (real ``generate_world`` on arithmetic tokens,…
+### Community 1045 - "flock_peer"
+Cohesion: 0.14
+Nodes (22): check_atomic_publish(), check_flock_local(), check_hardlink(), check_scaling(), finish(), flock_peer(), ladder(), _marker() (+14 more)
 
 ### Community 1047 - "test_tool_constructs_no_random_generator_reads_no_authorization_and_touches_no_protocol_file"
 Cohesion: 0.50
@@ -4800,69 +4833,189 @@ Nodes (5): The 2026-09-20 correction's own preflight checks are REQUIRED for…,
 Cohesion: 0.50
 Nodes (4): Actual venue records, Checks and exact next work, Controlled demo sample — existing Luffy execution and accounting, Evidence and runtime
 
-### Community 1050 - "M3.2 evidence machinery corrections — September 19, 2026"
-Cohesion: 0.50
-Nodes (4): Corrected current evidence, Grouping/null decision and next task, M3.2 evidence machinery corrections — September 19, 2026, Validation
+### Community 1050 - "_receipt_observation"
+Cohesion: 0.24
+Nodes (11): parametrize, Reintroduce only the exact 207e424 inverse hunk in a temporary method., Move BEGIN back before preparation, matching the cef02b7 defect., Compare physical evidence and pointers, including unreferenced segments., retained(), test_busy_writer_refuses_without_advancing_then_restarts(), test_original_shadow_defect_is_detected(), test_original_writer_lock_defect_is_detected() (+3 more)
 
-### Community 1052 - "M3.2 Scheme D deterministic sharding / resume layer (bundle v3), September 21"
-Cohesion: 0.50
-Nodes (4): M3.2 Scheme D deterministic sharding / resume layer (bundle v3), September 21, Measurements, Scheme, Verification (non-inferential fixtures only)
+### Community 1052 - "test_features_classic.py"
+Cohesion: 0.29
+Nodes (10): _ctx(), Standard vocabulary that was simply absent., volume_z should be NaN during warmup, not 0.0 (fabricated 'average')., vol_of_vol should be higher for changing volatility than steady., test_atr_pct_rank_is_high_when_volatility_expands(), test_keltner_brackets_the_price(), test_macd_histogram_is_negative_in_a_downtrend(), test_macd_histogram_is_positive_in_an_uptrend() (+2 more)
 
 ### Community 1053 - "graphify reference: incremental update and cluster-only"
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 1055 - "Depth Analyst.md"
-Cohesion: 0.50
-Nodes (3): Depth Analyst, Files here, Wraps
+### Community 1055 - "test_final_audit_macro_time.py"
+Cohesion: 0.27
+Nodes (7): event(), parametrize, test_clock_rollback_during_successful_refresh_does_not_publish_calendar(), rollback(), test_future_calendar_failed_refresh_never_uses_future_receipt(), test_successful_empty_calendar_retains_truthful_receipt(), test_valid_calendar_and_state_keep_original_receipt_when_republished()
 
-### Community 1056 - "Harvester.md"
-Cohesion: 0.50
-Nodes (3): Files here, Harvester, Wraps
+### Community 1056 - "versioned_strategies"
+Cohesion: 0.18
+Nodes (12): Serialize isolated API fixtures in process; browser starts no Dashboard., test_browser_fixture_artifact_and_readonly_contract(), test_unavailable_never_implies_account_or_provider_health(), test_versioned_board_reuses_authority_and_never_writes(), datetime, Read-only owner projections. No lifecycle, provider or control operations., runtime_truth(), versioned_strategies() (+4 more)
 
-### Community 1057 - "Positioning Analyst.md"
-Cohesion: 0.50
-Nodes (3): Files here, Positioning Analyst, Wraps
+### Community 1057 - "auth_with"
+Cohesion: 0.22
+Nodes (10): auth_with(), _load(), Path, sha(), test_bad_authorization_fails_before_layer_import_or_seed_registry(), test_evaluator_refuses_wrong_or_v3_authorization(), test_frozen_files_hash_chain_is_consistent(), test_importing_launcher_and_evaluator_constructs_no_rng_and_runs_nothing() (+2 more)
 
-### Community 1058 - "Structure Analyst.md"
-Cohesion: 0.50
-Nodes (3): Files here, Structure Analyst, Wraps
+### Community 1058 - "Motion for Vue"
+Cohesion: 0.33
+Nodes (6): API guidance, Component Integration, Importing, Motion for Vue, Patterns, `useTransform`
 
-### Community 1059 - "Stub Analyst.md"
+### Community 1059 - "M8.1 emergency whole-accounting and native exit provenance: bounded manual slice"
+Cohesion: 0.33
+Nodes (6): Delivered, Docs changed in this pass, Exact next work, M8.1 emergency whole-accounting and native exit provenance: bounded manual slice, Parallel M3.1 population state (unrelated to this slice, recorded for continuity), Runtime and live evidence
+
+### Community 1060 - "DATA-05 — append-only revisions and exact-cut truth"
+Cohesion: 0.33
+Nodes (5): Closing-condition proof, Cross-tracker impact (read-only), DATA-05 — append-only revisions and exact-cut truth, Demonstrated gap and bounded change, Validation
+
+### Community 1062 - ".ensure"
+Cohesion: 0.33
+Nodes (4): Community 17 - "Research Runner Loop", Community 16 - "test_research_runner.py", Community 16 - "Ledger", Add columns to tables created before this fix, without touching their existing…
+
+### Community 1064 - "test_review03_stop_fallback.py"
+Cohesion: 0.33
+Nodes (6): _ex(), P-1: an ambiguous native-stop placement must not stack a second stop., test_reached_stop_is_adopted_not_duplicated(), test_unreached_stop_still_falls_back(), test_unreadable_listing_keeps_the_fallback_protection(), Venue
+
+### Community 1065 - "test_features_deriv_extra.py"
+Cohesion: 0.33
+Nodes (8): _ctx(), Derivative structure beyond a z-score., The spike sits in the last few observations, not only on the final timestamp,…, When OI was zero n bars ago, division by zero produces inf unless masked.…, test_funding_pct_is_high_when_funding_is_at_its_extreme(), test_missing_series_is_nan_not_zero(), test_oi_price_div_is_nan_when_lagged_oi_is_zero(), test_oi_price_div_is_positive_when_oi_rises_as_price_falls()
+
+### Community 1066 - "seal"
+Cohesion: 0.31
+Nodes (9): test_realized_exact_accounting_cost_funding_and_risk_path(), shift_trade(), test_worker_delivers_exact_trade_and_recovers_delivery_after_restart(), artifact(), fixture, seal(), source(), add() (+1 more)
+
+### Community 1106 - "test_llm_purpose_budget.py"
+Cohesion: 0.36
+Nodes (8): _llm(), Each LLM consumer spends from its own slice. One shared 200k-token pot let the…, Spend recorded before purposes existed carries no tag; it still counts., test_a_capped_purpose_stops_at_its_cap(), test_a_reserved_purpose_cannot_be_eaten_by_others(), test_a_spent_purpose_never_reaches_the_network(), test_spend_is_recorded_under_its_purpose(), test_the_daily_total_still_binds()
+
+### Community 1107 - "OWN-02 typed owner authority evidence map"
+Cohesion: 0.40
+Nodes (4): Actual gap and change, Build policy and cross-tracker impact, Existing implementation mapped, OWN-02 typed owner authority evidence map
+
+### Community 1108 - "test_ref_sources.py"
+Cohesion: 0.22
+Nodes (3): Each reference source, parsed from a recorded payload shape — no network., test_binance_klines_pages_forward_until_the_venue_runs_dry(), test_yahoo_parses_bars_and_drops_an_unmeasured_close()
+
+### Community 1110 - "to_interval"
+Cohesion: 0.40
+Nodes (5): Coinalyze names intervals '4hour', not '4h'. Sending ours 400s, and a 400…, test_an_unmappable_interval_is_refused_not_sent(), test_interval_is_translated_to_the_documented_enum(), Our timeframe name -> Coinalyze's enum. Raises rather than sending an…, to_interval()
+
+### Community 1111 - "consumers.py"
+Cohesion: 0.31
+Nodes (8): aggregate_vote(), evidence_context(), govern_vote(), Exact contextual projections at normal decision and scheduling boundaries., Exact identity of this analyst's evidence from what is actually known. Returns…, Normal analyst vote path: carry truthful context, then look up governed state.…, Preserve raw evidence; attach optional governed reliability projections., vote_context()
+
+### Community 1112 - "opportunity_live.py"
+Cohesion: 0.04
+Nodes (49): Source delivery, ContextBlocked, ContextRefused, ValueError, Evidence cannot be bound coherently (wrong identity, mixed/future cut)., A REQUIRED input is missing/stale; no context or decision may proceed., Declared roster: `decision.context.required_analysts` (default none); every…, roster() (+41 more)
+
+### Community 1113 - "OWN-03 approval boundary evidence"
+Cohesion: 0.50
+Nodes (4): Actual gap and change, Closure impact, Evidence mapped before changes, OWN-03 approval boundary evidence
+
+### Community 1114 - "OWN-04 declared and observed state"
+Cohesion: 0.50
+Nodes (4): Actual gaps and change, Evidence mapped before fixes, OWN-04 declared and observed state, Terminal decision and impact check
+
+### Community 1115 - "[SOL-1][QNT-08] canonical CLOSED"
+Cohesion: 0.50
+Nodes (3): First-look cut limitation and assessment, [SOL-1][QNT-08] canonical CLOSED, Verification and preserved scope
+
+### Community 1116 - "[SOL-2][RES-03] Governed source registry — CLOSED offline"
+Cohesion: 0.50
+Nodes (4): Change, Evidence mapped before changes, [SOL-2][RES-03] Governed source registry — CLOSED offline, Validation and boundaries
+
+### Community 1117 - "[SOL-2][RES-04] CLOSED — architecture/offline preprocessing"
+Cohesion: 0.50
+Nodes (4): Demonstrated gaps and correction, Evidence mapped first, Offline proof, [SOL-2][RES-04] CLOSED — architecture/offline preprocessing
+
+### Community 1118 - "Handoff — owner end goal now governs"
+Cohesion: 0.25
+Nodes (8): Authorization and expectations, Handoff — owner end goal now governs, Latest implementation update, Next bounded work, No status claims, Note, Status of the capability assessment, What changed
+
+### Community 1119 - "Risk Officer.md"
+Cohesion: 0.21
+Nodes (6): Files here, Risk Officer, Wraps, Files here, Scraper, Wraps
+
+### Community 1120 - "test_series_map_covers_registry.py"
+Cohesion: 0.32
+Nodes (4): _Feed, Every derivative a feature can require must be loadable, or it is invisible.…, test_an_absent_account_ratio_is_untested_not_scored(), test_the_account_ratio_loads()
+
+### Community 1121 - "history"
+Cohesion: 0.25
+Nodes (8): test_history_and_research_readers_keep_existing_events_unchanged(), _decode(), history(), history_journal(), _key(), _qualification(), (record, None) or (None, reason)., Per-spec ordered health history. Pure; independent of row order. Descriptive…
+
+### Community 1123 - "HandoffRefused"
+Cohesion: 0.50
+Nodes (3): HandoffRefused, ValueError, The step is refused; `.code` is the stable reason code.
+
+### Community 1124 - "B. Kernel cadence design"
+Cohesion: 0.29
+Nodes (5): Deployment (requires separate operational authorization), B. Kernel cadence design, TimeoutError, The snapshot's read budget is spent; no further venue call is made., VenueReadTimeout
+
+### Community 1127 - "verify"
+Cohesion: 0.29
+Nodes (7): checked(), test_altered_prespec_is_refused(), test_altered_request_launcher_or_evaluator_is_refused(), test_real_authorization_verifies_statically(), test_v3_authorization_is_refused(), test_wrong_runtime_shard_worlds_or_workers_are_refused(), verify()
+
+### Community 1129 - "LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1"
+Cohesion: 0.33
+Nodes (4): Authority and activation, Current evidence and validation, Entry and lifecycle path audit, LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
+
+### Community 1130 - "LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1"
+Cohesion: 0.33
+Nodes (5): Actual bounded shadow, Control plane and next package, LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1, Prerequisite provenance and scope, Validation
+
+### Community 1131 - "ATT-03 — warm-up history and existing ranking audit"
+Cohesion: 0.33
+Nodes (5): ATT-03 — warm-up history and existing ranking audit, Cross-tracker impact, Demonstrated gap and correction, Remaining original condition, Validation
+
+### Community 1134 - "test_review03_stage5_start.py"
+Cohesion: 0.47
+Nodes (5): _kernel(), parametrize, Stage-5 start() must never raise into kernel boot (review 03, item 3)., test_absent_window_file_is_a_no_op(), test_invalid_or_future_window_file_does_not_raise_and_starts_nothing()
+
+### Community 1135 - "da05-final/verify.py"
+Cohesion: 0.60
+Nodes (4): cases(), Verify the frozen matched matrices, preserved scope and readiness evidence., read(), verify()
+
+### Community 1137 - "_membership"
+Cohesion: 0.50
+Nodes (4): m(), The history check at the deepest page: stream-hash the consumed range., _membership(), Digests of the matching trades in ``low <= (opened_at, id) <= anchor``, newest…
+
+### Community 1138 - "ATT-03 owner current-build scope decision"
+Cohesion: 0.50
+Nodes (4): ATT-03 owner current-build scope decision, Downstream impact, Existing proof reused, Split acceptance and retained calibration obligation
+
+### Community 1139 - "Stub Analyst.md"
 Cohesion: 0.50
 Nodes (3): Files here, Stub Analyst, Wraps
 
-### Community 1062 - "journal"
+### Community 1140 - "evaluator"
 Cohesion: 0.50
-Nodes (3): journal(), offline(), fixture
+Nodes (3): evaluator(), _receipt(), test_p1_still_receives_injection_through_the_v4_layer_evaluator()
 
-### Community 1064 - "drop"
-Cohesion: 0.67
-Nodes (3): Community 51 - "Cognition Replay PIT", Community 57 - "test_cognition_replay.py", drop()
-
-### Community 1066 - "test_import_collision_regression_both_orders"
-Cohesion: 0.67
-Nodes (3): parametrize, v3's ``scheme_d_runner.py`` does a bare ``import scheme_d_runner`` / ``import…, test_import_collision_regression_both_orders()
+### Community 1141 - "test_wrong_authorization_fields_are_refused"
+Cohesion: 0.50
+Nodes (4): parametrize, test_evaluator_applies_frozen_precedence(), test_evaluator_end_to_end_stop_and_inconclusive(), test_wrong_authorization_fields_are_refused()
 
 ## Knowledge Gaps
-- **4215 isolated node(s):** `run-focused.sh script`, `result`, `canonical_base`, `qnt09_absent_before`, `tracker_total` (+4210 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 9909 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **189 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **4221 isolated node(s):** `run-focused.sh script`, `result`, `canonical_base`, `qnt09_absent_before`, `tracker_total` (+4216 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 9928 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **202 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Journal` connect `Journal` to `kernel.py`, `test_protection_snapshot.py`, `test_attention_telemetry.py`, `datetime`, `StrategySpec`, `Kernel`, `test_outcome_backfill.py`, `test_trade_history.py`, `test_intelligence_spine.py`, `reconcile_futures`, `test_owner_interface.py`, `journal_evidence.py`, `test_hierarchical_admission.py`, `compile_spec`, `numpy`, `Scraper`, `test_activation_risk_baseline_v2.py`, `test_excursion.py`, `Authorizer`, `OwnerService`, `TVHarness`, `Ledger`, `journal`, `test_idea_pipeline.py`, `Combination`, `test_stage1_data_provenance_pit.py`, `load_bundle`, `test_research_combo.py`, `replace`, `test_owner_reads_m2.py`, `test_activation_risk_baseline.py`, `server.py`, `test_rent_keeper.py`, `test_opportunity_live_integration.py`, `test_stage1_entry_authority.py`, `test_owner_frontend_api.py`, `test_sg05_portfolio_accounting.py`, `test_trade_provenance.py`, `test_execution_accounting.py`, `ideas.py`, `test_numeric_harvester.py`, `test_control_state_recovery.py`, `pytest`, `.from_dict`, `test_analyst_tv_and_vault.py`, `predictive_receipt.py`, `test_manual_close.py`, `current_truth.py`, `test_entry_geometry_end_to_end.py`, `test_crawler.py`, `test_entry_recovery.py`, `graphql_schema.py`, `test_research_ledger.py`, `test_opportunity_context.py`, `ResearchRunner`, `test_single_creation_path.py`, `BrainLLM`, `SpecExit`, `test_owner_interface_r5.py`, `test_research_refusal_suppression.py`, `evaluate_population`, `ExitEngine`, `alpha_at`, `market_provenance.py`, `trader_strategy`, `test_current_truth_contract.py`, `test_da10_remaining_storage.py`, `Supervisor`, `Status`, `dataclasses`, `LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS)`, `OwnerRequest`, `Side`, `test_predictive_research_bridge.py`, `test_run01_instance_identity.py`, `test_owner_recovery_risk_guard.py`, `test_pine_spec.py`, `test_scraper_sources.py`, `test_research_control_unavailable.py`, `test_whole_trade_accounting.py`, `test_attention_selection_persistence.py`, `test_normal_learning_loop_closure.py`, `test_str04_governor_lifecycle.py`, `digest`, `test_research_growth.py`, `test_rp03_kernel_handoff.py`, `Harvester`, `RiskManager`, `ControlState`, `test_owner_recovery.py`, `test_review06_strategy_selection.py`, `test_strategy_factory_handoff.py`, `types.py`, `sqlite_tx.py`, `test_learning_application.py`, `test_strategy_health_observation.py`, `make_app`, `test_data06_universe_truth.py`, `journal.py`, `test_owner_reads.py`, `test_venue_reads.py`, `json`, `WorldModel`, `entry_authority.py`, `test_stage1_recovery_monitoring.py`, `test_da05_history_coverage.py`, `test_att03_warmup.py`, `WorldModelRecord`, `TickPrecision`, `test_decision_sources.py`, `A. Read-only capability design (blocker 1)`, `test_historical_outcome_capture.py`, `main`, `test_current_truth_integration.py`, `test_str01_version_lineage.py`, `test_current_truth_completion_clock.py`, `test_runtime_portfolio_integration.py`, `test_da01_exact_identity.py`, `test_negative_control_w5_w11_are_caught`, `test_wrld04_claim_history.py`, `da10-full/measure.py`, `test_phase1_brain.py`, `main`, `test_strategy_health_kernel_persistence.py`, `predictive_bridge.py`, `test_owner_telegram_binding.py`, `RecordingVenue`, `test_review03_flatten_panic_contract.py`, `test_final_audit_macro_time.py`, `test_verified_outcome_producers.py`, `evidence_capture.py`, `test_owner_interface_boundary.py`, `Genome`, `test_dec01_opportunity_context.py`, `resolve_pending`, `test_scout_upgrades.py`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Why does `Communities (437 total, 109 thin omitted)` connect `Communities (437 total, 109 thin omitted)` to `.basis`, `CompiledStrategy`, `Ledger`, `parts_for`, `StrategySpec`, `drop`, `._mechanism_once`, `Combination`, `Graph Report - trader  (2026-09-18)`, `test_research_combo.py`, `FeatureCtx`, `ExitEngine`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `Communities (267 total, 37 thin omitted)` connect `Communities (267 total, 37 thin omitted)` to `.basis`, `ExitSpec`, `CompiledStrategy`, `Ledger`, `parts_for`, `StrategySpec`, `drop`, `._mechanism_once`, `test_research_combo.py`, `test_rent_keeper.py`, `ExitEngine`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `Journal` connect `Journal` to `types.py`, `test_protection_snapshot.py`, `test_attention_telemetry.py`, `Analyst`, `api`, `Kernel`, `test_outcome_backfill.py`, `test_trade_history.py`, `StrategySpec`, `test_intelligence_spine.py`, `Graph Report - trader  (2026-09-19)`, `test_owner_interface.py`, `reconcile_futures`, `journal_evidence.py`, `test_hierarchical_admission.py`, `_receipt_observation`, `compile_spec`, `spec_evidence.py`, `test_activation_risk_baseline_v2.py`, `test_final_audit_macro_time.py`, `test_excursion.py`, `versioned_strategies`, `OwnerService`, `TVHarness`, `._conn`, `parts_for`, `test_idea_pipeline.py`, `Ledger`, `Combination`, `test_stage1_data_provenance_pit.py`, `seal`, `load_bundle`, `LUFFY-OWNER-RECOVERY-RISK-HALT-GUARD-V1`, `run`, `replace`, `Graph Report - trader  (2026-09-19)`, `test_owner_reads_m2.py`, `test_research_bundle_admission.py`, `server.py`, `test_rent_keeper.py`, `test_trade_provenance.py`, `test_owner_frontend_api.py`, `evaluate.py`, `test_stage1_entry_authority.py`, `test_execution_accounting.py`, `ideas.py`, `test_numeric_harvester.py`, `test_trade_booking.py`, `test_da04_snapshot_reliability.py`, `test_owner_interface_r5.py`, `pytest`, `test_analyst_tv_and_vault.py`, `test_qnt05_error_budget.py`, `trade_provenance.py`, `test_manual_close.py`, `test_entry_geometry_end_to_end.py`, `test_str04_governor_lifecycle.py`, `test_crawler.py`, `test_stage8_owner_os.py`, `SOL2 — attention_selections review`, `test_res08_governed_bridge.py`, `test_historical_outcome_capture.py`, `Graph Report - trader  (2026-09-18)`, `generate_truth_package.py`, `graphql_schema.py`, `test_research_ledger.py`, `test_opportunity_context.py`, `ResearchRunner`, `entry_authority.py`, `ChatEngine`, `NewsGuard`, `test_chat_agent.py`, `test_qnt04_holdout_separation.py`, `test_research_refusal_suppression.py`, `evaluate_population`, `ExitEngine`, `test_str01_version_lineage.py`, `alpha_at`, `test_str03_approval_binding.py`, `test_current_truth_contract.py`, `test_da10_remaining_storage.py`, `Supervisor`, `allocator.py`, `LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS)`, `j`, `test_exits.py`, `test_pine_spec.py`, `test_predictive_research_bridge.py`, `test_owner_recovery_risk_guard.py`, `Scraper`, `test_research_control_unavailable.py`, `test_attention_selection_persistence.py`, `test_risk02_exposure_feasibility.py`, `test_rp03_kernel_handoff.py`, `Coinalyze`, `A. Read-only capability design (blocker 1)`, `ControlState`, `test_owner_recovery.py`, `test_review06_strategy_selection.py`, `test_strategy_factory_handoff.py`, `test_spec_population.py`, `.from_dict`, `test_learning_application.py`, `test_strategy_health_observation.py`, `make_app`, `c`, `test_owner_reads.py`, `test_venue_reads.py`, `test_stage1_recovery_monitoring.py`, `json`, `Refused`, `test_da05_history_coverage.py`, `test_decision_sources.py`, `test_current_truth_integration.py`, `test_qnt08_admission_boundary.py`, `test_current_truth_completion_clock.py`, `test_runtime_portfolio_integration.py`, `test_da01_exact_identity.py`, `test_wrld04_claim_history.py`, `bench_trade_history.py`, `now_utc`, `add`, `test_strategy_health_kernel_persistence.py`, `RiskManager`, `predictive_bridge.py`, `tg_update`, `main`, `trade_page`, `Reads`, `test_reconcile.py`, `Final-review completion (A–D)`, `test_review03_accounting_classification.py`, `Source`, `test_owner_interface_boundary.py`, `test_single_creation_path.py`?**
+  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+- **Why does `Kernel` connect `Kernel` to `types.py`, `test_postmortem.py`, `test_current_truth_contract.py`, `test_attention_telemetry.py`, `Analyst`, `Supervisor`, `Part A: necessity and connections`, `LUFFY-OWNER-INTERFACE-GATEWAY-V1 (revision 6, Opus independent review PASS)`, `Harvester`, `RefStore`, `StrategySpec`, `test_owner_interface.py`, `test_owner_recovery_risk_guard.py`, `test_trade_attribution.py`, `test_current_truth_completion_clock.py`, `test_runtime_portfolio_integration.py`, `Scraper`, `test_hierarchical_admission.py`, `journal_evidence.py`, `test_final_audit_macro_time.py`, `test_activation_risk_baseline_v2.py`, `conversion_evidence.py`, `DerivFeed`, `.from_dict`, `TVHarness`, `OwnerService`, `test_idea_pipeline.py`, `test_stage1_data_provenance_pit.py`, `test_universe_frames_timeframes.py`, `._mechanism_once`, `test_strategy_health_kernel_persistence.py`, `RiskManager`, `LUFFY-OWNER-RECOVERY-RISK-HALT-GUARD-V1`, `test_research_growth.py`, `test_rp03_kernel_handoff.py`, `test_spec_writer.py`, `test_rent_keeper.py`, `publish`, `BrainLLM`, `test_stage1_entry_authority.py`, `ControlState`, `DataFeed`, `test_trade_provenance.py`, `test_exchange_exit_is_size_aware.py`, `test_review06_strategy_selection.py`, `test_strategy_factory_handoff.py`, `MacroGuard`, `test_da04_snapshot_reliability.py`, `Journal`, `pytest`, `._tg_dispatch`, `1. Requirement matrix (owner §1–24)`, `Collector`, `test_manual_close.py`, `test_entry_geometry_end_to_end.py`, `test_crawler.py`, `Final-review completion (A–D)`, `B. Kernel cadence design`, `test_stage1_recovery_monitoring.py`, `json`, `walk_table`, `._install_spec`, `SpecExit`, `test_orphan_positions.py`, `test_stage1_pit_blocker_fix.py`, `test_owner_interface_boundary.py`, `NewsGuard`, `entry_authority.py`, `test_single_creation_path.py`, `ResearchRunner`, `ExitEngine`, `evaluate_population`, `test_account_producer_uses_exact_execution_credential_context`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `Communities (267 total, 37 thin omitted)` connect `Communities (267 total, 37 thin omitted)` to `DerivFeed`, `.ensure`, `parts_for`, `spec_evidence.py`, `Combination`, `._mechanism_once`, `Graph Report - trader  (2026-09-19)`, `dataset.py`, `ExitEngine`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Are the 167 inferred relationships involving `Journal` (e.g. with `File Structure` and `Talk to Luffy — Intelligent Voice Analyst Implementation Plan`) actually correct?**
   _`Journal` has 167 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `run-focused.sh script`, `result`, `canonical_base` to the rest of the system?**
-  _4215 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `kernel.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.0461441213653603 - nodes in this community are weakly interconnected._
+  _4221 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `types.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.012507444907683145 - nodes in this community are weakly interconnected._
 - **Should `m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.055501460564751706 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.062206572769953054 - nodes in this community are weakly interconnected._

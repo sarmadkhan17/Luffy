@@ -1,0 +1,87 @@
+....F...F............................................................... [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+_________________________ test_incremental_tail_fetch __________________________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/regression-after/test_incremental_tail_fetch0')
+
+    def test_incremental_tail_fetch(tmp_path):
+        """When only the tail is stale, exactly one small request extends the
+        stored series instead of re-downloading full history."""
+        ex1 = FakeEx()
+        p = tmp_path / "c.db"
+        f1 = DataFeed(exchange=ex1, db_path=p, ttl_by_tf={"15m": 10_000})
+        f1.fetch_ohlcv("BTC/USDT", "15m", limit=400, force=True)
+    
+        # simulate the feed having stopped 12 bars (~3h) ago
+        import sqlite3
+        con = sqlite3.connect(p)
+        con.execute("DELETE FROM market_revisions WHERE event_ms IN "
+                    "(SELECT ts FROM candles WHERE symbol='BTC/USDT' AND tf='15m' "
+                    "ORDER BY ts DESC LIMIT 12)")
+        con.execute(
+            "DELETE FROM candles WHERE symbol='BTC/USDT' AND tf='15m' AND ts IN "
+            "(SELECT ts FROM candles WHERE symbol='BTC/USDT' AND tf='15m' "
+            "ORDER BY ts DESC LIMIT 12)")
+        con.commit()
+    
+        ex2 = FakeEx()
+        f2 = DataFeed(exchange=ex2, db_path=p, ttl_by_tf={"15m": 10_000})
+        df2 = f2.fetch_ohlcv("BTC/USDT", "15m", limit=400)
+        assert len(ex2.calls) == 1                      # one window-filling call
+        assert ex2.calls[0][2] is not None              # targeted `since`
+>       assert len(df2) == 400                          # restored, deduped
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       assert 412 == 400
+E        +  where 412 = len(     available_at_ms bar_state  ...  volume                        ts\n0      1792171526122     FINAL  ...    10.0 2026...026-10-16 16:45:00+00:00\n411    1792171526122     FINAL  ...    10.0 2026-10-16 17:00:00+00:00\n\n[412 rows x 23 columns])
+
+tests/test_feed_pagination.py:121: AssertionError
+_______________ test_incremental_fetch_re_reads_the_stored_tail ________________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da05-final-tmp-20261016/regression-after/test_incremental_fetch_re_read0')
+
+    def test_incremental_fetch_re_reads_the_stored_tail(tmp_path):
+        """`since` must cover the newest stored bar, not start past it.
+    
+        Starting at `last + tf_ms` is what made the freeze permanent: the one
+        bar that could be wrong was the one bar never requested again.
+        """
+        now = _now_ms()
+        bar_ts = _last_closed(now)
+        feed = FakeFeed(tmp_path / "c.db", now_ms=now)
+        _seed(feed, "BTC/USDT", "4h", _rows(bar_ts - 9 * TF_MS, 10))
+    
+        stored = feed._store_load("BTC/USDT", "4h", 100)
+        last_ms = int(stored["ts"].iloc[-1].timestamp() * 1000)
+    
+        feed.script = _rows(bar_ts - 9 * TF_MS, 10)
+        feed.calls.clear()
+        feed._cache.clear()
+        feed.fetch_ohlcv("BTC/USDT", "4h", limit=10, min_bars=1)
+    
+        assert feed.calls, "an incremental refresh must actually hit the venue"
+        since = feed.calls[-1]
+>       assert since is not None and since <= last_ms, (
+            f"since={since} starts after the newest stored bar {last_ms}, so "
+            "that bar can never be corrected once written")
+E       AssertionError: since=None starts after the newest stored bar 1792152000000, so that bar can never be corrected once written
+E       assert (None is not None)
+
+tests/test_forming_bar_never_stored.py:163: AssertionError
+=============================== warnings summary ===============================
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:137: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    return next(self.gen)
+
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:144: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_feed_pagination.py::test_incremental_tail_fetch - assert 41...
+FAILED tests/test_forming_bar_never_stored.py::test_incremental_fetch_re_reads_the_stored_tail
+2 failed, 267 passed, 3 warnings in 152.00s (0:02:31)
