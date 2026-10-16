@@ -102,7 +102,7 @@ tests that asserted only the dead behaviour.
   install, corrupt validation/probation/approval/deployment evidence, PAUSED, RETIRED); unsafe size refused by Risk;
   edited strategies inherit nothing; no unqualified path; Kernel installs only versions; real `Analyst.qualify` on
   synthetic candles issues a reproducible PASS and refuses a no-edge series and an unsupported exit.
-* Regression: 376 test files, baseline `e9f639e` vs candidate, per file. No new failure. Baseline failures are
+* Regression: 372 test files, baseline `e9f639e` vs candidate, per file. No new failure. Baseline failures are
   pre-existing and unchanged (105 in the 304 files outside the lifecycle surface; 13 in the 72 inside it, after the
   tests of the removed dead behaviour were deleted).
 
