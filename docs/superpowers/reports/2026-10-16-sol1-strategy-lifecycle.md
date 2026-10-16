@@ -92,6 +92,33 @@ Deliberately not a config flag: approvals bind the config hash, so a flag flip w
 (statistics/`stats_json` refresh retained); writer prompt's trailing-stop schema; three unread config keys;
 tests that asserted only the dead behaviour.
 
-## 7. Remaining gaps / owner decisions
+## 7. Verification (offline, isolated storage)
 
-See the final report.
+* `tests/test_sol1_strategy_lifecycle.py` — 64 tests: forged/resealed/tampered PASS refused; PASS cannot attach to
+  another strategy, universe, regime guess, timeframe or unsupported exit; valid strategy -> PASS -> exact paper
+  install; nine trades insufficient; ten pass; ten failing win rate / net PF / cost evidence / identity refused;
+  successful probation -> exact owner request -> approval; approved + capacity + Risk -> `live_entry_block` None only
+  with the owner deployment receipt; 12 HOLD cases (FROZEN, HALTED, stale capacity, changed Risk config, changed
+  install, corrupt validation/probation/approval/deployment evidence, PAUSED, RETIRED); unsafe size refused by Risk;
+  edited strategies inherit nothing; no unqualified path; Kernel installs only versions; real `Analyst.qualify` on
+  synthetic candles issues a reproducible PASS and refuses a no-edge series and an unsupported exit.
+* Regression: 376 test files, baseline `e9f639e` vs candidate, per file. No new failure. Baseline failures are
+  pre-existing and unchanged (105 in the 304 files outside the lifecycle surface; 13 in the 72 inside it, after the
+  tests of the removed dead behaviour were deleted).
+
+## 8. Remaining gaps / owner decisions
+
+1. **Paper PASS is impossible in production until a cost source exists (OWNER_DECISION).** Net P&L requires an
+   authoritative commission rate and executable-price source per paper trade; the only registered adapter is
+   no-funding-crossing. Account fees do not prove hypothetical paper fees (module contract). Options: accept the
+   backtest's labelled `quant_contract.cost_model` as an ESTIMATED paper cost source, or build a venue-schedule
+   adapter. Not invented here.
+2. The Backtest PASS has no drawdown or win-rate gate (recorded, not gating): none existed to reuse. New thresholds
+   are an owner decision.
+3. Dropping the writer's regime guess changes behaviour for newly created strategies (previously overwritten by an
+   advisory measurement); regime fitness remains advisory.
+4. No owner-facing command writes `record_first_live_deployment` yet; deliberately.
+5. Per-version allocation ceiling bounds Governor activation; Risk still sizes from configuration.
+6. The Referee-sourced version path remains `VALIDATED`-only (nothing installs it); research handoff stays closed.
+7. A PASS is a hash-chained, re-derived record, not a signature; same trust boundary as the rest of the journal.
+8. Trailing stops are unrepresentable under the Factory exit contract; the one historically strong mechanism used one.
