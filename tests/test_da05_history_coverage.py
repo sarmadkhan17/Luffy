@@ -262,13 +262,17 @@ def test_legacy_inventory_gap_late_acquisition_and_multiyear_reuse(tmp_path,monk
 
 def test_missing_grid_bar_is_reacquired_not_silently_skipped(tmp_path,monkeypatch):
     tasks=scheduler(monkeypatch); f=feed_at(tmp_path/'q.db')
-    raw=f.ex.rows(SYMBOLS[30],count=180); del raw[-5]
+    raw=f.ex.rows(SYMBOLS[30],count=180)
+    gap_ts=raw[-5][0]; del raw[-5]
     f._merge_save(SYMBOLS[30],'4h',None,f._received_frame(raw,SYMBOLS[30],'4h'))
     f.background_acquisition=True;f._acquisition_lock.acquire()
     f.prepare_history(SYMBOLS[30]);drain(f,tasks)
     obs,_=scan(f)
     assert obs['salience_rows'][SYMBOLS[30]]['eligible']
-    assert len(f.ex.calls)==1 and f.ex.calls[0][2] is None
+    assert len(f.ex.calls)==1
+    _, _, since, limit=f.ex.calls[0]
+    assert since is not None and since <= gap_ts
+    assert limit == f.HISTORY_REQUEST_BARS == 154
     f._acquisition_lock.release()
 
 
@@ -409,11 +413,14 @@ def test_worker_start_failure_retains_bounded_demand_for_retry(tmp_path,monkeypa
 
 def test_invalid_retained_prefix_reacquires_window_without_tail_certification(tmp_path,monkeypatch):
     tasks=scheduler(monkeypatch);f=feed_at(tmp_path/'invalid-prefix.db');s=SYMBOLS[30]
-    rows=f.ex.rows(s);rows[-40][5]=-1
+    rows=f.ex.rows(s); invalid_ts=rows[-40][0]; rows[-40][5]=-1
     f._merge_save(s,'4h',None,f._received_frame(rows,s,'4h'))
     f.background_acquisition=True;f._acquisition_lock.acquire()
     f.prepare_history(s);drain(f,tasks)
     current=f.cached_ohlcv(s,'4h',as_of_ms=CUT,limit=154)
-    assert current['quality'].eq('VALID').all()
-    assert len(f.ex.calls)==1 and f.ex.calls[0][2] is None
+    assert len(current)==154 and current['quality'].eq('VALID').all()
+    assert len(f.ex.calls)==1
+    _, _, since, limit=f.ex.calls[0]
+    assert since is not None and since <= invalid_ts
+    assert limit == f.HISTORY_REQUEST_BARS == 154
     f._acquisition_lock.release()

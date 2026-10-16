@@ -15,8 +15,9 @@ from trader.core.types import Side, Snapshot
 
 def _df(closes, tf="15m"):
     n = len(closes)
+    freq = tf[:-1] + "min" if tf.endswith("m") else tf
     return pd.DataFrame({
-        "ts": pd.date_range("2026-08-01", periods=n, freq="min"),
+        "ts": pd.date_range("2026-08-01", periods=n, freq=freq),
         "open": closes, "high": np.array(closes) * 1.001,
         "low": np.array(closes) * 0.999, "close": closes,
         "volume": np.full(n, 100.0),
@@ -28,7 +29,7 @@ def _snap(symbol="ETH/USDT", price=2000.0, **kw):
                     ts="2026-08-25T00:00:00+00:00",
                     price=price,
                     dfs={"15m": _df(np.linspace(price, price * 1.01, 300)),
-                         "1h": _df(np.linspace(price, price * 1.01, 120))},
+                         "1h": _df(np.linspace(price, price * 1.01, 120), tf="1h")},
                     market_type="futures", **kw)
 
 
@@ -48,38 +49,50 @@ def test_apply_identity_below_min_samples():
     assert not did and c == 0.45
 
 
-def test_refit_and_apply_recalibrates():
-    import tempfile, pathlib
+@pytest.mark.parametrize('conviction', [-0.6, 0.6])
+def test_historical_model_application_preserves_direction_without_learning(conviction):
+    state = {'scout': {'w0': 0.0, 'w1': 0.0, 'n': 100}}
+    before = repr(state)
+    value, calibrated = apply(state, 'scout', conviction, .85)
+    assert calibrated and value == pytest.approx(.05 if conviction > 0 else -.05)
+    assert repr(state) == before
+
+
+def test_refit_refuses_unregistered_learning_without_mutation(tmp_path, monkeypatch):
     from trader.core.journal import Journal
-    j = Journal(pathlib.Path(tempfile.mkdtemp()) / "cal.db")
+    j = Journal(tmp_path / "cal.db")
+
+    def write(sql, params=()):
+        with j._tx() as conn:
+            conn.execute(sql, params)
+
     # fake resolved votes: high-z votes wrong 80% (overconfident scout)
     rows = []
     for i in range(100):
         z_conv = 0.6 if i % 2 == 0 else 0.2
         correct = (i % 10 < 2) if z_conv == 0.6 else (i % 10 < 6)
         rows.append((z_conv, 1.0 if correct else 0.0))
-    import json as _json
-    j.query("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
+    write("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
             "market_type,mode) VALUES ('c','t','S',1,'RANGING',0,'NEUTRAL',"
             "'futures','live')")
-    j.query("INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,"
+    write("INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,"
             "threshold,confidence) VALUES ('base','c','t','S','BUY',0.3,"
             "0.24,0.5)")
     def ins(idx_r):
         idx, r = idx_r
         cid = f"c{idx}"
-        j.query("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
+        write("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,"
                 "market_type,mode) VALUES (?,'t','S',1,'RANGING',0,'NEUTRAL',"
                 "'futures','live')", (cid,))
-        j.query("INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,"
+        write("INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,"
                 "confidence,rationale,meta) VALUES (?,'t','S','scout','long',"
                 "?,?,'r','{}')", (cid, r[0], r[1]))
         did = f"d{idx}"
-        j.query(
+        write(
             "INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,"
             "threshold,confidence) VALUES (?,?,'t','S','BUY',0.3,0.24,0.5)",
             (did, cid))
-        j.query(
+        write(
             "INSERT INTO outcomes(decision_id,cycle_id,symbol,ts,action,"
             "entry_price,resolved_at,fwd_ret_1h,fwd_ret_4h,fwd_ret_24h,"
             "correct_1h,correct_4h,correct_24h) VALUES "
@@ -87,13 +100,18 @@ def test_refit_and_apply_recalibrates():
             (did, cid, r[1]))
     for i, r in enumerate(rows):
         ins((i, r))
-    # fix convictions so z matches intended magnitudes
-    state = refit(j, min_samples=60)
-    fit = state["scout"]
-    assert fit["n"] == 100
-    # high-conviction vote gets shrunk toward reality
-    new_c, did = apply(state, "scout", 0.6, 0.85, min_samples=60)
-    assert did and abs(new_c) < 0.6
+    # Plausible raw SQL outcomes are not replay-complete learning authority.
+    # SG-02 retired this writer. The logistic fit/apply mechanics remain
+    # covered independently above; this entry point must preserve history.
+    from trader.agents import calibration
+    frozen = tmp_path / 'calibration.json'
+    frozen.write_bytes(b'{"TEST_ONLY":"retained historical model"}')
+    monkeypatch.setattr(calibration, 'PATH', frozen)
+    before = {table: j.query('SELECT * FROM ' + table) for table in ('votes', 'outcomes')}
+    with pytest.raises(ValueError, match='^replay_complete_learning_authority_required:calibration$'):
+        refit(j, min_samples=60)
+    assert frozen.read_bytes() == b'{"TEST_ONLY":"retained historical model"}'
+    assert {table: j.query('SELECT * FROM ' + table) for table in before} == before
 
 
 # ── 2a. positioning ───────────────────────────────────────────────────────

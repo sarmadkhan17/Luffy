@@ -1,6 +1,8 @@
 """Synthetic algo-order/actual-order/fill mapping only; no exchange access."""
 import json
 import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -227,7 +229,8 @@ def test_reference_snapshot_rejects_malformed_sl_order_id():
 def test_source_free_cli_replay(artifact, tmp_path):
     path = tmp_path/'receipt.json'
     path.write_text(json.dumps(artifact))
-    cmd = ['./venv/bin/python', '-m', 'scripts.capture_native_exit_provenance', '--replay', str(path)]
-    out = subprocess.run(cmd, check=True, capture_output=True, cwd='/home/sarmad/trader')
+    cmd = [sys.executable, '-m', 'scripts.capture_native_exit_provenance', '--replay', str(path)]
+    out = subprocess.run(cmd, check=True, capture_output=True,
+                         cwd=Path(__file__).resolve().parents[1])
     result = json.loads(out.stdout)
     assert result['leg_verified'] is True

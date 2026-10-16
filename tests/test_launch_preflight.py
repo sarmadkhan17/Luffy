@@ -255,6 +255,7 @@ def test_filesystem_required_envelope(monkeypatch, variant):
 def shell_fixture(tmp_path, facts):
     """Actual restart.sh + actual preflight CLI; every operational command is a stub."""
     (tmp_path / 'restart.sh').write_bytes((ROOT / 'restart.sh').read_bytes())
+    (tmp_path / 'config.yaml').write_text('dashboard:\n  startup_mode: LIVE\n')
     binpath = tmp_path / 'bin'; binpath.mkdir()
     venv = tmp_path / 'venv/bin'; venv.mkdir(parents=True)
     fixture = tmp_path / 'facts.json'; fixture.write_text(json.dumps(facts))
@@ -271,6 +272,11 @@ from trader import runtime_identity as ri
 ri.inspect=lambda *a: dict(state='NONE', legacy_pids=[])
 ri.check_revision=lambda *a: dict(revision='a'*40, dirty_code=False)
 p.collect_facts=lambda *a, **k: json.load(open(os.environ['TEST_FACTS']))
+if sys.argv[2] == 'trader.dashboard.phase':
+    from trader.dashboard import phase
+    from trader.observability import dashboard_readiness
+    dashboard_readiness.check=lambda *a, **k: dict(allow=True, result='PASS')
+    raise SystemExit(phase.main(sys.argv[3:]))
 raise SystemExit(p.main(sys.argv[3:]))
 '''
     (venv / 'python').write_text(shim); (venv / 'python').chmod(0o755)

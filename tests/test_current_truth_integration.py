@@ -169,13 +169,18 @@ def test_company_equity_comes_from_the_account_observation(tmp_path):
     (lambda: time.time() - 42, "42s")])
 def test_graphql_heartbeat_future_or_malformed_is_invalid(tmp_path, monkeypatch, stamp, expect):
     from trader.api import graphql_schema
+    cut = 1_790_000_000.0
+    monkeypatch.setattr(time, 'time', lambda: cut)
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime.fromtimestamp(cut, tz)
+    monkeypatch.setattr(graphql_schema, 'datetime', Clock)
     hb = tmp_path / "hb.json"
     hb.write_text(json.dumps({"timestamp": stamp()}))
     monkeypatch.setattr(graphql_schema, "HEARTBEAT_PATH", str(hb))
     d = _gql(Journal(tmp_path / "j.db"), "{ status { heartbeat_age_s } }")
-    assert d["data"]["status"]["heartbeat_age_s"] in (expect, "41s", "43s")
-    if expect == "invalid":
-        assert d["data"]["status"]["heartbeat_age_s"] == "invalid"
+    assert d["data"]["status"]["heartbeat_age_s"] == expect
 
 
 # ── B. exact fallback row, bound observation ───────────────────────────────

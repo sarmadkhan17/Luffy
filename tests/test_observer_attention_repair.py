@@ -317,7 +317,7 @@ def test_normal_outcome_capture_nullable_metadata_and_bad_capture_isolation(pros
     assert j.query('SELECT * FROM learning_capture_failures')==failed
 
 
-def test_real_collector_producer_worker_reader_with_mixed_revisions_at_observed_scale(tmp_path):
+def test_real_collector_producer_worker_reader_with_mixed_revisions_at_observed_scale(tmp_path, monkeypatch):
     from tests.test_bounded_evidence_latency import Venue
     from tests.test_attention_telemetry import frames
     from trader.data.feed import Universe
@@ -325,7 +325,9 @@ def test_real_collector_producer_worker_reader_with_mixed_revisions_at_observed_
     from trader.observability.collector import Collector
     from trader.observability import scan_source as S
     from trader.core import journal_evidence as E
-    ex=Venue();universe=Universe({'universe':{'majors':['S0/USDT','S1/USDT','S2/USDT'],
+    ex=Venue()
+    monkeypatch.setattr('trader.data.feed.make_exchange', lambda *a, **k: ex)
+    universe=Universe({'universe':{'majors':['S0/USDT','S1/USDT','S2/USDT'],
         'auto_scan':dict(top_n=16,min_volume_usdt=1,min_price=1,min_age_days=0)}},ex)
     universe._rescan();members=universe.symbols();cut=int(time.time()*1000)
     original=frames(len(members),cut);data={}

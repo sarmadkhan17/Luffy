@@ -289,9 +289,13 @@ def test_rendered_dashboard_identity_payload(root, procs, tmp_path):
 def test_summary_endpoint_renders_kernel_identity(monkeypatch, tmp_path):
     from fastapi.testclient import TestClient
     from trader.dashboard import server
+    from trader.core.journal import Journal
+    journal = Journal(tmp_path / 'journal.db')
+    monkeypatch.setattr(server, 'get_journal', lambda: journal)
     monkeypatch.setenv("DASH_TOKEN", "fixture-token")
     monkeypatch.setattr(server, "kernel_identity_view", lambda root: {"state": "RUNNING", "marker": 1})
-    app = server.create_app({"attention": {"enabled": True}})
+    app = server.create_app({"attention": {"enabled": True},
+                             "dashboard": {"startup_mode": "LIVE"}})
     r = TestClient(app).get("/api/summary", headers={"x-luffy-token": "fixture-token"})
     assert r.status_code == 200, r.text
     assert r.json()["kernel_identity"] == {"state": "RUNNING", "marker": 1}
