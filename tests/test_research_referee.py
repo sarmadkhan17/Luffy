@@ -173,10 +173,13 @@ def test_examine_runs_end_to_end_on_a_real_store(store):
     out = rf.examine(c, {
         "cfg": {**CFG, "research": {"equity": 2000.0}},
         "paths": {"candles": store}, "cut_ms": CUT_BAR * TF_MS,
+        # the drifted cut would leave B at 480 bars: fewer distinct rotation
+        # offsets (58) than the 60 consistency draws, which RP-02 defers
+        "spent_cut_ms": CUT_BAR * TF_MS,
         "discovery_symbols": ["D1/USDT"],
         "heldout_symbols": ["A1/USDT", "A2/USDT", "LATE/USDT"],
         "draws": 19, "seed": 3, "book": []})
-    assert out["looked"] is True
+    assert out["looked"] is True, out.get("deferred")
     assert out["cut_ms"] >= CUT_BAR * TF_MS
     assert "p" in out["gate1"] and out["gate1"]["p"] == 1.0   # 2-3 symbols
     assert "untestable" in out["gate1"]["reason"]
