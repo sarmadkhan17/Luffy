@@ -1,0 +1,31 @@
+........................................................................ [ 45%]
+............F........................................................... [ 90%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_________________ test_mutant_ignoring_hash_mismatch_detected __________________
+
+backup = (PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/focused/test_mutant_ignoring_hash_mism0/source'), <trader.core.journal.Journal object at 0x796d6ecfac90>, <trader.persistence.backup.BackupSets object at 0x796d6ecfbd10>)
+
+    def test_mutant_ignoring_hash_mismatch_detected(backup):
+        _, _, sets = backup; g = sets.capture()
+        p = g / 'SDD.md'; raw = bytearray(p.read_bytes()); raw[0] ^= 1; p.write_bytes(raw)
+>       mutated_method(sets, 'verify', "len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']", 'False')
+
+tests/test_stage1_recovery_monitoring.py:389: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = <trader.persistence.backup.BackupSets object at 0x796d6ecfbd10>
+name = 'verify'
+old = "len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']"
+new = 'False'
+
+    def mutated_method(obj, name, old, new):
+        function = getattr(type(obj), name)
+        source = textwrap.dedent(inspect.getsource(function))
+>       assert old in source
+E       assert "len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']" in "def verify(self, generation, *, allow_staging=False):\n    generation = Path(generation)\n    if generation.is_symlin...json.JSONDecodeError) as exc:\n        raise Refused('backup_unavailable_or_invalid:' + type(exc).__name__) from exc\n"
+
+tests/test_stage1_recovery_monitoring.py:372: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stage1_recovery_monitoring.py::test_mutant_ignoring_hash_mismatch_detected
+1 failed, 158 passed in 28.22s

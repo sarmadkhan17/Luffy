@@ -1,0 +1,8 @@
+{
+  "selection": "tests/test_predictive_research_bridge.py tests/test_da06_input_work.py",
+  "status": "INTERRUPTED_NOT_A_PASS",
+  "reason": "Full unrelated numerical research pipeline exceeded the bounded fixture budget/window; stopped own pytest, not any service or other agent.",
+  "allocated_bytes_at_cleanup": 1487761408,
+  "teardown_note": "KeyboardInterrupt during JSON encoding; pytest tmp-path teardown KeyError followed interruption.",
+  "replacement": "Bounded execution of the actual numerical-ledger creation scope tests connection closure and commit/refusal only; no end-to-end research certification."
+}

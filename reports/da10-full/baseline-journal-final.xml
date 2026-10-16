@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="0" tests="8" time="2.076" timestamp="2026-10-16T19:30:19.305975+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[KeyboardInterrupt]" time="0.036"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_interrupted_write0')
+fault = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:294: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[SystemExit]" time="0.037"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_interrupted_write1')
+fault = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:294: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[GeneratorExit]" time="0.037"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_interrupted_write2')
+fault = &lt;class 'GeneratorExit'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:294: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[RuntimeError]" time="0.009" /><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[OperationalError]" time="0.012"><failure message="AssertionError: assert OperationalError('injected rollback failure') is OperationalError('database full')&#10; +  where OperationalError('injected rollback failure') = &lt;ExceptionInfo OperationalError('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_failed_rollback_d0')
+rollback_fault = &lt;class 'sqlite3.OperationalError'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert OperationalError('injected rollback failure') is OperationalError('database full')
+E            +  where OperationalError('injected rollback failure') = &lt;ExceptionInfo OperationalError('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:321: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[KeyboardInterrupt]" time="0.016"><failure message="AssertionError: assert KeyboardInterrupt('injected rollback failure') is OperationalError('database full')&#10; +  where KeyboardInterrupt('injected rollback failure') = &lt;ExceptionInfo KeyboardInterrupt('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_failed_rollback_d1')
+rollback_fault = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert KeyboardInterrupt('injected rollback failure') is OperationalError('database full')
+E            +  where KeyboardInterrupt('injected rollback failure') = &lt;ExceptionInfo KeyboardInterrupt('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:321: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[SystemExit]" time="0.007"><failure message="AssertionError: assert SystemExit('injected rollback failure') is OperationalError('database full')&#10; +  where SystemExit('injected rollback failure') = &lt;ExceptionInfo SystemExit('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_failed_rollback_d2')
+rollback_fault = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert SystemExit('injected rollback failure') is OperationalError('database full')
+E            +  where SystemExit('injected rollback failure') = &lt;ExceptionInfo SystemExit('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:321: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[None]" time="0.009"><failure message="assert &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x71fadd86d850&gt; is None&#10; +  where &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x71fadd86d850&gt; = &lt;_thread._local object at 0x71fadd867420&gt;.conn&#10; +    where &lt;_thread._local object at 0x71fadd867420&gt; = &lt;trader.core.journal.Journal object at 0x71fadd849700&gt;._local">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-journal-final/test_journal_failed_rollback_d3')
+rollback_fault = None
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+            assert caught.value is original
+            assert journal._safety_failed
+&gt;           assert journal._local.conn is None
+E           assert &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x71fadd86d850&gt; is None
+E            +  where &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x71fadd86d850&gt; = &lt;_thread._local object at 0x71fadd867420&gt;.conn
+E            +    where &lt;_thread._local object at 0x71fadd867420&gt; = &lt;trader.core.journal.Journal object at 0x71fadd849700&gt;._local
+
+tests/test_da10_remaining_storage.py:323: AssertionError</failure></testcase></testsuite></testsuites>

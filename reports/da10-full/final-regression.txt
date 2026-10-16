@@ -1,0 +1,97 @@
+..........................FF............................................ [ 40%]
+........................................................................ [ 80%]
+...................................                                      [100%]
+=================================== FAILURES ===================================
+_ test_research_numeric_binding_scope_closes_and_commits_without_running_research[False] _
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/final-regression/test_research_numeric_binding_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e78f4829fa0>
+failure = False
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scope=next(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'<real-numerical-binding-scope>','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+            with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+>       else:namespace['create_binding'](path,{'experiment_id':'exact'})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:360: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+numerical_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/final-regression/test_research_numeric_binding_0/numerical.db')
+ex = {'experiment_id': 'exact'}
+
+>   ???
+E   NameError: name 'bank_path' is not defined
+
+<real-numerical-binding-scope>:16: NameError
+_ test_research_numeric_binding_scope_closes_and_commits_without_running_research[True] _
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/final-regression/test_research_numeric_binding_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e78e495f710>
+failure = True
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scope=next(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'<real-numerical-binding-scope>','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+>           with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:359: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+numerical_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/final-regression/test_research_numeric_binding_1/numerical.db')
+ex = {'experiment_id': 'exact'}
+
+>   ???
+E   NameError: name 'bank_path' is not defined
+
+<real-numerical-binding-scope>:16: NameError
+=========================== short test summary info ============================
+FAILED tests/test_da10_remaining_storage.py::test_research_numeric_binding_scope_closes_and_commits_without_running_research[False]
+FAILED tests/test_da10_remaining_storage.py::test_research_numeric_binding_scope_closes_and_commits_without_running_research[True]
+2 failed, 177 passed in 35.99s

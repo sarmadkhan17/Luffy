@@ -1,0 +1,19 @@
+{
+  "data_baseline": "78e25833c8358e783006ebbbabbba47a9f93261c",
+  "working_baseline": "cb15d7c5c97427cb2c399515662b161c88855a79",
+  "ancestry": {
+    "78e25833c8358e783006ebbbabbba47a9f93261c": true,
+    "37383dcf6545490587ba31db35d56ed4e45a61bc": true,
+    "0b6f6067d0216f11d2b9c216207c7a610b0337d7": true,
+    "f32726d5fa3c2a95f18636c95df3f720d51176e0": true,
+    "22777f4f": true,
+    "d4cf68ce": true,
+    "41d0308f": true,
+    "3efd6d9d": true,
+    "2880d52a": true,
+    "dd4f5f5b": true
+  },
+  "da06_patch_id": "02456e99d35bf26b3ba560e69aa494b051c805cf",
+  "original_da10_preserved_ref": "verified-original-da10",
+  "opus_lifecycle_branch": "Inspected ancestry only; divergent and not merged; original verified bundle preserved unchanged"
+}

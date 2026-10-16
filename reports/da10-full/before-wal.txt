@@ -1,0 +1,18 @@
+{
+  "label": "before",
+  "snapshot_rows": 1,
+  "new_rows": 16,
+  "pinned_wal_bytes": 1207192,
+  "pinned_checkpoint": [
+    1,
+    293,
+    3
+  ],
+  "released_checkpoint": [
+    0,
+    0,
+    0
+  ],
+  "released_wal_bytes": 0,
+  "scope": "Own 1 MiB fixture; default WAL auto-checkpoint and synchronous policy. Only this probe connection uses a 25ms busy wait to bound the intentional checkpoint refusal. Active coherent readers necessarily retain WAL history."
+}

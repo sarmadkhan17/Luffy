@@ -1,0 +1,42 @@
+{
+  "baseline": "cb15d7c5c97427cb2c399515662b161c88855a79",
+  "implementation": "f3ed34aa2fc99f7459308448651a67582e80c63b",
+  "unchanged_sha256": {
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "STATE.yaml": "bea3d19d7f081a6942902a6525fd7c884e6766b4dd0f3013f0dfb8272b152478",
+    "NEXT.yaml": "6f490d49dd23f94b8f0652443f6d75ff2d891157c141e6c53e9c28f81b15012a",
+    "trader/kernel.py": "c5515a43593bf9a515774162d72b13eeb84bf439736964b36cd24f005614a749",
+    "trader/strategy/factory_handoff.py": "e945ccfff69784e252733ea04d271aebdc15ed39678758c2da2b55fba566c774",
+    "trader/engine/risk.py": "f2f138b79374886ff2f6a2c53c61e56fa0656a2293d0c12c252fd73504a5e412",
+    "trader/engine/executor.py": "820d735cdfd7cb6397e5f39773324b1af782258a470d22476b972e938f038a6d",
+    "trader/engine/entry_authority.py": "454ab8212ca98f4cec286a57ddb9dde64362dd044ad818f7417b2e12cbef2dd6",
+    "trader/attention_admission.py": "3217bcfbb013767dc78c6fda3791737789ccf5b57eb097bf8b10a79618a8c4a2",
+    "trader/data/feed.py": "46fd4639b7481a230e5860031521dee2073af9067312b934fc057401d6c04099",
+    "trader/data/market_provenance.py": "387d5ac6ae21fd54dcd74ee5edcb54bc4e9d981beb08d447510ffd4fe70aeae2",
+    "trader/agents/base.py": "41b3c276bb7b4ff5a664f8bd6b3f749cc9da5aba651b40df31bc803a67f274d4"
+  },
+  "changed_source_sha256": {
+    "trader/core/journal.py": "2ef9ef76124b2964bd9ab5f347fe98f131d22be5530c410dfeafa540c2dd3bac",
+    "trader/learning/capture.py": "10e61316cb9201ef696c0b9c96248da5140cfc0cf1bc2bb11e5e70afd28e09f2",
+    "trader/learning/consumers.py": "bd187dab511ea9c704883dd75d3f1a2106abf0c0bcddd9ceb65e4b33a61f6908",
+    "trader/learning/producers.py": "8adab6a035ca8fd904a888e9a68fb78c2b5b09d1a4726cca1efd012b29c7edbc",
+    "trader/observability/accounting.py": "8ef45d385581bc4dd3a3ac6498067c4b9ef8f1e8d0f2d373d47495287fc5072e",
+    "trader/observability/prospective_execution.py": "6bde310d6895e63c21273da876dec1e909e229e41619937adaa298f8502bdeb2",
+    "trader/persistence/backup.py": "4aa720e8274c28e4faac13e74e5cb1ebaa10bcc9d4fd1279e05391f9df542d48",
+    "trader/persistence/storage_cleanup.py": "6f7f37e513b18196bf37df16ac6906bfd0754bbf877ddb2fcb49d43737b3c913",
+    "trader/portfolio/current.py": "c4c21981af60a2cd2542b315bb35c20029503ce2d1e015502cc18207ec5af2ef",
+    "trader/portfolio/runtime.py": "d2f9ac1e1ae7cebd85846d91dfbf37ebb1c387f676bade2217a1fa94adc84a06",
+    "trader/research/predictive_bridge.py": "2cd9b1a385a355c1370ac99c19c60f9f8308c1b9dba389b9be543ef8ed72e1ad"
+  },
+  "production_writes": false,
+  "provider_calls": false,
+  "kernel_or_dashboard_starts": false,
+  "new_storage_subsystems": 0,
+  "new_caches": 0,
+  "threshold_changes": false,
+  "implementation_commits": [
+    "f3ed34aa",
+    "596f9f17c9da466aed0b28aba0da47f44f303671"
+  ]
+}

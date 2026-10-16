@@ -1,0 +1,8 @@
+{
+  "label": "after",
+  "retained_reader_objects": 32,
+  "unlinked_file_handles": 0,
+  "pending_deleted_allocated_bytes": 0,
+  "unique_deleted_inodes": 0,
+  "scope": "Own 8 MiB SQLite fixture on recovery volume; GC disabled and Reader references retained until measurement. This demonstrates a mechanism, not the historical zero-space cause."
+}

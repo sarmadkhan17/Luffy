@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "matched_main_tests": 211,
+  "final_focused_tests": 181,
+  "unique_passing_tests": 267,
+  "new_controls": {
+    "baseline_passed": 2,
+    "baseline_failed": 28,
+    "new_passed": 30
+  },
+  "exact_portfolio_bodies": true,
+  "exact_backup_assets": true,
+  "exact_historical_source_blobs": 77,
+  "historical_database_byte_parity": true,
+  "unchanged_scope_hashes": true,
+  "canonical_calls": [
+    2,
+    1
+  ],
+  "duplicate_wal_bytes": [
+    131872,
+    0
+  ],
+  "duplicate_open_fd_growth": [
+    65,
+    0
+  ],
+  "reader_open_fd_growth": [
+    32,
+    0
+  ],
+  "deleted_file_pending_allocated_bytes": [
+    8462336,
+    0
+  ],
+  "portfolio_duplicate_ms": [
+    138.04244800121523,
+    8.602245012298226
+  ],
+  "portfolio_prepare_max_writer_wait_ms": [
+    60.120956011815,
+    0.052669987780973315
+  ],
+  "backup_peak_python_bytes": {
+    "capture": [
+      9040493,
+      2134374
+    ],
+    "verify": [
+      9018463,
+      2112297
+    ],
+    "restore": [
+      9027876,
+      2164755
+    ]
+  },
+  "zero_space_cause": "UNPROVEN; historical attribution not established by these synthetic reproductions"
+}

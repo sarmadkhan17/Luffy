@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="2.296" timestamp="2026-10-16T19:33:37.472319+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_da10_remaining_storage" name="test_research_numeric_binding_scope_closes_and_commits_without_running_research[False]" time="0.814"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-research-final/test_research_numeric_binding_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f790999fe90&gt;
+failure = False
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scopes=(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        scope=min(scopes,key=lambda n:sum(1 for _ in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'&lt;real-numerical-binding-scope&gt;','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+            with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+        else:namespace['create_binding'](path,{'experiment_id':'exact'})
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;tests.test_da10_remaining_storage.test_research_numeric_binding_scope_closes_and_commits_without_running_research.&lt;locals&gt;.Fault object at 0x7f78fb1f4150&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_research_numeric_binding_scope_closes_and_commits_without_running_research[True]" time="0.038"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-research-final/test_research_numeric_binding_1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f78fb3b1d30&gt;
+failure = True
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scopes=(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        scope=min(scopes,key=lambda n:sum(1 for _ in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'&lt;real-numerical-binding-scope&gt;','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+            with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+        else:namespace['create_binding'](path,{'experiment_id':'exact'})
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;tests.test_da10_remaining_storage.test_research_numeric_binding_scope_closes_and_commits_without_running_research.&lt;locals&gt;.Fault object at 0x7f78fb1f4d50&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase></testsuite></testsuites>

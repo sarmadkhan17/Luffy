@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="28" skipped="0" tests="30" time="13.140" timestamp="2026-10-16T19:46:42.316799+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_da10_remaining_storage" name="test_retained_snapshot_reader_is_closed_at_scope_exit[False]" time="0.006"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_retained_snapshot_reader_0')
+failure = False
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_retained_snapshot_reader_is_closed_at_scope_exit(tmp_path,failure):
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE evidence(value)');db.commit()
+        reader=None
+        try:
+            with consumers.retained(path) as reader:
+                assert reader.query('SELECT * FROM evidence')==[]
+                if failure:raise RuntimeError('injected')
+        except RuntimeError:pass
+&gt;       with pytest.raises(sqlite3.ProgrammingError,match='closed'):
+E       Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:34: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_retained_snapshot_reader_is_closed_at_scope_exit[True]" time="0.005"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_retained_snapshot_reader_1')
+failure = True
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_retained_snapshot_reader_is_closed_at_scope_exit(tmp_path,failure):
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE evidence(value)');db.commit()
+        reader=None
+        try:
+            with consumers.retained(path) as reader:
+                assert reader.query('SELECT * FROM evidence')==[]
+                if failure:raise RuntimeError('injected')
+        except RuntimeError:pass
+&gt;       with pytest.raises(sqlite3.ProgrammingError,match='closed'):
+E       Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:34: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_learning_snapshot_serializes_once_with_exact_original_identity" time="0.037"><failure message="AssertionError: assert 2 == 1&#10; +  where 2 = len([{'nan_is_not_defaulted': None, 'values': [1, 0.12345678901234568, 'quoted \\ bytes']}, {'nan_is_not_defaulted': None, 'values': [1, 0.12345678901234568, 'quoted \\ bytes']}])">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_learning_snapshot_seriali0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0bafbe60&gt;
+
+    def test_learning_snapshot_serializes_once_with_exact_original_identity(tmp_path,monkeypatch):
+        value={'nan_is_not_defaulted':None,'values':[1,.12345678901234568,'quoted \\ bytes']}
+        expected=json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)
+        canonical=L.canonical;calls=[]
+        def counted(x):calls.append(x);return canonical(x)
+        monkeypatch.setattr(L,'canonical',counted)
+        with closing(sqlite3.connect(tmp_path/'j.db')) as db:
+            C.ensure(db)
+            dep=C.snapshot(db,'data',value,source_id='exact',version='v1',available_ms=1,producer='test')
+&gt;           assert len(calls)==1
+E           AssertionError: assert 2 == 1
+E            +  where 2 = len([{'nan_is_not_defaulted': None, 'values': [1, 0.12345678901234568, 'quoted \\ bytes']}, {'nan_is_not_defaulted': None, 'values': [1, 0.12345678901234568, 'quoted \\ bytes']}])
+
+tests/test_da10_remaining_storage.py:47: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_duplicate_execution_capture_does_not_rewrite_sequence" time="5.408"><failure message="AssertionError: assert [('observations', 5)] == [('observations', 1)]&#10;  &#10;  At index 0 diff: ('observations', 5) != ('observations', 1)&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_duplicate_execution_captu0')
+
+    def test_duplicate_execution_capture_does_not_rewrite_sequence(tmp_path):
+        cap=P.Capture(tmp_path/'p.db')
+        identity=cap.write('note',{'value':1})
+        with closing(sqlite3.connect(cap.path)) as db:
+            before=db.execute('SELECT * FROM observations').fetchall()
+            seq=db.execute('SELECT * FROM sqlite_sequence').fetchall()
+        for _ in range(4):assert cap.write('note',{'value':1})==identity
+        with closing(sqlite3.connect(cap.path)) as db:
+            assert db.execute('SELECT * FROM observations').fetchall()==before
+&gt;           assert db.execute('SELECT * FROM sqlite_sequence').fetchall()==seq
+E           AssertionError: assert [('observations', 5)] == [('observations', 1)]
+E             
+E             At index 0 diff: ('observations', 5) != ('observations', 1)
+E             Use -v to get more diff
+
+tests/test_da10_remaining_storage.py:63: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_execution_capture_and_replay_close_owned_connections" time="0.019"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_execution_capture_and_rep0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0b428b60&gt;
+
+    def test_execution_capture_and_replay_close_owned_connections(tmp_path,monkeypatch):
+        connections=track_connections(monkeypatch)
+        cap=P.Capture(tmp_path/'p.db');assert cap.write('note',{'value':1})
+        assert P.replay_observations(cap.path)==[]
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79af0b265d50&gt;, &lt;sqlite3.Connection object at 0x79af0b265e40&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_empty_accounting_queue_closes_without_venue_access" time="0.065"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_empty_accounting_queue_cl0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0b429760&gt;
+
+    def test_empty_accounting_queue_closes_without_venue_access(tmp_path,monkeypatch):
+        from trader.observability.accounting import step
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE trade_accounting_bookings(id INTEGER,trade_id TEXT)');db.commit()
+        connections=track_connections(monkeypatch)
+        def never():pytest.fail('empty queue constructed provider')
+        health=step(path,tmp_path/'accounting',never,now_ms=1)
+        assert health['attempted']==0
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79af0b266890&gt;, &lt;sqlite3.Connection object at 0x79af0b266980&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_accounting_delivery_closes_and_commits_or_refuses[False]" time="0.151"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_accounting_delivery_close0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0b42bec0&gt;
+failure = False
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_accounting_delivery_closes_and_commits_or_refuses(tmp_path,monkeypatch,failure):
+        from trader.learning import producers
+        from trader.engine import trade_accounting
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE learning_registrations(event_key TEXT)')
+            db.execute('CREATE TABLE trades(id TEXT,entry_identity_json TEXT)')
+            db.execute('CREATE TABLE delivered(value TEXT)');db.commit()
+        monkeypatch.setattr(trade_accounting,'verified_outcome',lambda *a:{})
+        monkeypatch.setattr(C,'trade_event',lambda *a:'event')
+        def registration(*a):
+            if failure:raise ValueError('injected_validation')
+            return None,{}
+        monkeypatch.setattr(C,'registration',registration)
+        monkeypatch.setattr(producers,'verify_trade_binding',lambda *a:None)
+        def delivered(db,*a,**kw):
+            db.execute("INSERT INTO delivered VALUES ('exact')");return 'outcome'
+        monkeypatch.setattr(C,'safely',delivered)
+        connections=track_connections(monkeypatch)
+        artifact={'captured_ms':1,'sha256':'test','bookings':{'trade':{'id':'t','decision_id':'d'}}}
+        if failure:
+            with pytest.raises(ValueError,match='injected_validation'):producers.deliver_accounting(path,artifact)
+        else:assert producers.deliver_accounting(path,artifact)=='outcome'
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79af0b267b50&gt;, &lt;sqlite3.Connection object at 0x79af0b267c40&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_accounting_delivery_closes_and_commits_or_refuses[True]" time="0.011"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_accounting_delivery_close1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0b2be330&gt;
+failure = True
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_accounting_delivery_closes_and_commits_or_refuses(tmp_path,monkeypatch,failure):
+        from trader.learning import producers
+        from trader.engine import trade_accounting
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE learning_registrations(event_key TEXT)')
+            db.execute('CREATE TABLE trades(id TEXT,entry_identity_json TEXT)')
+            db.execute('CREATE TABLE delivered(value TEXT)');db.commit()
+        monkeypatch.setattr(trade_accounting,'verified_outcome',lambda *a:{})
+        monkeypatch.setattr(C,'trade_event',lambda *a:'event')
+        def registration(*a):
+            if failure:raise ValueError('injected_validation')
+            return None,{}
+        monkeypatch.setattr(C,'registration',registration)
+        monkeypatch.setattr(producers,'verify_trade_binding',lambda *a:None)
+        def delivered(db,*a,**kw):
+            db.execute("INSERT INTO delivered VALUES ('exact')");return 'outcome'
+        monkeypatch.setattr(C,'safely',delivered)
+        connections=track_connections(monkeypatch)
+        artifact={'captured_ms':1,'sha256':'test','bookings':{'trade':{'id':'t','decision_id':'d'}}}
+        if failure:
+            with pytest.raises(ValueError,match='injected_validation'):producers.deliver_accounting(path,artifact)
+        else:assert producers.deliver_accounting(path,artifact)=='outcome'
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79af0b31c130&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_portfolio_delivery_closes_its_owned_journal_connection" time="1.703"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_portfolio_delivery_closes0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79af0b2bee70&gt;
+
+    def test_portfolio_delivery_closes_its_owned_journal_connection(tmp_path,monkeypatch):
+        from trader.portfolio import current,runtime
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE delivered(value TEXT)');db.commit()
+        monkeypatch.setattr(current,'freeze',lambda *a:({},{}))
+        monkeypatch.setattr(runtime.Consumer,'consume',lambda *a:{'portfolio_cut_id':'cut','proposal':None})
+        def delivered(db,*a,**kw):
+            db.execute("INSERT INTO delivered VALUES ('exact')");return 'outcome'
+        monkeypatch.setattr(C,'safely',delivered)
+        connections=track_connections(monkeypatch)
+        result,detail=current.checkpoint(path,{})
+        assert detail['learning_source_delivery']=='outcome'
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79aefcc66980&gt;, &lt;sqlite3.Connection object at 0x79aefcc67100&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_backup_and_restore_never_materialize_whole_databases" time="0.195"><failure message="Failed: whole database read_bytes">backup = (PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_backup_and_restore_never_0/...trader.core.journal.Journal object at 0x79aefcaebdd0&gt;, &lt;trader.persistence.backup.BackupSets object at 0x79aefe31dd30&gt;)
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_backup_and_restore_never_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefcaebcb0&gt;
+
+    def test_backup_and_restore_never_materialize_whole_databases(backup,tmp_path,monkeypatch):
+        _,_,sets=backup;original=Path.read_bytes
+        def bounded(self):
+            if self.suffix=='.db':pytest.fail('whole database read_bytes')
+            return original(self)
+        monkeypatch.setattr(Path,'read_bytes',bounded)
+&gt;       generation=sets.capture();sets.verify(generation)
+                   ^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/persistence/backup.py:326: in capture
+    raw = target.read_bytes()
+          ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_backup_and_restore_never_0/external-mount/4afc58e4693e4eb3b340bd1b451b0dc9.incomplete/data/luffy.db')
+
+    def bounded(self):
+&gt;       if self.suffix=='.db':pytest.fail('whole database read_bytes')
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: whole database read_bytes
+
+tests/test_da10_remaining_storage.py:150: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_restored_store_integrity_is_checked_once_per_asset" time="0.332"><failure message="AssertionError: assert 3 == 1&#10; +  where 3 = len([PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_restored_store_integrity_0/...016/baseline-storage/test_restored_store_integrity_0/restored.restore-31f0604416474c519c4d8a15b3cf66d8/data/luffy.db')])&#10; +  and   1 = len([Asset(path='data/luffy.db', role='control_execution_strategy_world_research_learning_owner_audit', kind='sqlite', sto...a189d592560551e64c433fa9f2cd1efce08f1ed4c1d1f6fa011c3a1ae6ac4', 'sqlite_version': '3.45.1'}, dependency_identity=None)])">backup = (PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_restored_store_integrity_0/...trader.core.journal.Journal object at 0x79af08373c20&gt;, &lt;trader.persistence.backup.BackupSets object at 0x79aefcae95b0&gt;)
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_restored_store_integrity_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefcaeb7d0&gt;
+
+    def test_restored_store_integrity_is_checked_once_per_asset(backup,tmp_path,monkeypatch):
+        from trader.persistence import backup as B
+        _,_,sets=backup;generation=sets.capture();original=B.metadata;counts=[]
+        def counted(path):
+            if '.restore-' in str(path):counts.append(path)
+            return original(path)
+        monkeypatch.setattr(B,'metadata',counted)
+        assert sets.restore(generation,tmp_path/'restored')['restore']=='PUBLISHED'
+        sqlite_assets=[a for a in sets.inventory.assets if a.kind=='sqlite']
+&gt;       assert len(counts)==len(sqlite_assets)
+E       AssertionError: assert 3 == 1
+E        +  where 3 = len([PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_restored_store_integrity_0/...016/baseline-storage/test_restored_store_integrity_0/restored.restore-31f0604416474c519c4d8a15b3cf66d8/data/luffy.db')])
+E        +  and   1 = len([Asset(path='data/luffy.db', role='control_execution_strategy_world_research_learning_owner_audit', kind='sqlite', sto...a189d592560551e64c433fa9f2cd1efce08f1ed4c1d1f6fa011c3a1ae6ac4', 'sqlite_version': '3.45.1'}, dependency_identity=None)])
+
+tests/test_da10_remaining_storage.py:167: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_portfolio_duplicate_replay_needs_no_writer_lock" time="0.058"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_portfolio_duplicate_repla0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefcb4af30&gt;
+
+    def test_portfolio_duplicate_replay_needs_no_writer_lock(tmp_path,monkeypatch):
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        fast_portfolio_connections(monkeypatch)
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');first=consumer.consume(book,processed_at=book.as_of_ms)
+        with closing(sqlite3.connect(consumer.path)) as other:
+            other.execute('BEGIN IMMEDIATE')
+&gt;           try:assert consumer.consume(book,processed_at=book.as_of_ms)==dict(first,duplicate=True)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;trader.portfolio.runtime.Consumer object at 0x79aefcbe9130&gt;
+current = Inputs(as_of_ms=1500, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=2000, e...2da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None)
+processed_at = 1500
+
+    def consume(self, current, *, processed_at=None):
+        raw = gate._cut(current)
+        cut = digest(raw)
+        with self._db() as db:
+&gt;           db.execute('BEGIN IMMEDIATE')
+E           sqlite3.OperationalError: database is locked
+
+trader/portfolio/runtime.py:66: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_portfolio_pure_preparation_does_not_own_writer" time="0.086"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_portfolio_pure_preparatio0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefcb4b6e0&gt;
+
+    def test_portfolio_pure_preparation_does_not_own_writer(tmp_path,monkeypatch):
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');original=R.gate.reoptimize
+        def probe(*a,**kw):
+            with closing(sqlite3.connect(consumer.path,timeout=.025)) as other:
+                other.execute('BEGIN IMMEDIATE');other.rollback()
+            return original(*a,**kw)
+        monkeypatch.setattr(R.gate,'reoptimize',probe)
+&gt;       result=consumer.consume(book,processed_at=book.as_of_ms)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/portfolio/runtime.py:79: in consume
+    event, proposal, intents = gate.reoptimize(previous, current, processed_ids=processed)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (None, Inputs(as_of_ms=1500, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=...da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None))
+kw = {'processed_ids': ()}
+
+    def probe(*a,**kw):
+        with closing(sqlite3.connect(consumer.path,timeout=.025)) as other:
+&gt;           other.execute('BEGIN IMMEDIATE');other.rollback()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:195: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_portfolio_concurrent_change_preserves_serialized_results" time="0.096"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_portfolio_concurrent_chan0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc987500&gt;
+
+    def test_portfolio_concurrent_change_preserves_serialized_results(tmp_path,monkeypatch):
+        from dataclasses import replace
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        fast_portfolio_connections(monkeypatch)
+        older=replace(inputs(),as_of_ms=1501);book=replace(inputs(),as_of_ms=1502)
+        # The existing serialized order is the oracle for a concurrent state change.
+        serial=R.Consumer(tmp_path/'serial.db')
+        serial.consume(older,processed_at=older.as_of_ms)
+        expected=serial.consume(book,processed_at=book.as_of_ms)
+        consumer=R.Consumer(tmp_path/'p.db');original=R.gate.reoptimize;once=[]
+        def race(*a,**kw):
+            if not once:
+                once.append(True)
+                R.Consumer(consumer.path).consume(older,processed_at=older.as_of_ms)
+            return original(*a,**kw)
+        monkeypatch.setattr(R.gate,'reoptimize',race)
+&gt;       assert consumer.consume(book,processed_at=book.as_of_ms)==expected
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/portfolio/runtime.py:79: in consume
+    event, proposal, intents = gate.reoptimize(previous, current, processed_ids=processed)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_da10_remaining_storage.py:216: in race
+    R.Consumer(consumer.path).consume(older,processed_at=older.as_of_ms)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;trader.portfolio.runtime.Consumer object at 0x79aefc987410&gt;
+current = Inputs(as_of_ms=1501, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=2000, e...2da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None)
+processed_at = 1501
+
+    def consume(self, current, *, processed_at=None):
+        raw = gate._cut(current)
+        cut = digest(raw)
+        with self._db() as db:
+&gt;           db.execute('BEGIN IMMEDIATE')
+E           sqlite3.OperationalError: database is locked
+
+trader/portfolio/runtime.py:66: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_snapshot_refuses_known_insufficient_space_before_copying" time="0.010"><failure message="Failed: known impossible copy started">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_snapshot_refuses_known_in0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc9c5e80&gt;
+
+    def test_snapshot_refuses_known_insufficient_space_before_copying(tmp_path,monkeypatch):
+        from types import SimpleNamespace
+        from trader.persistence import storage_cleanup as S
+        source=tmp_path/'source';source.mkdir();(source/'j.db').write_bytes(b'bounded fixture')
+        monkeypatch.setattr(S.shutil,'disk_usage',lambda *a:SimpleNamespace(free=0))
+        monkeypatch.setattr(S.shutil,'copyfile',lambda *a:pytest.fail('known impossible copy started'))
+        with pytest.raises(ValueError,match='SNAPSHOT_SPACE_INSUFFICIENT'):
+&gt;           S.snapshot(source,tmp_path/'scratch')
+
+tests/test_da10_remaining_storage.py:234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/persistence/storage_cleanup.py:116: in snapshot
+    shutil.copyfile(item, copies/Path(item).name)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = ('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_snapshot_refuses_known_in0/source/j.d...y-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_snapshot_refuses_known_in0/scratch/copies/j.db'))
+
+&gt;   monkeypatch.setattr(S.shutil,'copyfile',lambda *a:pytest.fail('known impossible copy started'))
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: known impossible copy started
+
+tests/test_da10_remaining_storage.py:232: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_copy_rehearsal_closes_reader_when_inventory_fails" time="0.031"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_copy_rehearsal_closes_rea0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc9c7590&gt;
+
+    def test_copy_rehearsal_closes_reader_when_inventory_fails(tmp_path,monkeypatch):
+        from trader.persistence import storage_cleanup as S
+        from tests.test_storage_cleanup import fixture_db
+        db,*_=fixture_db(tmp_path);path=Path(db.execute('PRAGMA database_list').fetchone()[2]);db.close()
+        original=S.read_normalized_copy;connections=[]
+        def tracked(*a):
+            db=original(*a);connections.append(db);return db
+        monkeypatch.setattr(S,'read_normalized_copy',tracked)
+        def failure(*a):raise ValueError('injected_inventory')
+        monkeypatch.setattr(S,'inventory',failure)
+        with pytest.raises(ValueError,match='injected_inventory'):S.rehearse(path.parent,tmp_path/'report')
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;sqlite3.Connection object at 0x79aefc9e4040&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_changed_generation_during_streamed_restore_is_never_published" time="0.252"><failure message="AttributeError: module 'trader.persistence.backup' has no attribute 'durable_copy'">backup = (PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_changed_generation_during0/...trader.core.journal.Journal object at 0x79aefc9863c0&gt;, &lt;trader.persistence.backup.BackupSets object at 0x79aefcc77890&gt;)
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_changed_generation_during0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc986f60&gt;
+
+    def test_changed_generation_during_streamed_restore_is_never_published(backup,tmp_path,monkeypatch):
+        from trader.persistence import backup as B
+&gt;       _,_,sets=backup;generation=sets.capture();original=B.durable_copy;changed=[]
+                                                           ^^^^^^^^^^^^^^
+E       AttributeError: module 'trader.persistence.backup' has no attribute 'durable_copy'
+
+tests/test_da10_remaining_storage.py:254: AttributeError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_concurrent_same_portfolio_cut_returns_exact_duplicate" time="0.051"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_concurrent_same_portfolio0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc984380&gt;
+
+    def test_concurrent_same_portfolio_cut_returns_exact_duplicate(tmp_path,monkeypatch):
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        fast_portfolio_connections(monkeypatch)
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');original=R.gate.reoptimize;other=[]
+        def race(*a,**kw):
+            if not other:
+                other.append(None)
+                other[0]=R.Consumer(consumer.path).consume(book,processed_at=book.as_of_ms)
+            return original(*a,**kw)
+        monkeypatch.setattr(R.gate,'reoptimize',race)
+&gt;       assert consumer.consume(book,processed_at=book.as_of_ms)==dict(other[0],duplicate=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:277: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/portfolio/runtime.py:79: in consume
+    event, proposal, intents = gate.reoptimize(previous, current, processed_ids=processed)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_da10_remaining_storage.py:274: in race
+    other[0]=R.Consumer(consumer.path).consume(book,processed_at=book.as_of_ms)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;trader.portfolio.runtime.Consumer object at 0x79aefcb49f40&gt;
+current = Inputs(as_of_ms=1500, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=2000, e...2da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None)
+processed_at = 1500
+
+    def consume(self, current, *, processed_at=None):
+        raw = gate._cut(current)
+        cut = digest(raw)
+        with self._db() as db:
+&gt;           db.execute('BEGIN IMMEDIATE')
+E           sqlite3.OperationalError: database is locked
+
+trader/portfolio/runtime.py:66: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[KeyboardInterrupt]" time="0.042"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_interrupted_write0')
+fault = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:296: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[SystemExit]" time="0.036"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_interrupted_write1')
+fault = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:296: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[GeneratorExit]" time="0.041"><failure message="sqlite3.OperationalError: database is locked">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_interrupted_write2')
+fault = &lt;class 'GeneratorExit'&gt;
+
+    @pytest.mark.parametrize('fault',[KeyboardInterrupt,SystemExit,GeneratorExit,RuntimeError])
+    def test_journal_interrupted_write_releases_writer_and_preserves_exception(tmp_path,fault):
+        import threading
+        from trader.core.journal import Journal
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;original=fault('injected')
+        try:
+            with pytest.raises(fault) as caught:
+                with journal._tx() as tx:
+                    tx.execute('insert into evidence values (1)');raise original
+            assert caught.value is original
+            with closing(sqlite3.connect(journal.db_path,timeout=.025)) as other:
+&gt;               other.execute('BEGIN IMMEDIATE');other.rollback()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:296: OperationalError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_interrupted_write_releases_writer_and_preserves_exception[RuntimeError]" time="0.008" /><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[OperationalError]" time="0.011"><failure message="AssertionError: assert OperationalError('injected rollback failure') is OperationalError('database full')&#10; +  where OperationalError('injected rollback failure') = &lt;ExceptionInfo OperationalError('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_failed_rollback_d0')
+rollback_fault = &lt;class 'sqlite3.OperationalError'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert OperationalError('injected rollback failure') is OperationalError('database full')
+E            +  where OperationalError('injected rollback failure') = &lt;ExceptionInfo OperationalError('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:323: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[KeyboardInterrupt]" time="0.015"><failure message="AssertionError: assert KeyboardInterrupt('injected rollback failure') is OperationalError('database full')&#10; +  where KeyboardInterrupt('injected rollback failure') = &lt;ExceptionInfo KeyboardInterrupt('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_failed_rollback_d1')
+rollback_fault = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert KeyboardInterrupt('injected rollback failure') is OperationalError('database full')
+E            +  where KeyboardInterrupt('injected rollback failure') = &lt;ExceptionInfo KeyboardInterrupt('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:323: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[SystemExit]" time="0.014"><failure message="AssertionError: assert SystemExit('injected rollback failure') is OperationalError('database full')&#10; +  where SystemExit('injected rollback failure') = &lt;ExceptionInfo SystemExit('injected rollback failure') tblen=4&gt;.value">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_failed_rollback_d2')
+rollback_fault = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+&gt;           assert caught.value is original
+E           AssertionError: assert SystemExit('injected rollback failure') is OperationalError('database full')
+E            +  where SystemExit('injected rollback failure') = &lt;ExceptionInfo SystemExit('injected rollback failure') tblen=4&gt;.value
+
+tests/test_da10_remaining_storage.py:323: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_journal_failed_rollback_discards_connection_without_masking_commit_error[None]" time="0.013"><failure message="assert &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x79aefc9ad650&gt; is None&#10; +  where &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x79aefc9ad650&gt; = &lt;_thread._local object at 0x79aefc9e9170&gt;.conn&#10; +    where &lt;_thread._local object at 0x79aefc9e9170&gt; = &lt;trader.core.journal.Journal object at 0x79aefc9b9d00&gt;._local">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_journal_failed_rollback_d3')
+rollback_fault = None
+
+    @pytest.mark.parametrize('rollback_fault',[sqlite3.OperationalError,KeyboardInterrupt,SystemExit,None])
+    def test_journal_failed_rollback_discards_connection_without_masking_commit_error(tmp_path,rollback_fault):
+        import threading
+        from trader.core.journal import Journal
+        original=sqlite3.OperationalError('database full')
+        class Failing(sqlite3.Connection):
+            fail=False
+            def commit(self):
+                if self.fail:raise original
+                return super().commit()
+            def rollback(self):
+                if self.fail:
+                    if rollback_fault is not None:raise rollback_fault('injected rollback failure')
+                    return  # A rollback which returns while still in transaction.
+                return super().rollback()
+        journal=object.__new__(Journal);journal.db_path=tmp_path/'j.db'
+        journal._local=threading.local();journal._write_lock=threading.Lock()
+        db=sqlite3.connect(journal.db_path,factory=Failing);db.execute('create table evidence(value)');db.commit()
+        journal._local.conn=db;db.fail=True
+        try:
+            with pytest.raises(BaseException) as caught:
+                with journal._tx() as tx:tx.execute('insert into evidence values (1)')
+            assert caught.value is original
+            assert journal._safety_failed
+&gt;           assert journal._local.conn is None
+E           assert &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x79aefc9ad650&gt; is None
+E            +  where &lt;tests.test_da10_remaining_storage.test_journal_failed_rollback_discards_connection_without_masking_commit_error.&lt;locals&gt;.Failing object at 0x79aefc9ad650&gt; = &lt;_thread._local object at 0x79aefc9e9170&gt;.conn
+E            +    where &lt;_thread._local object at 0x79aefc9e9170&gt; = &lt;trader.core.journal.Journal object at 0x79aefc9b9d00&gt;._local
+
+tests/test_da10_remaining_storage.py:325: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_research_numeric_binding_scope_closes_and_commits_without_running_research[False]" time="0.315"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_research_numeric_binding_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc9ba8d0&gt;
+failure = False
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scopes=(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        scope=min(scopes,key=lambda n:sum(1 for _ in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'&lt;real-numerical-binding-scope&gt;','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+            with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+        else:namespace['create_binding'](path,{'experiment_id':'exact'})
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:364: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;tests.test_da10_remaining_storage.test_research_numeric_binding_scope_closes_and_commits_without_running_research.&lt;locals&gt;.Fault object at 0x79aefca09c50&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_research_numeric_binding_scope_closes_and_commits_without_running_research[True]" time="0.061"><failure message="Failed: DID NOT RAISE ProgrammingError">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_research_numeric_binding_1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79aefc839f40&gt;
+failure = True
+
+    @pytest.mark.parametrize('failure',[False,True])
+    def test_research_numeric_binding_scope_closes_and_commits_without_running_research(tmp_path,monkeypatch,failure):
+        # Execute the actual small creation scope from cycle(). Numerical/referee
+        # computation is outside this connection-lifetime regression's scope.
+        import ast,inspect
+        from trader.research import predictive_bridge as B
+        tree=ast.parse(inspect.getsource(B.cycle))
+        scopes=(n for n in ast.walk(tree) if isinstance(n,ast.With) and any(
+            isinstance(v,ast.Constant) and isinstance(v.value,str) and
+            v.value.startswith('CREATE TABLE predictive_experiment_binding') for v in ast.walk(n)))
+        scope=min(scopes,key=lambda n:sum(1 for _ in ast.walk(n)))
+        function=ast.parse('def create_binding(numerical_path,ex):\n    pass').body[0]
+        function.body=[scope]
+        module=ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[]))
+        namespace=dict(B.__dict__);exec(compile(module,'&lt;real-numerical-binding-scope&gt;','exec'),namespace)
+        original=sqlite3.connect;connections=[]
+        class Fault(sqlite3.Connection):
+            def execute(self,sql,*a,**kw):
+                if failure and sql.startswith('INSERT INTO predictive_experiment_binding'):
+                    raise ValueError('injected_binding')
+                return super().execute(sql,*a,**kw)
+        def tracked(*a,**kw):
+            db=original(*a,factory=Fault,**kw);connections.append(db);return db
+        monkeypatch.setattr(sqlite3,'connect',tracked)
+        path=tmp_path/'numerical.db'
+        if failure:
+            with pytest.raises(ValueError,match='injected_binding'):namespace['create_binding'](path,{'experiment_id':'exact'})
+        else:namespace['create_binding'](path,{'experiment_id':'exact'})
+&gt;       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:364: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [&lt;tests.test_da10_remaining_storage.test_research_numeric_binding_scope_closes_and_commits_without_running_research.&lt;locals&gt;.Fault object at 0x79aefca0a050&gt;]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+&gt;           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_execution_retry_uses_no_writer_but_new_evidence_keeps_lock_boundary[True]" time="0.115"><failure message="AssertionError: assert None == 'a8cad065d95a7aaf41f7a7a56515325058669ea3d79cc62073834b17c824644b'">tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-storage/test_execution_retry_uses_no_w0')
+duplicate = True
+
+    @pytest.mark.parametrize('duplicate',[True,False])
+    def test_execution_retry_uses_no_writer_but_new_evidence_keeps_lock_boundary(tmp_path,duplicate):
+        cap=P.Capture(tmp_path/'p.db');body={'value':1};identity=cap.write('note',body)
+        with closing(sqlite3.connect(cap.path)) as other:
+            other.execute('BEGIN IMMEDIATE')
+            try:
+                got=cap.write('note',body if duplicate else {'value':2})
+&gt;               assert got==(identity if duplicate else None)
+E               AssertionError: assert None == 'a8cad065d95a7aaf41f7a7a56515325058669ea3d79cc62073834b17c824644b'
+
+tests/test_da10_remaining_storage.py:376: AssertionError</failure></testcase><testcase classname="tests.test_da10_remaining_storage" name="test_execution_retry_uses_no_writer_but_new_evidence_keeps_lock_boundary[False]" time="0.131" /></testsuite></testsuites>

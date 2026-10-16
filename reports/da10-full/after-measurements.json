@@ -1,0 +1,524 @@
+{
+  "snapshot": {
+    "median_ms": 16.38280798215419,
+    "runs_ms": [
+      38.72807099833153,
+      17.919414007337764,
+      14.76853500935249,
+      16.38280798215419,
+      15.264723013387993
+    ],
+    "canonical_calls_per_call": 1,
+    "rows": 1
+  },
+  "duplicate_capture": {
+    "retries": 32,
+    "open_fd_growth": 0,
+    "wal_growth_bytes": 0,
+    "sequence": 1,
+    "rows": 1
+  },
+  "reader_fd_growth": 0,
+  "backup": {
+    "measurements": {
+      "capture": {
+        "seconds": 0.2531058309832588,
+        "peak_python_bytes": 2134374
+      },
+      "verify": {
+        "seconds": 0.06251558801159263,
+        "peak_python_bytes": 2112297
+      },
+      "restore": {
+        "seconds": 0.18912611997802742,
+        "peak_python_bytes": 2164755
+      }
+    },
+    "asset_identity": {
+      "data/luffy.db": {
+        "size": 8925184,
+        "sha256": "0c0ea9866682607e9ac97d79463817b617a39810aead8d87e311fcc298a069a8"
+      },
+      "SDD.md": {
+        "size": 15,
+        "sha256": "48900423e36748a15fd231816cb795da3620598a3dd41f3edea789d98197b282"
+      },
+      "STATE.yaml": {
+        "size": 15,
+        "sha256": "48900423e36748a15fd231816cb795da3620598a3dd41f3edea789d98197b282"
+      },
+      "NEXT.yaml": {
+        "size": 15,
+        "sha256": "48900423e36748a15fd231816cb795da3620598a3dd41f3edea789d98197b282"
+      },
+      "config.yaml": {
+        "size": 15,
+        "sha256": "48900423e36748a15fd231816cb795da3620598a3dd41f3edea789d98197b282"
+      },
+      "data/ewa_state.json": {
+        "size": 40,
+        "sha256": "8fc478c0aa879ff6e79869c596db72cccea1e832bcf33959a3b549671e2b3d8f"
+      }
+    },
+    "restore": "PUBLISHED"
+  },
+  "contention": {
+    "duplicate_during_other_writer_ms": 8.602245012298226,
+    "pure_prepare_probe_wait_ms": [
+      0.052669987780973315,
+      0.02970700734294951,
+      0.03929500235244632,
+      0.03959497553296387
+    ],
+    "max_prepare_probe_wait_ms": 0.052669987780973315,
+    "fixture_delay_ms": 40
+  },
+  "replay_bodies": [
+    {
+      "schema": "runtime-portfolio-checkpoint.v1",
+      "portfolio_cut_id": "40b3c7c4e77b99bae4ed8c96209052e58a948993861fa11adffef5eac19445b1",
+      "candidate_set_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "proposal": null,
+      "trade_intents": [],
+      "risk_decisions": [],
+      "event_receipt": {
+        "schema": "portfolio-reoptimization.v1",
+        "receipt_id": "410f70a1908ee73556ec3d1911c831aea4308b39c1814d359e939d8f41475a95",
+        "inputs": {
+          "current": {
+            "as_of_ms": 1501,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "materiality_sources": [],
+          "previous": {
+            "as_of_ms": 1500,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "processed_ids": []
+        },
+        "result": {
+          "events": [],
+          "next_cursor": "40b3c7c4e77b99bae4ed8c96209052e58a948993861fa11adffef5eac19445b1",
+          "polling": false,
+          "side_effects": "NONE",
+          "trigger": false
+        }
+      },
+      "checkpointed_event_ids": [],
+      "triggered": false,
+      "execution_routed": false,
+      "real_order_submissions": 0,
+      "replay": "PASS",
+      "duplicate": false
+    },
+    {
+      "schema": "runtime-portfolio-checkpoint.v1",
+      "portfolio_cut_id": "3066bd411ffb45bd16787367a0e442ad702dc1d521f0cb3b7ebd626f660be87e",
+      "candidate_set_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "proposal": null,
+      "trade_intents": [],
+      "risk_decisions": [],
+      "event_receipt": {
+        "schema": "portfolio-reoptimization.v1",
+        "receipt_id": "8d156a5d5a63b6d6bf52ed5b1ab352283ec30739010889f98560fd0d6e5caee0",
+        "inputs": {
+          "current": {
+            "as_of_ms": 1502,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "materiality_sources": [],
+          "previous": {
+            "as_of_ms": 1501,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "processed_ids": []
+        },
+        "result": {
+          "events": [],
+          "next_cursor": "3066bd411ffb45bd16787367a0e442ad702dc1d521f0cb3b7ebd626f660be87e",
+          "polling": false,
+          "side_effects": "NONE",
+          "trigger": false
+        }
+      },
+      "checkpointed_event_ids": [],
+      "triggered": false,
+      "execution_routed": false,
+      "real_order_submissions": 0,
+      "replay": "PASS",
+      "duplicate": false
+    },
+    {
+      "schema": "runtime-portfolio-checkpoint.v1",
+      "portfolio_cut_id": "84f383fa4ae6f711e76b8f327a8ddad9ea9fa8785dbf0a615ff771e878dd45e0",
+      "candidate_set_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "proposal": null,
+      "trade_intents": [],
+      "risk_decisions": [],
+      "event_receipt": {
+        "schema": "portfolio-reoptimization.v1",
+        "receipt_id": "5b146d5e84eb93dd262d7a8a4d8e28aeccd584326adea7ffab396d701f233924",
+        "inputs": {
+          "current": {
+            "as_of_ms": 1503,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "materiality_sources": [],
+          "previous": {
+            "as_of_ms": 1502,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "processed_ids": []
+        },
+        "result": {
+          "events": [],
+          "next_cursor": "84f383fa4ae6f711e76b8f327a8ddad9ea9fa8785dbf0a615ff771e878dd45e0",
+          "polling": false,
+          "side_effects": "NONE",
+          "trigger": false
+        }
+      },
+      "checkpointed_event_ids": [],
+      "triggered": false,
+      "execution_routed": false,
+      "real_order_submissions": 0,
+      "replay": "PASS",
+      "duplicate": false
+    },
+    {
+      "schema": "runtime-portfolio-checkpoint.v1",
+      "portfolio_cut_id": "eb50c96492b385b34310ec757dc9a20f8c9129d07433697c4ca90ff07126f74b",
+      "candidate_set_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "proposal": null,
+      "trade_intents": [],
+      "risk_decisions": [],
+      "event_receipt": {
+        "schema": "portfolio-reoptimization.v1",
+        "receipt_id": "6f73a6743d04a28ce00c6424ab5b4a842e54298be0c8fa67cede1142db92c044",
+        "inputs": {
+          "current": {
+            "as_of_ms": 1504,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "materiality_sources": [],
+          "previous": {
+            "as_of_ms": 1503,
+            "candidates": [],
+            "control_state": "ACTIVE",
+            "exposure_source_id": null,
+            "portfolio": {
+              "as_of_ms": 1000,
+              "evidence": {
+                "detail_json": "{}",
+                "source_ids": [
+                  "fixture-authority"
+                ],
+                "status": "ESTABLISHED"
+              },
+              "positions": [],
+              "snapshot_id": "snapshot",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "valid_until_ms": 2000
+            },
+            "relationships": {
+              "detail_json": "{}",
+              "source_ids": [],
+              "status": "UNKNOWN"
+            },
+            "risk_policy": {
+              "detail_json": "{}",
+              "source_ids": [
+                "fixture-authority"
+              ],
+              "status": "ESTABLISHED"
+            },
+            "sources": [
+              {
+                "payload_json": "{\"kind\":\"synthetic-test-only\",\"version\":1}",
+                "sha256": "7845470704302a446d340d2de42b277e652da2ecfd64035a4f5b1666d36c2602",
+                "source_id": "fixture-authority"
+              }
+            ]
+          },
+          "processed_ids": []
+        },
+        "result": {
+          "events": [],
+          "next_cursor": "eb50c96492b385b34310ec757dc9a20f8c9129d07433697c4ca90ff07126f74b",
+          "polling": false,
+          "side_effects": "NONE",
+          "trigger": false
+        }
+      },
+      "checkpointed_event_ids": [],
+      "triggered": false,
+      "execution_routed": false,
+      "real_order_submissions": 0,
+      "replay": "PASS",
+      "duplicate": false
+    }
+  ],
+  "scratch_peak_logical_bytes": 29070082,
+  "limits": "Synthetic bounded fixtures, default durability; fixed 40ms pure-preparation injection for lock ownership and 120ms external writer. Memory is Python tracemalloc, not total RSS. No production stores or providers."
+}

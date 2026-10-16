@@ -1,0 +1,33 @@
+{
+  "observed_at": "2026-10-16T16:13:07.183558+00:00",
+  "source_report": "/mnt/luffy-recovery/recovery/sol1-lifecycle-closure-evidence-20261016/2026-10-16-sol1-lifecycle-closure.md",
+  "source_sha256": "fca9580a2473f97982ed204903b9952ca2c18aa995398ca72de45b89424ac393",
+  "source_disk_paragraph": "`/mnt/luffy-data` 96% used (~4-5 GB free, down from 5.0 GB during this task as the shared test-tmp grew); `/mnt/luffy-recovery` ~45 GB free. `test-tmp/sarmad` holds ~8-11 GB of foreign Oct 14-15 pytest basetemps. A foreign `gui01-baseline` pytest ran during the zero-free event; cause not proven. No foreign files touched.",
+  "current_allocated_bytes": {
+    "/mnt/luffy-data/test-tmp": 11126398976,
+    "/mnt/luffy-data/tmp": 2201067520,
+    "/mnt/luffy-data/.Trash-1000": 16384
+  },
+  "current_filesystems": {
+    "/mnt/luffy-data": {
+      "available": 4416733184,
+      "total": 105087164416
+    },
+    "/mnt/luffy-recovery": {
+      "available": 47412699136,
+      "total": 210239463424
+    },
+    "/tmp": {
+      "available": 5240852480,
+      "total": 52518420480
+    }
+  },
+  "journal_search": {
+    "since": "2026-10-15",
+    "pattern": "No space|ENOSPC|disk full|free space",
+    "result": "-- No entries --"
+  },
+  "conclusion": "Zero-free-space event is owner/other-task reported; no retained event-time allocation/process/WAL trace proves its writer. Foreign pytest coincidence is a hypothesis, not attribution. Current directory sizes are not event-time sizes.",
+  "task_uses_recovery_only": true,
+  "foreign_files_touched": false
+}

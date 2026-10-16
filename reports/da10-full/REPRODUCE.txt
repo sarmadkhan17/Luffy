@@ -1,0 +1,11 @@
+Restore the self-contained DA10_FULL.bundle into a new offline checkout. Use an existing Python environment with requirements.txt dependencies; no service, provider or credentials are needed.
+
+From that checkout root:
+PYTHONPATH=. python reports/da10-full/verify.py
+PYTHONPATH=.:reports/da10-full python -m pytest -q -p offline_guard tests/test_da10_remaining_storage.py --basetemp=<new-private-recovery-scratch>
+
+For recorded fresh before/after source replay, replay_sources.py uses only the bundled historical-sources.json.gz and baseline-capture.py. The measurement/replay helpers use /mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016 as their explicit private scratch parent; create that empty parent on a volume with ample space before running them. They never open production databases. Remove only the scratch directories you create.
+
+Historical data, SQLite decisions and evidence identities are not regenerated from current feeds. verify.py validates bundled immutable source/backup/portfolio parity, test matrices, WAL/handle/storage measurements and code hashes without original data stores or input bundles.
+
+The code-only patch includes source, tests and preserved DA-06 changes; original DA-10/DA-06 refs and latest data lineage are also included in the complete-history bundle. Production integration is not performed by any verification command above.

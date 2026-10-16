@@ -1,0 +1,10 @@
+{
+  "task_scratch_removed": true,
+  "baseline_worktree_removed": true,
+  "venv_link_removed": true,
+  "bytecode_and_pytest_cache_removed": true,
+  "disposable_graph_cache_files_removed": 766,
+  "retained_code_graph_nodes": 25157,
+  "no_temporary_source_nodes": true,
+  "production_or_foreign_files_deleted": false
+}

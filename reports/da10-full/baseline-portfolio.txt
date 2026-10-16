@@ -1,0 +1,146 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_________ test_portfolio_delivery_closes_its_owned_journal_connection __________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-portfolio/test_portfolio_delivery_closes0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bd2df065400>
+
+    def test_portfolio_delivery_closes_its_owned_journal_connection(tmp_path,monkeypatch):
+        from trader.portfolio import current,runtime
+        path=tmp_path/'j.db'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE delivered(value TEXT)');db.commit()
+        monkeypatch.setattr(current,'freeze',lambda *a:({},{}))
+        monkeypatch.setattr(runtime.Consumer,'consume',lambda *a:{'portfolio_cut_id':'cut','proposal':None})
+        def delivered(db,*a,**kw):
+            db.execute("INSERT INTO delivered VALUES ('exact')");return 'outcome'
+        monkeypatch.setattr(C,'safely',delivered)
+        connections=track_connections(monkeypatch)
+        result,detail=current.checkpoint(path,{})
+        assert detail['learning_source_delivery']=='outcome'
+>       assert_closed(connections)
+
+tests/test_da10_remaining_storage.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+connections = [<sqlite3.Connection object at 0x7bd2cecb45e0>, <sqlite3.Connection object at 0x7bd2cecb58a0>]
+
+    def assert_closed(connections):
+        assert connections
+        for db in connections:
+>           with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+E           Failed: DID NOT RAISE ProgrammingError
+
+tests/test_da10_remaining_storage.py:80: Failed
+_____________ test_portfolio_duplicate_replay_needs_no_writer_lock _____________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-portfolio/test_portfolio_duplicate_repla0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bd2cef9f5f0>
+
+    def test_portfolio_duplicate_replay_needs_no_writer_lock(tmp_path,monkeypatch):
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        fast_portfolio_connections(monkeypatch)
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');first=consumer.consume(book,processed_at=book.as_of_ms)
+        with closing(sqlite3.connect(consumer.path)) as other:
+            other.execute('BEGIN IMMEDIATE')
+>           try:assert consumer.consume(book,processed_at=book.as_of_ms)==dict(first,duplicate=True)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.portfolio.runtime.Consumer object at 0x7bd2cf41b560>
+current = Inputs(as_of_ms=1500, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=2000, e...2da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None)
+processed_at = 1500
+
+    def consume(self, current, *, processed_at=None):
+        raw = gate._cut(current)
+        cut = digest(raw)
+        with self._db() as db:
+>           db.execute('BEGIN IMMEDIATE')
+E           sqlite3.OperationalError: database is locked
+
+trader/portfolio/runtime.py:66: OperationalError
+_____________ test_portfolio_pure_preparation_does_not_own_writer ______________
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-portfolio/test_portfolio_pure_preparatio0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bd2ced41520>
+
+    def test_portfolio_pure_preparation_does_not_own_writer(tmp_path,monkeypatch):
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');original=R.gate.reoptimize
+        def probe(*a,**kw):
+            with closing(sqlite3.connect(consumer.path,timeout=.025)) as other:
+                other.execute('BEGIN IMMEDIATE');other.rollback()
+            return original(*a,**kw)
+        monkeypatch.setattr(R.gate,'reoptimize',probe)
+>       result=consumer.consume(book,processed_at=book.as_of_ms)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_da10_remaining_storage.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/portfolio/runtime.py:79: in consume
+    event, proposal, intents = gate.reoptimize(previous, current, processed_ids=processed)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (None, Inputs(as_of_ms=1500, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=...da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None))
+kw = {'processed_ids': ()}
+
+    def probe(*a,**kw):
+        with closing(sqlite3.connect(consumer.path,timeout=.025)) as other:
+>           other.execute('BEGIN IMMEDIATE');other.rollback()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           sqlite3.OperationalError: database is locked
+
+tests/test_da10_remaining_storage.py:195: OperationalError
+_____ test_portfolio_refuses_changed_previous_cut_without_partial_records ______
+
+tmp_path = PosixPath('/mnt/luffy-recovery/recovery/sol1-da10-full-tmp-20261016/baseline-portfolio/test_portfolio_refuses_changed0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bd2cecc6ba0>
+
+    def test_portfolio_refuses_changed_previous_cut_without_partial_records(tmp_path,monkeypatch):
+        from dataclasses import replace
+        from trader.portfolio import runtime as R
+        from tests.test_portfolio_allocator import inputs
+        fast_portfolio_connections(monkeypatch)
+        book=inputs();consumer=R.Consumer(tmp_path/'p.db');original=R.gate.reoptimize;once=[]
+        def race(*a,**kw):
+            if not once:
+                once.append(True)
+                newer=replace(book,as_of_ms=book.as_of_ms+1)
+                R.Consumer(consumer.path).consume(newer,processed_at=newer.as_of_ms)
+            return original(*a,**kw)
+        monkeypatch.setattr(R.gate,'reoptimize',race)
+        with pytest.raises(ValueError,match='PORTFOLIO_STATE_CHANGED_DURING_PREPARE'):
+>           consumer.consume(book,processed_at=book.as_of_ms)
+
+tests/test_da10_remaining_storage.py:216: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/portfolio/runtime.py:79: in consume
+    event, proposal, intents = gate.reoptimize(previous, current, processed_ids=processed)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_da10_remaining_storage.py:212: in race
+    R.Consumer(consumer.path).consume(newer,processed_at=newer.as_of_ms)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.portfolio.runtime.Consumer object at 0x7bd2ced438f0>
+current = Inputs(as_of_ms=1501, candidates=(), portfolio=Portfolio(snapshot_id='snapshot', as_of_ms=1000, valid_until_ms=2000, e...2da2ecfd64035a4f5b1666d36c2602', payload_json='{"kind":"synthetic-test-only","version":1}'),), exposure_source_id=None)
+processed_at = 1501
+
+    def consume(self, current, *, processed_at=None):
+        raw = gate._cut(current)
+        cut = digest(raw)
+        with self._db() as db:
+>           db.execute('BEGIN IMMEDIATE')
+E           sqlite3.OperationalError: database is locked
+
+trader/portfolio/runtime.py:66: OperationalError
+=========================== short test summary info ============================
+FAILED tests/test_da10_remaining_storage.py::test_portfolio_delivery_closes_its_owned_journal_connection
+FAILED tests/test_da10_remaining_storage.py::test_portfolio_duplicate_replay_needs_no_writer_lock
+FAILED tests/test_da10_remaining_storage.py::test_portfolio_pure_preparation_does_not_own_writer
+FAILED tests/test_da10_remaining_storage.py::test_portfolio_refuses_changed_previous_cut_without_partial_records
+4 failed, 10 deselected in 2.56s

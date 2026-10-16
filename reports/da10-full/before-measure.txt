@@ -1,0 +1,35 @@
+{
+  "snapshot": {
+    "median_ms": 19.95370798977092,
+    "runs_ms": [
+      47.904506005579606,
+      16.71231701038778,
+      17.922578001162037,
+      19.95370798977092,
+      29.392361000645906
+    ],
+    "canonical_calls_per_call": 2,
+    "rows": 1
+  },
+  "duplicate_capture": {
+    "retries": 32,
+    "open_fd_growth": 65,
+    "wal_growth_bytes": 131872,
+    "sequence": 33,
+    "rows": 1
+  },
+  "reader_fd_growth": 32,
+  "contention": {
+    "duplicate_during_other_writer_ms": 138.04244800121523,
+    "pure_prepare_probe_wait_ms": [
+      60.120956011815,
+      56.165248999604955,
+      59.271403995808214,
+      57.888161012670025
+    ],
+    "max_prepare_probe_wait_ms": 60.120956011815,
+    "fixture_delay_ms": 40
+  },
+  "scratch_peak_logical_bytes": 29070085,
+  "limits": "Synthetic bounded fixtures, default durability; fixed 40ms pure-preparation injection for lock ownership and 120ms external writer. Memory is Python tracemalloc, not total RSS. No production stores or providers."
+}
