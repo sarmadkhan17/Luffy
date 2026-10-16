@@ -417,7 +417,17 @@ class DataFeed:
                 conn.execute(
                     "CREATE TABLE IF NOT EXISTS candle_floor ("
                     "symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER "
-                    "NOT NULL, PRIMARY KEY (symbol, tf))")
+                    "NOT NULL, window_version TEXT, PRIMARY KEY (symbol, tf))")
+                # Older floor hints may describe a deficit-sized overlapping
+                # query, not the source's history boundary. Preserve those
+                # rows but recheck through the ordinary bounded acquisition.
+                if 'window_version' not in {r[1] for r in conn.execute('PRAGMA table_info(candle_floor)')}:
+                    with write_tx(self._local, conn, 'floor schema'):
+                        conn.execute('BEGIN IMMEDIATE')
+                        # Another opener may have completed this migration
+                        # while this connection waited for the writer.
+                        if 'window_version' not in {r[1] for r in conn.execute('PRAGMA table_info(candle_floor)')}:
+                            conn.execute('ALTER TABLE candle_floor ADD COLUMN window_version TEXT')
                 mp.init(conn)
                 conn.commit()
             except BaseException:
@@ -607,7 +617,8 @@ class DataFeed:
         """Where the venue's history for this series begins, once known."""
         try:
             r = self.db.execute(
-                "SELECT first_ts FROM candle_floor WHERE symbol=? AND tf=?",
+                "SELECT first_ts FROM candle_floor WHERE symbol=? AND tf=? "
+                "AND window_version='full-window.v1'",
                 (norm_symbol(symbol), tf)).fetchone()
         except Exception:
             return None
@@ -628,7 +639,8 @@ class DataFeed:
             try:
                 with write_tx(self._local, self.db, "floor") as conn:
                     conn.execute(
-                        "INSERT OR REPLACE INTO candle_floor VALUES (?,?,?)",
+                        "INSERT OR REPLACE INTO candle_floor "
+                        "(symbol,tf,first_ts,window_version) VALUES (?,?,?,'full-window.v1')",
                         (norm_symbol(symbol), tf, self._first_ms(df)))
             except Exception as e:
                 log.warning(f"candle floor {symbol} {tf}: {e}")
@@ -974,8 +986,11 @@ class DataFeed:
                            if limit > 1000 else
                            self._klines(
                                symbol, tf,
-                               since=int(last) + tf_ms -
-                               (limit - len(stored)) * tf_ms, limit=1000))
+                               # Include the current requested window. A
+                               # deficit-sized interval overlaps the
+                               # stored tail and can falsely set a floor.
+                               since=(now_ms // tf_ms - limit) * tf_ms,
+                               limit=1000))
                 else:   # full window stored → only the tail can be stale
                     # Start ON the stored tail, not past it. `last + tf_ms`
                     # meant the newest stored bar was the one bar never
@@ -1011,7 +1026,9 @@ class DataFeed:
                 log.warning(f"ohlcv {symbol} {tf}: {e}")
             if stored is not None and len(stored) >= min_bars:
                 return finish(stored)
-            return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300)) if hit and hit[0] * 1000 <= now_ms else None
+            # A retained short history stays evidence, but a failed refresh
+            # cannot bypass this caller's minimum-bar requirement.
+            return finish(hit[1]) if hit and hit[0] * 1000 <= now_ms else None
 
     # ── dead-symbol negative cache ──────────────────────────────────────
     #: exchange messages that mean "this market will never exist"
