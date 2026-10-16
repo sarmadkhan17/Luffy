@@ -13,7 +13,10 @@ from trader.engine import paper_cost_evidence as C
 from trader.observability import funding_events as FE
 from trader.strategy import factory_handoff as F
 from tests.test_sol1_paper_cost import (  # noqa: F401  (fixtures + helpers)
-    NOW, Run, cfg, run_outcomes)
+    NOW, Run, cfg, no_public_network, run_outcomes)
+
+
+DEFAULT_FETCH = FE.lookup.__kwdefaults__["fetch"]      # captured before any tripwire
 
 
 def ms(value):
@@ -260,7 +263,7 @@ def test_funding_requests_respect_the_existing_controls(tmp_path, cfg, monkeypat
     src = inspect.getsource(paper) + inspect.getsource(FE)
     for forbidden in ("trader.brain", "llm", "Env.", "api_key", "apiKey", "signature"):
         assert forbidden not in src.split("class PaperExecutor")[0] + inspect.getsource(FE)
-    assert FE.lookup.__kwdefaults__["fetch"].__name__ == "urllib_fetch"
+    assert DEFAULT_FETCH.__name__ == "urllib_fetch"
 
 
 def test_a_non_production_trade_makes_no_request_and_blocks_probation(tmp_path, cfg):

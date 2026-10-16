@@ -141,6 +141,9 @@ class Run:
         self.qualification = q
         self.market = spec.markets[0]
         self.paper = PaperExecutor(self.j, cfg, venue_environment="production")
+        # The executor's observation hook issues public depth/funding GETs on its own
+        # worker; tests never reach a network, so it is detached (see the tripwire).
+        self.paper.capture = None
         self.start = (T0 + 5 * DAY) // H4 * H4
         self.tail = []
         self.ids = []
@@ -179,6 +182,22 @@ class Run:
 
     def assess(self, day=30):
         return F.evaluate_probation(self.j, self.cfg, self.vid, at_ms=T0 + day * DAY)
+
+
+@pytest.fixture(autouse=True)
+def no_public_network(monkeypatch):
+    """Tripwire: any default (real) public fetch used by these tests fails loudly."""
+    from trader.observability import execution_shadow as S
+
+    attempts = []
+
+    def real(url, *a, **k):
+        attempts.append(url)           # worker threads swallow errors: record, then assert
+        raise OSError("blocked: tests never reach the network")
+    for fn in (FE.lookup, S.capture):
+        monkeypatch.setitem(fn.__kwdefaults__, "fetch", real)
+    yield
+    assert attempts == [], attempts
 
 
 @pytest.fixture
