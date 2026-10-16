@@ -430,6 +430,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                             from .combo import Combination
                             value=dict(hash=Combination.from_dict(payload['combo']).hash,
                                        cut_ms=ex['split']['cut_ms'],looked=True,
+                                       quantitative_receipt_refused=str(exc),
                                        a={},b={},rotation={},gate1=registered.gate1({}, {}, {}),
                                        gate3=dict(passed=False,reason='refused quantitative receipt'))
                             res=ChildResult(ok=True,value=value,elapsed_s=res.elapsed_s)

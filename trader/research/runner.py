@@ -720,6 +720,18 @@ class ResearchRunner:
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}
+        if res.ok and v.get('looked') and v.get('quantitative_receipt_refused'):
+            # The bridge already rejected the worker's identity/cut receipt.
+            # Its numerical portfolios are unusable. Charge the actual look
+            # once, without asking that worker to read protected prices again.
+            reason = 'untestable: ' + str(v['quantitative_receipt_refused'])
+            self.ledger.record_test(h, tf, geo, 'gate1', 1.0, alpha,
+                                    brake < 1.0, {'error': reason,
+                                    'cut_ms': int(cut_ms), 'evaluated': evaluated})
+            self.ledger.set_candidate(h, tf, geo, 'gate1_fail',
+                                      gate1={'p': 1.0, 'reason': reason}, reason=reason)
+            self.ledger.finish_batch(bid, False, time.monotonic() - t0, reason)
+            return {**out, 'ok': False, 'state': 'gate1_fail', 'error': reason}
         if res.ok and v.get("deferred") and not v.get("looked"):
             # Decided from bar counts before any held-out price was read: no
             # look is taken, no budget step is charged (cf. the alpha deferral).

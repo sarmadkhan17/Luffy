@@ -77,6 +77,12 @@ def test_actual_cycle_owner_exit_with_busy_acquisition(tmp_path, cfg, monkeypatc
     calls = [call for call in kernel._manage_one.call_args_list if call.args[0]['id'] == 'held']
     assert len(calls) == 1 and calls[0].args[2] == expected_score
     kernel._detect_exchange_exits.assert_any_call('S00/USDT')
-    assert feed.background_acquisition_health()['pending'] == 1
+    # DA-05 also prepares a bounded rotating history cohort during cycle().
+    # The existing cold request and history requests share the same DA-02 queue.
+    health = feed.background_acquisition_health()
+    assert ('COLD/USDT', '15m') in feed._acquisition_queue
+    history = [r for r in feed._acquisition_queue.values() if r.get('history')]
+    assert len(history) <= feed.HISTORY_BATCH
+    assert health['pending'] == 1 + len(history)
     feed.cancel_background_acquisition()
     feed._acquisition_lock.release()

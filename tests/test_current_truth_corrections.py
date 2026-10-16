@@ -366,7 +366,8 @@ def test_marks_without_quote_times_publish_nothing(tmp_path, monkeypatch):
     from trader.dashboard import server
     make_app(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "_position_quotes", None)
-    app = server.create_app({"attention": {"enabled": False},
+    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
+                             "attention": {"enabled": False},
                              "owner_interface": {"enabled": True}})
     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
                             headers={"x-luffy-token": TOKEN}).json()
@@ -459,9 +460,12 @@ def test_running_manager_identity_equals_config_identity(journal):
 def _feed_with(ticker):
     """A DataFeed whose market-data exchange and time.time are scripted."""
     from trader.data.feed import DataFeed
-    f = object.__new__(DataFeed)
-    f.data_ex = NS(fetch_ticker=ticker)
-    return f
+    # Exercise timing with a fully initialized, identity-bearing fake venue.
+    # DA-01 requires identity as well as price; no transport is constructed.
+    venue = NS(id='binanceusdm', urls={'api': 'https://offline.invalid'},
+               market=lambda symbol: {'id': symbol.replace('/', ''), 'contract': True},
+               fetch_ticker=ticker)
+    return DataFeed(exchange=venue)
 
 
 def test_ticker_attempt_precedes_fetch_and_receipt_follows_it(monkeypatch):
@@ -684,7 +688,8 @@ def test_marks_duplicate_symbol_never_overwrites_a_position(tmp_path, monkeypatc
     monkeypatch.setattr(server, "_position_quotes", lambda j: (
         trades, {"BTC/USDT": dict(_q(110.0), attempt_started_at=time.time() - 2),
                  "ETH/USDT": _q(12.0)}))
-    app = server.create_app({"attention": {"enabled": False},
+    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
+                             "attention": {"enabled": False},
                              "owner_interface": {"enabled": True}})
     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
                             headers={"x-luffy-token": TOKEN}).json()
@@ -706,7 +711,8 @@ def test_marks_duplicate_symbol_with_one_bad_trade_is_unvalued(tmp_path, monkeyp
               _trade("b", "BTC/USDT", "sideways", 2.0, 120.0)]
     monkeypatch.setattr(server, "_position_quotes",
                         lambda j: (trades, {"BTC/USDT": _q(110.0)}))
-    app = server.create_app({"attention": {"enabled": False},
+    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
+                             "attention": {"enabled": False},
                              "owner_interface": {"enabled": True}})
     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
                             headers={"x-luffy-token": TOKEN}).json()

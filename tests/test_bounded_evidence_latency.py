@@ -374,12 +374,12 @@ def test_reference_refresh_shared_response_preserves_all_source_rows(tmp_path, m
     frame = ref_sources.defillama_stables(get=lambda url:raw)
     cut = int(frame.ts.iloc[-1].timestamp()*1000)+DAY
     expected_hash = mp.digest(raw)
-    original = mp.digest
+    original = mp.encode
     calls=[]
-    def digest(value):
+    def encode(value):
         if value is raw: calls.append(1)
         return original(value)
-    monkeypatch.setattr(mp,'digest',digest)
+    monkeypatch.setattr(mp,'encode',encode)
     store=RefStore(tmp_path/'references.db',clock_ms=lambda:cut)
     assert store.save('stables',frame,now_ms=cut)==3232
     assert len(calls)==1

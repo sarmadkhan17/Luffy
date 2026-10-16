@@ -253,7 +253,10 @@ def freeze_candles(source, dest, experiment):
         if [c[1] for c in columns] != ['symbol','tf','ts','open','high','low','close','volume','taker_buy']:
             raise ValueError('unsupported_candle_schema')
         dst.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,open REAL,high REAL,low REAL,close REAL,volume REAL,taker_buy REAL,PRIMARY KEY(symbol,tf,ts))')
-        dst.execute('CREATE TABLE candle_floor(symbol TEXT,tf TEXT,first_ts INTEGER,PRIMARY KEY(symbol,tf))')
+        # Match the feed's current storage schema before sealing the snapshot.
+        # Otherwise the first reader migrates this table, changing frozen bytes
+        # and the next restart's registered checkpoint identity.
+        dst.execute('CREATE TABLE candle_floor(symbol TEXT,tf TEXT,first_ts INTEGER,window_version TEXT,PRIMARY KEY(symbol,tf))')
         from ..data import market_provenance as provenance
         from ..data.feed import DataFeed
         provenance.init(dst)

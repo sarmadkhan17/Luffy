@@ -44,10 +44,14 @@ def test_legacy_unqualified_projection_stays_unknown_without_mutating_snapshot(p
     experiment=E.translate(P.propose(s,'volume_breakout_context.v1',created),source,CFG,later)
     # Deliberately discard all artificial receipts to reproduce a legacy projection.
     with sqlite3.connect(source) as db: db.execute('DELETE FROM market_revisions')
-    target=tmp_path/'legacy-frozen.db';E.freeze_candles(source,target,experiment)
-    initial=hashlib.sha256(target.read_bytes()).hexdigest()
-    assert DataFeed(exchange=NoExchange(),db_path=target).cached_ohlcv(DISCOVERY[0],'4h') is None
-    assert hashlib.sha256(target.read_bytes()).hexdigest()==initial
+    target=tmp_path/'legacy-frozen.db'
+    initial=hashlib.sha256(source.read_bytes()).hexdigest()
+    # A registered provenance-bound experiment cannot seal an unqualified
+    # projection after its receipts disappear. Refusal must preserve the source.
+    with pytest.raises(ValueError, match='retained_data_provenance_unavailable'):
+        E.freeze_candles(source,target,experiment)
+    assert not target.exists()
+    assert hashlib.sha256(source.read_bytes()).hexdigest()==initial
 
 
 def test_existing_pre_pit_snapshot_refuses_reuse_without_rewriting(population,tmp_path):

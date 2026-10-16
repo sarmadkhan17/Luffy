@@ -247,11 +247,23 @@ def test_htf_score_math():
     assert abs(htf_trend_score(flat)) < 0.05
 
 
+def _strategy_proposal(monkeypatch, conviction):
+    from types import SimpleNamespace as NS
+    from trader.core.types import Action, StrategySignal
+    from trader.strategy import library
+    monkeypatch.setitem(library.EVALUATORS, 'htf_fixture', lambda *_:
+        StrategySignal('htf-plan', 'htf-plan', 'ETH/USDT',
+                       Action.BUY if conviction > 0 else Action.SELL,
+                       abs(conviction), 'synthetic HTF boundary', {}))
+    return [(NS(id='htf-plan', is_trade_eligible=True),
+             NS(family='htf_fixture', markets=['futures'], params={}))]
+
+
 def test_htf_hard_veto_blocks_counter_trend(monkeypatch):
     import trader.engine.orchestrator as om
     monkeypatch.setattr(om, "htf_trend_score", lambda df: 0.9)
     o = _orch(-0.9, None)                          # strongly SHORT vote
-    d = o.decide(_snap(), population=[], entry_allowed=True)
+    d = o.decide(_snap(), population=_strategy_proposal(monkeypatch, -.9), entry_allowed=True)
     assert d.action != "SELL"
     assert "hard veto" in d.skip_reason
 
@@ -260,9 +272,9 @@ def test_htf_soft_bump_raises_threshold(monkeypatch):
     import trader.engine.orchestrator as om
     monkeypatch.setattr(om, "htf_trend_score", lambda df: 0.5)
     o_ct = _orch(-0.55, None)                      # counter-trend short
-    d_ct = o_ct.decide(_snap(), population=[], entry_allowed=True)
+    d_ct = o_ct.decide(_snap(), population=_strategy_proposal(monkeypatch, -.55), entry_allowed=True)
     o_wt = _orch(+0.55, None)                      # with-trend long
-    d_wt = o_wt.decide(_snap(), population=[], entry_allowed=True)
+    d_wt = o_wt.decide(_snap(), population=_strategy_proposal(monkeypatch, .55), entry_allowed=True)
     assert d_ct.threshold - d_wt.threshold == pytest.approx(0.07)
 
 

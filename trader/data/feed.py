@@ -975,7 +975,9 @@ class DataFeed:
                     (qualified is None or not qualified['quality'].eq('VALID').all() or
                      not self._contiguous_tail(qualified, tf, min(min_bars, limit)))):
                 raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
-                       else self._klines(symbol, tf, limit=limit))
+                       else self._klines(symbol, tf,
+                                         since=(now_ms // tf_ms - limit) * tf_ms,
+                                         limit=limit))
                 new = self._received_frame(raw or [], symbol, tf)
                 return finish(self._merge_save(symbol, tf, stored, new)) if len(new) else finish(qualified)
             if stored is not None and len(stored) > 0:

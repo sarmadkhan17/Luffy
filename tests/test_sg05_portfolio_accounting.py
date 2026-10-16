@@ -251,12 +251,16 @@ def test_statistical_policy_and_frozen_evidence_unchanged():
     # Retrospective mode adds source-bound input handling to the backtester.
     # Keep its statistical decision threshold exactly pinned while retaining
     # byte-level guards for statistical policy, configuration and evidence.
-    paths = ['trader/strategy/vector_backtest.py',
-             'trader/research/combo.py','trader/research/fdr.py',
-             'trader/research/thresholds.py','docs/tracker',
-             'docs/superpowers/evidence','docs/superpowers/specs']
-    paths.remove('trader/strategy/vector_backtest.py')
+    paths = ['trader/research/combo.py','trader/research/fdr.py',
+             'trader/research/thresholds.py']
     subprocess.run(['git','diff','--exit-code','fc6c0b2','--',*paths],check=True,capture_output=True)
+    # New bundle reports are additive evidence. Every historical tracked file
+    # must still retain its exact bytes and path; additions cannot mask edits.
+    historical = ['docs/tracker', 'docs/superpowers/evidence', 'docs/superpowers/specs']
+    changed = subprocess.check_output(
+        ['git','diff','--name-only','--no-renames','--diff-filter=DMRTUXB',
+         'fc6c0b2','--',*historical], text=True)
+    assert changed == '', changed
     # config.yaml: the research budget, the risk policy and every strategies
     # key are pinned; only the owner-authorized lifecycle edits may differ
     # (ten-trade probation, three unread keys removed).
