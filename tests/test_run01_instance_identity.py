@@ -290,6 +290,9 @@ def test_summary_endpoint_renders_kernel_identity(monkeypatch, tmp_path):
     from fastapi.testclient import TestClient
     from trader.dashboard import server
     monkeypatch.setattr(server, 'ROOT', tmp_path)
+    monkeypatch.setattr(server, '_account_snapshot', lambda: {})
+    monkeypatch.setattr(server, '_universe_prices', lambda: {})
+    monkeypatch.setattr(server, '_position_quotes', lambda journal: ([], {}))
     monkeypatch.setenv("DASH_TOKEN", "fixture-token")
     monkeypatch.setattr(server, "kernel_identity_view", lambda root: {"state": "RUNNING", "marker": 1})
     app = server.create_app({"attention": {"enabled": True},
