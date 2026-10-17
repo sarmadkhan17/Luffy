@@ -1,0 +1,31 @@
+         899980 function calls (866614 primitive calls) in 2.960 seconds
+
+   Ordered by: cumulative time
+   List reduced from 795 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    2.963    2.963 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/reports/da06/replay.py:70(analysts)
+      112    0.002    0.000    2.953    0.026 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/base.py:40(measured)
+      224    0.012    0.000    2.713    0.012 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/base.py:48(_inputs)
+      224    0.004    0.000    2.365    0.011 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/generic.py:3783(to_csv)
+      224    0.005    0.000    2.341    0.010 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/io/formats/format.py:976(to_csv)
+      224    0.003    0.000    2.280    0.010 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/io/formats/csvs.py:246(save)
+      224    0.001    0.000    2.255    0.010 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/io/formats/csvs.py:274(_save)
+      224    0.034    0.000    2.238    0.010 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/io/formats/csvs.py:307(_save_body)
+      224    1.027    0.005    2.201    0.010 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/io/formats/csvs.py:317(_save_chunk)
+      112    0.004    0.000    1.423    0.013 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/base.py:103(_vote)
+      399    0.023    0.000    1.048    0.003 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/internals/managers.py:399(apply)
+      224    0.001    0.000    1.040    0.005 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/frame.py:1386(_get_values_for_csv)
+      224    0.001    0.000    1.036    0.005 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/internals/managers.py:635(get_values_for_csv)
+     5152    0.013    0.000    0.992    0.000 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/internals/blocks.py:624(get_values_for_csv)
+     5600    0.057    0.000    0.956    0.000 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/indexes/base.py:8085(get_values_for_csv)
+       16    0.001    0.000    0.340    0.021 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/momentum.py:78(evaluate)
+       16    0.001    0.000    0.292    0.018 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/flow.py:25(evaluate)
+     4531    0.288    0.000    0.288    0.000 {method 'astype' of 'numpy.ndarray' objects}
+      518    0.007    0.000    0.285    0.001 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/frame.py:4337(__getitem__)
+       16    0.001    0.000    0.278    0.017 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/momentum.py:116(evaluate)
+       16    0.001    0.000    0.268    0.017 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/trader/agents/structure.py:27(evaluate)
+      224    0.250    0.001    0.254    0.001 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/arrays/datetimes.py:769(_format_native_types)
+      194    0.006    0.000    0.184    0.001 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/indexes/base.py:6288(_get_indexer_strict)
+     2464    0.025    0.000    0.159    0.000 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/arrays/string_.py:914(astype)
+8003/5539    0.006    0.000    0.152    0.000 /mnt/luffy-data/luffy/workspaces/sol1-da06-offline-20261016/venv/lib/python3.12/site-packages/pandas/core/dtypes/missing.py:97(isna)

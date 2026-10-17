@@ -1,0 +1,10 @@
+From the repository root, with requirements.txt dependencies installed:
+
+mkdir -p .da06-tmp
+PYTHONPATH=. python reports/da06/verify.py
+PYTHONPATH=. python reports/da06/replay.py replay --repeat 7
+python -m pytest -q tests/test_da06_input_work.py tests/test_wrld01_measurements.py tests/test_scan_plan.py tests/test_hierarchical_admission.py tests/test_cognition_attention.py tests/test_orchestrator_abstention.py tests/test_orchestrator_agreement.py --basetemp=.da06-tmp/reproduced-tests
+
+The bundled before/after files preserve the matched original runs. For a new baseline run, use trader/agents/base.py from baseline commit fc6c0b2836b7c226517a2c22fcce389eedd9a4c0 in a separate disposable checkout, with this task's replay scripts and fixture. The two new work-count tests should fail on that baseline. Do not replace files in production.
+
+verify.py needs only bundled files and installed dependencies; it does not use production data, services, venue access or credentials. replay.py explicitly denies networking. extract.py records the original evidence-acquisition procedure and is not required for verification.

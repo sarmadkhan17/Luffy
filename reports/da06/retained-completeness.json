@@ -1,0 +1,17 @@
+{
+  "frame_references": 60,
+  "all_frame_references_resolve": true,
+  "retained_blobs": 77,
+  "additional_peer_frame_blobs": [
+    "3786d03312697ec8417b180b6a0e89f3a79b7266a0b85c616fb34ea27aacb6dd",
+    "383d233db7d8044939e23b0d95ad8607ccd9520edee34910e3bfe8a653147c40",
+    "700015b251d71e5c6d49ebd5791db01b3e4d4613eecaeeeb74071fbef2b8dbd2",
+    "75463e2720b5a0e5bb65ee4f45f2687466d26c60ef8f2b0f534caf3e6b6a290c",
+    "96d632eafae9b14f2743d16551769536b8cca137eb286d10af6804a47fb0ce12",
+    "a44002b6e5a66eb1c0661e5f809dbdbb803b538f19d4ecf35a39add58b8c44e0",
+    "b420aea9282a9f573ebdd778de0ed2577e683f3860d397234ab105e45d3a8753",
+    "efacf79f25927d22c2378e2042f96ac811a3413e3d9925383b8d2fa9f762865f"
+  ],
+  "source_mode": "immutable read-only base pages; excludes WAL",
+  "procedure": "Resolve every non-null hash under chunks, including peer universe and anchors, through journal_evidence and verify learning.foundation.digest."
+}

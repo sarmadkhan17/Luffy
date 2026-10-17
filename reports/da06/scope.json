@@ -1,0 +1,15 @@
+{
+  "baseline": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+  "unchanged_source_sha256": {
+    "trader/kernel.py": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f",
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "trader/attention_admission.py": "1475e3424a4f53db93e94cd571eb02497421f098769e13f6d094d464d3f70077",
+    "trader/data/broad_crypto.py": "2bcf278a5cb2bb01707291a9159cbc4904fc17bd881efd82f563605434dbbc14",
+    "trader/cognition/attention.py": "4b7245c48e0765fdb46f561120a36fd2d5c4fab85abdcfed457fc3acaa1f7edd",
+    "trader/engine/orchestrator.py": "71a9256ca3011ad8b6c6aab533c7dfd139452c5d58ead6973c6786ad5669cd41",
+    "trader/strategy/scan_plan.py": "f3ce246cf92a26bafcaf37081c6e455b63c1fe8bfd18ea53d1bf5b696602213c"
+  },
+  "executable_change": "trader/agents/base.py",
+  "production_writes": false
+}

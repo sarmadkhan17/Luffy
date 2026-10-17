@@ -1,0 +1,8 @@
+{
+  "task_temp_directory_removed": true,
+  "venv_link_removed": true,
+  "pytest_cache_removed": true,
+  "disposable_graph_cache_and_snapshot_files_removed": 746,
+  "temporary_graph_nodes": 0,
+  "retained_graph_nodes": 26183
+}

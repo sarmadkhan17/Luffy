@@ -1,0 +1,47 @@
+FF...................................................................... [ 52%]
+.................................................................        [100%]
+=================================== FAILURES ===================================
+____ test_preflight_serializes_no_frames_and_final_vote_hashes_once[False] _____
+
+invalid = False
+
+    @pytest.mark.parametrize('invalid',[False,True])
+    def test_preflight_serializes_no_frames_and_final_vote_hashes_once(invalid):
+        s=snap()
+        if invalid:s.dfs['15m'].loc[39,'taker_buy']=float('nan')
+        original=pd.DataFrame.to_csv
+        calls=[]
+        def count(self,*a,**kw):
+            calls.append(self)
+            return original(self,*a,**kw)
+        with patch.object(pd.DataFrame,'to_csv',count):
+            p=FlowAnalyst().evaluate(s).measurement
+>       assert len(calls)==1
+E       assert 2 == 1
+E        +  where 2 = len([    close  volume  taker_buy\n0    10.0   100.0       60.0\n1    10.0   100.0       60.0\n2    10.0   100.0       60.0\n3....0\n36   10.0   100.0       60.0\n37   10.0   100.0       60.0\n38   10.0   100.0       60.0\n39   10.0   100.0       60.0])
+
+tests/test_da06_input_work.py:27: AssertionError
+_____ test_preflight_serializes_no_frames_and_final_vote_hashes_once[True] _____
+
+invalid = True
+
+    @pytest.mark.parametrize('invalid',[False,True])
+    def test_preflight_serializes_no_frames_and_final_vote_hashes_once(invalid):
+        s=snap()
+        if invalid:s.dfs['15m'].loc[39,'taker_buy']=float('nan')
+        original=pd.DataFrame.to_csv
+        calls=[]
+        def count(self,*a,**kw):
+            calls.append(self)
+            return original(self,*a,**kw)
+        with patch.object(pd.DataFrame,'to_csv',count):
+            p=FlowAnalyst().evaluate(s).measurement
+>       assert len(calls)==1
+E       assert 2 == 1
+E        +  where 2 = len([    close  volume  taker_buy\n0    10.0   100.0       60.0\n1    10.0   100.0       60.0\n2    10.0   100.0       60.0\n3....0\n36   10.0   100.0       60.0\n37   10.0   100.0       60.0\n38   10.0   100.0       60.0\n39   10.0   100.0        NaN])
+
+tests/test_da06_input_work.py:27: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_da06_input_work.py::test_preflight_serializes_no_frames_and_final_vote_hashes_once[False]
+FAILED tests/test_da06_input_work.py::test_preflight_serializes_no_frames_and_final_vote_hashes_once[True]
+2 failed, 135 passed in 16.91s
