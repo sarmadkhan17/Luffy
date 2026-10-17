@@ -1,7 +1,7 @@
 """Phase startup and authority boundaries; fixture stores only, no venue/provider calls."""
 from pathlib import Path
 from unittest.mock import Mock
-import shutil
+import yaml
 import pytest
 from fastapi.testclient import TestClient
 from trader.dashboard import phase, server
@@ -37,8 +37,23 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(server, 'ROOT', tmp_path)
     monkeypatch.setenv('DASH_TOKEN', 'phase-test-token')
     target = tmp_path / 'docs/tracker'; target.mkdir(parents=True)
-    shutil.copy(ROOT / 'docs/tracker/LUFFY_Product_Tracker_v1.yaml', target)
-    shutil.copy(ROOT / 'NEXT.yaml', tmp_path)
+    # Synthetic terminal selection: this API boundary must not depend on the
+    # project's changing work queue. No tracked tracker/NEXT file is edited.
+    statuses = ['EVIDENCE_TO_MAP', 'OPEN', 'IN_PROGRESS', 'AWAITING_EVIDENCE',
+                'AWAITING_OWNER', 'CLOSED', 'DEFERRED', 'BLOCKED']
+    row = {name: 'TEST_ONLY' for name in ('area', 'stage', 'release_scope',
+           'required_behavior', 'why_needed', 'closure_condition', 'latest_evidence',
+           'next_proof', 'owner_role')}
+    row.update(id='OBS-05', status='CLOSED', dependencies=[], parent_ids=[], related_items=[])
+    ledger = dict(metadata=dict(version='synthetic-phase-fixture', row_count=1,
+        current_active_item='OBS-05', status_counts={'CLOSED': 1}, baseline_commit='a' * 40),
+        status_definitions=[dict(status=s, meaning='TEST_ONLY') for s in statuses],
+        readiness_gates=[dict(id=f'M{i}', title='TEST_ONLY', items=['OBS-05'],
+                             closure='TEST_ONLY', current='TEST_ONLY', limit='TEST_ONLY')
+                         for i in range(7)], items=[row])
+    (target / 'LUFFY_Product_Tracker_v1.yaml').write_text(yaml.safe_dump(ledger))
+    (tmp_path / 'NEXT.yaml').write_text(yaml.safe_dump(dict(work_package=dict(
+        id='OBS-05', status='CLOSED', mode='ENGINEERING_ONLY', objective='TEST_ONLY'))))
     # If the boundary fails, these spies catch control/provider/LLM execution.
     gateway = Mock(side_effect=AssertionError('gateway used'))
     marks = Mock(side_effect=AssertionError('provider used'))
