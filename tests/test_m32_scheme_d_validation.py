@@ -143,11 +143,19 @@ def test_phase90_injections_preserve_membership_masks_and_strata():
 
 def test_symbolic_truth_tables_are_complete_in_shape_and_honestly_refuse_ambiguity():
     truth = generate_truth_tables()
+    # v2 records ambiguity on each hypothesis instead of a redundant boolean.
+    # Derive the same predicate from every row; never assume missing means true.
+    def fully_classified(cell):
+        assert all(r['classification'] in {'true_null', 'analytic_non_null', 'unclassifiable'}
+                   for r in cell['records'])
+        return all(r['classification'] != 'unclassifiable' for r in cell['records'])
     assert len(truth["cells"]) == 55
     assert all(len(cell["records"]) == HYPOTHESES for cell in truth["cells"])
-    assert not truth["fully_classified"]
+    assert truth['schema'] == 'm3.2-scheme-d-symbolic-truth.v2'
+    assert truth['unresolved_cells'] == sum(not fully_classified(c) for c in truth['cells'])
+    assert not all(fully_classified(c) for c in truth['cells'])
     p1 = next(c for c in truth["cells"] if c.get("scenario") == 101 and c["correlation"] == 4)
-    assert p1["fully_classified"]
+    assert fully_classified(p1)
     assert p1["records"][0]["classification"] == "true_null"
     p3 = next(c for c in truth["cells"] if c.get("scenario") == 103 and c["correlation"] == 4)
     assert p3["records"][320]["classification"] == "true_null"
@@ -156,9 +164,9 @@ def test_symbolic_truth_tables_are_complete_in_shape_and_honestly_refuse_ambigui
     assert p2["records"][143]["sign"] == 1
     assert p2["records"][144]["sign"] == -1
     p4_c0 = next(c for c in truth["cells"] if c.get("scenario") == 104 and c["correlation"] == 0)
-    assert p4_c0["fully_classified"]
+    assert fully_classified(p4_c0)
     p4_c1 = next(c for c in truth["cells"] if c.get("scenario") == 104 and c["correlation"] == 1)
-    assert not p4_c1["fully_classified"]
+    assert not fully_classified(p4_c1)
 
 
 def test_n1_null_mad_derivation_matches_frozen_value():
