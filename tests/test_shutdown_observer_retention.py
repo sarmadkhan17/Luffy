@@ -154,6 +154,7 @@ def test_confirmed_clean_child_exit_precedes_cleanup(launcher, tmp_path, monkeyp
     assert events.index('verified_exit') < events.index('storage-final-stopped') < events.index('cleanup')
 
 
+@pytest.mark.operational
 def test_real_timers_retain_truthful_observations_until_verified_exit(launcher, tmp_path):
     # Never launch Kernel/Dashboard. The child deliberately delays SIGTERM exit
     # until a fixture release file appears. Timer workers call actual safety probes.

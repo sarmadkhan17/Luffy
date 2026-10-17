@@ -199,19 +199,15 @@ def test_margin_equity_disagreeing_with_account_equity_refused(setup):
     assert not ex.sent
 
 
-@pytest.mark.parametrize('amount', [0.0005, 0.00099, 1001.])
-def test_quantity_outside_venue_bounds_never_submits(setup, amount):
-    ex, j, e, d = setup
-    try:
-        kw = permission(e, d, amount=amount)
-    except ValueError:
-        assert not ex.sent
-        return
-    assert _open(e, d, kw, amount=amount) is None and not ex.sent
-
-
-@pytest.mark.parametrize('amount', [1.0005, 0.0015, 2.0000001])
-def test_quantity_off_step_never_submits(setup, amount):
+@pytest.mark.parametrize('amount', [
+    pytest.param(0.0005, id='below-minimum'),
+    pytest.param(0.00099, id='below-minimum-near-boundary'),
+    pytest.param(1001., id='above-maximum'),
+    pytest.param(1.0005, id='off-step'),
+    pytest.param(0.0015, id='off-step-small'),
+    pytest.param(2.0000001, id='off-step-roundoff'),
+])
+def test_infeasible_quantity_never_submits(setup, amount):
     ex, j, e, d = setup
     try:
         kw = permission(e, d, amount=amount)
@@ -271,7 +267,7 @@ def _must_fail(check, *a):
 
 def test_mutant_venue_constraint_check_removed_is_detected(setup, monkeypatch):
     _mutate(monkeypatch, 'validate', "if (q % positive(constraints['market_quantity_step'])", "if (False and q % positive(constraints['market_quantity_step'])")
-    _must_fail(test_quantity_off_step_never_submits, setup, 1.0005)
+    _must_fail(test_infeasible_quantity_never_submits, setup, 1.0005)
 
 
 def test_mutant_min_notional_removed_is_detected(setup, monkeypatch):

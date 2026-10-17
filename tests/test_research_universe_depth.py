@@ -30,6 +30,7 @@ def test_the_universes_do_not_overlap():
     assert len(DISCOVERY) >= 19 and len(HELDOUT) >= 17
 
 
+@pytest.mark.operational
 def test_every_enabled_horizon_carries_enough_discovery_symbols():
     cfg = load_config()
     rcfg = cfg.get("research") or {}
@@ -85,6 +86,7 @@ def test_a_non_sql_failure_is_not_swallowed_into_the_skip_signal():
         coverage(["4h"], feed=_WeirdFeed())
 
 
+@pytest.mark.operational
 def test_four_hour_is_deep_enough_today():
     """The horizon the book already trades. If this regresses, the candle
     store lost history and every Phase 2 number is suspect."""
