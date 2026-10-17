@@ -24,15 +24,16 @@ startup_preflight() {
   local output rc
   output="$(cd "$DIR" && ./venv/bin/python -m "$@")"
   rc=$?
-  if [ -n "$output" ]; then
+  if [ -n "$output" ] && { [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ]; }; then
     printf '%s\n' "$output"
   elif [ "$rc" -ne 0 ]; then
-    printf '%s\n' '{"allow":false,"result":"REFUSE","reasons":["preflight_command_failed"]}'
+    [ -z "$output" ] || printf '%s\n' "$output" >&2
+    printf '%s\n' '{"schema":"luffy-launch-preflight.v1","allow":false,"result":"FAIL","reasons":["preflight_command_failed"]}'
   fi
   return "$rc"
 }
 
-# Dashboard phase contract is shared with direct module startup. Kernel preflight is unchanged.
+# Each target retains its own startup authorization checks.
 if [ "$TARGET" = dashboard ]; then
   if ! startup_preflight trader.dashboard.phase --root "$DIR"; then
     echo 'dashboard phase startup refused; existing process retained' >&2

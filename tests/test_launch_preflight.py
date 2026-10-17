@@ -329,14 +329,23 @@ def test_unavailable_dashboard_phase_has_zero_side_effects(tmp_path, variant):
     _unavailable_preflight_refuses(tmp_path, variant, 'dashboard')
 
 
+def test_crashed_helper_partial_stdout_is_diagnostic_only(tmp_path):
+    _unavailable_preflight_refuses(tmp_path, 'noisy_crash', 'kernel')
+
+
 def _unavailable_preflight_refuses(tmp_path, variant, target):
     path, events, env = shell_fixture(tmp_path, good_facts())
     python = tmp_path / 'venv/bin/python'
     if variant == 'missing_helper': python.unlink()
+    elif variant == 'noisy_crash': python.write_text('#!/bin/bash\necho partial-output\nexit 2\n')
     else: python.write_text('#!/bin/bash\nexit 2\n')
     result = subprocess.run(['bash',str(path),target],env=env,capture_output=True,text=True,timeout=10)
     assert result.returncode != 0 and not events.exists()
-    assert json.loads(result.stdout)['reasons'] == ['preflight_command_failed']
+    refusal = json.loads(result.stdout)
+    assert refusal['reasons'] == ['preflight_command_failed']
+    assert refusal['schema'] == 'luffy-launch-preflight.v1'
+    assert refusal['allow'] is False and refusal['result'] == 'FAIL'
+    if variant == 'noisy_crash': assert 'partial-output' in result.stderr
 
 
 def test_terminal_obs01_remains_readable_without_selecting_next_item(tmp_path):

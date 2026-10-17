@@ -775,7 +775,8 @@ def _dashboard_app(journal_path, ipc_dir, authenticated=True):
     from trader.api.graphql_schema import make_graphql_router
     from trader.dashboard.server import _owner_gateway
     auth = SimpleNamespace(authenticated=lambda scope: authenticated)
-    cfg = {"owner_interface": {"ipc_dir": str(ipc_dir)}}
+    cfg = {"owner_interface": {"ipc_dir": str(ipc_dir)},
+           "dashboard": {"startup_mode": "LIVE"}}
     app = FastAPI()
     app.include_router(make_graphql_router(Journal(journal_path), _owner_gateway(cfg, auth)))
     return TestClient(app)

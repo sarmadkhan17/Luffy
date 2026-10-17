@@ -49,3 +49,47 @@ def _incomplete_then_complete(tmp_path, monkeypatch, exposure):
     assert k._drain_panic() == 1
     assert journal.kv_get('panic_requested') == '0'
     assert journal.kv_get('control_state') == 'FROZEN'
+
+
+def test_incomplete_flatten_preserves_halted_containment(tmp_path, monkeypatch):
+    journal = Journal(tmp_path / 'j.db')
+    k = _active(journal, HookVenue(), monkeypatch)
+    service = svc(k)
+    service.execute(req('panic', 'test-panic-halted01'))
+    service.execute(req('halt', 'test-halt-afterpanic'))
+    pending = journal.kv_get('panic_requested')
+    monkeypatch.setattr('trader.kernel.flatten_all', lambda *args: FlattenResult(0, remaining=('A/USDT',)))
+    assert k._drain_panic() == 0
+    assert journal.kv_get('panic_requested') == pending
+    assert journal.kv_get('control_state') == 'HALTED'
+
+
+def test_flatten_exception_does_not_consume_request(tmp_path, monkeypatch):
+    journal = Journal(tmp_path / 'j.db')
+    k = _active(journal, HookVenue(), monkeypatch)
+    svc(k).execute(req('panic', 'test-panic-failed01'))
+    pending = journal.kv_get('panic_requested')
+    def unavailable(*args): raise OSError('synthetic venue unavailable')
+    monkeypatch.setattr('trader.kernel.flatten_all', unavailable)
+    with pytest.raises(OSError, match='synthetic venue unavailable'):
+        k._drain_panic()
+    assert journal.kv_get('panic_requested') == pending
+    assert journal.kv_get('control_state') == 'FROZEN'
+
+
+def test_incomplete_flatten_keeps_the_newer_panic_identity(tmp_path, monkeypatch):
+    journal = Journal(tmp_path / 'j.db')
+    k = _active(journal, HookVenue(), monkeypatch)
+    service = svc(k)
+    service.execute(req('panic', 'test-panic-before01'))
+    def incomplete(*args):
+        service.execute(req('panic', 'test-panic-newer001'))
+        return FlattenResult(0, remaining=('A/USDT',))
+    monkeypatch.setattr('trader.kernel.flatten_all', incomplete)
+    k._drain_panic()
+    assert json.loads(journal.kv_get('panic_requested'))['request_id'] == 'test-panic-newer001'
+    assert journal.kv_get('control_state') == 'FROZEN'
+    monkeypatch.setattr('trader.kernel.flatten_all', lambda *args: FlattenResult(1))
+    assert k._drain_panic() == 1
+    assert journal.kv_get('panic_requested') == '0'
+    assert journal.kv_get('control_state') == 'FROZEN'
