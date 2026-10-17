@@ -2,6 +2,7 @@
 from copy import deepcopy
 import json
 import subprocess
+import sys
 
 import pytest
 
@@ -124,10 +125,10 @@ def test_source_free_cli_replay(artifact,tmp_path):
     items, ex = setup(artifact)
     path=tmp_path/'conversion.json'
     path.write_text(json.dumps(C.capture(artifact,ex,items)))
-    r=subprocess.run(['./venv/bin/python','-m','scripts.capture_trade_conversions',
+    r=subprocess.run([sys.executable,'-m','scripts.capture_trade_conversions',
                       '--replay',str(path)],check=True,capture_output=True,text=True)
     assert json.loads(r.stdout)['learning_eligible'] is False
-    r=subprocess.run(['./venv/bin/python','-m','scripts.capture_trade_conversions',
+    r=subprocess.run([sys.executable,'-m','scripts.capture_trade_conversions',
                       '--whole-trade',str(path),'--request','commission:1:99',
                       '--output',str(path)],capture_output=True,text=True)
     assert r.returncode != 0 and 'output exists' in r.stderr

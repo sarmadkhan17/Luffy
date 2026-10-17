@@ -2,6 +2,7 @@
 import json
 import sqlite3
 import subprocess
+import sys
 
 import pytest
 
@@ -107,12 +108,12 @@ def test_cli_source_free_replay_and_read_only_legacy_export(tmp_path):
         db.execute('CREATE TABLE trades(id TEXT, realized_pnl REAL, status TEXT)')
         db.execute("INSERT INTO trades VALUES ('old', 12345, 'closed')")
     original=path.read_bytes();out=tmp_path/'receipt.json'
-    subprocess.run(['./venv/bin/python','-m','scripts.export_trade_accounting','--journal',str(path),'--trade-id','old','--output',str(out)],check=True,capture_output=True)
+    subprocess.run([sys.executable,'-m','scripts.export_trade_accounting','--journal',str(path),'--trade-id','old','--output',str(out)],check=True,capture_output=True)
     assert path.read_bytes()==original
     a=json.loads(out.read_text())
     assert 'legacy_booking_receipts_absent' in a['reasons']
     path.unlink()
-    subprocess.run(['./venv/bin/python','-m','scripts.export_trade_accounting','--replay',str(out)],check=True,capture_output=True)
+    subprocess.run([sys.executable,'-m','scripts.export_trade_accounting','--replay',str(out)],check=True,capture_output=True)
 
 
 @pytest.mark.parametrize('field,value',[('commission',None),('realized_pnl',None),('commission_asset','BNB'),('id',None),('commission','nan')])

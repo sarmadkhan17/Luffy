@@ -5,6 +5,8 @@ tests exercise the scan directly against a real sqlite fixture."""
 import json
 import sqlite3
 import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -212,9 +214,9 @@ def test_cli_refuses_when_archived_payload_id_does_not_match_lookup_key(tmp_path
     conn.commit()
     conn.close()
     out_path = tmp_path/'out.json'
-    cmd = ['./venv/bin/python', '-m', 'scripts.capture_emergency_whole_accounting',
+    cmd = [sys.executable, '-m', 'scripts.capture_emergency_whole_accounting',
           '--journal', str(journal), '--intent-id', 'row-key', '--output', str(out_path)]
-    result = subprocess.run(cmd, cwd='/home/sarmad/trader', capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
     assert result.returncode != 0
     assert 'does not match' in result.stderr
     assert not out_path.exists()

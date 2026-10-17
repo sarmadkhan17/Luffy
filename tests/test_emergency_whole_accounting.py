@@ -2,6 +2,8 @@
 from copy import deepcopy
 import json
 import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -231,8 +233,8 @@ def test_malformed_overlap_scan_metadata_refuses_before_network(bad_scan):
 def test_source_free_cli_replay(artifact, tmp_path):
     path = tmp_path/'receipt.json'
     path.write_text(json.dumps(artifact))
-    cmd = ['./venv/bin/python', '-m', 'scripts.capture_emergency_whole_accounting', '--replay', str(path)]
-    out = subprocess.run(cmd, check=True, capture_output=True, cwd='/home/sarmad/trader')
+    cmd = [sys.executable, '-m', 'scripts.capture_emergency_whole_accounting', '--replay', str(path)]
+    out = subprocess.run(cmd, check=True, capture_output=True, cwd=Path(__file__).resolve().parents[1])
     result = json.loads(out.stdout)
     assert result['net_trade_pnl_usdt'] == pytest.approx(6.0)
     assert result['learning_eligible'] is False

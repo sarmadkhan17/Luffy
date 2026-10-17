@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import sqlite3
 import subprocess
+import sys
 
 import pytest
 
@@ -179,7 +180,7 @@ def test_source_free_cli_replay_and_complete_import(artifact,tmp_path):
     with sqlite3.connect(memory) as db:
         schema(db)
         db.execute("INSERT INTO typed_outcome_meta VALUES ('activated_ms',0)")
-    cmd=['./venv/bin/python','-m','scripts.reconcile_trade_accounting','--replay',str(path),'--import-memory',str(memory)]
+    cmd=[sys.executable,'-m','scripts.reconcile_trade_accounting','--replay',str(path),'--import-memory',str(memory)]
     subprocess.run(cmd,check=True,capture_output=True)
     subprocess.run(cmd,check=True,capture_output=True)
     with sqlite3.connect(memory) as db:
