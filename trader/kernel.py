@@ -2171,8 +2171,9 @@ class Kernel:
         older work — a Supervisor or other system transition — never is. So:
         - newer owner intent exists → keep the current state (normal rules);
         - otherwise → contained: HALTED stays HALTED, anything else → FROZEN.
-        Only the pending value consumed here is cleared (compare-and-clear), so
-        a panic accepted meanwhile stays pending for the next cycle.
+        Clear this value only after flattening reports complete. Remaining or
+        unjournaled exposure keeps the request pending for another cycle. A
+        panic accepted meanwhile also stays pending (compare-and-clear).
         """
         from .engine.control_fence import latest_intent_event_id
         from .engine.state import OWNER_ACTORS
@@ -2184,9 +2185,13 @@ class Kernel:
         except (ValueError, TypeError, KeyError):
             accepted = latest_intent_event_id(self.journal)     # legacy flag
         n = flatten_all(self.exchange, self.journal, self.notifier)
-        with self.journal._tx() as c:              # compare-and-clear this value only
-            c.execute("UPDATE state_kv SET value='0' WHERE key='panic_requested' AND value=?",
-                      (raw,))
+        if getattr(n, "complete", True):          # legacy integer callers report completion
+            with self.journal._tx() as c:        # compare-and-clear this value only
+                c.execute("UPDATE state_kv SET value='0' WHERE key='panic_requested' AND value=?",
+                          (raw,))
+        else:
+            log.warning("panic incomplete; request remains pending: remaining=%s unjournaled=%s",
+                        n.remaining, n.unjournaled)
         marks = ",".join("?" * len(OWNER_ACTORS))
         with self.state_machine.fenced() as f:
             newer_owner = self.journal.query(

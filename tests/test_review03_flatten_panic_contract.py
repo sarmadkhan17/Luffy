@@ -1,9 +1,8 @@
 """Cross-lane contract for C-1: an incomplete flatten must not consume panic.
 
 Execution half (flatten_all keeps stops, reports remaining) is covered in
-tests/test_reconcile.py. The Kernel half — `_drain_panic` honouring
-`FlattenResult.complete` — lives in Sol1-owned trader/kernel.py and is pinned
-here as a strict expected failure until Sol1 implements it.
+tests/test_reconcile.py. These checks retain the pending owner request until
+both journaled and unjournaled exposure are resolved.
 """
 import json
 import sys
@@ -26,18 +25,27 @@ def test_flatten_result_is_a_drop_in_int():
     assert not FlattenResult(1, unjournaled=("B/USDT",)).complete
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "BLOCKED_WITH_DEPENDENCY (Sol1, trader/kernel.py _drain_panic): the panic "
-    "request is compare-and-cleared after one flatten_all call regardless of "
-    "FlattenResult.complete. It should stay pending while exposure remains."))
 def test_incomplete_flatten_keeps_panic_pending(tmp_path, monkeypatch):
+    _incomplete_then_complete(tmp_path, monkeypatch, 'remaining')
+
+
+def test_unjournaled_exposure_keeps_panic_pending(tmp_path, monkeypatch):
+    _incomplete_then_complete(tmp_path, monkeypatch, 'unjournaled')
+
+
+def _incomplete_then_complete(tmp_path, monkeypatch, exposure):
     journal, venue = Journal(tmp_path / "j.db"), HookVenue()
     k = _active(journal, venue, monkeypatch)
     svc(k).execute(req("panic", "test-panic-first01"))
     monkeypatch.setattr(
         "trader.kernel.flatten_all",
-        lambda exchange, journal, notifier: FlattenResult(0, remaining=("A/USDT",)))
+        lambda exchange, journal, notifier: FlattenResult(0, **{exposure: ("A/USDT",)}))
     k._drain_panic()
     raw = journal.kv_get("panic_requested")
     assert raw not in (None, "", "0")
     assert json.loads(raw)["request_id"] == "test-panic-first01"
+    assert journal.kv_get('control_state') == 'FROZEN'
+    monkeypatch.setattr('trader.kernel.flatten_all', lambda *args: FlattenResult(1))
+    assert k._drain_panic() == 1
+    assert journal.kv_get('panic_requested') == '0'
+    assert journal.kv_get('control_state') == 'FROZEN'
