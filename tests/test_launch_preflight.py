@@ -321,11 +321,20 @@ def test_actual_shell_gate_before_every_stop_start(tmp_path, target, case):
 
 @pytest.mark.parametrize('variant', ['missing_helper', 'crashed_helper'])
 def test_unavailable_preflight_command_has_zero_side_effects(tmp_path, variant):
+    _unavailable_preflight_refuses(tmp_path, variant, 'kernel')
+
+
+@pytest.mark.parametrize('variant', ['missing_helper', 'crashed_helper'])
+def test_unavailable_dashboard_phase_has_zero_side_effects(tmp_path, variant):
+    _unavailable_preflight_refuses(tmp_path, variant, 'dashboard')
+
+
+def _unavailable_preflight_refuses(tmp_path, variant, target):
     path, events, env = shell_fixture(tmp_path, good_facts())
     python = tmp_path / 'venv/bin/python'
     if variant == 'missing_helper': python.unlink()
     else: python.write_text('#!/bin/bash\nexit 2\n')
-    result = subprocess.run(['bash',str(path),'kernel'],env=env,capture_output=True,text=True,timeout=10)
+    result = subprocess.run(['bash',str(path),target],env=env,capture_output=True,text=True,timeout=10)
     assert result.returncode != 0 and not events.exists()
     assert json.loads(result.stdout)['reasons'] == ['preflight_command_failed']
 

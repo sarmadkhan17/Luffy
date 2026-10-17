@@ -20,15 +20,27 @@ case "$TARGET" in
   *) echo "usage: $0 kernel|dashboard"; exit 1 ;;
 esac
 
+startup_preflight() {
+  local output rc
+  output="$(cd "$DIR" && ./venv/bin/python -m "$@")"
+  rc=$?
+  if [ -n "$output" ]; then
+    printf '%s\n' "$output"
+  elif [ "$rc" -ne 0 ]; then
+    printf '%s\n' '{"allow":false,"result":"REFUSE","reasons":["preflight_command_failed"]}'
+  fi
+  return "$rc"
+}
+
 # Dashboard phase contract is shared with direct module startup. Kernel preflight is unchanged.
 if [ "$TARGET" = dashboard ]; then
-  if ! (cd "$DIR" && ./venv/bin/python -m trader.dashboard.phase --root "$DIR"); then
-    echo 'dashboard phase startup refused; existing process retained'
+  if ! startup_preflight trader.dashboard.phase --root "$DIR"; then
+    echo 'dashboard phase startup refused; existing process retained' >&2
     exit 1
   fi
 else
-  if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.preflight --root "$DIR" --target "$TARGET"); then
-    echo 'kernel preflight refused'
+  if ! startup_preflight trader.observability.preflight --root "$DIR" --target "$TARGET"; then
+    echo 'kernel preflight refused' >&2
     exit 1
   fi
 fi
