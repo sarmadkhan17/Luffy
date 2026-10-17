@@ -46,7 +46,13 @@ def _trailing(spec_exits, side, r_now, *, strategy_id="s1"):
                            - timedelta(minutes=5)).isoformat()}
 
     e = _engine(spec_exits)
-    e.journal = type("J", (), {"query": lambda self, q, a: [dict(trade)]})()
+    class LegacyJournal:
+        def query(self, sql, params=()):
+            if sql == "SELECT name FROM sqlite_master WHERE type='table'":
+                return []  # This fixture has no factory-version tables.
+            assert sql == 'SELECT * FROM trades WHERE id=?' and params == (trade['id'],)
+            return [dict(trade)]
+    e.journal = LegacyJournal()
     e.executor = None
     moved = []
     e._move_stop = lambda t, sl: moved.append(sl)

@@ -211,3 +211,15 @@ def test_executing_replay_loads_no_runtime_or_ledger_modules():
     assert not [m for m in mods if m.startswith('trader.')
                 and not m.startswith('trader.cognition')]
     assert not mods & {'sqlite3', 'ccxt', 'requests', 'openai'}
+
+
+def test_replay_core_imports_only_stdlib_and_itself():
+    # Keep the broader package assertion above unchanged. Runtime adapters
+    # elsewhere in the package need a separate owner decision about that rule.
+    for name in ('__init__', 'attention', 'contracts', 'hypotheses', 'replay'):
+        path = PKG / (name + '.py')
+        for node in ast.walk(ast.parse(path.read_text())):
+            names = ([a.name for a in node.names] if isinstance(node, ast.Import)
+                     else [node.module] if isinstance(node, ast.ImportFrom) else [])
+            for imported in names:
+                assert imported in ALLOWED_IMPORTS, f'{path.name} imports {imported}'
