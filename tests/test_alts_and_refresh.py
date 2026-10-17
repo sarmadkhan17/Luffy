@@ -65,8 +65,10 @@ class _Ex:
 def _feed():
     frames = {s: _px([100.0 + i for i in range(3)])
               for s in ("A", "B", "C", "D", "E")}
-    return types.SimpleNamespace(
-        ex=_Ex(), cached_ohlcv=lambda s, tf, limit=None: frames.get(s))
+    def cached(symbol, timeframe, limit=None, *, as_of_ms):
+        assert type(as_of_ms) is int and as_of_ms > 0
+        return frames.get(symbol)
+    return types.SimpleNamespace(ex=_Ex(), cached_ohlcv=cached)
 
 
 def _get(fail_yahoo=False):
@@ -108,7 +110,9 @@ def test_a_failing_source_costs_only_itself(tmp_path):
 
 
 def test_coingecko_is_snapshotted_at_most_every_four_hours(tmp_path):
-    store = RefStore(tmp_path / "c.db")
-    S.refresh_all(_feed(), [], store, _get(), now_ms=10 ** 13)
-    out = S.refresh_all(_feed(), [], store, _get(), now_ms=10 ** 13 + HOUR)
+    clock = [10 ** 13]
+    store = RefStore(tmp_path / "c.db", clock_ms=lambda: clock[0])
+    S.refresh_all(_feed(), [], store, _get(), now_ms=clock[0])
+    clock[0] += HOUR
+    out = S.refresh_all(_feed(), [], store, _get(), now_ms=clock[0])
     assert "cg_btc_d" not in out

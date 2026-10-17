@@ -18,7 +18,8 @@ class _Store:
     def __init__(self, have):
         self.have = have
 
-    def load(self, key, since_ms=0):
+    def load(self, key, since_ms=0, *, as_of_ms=None):
+        assert as_of_ms is None, 'timestamp-qualified reads need a real RefStore fixture'
         return self.have.get(key)
 
 
