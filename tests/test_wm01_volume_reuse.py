@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from trader.cognition import contracts
-from trader.cognition.attention import CognitionConfig, evaluate
+from trader.cognition.attention import CognitionConfig
+from trader.observability.attention import evaluate
 from trader.observability import attention as A, world_producer as W
 from trader.world import Quality
 from tests.test_attention_telemetry import frames, no_network  # noqa: F401

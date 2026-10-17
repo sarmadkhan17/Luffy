@@ -198,3 +198,16 @@ def test_importing_replay_loads_no_runtime_or_network_modules():
     for banned in ("sqlite3", "ccxt", "requests", "httpx", "aiohttp", "urllib.request",
                    "http.client", "pandas", "openai"):
         assert banned not in mods
+
+
+def test_executing_replay_loads_no_runtime_or_ledger_modules():
+    code = ("import sys, json\nfrom trader.cognition.replay import run\n"
+            "run(json.loads(sys.stdin.read()))\n"
+            "print(json.dumps(sorted(sys.modules)))")
+    result = subprocess.run([sys.executable, '-c', code], cwd=ROOT,
+                            input=json.dumps(make_fixture()), capture_output=True,
+                            text=True, check=True)
+    mods = set(json.loads(result.stdout))
+    assert not [m for m in mods if m.startswith('trader.')
+                and not m.startswith('trader.cognition')]
+    assert not mods & {'sqlite3', 'ccxt', 'requests', 'openai'}

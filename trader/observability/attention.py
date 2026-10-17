@@ -13,7 +13,7 @@ import time
 
 import numpy as np
 
-from trader.cognition.attention import CognitionConfig, evaluate
+from trader.cognition.attention import CognitionConfig, evaluate as evaluate_core
 from trader.cognition.contracts import (CORRELATION_CAPTURE_CLOSES, INPUT_SCHEMA, TF_MS,
                                        load_input, to_dict)
 from trader.world.model import WorldModel
@@ -201,6 +201,15 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, *, membership_receipts
                   "membership": membership, "participation": [],
                   "correlation_history": histories},
     }
+
+
+def evaluate(ds, as_of, cfg, decision_id, open_episodes, world_model=None,
+             learning_journal=None, frozen_priorities=None, frozen_claim_states=None):
+    """Supply governed runtime reads explicitly to the isolated numeric core."""
+    from trader.learning.consumers import AttentionQueryView
+    view = AttentionQueryView(learning_journal, frozen_priorities, frozen_claim_states)
+    return evaluate_core(ds, as_of, cfg, decision_id, open_episodes, world_model,
+                         query_view=view)
 
 
 def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_journal=None, *, _dataset=None):

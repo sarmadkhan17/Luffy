@@ -180,7 +180,7 @@ def _world_module(world_model):
     return mod
 
 
-def _world_volume(model, w, sym, timeframe, anchor_close, as_of, claim_reader):
+def _world_volume(model, w, sym, timeframe, anchor_close, as_of, query_view):
     """One accepted world z-score for `sym`, or an explicit no-contribution."""
     valid = sys.modules["trader.world.observation"].Quality.VALID
     out = {"model_id": model.model_id, "observation_id": None, "record_sha256": None,
@@ -195,10 +195,7 @@ def _world_volume(model, w, sym, timeframe, anchor_close, as_of, claim_reader):
     # The established WorldModel query presents confidence alongside immutable
     # measurements to Attention's reasoning input. No confidence-to-salience
     # calibration exists: values, ranks and strategy signals remain unchanged.
-    from trader.learning.consumers import world_claims
-    views = world_claims(claim_reader, model, w.Scope(w.ScopeLevel.INSTRUMENT, sym),
-        w.Horizon.INTRADAY, dimension=WORLD_KIND, regime='NOT_APPLICABLE',
-        direction='NOT_APPLICABLE', family='NOT_APPLICABLE')
+    views = query_view.claims(model, w, sym) if query_view is not None else ()
     if views:
         out['claims'] = [dict(claim=v.claim.to_dict(), confidence=v.effective_confidence,
             base_confidence=v.base_confidence, learned=v.learned, reason=v.reason) for v in views]
@@ -231,9 +228,7 @@ def _world_volume(model, w, sym, timeframe, anchor_close, as_of, claim_reader):
 
 
 def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
-             open_episodes: dict, world_model: WorldModel | None = None, learning_journal=None, frozen_priorities=None, frozen_claim_states=None) -> dict:
-    from trader.learning.consumers import WorldQueryReader
-    claim_reader = WorldQueryReader(learning_journal, frozen_claim_states)
+             open_episodes: dict, world_model: WorldModel | None = None, *, query_view=None) -> dict:
     if world_model is not None:
         w = _world_module(world_model)
         if world_model.as_of_ms != as_of:
@@ -350,7 +345,7 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
         avail = {k: abs(v) for k, v in comps.items() if v is not None}
         world = None
         if world_model is not None:
-            world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of, claim_reader)
+            world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of, query_view)
             if world["status"] == "ok":
                 avail[WORLD_COMPONENT] = abs(world["value"])
         positioning = None
@@ -396,17 +391,9 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
 
     ranked = sorted((s for s in cohort if rows[s]["eligible"]),
                     key=lambda s: (-rows[s]["salience"], s))
-    from trader.learning import targets as learned_targets, consumers as learned_consumers, foundation as learning
-    priorities = dict(frozen_priorities or {})
-    if learning_journal is not None and frozen_priorities is None:
-        priorities = {symbol:learned_targets.read(learning_journal, learning.Target.ATTENTION,
-            learned_consumers.attention_context(symbol,str(ds.tf_ms)), as_of_ms=as_of) for symbol in ranked}
-        priorities = {symbol:state for symbol,state in priorities.items() if state['value'] is not None}
+    priorities = query_view.priorities(ranked, ds.tf_ms, as_of) if query_view is not None else {}
     if priorities:
         preference = {'HIGH':0,'NORMAL':1,'LOW':2}
-        for symbol,state in priorities.items():
-            learned_targets.temporal_state(state, learning.Target.ATTENTION,
-                learned_consumers.attention_context(symbol,str(ds.tf_ms)), as_of)
         ranked = sorted(ranked,key=lambda symbol:preference[
             priorities[symbol]['value']['priority']] if symbol in priorities else preference['NORMAL'])
         for symbol in ranked:
@@ -443,7 +430,7 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
     return {"anchor_close_ms": anchor_close, "members": members + capped,
             "universe": [rows[s] for s in sorted(rows)], "rows": rows, "market": market,
             "features": feats, "cohort": cohort, "ranked": ranked,
-            "selected": selected, "observations": observations, "index": index, "governed_attention_state": priorities, "governed_world_claim_state": claim_reader.states if frozen_claim_states is None else frozen_claim_states}
+            "selected": selected, "observations": observations, "index": index, "governed_attention_state": priorities, "governed_world_claim_state": query_view.claim_states if query_view is not None else {}}
 
 
 def _participation(ds, sym, as_of, cfg, add):

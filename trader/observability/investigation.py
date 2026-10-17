@@ -20,7 +20,8 @@ import time
 from uuid import uuid4
 import zlib
 
-from trader.cognition.attention import CognitionConfig, evaluate
+from trader.cognition.attention import CognitionConfig
+from trader.observability.attention import evaluate
 from trader.cognition.contracts import INPUT_SCHEMA, is_timestamp, load_input
 from trader.cognition import investigation as I
 from .attention import SCHEMA as ATTENTION_SCHEMA, digest

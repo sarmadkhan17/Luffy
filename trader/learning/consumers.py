@@ -159,3 +159,33 @@ class WorldQueryReader:
         if state['value'] is not None:
             self.states[context.identity] = state
         return state
+
+
+class AttentionQueryView:
+    """Explicit runtime capability; the offline cognition core imports no ledger."""
+    def __init__(self, journal=None, priorities=None, claims=None):
+        self.journal = journal
+        self.frozen_priorities = priorities
+        self.frozen_claims = claims
+        self.reader = WorldQueryReader(journal, claims)
+
+    def claims(self, model, world, symbol):
+        return world_claims(self.reader, model,
+            world.Scope(world.ScopeLevel.INSTRUMENT, symbol), world.Horizon.INTRADAY,
+            dimension='volume_anomaly', regime='NOT_APPLICABLE',
+            direction='NOT_APPLICABLE', family='NOT_APPLICABLE')
+
+    def priorities(self, symbols, timeframe, as_of):
+        states = dict(self.frozen_priorities or {})
+        if self.journal is not None and self.frozen_priorities is None:
+            states = {symbol:T.read(self.journal, L.Target.ATTENTION,
+                attention_context(symbol, str(timeframe)), as_of_ms=as_of) for symbol in symbols}
+            states = {symbol:state for symbol,state in states.items() if state['value'] is not None}
+        for symbol,state in states.items():
+            T.temporal_state(state, L.Target.ATTENTION,
+                attention_context(symbol, str(timeframe)), as_of)
+        return states
+
+    @property
+    def claim_states(self):
+        return self.reader.states if self.frozen_claims is None else self.frozen_claims
