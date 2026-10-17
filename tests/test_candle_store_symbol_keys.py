@@ -52,9 +52,29 @@ def test_the_two_forms_merge_rather_than_fragment(tmp_path):
 
 
 def test_cached_ohlcv_reads_through_the_same_normalisation(tmp_path):
-    feed = DataFeed(db_path=tmp_path / "c.db")
-    feed._store_save("XAU/USDT:USDT", "4h", _frame(60))
-    assert len(feed.cached_ohlcv("XAU/USDT", "4h", limit=500)) == 60
+    from trader.data import market_provenance as P
+    class Venue:
+        id = 'binanceusdm'
+        urls = {'api': {'fapiPublic': 'https://offline.example/fapi/v1'}}
+        def market(self, symbol): return {'id': 'XAUUSDT', 'contract': True}
+    frame = _frame(60)
+    received = int(frame.ts.iloc[-1].timestamp() * 1000) + 4 * 3_600_000
+    feed = DataFeed(exchange=Venue(), db_path=tmp_path / 'c.db', clock_ms=lambda: received)
+    identity, source = feed._identity('XAU/USDT:USDT')
+    retained = P.annotate(frame, instrument_id=identity, source=source,
+                          kind='candle', received_ms=received, timeframe='4h')
+    feed._store_save('XAU/USDT:USDT', '4h', retained, now_ms=received)
+    replay = feed.cached_ohlcv('XAU/USDT', '4h', limit=500)
+    assert len(replay) == 60
+    assert replay.quality.eq('VALID').all()
+    assert replay.instrument_id.eq(identity).all()
+
+
+def test_unqualified_legacy_rows_do_not_become_replay_receipts(tmp_path):
+    feed = DataFeed(db_path=tmp_path / 'c.db')
+    feed._store_save('XAU/USDT:USDT', '4h', _frame(60))
+    assert len(feed._store_load('XAU/USDT', '4h', 500)) == 60
+    assert feed.cached_ohlcv('XAU/USDT', '4h', limit=500) is None
 
 
 def test_distinct_markets_are_still_distinct(tmp_path):
