@@ -28,8 +28,10 @@ def test_original_registry_vectors_survive_restart_without_authority(tmp_path, c
         columns = j.query('PRAGMA table_info(research_evidence)')
         values = {r['name']: 1 if 'INT' in r['type'].upper() else 'TEST_ONLY-' + r['name']
                   for r in columns}
+        plan = json.loads(row['plan_canonical_json'])
         values.update(evidence_id=row['evidence_id'], canonical_json=canonical,
-                      canonical_sha256=row['evidence_sha256'])
+                      canonical_sha256=row['evidence_sha256'], plan_id=plan['plan_id'],
+                      plan_sha256=hashlib.sha256(row['plan_canonical_json'].encode()).hexdigest())
         with j._tx() as db:
             db.execute('INSERT INTO research_evidence VALUES (' + ','.join('?' for _ in values) + ')',
                        tuple(values.values()))
