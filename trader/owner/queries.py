@@ -166,9 +166,11 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
                 sql = 'SELECT cut_id,payload FROM evaluations '
                 for cut, raw in db.execute(sql + ('WHERE cut_id=? ' if identity else '') + 'ORDER BY rowid DESC LIMIT 50',
                                            (identity,) if identity else ()).fetchall():
-                    value = json.loads(raw)
-                    if value['portfolio_cut_id'] != cut:
-                        raise ValueError('portfolio_cut_identity_differs')
+                    # DA-10 stores a lossless authenticated detail marker.
+                    # Resolve through the same exact-cut reader as replay;
+                    # parsing the physical marker as JSON loses owner access.
+                    from trader.portfolio.runtime import _evaluation
+                    value = _evaluation(db, cut, raw)
                     records.append(record('portfolio', cut, value, source='runtime-portfolio evaluations',
                                           at=value['event_receipt']['inputs']['current']['as_of_ms']))
         if identity is None:
