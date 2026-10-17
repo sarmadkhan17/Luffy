@@ -48,6 +48,10 @@ class _Journal:
     def __init__(self):
         self.events = []
 
+    def query(self, sql, params=()):
+        assert sql.startswith("SELECT version_id FROM strategy_versions")
+        return []  # this unit fixture has no registered Factory version
+
     def log_brain_event(self, kind, subject, detail):
         self.events.append((kind, subject, detail))
 
@@ -101,7 +105,8 @@ def test_evaluate_picks_a_timeframe_and_reports_all(analyst):
     assert ev["chosen_timeframe"] == "1h"
 
 
-def test_evaluate_reports_untested_when_data_is_missing(analyst):
+def test_evaluate_reports_untested_when_data_is_missing(analyst, monkeypatch):
+    monkeypatch.setattr("trader.strategy.spec_evidence.load_derivs", lambda *a, **k: {})
     ok, ev = analyst.evaluate(_spec(entry="funding_z(1920) > 2.0"),
                               timeframes=("1h",))
     assert not ok

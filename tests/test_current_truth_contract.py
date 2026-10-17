@@ -381,14 +381,21 @@ def test_valuation_quote_uses_ticker_time_and_age():
     assert q["time_basis"] == "ticker_timestamp" and q["age_s"] == pytest.approx(30, abs=1)
 
 
-def test_ticker_quote_identity_and_failure():
+def test_ticker_quote_identity_and_failure(monkeypatch, tmp_path):
+    monkeypatch.setattr("trader.data.feed.time.time", lambda: 1_790_000_001.0)
     from trader.data.feed import DataFeed
-    f = object.__new__(DataFeed)
-    f.data_ex = NS(fetch_ticker=lambda s: {"last": None, "close": 5.0,
-                                           "timestamp": 1_790_000_000_000})
+    venue = dict(id="binanceusdm", urls={"api": {"public": "https://offline.example"}},
+                 market=lambda s: {"id": "XUSDT", "contract": True})
+    f = DataFeed(exchange=NS(**venue, fetch_ticker=lambda s: {"last": None, "close": 5.0,
+                                           "timestamp": 1_790_000_000_000}), db_path=tmp_path / "candles.db")
     q = f.ticker_quote("X/USDT")
     assert q["price"] == 5.0 and q["field"] == "close" and q["source_ms"] == 1_790_000_000_000
     assert f.price("X/USDT") == 5.0                           # unchanged valuation
+    assert q['instrument_id'] == 'binance_usdm:futures:XUSDT'
+    assert q['quality'] == 'VALID' and q['source']
+    f.data_ex = NS(fetch_ticker=lambda s: {'last': 5.0})
+    unknown = f.ticker_quote('X/USDT')
+    assert unknown['price'] is None and unknown['error'] == 'ticker_identity_unknown'
     f.data_ex = NS(fetch_ticker=lambda s: (_ for _ in ()).throw(TimeoutError("t")))
     q = f.ticker_quote("X/USDT")
     assert q["price"] is None and q["error"].startswith("ticker_fetch_failed")

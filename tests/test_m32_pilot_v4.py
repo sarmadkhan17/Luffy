@@ -653,7 +653,14 @@ def test_importing_launcher_and_evaluator_constructs_no_rng_and_runs_nothing():
         assert token not in (PILOT / "run_pilot.py").read_text()
 
 
-def test_no_pilot_run_or_verdict_exists():
-    assert sorted(p.name for p in PILOT.iterdir() if p.name != "__pycache__") == [
-        "AUTHORIZATION_REQUEST.json", "OWNER_AUTHORIZATION.json", "PILOT_PRESPEC.json", "evaluate_pilot.py",
-        "run_pilot.py"]
+def test_historical_pilot_evidence_is_preserved_without_new_execution():
+    # The preparation-only assertion predates the authorized 2026-09-23 run.
+    # These exact bytes are evidence, never authorization for another run.
+    import hashlib
+    files = sorted(f for f in PILOT.rglob('*')
+                   if f.is_file() and '__pycache__' not in f.parts)
+    listing = ''.join(f'{f.relative_to(PILOT)} {sha(f)}\n' for f in files)
+    assert hashlib.sha256(listing.encode()).hexdigest() == '832bcb6816e1faf958579b19b9b85fb39a8641c7ab2a6776d755a3dcfd2bdc90'
+    verdict = json.loads((PILOT / 'PILOT_VERDICT.json').read_text())
+    assert verdict['scope'] == 'pilot_only_non_final'
+    assert verdict['verdict'] == 'GO'

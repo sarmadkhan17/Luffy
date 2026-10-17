@@ -1,18 +1,12 @@
-"""Legacy genome lifecycle must never govern `kind='spec'` rows.
+"""Descriptive statistics must never govern spec or genome lifecycle.
 
-`promotion.evaluate_population` implements the LEGACY GENOME rules
-(kernel.py says so at the call site). `journal.list_strategies()` applies no
-kind filter, so it also handed that function every spec row — and on
-2026-09-20 the 6-consecutive-loss counter retired the Donchian spec on a
-closed-trade-only sample while six winners sat open, writing no retire_reason.
-
-Specs retire through analyst.review_deployed -> rolling.has_decayed, which
-scores pooled backtested evidence on the spec's own universe and treats too
-few recent trades as idle rather than decay.
-
-See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
+The historical six-loss genome rule once retired spec rows as well. Current
+promotion.evaluate_population only refreshes closed-trade statistics. Both row
+kinds retain their state, clocks and reasons; retired records remain untouched.
+Registered learning and the Governor own lifecycle changes.
 """
 import sys
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -34,7 +28,7 @@ def _mk(j, sid, state, kind="ema_trend", retire_reason="", stats="{}"):
 
 
 def _losses(j, sid, n):
-    """n closed losers — enough to trip DEMOTE_CONSEC_LOSSES."""
+    """Six-loss fixtures retain arithmetic without granting authority."""
     for i in range(n):
         p = Position(id=f"{sid}_t{i}", symbol="X/USDT", side=Side.LONG,
                      amount=1, entry_price=100, notional_usdt=100,
@@ -47,30 +41,20 @@ def _row(j, sid):
     return j.query("SELECT * FROM strategies WHERE id=?", (sid,))[0]
 
 
-
-
-def test_spec_rows_are_ignored_by_legacy_lifecycle(tmp_path):
-    """Identical losing record on a spec row must produce NO transition.
-
-    Same trade history that retires the genome above. The spec is left for
-    rolling.has_decayed, which asks a different question of different
-    evidence.
-    """
-    j = Journal(tmp_path / "j.db")
-    _mk(j, "s_paper", "paper", kind="spec")
-    _losses(j, "s_paper", 6)
-
-    actions = promotion.evaluate_population(j)
-
-    assert not [a for a in actions if a["id"] == "s_paper"], actions
-    row = _row(j, "s_paper")
-    assert row["state"] == "paper"
-    assert row["retire_reason"] == ""
-    # no statistical_transition event may be attributed to a spec
-    events = j.query("SELECT * FROM brain_events WHERE subject=?", ("s_paper",))
-    assert not [e for e in events if e["kind"] == "statistical_transition"], events
-
-
+def test_mixed_spec_and_genome_statistics_never_authorize_state_changes(tmp_path):
+    j = Journal(tmp_path / 'j.db')
+    for sid, kind in [('spec', 'spec'), ('genome', 'ema_trend')]:
+        _mk(j, sid, 'paper', kind=kind)
+        _losses(j, sid, 6)
+    before = {sid: {k: v for k, v in _row(j, sid).items() if k != 'stats_json'}
+              for sid in ('spec', 'genome')}
+    assert promotion.evaluate_population(j) == []
+    for sid in before:
+        row = _row(j, sid)
+        assert {k: v for k, v in row.items() if k != 'stats_json'} == before[sid]
+        assert json.loads(row['stats_json']) == {
+            'trades': 6, 'wins': 0, 'pnl_usdt': -30.0, 'pf': 0.0}
+    assert not j.query("SELECT * FROM brain_events WHERE kind='statistical_transition'")
 
 
 def test_existing_retired_spec_rows_are_not_mutated(tmp_path):

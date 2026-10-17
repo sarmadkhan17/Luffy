@@ -1,0 +1,1922 @@
+{
+  "reference_candidate": "7ae12a485eb3379cf897dcaf2662c29bcc9f0b6f",
+  "tree_equal_to_verified_resolution": "4674faa56fb8a059ef3bba812ada2336bbb1bbbf",
+  "triage_counts": {
+    "essential": 27,
+    "partial": 65
+  },
+  "disposition_counts": {
+    "MISSING_ESSENTIAL_COVERAGE": {
+      "CHANGED_CONTRACT": 15,
+      "MERGE": 3,
+      "ARCHIVE": 9
+    },
+    "PARTIAL_SUBJECT_REMOVED": {
+      "ARCHIVE": 63,
+      "KEEP": 1,
+      "MERGE": 1
+    }
+  },
+  "items": [
+    {
+      "old_nodeid": "tests/test_data03_consumer_cuts.py::test_historical_scan_cannot_restamp_live_strategy_include",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Historical universe membership",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Kernel._scan_symbols was retired; retained source receipts now fence all admission/replay consumers instead of re-stamping a live include list.",
+      "current_witnesses": [
+        "tests/test_data03_consumer_cuts.py::test_current_config_membership_not_restamped_before_observation",
+        "tests/test_data03_consumer_cuts.py::test_analyst_replay_leader_requires_local_observation_at_each_cut"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_data03_consumer_cuts.py",
+      "original_function_sha256": "c101585c9ea86610d2e88c9db729e2686845c3a046be18ace91318ddfc303f59",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_checkpoint_and_bank_corruption_refused",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "2b9a6045382623f64cf695a54c43fd18758ee7a1816915511a1996bb74482e86",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_cli_disabled_never_initializes_journal_or_network",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "9b475d2998a9dda497106e4f5e258e2213296019fc7fe45c8417534cfe8d5776",
+      "original_assertions": [
+        "assert R.main([\"--journal\", str(path), \"--once\"]) == 0",
+        "assert json.loads(capsys.readouterr().out)[\"status\"] == \"DISABLED\"",
+        "assert not path.exists()"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_crash_after_claim_recovery_is_explicit_and_does_not_retry",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "a7fe1dc341d8151b21b54998e2c8901ce80cf29def1f1896d8bcecace3d564fc",
+      "original_assertions": [
+        "assert bank[\"collection_status\"] == \"UNAVAILABLE\" and not child.calls",
+        "assert bank[\"searches\"][0][\"reason\"] == \"INTERRUPTED_REQUEST_NOT_RETRIED\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_empty_is_distinct_from_failed_and_saved",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "a770f3eaf790d69272735b7419516a5c95e89ce24f1949aabf928ed7e95b55a8",
+      "original_assertions": [
+        "assert bank[\"collection_status\"] == \"EMPTY\" and bank[\"searches\"][0][\"status\"] == \"EMPTY\"",
+        "assert bank[\"extracted_claims\"][\"status\"] == \"NOT_AVAILABLE\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_existing_bank_family_and_recall_remain_verifiable",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "d52c8b3031aa5f25dd6b0feb57364115c68aaf0653b1ebe7ebeb9d02585b4f76",
+      "original_assertions": [
+        "assert existing",
+        "assert B.load(j) == existing",
+        "assert Recall.recall(j, q[\"question_id\"], max_objects=4) == prior",
+        "assert len(j.query(\"SELECT * FROM research_bank_objects\")) == len(existing) + 1"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_existing_child_runner_hard_deadline",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Supervised child deadline",
+      "classification": "MERGE",
+      "reason": "Same run_child timeout and wall-clock assertions; existing test tightened to the original .2s deadline and <3s bound.",
+      "current_witnesses": [
+        "tests/test_child_runner.py::test_a_child_past_its_deadline_is_killed"
+      ],
+      "witness_relation": "behavioral_equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "8d8e382e0530f6be46d672734d839872a7fb1ccde54861c216d31f177f09d88a",
+      "original_assertions": [
+        "assert result.timed_out and time.monotonic() - started < 3"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_failed_retrieval_is_negative_bank_memory[failure0-retrieval_timeout]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "3af6407ca4faf209a1e6666bae333dbdfb10467cc6d3bf4adf91d8a9361fdde4",
+      "original_assertions": [
+        "assert bank[\"collection_status\"] == \"UNAVAILABLE\"",
+        "assert bank[\"searches\"][0][\"reason\"] == expected",
+        "assert R.research_pass(j, child=FakeChild())[\"results\"] == []"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_failed_retrieval_is_negative_bank_memory[failure1-retrieval_child_failed]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "3af6407ca4faf209a1e6666bae333dbdfb10467cc6d3bf4adf91d8a9361fdde4",
+      "original_assertions": [
+        "assert bank[\"collection_status\"] == \"UNAVAILABLE\"",
+        "assert bank[\"searches\"][0][\"reason\"] == expected",
+        "assert R.research_pass(j, child=FakeChild())[\"results\"] == []"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw0]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw1]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw2]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw3]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw4]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw5]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw6]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_invalid_bounds_refuse[kw7]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ecf7563093c6d33e581f23b9a0656aa3270018339918ccb75a658ac3a1cf05a6",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_metadata_filter_dedup_before_retrieval_and_content_dedup",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "0b5a4874701b97919f4e148f483aeb4452aee40a171b7ed6906784120dab8087",
+      "original_assertions": [
+        "assert [c[0] for c in child.calls] == [\"search\", \"retrieve\", \"retrieve\"]",
+        "assert bank[\"filtering\"][\"metadata_rejected\"] == 2",
+        "assert [e[\"extraction_status\"] for e in bank[\"evidence\"]] == [\"EXTRACTED_UNVERIFIED\", \"DUPLICATE_CONTENT\"]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_normal_question_no_owner_urls_router_provenance_and_bank",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "b414dca5608de04debe112e0649fda8af6948aacf37372a0a6dc0c9f8769b0a6",
+      "original_assertions": [
+        "assert bank[\"plan\"][\"route\"][\"source_classes\"] == [\"academic_factors\"]",
+        "assert [c[0] for c in child.calls] == [\"search\", \"retrieve\"]",
+        "assert bank[\"question\"] == Q.load(j)[0]",
+        "assert bank[\"collection_status\"] == \"COLLECTED\"",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\" and bank[\"authority\"] == \"RESEARCH_ONLY\"",
+        "assert evidence[\"source_url\"] == \"https://doi.org/10.1234/one\"",
+        "assert evidence[\"question_id\"] == bank[\"question\"][\"question_id\"]",
+        "assert evidence[\"query_provenance\"] == [bank[\"searches\"][0][\"request_id\"]]",
+        "assert evidence[\"available_ms\"] >= evidence[\"retrieved_at_ms\"] > 0",
+        "assert evidence[\"extraction_status\"] == \"EXTRACTED_UNVERIFIED\"",
+        "assert evidence[\"passage_sha256\"] == R.sha(evidence[\"passage\"])",
+        "assert evidence[\"source_sha256\"] == S.digest(S.source(evidence[\"source_id\"]).record())",
+        "assert bank[\"limitations\"] and bank[\"next_questions\"] and bank[\"cost\"][\"paid_cost_usd\"] == 0",
+        "assert R.verify_bank(j, j.research_bank_object(bank[\"bank_object_id\"])) == bank",
+        "assert {t: j.query(\"SELECT * FROM \" + t) for t in before} == before",
+        "assert B.load(j) == []",
+        "assert j.research_bank_objects(schema=R.BANK_SCHEMA)[0][\"bank_object_id\"] == bank[\"bank_object_id\"]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_predictive_bridge_refuses_external_bank_and_live_has_no_worker",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "6caf93b919e1d99df5126523e5644c7ee000b77cb2f6741c06b7b22807c96f10",
+      "original_assertions": [
+        "assert P.read_sources(j.db_path, set(), 1, int(time.time()*1000))[0] == []",
+        "assert not any(x and (\"strategy\" in x or \"engine\" in x or \"predictive\" in x) for x in imports)",
+        "assert \"external_research\" not in path.read_text()"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_query_page_passage_and_time_limits",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "bd1450fa828cc6083c48a3762e45baffc7b43c6f5b23c6fa42dde58fd77ec678",
+      "original_assertions": [
+        "assert len(child.calls) == 2 and len(bank[\"evidence\"]) == 1",
+        "assert len(bank[\"evidence\"][0][\"passage\"]) <= 128",
+        "assert bank[\"filtering\"][\"pages_omitted\"] == 9",
+        "assert broker.request(S.select(\"academic_factors\")[0], \"search\", dict(query=\"a\",limit=1))[\"reason\"] == \"request_time_or_count_bound\"",
+        "assert len(child.calls) == 2"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_registry_reuses_all_metadata_fields_and_does_not_invent_unknowns",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "e9dcfc48028b8de8bf1fd4ceb4649e95fbb26f8e623368477349a422d2541809",
+      "original_assertions": [
+        "assert set(src.metadata) == set(S.S.METADATA_FIELDS)",
+        "assert src.metadata[\"historical_depth\"][\"value\"] is None",
+        "assert src.metadata[\"rate_limits\"][\"value\"] is None",
+        "assert src.metadata[\"credibility_class\"][\"value\"] is None",
+        "assert S.source(src.source_id).metadata[\"cost\"][\"value\"][\"paid_request_usd\"] == 0",
+        "assert S.S.registry()[\"schema\"] == \"research-source-registry.v1\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_restart_no_repeat_network_or_evidence_work",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "f7f7c0c1d0e4ee61f72935600dc77e8c2574ea87462642e71e9236217930fe06",
+      "original_assertions": [
+        "assert R.research_pass(Journal(j.db_path), child=child)[\"results\"] == []",
+        "assert len(child.calls) == 2",
+        "assert Journal(j.db_path).research_bank_objects(schema=R.BANK_SCHEMA) == rows",
+        "assert R._collect(j, q, R.Bounds(), child)[\"status\"] == \"DUPLICATE\"",
+        "assert len(child.calls) == 2"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_storage_capacity_and_concurrent_worker_bounds",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "b7da2b3d6b4c71a6e987528e2ddd9169fe5a233b7b20dfbe107511d02f8ecf5a",
+      "original_assertions": [
+        "assert result[\"status\"] == \"REFUSED\" and result[\"reason\"] == \"checkpoint_capacity\"",
+        "assert child.calls == []",
+        "assert R.research_pass(j, child=FakeChild())[\"status\"] == \"BUSY\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_transport_byte_bound_redirect_and_absent_abstract",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "6e54a8df822f8976e269e44b26efd93e878af8ac1c9c3d243989820510a8f67b",
+      "original_assertions": [
+        "assert result[\"reason\"] == \"response_byte_bound\"",
+        "assert R.crossref_request(\"search\", dict(query=\"decay\",limit=1), 1024, 1)[\"reason\"] == \"http_status:302\"",
+        "assert R._metadata({\"DOI\":\"10.1234/one\", \"title\":[\"Trading strategy decay\"]})[\"abstract\"] is None",
+        "assert kw[\"allow_redirects\"] is False and kw[\"stream\"] is True",
+        "assert self.trust_env is False"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_transport_parses_metadata_and_detail_with_exact_hash",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "61148bd4b26e3533f11a7fb8de1627be4c1eed15ba0d0cc9d6771621b223c73e",
+      "original_assertions": [
+        "assert found[\"status\"] == \"OK\" and found[\"metadata\"][0][\"doi\"] == \"10.1234/one\"",
+        "assert found[\"content_sha256\"] == R.sha(json.dumps(search_body))",
+        "assert page[\"status\"] == \"OK\" and page[\"metadata\"][\"abstract\"] is None"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_unsupported_and_paid_fail_closed",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "ec00b52b48d3a3667910e591532a7f9ea88ed5f6ae4c74341e13578fe718922c",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_external_research_router.py::test_url_dedup_preserves_meaning_and_rejects_unknown_hosts",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external scholarly worker/registry/transport",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_external_research_router.py",
+      "original_function_sha256": "1c277682f19a8f851531565c97c7c908b482bb8b75489df5e1a8dabf43abdbf4",
+      "original_assertions": [
+        "assert R.normalize_url(\"https://doi.org/10.1234/one/?a=1&utm_source=x#part\") == \"https://doi.org/10.1234/one?a=1\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_historical_outcome_capture.py::test_automatic_research_bank_chain_capture",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired strategy-decay/unreadable-bank chain",
+      "classification": "ARCHIVE",
+      "reason": "Body imports removed test helpers that construct retired strategy_decay or strategy_health_unreadable chains. Generic file imports hid these actual dependencies from coarse triage. Retired kind refusal and legacy table preservation remain; surviving investigation/predictive outcomes have independent replay coverage, not equivalence to the retired chain.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_historical_bank_kind_is_refused_not_substituted",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_historical_outcome_capture.py",
+      "original_function_sha256": "54452ff47010e9f74ec6b99081c2a88bf627299f56e66e279f95858e71f21aa7",
+      "original_assertions": [
+        "assert not failures,failures",
+        "assert rows",
+        "assert m['status']=='REPLAY_COMPLETE',m['dependencies']",
+        "assert m['sources']['bank']['result_status']=='INCONCLUSIVE'",
+        "assert m['sources']['question']['question_id']==m['sources']['bank']['question']['question_id']",
+        "assert chain(j,rows[0]['outcome_id'])[3].quality=='VERIFIED_REPLAY'",
+        "assert captured['authoritative'] and captured['proposal']['proposed_json'] is None",
+        "assert json.loads(captured['outcome']['observation_json'])['result_status']=='INCONCLUSIVE'"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_historical_outcome_capture.py::test_unreadable_research_bank_exact_chain_captured",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired strategy-decay/unreadable-bank chain",
+      "classification": "ARCHIVE",
+      "reason": "Body imports removed test helpers that construct retired strategy_decay or strategy_health_unreadable chains. Generic file imports hid these actual dependencies from coarse triage. Retired kind refusal and legacy table preservation remain; surviving investigation/predictive outcomes have independent replay coverage, not equivalence to the retired chain.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_historical_bank_kind_is_refused_not_substituted",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_historical_outcome_capture.py",
+      "original_function_sha256": "faf473a5836d9d07c5f6ede99f222ef821c0abf68e35d1bbf3f4a752804a44cd",
+      "original_assertions": [
+        "assert not j.query('SELECT * FROM learning_capture_failures')",
+        "assert rows",
+        "assert m['status']=='REPLAY_COMPLETE',m['dependencies']",
+        "assert m['sources']['bank']['bank_kind']=='strategy_health_unreadable'",
+        "assert chain(j,row['outcome_id'])[3].quality=='VERIFIED_REPLAY'"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_journal_evidence_repair.py::test_attached_research_sql_resolves_and_verifies",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired research-shadow attached SQL adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent. Logical journal evidence decoding/corruption guards remain active; attached research shadow source_query has no consumer.",
+      "current_witnesses": [
+        "tests/test_journal_evidence_repair.py::test_exact_detail_shared_references_clocks_and_legacy",
+        "tests/test_journal_evidence_repair.py::test_corrupt_or_missing_evidence_fails"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_journal_evidence_repair.py",
+      "original_function_sha256": "2691ca5d49319016ecab0fcdb73ff7532e6ae0329cd2a612676b0f7e3055c868",
+      "original_assertions": [
+        "assert j.query('SELECT detail FROM brain_events')[0]['detail']==raw",
+        "assert j.source_query('SELECT detail FROM src.brain_events')[0]['detail']==raw"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_learning_foundation.py::test_exact_prior_inconclusive_research_recalled_and_tamper_refused",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired strategy-decay/unreadable-bank chain",
+      "classification": "ARCHIVE",
+      "reason": "Body imports removed test helpers that construct retired strategy_decay or strategy_health_unreadable chains. Generic file imports hid these actual dependencies from coarse triage. Retired kind refusal and legacy table preservation remain; surviving investigation/predictive outcomes have independent replay coverage, not equivalence to the retired chain.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_historical_bank_kind_is_refused_not_substituted",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_learning_foundation.py",
+      "original_function_sha256": "ff4cdc2c8146f56d6114e83259f90bc6ea6f83bfd8df85a5d82efa98ef7bcf0e",
+      "original_assertions": [
+        "assert result['result_status'] == 'INCONCLUSIVE'",
+        "assert result['authority'] == 'context_only'"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_learning_foundation.py::test_structured_prior_context_recall_does_not_suppress",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired strategy-decay/unreadable-bank chain",
+      "classification": "ARCHIVE",
+      "reason": "Body imports removed test helpers that construct retired strategy_decay or strategy_health_unreadable chains. Generic file imports hid these actual dependencies from coarse triage. Retired kind refusal and legacy table preservation remain; surviving investigation/predictive outcomes have independent replay coverage, not equivalence to the retired chain.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_historical_bank_kind_is_refused_not_substituted",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_learning_foundation.py",
+      "original_function_sha256": "0e4a954fb50129cabc9615045647bd72d301503b0bf538c238bde4dced2c1092",
+      "original_assertions": [
+        "assert result['prior'] and result['prior'][0]['structured_context_equal']",
+        "assert result['authority'] == 'context_only' and not result['suppression_authority']",
+        "assert j.query('SELECT COUNT(*) AS n FROM research_runs') == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_lifecycle_kind_routing.py::test_genome_rows_still_evaluate_normally",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Lifecycle observation without authority",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Automatic legacy retirement is retired. Same mixed-row loss arithmetic persists without changing state, clocks, reasons or emitting transition events.",
+      "current_witnesses": [
+        "tests/test_lifecycle_kind_routing.py::test_mixed_spec_and_genome_statistics_never_authorize_state_changes"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_lifecycle_kind_routing.py",
+      "original_function_sha256": "63a83bccc610267547c3fb62676186a0d663de6da6e2103e014982113c1fb7a8",
+      "original_assertions": [
+        "assert any(a[\"id\"] == \"g_paper\" and a[\"to\"] == \"retired\"\n               for a in actions), actions",
+        "assert _row(j, \"g_paper\")[\"state\"] == \"retired\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_lifecycle_kind_routing.py::test_spec_and_genome_coexist_in_one_sweep",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Lifecycle observation without authority",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Both row kinds now refresh statistics; neither may acquire lifecycle authority from descriptive losses.",
+      "current_witnesses": [
+        "tests/test_lifecycle_kind_routing.py::test_mixed_spec_and_genome_statistics_never_authorize_state_changes"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_lifecycle_kind_routing.py",
+      "original_function_sha256": "ba8fa453ffeb13735cdf259183b491370bab5d6a2b55ac79e7fb9b3d61bb6898",
+      "original_assertions": [
+        "assert {a[\"id\"] for a in actions} == {\"g_paper\"}, actions",
+        "assert _row(j, \"s_paper\")[\"state\"] == \"paper\"",
+        "assert _row(j, \"g_paper\")[\"state\"] == \"retired\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_phase1_brain.py::test_adaptive_threshold_fallback_and_tighten",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Unregistered adaptive threshold writer",
+      "classification": "ARCHIVE",
+      "reason": "Orchestrator._adaptive_base and live analyst blending are removed. Static historical thresholds remain frozen; old resolved labels cannot recreate adaptive trading authority.",
+      "current_witnesses": [
+        "tests/test_phase1_brain.py::test_historical_threshold_is_explicitly_frozen"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_phase1_brain.py",
+      "original_function_sha256": "fe42f7f5eff6f7d95bb1a68e0706e0417268d3c45bbe25cf220bf6b185a8eadf",
+      "original_assertions": [
+        "assert abs(o._adaptive_base(\"RANGING\") - 0.24) < 1e-6",
+        "assert base > 0.30",
+        "assert abs(o2._adaptive_base(\"TRENDING_UP\") - 0.24) < 1e-6",
+        "assert o2._adaptive_base(\"RANGING\", vol_ratio=2.0) > \\\n        o2._adaptive_base(\"RANGING\", vol_ratio=1.0)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_phase2.py::test_demote_on_consecutive_losses",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Lifecycle observation without authority",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Six losses no longer authorize a legacy demotion; state and clock preservation is tested, registered decay remains in active learning coverage.",
+      "current_witnesses": [
+        "tests/test_legacy_learning_replay_gate.py::test_legacy_losses_cannot_mutate_lifecycle",
+        "tests/test_learning_foundation.py::test_registered_proposal_deterministic_and_existing_authority_changes_future_state"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_phase2.py",
+      "original_function_sha256": "3640a82260dbc4eb594fb626ea6cf160a4dec1f5281a5503de1cebf1338b15ae",
+      "original_assertions": [
+        "assert any(a[\"to\"] == \"demoted\" for a in actions)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_phase2.py::test_promotion_paper_to_active",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Exact-version probation and owner authority",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Retired 15-win automatic genome promotion conflicts with current ten-trade exact-version, cost-complete probation and explicit owner deployment. No thresholds changed here.",
+      "current_witnesses": [
+        "tests/test_sol1_strategy_lifecycle.py::test_ten_trades_meeting_every_criterion_pass",
+        "tests/test_sol1_strategy_lifecycle.py::test_activation_alone_is_not_live_and_approval_is_not_deployment"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_phase2.py",
+      "original_function_sha256": "c2c048c7cc4e9d0c21fd26d744c52bdbb981f6d771256259a668221306b2a13f",
+      "original_assertions": [
+        "assert any(a[\"to\"] == \"active\" for a in actions)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_anomaly_is_not_misrouted_to_unsupported_external_source_class",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "34647dee5ff40ad06b8b479f1d9cf540efd81cee43347f04e67aa96ac92880fc",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[COLLECTED]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "3ed444cb71ed542441f939c271c5f83813e5886200462ee7ce0812361c1a9444",
+      "original_assertions": [
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert bank[\"question\"] == original_question",
+        "assert bank[\"plan\"][\"question_source\"] == provenance",
+        "assert route[\"question_id\"] == original_question[\"question_id\"]",
+        "assert route[\"question_sha256\"] == S.digest(original_question)",
+        "assert route[\"scope\"][\"kind\"] == \"strategy\"",
+        "assert original_question[\"question_kind\"] == \"strategy_decay\"",
+        "assert route[\"source_classes\"] == [\"academic_factors\"]",
+        "assert route[\"registry_sha256\"] == S.REGISTRY_SHA256",
+        "assert selected == S.select(\"academic_factors\")[0].record()",
+        "assert selected[\"metadata\"][\"type\"][\"value\"] == \"scholarly_metadata\"",
+        "assert selected[\"metadata\"][\"credibility_class\"][\"state\"] == \"NOT_ASSESSED\"",
+        "assert bank[\"collection_status\"] == collection",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert child.calls[0][0] == \"search\"",
+        "assert set(child.calls[0][1]) == {\"query\", \"limit\"}",
+        "assert child.calls[0][1][\"query\"] in route[\"queries\"]",
+        "assert worker.research_questions() == []",
+        "assert E.verify_bank(worker, row) == bank",
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert json.loads(capsys.readouterr().out)[\"results\"] == []",
+        "assert child.calls == calls",
+        "assert Journal(worker.db_path).research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert reader.read(original_question[\"question_id\"]) == (original_question, provenance)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[EMPTY]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "3ed444cb71ed542441f939c271c5f83813e5886200462ee7ce0812361c1a9444",
+      "original_assertions": [
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert bank[\"question\"] == original_question",
+        "assert bank[\"plan\"][\"question_source\"] == provenance",
+        "assert route[\"question_id\"] == original_question[\"question_id\"]",
+        "assert route[\"question_sha256\"] == S.digest(original_question)",
+        "assert route[\"scope\"][\"kind\"] == \"strategy\"",
+        "assert original_question[\"question_kind\"] == \"strategy_decay\"",
+        "assert route[\"source_classes\"] == [\"academic_factors\"]",
+        "assert route[\"registry_sha256\"] == S.REGISTRY_SHA256",
+        "assert selected == S.select(\"academic_factors\")[0].record()",
+        "assert selected[\"metadata\"][\"type\"][\"value\"] == \"scholarly_metadata\"",
+        "assert selected[\"metadata\"][\"credibility_class\"][\"state\"] == \"NOT_ASSESSED\"",
+        "assert bank[\"collection_status\"] == collection",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert child.calls[0][0] == \"search\"",
+        "assert set(child.calls[0][1]) == {\"query\", \"limit\"}",
+        "assert child.calls[0][1][\"query\"] in route[\"queries\"]",
+        "assert worker.research_questions() == []",
+        "assert E.verify_bank(worker, row) == bank",
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert json.loads(capsys.readouterr().out)[\"results\"] == []",
+        "assert child.calls == calls",
+        "assert Journal(worker.db_path).research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert reader.read(original_question[\"question_id\"]) == (original_question, provenance)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[UNAVAILABLE]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "3ed444cb71ed542441f939c271c5f83813e5886200462ee7ce0812361c1a9444",
+      "original_assertions": [
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert bank[\"question\"] == original_question",
+        "assert bank[\"plan\"][\"question_source\"] == provenance",
+        "assert route[\"question_id\"] == original_question[\"question_id\"]",
+        "assert route[\"question_sha256\"] == S.digest(original_question)",
+        "assert route[\"scope\"][\"kind\"] == \"strategy\"",
+        "assert original_question[\"question_kind\"] == \"strategy_decay\"",
+        "assert route[\"source_classes\"] == [\"academic_factors\"]",
+        "assert route[\"registry_sha256\"] == S.REGISTRY_SHA256",
+        "assert selected == S.select(\"academic_factors\")[0].record()",
+        "assert selected[\"metadata\"][\"type\"][\"value\"] == \"scholarly_metadata\"",
+        "assert selected[\"metadata\"][\"credibility_class\"][\"state\"] == \"NOT_ASSESSED\"",
+        "assert bank[\"collection_status\"] == collection",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert child.calls[0][0] == \"search\"",
+        "assert set(child.calls[0][1]) == {\"query\", \"limit\"}",
+        "assert child.calls[0][1][\"query\"] in route[\"queries\"]",
+        "assert worker.research_questions() == []",
+        "assert E.verify_bank(worker, row) == bank",
+        "assert E.main(cli(source, reader, worker)) == 0",
+        "assert json.loads(capsys.readouterr().out)[\"results\"] == []",
+        "assert child.calls == calls",
+        "assert Journal(worker.db_path).research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert reader.read(original_question[\"question_id\"]) == (original_question, provenance)"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_manual_urls_cannot_replace_generated_question_source",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "942c4459a5471fd1fdc3b84e14f5e85f421993739fca2259e03a4f4be03f01a2",
+      "original_assertions": [
+        "assert refused.value.code == 2",
+        "assert \"unrecognized arguments: --urls\" in capsys.readouterr().err",
+        "assert refused.value.code == 2",
+        "assert \"requires both generated-question database paths\" in capsys.readouterr().err",
+        "assert not worker.exists()"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_replay_refuses_substituted_manual_url_route",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Active internal research provenance",
+      "classification": "KEEP",
+      "reason": "Restored exact semantic tamper case: drop triggers, rehash a manual URL route, require plan rederivation refusal.",
+      "current_witnesses": [
+        "tests/test_res01_question_producer.py::test_replay_refuses_rehashed_manual_url_route"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "7697a258f9640994536df4e58cbc126f6dd0dd5b2ba6f7a7f6d1d1f990ef562b",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_res01_generated_question_enters_internal_router_with_protocol_justification",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Active internal research routing",
+      "classification": "MERGE",
+      "reason": "Entire routing assertion set restored into the existing normal-producer/restart test; no new routing layer.",
+      "current_witnesses": [
+        "tests/test_res01_question_producer.py::test_supported_event_generates_typed_question_and_survives_restart"
+      ],
+      "witness_relation": "behavioral_equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "f74b0f5e6d4527da79d2b56ebfbb4a483fbd5464c86bd96ec9a9429aabacbf06",
+      "original_assertions": [
+        "assert plan[\"schema\"] == I.PLAN_SCHEMA",
+        "assert plan[\"question_id\"] == q[\"question_id\"]",
+        "assert plan[\"question_sha256\"] == I.sha256(I.canonical(q))",
+        "assert plan[\"predicates_id\"] == I.PREDICATES_ID",
+        "assert unavailable[\"hypothesis\"] == \"participant_cause\"",
+        "assert unavailable[\"status\"] == \"UNAVAILABLE\"",
+        "assert unavailable[\"reason\"] == I.PARTICIPANT_REASON",
+        "assert unavailable[\"routes\"] == []",
+        "assert chain[\"runs\"][0][\"result\"][\"status\"] == \"INCONCLUSIVE\"",
+        "assert producer(root, now + 1)[\"research\"][\"attempted\"] == 0",
+        "assert I.chain(dest, iid) == chain",
+        "assert section[\"status\"] == \"ROUTED\"",
+        "assert section[\"hypothesis\"] == alternative[\"name\"]",
+        "assert section[\"prediction\"] == alternative[\"prediction\"]",
+        "assert section[\"invalidator\"] == alternative[\"invalidator\"]",
+        "assert updates[\"store\"] == \"investigation.updates\"",
+        "assert updates[\"locator\"][\"investigation_id\"] == iid",
+        "assert \"evidence.target_versions\" in updates[\"fields\"]",
+        "assert candles[\"store\"] == \"investigation.inputs\"",
+        "assert candles[\"locator\"][\"target_keys\"] == q[\"protocol\"][\"target_keys\"]",
+        "assert \"candle.volume\" in candles[\"fields\"]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res02_question_routing.py::test_shadow_codec_fix_keeps_authority_and_network_imports_blocked",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external/generated-question router or shadow adapter",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res02_question_routing.py",
+      "original_function_sha256": "16ae9cfc1b9b55fd629a84ef497b033352ceceb741450e70c5911958d786a0bb",
+      "original_assertions": [
+        "assert completed.returncode == 0, completed.stderr"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_equivalent_rendered_content_is_deduplicated",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "198e93168b93cc0cb3e9cd9f9e9723638658e8482ee79c6de67cfb25041671a5",
+      "original_assertions": [
+        "assert [e[\"extraction_status\"] for e in bank[\"evidence\"]] == [\"EXTRACTED_UNVERIFIED\", \"DUPLICATE_CONTENT\"]",
+        "assert bank[\"evidence\"][1][\"passage\"] is None",
+        "assert bank[\"evidence\"][1][\"duplicate_of\"] == bank[\"evidence\"][0][\"request_id\"]",
+        "assert bank[\"cost\"][\"llm_calls\"] == 0",
+        "assert R.research_pass(j,child=child)[\"results\"] == []",
+        "assert len(child.calls) == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_extract_relevant_passage_after_irrelevant_prefix",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "2ab425aba482c5867e77a1e77e3a9c92762815e8a6516e1dbaa83955e52aafba",
+      "original_assertions": [
+        "assert \"Trading strategy decay\" in passage",
+        "assert \"Biological\" not in passage",
+        "assert len(passage) <= 128"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_irrelevant_abstract_is_explicitly_insufficient",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "085482f466e606574c25c432ea86bc84314089750d53ce8fc5a12c1b53ef78b4",
+      "original_assertions": [
+        "assert bank[\"evidence\"][0][\"extraction_status\"] == \"NO_RELEVANT_PASSAGE\"",
+        "assert bank[\"evidence\"][0][\"passage\"] is None",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_large_single_paragraph_has_relevant_bounded_window",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "f93181ae1269cbf18ddc5702c66f835364b991fc09888b1b7df8ba40969ac6b4",
+      "original_assertions": [
+        "assert \"Trading strategy decay\" in bank[\"evidence\"][0][\"passage\"]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_legacy_builder_receipt_remains_verifiable",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "85d21bbac18a730e5f18cd6872303073b62265bd5390886be164828fa30238b6",
+      "original_assertions": [
+        "assert j.record_research_bank_object(R._row(legacy),recorded_at_ms=1) == \"inserted\"",
+        "assert R.verify_bank(j,j.research_bank_object(legacy[\"bank_object_id\"])) == legacy"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[limits]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "263a52d04c56d06907cbf860d23bae876a278715c950ebe8988f1037fe8ff7db",
+      "original_assertions": [
+        "assert j.record_research_bank_object(row,recorded_at_ms=1) == \"inserted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[missing_query]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "263a52d04c56d06907cbf860d23bae876a278715c950ebe8988f1037fe8ff7db",
+      "original_assertions": [
+        "assert j.record_research_bank_object(row,recorded_at_ms=1) == \"inserted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[passage]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "263a52d04c56d06907cbf860d23bae876a278715c950ebe8988f1037fe8ff7db",
+      "original_assertions": [
+        "assert j.record_research_bank_object(row,recorded_at_ms=1) == \"inserted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[query]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "263a52d04c56d06907cbf860d23bae876a278715c950ebe8988f1037fe8ff7db",
+      "original_assertions": [
+        "assert j.record_research_bank_object(row,recorded_at_ms=1) == \"inserted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[url]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "263a52d04c56d06907cbf860d23bae876a278715c950ebe8988f1037fe8ff7db",
+      "original_assertions": [
+        "assert j.record_research_bank_object(row,recorded_at_ms=1) == \"inserted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res04_preprocessing.py::test_repeated_search_results_do_not_repeat_retrieval",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external passage extraction and bank preprocessing",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res04_preprocessing.py",
+      "original_function_sha256": "5ea9e3f836f1b2008aec4970dc9efcb6980811ebe454109a1de539a8d447eae8",
+      "original_assertions": [
+        "assert [c[0] for c in child.calls] == [\"search\",\"search\",\"retrieve\"]",
+        "assert len(bank[\"evidence\"]) == 1 and len(bank[\"evidence\"][0][\"query_provenance\"]) == 2",
+        "assert bank[\"filtering\"] == dict(metadata_seen=6,metadata_rejected=5,selected=1,pages_omitted=0)",
+        "assert R.verify_bank(j,j.research_bank_object(bank[\"bank_object_id\"])) == bank"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_normal_persistence_restart_and_duplicate_preserve_exact_record[collected]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "4e71729d710ec23e160f2ac0528373933717799e2437ba0e4b54ed8e762c5e04",
+      "original_assertions": [
+        "assert bank[\"question\"][\"question\"] and bank[\"question\"][\"question_id\"]",
+        "assert bank[\"sources\"] and bank[\"plan_id\"] and bank[\"evidence_id\"] and bank[\"result_id\"]",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert all(bank[k] == v for k, v in R.result_fields().items())",
+        "assert bank[\"limitations\"] and bank[\"cost\"][\"total_operating_cost\"] == \"NOT_MEASURED\"",
+        "assert R.research_pass(restarted, child=child)[\"results\"] == []",
+        "assert duplicate == dict(status=\"DUPLICATE\", bank=bank)",
+        "assert len(child.calls) == calls",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert R.verify_bank(restarted, row) == bank",
+        "assert restarted.record_research_bank_object(conflict, recorded_at_ms=2) == \"conflict\"",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_normal_persistence_restart_and_duplicate_preserve_exact_record[empty]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "4e71729d710ec23e160f2ac0528373933717799e2437ba0e4b54ed8e762c5e04",
+      "original_assertions": [
+        "assert bank[\"question\"][\"question\"] and bank[\"question\"][\"question_id\"]",
+        "assert bank[\"sources\"] and bank[\"plan_id\"] and bank[\"evidence_id\"] and bank[\"result_id\"]",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert all(bank[k] == v for k, v in R.result_fields().items())",
+        "assert bank[\"limitations\"] and bank[\"cost\"][\"total_operating_cost\"] == \"NOT_MEASURED\"",
+        "assert R.research_pass(restarted, child=child)[\"results\"] == []",
+        "assert duplicate == dict(status=\"DUPLICATE\", bank=bank)",
+        "assert len(child.calls) == calls",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert R.verify_bank(restarted, row) == bank",
+        "assert restarted.record_research_bank_object(conflict, recorded_at_ms=2) == \"conflict\"",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_normal_persistence_restart_and_duplicate_preserve_exact_record[unavailable]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "4e71729d710ec23e160f2ac0528373933717799e2437ba0e4b54ed8e762c5e04",
+      "original_assertions": [
+        "assert bank[\"question\"][\"question\"] and bank[\"question\"][\"question_id\"]",
+        "assert bank[\"sources\"] and bank[\"plan_id\"] and bank[\"evidence_id\"] and bank[\"result_id\"]",
+        "assert bank[\"result_status\"] == \"INCONCLUSIVE\"",
+        "assert all(bank[k] == v for k, v in R.result_fields().items())",
+        "assert bank[\"limitations\"] and bank[\"cost\"][\"total_operating_cost\"] == \"NOT_MEASURED\"",
+        "assert R.research_pass(restarted, child=child)[\"results\"] == []",
+        "assert duplicate == dict(status=\"DUPLICATE\", bank=bank)",
+        "assert len(child.calls) == calls",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row",
+        "assert R.verify_bank(restarted, row) == bank",
+        "assert restarted.record_research_bank_object(conflict, recorded_at_ms=2) == \"conflict\"",
+        "assert restarted.research_bank_object(bank[\"bank_object_id\"]) == row"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[collection_status-EMPTY]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[contradictory_evidence-value2]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[cost-value6]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[experiments-value3]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[extracted_claims-value0]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[next_questions-value4]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[supporting_evidence-value1]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired external research-bank persistence/projections",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res05_bank_persistence.py",
+      "original_function_sha256": "6dc6ecd6b70bee93508de76ebfe5c74eb5660d1bebcba7d568a3ddacecc7cb81",
+      "original_assertions": []
+    },
+    {
+      "old_nodeid": "tests/test_res07_competing_hypotheses.py::test_normal_chain_retains_genuine_competitors_and_exact_restart",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Predictive hypothesis generation and retained paired replay",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Planner generates supported shapes only. Historical v2 paired benefit/null content, complementary comparator, deterministic identity and byte-exact replay remain checked; unsupported shape cannot gain quantitative authority.",
+      "current_witnesses": [
+        "tests/test_res07_competing_hypotheses.py::test_normal_chain_registers_only_supported_shapes_and_exact_restart",
+        "tests/test_res07_competing_hypotheses.py::test_legacy_hypothesis_identity_and_payload_are_preserved"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res07_competing_hypotheses.py",
+      "original_function_sha256": "7206e44a8350d9f575dcd820cb0ca84694d60a1bddba886717a7a8e42ed97408",
+      "original_assertions": [
+        "assert benefit.hypothesis_id != null.hypothesis_id",
+        "assert benefit.predictor_definition == null.predictor_definition",
+        "assert benefit.target_definition == null.target_definition",
+        "assert benefit.asset_scope == null.asset_scope and benefit.horizon == null.horizon",
+        "assert a['competition_group'] == b['competition_group']",
+        "assert a['competing_transformation'] == null.transformation",
+        "assert b['competing_transformation'] == benefit.transformation",
+        "assert a['test']['metric'] == b['test']['metric']",
+        "assert a['test']['baseline'] == b['test']['baseline']",
+        "assert (a['test']['comparator'], b['test']['comparator']) == ('> 0', '<= 0')",
+        "assert E.translate(null, candles, {}, later)['status'] == 'UNSUPPORTED_EXPERIMENT_SHAPE'",
+        "assert all(json.loads(h.proposal_contract_json)['predictive_edge_status'] == 'UNTESTED'\n               for h in by.values())",
+        "assert saved(bank, 'bridge_hypotheses') == records",
+        "assert source.read_bytes() == original",
+        "assert replayed == [r['hypothesis'] for r in records]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_res08_governed_bridge.py::test_unsupported_paired_null_is_retained_without_quantitative_result",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Unsupported shape refusal and historical hypothesis replay",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Unsupported paired-null experiments are no longer generated or registered. Retained paired hypothesis still replays UNTESTED and translator refuses before data access. No fictitious NOT_TESTABLE result is required for an experiment that does not exist.",
+      "current_witnesses": [
+        "tests/test_res08_governed_bridge.py::test_unsupported_shapes_are_never_generated_or_registered",
+        "tests/test_res07_competing_hypotheses.py::test_legacy_hypothesis_identity_and_payload_are_preserved"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_res08_governed_bridge.py",
+      "original_function_sha256": "714528ef69ded619cb12977e027092de8114dcc82b57069bab9f32e49ed79a8e",
+      "original_assertions": [
+        "assert result['classification']=='NOT_TESTABLE' and result['quantitative_outcome']=='UNTESTED'",
+        "assert result['experiment_id'] is result['measurement_id'] is result['quantitative_evidence_id'] is None",
+        "assert result['measured_result'] is None and not result['predictive_strategy_validation']",
+        "assert translations and translations[0]['translation']['status']=='UNSUPPORTED_EXPERIMENT_SHAPE'",
+        "assert translations[0]['contract']['proposal_contract']==json.loads(h['proposal_contract_json'])"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_filed_gaps_reach_bank_view_and_typed_owner_consumers[capability]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "2f1d0284c2c71cc5d71164aeae3d860c8beb5dcabf1ed479b0ba52231f0b8d7f",
+      "original_assertions": [
+        "assert view.build(journal, bank_object_id=bid, max_prior_objects=5)[\n        \"linked_next_questions\"][\"stored_count\"] == 0",
+        "assert built[\"bank_object\"] == legacy",
+        "assert built[\"linked_next_questions\"][\"completeness\"] == \"NOT_ASSERTED\"",
+        "assert [r[\"record\"] for r in built[\"linked_next_questions\"][\"records\"]] == expected",
+        "assert research[\"verification\"] == \"VERIFIED\"",
+        "assert research[\"value\"] == built"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_filed_gaps_reach_bank_view_and_typed_owner_consumers[cost]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "2f1d0284c2c71cc5d71164aeae3d860c8beb5dcabf1ed479b0ba52231f0b8d7f",
+      "original_assertions": [
+        "assert view.build(journal, bank_object_id=bid, max_prior_objects=5)[\n        \"linked_next_questions\"][\"stored_count\"] == 0",
+        "assert built[\"bank_object\"] == legacy",
+        "assert built[\"linked_next_questions\"][\"completeness\"] == \"NOT_ASSERTED\"",
+        "assert [r[\"record\"] for r in built[\"linked_next_questions\"][\"records\"]] == expected",
+        "assert research[\"verification\"] == \"VERIFIED\"",
+        "assert research[\"value\"] == built"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_filed_gaps_reach_bank_view_and_typed_owner_consumers[research]",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "2f1d0284c2c71cc5d71164aeae3d860c8beb5dcabf1ed479b0ba52231f0b8d7f",
+      "original_assertions": [
+        "assert view.build(journal, bank_object_id=bid, max_prior_objects=5)[\n        \"linked_next_questions\"][\"stored_count\"] == 0",
+        "assert built[\"bank_object\"] == legacy",
+        "assert built[\"linked_next_questions\"][\"completeness\"] == \"NOT_ASSERTED\"",
+        "assert [r[\"record\"] for r in built[\"linked_next_questions\"][\"records\"]] == expected",
+        "assert research[\"verification\"] == \"VERIFIED\"",
+        "assert research[\"value\"] == built"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_gap_filing_retries_reopens_and_preserves_historical_authority",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "b8aced0d6354db977693727c4200110b21ae8e062964939fed1f319edf62b58e",
+      "original_assertions": [
+        "assert first[\"inserted\"] and not first[\"refusals\"]",
+        "assert {r[\"question_kind\"] for r in records} == set(nq.QUESTION_KINDS)",
+        "assert all(r[\"authority\"] == \"context_only\" for r in records)",
+        "assert again[\"duplicate\"] == first[\"inserted\"]",
+        "assert not again[\"inserted\"] and not again[\"conflict\"]",
+        "assert nq.load(reopened, bid) == records",
+        "assert all(r[\"recorded_at_ms\"] == 3 for r in reopened.research_next_questions(bid))",
+        "assert _history(reopened) == before",
+        "assert reopened.kv_get(\"control_state\") == \"FROZEN\"",
+        "assert reopened.kv_get(\"macro_guard_operator_hold\") == \"1\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_historical_missing_table_read_does_not_create_or_backfill",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "4acbf88eaa27fdfe428b120c0df73f0d2b96a95fe2359b8d788e61014265c4fd",
+      "original_assertions": [
+        "assert readonly.query(\"SELECT name FROM sqlite_master WHERE name=?\",\n                              (\"research_next_questions\",)) == []",
+        "assert _history(readonly) == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_projection_conflict_never_overwrites_and_reader_fails_closed",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "b6c90fe1d68daf08f5720f9890ce807e11107fbed53eeb5d0ec58b8837c1bf61",
+      "original_assertions": [
+        "assert len(retry[\"conflict\"]) == len(before) and not retry[\"inserted\"]",
+        "assert journal.research_next_questions(bid) == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_readonly_bank_view_resolves_logical_evidence_without_writes",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "70d16f9d6033cf1a47d01ba2e8aa9924c7ea1f5c60d2b8c25abcad84b7f4a0f2",
+      "original_assertions": [
+        "assert readonly.query(\"SELECT name FROM sqlite_master WHERE name=?\",\n                              (\"brain_events_logical_v1\",))",
+        "assert readonly.query(\"SELECT * FROM brain_events ORDER BY id\") == \\\n            journal.query(\"SELECT * FROM brain_events ORDER BY id\")",
+        "assert view.build(readonly, bank_object_id=bid, max_prior_objects=5) == expected",
+        "assert nq.load(readonly, bid) == nq.load(journal, bid)",
+        "assert _history(readonly) == before",
+        "assert readonly.query(\"SELECT name,sql FROM sqlite_master ORDER BY name\") == schema"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_research_next_question_contract.py::test_tampered_upstream_chain_refuses_filing_loading_and_owner_view",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired strategy-decay bank next-question/view projection",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent.",
+      "current_witnesses": [
+        "tests/test_retired_research_chains.py::test_retired_modules_are_gone",
+        "tests/test_retired_research_chains.py::test_legacy_journal_with_retired_tables_opens_without_migration"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_research_next_question_contract.py",
+      "original_function_sha256": "9254e9b88beca5abfd69f8a8aef048cd983f6f25aac029f5106f270dc3ed4942",
+      "original_assertions": [
+        "assert refusal[\"refusals\"] and not refusal[\"inserted\"]",
+        "assert journal.research_next_questions(bid) == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_scout_upgrades.py::test_refit_and_apply_recalibrates",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Calibration writer replay authority",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Unverified label-only refitting is intentionally refused before any read/write. Existing model bytes and registered learning gates are preserved, not a revived fitting path.",
+      "current_witnesses": [
+        "tests/test_legacy_learning_replay_gate.py::test_legacy_model_writers_preserve_existing_bytes"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_scout_upgrades.py",
+      "original_function_sha256": "43fc5e90104e28d61fbc94e3fbf51104ae60f59f315080867c4a8576617159c0",
+      "original_assertions": [
+        "assert fit[\"n\"] == 100",
+        "assert did and abs(new_c) < 0.6"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_a_mutate_verdict_creates_no_strategy",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired legacy genome reviewer",
+      "classification": "ARCHIVE",
+      "reason": "trader.brain.strategist and all review/mutation consumers are absent. Existing guards forbid module/caller resurrection and research writes to strategies.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_the_legacy_review_module_is_gone",
+        "tests/test_single_creation_path.py::test_the_kernel_brain_tick_runs_no_legacy_review",
+        "tests/test_single_creation_path.py::test_no_research_module_writes_the_strategies_table"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "6e739610fbffa1fefd1885f1d1a0678c819556a4097d8ffb649db18920535ad3",
+      "original_assertions": [
+        "assert _states(j) == before"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_a_refused_candidate_is_recorded_and_not_installed",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Unauthenticated research handoff",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Missing lineage defers without poisoning candidate state; invalid evidence is refused and cannot write the trading book.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_unavailable_lineage_does_not_permanently_refuse_candidate",
+        "tests/test_rp03_research_factory_transfer.py::test_unsupported_results_are_refused_and_write_nothing"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "909ea6fb2b40b0c9aa824603e0c906f47e425eb285495580f226d3af9cce5da0",
+      "original_assertions": [
+        "assert k._research_handoff(analyst, []) is None",
+        "assert led.candidate(c.hash)[\"state\"] == \"refused\"",
+        "assert _states(k.journal) == {}"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_a_verdict_never_touches_a_spec",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired legacy genome reviewer",
+      "classification": "ARCHIVE",
+      "reason": "trader.brain.strategist and all review/mutation consumers are absent. Existing guards forbid module/caller resurrection and research writes to strategies.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_the_legacy_review_module_is_gone",
+        "tests/test_single_creation_path.py::test_the_kernel_brain_tick_runs_no_legacy_review",
+        "tests/test_single_creation_path.py::test_no_research_module_writes_the_strategies_table"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "ca2137d3724a9cc42c208ac1115a0227d918f5fab0359768bcc0cba91140467f",
+      "original_assertions": [
+        "assert _states(j)[\"the_spec\"] == \"paper\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_an_open_handoff_goes_through_admit_and_nothing_else",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Authenticated research-to-Factory handoff",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Handoff authenticates bank/experiment evidence and stops at Factory validation; it cannot directly call Analyst admission or install strategies.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_an_open_handoff_requires_bank_and_does_not_call_admit",
+        "tests/test_rp03_research_factory_transfer.py::test_supported_result_transfers_and_factory_validates"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "6837e5ec300ed2b5de4dc843b137fd7659304533103034a8c3c876e0c49ec777",
+      "original_assertions": [
+        "assert spec is not None and len(seen) == 1",
+        "assert seen[0].provenance[\"research_hash\"] == c.hash",
+        "assert len(seen[0].universe[\"include\"]) == 36",
+        "assert led.candidate(c.hash)[\"state\"] == \"admitted\"",
+        "assert _states(k.journal)[spec.id] == \"paper\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_only_reason_passed_candidates_are_handed_off",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Authenticated evidence over status labels",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Candidate labels cannot substitute for authenticated evidence. Factory transfer and qualification bind exact evidence/version.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_referee_passed_label_alone_does_not_replace_authentication",
+        "tests/test_rp03_research_factory_transfer.py::test_forged_bank_evidence_is_refused"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "460f3c479c5a09cda513d31ead9b6a6098207ae2a6c13cf06088d962e92b24e5",
+      "original_assertions": [
+        "assert k._research_handoff(analyst, []) is None",
+        "assert seen == []"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_single_creation_path.py::test_the_llm_is_shown_only_live_legacy_genomes",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired legacy genome reviewer",
+      "classification": "ARCHIVE",
+      "reason": "trader.brain.strategist and all review/mutation consumers are absent. Existing guards forbid module/caller resurrection and research writes to strategies.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_the_legacy_review_module_is_gone",
+        "tests/test_single_creation_path.py::test_the_kernel_brain_tick_runs_no_legacy_review",
+        "tests/test_single_creation_path.py::test_no_research_module_writes_the_strategies_table"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_single_creation_path.py",
+      "original_function_sha256": "36749aea3fd448a9fe9f1c8f414baddf81e28e9a5b2e41ba7ca252ab97192819",
+      "original_assertions": [
+        "assert {p[\"id\"] for p in s._population_report()} == {\"live\"}"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_stage1_data_provenance_pit.py::test_supplemental_raw_receipt_is_not_backdated",
+      "triage_category": "PARTIAL_SUBJECT_REMOVED",
+      "functionality": "Retired supplemental acquisition subprocess",
+      "classification": "ARCHIVE",
+      "reason": "The test body or its constructor helpers exercise a removed worker/adapter. Surviving shared child, Journal, SQLite, owner query or provenance imports do not make that removed API an active consumer. Preserve original test source at the baseline commit; do not restore obsolete services or claim generic current checks equivalent. Current feed raw/receipt behavior is separately retained; no supplemental module remains.",
+      "current_witnesses": [
+        "tests/test_stage1_data_provenance_pit.py::test_normal_feed_source_canonical_identity_and_raw",
+        "tests/test_data03_consumer_cuts.py::test_capture_cannot_restamp_future_frame"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_stage1_data_provenance_pit.py",
+      "original_function_sha256": "9bab9ff2b78fc76afda21cb35cf1eee5437da2c106e8c96edd00cc06b4d54dc6",
+      "original_assertions": [
+        "assert df.available_at_ms.iloc[0]==T+Q+20",
+        "assert json.loads(df.raw_json.iloc[0])==raw",
+        "assert P.eligible_frame(df,'15m',T+Q+19).empty"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_stage1_pit_blocker_fix.py::test_kernel_and_normal_attention_lineage",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Attention point-in-time membership receipts",
+      "classification": "MERGE",
+      "reason": "Same membership/timing/revision/immutable-detachment assertions retained under renamed test. Kernel scan method retired, retained Universe + attention adapter still exercised.",
+      "current_witnesses": [
+        "tests/test_stage1_pit_blocker_fix.py::test_retained_universe_and_attention_lineage"
+      ],
+      "witness_relation": "behavioral_equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_stage1_pit_blocker_fix.py",
+      "original_function_sha256": "2a521d3670a15cd6e92ac2e89cacfbde6fb03890a56cdedb42731d40c4005d7f",
+      "original_assertions": [
+        "assert members == ['BTC/USDT'], 'Kernel consumed future universe'",
+        "assert k._attention_call('begin', {}, members, U1)",
+        "assert [m['symbol'] for m in event['input']['membership']] == ['BTC/USDT']",
+        "assert all(m['source_receipt']['available_at_ms'] <= U1 for m in event['input']['membership'])",
+        "assert k._attention_call('begin', {}, members, U2)",
+        "assert alt['source_receipt']['available_at_ms'] == U2",
+        "assert alt['source_receipt']['revision_id'] == u._selection_receipt['revision_id']",
+        "assert saved_alt['source_receipt'] == alt['source_receipt']",
+        "assert alt['source_receipt']['members'] == ['ALT/USDT']"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_strategy_factory_handoff.py::test_kernel_handoff_admits_exactly_the_frozen_version",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Exact frozen strategy version",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Research handoff no longer directly admits; authenticated Factory transfer plus exact validated paper installation is the current path.",
+      "current_witnesses": [
+        "tests/test_strategy_factory_handoff.py::test_kernel_handoff_does_not_automatically_install_or_start_probation",
+        "tests/test_sol1_strategy_lifecycle.py::test_kernel_installs_a_qualified_spec_as_one_exact_paper_version"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_strategy_factory_handoff.py",
+      "original_function_sha256": "e701dc426c615ea607a34cdf1e4f68439f46cec257cbb9208cac84ea0cd6acc8",
+      "original_assertions": [
+        "assert k._research_handoff(_Analyst(), []) is None",
+        "assert seen == [frozen]",
+        "assert {k: v2 for k, v2 in frozen.items() if k != \"data_requires\"} == {\n        k: v2 for k, v2 in built.items() if k != \"data_requires\"}",
+        "assert frozen[\"universe\"][\"include\"] and \\\n        frozen[\"provenance\"][\"research_hash\"] == h"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_strategy_factory_handoff.py::test_kernel_installs_the_exact_version_and_starts_probation",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Exact paper installation and probation",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "No automatic research installation. Qualified backtest pass installs exact paper version; explicit probation binds exact installed evidence.",
+      "current_witnesses": [
+        "tests/test_sol1_strategy_lifecycle.py::test_kernel_installs_a_qualified_spec_as_one_exact_paper_version",
+        "tests/test_strategy_factory_handoff.py::test_probation_cannot_start_without_exact_install"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_strategy_factory_handoff.py",
+      "original_function_sha256": "59efb56540c1e74e8a0808cad3681a40cca0ed1d5b1125fae375c8e045cea610",
+      "original_assertions": [
+        "assert spec is not None and an.measured",
+        "assert installed == v[\"spec\"]",
+        "assert installed[\"regime_filter\"] == [] and \\\n        \"regime_evidence\" not in installed[\"provenance\"]",
+        "assert F.state_of(j, v[\"version_id\"]) == F.SHADOW",
+        "assert ev[0][\"version_id\"] == v[\"version_id\"]",
+        "assert ev[0][\"regimes_advisory_not_applied\"][\"fit\"] == [\"TRENDING_UP\"]",
+        "assert _row(j, \"SELECT state FROM research_candidates\")[\"state\"] == \\\n        \"admitted\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_strategy_factory_handoff.py::test_unversioned_install_keeps_its_existing_behavior",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Refusal of unversioned installation",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Bare-row install bypass is deliberately gone; installation requires an exact Backtest PASS version.",
+      "current_witnesses": [
+        "tests/test_sol1_strategy_lifecycle.py::test_unmapped_legacy_install_path_is_gone",
+        "tests/test_sol1_strategy_lifecycle.py::test_a_passed_backtest_installs_a_version_never_a_bare_row"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_strategy_factory_handoff.py",
+      "original_function_sha256": "9828eaf91839eb86894c70d65da24ad01aea2ea72aecd31180625fd41c98ac9e",
+      "original_assertions": [
+        "assert ok is True",
+        "assert stored.timeframe == \"1h\" and stored.regime_filter == [\"TRENDING_UP\"]"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_strategy_signal_gate.py::test_the_lead_can_be_turned_off",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Retired analyst/strategy blend flag",
+      "classification": "ARCHIVE",
+      "reason": "strategy_leads and live voting blend are removed from Orchestrator. Historical blending helpers have explicit fixtures but no operational flag consumer.",
+      "current_witnesses": [
+        "tests/test_single_creation_path.py::test_the_legacy_review_module_is_gone"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_strategy_signal_gate.py",
+      "original_function_sha256": "b6095441bde2dcf6d51dc1e43de5df1f42d61b116b92a70bf6a947dc91fd72c2",
+      "original_assertions": [
+        "assert orc.strategy_leads is True",
+        "assert off.strategy_leads is False"
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_trade_attribution.py::test_the_loudest_of_the_agreeing_signals_wins",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Trade ownership attribution",
+      "classification": "MERGE",
+      "reason": "Same legacy unversioned SELL decision, opposing louder BUY signal and max matching confidence assertion; renamed exact behavioral witness.",
+      "current_witnesses": [
+        "tests/test_trade_attribution.py::test_historical_matching_confidence_owner_is_preserved"
+      ],
+      "witness_relation": "behavioral_equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_trade_attribution.py",
+      "original_function_sha256": "dc36645348bd7aec04770e23573ebe4f79b86f6b6921087ad939b1103026a023",
+      "original_assertions": [
+        "assert _top(None, d) == \"loud\""
+      ]
+    },
+    {
+      "old_nodeid": "tests/test_universe_frames_timeframes.py::test_a_symbol_with_no_data_is_omitted_rather_than_half_built",
+      "triage_category": "MISSING_ESSENTIAL_COVERAGE",
+      "functionality": "Explicit missing peer data",
+      "classification": "CHANGED_CONTRACT",
+      "reason": "Kernel._universe_frames removed. Cache-only _peer_frames keeps symbol with empty timeframe map rather than fabricating data; test exercises the current method.",
+      "current_witnesses": [
+        "tests/test_universe_frames_timeframes.py::test_unavailable_peer_stays_explicit_without_fabricated_data"
+      ],
+      "witness_relation": "current_contract_or_retirement_guard; not wholesale historical equivalence",
+      "historical_commit": "fc6c0b2836b7c226517a2c22fcce389eedd9a4c0",
+      "historical_path": "tests/test_universe_frames_timeframes.py",
+      "original_function_sha256": "9bc2b63ac92ceed01c018917345aeb4163157d95ee779f0bc835f0ef521ae3ee",
+      "original_assertions": [
+        "assert k._universe_frames([\"BTC/USDT\"]) == {}"
+      ]
+    }
+  ],
+  "approval_scope": "Owner requested final functional cleanup; dispositions are review evidence. No Opus policy/state or accepted-pin-retirements were edited. Consumer must review functional contract changes explicitly."
+}

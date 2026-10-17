@@ -9,13 +9,13 @@ from trader.dashboard.auth import DashboardAuth
 def test_missing_default_tokens_fail_closed(server, monkeypatch, token):
     if token is None: monkeypatch.delenv('DASH_TOKEN', raising=False)
     else: monkeypatch.setenv('DASH_TOKEN', token)
-    client = TestClient(server.create_app({'attention': {'enabled': True}}))
+    client = TestClient(server.create_app({'dashboard': {'startup_mode': 'LIVE'}, 'attention': {'enabled': True}}))
     for path in ('/', '/graphql', '/api/investigations/latest', '/docs'):
         assert client.get(path, headers={'x-luffy-token': 'luffy'}).status_code == 401
 
 
 def test_browser_session_all_routes_csrf_logout(server):
-    c = TestClient(server.create_app({'attention': {'enabled': True}}))
+    c = TestClient(server.create_app({'dashboard': {'startup_mode': 'LIVE'}, 'attention': {'enabled': True}}))
     assert c.get('/').status_code == 401
     origin = {'origin': 'http://testserver'}
     assert c.post('/graphql', json={}, headers=origin).status_code == 401

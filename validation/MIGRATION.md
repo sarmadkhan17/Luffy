@@ -76,3 +76,46 @@ versioned implementations were retained. The sole code merge removes a duplicate
 quantity-refusal function while preserving all six numeric cases and migrating
 its internal mutation-check caller. The initial missed caller and successful
 affected-module rerun remain in the raw campaign evidence.
+
+
+## Final essential cleanup, 2026-10-17
+
+The verified unified tree `7ae12a4` equals the earlier `4674faa` resolution
+snapshot. This branch incorporates the previously delivered simplification,
+then reviews all 27 essential and 65 partial identities in
+`final-essential-review.json`. Read each item's functional disposition, original
+assertions, source hash and named current witnesses. A changed contract or a
+retired adapter is not identical historical behavior. No missing-ID policy was
+modified or automatically accepted in Opus.
+
+The core adds five existing modules for the supervised child deadline, internal
+question routing/rehashed-route refusal, historical paired-hypothesis replay,
+pre-RNG generator/world/injection refusal and four-state restore containment.
+No test runner, fixture framework, trading code, risk threshold or strategy
+requirement was added. Current source behavior is unchanged.
+
+The duplicate package-wide cognition import guard was obsolete: dataset and
+outcome adapters authenticate trade accounting, while other adapters consume
+research/observability. Static standalone replay-core checks and fresh-process
+import/execution isolation remain. Historical M32 tests now refuse current
+pre-RNG generation/injection; a deterministic 384-statistic fixture preserves
+actual metric coverage without RNG. The pilot evidence tree is pinned to its
+recorded bytes and non-final GO verdict; absence of an authorized historical run is no
+longer asserted. Their original tests remain recoverable from `7ae12a4`.
+The three truth-freeze test modules and every frozen package/script/artifact
+remain byte-identical. Their verifier writes a report, so execute them in a
+writable disposable clone and compare protected hashes afterwards. This is an
+archive execution constraint, never permission to alter original records.
+
+Existing small fixture defects are fixed locally: missing query/cut interfaces,
+missing venue identity/clock, frozen allocation retry semantics, required-value
+capture isolation, explicit ASGI test configuration and temporary browser output.
+In-process ASGI tests start no service and authorize no production change.
+The old population v1 artifact is an authenticated detached input, not generated
+or backfilled; its exact hash and provenance are in the handoff evidence.
+
+The prior sections describe the previous 7,247-case snapshot. Use the new census
+and focused evidence accompanying this bundle for final counts. Do not infer a
+fresh full-suite or deployment pass from selected regressions. Existing Opus
+importer/policy changes, historical pin acceptance and operational verification
+remain the consumer's responsibility.

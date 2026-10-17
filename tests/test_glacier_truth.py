@@ -100,4 +100,6 @@ def test_browser_fixture_artifact_and_readonly_contract(tmp_path, monkeypatch):
     assert all(call['operation'] == 'health' for call in gateway.calls)
     log = fixtures['/owner-api/v1/operations/log']
     assert log['window_start'] and log['window_end'] and log['truncated'] is False
-    Path('/mnt/luffy-data/test-tmp/glacier-browser-fixtures.json').write_text(json.dumps(fixtures))
+    artifact = tmp_path / 'glacier-browser-fixtures.json'
+    artifact.write_text(json.dumps(fixtures, allow_nan=False))
+    assert json.loads(artifact.read_text()) == fixtures

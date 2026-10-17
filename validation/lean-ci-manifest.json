@@ -1,6 +1,6 @@
 {
   "schema": "luffy.lean_ci.v1",
-  "base_commit": "e66df900de3d943980df7bc41f0cefcb23143079",
+  "base_commit": "7ae12a485eb3379cf897dcaf2662c29bcc9f0b6f",
   "groups": {
     "strategy_creation_backtest_qualification": [
       "tests/test_single_creation_path.py",
@@ -47,7 +47,8 @@
       "tests/test_activation_risk_baseline_v2.py",
       "tests/test_owner_recovery_risk_guard.py",
       "tests/test_own03_approval_boundary.py",
-      "tests/test_llm_disabled_boundary.py"
+      "tests/test_llm_disabled_boundary.py",
+      "tests/test_integration_restore_safety.py"
     ],
     "market_data_accounting_integrity": [
       "tests/test_data01_canonical_identity.py",
@@ -81,13 +82,18 @@
       "tests/test_real_learning_integration.py",
       "tests/test_normal_learning_loop_closure.py",
       "tests/test_verified_outcome_producers.py",
-      "tests/test_thesis_validate_frozen.py"
+      "tests/test_thesis_validate_frozen.py",
+      "tests/test_child_runner.py",
+      "tests/test_res01_question_producer.py",
+      "tests/test_res07_competing_hypotheses.py",
+      "tests/test_pre_rng_refusal_boundary.py"
     ]
   },
   "core_paths": [
     "tests/test_acc01_venue_authority.py",
     "tests/test_activation_risk_baseline_v2.py",
     "tests/test_candle_store_transaction_safety.py",
+    "tests/test_child_runner.py",
     "tests/test_cognition_contracts.py",
     "tests/test_cognition_replay.py",
     "tests/test_compile.py",
@@ -107,6 +113,7 @@
     "tests/test_exe03_partial_exit_identity.py",
     "tests/test_execution_accounting.py",
     "tests/test_forming_bar_never_stored.py",
+    "tests/test_integration_restore_safety.py",
     "tests/test_kernel_boot_recovery.py",
     "tests/test_llm_disabled_boundary.py",
     "tests/test_normal_learning_loop_closure.py",
@@ -114,6 +121,7 @@
     "tests/test_own03_approval_boundary.py",
     "tests/test_owner_recovery_risk_guard.py",
     "tests/test_phase0.py",
+    "tests/test_pre_rng_refusal_boundary.py",
     "tests/test_protective_stops.py",
     "tests/test_qnt01_quant_contract.py",
     "tests/test_qnt02_null_controls.py",
@@ -123,6 +131,8 @@
     "tests/test_qnt06_untested_power.py",
     "tests/test_qnt08_admission_boundary.py",
     "tests/test_real_learning_integration.py",
+    "tests/test_res01_question_producer.py",
+    "tests/test_res07_competing_hypotheses.py",
     "tests/test_research_bundle_admission.py",
     "tests/test_research_legacy_discard.py",
     "tests/test_research_refusal_suppression.py",
@@ -550,7 +560,7 @@
   "selection_contract": {
     "core": "pytest default testpaths, exact collected identities sealed in core-nodeids.json",
     "extended": "pytest <extended_paths>; operational marker excluded by default",
-    "archive": "pytest -o addopts= <one archive path per process>; original hashes/paths preserved",
+    "archive": "pytest -o addopts= <one archive path per process>; frozen pre-RNG package verifier requires a writable disposable clone because it rewrites verification_result.json. Never rewrite original evidence in place.",
     "operational": "pytest -o addopts= -m operational <three exact nodeids>; deployment-only, not executed here",
     "changed_source": "core always; extended for trader/config changes; historical campaigns mandatory when their scripts, cognition/m32* or frozen input bindings change",
     "critical_nonpass": "block; never treat removal, absence, skip, xfail, timeout or inherited failure as pass",
@@ -558,5 +568,6 @@
   },
   "status": "PROPOSED_CONSUMER_MIGRATION_REQUIRED",
   "historical_retirements_approved_by_this_manifest": [],
-  "equivalence": "Archive is preserved coverage in a separate profile, not equivalence to a generic current witness. MERGE entries have exact parameter/body/fixture equivalence only."
+  "equivalence": "Six quantity cases retain identical assertions/fixtures/values. Three additional essential aliases and one partial routing consolidation have explicit witnesses. Changed-contract and archive dispositions do not assert wholesale historical equivalence.",
+  "functional_review": "validation/final-essential-review.json: all 27 essential and 65 partial identities reviewed by exercised functionality; exact equivalence separated from changed contract and retired adapter."
 }

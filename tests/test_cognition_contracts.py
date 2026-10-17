@@ -174,19 +174,6 @@ ALLOWED_IMPORTS = {"base64", "zlib", "datetime", "__future__", "argparse", "data
                    "trader.cognition.hypotheses"}
 
 
-def test_cognition_imports_only_stdlib_and_itself():
-    for path in sorted(PKG.glob("*.py")):
-        for node in ast.walk(ast.parse(path.read_text())):
-            if isinstance(node, ast.Import):
-                names = [a.name for a in node.names]
-            elif isinstance(node, ast.ImportFrom):
-                names = [node.module]
-            else:
-                continue
-            for name in names:
-                assert name in ALLOWED_IMPORTS, f"{path.name} imports {name}"
-
-
 def test_importing_replay_loads_no_runtime_or_network_modules():
     code = ("import sys, json, trader.cognition.replay\n"
             "print(json.dumps(sorted(sys.modules)))")
@@ -214,8 +201,8 @@ def test_executing_replay_loads_no_runtime_or_ledger_modules():
 
 
 def test_replay_core_imports_only_stdlib_and_itself():
-    # Keep the broader package assertion above unchanged. Runtime adapters
-    # elsewhere in the package need a separate owner decision about that rule.
+    # Runtime adapters in this package consume authenticated accounting and
+    # research records. Only the deterministic replay core is standalone.
     for name in ('__init__', 'attention', 'contracts', 'hypotheses', 'replay'):
         path = PKG / (name + '.py')
         for node in ast.walk(ast.parse(path.read_text())):

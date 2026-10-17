@@ -111,6 +111,30 @@ def test_legacy_hypothesis_identity_and_payload_are_preserved(proposal_source):
             with pytest.raises(ValueError, match='unsupported_experiment_shape'):
                 P.propose(source, transformation, source.available_ms)
 
+    # Retained v2 paired hypotheses must still replay byte-for-byte. They
+    # describe competing claims; neither is quantitative validation by itself.
+    historical = [P._propose(source, t, source.available_ms, P.SCHEMA) for t in
+                  ('volume_breakout_context.v1', 'volume_breakout_no_benefit.v1')]
+    benefit, null = historical
+    a, b = [json.loads(h.proposal_contract_json) for h in historical]
+    assert benefit.hypothesis_id != null.hypothesis_id
+    assert benefit.predictor_definition == null.predictor_definition
+    assert benefit.target_definition == null.target_definition
+    assert benefit.asset_scope == null.asset_scope and benefit.horizon == null.horizon
+    assert a['competition_group'] == b['competition_group']
+    assert a['competing_transformation'] == null.transformation
+    assert b['competing_transformation'] == benefit.transformation
+    assert a['test']['metric'] == b['test']['metric']
+    assert a['test']['baseline'] == b['test']['baseline']
+    assert (a['test']['comparator'], b['test']['comparator']) == ('> 0', '<= 0')
+    for h in historical:
+        raw = json.loads(P.canonical(asdict(h)))
+        assert P.canonical(asdict(P.hypothesis_from_dict(raw))) == P.canonical(raw)
+        assert json.loads(h.proposal_contract_json)['predictive_edge_status'] == 'UNTESTED'
+    assert E.translate(null, 'missing-candles.db', {}, source.available_ms)['status'] == 'UNSUPPORTED_EXPERIMENT_SHAPE'
+    with pytest.raises(ValueError, match='^unsupported_experiment_shape$'):
+        P.propose(source, null.transformation, source.available_ms)
+
 
 def test_supported_source_projection_required_at_generation(proposal_source):
     source = proposal_source

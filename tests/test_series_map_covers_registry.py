@@ -22,7 +22,7 @@ from trader.strategy.features import FEATURES
 
 
 def test_every_required_series_in_the_registry_is_loadable():
-    needed = {r for f in FEATURES.values() for r in f.requires if r != "ohlcv"}
+    needed = {r for f in FEATURES.values() for r in f.requires if r != "ohlcv" and r != "world" and not r.startswith("ref:")}
     unmapped = sorted(needed - set(spec_evidence._SERIES_FOR))
     assert not unmapped, (
         f"features require {unmapped} but load_derivs cannot load them — "
@@ -33,7 +33,7 @@ class _Feed:
     def __init__(self, have):
         self.have = have
 
-    def load(self, symbol, series):
+    def load(self, symbol, series, *, as_of_ms=None):
         if series not in self.have:
             return None
         return pd.DataFrame({"ts": [1_788_000_000_000], "value": [1.7]})

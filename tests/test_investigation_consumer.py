@@ -70,7 +70,9 @@ def test_capacity_retention_and_diagnostic_bounds(paths, monkeypatch):
     with sqlite3.connect(dest) as db:
         assert db.execute("SELECT COUNT(*) FROM diagnostics").fetchone()[0] == 512
     monkeypatch.setattr(C, "MAX_ACTIVE", 32)
-    C.step(source, dest, now+2)
+    # The refused scan has a frozen allocation; only a new scan can use capacity.
+    publish(source, now+2, 'capacity-restored')
+    assert C.step(source, dest, now+2)['registered'] > 0
     expiry = max(d["investigation"]["measurement"]["expires_ms"] for d in C.dossiers(dest))
     C.step(source, dest, expiry+1)
     C.step(source, dest, expiry+C.RETENTION_MS+2)
@@ -144,7 +146,7 @@ def test_reader_rejects_oversized_source_and_does_not_create_missing_file(paths)
     publish(source,now)
     with sqlite3.connect(source) as db:
         db.execute('UPDATE scans SET payload=?',('x'*(2*1024**2+1),))
-    with pytest.raises(ValueError,match='source_payload_bound'): C.source_snapshot(source)
+    with pytest.raises(ValueError,match='^SOURCE_PAYLOAD_BOUND_EXCEEDED$'): C.source_snapshot(source)
 
 
 def test_watchdog_isolated_opt_in(tmp_path):

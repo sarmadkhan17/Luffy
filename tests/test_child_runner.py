@@ -45,9 +45,9 @@ def test_an_exception_is_reported_not_raised():
 
 def test_a_child_past_its_deadline_is_killed():
     t0 = time.monotonic()
-    r = run_child(_sleep, 30, timeout_s=2)
+    r = run_child(_sleep, 30, timeout_s=.2)
     assert r.ok is False and r.timed_out is True
-    assert time.monotonic() - t0 < 15
+    assert time.monotonic() - t0 < 3
 
 
 def test_the_child_runs_at_low_priority():

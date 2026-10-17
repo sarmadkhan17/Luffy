@@ -12,18 +12,14 @@ from trader.cognition.m32_scheme_d_validation import (
     HYPOTHESIS_TABLE,
     IntegrityError,
     N1_NULL_MAD,
-    PHASE_BENCHMARK,
-    SeedRegistry,
     WorldRefused,
     actual_statistic_vector,
-    apply_injections,
     bh_rejections,
     blocked_network,
     derive_n1_null_mad,
     draw_block_map,
     exclusive_json,
     generate_truth_tables,
-    generate_world,
     hypothesis_table,
     monte_carlo_p,
     orbit_size,
@@ -46,15 +42,6 @@ def test_fixed_384_hypothesis_family_and_labels():
             ("case_kind", "persistence", "continuation")] == [128, 128, 128]
     assert {sum(h.cluster == c for h in table) for c in range(32)} == {12}
     assert sum(h.sector == "A" for h in table) == 192
-
-
-def test_seed_registry_allows_only_unique_phase_90_tuples():
-    registry = SeedRegistry()
-    registry.generator(PHASE_BENCHMARK, 0, 1, 0, 0)
-    with pytest.raises(IntegrityError, match="duplicate_seed_tuple"):
-        registry.generator(PHASE_BENCHMARK, 0, 1, 0, 0)
-    with pytest.raises(IntegrityError, match="non_phase_90_rng_refused"):
-        registry.generator(10, 0, 1, 0, 0)
 
 
 def test_frozen_hashes_and_environment_match(monkeypatch):
@@ -122,25 +109,6 @@ def test_sampling_can_include_identity_and_repeats_with_replacement():
     assert np.array_equal(first, second)
 
 
-def test_actual_statistic_harness_calls_all_384_imported_statistics():
-    world = generate_world(correlation=0, dgp=1, world_index=0)
-    values = actual_statistic_vector(world)
-    assert values.shape == (HYPOTHESES,)
-    assert np.all(np.isfinite(values))
-    assert HYPOTHESIS_TABLE[0].label == "case_kind"
-    assert HYPOTHESIS_TABLE[128].label == "persistence"
-
-
-def test_phase90_injections_preserve_membership_masks_and_strata():
-    registry = SeedRegistry()
-    world = generate_world(correlation=0, dgp=1, world_index=4, registry=registry)
-    injected = apply_injections(world, 104, registry=registry)
-    assert np.array_equal(injected.memberships, world.memberships)
-    assert np.array_equal(injected.observed, world.observed)
-    assert injected.block_strata == world.block_strata
-    assert np.any(injected.persistence != world.persistence)
-
-
 def test_symbolic_truth_tables_are_complete_in_shape_and_honestly_refuse_ambiguity():
     truth = generate_truth_tables()
     # v2 records ambiguity on each hypothesis instead of a redundant boolean.
@@ -181,3 +149,29 @@ def test_network_is_blocked_and_output_is_exclusive(tmp_path):
     exclusive_json(path, "{}\n")
     with pytest.raises(IntegrityError, match="output_path_collision"):
         exclusive_json(path, "{}\n")
+
+
+def test_actual_statistic_harness_calls_all_384_imported_statistics(monkeypatch):
+    from collections import Counter
+    from trader.cognition import m32_scheme_d_validation as D
+    rows = np.arange(D.ROWS)
+    memberships = (rows[:, None] + np.arange(HYPOTHESES)[None, :]) % 4 == 0
+    world = D.SyntheticWorld(0, 1, 0, memberships, rows % 3,
+        (rows % 17).astype(float), np.ones(D.ROWS, dtype=bool), n0_strata(),
+        valid_metadata(n0_strata()))
+    metric = D._metric
+    calls = []
+    def measured(rows, matched, label, lookup):
+        calls.append(label)
+        return metric(rows, matched, label, lookup)
+    def forbidden(*args, **kwargs):
+        pytest.fail('pre-RNG computation reached a generator')
+    monkeypatch.setattr(D, '_metric', measured)
+    monkeypatch.setattr(D.np.random, 'default_rng', forbidden)
+    monkeypatch.setattr(D, 'SeedRegistry', forbidden)
+    values = actual_statistic_vector(world)
+    assert HYPOTHESIS_TABLE[0].label == 'case_kind'
+    assert HYPOTHESIS_TABLE[128].label == 'persistence'
+    assert values.shape == (HYPOTHESES,)
+    assert np.all(np.isfinite(values))
+    assert Counter(calls) == {'case_kind': 128, 'persistence': 128, 'continuation': 128}

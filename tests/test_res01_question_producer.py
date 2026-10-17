@@ -89,6 +89,30 @@ def test_supported_event_generates_typed_question_and_survives_restart(paths):
         src, "SELECT payload FROM scans WHERE scan_id=?", event["scan_id"])[0][0])
     assert q["context"]["world_model"]["model_id"] == scan_of(src)["world_model"]["model_id"]
     assert q["protocol"]["horizon_bars"] == 5
+    # Retained RES-02 protection: the route is derived from the frozen
+    # hypothesis and exact internal sources, never arbitrary external prose.
+    plan = chain['plan']
+    assert plan['schema'] == R.PLAN_SCHEMA
+    assert plan['question_id'] == q['question_id']
+    assert plan['question_sha256'] == R.sha256(R.canonical(q))
+    assert plan['predicates_id'] == R.PREDICATES_ID
+    for section, alternative in zip(plan['sections'][:3], q['protocol']['alternatives']):
+        assert section['status'] == 'ROUTED'
+        assert section['hypothesis'] == alternative['name']
+        assert section['prediction'] == alternative['prediction']
+        assert section['invalidator'] == alternative['invalidator']
+        updates, candles = section['routes']
+        assert updates['store'] == 'investigation.updates'
+        assert updates['locator']['investigation_id'] == iid
+        assert 'evidence.target_versions' in updates['fields']
+        assert candles['store'] == 'investigation.inputs'
+        assert candles['locator']['target_keys'] == q['protocol']['target_keys']
+        assert 'candle.volume' in candles['fields']
+    unavailable = plan['sections'][-1]
+    assert unavailable['hypothesis'] == 'participant_cause'
+    assert unavailable['status'] == 'UNAVAILABLE'
+    assert unavailable['reason'] == R.PARTICIPANT_REASON
+    assert unavailable['routes'] == []
     # A real question about unresolved evidence must not imply a result.
     assert chain["runs"][0]["result"]["status"] == "INCONCLUSIVE"
     assert {p["status"] for p in chain["runs"][0]["result"]["paths"]} == {"NOT_ASSESSED"}
@@ -135,3 +159,24 @@ def test_disabled_producer_does_not_fabricate_work(paths):
     publish(src, now)
     assert producer(root, now, enabled=False) == {"status": "disabled"}
     assert not dest.exists()
+
+
+def test_replay_refuses_rehashed_manual_url_route(paths):
+    root, src, dest, now = root_for(paths)
+    publish(src, now)
+    assert producer(root, now)['research']['ok'] == 1
+    (iid,), = table(dest, 'SELECT id FROM cases')
+    chain = R.chain(dest, iid)
+    forged = dict(chain['plan'])
+    forged['sections'] = [dict(chain['plan']['sections'][0], routes=[{
+        'store': 'manual.urls', 'urls': ['https://doi.org/10.1234/primed']}])]
+    forged.pop('plan_id')
+    forged = R._with_id(forged, 'plan_id')
+    with sqlite3.connect(dest) as db:
+        for (name,) in db.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
+            db.execute('DROP TRIGGER "' + name + '"')
+        encoded = R.canonical(forged)
+        db.execute('UPDATE investigation_research_records SET record_id=?,canonical_sha256=?,canonical_json=? WHERE record_type=?',
+                   (forged['plan_id'], R.sha256(encoded), encoded, R.PLAN_SCHEMA))
+    with pytest.raises(R.ResearchRefused, match='^plan_rederivation_mismatch$'):
+        R.chain(dest, iid)

@@ -302,7 +302,8 @@ def test_normal_outcome_capture_nullable_metadata_and_bad_capture_isolation(pros
     class Feed:
         def fetch_ohlcv(self,symbol,*a,**k):
             return pd.DataFrame({'ts':pd.to_datetime([CUT+3600000,CUT+14400000],unit='ms',utc=True),
-                'close':[float('nan') if symbol=='bad' else 110,120],
+                'close':[110,120],
+                'volume':[float('nan') if symbol=='bad' else 5,5],
                 'taker_buy':[float('nan'),float('nan')]})
     assert resolve_pending(j,Feed(),now_ms=CUT+14400000+300000)==2
     failed=j.query('SELECT * FROM learning_capture_failures')

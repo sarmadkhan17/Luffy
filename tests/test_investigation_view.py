@@ -5,7 +5,7 @@ from trader.observability import investigation as C
 
 
 def test_authenticated_missing_readonly_endpoint(server,tmp_path):
-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
+    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
     assert client.get('/api/investigations/latest').status_code==401
     r=client.get('/api/investigations/latest?token=fixture-token')
     assert r.json()['status']=='unavailable'
