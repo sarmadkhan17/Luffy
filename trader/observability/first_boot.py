@@ -16,7 +16,7 @@ READ_BUDGET_S = 20.0
 
 REASON_CODES = frozenset({
     'read_credentials_missing', 'read_credentials_unusable',
-    'read_credentials_separation_violation', 'venue_authentication_or_permission_failure',
+    'venue_authentication_or_permission_failure',
     'venue_timeout_or_network_failure', 'venue_response_malformed',
     'venue_positions_nonzero', 'venue_orders_nonzero', 'local_execution_ledger_not_clear',
     'snapshot_stale_or_unverifiable', 'first_boot_static_facts_not_pass',
@@ -35,15 +35,13 @@ def failure_code(exc):
     # Never serialize exception text, class names, response bodies or headers.
     import ccxt
     import requests
-    from trader.engine.venue_reads import ReadCredentialsMissing, ReadCredentialsSeparation
+    from trader.engine.venue_reads import ReadCredentialsMissing
     if isinstance(exc, AdmissionFailure):
         return exc.code if exc.code in REASON_CODES else 'first_boot_unexpected_failure'
     if isinstance(exc, sqlite3.Error):
         return 'local_execution_ledger_not_clear'
     if isinstance(exc, ReadCredentialsMissing):
         return 'read_credentials_missing'
-    if isinstance(exc, ReadCredentialsSeparation):
-        return 'read_credentials_separation_violation'
     if isinstance(exc, (ccxt.AuthenticationError, ccxt.PermissionDenied)):
         return 'venue_authentication_or_permission_failure'
     if isinstance(exc, ccxt.ArgumentsRequired):
@@ -133,7 +131,7 @@ def read_zero_account(*, clock=time.time, monotonic=time.monotonic):
         end = clock()
         return dict(schema='luffy-first-boot-zero-account.v1', status='VERIFIED',
                     account_scope=scope, venue_host=guard.host, environment='DEMO',
-                    complete_listing=True, checked_at=begin, completed_at=end,
+                    connection='CONNECTED', complete_listing=True, checked_at=begin, completed_at=end,
                     read_elapsed_seconds=monotonic()-start, requests=requests,
                     position_count=0, ordinary_order_count=0, algo_order_count=0,
                     unknown_exposure=False, mutations=0, trading_authority=False)
@@ -143,9 +141,8 @@ def read_zero_account(*, clock=time.time, monotonic=time.monotonic):
 
 def validate_zero_account(value, now):
     from trader.engine.protection_snapshot import STALE_AFTER_S
-    from trader.engine.venue_reads import READ_SCOPES
     if (not isinstance(value, dict) or value.get('schema') != 'luffy-first-boot-zero-account.v1'
-            or value.get('status') != 'VERIFIED' or value.get('account_scope') not in READ_SCOPES
+            or value.get('status') != 'VERIFIED' or value.get('account_scope') != 'configured_key'
             or value.get('environment') != 'DEMO' or value.get('complete_listing') is not True
             or value.get('venue_host') != 'demo-fapi.binance.com'
             or value.get('unknown_exposure') is not False or value.get('trading_authority') is not False
@@ -162,3 +159,11 @@ def validate_zero_account(value, now):
             or value['completed_at']-value['checked_at'] > READ_BUDGET_S):
         raise AdmissionFailure('snapshot_stale_or_unverifiable')
     return value
+
+
+def connection_state(exc):
+    """A non-empty account is still a successful authenticated read."""
+    from trader.engine.venue_reads import connection_state as state, CONNECTED
+    if isinstance(exc, AdmissionFailure) and exc.code in ('venue_positions_nonzero', 'venue_orders_nonzero'):
+        return CONNECTED
+    return state(exc)

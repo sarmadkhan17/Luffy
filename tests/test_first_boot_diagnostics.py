@@ -38,21 +38,8 @@ def refused(local, monkeypatch, expected):
     ('missing_secret','read_credentials_missing'),
     ('wrong_type','read_credentials_unusable'),
     ('whitespace','read_credentials_unusable'),
-    ('key_overlap','read_credentials_separation_violation'),
-    ('secret_overlap','read_credentials_separation_violation'),
 ])
 def test_credential_reasons_without_transport(local, monkeypatch, venue, case, expected):
-    """DEMO reads use the trading pair, so its absence/shape is what fails; the
-    distinct-read-key overlap rule is the non-demo rule and is checked directly."""
-    if case in ('key_overlap', 'secret_overlap'):
-        env = Env(read_key=True, demo='false')
-        env.values['BINANCE_READ_API_KEY' if case == 'key_overlap' else 'BINANCE_READ_SECRET_KEY'] = \
-            'tk' if case == 'key_overlap' else 'ts'
-        with pytest.raises(RuntimeError) as e:
-            V._read_credentials(env)
-        assert F.failure_code(e.value) == expected
-        assert venue.sent == []
-        return
     from trader.core import config
     empty_receipt(local)
     env = Env()
@@ -62,15 +49,6 @@ def test_credential_reasons_without_transport(local, monkeypatch, venue, case, e
     monkeypatch.setattr(config, 'Env', env)
     refused(local, monkeypatch, expected)
     assert venue.sent == []
-
-
-@pytest.mark.parametrize('case', ['missing', 'missing_secret'])
-def test_non_demo_without_a_distinct_read_key_is_missing(case):
-    env = Env(read_key=True, demo='false')
-    env.values.pop('BINANCE_READ_API_KEY' if case == 'missing' else 'BINANCE_READ_SECRET_KEY')
-    with pytest.raises(RuntimeError) as e:
-        V._read_credentials(env)
-    assert F.failure_code(e.value) == 'read_credentials_missing'
 
 
 @pytest.mark.parametrize('exception,expected', [

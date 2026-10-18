@@ -205,7 +205,7 @@ def _first_boot_protection(db, facts, clock):
         raise AdmissionFailure('snapshot_stale_or_unverifiable')
     inventory = validate_zero_account(inventory, clock())
     return dict(status='PASS', reasons=[], admission='FIRST_BOOT_ZERO_ACCOUNT',
-                evidence_status='AUTHORITATIVE_ZERO_EXPOSURE', account_inventory=inventory,
+                evidence_status='AUTHORITATIVE_ZERO_EXPOSURE', connection='CONNECTED', account_inventory=inventory,
                 freshness='FRESH', age_seconds=clock()-inventory['checked_at'], position_count=0,
                 # Floor for Phase B's unchanged newer-producer-generation test;
                 # this is NOT a synthetic/persisted protection receipt.
@@ -290,9 +290,10 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
                 try:
                     facts['protection'] = _first_boot_protection(db, facts, clock)
                 except Exception as exc:
-                    from .first_boot import failure_code
+                    from .first_boot import failure_code, connection_state
                     # Diagnostic only: every failure remains FAIL / zero authority.
                     facts['protection'] = {**_fact([failure_code(exc)]),
+                                           'connection': connection_state(exc),
                                            'admission': 'FIRST_BOOT_ZERO_ACCOUNT',
                                            'trading_authority': False}
             else:
@@ -305,10 +306,11 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
         facts.setdefault('control', _fact(['control_unreadable']))
         if first_boot_path:
             import sqlite3
-            from .first_boot import failure_code
+            from .first_boot import failure_code, connection_state
             code = ('local_execution_ledger_not_clear' if isinstance(exc, sqlite3.Error)
                     else failure_code(exc))
-            facts['protection'] = {**_fact([code]), 'admission': 'FIRST_BOOT_ZERO_ACCOUNT',
+            facts['protection'] = {**_fact([code]), 'connection': connection_state(exc),
+                                   'admission': 'FIRST_BOOT_ZERO_ACCOUNT',
                                    'trading_authority': False}
         else:
             facts['protection'] = _fact(['protection_unreadable_or_unverified'])

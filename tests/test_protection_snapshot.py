@@ -685,9 +685,6 @@ def _cell_ok(cell):
         return False
 
 
-TRADING_KEY, TRADING_SECRET = "tk", "ts"          # tests.test_venue_reads.Env
-
-
 def violations(root):
     from trader.engine.venue_reads import GetOnlySession
     bad = []
@@ -697,9 +694,6 @@ def violations(root):
             bad.append(name)
         elif name in ("SnapshotStore", "ProtectionMonitor"):
             bad.append("publisher:" + name)
-        elif isinstance(o, ccxt.Exchange) and (getattr(o, "secret", None) == TRADING_SECRET
-                                               or getattr(o, "apiKey", None) == TRADING_KEY):
-            bad.append("trading_credentials_reachable")
         elif any(callable(getattr(type(o), m, None)) for m in MUTATOR_NAMES[:6]):
             # an exchange-like object: only the dedicated GET-only client may exist
             if not (isinstance(o, ccxt.Exchange) and isinstance(o.session, GetOnlySession)):
@@ -710,7 +704,7 @@ def violations(root):
 def _real_observer(journal, busy):
     from tests.test_venue_reads import Env, Kernel
     from trader.engine.venue_reads import make_venue_reads
-    reads = make_venue_reads(Kernel(demo=False), env=Env(read_key=True, demo="false"))
+    reads = make_venue_reads(Kernel(), env=Env())
     return ps.Observer(reads, ps.JournalReads(journal.db_path), busy)
 
 
@@ -1178,24 +1172,21 @@ def test_kernel_does_not_activate_the_protection_monitor():
     assert "protection_snapshot" not in pathlib.Path(kmod.__file__).read_text()
 
 
-def test_demo_monitor_reuses_trading_key_for_get_only_reads(tmp_path):
-    """Owner exception, DEMO only: the trading key pair feeds the GET-only reads."""
+def test_monitor_reader_uses_the_one_configured_pair(tmp_path):
     from tests.test_venue_reads import Env, Kernel as KernelExchange
     journal = Journal(tmp_path / "j.db")
-    demo = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False,
-                           env=Env())
-    assert demo.observer.reads.credential_scope == "demo_shared_trading_key_get_only"
+    m = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False, env=Env())
+    assert m.observer.reads.credential_scope == "configured_key"
 
 
-def test_without_read_only_key_the_monitor_publishes_unreadable(tmp_path, monkeypatch):
-    """Off DEMO the trading key is never used for the snapshot. No read key →
-    the reader is not built and every check publishes the reason."""
+def test_without_configured_credentials_the_monitor_publishes_unreadable(tmp_path):
     from tests.test_venue_reads import Env, Kernel as KernelExchange
     journal = Journal(tmp_path / "j.db")
-    m = ps.make_monitor(KernelExchange(demo=False), journal.db_path, supervisor_busy=lambda: False,
-                        env=Env(demo="false"))
+    env = Env()
+    env.binance_keys = lambda: ("", "")
+    m = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False, env=env)
     assert m.observer.reads is None
     snap = m.run_once()
     assert snap["status"] == "UNREADABLE"
-    assert snap["reasons"] == ["venue_reader_unavailable:read_only_api_key_not_configured"]
+    assert snap["reasons"] == ["venue_reader_unavailable:api_key_not_configured"]
     assert _stored(journal)["value"]["generation"] == snap["generation"]

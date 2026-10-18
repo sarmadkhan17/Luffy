@@ -47,7 +47,7 @@ def venue(local,monkeypatch):
     from trader.core import config
     transport=InventoryHTTP(); original=V.guarded_client
     # DEMO reuses the trading key pair for GET-only reads; a stale read key is ignored.
-    monkeypatch.setattr(config,'Env',Env(read_key=True))
+    monkeypatch.setattr(config,'Env',Env())
     def guarded(**kwargs):
         client, guard = original(**kwargs, inner=transport)
         client.enableRateLimit = False  # fake HTTP only; production rate policy unchanged
@@ -205,17 +205,16 @@ def test_first_boot_does_not_relax_phase_b(ready):
     assert not B.readiness(ready.root,CFG,ready.instance.record,baseline,clock=lambda:ready.now)['allow']
 
 
-@pytest.mark.parametrize('key',['missing','trading'])
-def test_demo_first_boot_reuses_trading_key_and_ignores_read_key(local,monkeypatch,venue,key):
+def test_first_boot_reads_with_the_one_configured_pair(local,monkeypatch,venue):
     from trader.core import config
     empty_receipt(local)
-    env=Env(read_key=key!='missing')
-    if key=='trading':env.values.update(BINANCE_READ_API_KEY='tk',BINANCE_READ_SECRET_KEY='ts')
-    monkeypatch.setattr(config,'Env',env)
+    monkeypatch.setattr(config,'Env',Env())
     result=phase_a(local,monkeypatch)
     assert result['allow'] and len(venue.sent)==6
     assert {h['X-MBX-APIKEY'] for _,_,h,_ in venue.sent}=={'tk'}
-    assert result['facts']['protection']['account_inventory']['account_scope']==V.DEMO_SHARED_SCOPE
+    protection=result['facts']['protection']
+    assert protection['account_inventory']['account_scope']==V.CONFIGURED_SCOPE
+    assert protection['connection']=='CONNECTED'
 
 
 def test_empty_malformed_receipt_schema_is_not_first_boot(local,monkeypatch,venue):

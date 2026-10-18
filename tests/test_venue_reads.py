@@ -100,10 +100,8 @@ class Kernel:
 
 
 class Env:
-    def __init__(self, read_key=False, demo="true"):
+    def __init__(self, demo="true"):
         self.values = {"BINANCE_DEMO": demo}
-        if read_key:
-            self.values.update(BINANCE_READ_API_KEY="rk", BINANCE_READ_SECRET_KEY="rs")
 
     def get(self, key, default=""):
         return self.values.get(key, default)
@@ -112,7 +110,7 @@ class Env:
         return "tk", "ts"
 
 
-def _reads(transport=None, max_used_weight=1200, read_key=False):
+def _reads(transport=None, max_used_weight=1200):
     transport = transport or Transport()
     client, guard = vr.guarded_client(api_key="k", secret="s", demo=True, markets=MARKETS,
                                       max_used_weight=max_used_weight, inner=transport)
@@ -202,41 +200,52 @@ def test_tick_precision_is_authoritative_or_unknown():
 
 def test_make_venue_reads_is_dedicated_and_same_venue():
     kernel = Kernel(demo=True)
-    reads = vr.make_venue_reads(kernel, env=Env())          # DEMO: shared key, no read key needed
-    assert reads.credential_scope == vr.DEMO_SHARED_SCOPE
+    reads = vr.make_venue_reads(kernel, env=Env())          # the one configured pair
+    assert reads.credential_scope == vr.CONFIGURED_SCOPE
     assert reads._client.apiKey == "tk" and reads._client.secret == "ts"
     assert reads._client is not kernel and isinstance(reads._client.session, vr.GetOnlySession)
     assert reads._client.markets is not kernel.markets          # copied, not shared
-    stale = vr.make_venue_reads(kernel, env=Env(read_key=True))  # a configured read key is ignored in DEMO
-    assert stale._client.apiKey == "tk"
     with pytest.raises(RuntimeError, match="snapshot_venue_differs_from_kernel_venue"):
-        vr.make_venue_reads(Kernel(demo=False), env=Env(read_key=True, demo="true"))
+        vr.make_venue_reads(Kernel(demo=False), env=Env(demo="true"))
     assert kernel.mutations == []
 
 
-def test_non_demo_keeps_the_distinct_read_only_key_rule():
+def test_live_environment_uses_the_same_configured_pair():
     live = Kernel(demo=False)
-    reads = vr.make_venue_reads(live, env=Env(read_key=True, demo="false"))
-    assert reads.credential_scope == vr.READ_ONLY_SCOPE and reads._client.apiKey == "rk"
-    with pytest.raises(RuntimeError, match="read_only_api_key_not_configured"):
-        vr.make_venue_reads(live, env=Env(demo="false"))        # never falls back to trading key
-    same = Env(read_key=True, demo="false")
-    same.values.update(BINANCE_READ_API_KEY="tk", BINANCE_READ_SECRET_KEY="ts")
-    with pytest.raises(RuntimeError, match="read_only_key_equals_trading_key"):
-        vr.make_venue_reads(live, env=same)
+    reads = vr.make_venue_reads(live, env=Env(demo="false"))
+    assert reads.credential_scope == vr.CONFIGURED_SCOPE and reads._client.apiKey == "tk"
     assert live.mutations == []
 
 
-def test_inherited_transport_bypass_carries_only_the_read_only_key():
-    """Astra R2 repro, restated honestly: the GET-only guard is defence in
-    depth and CAN be bypassed through inherited requests methods. What the
-    bypass can sign with is the read-only key — never the trading key, which
-    this client never receives. The venue refuses a mutation for that key
-    (pre-deploy gate: confirm the key's permissions)."""
+def test_missing_configured_pair_is_reported_not_substituted():
+    env = Env()
+    env.binance_keys = lambda: ("", "ts")
+    with pytest.raises(vr.ReadCredentialsMissing):
+        vr.make_venue_reads(Kernel(demo=True), env=env)
+
+
+@pytest.mark.parametrize("exc,state", [
+    (None, "CONNECTED"),
+    (ccxt.AuthenticationError("x"), "UNAVAILABLE"),
+    (ccxt.PermissionDenied("x"), "UNAVAILABLE"),
+    (ccxt.RequestTimeout("x"), "UNAVAILABLE"),
+    (ccxt.NetworkError("x"), "UNAVAILABLE"),
+    (requests.exceptions.ConnectionError("x"), "UNAVAILABLE"),
+    (ccxt.BadResponse("x"), "ERROR"),
+    (ValueError("x"), "ERROR"),
+])
+def test_connection_state_is_connected_unavailable_or_error(exc, state):
+    assert vr.connection_state(exc) == state
+
+
+def test_inherited_transport_bypass_is_defence_in_depth_only():
+    """The GET-only guard is defence in depth and CAN be bypassed through
+    inherited requests methods; the venue-side key permissions are the owner's
+    concern, so this documents the bypass rather than relying on it."""
     from requests.adapters import HTTPAdapter
     t = Transport()
     kernel = Kernel(demo=False)
-    reads = vr.make_venue_reads(kernel, env=Env(read_key=True, demo="false"))
+    reads = vr.make_venue_reads(kernel, env=Env(demo="false"))
     client = reads._client
     adapter = client.session.get_adapter("https://fapi.binance.com")
     adapter._inner = t
@@ -256,6 +265,5 @@ def test_inherited_transport_bypass_carries_only_the_read_only_key():
             super(vr.GetOnlyAdapter, adapter).send(prepared)
     finally:
         HTTPAdapter.send = orig
-    assert seen == {"method": "POST", "key": "rk"}        # the bypass exists …
-    assert client.apiKey == "rk" and client.secret == "rs"  # … but only with the read key
-    assert "tk" not in (client.apiKey, client.secret) and "ts" not in (client.apiKey, client.secret)
+    assert seen == {"method": "POST", "key": "tk"}        # the bypass exists …
+    assert client.apiKey == "tk" and client.secret == "ts"

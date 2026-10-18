@@ -9,17 +9,11 @@ module provides both:
     used only by the snapshot worker thread. It gets a copy of the kernel's
     already-loaded markets (no extra exchangeInfo request) and must address
     the same venue (demo or not) as the kernel, or construction fails.
-  * credentials. On a non-demo venue a **read-only API key**
-    (``BINANCE_READ_API_KEY``/``BINANCE_READ_SECRET_KEY``, "Enable Reading"
-    only) is required: the venue enforces that authority boundary, the trading
-    key is never loaded, and without a distinct read key the reader is not
-    built and the snapshot publishes UNREADABLE ``venue_reader_unavailable:…``.
-    DEMO-ONLY EXCEPTION (owner decision): with ``BINANCE_DEMO`` truthy the
-    ordinary ``BINANCE_API_KEY``/``BINANCE_SECRET_KEY`` pair is reused for
-    these GET-only reads, so the venue no longer enforces read-only isolation
-    for them; the GET-only transport, endpoint allow-list and separate client
-    are defence in depth only. Credential scope is reported as
-    ``demo_shared_trading_key_get_only``. Not to be extended to live trading.
+  * **the configured credential pair** (``BINANCE_API_KEY``/``BINANCE_SECRET_KEY``,
+    the pair the Kernel trades with; owner decision: one Binance API
+    configuration, DEMO or LIVE as the owner configures). Key permissions are
+    the owner's concern at Binance, not an in-process boundary. The reader is
+    still a *separate client instance* (thread safety).
   * a **GET-only transport** as defence in depth only: ccxt's ordinary paths
     (``create_order``, ``cancel_order``, algo deletes …) are refused before
     sending. It is *not* a boundary: inherited ``requests``/``urllib3``
@@ -276,46 +270,36 @@ class VenueReads:
 
 
 class ReadCredentialsMissing(RuntimeError):
-    """No dedicated read credentials configured."""
+    """BINANCE_API_KEY / BINANCE_SECRET_KEY are not configured."""
 
 
-class ReadCredentialsSeparation(RuntimeError):
-    """Dedicated read credentials overlap trading credentials."""
-
-
-READ_ONLY_SCOPE = "read_only_key"
-DEMO_SHARED_SCOPE = "demo_shared_trading_key_get_only"
-READ_SCOPES = frozenset({READ_ONLY_SCOPE, DEMO_SHARED_SCOPE})
+CONFIGURED_SCOPE = "configured_key"
 
 
 def _read_credentials(env) -> tuple[str, str, str]:
-    """Credentials for the GET-only venue reads.
-
-    DEMO (``BINANCE_DEMO`` truthy, the only venue today): the ordinary
-    ``BINANCE_API_KEY``/``BINANCE_SECRET_KEY`` pair is reused, so no second key
-    has to be kept valid. This is an owner-approved, DEMO-only exception. The
-    key keeps its trading permission, so the venue no longer enforces
-    read-only isolation; what remains is the GET-only transport, the
-    allow-listed endpoints, a separate client instance and the rate guard,
-    which are defence in depth and not an authority boundary. Reads still go
-    through ``guarded_client`` and never through the execution client.
-
-    Anything that is not explicitly DEMO keeps the original rule: a distinct
-    read-only key, enforced by the venue ("Enable Reading" only), or nothing.
-    The exception is never extended to a live venue.
-    """
-    if env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes"):
-        key, secret = env.binance_keys()
-        if not (key and secret):
-            raise ReadCredentialsMissing("demo_api_key_not_configured")
-        return key, secret, DEMO_SHARED_SCOPE
-    key, secret = env.get("BINANCE_READ_API_KEY"), env.get("BINANCE_READ_SECRET_KEY")
+    """The one configured Binance pair, used for GET-only account reads."""
+    key, secret = env.binance_keys()
     if not (key and secret):
-        raise ReadCredentialsMissing("read_only_api_key_not_configured")
-    trading_key, trading_secret = env.binance_keys()
-    if key == trading_key or secret == trading_secret:
-        raise ReadCredentialsSeparation("read_only_key_equals_trading_key")
-    return key, secret, READ_ONLY_SCOPE
+        raise ReadCredentialsMissing("api_key_not_configured")
+    return key, secret, CONFIGURED_SCOPE
+
+
+CONNECTED, UNAVAILABLE, ERROR = "CONNECTED", "UNAVAILABLE", "ERROR"
+
+
+def connection_state(exc: BaseException | None = None) -> str:
+    """CONNECTED: the required authenticated reads succeeded (exc is None).
+    UNAVAILABLE: the exchange is unreachable or rejects the credentials.
+    ERROR: any other connection or response error. Reads only, never an order."""
+    if exc is None:
+        return CONNECTED
+    import ccxt
+    import requests
+    if isinstance(exc, (ccxt.AuthenticationError, ccxt.PermissionDenied, ccxt.NetworkError,
+                        requests.exceptions.Timeout, requests.exceptions.ConnectionError,
+                        TimeoutError, ConnectionError)):
+        return UNAVAILABLE
+    return ERROR
 
 
 def guarded_client(*, api_key: str, secret: str, demo: bool, markets: dict,
