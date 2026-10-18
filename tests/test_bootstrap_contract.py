@@ -66,6 +66,13 @@ def test_phase_a_static_required_facts_remain_fail_closed(local, monkeypatch, ba
         from trader.core import config
         monkeypatch.setattr(config, 'load_config', lambda *a: {})
     if bad == 'environment_invalid': monkeypatch.setattr(P, '_filesystem', lambda *a: (_ for _ in ()).throw(OSError()))
+    if bad == 'protection_missing':
+        # first-boot read needs credentials; none configured here, so it must refuse before any network
+        from trader.core import config
+        class NoKeys:
+            def get(self, key, default=''): return 'true' if key == 'BINANCE_DEMO' else default
+            def binance_keys(self): return ('', '')
+        monkeypatch.setattr(config, 'Env', NoKeys())
     if bad in ['protection_missing', 'protection_partial', 'book_changed', 'hold_missing', 'active_control', 'pending_entry']:
         with sqlite3.connect(root / 'data/luffy.db') as db:
             if bad == 'protection_missing': db.execute('DELETE FROM protection_evidence')

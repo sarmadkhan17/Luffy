@@ -1178,15 +1178,20 @@ def test_kernel_does_not_activate_the_protection_monitor():
     assert "protection_snapshot" not in pathlib.Path(kmod.__file__).read_text()
 
 
-def test_demo_monitor_reuses_trading_key_and_non_demo_without_read_key_is_unreadable(tmp_path, monkeypatch):
-    """DEMO shares the trading key for GET-only reads (owner exception). Any
-    non-demo venue still needs the distinct read key, else every check
-    publishes the reason."""
+def test_demo_monitor_reuses_trading_key_for_get_only_reads(tmp_path):
+    """Owner exception, DEMO only: the trading key pair feeds the GET-only reads."""
     from tests.test_venue_reads import Env, Kernel as KernelExchange
     journal = Journal(tmp_path / "j.db")
     demo = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False,
                            env=Env())
     assert demo.observer.reads.credential_scope == "demo_shared_trading_key_get_only"
+
+
+def test_without_read_only_key_the_monitor_publishes_unreadable(tmp_path, monkeypatch):
+    """Off DEMO the trading key is never used for the snapshot. No read key →
+    the reader is not built and every check publishes the reason."""
+    from tests.test_venue_reads import Env, Kernel as KernelExchange
+    journal = Journal(tmp_path / "j.db")
     m = ps.make_monitor(KernelExchange(demo=False), journal.db_path, supervisor_busy=lambda: False,
                         env=Env(demo="false"))
     assert m.observer.reads is None
