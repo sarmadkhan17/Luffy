@@ -13,6 +13,7 @@ from ccxt import RequestTimeout
 
 from trader.core.journal import Journal
 from trader.core.types import Action, ControlState, Decision
+from trader.core import reason_codes as rc
 from trader.engine import protective
 from trader.engine.control_fence import control_fence, fence_path
 from trader.engine.recovery import KEY
@@ -207,3 +208,16 @@ def test_exit_protection_and_recovery_run_in_recovery_while_fence_held(setup):
     assert any("stopLossPrice" not in s[4] for s in reduce_only)  # exit
     assert len(_entries(ex)) == 1                                # no new entry
     assert j.kv_get("control_state") == "RECOVERY"
+
+
+@pytest.mark.parametrize("state,reason,code", [
+    (A, None, None),
+    (F, "state=FROZEN: entries blocked", rc.FENCE_STATE_FROZEN),
+    (H, "state=HALTED", rc.FENCE_STATE_HALTED),
+    (R, "state=RECOVERY: entries blocked", rc.FENCE_STATE_NOT_ACTIVE),
+    (None, "state=UNREADABLE: entries blocked", rc.FENCE_STATE_UNREADABLE),
+])
+def test_entry_block_names_each_state_and_only_active_may_enter(state, reason, code):
+    """FROZEN keeps its own stable reason code; nothing but ACTIVE (and never an unreadable state) enters."""
+    from trader.engine.control_fence import entry_block
+    assert entry_block(state) == (reason, code)
