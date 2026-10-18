@@ -65,6 +65,193 @@ def venue_realized_pnl(exchange, symbol: str,
     return total
 
 
+_WINDOW_MS = 7 * 86_400_000 - 1_000     # Binance serves at most 7 days per history call
+_FUNDING_HOURS = (0, 8, 16)             # UTC settlement hours
+
+
+def _paged(fetch, since_ms: int, until_ms: int):
+    """Every distinct row in [since, until], one <=7-day call at a time.
+
+    None when a call fills its page or two rows share an id with different
+    content: a truncated history is not evidence of completeness.
+    """
+    rows: dict = {}
+    start = since_ms
+    while start <= until_ms:
+        end = min(start + _WINDOW_MS, until_ms)
+        page = fetch(start, end)
+        if not isinstance(page, list) or len(page) >= 1000:
+            return None
+        for row in page:
+            key = str(row.get("id"))
+            if not row.get("id") or (key in rows and rows[key] != row):
+                return None
+            rows[key] = row
+        start = end + 1
+    return list(rows.values())
+
+
+def _funding_settlements(after_ms: int, through_ms: int) -> int:
+    """Funding instants the venue owes a position held across (after, through]."""
+    n, day = 0, after_ms // 86_400_000
+    while day * 86_400_000 <= through_ms:
+        for hour in _FUNDING_HOURS:
+            at = day * 86_400_000 + hour * 3_600_000
+            n += after_ms < at <= through_ms
+        day += 1
+    return n
+
+
+def external_close_attribution(exchange, journal: Journal, trade: dict, *, now_ms: int | None = None):
+    """The venue's own record of how an open journal trade was closed elsewhere.
+
+    Returns (attribution, None) or (None, reason). Nothing here is estimated: the
+    entry order is the one the journal recorded, the exit is the venue's reduce
+    fills that bring that quantity back to zero, and P&L is the sum of the
+    venue's per-fill realizedPnl less commission (funding is carried as separate
+    evidence, as everywhere else in the booking contract). Anything ambiguous --
+    an extra same-side fill, several exit orders, a history page that may be
+    truncated, a non-USDT fee -- is refused so the caller keeps its fail-closed
+    behaviour.
+    """
+    from .accounting import number, safe_fill
+    from .booking import monetary_total, order_evidence
+    try:
+        symbol = trade["symbol"]
+        entry_oid = None
+        for row in journal.query("SELECT payload FROM trade_accounting_bookings "
+                                 "WHERE trade_id=? ORDER BY id", (trade["id"],)):
+            receipt = json.loads(row["payload"])
+            if receipt.get("kind") == "entry":
+                entry_oid = str((receipt.get("evidence") or {}).get("order_id") or "") or None
+                break
+        if not entry_oid:
+            return None, "entry_order_id_not_recorded"
+        now_ms = now_ms or int(datetime.now(timezone.utc).timestamp() * 1000)
+        opened_ms = int(datetime.fromisoformat(trade["opened_at"]).timestamp() * 1000)
+        fills = _paged(lambda a, b: exchange.fetch_my_trades(symbol, since=a, limit=1000,
+                                                             params={"until": b}),
+                       opened_ms - 120_000, now_ms)
+        if fills is None:
+            return None, "fill_history_unavailable_or_truncated"
+        fills.sort(key=lambda f: (int(f["timestamp"]), int(f["id"])))
+        entry_side = "buy" if trade["side"] == "long" else "sell"
+        exit_side = "sell" if entry_side == "buy" else "buy"
+        entry = [f for f in fills if str(f.get("order")) == entry_oid]
+        amount = float(trade["amount"])
+        if (not entry or any(f["side"] != entry_side for f in entry)
+                or not math.isclose(sum(float(f["amount"]) for f in entry), amount, rel_tol=1e-9)):
+            return None, "entry_fills_do_not_match_journal"
+        entry_ms = int(entry[0]["timestamp"])
+        held, exits = amount, []
+        for f in fills:
+            if str(f.get("order")) == entry_oid or int(f["timestamp"]) < entry_ms:
+                continue
+            if f["side"] != exit_side:
+                return None, "additional_same_side_fill_after_entry"
+            held -= float(f["amount"])
+            exits.append(f)
+            if abs(held) <= 1e-9 * amount:
+                break
+        if not exits or abs(held) > 1e-9 * amount:
+            return None, "position_not_closed_exactly_by_fills"
+        orders = {str(f.get("order")) for f in exits}
+        if len(orders) != 1:
+            return None, "multiple_exit_orders_unsupported"
+        closed_ms = int(exits[-1]["timestamp"])
+        for other in journal.query("SELECT id,opened_at,closed_at FROM trades WHERE symbol=? AND id<>?",
+                                   (symbol, trade["id"])):
+            o0 = int(datetime.fromisoformat(other["opened_at"]).timestamp() * 1000)
+            o1 = (int(datetime.fromisoformat(other["closed_at"]).timestamp() * 1000)
+                  if other["closed_at"] else None)
+            if o0 <= closed_ms and (o1 is None or o1 >= entry_ms):
+                return None, "overlapping_journal_trade_on_symbol"
+        evidence_fills = [safe_fill(f) for f in entry + exits]
+        total = monetary_total(evidence_fills)
+        if total is None:
+            return None, "missing_or_invalid_pnl_fee_currency"
+        exit_qty = sum(float(f["amount"]) for f in exits)
+        exit_px = round(sum(float(f["price"]) * float(f["amount"]) for f in exits) / exit_qty, 10)
+        funding = _funding_evidence(exchange, symbol, entry_ms, closed_ms)
+        evidence = order_evidence(trade, {"id": orders.copy().pop()}, exits, exit_qty,
+                                  int(exits[0]["timestamp"]) - 1, "venue_order_fills")
+        evidence.update(
+            purpose="external_close", requested_quantity=exit_qty,
+            booked_pnl_basis="attributed_entry_and_exit_fills_excluding_funding",
+            entry_order_id=entry_oid, entry_fills=[safe_fill(f) for f in entry],
+            attributed_net_excluding_funding=total, funding=funding,
+            attribution={"method": "journal_entry_order_then_reduce_fills_to_zero",
+                         "exit_order_id": next(iter(orders)), "fill_count": len(exits)})
+        return {"pnl": total, "exit_price": exit_px, "closed_ms": closed_ms,
+                "closed_at": datetime.fromtimestamp(closed_ms / 1000, timezone.utc).isoformat(),
+                "evidence": evidence}, None
+    except Exception as exc:
+        return None, "attribution_failed:" + type(exc).__name__
+
+
+def _funding_evidence(exchange, symbol: str, after_ms: int, through_ms: int) -> dict:
+    """Venue FUNDING_FEE income for the holding period; UNKNOWN unless complete."""
+    out = {"basis": "venue_income_funding_fee", "status": "UNKNOWN", "funding_usdt": None,
+           "expected_settlements": _funding_settlements(after_ms, through_ms), "rows": []}
+    try:
+        rows = _paged(lambda a, b: exchange.fetch_funding_history(symbol, since=a, limit=1000,
+                                                                  params={"until": b}),
+                      after_ms + 1, through_ms)
+        if rows is None:
+            out["reason"] = "funding_history_unavailable_or_truncated"
+            return out
+        kept = [r for r in rows if (r.get("info") or {}).get("incomeType", "FUNDING_FEE") == "FUNDING_FEE"
+                and after_ms < int(r["timestamp"]) <= through_ms]
+        if any((r.get("info") or {}).get("asset", "USDT") != "USDT" for r in kept):
+            out["reason"] = "non_usdt_funding"
+            return out
+        out["rows"] = [{"id": str(r["id"]), "timestamp": int(r["timestamp"]),
+                        "amount": float(r["amount"])} for r in kept]
+        if len(kept) == out["expected_settlements"]:
+            out.update(status="COMPLETE", funding_usdt=sum(r["amount"] for r in out["rows"]))
+        else:
+            out["reason"] = "funding_row_count_differs_from_settlements"
+    except Exception as exc:
+        out["reason"] = "funding_failed:" + type(exc).__name__
+    return out
+
+
+def reconcile_external_closes(exchange, journal: Journal, *, apply: bool = False, trade_ids=None) -> list:
+    """Close open futures trades the venue shows flat, from the venue's own fills.
+
+    Dry-run unless apply. Only symbols with no venue position, no open order and
+    no protective stop are considered; every other open trade is left alone.
+    Re-running is harmless (close_trade ignores a trade that is already closed).
+    """
+    report = []
+    rows = exchange.fetch_positions()
+    held = {norm_symbol(p["symbol"]) for p in rows if float(p.get("contracts") or 0) != 0}
+    for trade in journal.open_trades():
+        if trade["market_type"] != "futures" or (trade_ids and trade["id"] not in trade_ids):
+            continue
+        item = {"trade_id": trade["id"], "symbol": trade["symbol"], "status": "SKIPPED"}
+        report.append(item)
+        if trade["symbol"] in held:
+            item["reason"] = "venue_position_present"
+            continue
+        if exchange.fetch_open_orders(trade["symbol"]) or protective.open_stops(
+                exchange, trade["symbol"], strict=True):
+            item["reason"] = "venue_orders_or_stops_present"
+            continue
+        attribution, why = external_close_attribution(exchange, journal, trade)
+        if attribution is None:
+            item["reason"] = why
+            continue
+        item.update(status="WOULD_CLOSE", pnl=attribution["pnl"], exit_price=attribution["exit_price"],
+                    closed_at=attribution["closed_at"], funding=attribution["evidence"]["funding"])
+        if apply:
+            journal.close_trade(trade["id"], attribution["exit_price"], round(attribution["pnl"], 8),
+                                "external_close", closed_at=attribution["closed_at"],
+                                accounting=attribution["evidence"])
+            item["status"] = "CLOSED"
+    return report
+
+
 def _last(exchange, symbol: str) -> float | None:
     """Venue last price, or None — a missing quote is never a price of zero."""
     try:
@@ -268,6 +455,17 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
             continue
         if jt["market_type"] != "futures":
             continue   # spot handled separately (balances ≠ positions)
+        # The venue's own fills for this trade, when they attribute exactly, beat
+        # any mark: nothing below is used then.
+        attribution, _why = external_close_attribution(exchange, journal, jt)
+        if attribution is not None:
+            journal.close_trade(jt["id"], attribution["exit_price"], round(attribution["pnl"], 8),
+                                "external_close", closed_at=attribution["closed_at"],
+                                accounting=attribution["evidence"])
+            log.warning(f"EXTERNAL CLOSE booked from venue fills: {sym} "
+                        f"pnl={attribution['pnl']:+.2f}")
+            ghosts += 1
+            continue
         if sym not in mark_cache:
             mark_cache[sym] = _last(exchange, sym)
         quote = mark_cache[sym]

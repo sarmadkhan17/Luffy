@@ -624,8 +624,10 @@ class Journal:
             from ..strategy.legacy_authority import SCHEMA as legacy_authority_schema
             c.executescript(legacy_authority_schema)
             if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
-                from ..strategy.factory_handoff import AUTHORITY_GUARDS
-                c.executescript(AUTHORITY_GUARDS)
+                # the guards name tables a database created by an earlier release
+                # may lack; the Factory's own idempotent schema comes first
+                from ..strategy.factory_handoff import AUTHORITY_GUARDS, SCHEMA as factory_schema
+                c.executescript(factory_schema + AUTHORITY_GUARDS)
             # backfill: existing rows get their birth time so the demotion
             # clock starts now rather than firing retroactively
             try:
