@@ -9,11 +9,17 @@ module provides both:
     used only by the snapshot worker thread. It gets a copy of the kernel's
     already-loaded markets (no extra exchangeInfo request) and must address
     the same venue (demo or not) as the kernel, or construction fails.
-  * a **read-only API key** (``BINANCE_READ_API_KEY``/``BINANCE_READ_SECRET_KEY``,
-    created with "Enable Reading" only) — required. This is the authority
-    boundary, and the venue enforces it. The trading key is never loaded
-    here; without a distinct read key the reader is not built and the
-    snapshot publishes UNREADABLE ``venue_reader_unavailable:…``.
+  * credentials. On a non-demo venue a **read-only API key**
+    (``BINANCE_READ_API_KEY``/``BINANCE_READ_SECRET_KEY``, "Enable Reading"
+    only) is required: the venue enforces that authority boundary, the trading
+    key is never loaded, and without a distinct read key the reader is not
+    built and the snapshot publishes UNREADABLE ``venue_reader_unavailable:…``.
+    DEMO-ONLY EXCEPTION (owner decision): with ``BINANCE_DEMO`` truthy the
+    ordinary ``BINANCE_API_KEY``/``BINANCE_SECRET_KEY`` pair is reused for
+    these GET-only reads, so the venue no longer enforces read-only isolation
+    for them; the GET-only transport, endpoint allow-list and separate client
+    are defence in depth only. Credential scope is reported as
+    ``demo_shared_trading_key_get_only``. Not to be extended to live trading.
   * a **GET-only transport** as defence in depth only: ccxt's ordinary paths
     (``create_order``, ``cancel_order``, algo deletes …) are refused before
     sending. It is *not* a boundary: inherited ``requests``/``urllib3``
@@ -277,21 +283,39 @@ class ReadCredentialsSeparation(RuntimeError):
     """Dedicated read credentials overlap trading credentials."""
 
 
-def _read_credentials(env) -> tuple[str, str, str]:
-    """A read-only key, or nothing. The trading key is never used here.
+READ_ONLY_SCOPE = "read_only_key"
+DEMO_SHARED_SCOPE = "demo_shared_trading_key_get_only"
+READ_SCOPES = frozenset({READ_ONLY_SCOPE, DEMO_SHARED_SCOPE})
 
-    No in-process guard can make a trading credential read-only: Python code
-    that can reach a signing client can always reach a transport beneath any
-    guard (``super(GetOnlyAdapter, a).send`` did). The boundary is therefore
-    the venue's own key permission ("Enable Reading" only), not this module.
+
+def _read_credentials(env) -> tuple[str, str, str]:
+    """Credentials for the GET-only venue reads.
+
+    DEMO (``BINANCE_DEMO`` truthy, the only venue today): the ordinary
+    ``BINANCE_API_KEY``/``BINANCE_SECRET_KEY`` pair is reused, so no second key
+    has to be kept valid. This is an owner-approved, DEMO-only exception. The
+    key keeps its trading permission, so the venue no longer enforces
+    read-only isolation; what remains is the GET-only transport, the
+    allow-listed endpoints, a separate client instance and the rate guard,
+    which are defence in depth and not an authority boundary. Reads still go
+    through ``guarded_client`` and never through the execution client.
+
+    Anything that is not explicitly DEMO keeps the original rule: a distinct
+    read-only key, enforced by the venue ("Enable Reading" only), or nothing.
+    The exception is never extended to a live venue.
     """
+    if env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes"):
+        key, secret = env.binance_keys()
+        if not (key and secret):
+            raise ReadCredentialsMissing("demo_api_key_not_configured")
+        return key, secret, DEMO_SHARED_SCOPE
     key, secret = env.get("BINANCE_READ_API_KEY"), env.get("BINANCE_READ_SECRET_KEY")
     if not (key and secret):
         raise ReadCredentialsMissing("read_only_api_key_not_configured")
     trading_key, trading_secret = env.binance_keys()
     if key == trading_key or secret == trading_secret:
         raise ReadCredentialsSeparation("read_only_key_equals_trading_key")
-    return key, secret, "read_only_key"
+    return key, secret, READ_ONLY_SCOPE
 
 
 def guarded_client(*, api_key: str, secret: str, demo: bool, markets: dict,

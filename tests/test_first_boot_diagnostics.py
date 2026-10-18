@@ -38,22 +38,31 @@ def refused(local, monkeypatch, expected):
     ('missing_secret','read_credentials_missing'),
     ('wrong_type','read_credentials_unusable'),
     ('whitespace','read_credentials_unusable'),
-    ('key_overlap','read_credentials_separation_violation'),
-    ('secret_overlap','read_credentials_separation_violation'),
 ])
 def test_credential_reasons_without_transport(local, monkeypatch, venue, case, expected):
     from trader.core import config
     empty_receipt(local)
-    env = Env(read_key=True)
-    if case == 'missing': env.values.pop('BINANCE_READ_API_KEY')
-    if case == 'missing_secret': env.values.pop('BINANCE_READ_SECRET_KEY')
-    if case == 'wrong_type': env.values['BINANCE_READ_API_KEY'] = 123
-    if case == 'whitespace': env.values['BINANCE_READ_SECRET_KEY'] = ' '
-    if case == 'key_overlap': env.values['BINANCE_READ_API_KEY'] = 'tk'
-    if case == 'secret_overlap': env.values['BINANCE_READ_SECRET_KEY'] = 'ts'
+    env = Env()
+    keys = {'missing': ('', 'ts'), 'missing_secret': ('tk', ''),
+            'wrong_type': (123, 'ts'), 'whitespace': ('tk', ' ')}[case]
+    env.binance_keys = lambda: keys
     monkeypatch.setattr(config, 'Env', env)
     refused(local, monkeypatch, expected)
     assert venue.sent == []
+
+
+@pytest.mark.parametrize('case,expected', [
+    ('missing','read_credentials_missing'),
+    ('key_overlap','read_credentials_separation_violation'),
+    ('secret_overlap','read_credentials_separation_violation'),
+])
+def test_non_demo_still_requires_a_distinct_read_key(monkeypatch, case, expected):
+    env = Env(read_key=case != 'missing', demo='false')
+    if case == 'key_overlap': env.values['BINANCE_READ_API_KEY'] = 'tk'
+    if case == 'secret_overlap': env.values['BINANCE_READ_SECRET_KEY'] = 'ts'
+    with pytest.raises(RuntimeError) as e:
+        V._read_credentials(env)
+    assert F.failure_code(e.value) == expected
 
 
 @pytest.mark.parametrize('exception,expected', [

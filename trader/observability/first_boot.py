@@ -143,8 +143,9 @@ def read_zero_account(*, clock=time.time, monotonic=time.monotonic):
 
 def validate_zero_account(value, now):
     from trader.engine.protection_snapshot import STALE_AFTER_S
+    from trader.engine.venue_reads import READ_SCOPES
     if (not isinstance(value, dict) or value.get('schema') != 'luffy-first-boot-zero-account.v1'
-            or value.get('status') != 'VERIFIED' or value.get('account_scope') != 'read_only_key'
+            or value.get('status') != 'VERIFIED' or value.get('account_scope') not in READ_SCOPES
             or value.get('environment') != 'DEMO' or value.get('complete_listing') is not True
             or value.get('venue_host') != 'demo-fapi.binance.com'
             or value.get('unknown_exposure') is not False or value.get('trading_authority') is not False

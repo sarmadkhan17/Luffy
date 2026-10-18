@@ -710,7 +710,7 @@ def violations(root):
 def _real_observer(journal, busy):
     from tests.test_venue_reads import Env, Kernel
     from trader.engine.venue_reads import make_venue_reads
-    reads = make_venue_reads(Kernel(), env=Env(read_key=True))
+    reads = make_venue_reads(Kernel(demo=False), env=Env(read_key=True, demo="false"))
     return ps.Observer(reads, ps.JournalReads(journal.db_path), busy)
 
 
@@ -1178,13 +1178,17 @@ def test_kernel_does_not_activate_the_protection_monitor():
     assert "protection_snapshot" not in pathlib.Path(kmod.__file__).read_text()
 
 
-def test_without_read_only_key_the_monitor_publishes_unreadable(tmp_path, monkeypatch):
-    """The trading key is never used for the snapshot. No read key → the
-    reader is not built and every check publishes the reason."""
+def test_demo_monitor_reuses_trading_key_and_non_demo_without_read_key_is_unreadable(tmp_path, monkeypatch):
+    """DEMO shares the trading key for GET-only reads (owner exception). Any
+    non-demo venue still needs the distinct read key, else every check
+    publishes the reason."""
     from tests.test_venue_reads import Env, Kernel as KernelExchange
     journal = Journal(tmp_path / "j.db")
-    m = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False,
-                        env=Env())
+    demo = ps.make_monitor(KernelExchange(), journal.db_path, supervisor_busy=lambda: False,
+                           env=Env())
+    assert demo.observer.reads.credential_scope == "demo_shared_trading_key_get_only"
+    m = ps.make_monitor(KernelExchange(demo=False), journal.db_path, supervisor_busy=lambda: False,
+                        env=Env(demo="false"))
     assert m.observer.reads is None
     snap = m.run_once()
     assert snap["status"] == "UNREADABLE"

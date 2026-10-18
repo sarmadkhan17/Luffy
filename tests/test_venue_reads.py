@@ -202,19 +202,29 @@ def test_tick_precision_is_authoritative_or_unknown():
 
 def test_make_venue_reads_is_dedicated_and_same_venue():
     kernel = Kernel(demo=True)
-    reads = vr.make_venue_reads(kernel, env=Env(read_key=True))
-    assert reads.credential_scope == "read_only_key"
+    reads = vr.make_venue_reads(kernel, env=Env())          # DEMO: shared key, no read key needed
+    assert reads.credential_scope == vr.DEMO_SHARED_SCOPE
+    assert reads._client.apiKey == "tk" and reads._client.secret == "ts"
     assert reads._client is not kernel and isinstance(reads._client.session, vr.GetOnlySession)
     assert reads._client.markets is not kernel.markets          # copied, not shared
-    with pytest.raises(RuntimeError, match="read_only_api_key_not_configured"):
-        vr.make_venue_reads(kernel, env=Env())            # never falls back to trading key
-    same = Env(read_key=True)
-    same.values.update(BINANCE_READ_API_KEY="tk", BINANCE_READ_SECRET_KEY="ts")
-    with pytest.raises(RuntimeError, match="read_only_key_equals_trading_key"):
-        vr.make_venue_reads(kernel, env=same)
+    stale = vr.make_venue_reads(kernel, env=Env(read_key=True))  # a configured read key is ignored in DEMO
+    assert stale._client.apiKey == "tk"
     with pytest.raises(RuntimeError, match="snapshot_venue_differs_from_kernel_venue"):
         vr.make_venue_reads(Kernel(demo=False), env=Env(read_key=True, demo="true"))
     assert kernel.mutations == []
+
+
+def test_non_demo_keeps_the_distinct_read_only_key_rule():
+    live = Kernel(demo=False)
+    reads = vr.make_venue_reads(live, env=Env(read_key=True, demo="false"))
+    assert reads.credential_scope == vr.READ_ONLY_SCOPE and reads._client.apiKey == "rk"
+    with pytest.raises(RuntimeError, match="read_only_api_key_not_configured"):
+        vr.make_venue_reads(live, env=Env(demo="false"))        # never falls back to trading key
+    same = Env(read_key=True, demo="false")
+    same.values.update(BINANCE_READ_API_KEY="tk", BINANCE_READ_SECRET_KEY="ts")
+    with pytest.raises(RuntimeError, match="read_only_key_equals_trading_key"):
+        vr.make_venue_reads(live, env=same)
+    assert live.mutations == []
 
 
 def test_inherited_transport_bypass_carries_only_the_read_only_key():
@@ -225,10 +235,10 @@ def test_inherited_transport_bypass_carries_only_the_read_only_key():
     (pre-deploy gate: confirm the key's permissions)."""
     from requests.adapters import HTTPAdapter
     t = Transport()
-    kernel = Kernel()
-    reads = vr.make_venue_reads(kernel, env=Env(read_key=True))
+    kernel = Kernel(demo=False)
+    reads = vr.make_venue_reads(kernel, env=Env(read_key=True, demo="false"))
     client = reads._client
-    adapter = client.session.get_adapter("https://demo-fapi.binance.com")
+    adapter = client.session.get_adapter("https://fapi.binance.com")
     adapter._inner = t
     signed = client.sign("order", "fapiPrivate", "POST",
                          {"symbol": "BTCUSDT", "side": "SELL", "type": "MARKET", "quantity": "1"})

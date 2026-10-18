@@ -46,7 +46,7 @@ class InventoryHTTP:
 def venue(local,monkeypatch):
     from trader.core import config
     transport=InventoryHTTP(); original=V.guarded_client
-    # Existing fixture read credentials are distinct from its trading key.
+    # DEMO reuses the trading key pair for GET-only reads; a stale read key is ignored.
     monkeypatch.setattr(config,'Env',Env(read_key=True))
     def guarded(**kwargs):
         client, guard = original(**kwargs, inner=transport)
@@ -74,7 +74,7 @@ def test_no_receipt_fresh_signed_global_zero_account_passes_contained_only(local
     assert not result['trading_authority'] and (local[0]/'data/safety_health.json').read_bytes()==before
     assert len(venue.sent)==6 and all(method=='GET' for method,_,_,_ in venue.sent)
     for _,_,headers,url in venue.sent:
-        assert headers['X-MBX-APIKEY']=='rk'  # distinct read credential, never tk
+        assert headers['X-MBX-APIKEY']=='tk'  # DEMO: shared key, GET-only transport
         query=parse_qs(urlsplit(url).query)
         assert 'signature' in query and 'symbol' not in query
     with sqlite3.connect(local[0]/'data/luffy.db') as db:
@@ -206,13 +206,16 @@ def test_first_boot_does_not_relax_phase_b(ready):
 
 
 @pytest.mark.parametrize('key',['missing','trading'])
-def test_first_boot_does_not_fall_back_to_trading_credentials(local,monkeypatch,venue,key):
+def test_demo_first_boot_reuses_trading_key_and_ignores_read_key(local,monkeypatch,venue,key):
     from trader.core import config
     empty_receipt(local)
     env=Env(read_key=key!='missing')
     if key=='trading':env.values.update(BINANCE_READ_API_KEY='tk',BINANCE_READ_SECRET_KEY='ts')
     monkeypatch.setattr(config,'Env',env)
-    assert not phase_a(local,monkeypatch)['allow'] and venue.sent==[]
+    result=phase_a(local,monkeypatch)
+    assert result['allow'] and len(venue.sent)==6
+    assert {h['X-MBX-APIKEY'] for _,_,h,_ in venue.sent}=={'tk'}
+    assert result['facts']['protection']['account_inventory']['account_scope']==V.DEMO_SHARED_SCOPE
 
 
 def test_empty_malformed_receipt_schema_is_not_first_boot(local,monkeypatch,venue):
