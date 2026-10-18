@@ -3258,7 +3258,7 @@ def main() -> None:
     if not args.status:
         # A direct module invocation cannot evade the two-phase startup fence.
         # Admission precedes construction, venue access and background workers.
-        from .observability.bootstrap import child_admission
+        from .observability.bootstrap import ChildPrelaunchRefused, child_admission
         try:
             if not args.bootstrap_token:
                 raise ValueError('contained_startup_controller_required')
@@ -3266,7 +3266,11 @@ def main() -> None:
                 raise ValueError('contained_startup_requires_revision_bound_config')
             child_admission(ROOT, args.bootstrap_token, args.expect_revision)
         except Exception as exc:
-            log.critical("contained startup refused: %s", type(exc).__name__)
+            if isinstance(exc, ChildPrelaunchRefused):
+                log.critical("contained startup refused: child_prelaunch_refused reasons=%s",
+                             json.dumps(exc.reason_codes))
+            else:
+                log.critical("contained startup refused: %s", type(exc).__name__)
             sys.exit(6)
         # One kernel per account: take the lock BEFORE any state is touched, so
         # a duplicate or wrong-revision launch exits without side effects.

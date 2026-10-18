@@ -266,6 +266,74 @@ def test_child_admission_requires_persisted_attempt_and_rechecks_static_facts(lo
         B.child_admission(root,'attempt',REV)
 
 
+@pytest.mark.parametrize('contained_cold', [True, False])
+def test_observer_refresh_during_preflight_only_defers_cold_producer_conditions(
+        local, monkeypatch, contained_cold):
+    root = local[0]
+    local[1]['conditions']['observed_cycle:luffy'] = dict(status='RESOLVED', reason='STALE')
+    update_health(local)
+    original = P._probe
+    def concurrent_observer(*args):
+        result = original(*args)
+        observer = SafetyObserver(SafetyHealth(root / 'data/safety_health.json',
+                                               clock=lambda: NOW), clock=lambda: NOW)
+        observer.heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', HeartbeatPolicy(960))
+        return result
+    monkeypatch.setattr(P, '_probe', concurrent_observer)
+    result = P.evaluate(P.collect_facts(root, clock=lambda: NOW, contained_cold=contained_cold))
+    assert result['allow'] is contained_cold
+    if contained_cold:
+        assert set(result['facts']['safety']['deferred_to_contained_readiness']) == {
+            'heartbeat:luffy', 'observed_cycle:luffy'}
+        assert SafetyHealth(root / 'data/safety_health.json').entry_block()
+    else:
+        assert 'safety_health_changed_during_preflight' in result['reasons']
+
+
+@pytest.mark.parametrize('change', ['journal_fault', 'protection_fault', 'latch',
+                                  'bootstrap', 'heartbeat_record', 'unknown_field', 'revision_rollback'])
+def test_cold_admission_still_refuses_changed_non_deferred_safety(local, monkeypatch, change):
+    root = local[0]
+    original = P._probe
+    def concurrent_change(*args):
+        result = original(*args)
+        health = SafetyHealth(root / 'data/safety_health.json')
+        value = health.read()
+        if change in ('journal_fault', 'protection_fault'):
+            name = 'journal_write' if change == 'journal_fault' else 'protection'
+            health.observe(name, 'FAILED')
+        else:
+            if change == 'latch': value['recovery_required'] = False
+            if change == 'bootstrap': value['bootstrap'] = {'status': 'FAILED'}
+            if change == 'heartbeat_record': value['heartbeats']['luffy'] = {'instance_id': 'changed'}
+            if change == 'unknown_field': value['unexpected_authority'] = True
+            if change == 'revision_rollback': value['revision'] = 0
+            B.publish(health.path, value)
+        return result
+    monkeypatch.setattr(P, '_probe', concurrent_change)
+    result = P.evaluate(P.collect_facts(root, clock=lambda: NOW, contained_cold=True))
+    assert not result['allow']
+    assert 'safety_health_changed_during_preflight' in result['reasons']
+
+
+def test_child_refusal_logs_only_existing_sanitized_codes(monkeypatch, caplog):
+    import sys
+    from trader import kernel
+    reasons = ['safety_not_pass', 'safety_health_changed_during_preflight']
+    monkeypatch.setattr(sys, 'argv', ['fixture-kernel', '--bootstrap-token', 'attempt',
+                                    '--expect-revision', REV])
+    monkeypatch.setattr(kernel, 'load_config', lambda *a: {})
+    monkeypatch.setattr(kernel, 'setup_logging', lambda *a: None)
+    monkeypatch.setattr(P, 'prelaunch', lambda *a: {
+        'allow': False, 'reasons': reasons, 'facts': {'private': 'NEVER_LOG_THIS'}})
+    monkeypatch.setattr(kernel, 'Kernel', lambda *a: pytest.fail('refused Kernel constructed'))
+    with pytest.raises(SystemExit) as exc:
+        kernel.main()
+    assert exc.value.code == ri.EXIT_WRONG_REVISION
+    assert 'child_prelaunch_refused reasons=' + json.dumps(reasons) in caplog.text
+    assert 'NEVER_LOG_THIS' not in caplog.text
+
+
 def test_native_kernel_without_controller_refuses_before_construction(monkeypatch):
     import sys
     from trader import kernel

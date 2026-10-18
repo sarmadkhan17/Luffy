@@ -57,11 +57,18 @@ def record_fence(root, token, status, revision, *, expected_health=None):
         publish(health.path, value)
 
 
+class ChildPrelaunchRefused(ValueError):
+    def __init__(self, result):
+        super().__init__('child_prelaunch_refused')
+        # Only the preflight's existing sanitized codes cross into stderr.
+        self.reason_codes = result['reasons']
+
+
 def child_admission(root, token, revision):
     """Called before Kernel construction, after controller admission and fence."""
     result = preflight.prelaunch(root, revision)
     if not result['allow']:
-        raise ValueError('child_prelaunch_refused')
+        raise ChildPrelaunchRefused(result)
     value = preflight._health(Path(root) / 'data/safety_health.json')
     if value.get('bootstrap') != dict(token=token, status='PENDING', intended_revision=revision):
         raise ValueError('bootstrap_fence_missing_or_changed')

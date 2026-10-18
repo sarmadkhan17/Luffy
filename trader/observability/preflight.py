@@ -70,6 +70,19 @@ def _health(path):
     return value
 
 
+def _health_admission_state(value, *, contained_cold):
+    if not contained_cold:
+        return value
+    # Cold admission already defers these two absent-producer conditions to
+    # Phase B. Independent observers may refresh them while signed GETs run.
+    # Preserve every other field, including recovery, bootstrap and the actual
+    # heartbeat records; a new nondeferred fault must still invalidate launch.
+    return {**{key: item for key, item in value.items()
+               if key not in ('revision', 'observed_at', 'conditions')},
+            'conditions': {name: condition for name, condition in value['conditions'].items()
+                           if name not in ('heartbeat:luffy', 'observed_cycle:luffy')}}
+
+
 def _filesystem(root, recovery_root):
     mounts = [root, recovery_root]
     if len({p.stat().st_dev for p in mounts}) != 2:
@@ -300,8 +313,15 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
                 facts['protection'] = _protection(db, clock(), require_fresh=not contained_cold)
         # Probe/publication races cannot waive a new persisted safety fault.
         health_after = _health(root / 'data/safety_health.json')
-        if health_after != health:
+        if (health_after['revision'] < health['revision']
+                or _health_admission_state(health_after, contained_cold=contained_cold)
+                != _health_admission_state(health, contained_cold=contained_cold)):
             facts['safety'] = _fact(['safety_health_changed_during_preflight'])
+        elif contained_cold and facts['safety']['status'] == 'PASS':
+            facts['safety']['deferred_to_contained_readiness'] = [
+                name for name, condition in health_after['conditions'].items()
+                if name in ('heartbeat:luffy', 'observed_cycle:luffy')
+                and condition['status'] == 'ACTIVE']
     except Exception as exc:
         facts.setdefault('control', _fact(['control_unreadable']))
         if first_boot_path:
