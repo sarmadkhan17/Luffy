@@ -19,6 +19,7 @@ only, which is why the equivalence criterion compares trades/wins/pnl.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -76,13 +77,15 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
            bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None,
-           fill=None):
+           fill=None, exit_sig_available=None):
     """One trade signalled on bar `i`: (exit_i, stop distance, P&L per unit
     of size). `fill` is `fill_timing.fills`: the entry fills at the OPEN of
     bar fill[i], and a declared signal exit seen on bar j at the open of bar
     fill[j]; with no array both default to the next bar. Signal ATR and swing
     context stop at bar `i`. A max_bars exit is a clock event, not a data
     decision, so it stays at the final held bar's close.
+    Canonical signal intent remains separate from its execution evidence;
+    active protection and next-bar trails continue while that intent waits.
     Every cost scales with size, so P&L = unit P&L x amount and the R
     multiple — unit P&L / stop distance — does not depend on the balance.
     `simulate` and the research rotation table both call this, so there is
@@ -117,16 +120,37 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     best = entry
     due = -1                        # bar whose open fills a signalled exit
     at_open = 0
-    for j in range(f, end + 1):
+    pending_signal = None
+    for j in range(f, n if canonical else end + 1):
         if j == due:
+            if canonical:
+                state = pending_signal
             exit_i, exit_px, at_open = j, float(df["open"].iloc[j]), 1
             break
         if canonical:
             row = df.iloc[j]
             clock = row['ts']
             ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
-            transition = E.advance(policy, state, E.Observation(ms, float(row['open']),
-                highs[j], lows[j], closes[j]), intended_quantity)
+            signal = (bool(exit_sig[j]) if exit_sig is not None and exit_sig_available is not None
+                      and exit_sig_available[j] else None)
+            g = j + 1 if fill is None else int(fill[j])
+            # A known but unexecutable signal cannot become a simulated fill.
+            # Pending execution still leaves the active protection and trail in force.
+            observation = E.Observation(ms, float(row['open']), highs[j], lows[j], closes[j],
+                completed=bool(row.get('observation_quality' if df.attrs.get('read_mode') == 'retrospective'
+                                       else 'quality', 'VALID') == 'VALID'
+                               and row.get('bar_state', 'FINAL') == 'FINAL'),
+                atr=float(atr[j]), signal_exit=False if due >= 0 or (signal and not j < g < n) else signal)
+            active_policy = replace(policy, signal_exit=False, max_bars=n + max_bars) if due >= 0 else policy
+            transition = E.advance(active_policy, state, observation, intended_quantity)
+            if transition.reason == 'signal':
+                pending_signal, due = transition.state, g
+                if transitions_out is not None:
+                    transitions_out.append(transition)
+                # The signal is an intent, not a terminal protective state. Advance
+                # the surviving bar so its trail is effective while awaiting fill.
+                transition = E.advance(replace(policy, signal_exit=False, max_bars=n + max_bars),
+                                       state, replace(observation, signal_exit=False), intended_quantity)
             if transitions_out is not None:
                 transitions_out.append(transition)
             state = transition.state
@@ -159,7 +183,9 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
         if exit_evidence_out is not None:
             exit_evidence_out.append({'entry_i': e, 'exit_i': exit_i if state.reason else None,
                 'exit_semantics_id': E.EXIT_SEMANTICS_ID, 'state': json.loads(E.encode(policy,state)),
-                'censored': not bool(state.reason), 'authority': 'STRATEGY'})
+                'censored': not bool(state.reason), 'authority': 'STRATEGY',
+                'fill_i': exit_i if state.reason else None,
+                'fill_price': float(exit_px) if state.reason else None, 'at_open': bool(at_open)})
         if not state.reason:
             return -2, sl_dist, float('nan')
     exit_px = exit_px - sign * slip                   # exits pay the spread too
@@ -182,7 +208,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
 
 def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
                 funding: np.ndarray | None = None,
-                first_bar: int = 0) -> dict:
+                first_bar: int = 0, exit_sig=None, exit_sig_available=None) -> dict:
     """Every bar's trade, both sides, computed once: {side: (exit_i, r,
     px_over_stop)} arrays with exit_i = -1 where no trade can open.
 
@@ -204,6 +230,11 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
     highs = df["high"].to_numpy(float)
     lows = df["low"].to_numpy(float)
     atr = atr_series(df, 14).to_numpy(float)
+    if (getattr(exit_spec, "_exit_semantics_id", None) is not None
+            and exit_spec.trail.get("kind") == "atr"):
+        from .exit_policy import trail_atr_series
+        from ..core.types import TF_MS
+        atr = trail_atr_series(df, TF_MS[exit_spec._exit_timeframe]).to_numpy(float)
     max_bars = int(exit_spec.time.get("max_bars", 32) or 32)
     trail = exit_spec.trail or {"kind": "none"}
     trail_mult = float(trail.get("mult", 0.0)) \
@@ -220,8 +251,8 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
                 continue
             e, sl_dist, unit = _trade(
                 i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
-                fee, max_bars, trail_mult, arm_at_r, None, fund_arr,
-                funding_8h, bar_minutes, fill=fill)
+                fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
+                funding_8h, bar_minutes, fill=fill, exit_sig_available=exit_sig_available)
             ex[i], r[i], pos[i] = e, unit / sl_dist, closes[i] / sl_dist
         out[side] = (ex, r, pos)
     return out
@@ -261,7 +292,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_sig: np.ndarray | None = None,
              funding: np.ndarray | None = None,
              fills_out: list | None = None,
-             score_from: int = 0, exit_evidence_out=None) -> BacktestResult:
+             score_from: int = 0, exit_evidence_out=None, exit_sig_available=None) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -297,6 +328,11 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     highs = df["high"].to_numpy(float)
     lows = df["low"].to_numpy(float)
     atr = atr_series(df, 14).to_numpy(float)
+    if (getattr(exit_spec, "_exit_semantics_id", None) is not None
+            and exit_spec.trail.get("kind") == "atr"):
+        from .exit_policy import trail_atr_series
+        from ..core.types import TF_MS
+        atr = trail_atr_series(df, TF_MS[exit_spec._exit_timeframe]).to_numpy(float)
 
     max_bars = int(exit_spec.time.get("max_bars", 32) or 32)
     trail = exit_spec.trail or {"kind": "none"}
@@ -323,7 +359,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         exit_i, sl_dist, unit_pnl = _trade(
             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-            funding_8h, bar_minutes, trace, fill=fill)
+            funding_8h, bar_minutes, trace, fill=fill, exit_sig_available=exit_sig_available)
         amount = (equity_curve[-1] * risk_frac) / sl_dist
         if amount * px < 10:                          # dust guard
             continue
@@ -384,12 +420,12 @@ def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
             raise ValueError('retrospective symbol binding mismatch')
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol,
                               universe=universe, market=market)
-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol,
+    ex, ex_available = compiled.exit_signal_detail(frames, btc=btc, derivs=derivs, symbol=symbol,
                               universe=universe, market=market)
     df = frames[compiled.spec.timeframe]
     fund = funding_for(symbol, df, risk_cfg) if df.attrs.get('read_mode') == 'retrospective' else None
     result = simulate(lo, sh, df, compiled.spec.exit, risk_cfg, equity=equity,
-                      genome_id=compiled.spec.id, symbol=symbol, exit_sig=ex, funding=fund)
+                      genome_id=compiled.spec.id, symbol=symbol, exit_sig=ex, funding=fund, exit_sig_available=ex_available)
     if df.attrs.get('read_mode') == 'retrospective':
         from . import quant_contract
         from ..data.market_provenance import digest
@@ -481,7 +517,7 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
             raise ValueError('retrospective symbol binding mismatch')
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol)
-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
+    ex, ex_available = compiled.exit_signal_detail(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol)
     cut = int(len(df) * split)
     fund = funding_for(symbol, df, risk_cfg)
@@ -492,6 +528,7 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
                         compiled.spec.exit, risk_cfg,
                         genome_id=compiled.spec.id, symbol=symbol,
                         exit_sig=None if ex is None else ex[sl],
+                        exit_sig_available=None if ex_available is None else ex_available[sl],
                         funding=None if fund is None else fund[sl],
                         score_from=score_from)
 

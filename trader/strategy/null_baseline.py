@@ -41,7 +41,7 @@ def rotate_entries(a: np.ndarray, offset: int) -> np.ndarray:
 def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
              risk_cfg: dict, draws: int = 100, seed: int = 0,
              symbol: str = "BT", funding: np.ndarray | None = None,
-             score_from: int = 0) -> list[float]:
+             score_from: int = 0, exit_sig=None, exit_sig_available=None) -> list[float]:
     """Profit factors from `draws` rotations of the same signals.
 
     `funding` is the same signed per-bar series the actual result was charged.
@@ -82,7 +82,7 @@ def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
     for off in rng.integers(lo_off, hi_off, size=int(draws)):
         r = simulate(rotated(long, off), rotated(short, off),
                      df, exit_spec, risk_cfg, symbol=symbol, funding=funding,
-                     score_from=score_from)
+                     score_from=score_from, exit_sig=exit_sig, exit_sig_available=exit_sig_available)
         if r.trades > 0:
             out.append(float(r.profit_factor))
     return out
@@ -116,6 +116,9 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
     df = frames[tf]
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol, world=world)
+    ex, ex_available = compiled.exit_signal_detail(
+        frames, btc=btc, derivs=derivs, universe=universe, market=market, symbol=symbol, world=world
+    ) if compiled.spec.exit.signal_exit.strip() else (None, None)
     score_from = 0
     if split is not None:
         cut = int(len(df) * float(split))
@@ -124,11 +127,13 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
                           else warm_window(0, cut))
         df = df.iloc[sl].reset_index(drop=True)
         lo, sh = lo[sl], sh[sl]
+        ex = None if ex is None else ex[sl]
+        ex_available = None if ex_available is None else ex_available[sl]
         if funding is not None:
             funding = np.asarray(funding, dtype=float)[sl]
     pfs = null_pfs(lo, sh, df, compiled.spec.exit, risk_cfg,
                    draws=draws, seed=seed, symbol=symbol, funding=funding,
-                   score_from=score_from)
+                   score_from=score_from, exit_sig=ex, exit_sig_available=ex_available)
     if len(pfs) < MIN_DRAWS:
         return {"draws": len(pfs), "bars": len(df), "percentile": None,
                 "reason": f"only {len(pfs)} usable null draws"}

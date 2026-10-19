@@ -100,6 +100,9 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       universe=universe,
                                       market=market,
                                       symbol=sym)
+            ex, ex_available = compiled.exit_signal_detail(
+                {timeframe: df}, btc=btc, derivs=derivs, universe=universe,
+                market=market, symbol=sym) if compiled.spec.exit.signal_exit.strip() else (None, None)
         except Exception as e:
             if df.attrs.get('read_mode') == 'retrospective':
                 raise ValueError('retrospective strategy evaluation refused: ' + str(e)) from e
@@ -110,7 +113,9 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             sl, score_from = warm_window(a, b)
             r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
                          compiled.spec.exit, risk_cfg, symbol=sym,
-                         score_from=score_from, funding=None if fund is None else fund[sl])
+                         score_from=score_from, funding=None if fund is None else fund[sl],
+                         exit_sig=None if ex is None else ex[sl],
+                         exit_sig_available=None if ex_available is None else ex_available[sl])
             if r.trades >= min_trades:
                 st.n_windows += 1
                 st.trades.append(r.trades)
@@ -251,9 +256,13 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       derivs=derivs, universe=universe,
                                       market=market,
                                       symbol=sym)
+            ex, ex_available = compiled.exit_signal_detail(
+                {timeframe: recent}, btc=btc, derivs=derivs, universe=universe,
+                market=market, symbol=sym) if compiled.spec.exit.signal_exit.strip() else (None, None)
             stage = "simulation"
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
-                         symbol=sym, funding=fund, score_from=score_from)
+                         symbol=sym, funding=fund, score_from=score_from,
+                         exit_sig=ex, exit_sig_available=ex_available)
         except Exception as e:
             if df.attrs.get('read_mode') == 'retrospective':
                 raise ValueError('retrospective strategy evaluation refused: ' + str(e)) from e
@@ -434,6 +443,9 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       universe=universe,
                                       market=market,
                                       symbol=sym)
+            ex, ex_available = compiled.exit_signal_detail(
+                {timeframe: df}, btc=btc, derivs=derivs, universe=universe,
+                market=market, symbol=sym) if compiled.spec.exit.signal_exit.strip() else (None, None)
             regimes = regime_series(df)
         except Exception as e:
             if df.attrs.get('read_mode') == 'retrospective':
@@ -455,7 +467,9 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             sl, score_from = warm_window(a, b)
             r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
                          compiled.spec.exit, risk_cfg, symbol=sym,
-                         score_from=score_from, funding=None if fund is None else fund[sl])
+                         score_from=score_from, funding=None if fund is None else fund[sl],
+                         exit_sig=None if ex is None else ex[sl],
+                         exit_sig_available=None if ex_available is None else ex_available[sl])
             if r.trades < min_trades:
                 continue
             st = by_regime.setdefault(dominant, WindowStats())

@@ -458,10 +458,14 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
                 universe=b.universe, market=b.market, symbol=sym, world=b.world)
+            ex, ex_available = compiled.exit_signal_detail(
+                sf, btc=b.btc, derivs=b.derivs.get(sym), universe=b.universe,
+                market=b.market, symbol=sym, world=b.world
+            ) if spec.exit.signal_exit.strip() else (None, None)
             fund = retrospective_funding.get(sym) if b.evidence else funding_for(sym, df, b.risk)
             mine: list = []
             r = simulate(lo, sh, df, spec.exit, b.risk, symbol=sym,
-                         funding=fund, fills_out=mine)
+                         funding=fund, fills_out=mine, exit_sig=ex, exit_sig_available=ex_available)
         except Exception as e:                          # noqa: BLE001
             log.debug(f"research {c.hash} {sym}: {e}")
             rec["error"] = str(e)[:200]

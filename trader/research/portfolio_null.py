@@ -53,6 +53,8 @@ class Leg:
     # there. 0 on the discovery slice; the cut's index on held-out B.
     first_bar: int = 0
     table: dict | None = field(default=None, repr=False)
+    exit_sig: np.ndarray | None = None
+    exit_sig_available: np.ndarray | None = None
 
 
 def _mask(a, first_bar: int) -> np.ndarray:
@@ -78,7 +80,8 @@ def _prepare(legs, exit_spec, risk: dict, tf: str, t0: int | None = None):
     for l in legs:
         if l.table is None:
             l.table = trade_table(l.df, exit_spec, risk, funding=l.funding,
-                                  first_bar=l.first_bar)
+                                  first_bar=l.first_bar, exit_sig=l.exit_sig,
+                                  exit_sig_available=l.exit_sig_available)
         l._grid = (clocks[id(l)] - t0).astype(np.int64)
         l._long = np.asarray(l.long, dtype=bool)
         l._short = np.asarray(l.short, dtype=bool)
@@ -181,10 +184,15 @@ def legs_for(compiled, bundle) -> list:
             lo, sh = compiled.entries(
                 sf, btc=bundle.btc, derivs=bundle.derivs.get(sym),
                 universe=bundle.universe, market=bundle.market, symbol=sym, world=bundle.world)
+            ex, ex_available = compiled.exit_signal_detail(
+                sf, btc=bundle.btc, derivs=bundle.derivs.get(sym), universe=bundle.universe,
+                market=bundle.market, symbol=sym, world=bundle.world
+            ) if compiled.spec.exit.signal_exit.strip() else (None, None)
         except Exception as e:                          # noqa: BLE001
             log.debug(f"portfolio null entries {sym}: {e}")
             continue
         legs.append(Leg(sym, np.asarray(lo, bool), np.asarray(sh, bool), df,
                         funding_for(sym, df, bundle.risk),
-                        int(bundle.first_bars.get(sym, 0))))
+                        int(bundle.first_bars.get(sym, 0)),
+                        exit_sig=ex, exit_sig_available=ex_available))
     return legs
