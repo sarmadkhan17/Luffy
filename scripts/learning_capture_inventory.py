@@ -29,8 +29,8 @@ def run(journal,as_of_ms,limit):
     db.execute('PRAGMA query_only=ON');db.execute('BEGIN')
     captured=0
     try:
-        if db.execute("SELECT 1 FROM sqlite_master WHERE name='learning_outcome_captures'").fetchone():
-            for oid,payload in db.execute('SELECT outcome_id,payload FROM learning_outcome_captures ORDER BY outcome_id LIMIT ?',(limit,)).fetchall():
+        if C.read(db,"SELECT 1 FROM sqlite_master WHERE name='learning_outcome_captures'").fetchone():
+            for oid,payload in C.read(db,'SELECT outcome_id,payload FROM learning_outcome_captures ORDER BY outcome_id LIMIT ?',(limit,)).fetchall():
                 if json.loads(payload)['observed_ms']>as_of_ms: continue
                 try:
                     m=C.manifest(db,oid)

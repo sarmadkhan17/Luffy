@@ -142,7 +142,9 @@ def test_normal_bank_consumer_to_planner_referee_feedback(population, dispositio
     assert len(saved(bank,'bridge_tests'))==1
     if disposition=='SUPPORTED':
         candidate=final['referee_disposition']['factory_candidate']
-        j=Journal(candidate['quantitative_ledger'])
+        from tests.retained_research_fixtures import restore_ledger
+        replayed=restore_ledger(bank,final['experiment_id'],bank.parent/'replayed-factory.db')
+        j=Journal(replayed)
         assert F.gate_evidence(j,candidate['hash'])['candidate']['state']=='referee_passed'
         # Factory remains the only writer of StrategyVersion; bridge didn't create one.
         assert not j.query("SELECT name FROM sqlite_master WHERE name='strategy_versions'")

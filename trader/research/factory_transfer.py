@@ -4,7 +4,8 @@ A predictive experiment runs against its OWN quantitative ledger
 (`<bank>-experiments/<experiment_id>/quantitative.db`), seeded from, but never
 written back to, the Journal the Factory reads. When that experiment ends
 SUPPORTED, its spent look, registered gate evidence and candidate row exist
-only there and in the Research Bank. The Factory re-derives its validation
+in its working ledger and in the Research Bank; completed working copies can
+be retired once verified Bank evidence supplies the same read contract. The Factory re-derives its validation
 from the Journal it is given (candidate row, the whole error-budget sequence,
 the registered budget, the combination), so against the production Journal it
 can only refuse `candidate_not_found` — and a later discovery look priced
@@ -195,16 +196,17 @@ def authenticate(bank_path, result_id: str) -> dict:
     path = experiment_ledger_path(bank_path, r["experiment_id"])
     if path.is_symlink():
         _refuse("experiment_ledger_alias")
-    if not path.is_file():
-        _refuse("experiment_ledger_missing")
     try:
-        with closing(readonly(path)) as led:
+        from trader.persistence.storage_cleanup import completed_reader
+        with closing(completed_reader(bank_path,r['experiment_id'])) as led:
             bound = led.execute(
                 "SELECT id FROM predictive_experiment_binding").fetchall()
             combo = _rows(led, "SELECT * FROM research_combos WHERE hash=?",
                           (h,))
     except (OSError, sqlite3.Error) as exc:
         _refuse("experiment_ledger_unavailable" if _temporary_io(exc) else "experiment_ledger_unreadable")
+    except ValueError as exc:
+        _refuse('experiment_ledger_missing' if str(exc)=='RESEARCH_REPRODUCTION_EVIDENCE_UNAVAILABLE' else 'experiment_ledger_unreadable')
     except Exception:                                   # noqa: BLE001
         _refuse("experiment_ledger_unreadable")
     if bound != [(r["experiment_id"],)]:

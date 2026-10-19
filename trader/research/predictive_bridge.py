@@ -54,17 +54,22 @@ def append(db, table, key, body):
     text = P.canonical(body)
     old = db.execute(f'SELECT payload FROM {table} WHERE id=?', (key,)).fetchone()
     if old:
-        if old[0] != text:
+        from trader.core import journal_evidence as codec
+        if codec.resolve(db,old[0]) != text:
             raise ValueError('checkpoint_conflict')
         return False
     if db.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] >= MAX_RECORDS:
         raise ValueError('checkpoint_capacity')
+    if table=='bridge_runtime_bindings' and key.startswith('completed-work:'):
+        from trader.core import journal_evidence as codec
+        text=codec.store(db,text)
     db.execute(f'INSERT INTO {table} VALUES (?,?)', (key, text))
     return True
 
 
 def records(db, table):
-    return [json.loads(p) for (p,) in db.execute(f'SELECT payload FROM {table} ORDER BY rowid')]
+    from trader.learning import capture as C
+    return [C.payload(db,p) for (p,) in db.execute(f'SELECT payload FROM {table} ORDER BY rowid')]
 
 
 def read_sources(path, known, limit, now_ms, known_investigations=frozenset()):
@@ -314,6 +319,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                             append(db,'bridge_runtime_bindings','registered-error-budget',budget)
                         for test in tests:
                             append(db,'bridge_tests',str(test['seq']),dict(test))
+            lifecycle=cleanup_completed(db,bank_path,limit=max_experiments)
             counts = dict(eligible_research_results=0, hypotheses_proposed=0, exact_duplicates=0,
                 experiment_shape_supported=0, data_insufficient=0, planner_submissions=0,
                 supported=0, unsupported=0, inconclusive=0, not_testable=0)
@@ -343,8 +349,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
             for saved in records(db, 'bridge_hypotheses'):
                 h = P.hypothesis_from_dict(saved['hypothesis'])
                 finished = [o for o in records(db,'bridge_bank_results') if o['hypothesis_id']==h.hypothesis_id
-                            and (o['classification'] in ('SUPPORTED','UNSUPPORTED','NOT_TESTABLE')
-                                 or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE','DUPLICATE_EXPERIMENT_IDENTITY'))]
+                            and terminal(o)]
                 if finished:
                     continue
                 if P.TRANSFORMS[h.transformation]['shape']=='combination':
@@ -457,6 +462,9 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                     with db:
                         feedback(db,h,ex['experiment_id'],'DATA_INSUFFICIENT',None,
                                  dict(state='PROTECTED_CUT_INCOMPATIBLE'),now_ms)
+                    runner.journal._conn().close()
+                    runner.journal._local.conn=None
+                    lifecycle.extend(cleanup_completed(db,bank_path,limit=1,experiment_id=ex['experiment_id']))
                     counts['data_insufficient']+=1
                     continue
                 result = runner.step()
@@ -478,10 +486,47 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                                 disposition=dict(state='CONTROL_DATA_INSUFFICIENT')
                     disposition['last_step']=result
                     feedback(db,h,ex['experiment_id'],classification,measured,disposition,now_ms)
+                runner.journal._conn().close()
+                runner.journal._local.conn=None
+                lifecycle.extend(cleanup_completed(db,bank_path,limit=1,experiment_id=ex['experiment_id']))
                 counts[classification.lower()] += 1
             return dict(mode='ASYNC_RESEARCH_CONSUMER' if submit else 'READ_ONLY_SOURCE_SHADOW',
-                counts=counts,refusals=refusals,source_mutations=0,order_submissions=0,
+                counts=counts,refusals=refusals,lifecycle=lifecycle,source_mutations=0,order_submissions=0,
                 trading_behavior_changed=False)
+
+
+
+def terminal(result):
+    from trader.persistence.storage_cleanup import terminal_research
+    return terminal_research(result)
+
+
+def cleanup_completed(db, bank, *, limit=1, experiment_id=None):
+    """Bounded completion/restart work under cycle's existing Bank flock."""
+    from trader.persistence.storage_cleanup import retire_research_work
+    from trader.learning import capture as C
+    if db.in_transaction or not 1<=limit<=4:
+        return [dict(status='REFUSED',reason='cleanup_transaction_or_bound')]
+    if experiment_id:
+        rows=db.execute('SELECT rowid,payload FROM bridge_experiments WHERE id=?',(experiment_id,)).fetchall()
+    else:
+        marker=db.execute("SELECT manifest FROM journal_representation_v1 WHERE version='research.lifecycle.v1'").fetchone()
+        try: after=int(json.loads(marker[0])['rowid']) if marker else 0
+        except (ValueError,TypeError,KeyError): return [dict(status='REFUSED',reason='unknown_research_cursor')]
+        rows=db.execute('SELECT rowid,payload FROM bridge_experiments WHERE rowid>? ORDER BY rowid LIMIT ?',(after,limit)).fetchall()
+        if not rows:
+            with db: db.execute("INSERT OR REPLACE INTO journal_representation_v1 VALUES ('research.lifecycle.v1','VERIFIED',?)",(json.dumps(dict(rowid=0)),))
+            return []
+    results=records(db,'bridge_bank_results');out=[]
+    for rowid,text in rows:
+        ex=C.payload(db,text)
+        completed=[r for r in results if r.get('experiment_id')==ex['experiment_id'] and terminal(r)]
+        if completed:
+            out.append(retire_research_work(db,bank,ex,completed[-1]))
+        else: out.append(dict(status='RETAINED',reason='research_incomplete',experiment_id=ex['experiment_id']))
+        if not experiment_id:
+            with db: db.execute("INSERT OR REPLACE INTO journal_representation_v1 VALUES ('research.lifecycle.v1','VERIFIED',?)",(json.dumps(dict(rowid=rowid)),))
+    return out
 
 
 def main():

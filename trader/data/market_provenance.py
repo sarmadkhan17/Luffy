@@ -289,6 +289,7 @@ def prepare(df):
 def append(conn, key, df=None, *, prepared=None):
     """Append/link exact retrievals atomically; ancestry stays inside the write."""
     iterator = iter(prepare(df) if prepared is None else prepared)
+    wrote = False
     while batch := list(islice(iterator, 128)):
         # All parent selection remains inside the existing transaction. Bound
         # both temporary state and SQLite crossings, rather than releasing
@@ -302,6 +303,7 @@ def append(conn, key, df=None, *, prepared=None):
         batch = [r for r in batch if r['revision_id'] not in existing]
         if not batch:
             continue
+        wrote = True
         groups = {}
         for r in batch:
             groups.setdefault((r['instrument_id'], r['source']), set()).add(r['event_time_ms'])
@@ -346,6 +348,10 @@ def append(conn, key, df=None, *, prepared=None):
         conn.execute('INSERT OR IGNORE INTO market_revisions VALUES '
                      + ','.join('(?,?,?,?,?,?)' for _ in writes),
                      tuple(value for row in writes for value in row))
+
+    if wrote:
+        from trader.persistence.storage_cleanup import market_completion
+        market_completion(conn)
 
 
 def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False):

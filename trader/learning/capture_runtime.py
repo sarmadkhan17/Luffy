@@ -134,7 +134,7 @@ def decision(db, row, cycle, inputs=None, *, stage=None):
     """
     cut = stage['cut_ms'] if stage else timestamp(row['ts'])
     event = stage['event_key'] if stage else 'decision:'+row['id']
-    votes=[dict(v) for v in db.execute('SELECT * FROM votes WHERE cycle_id=? AND symbol=? ORDER BY rowid',
+    votes=[dict(v) for v in C.read(db,'SELECT * FROM votes WHERE cycle_id=? AND symbol=? ORDER BY rowid',
                                      (row['cycle_id'],row['symbol']))]
     reasons=dict(skip_reason=row.get('skip_reason'), reason_codes=row.get('reason_codes'),
                  signals=row.get('signals_json'),votes=votes)
@@ -226,7 +226,7 @@ def action(db, row, at_ms, risk_value=None):
 
 
 def booking(db, trade_id, receipt):
-    row=db.execute('SELECT * FROM trades WHERE id=?',(trade_id,)).fetchone()
+    row=C.read(db,'SELECT * FROM trades WHERE id=?',(trade_id,)).fetchone()
     trade=dict(row)
     event=C.trade_event(db,trade['decision_id'],trade_id)
     C.registration(db,event)
@@ -258,7 +258,7 @@ def forward(db, original, updates, targets, now_ms):
     if kind in (L.Kind.CASH.value,L.Kind.MISSED.value) and (reg.get('chain') or reg['lineage'].get('opportunity_id') or reg['lineage'].get('context_id')):
         from .producers import opportunity
         opportunity(reg,{d['role']:C.resolve(db,d) for d in reg['dependencies'] if d['status']=='AVAILABLE'})
-    action_rows=db.execute('SELECT payload FROM learning_actions WHERE event_key=?',(event,)).fetchall()
+    action_rows=C.read(db,'SELECT payload FROM learning_actions WHERE event_key=?',(event,)).fetchall()
     actions=sorted([json.loads(r[0])['dependency'] for r in action_rows if json.loads(r[0])['dependency']['available_ms']<=now_ms],
                    key=lambda d:(d['available_ms'],d['sha256']))
     risk=[d for d in actions if d['role']=='risk_decision']
@@ -276,7 +276,7 @@ def forward(db, original, updates, targets, now_ms):
     # A scheduled measurement belongs to the root decision, retained verbatim.
     # The terminal stage owns the action/outcome; its parent owns the declaration.
     prediction_actions = actions if event == root_event else [json.loads(r[0])['dependency']
-        for r in db.execute('SELECT payload FROM learning_actions WHERE event_key=?',(root_event,))]
+        for r in C.read(db,'SELECT payload FROM learning_actions WHERE event_key=?',(root_event,))]
     prediction_rows=[d for d in prediction_actions if d['role']=='action'
         and d['available_ms']<=now_ms and 'prediction' in C.resolve(db,d)]
     declaration=C.resolve(db,prediction_rows[0])['prediction'] if prediction_rows else {k:original[k] for k in ('decision_id','cycle_id','symbol','ts','action','entry_price')}
@@ -355,12 +355,12 @@ def missed_snapshot(db,scan_id,symbol,at_ms,admission_context=None):
 
 def _signal_version(db, strategy_id, spec_hash, cut_ms):
     """(version, install) of one signal's own exact StrategyVersion, else (None, None)."""
-    rows=db.execute('SELECT canonical_json,recorded_at_ms FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+    rows=C.read(db,'SELECT canonical_json,recorded_at_ms FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
                     (strategy_id,spec_hash)).fetchall()
     if len(rows)!=1 or rows[0][1]>cut_ms: return None,None
     version=json.loads(rows[0][0]); install=None
-    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_version_installs'").fetchone():
-        matches=db.execute('SELECT canonical_json FROM strategy_version_installs WHERE version_id=?',(version['version_id'],)).fetchall()
+    if C.read(db,"SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_version_installs'").fetchone():
+        matches=C.read(db,'SELECT canonical_json FROM strategy_version_installs WHERE version_id=?',(version['version_id'],)).fetchall()
         if len(matches)==1: install=json.loads(matches[0][0])
     return version,install
 
@@ -373,7 +373,7 @@ def bind_signal_version(db, inputs, row):
     # infer a governing version from current state or mutable rejection text.
     if row['action']=='HOLD' and len(signals)==1:
         agreeing=signals
-    if not agreeing or not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
+    if not agreeing or not C.read(db,"SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
         return inputs
     from trader.strategy.plan_owner import historical_owner, verified_selection
     raw_selection = row.get('strategy_selection_json')
@@ -441,7 +441,7 @@ def verified_trade(db, receipt):
     trade=whole['bookings']['trade']
     event=C.trade_event(db,trade['decision_id'],trade['id'])
     _,reg=C.registration(db,event)
-    identity_row=db.execute('SELECT entry_identity_json FROM trades WHERE id=?',(trade['id'],)).fetchone()
+    identity_row=C.read(db,'SELECT entry_identity_json FROM trades WHERE id=?',(trade['id'],)).fetchone()
     identity=json.loads(identity_row[0]) if identity_row and identity_row[0] else None
     from .producers import verify_trade_binding
     verify_trade_binding(reg,identity,trade)
@@ -488,7 +488,7 @@ def paper_cost(db, trade, receipt, *, observed_ms):
     at_ms=observed_ms
     sources={}
     for kind,sid in receipt['source_ids'].items():
-        row=db.execute('SELECT canonical_json FROM versioned_paper_cost_sources WHERE source_id=?',(sid,)).fetchone()
+        row=C.read(db,'SELECT canonical_json FROM versioned_paper_cost_sources WHERE source_id=?',(sid,)).fetchone()
         if row:
             raw=json.loads(row[0]);sources[kind]=raw
             if raw['captured_ms']>at_ms:
@@ -543,7 +543,7 @@ def journalize_allocation(journal, snap, decision, config, receipt, proposal, al
     from trader.portfolio.opportunity_registry import Registry
     registry=Registry(journal.db_path,learning_journal=journal)
     try:
-        cached=registry.db.execute('SELECT payload FROM opportunities WHERE opportunity_id=?',(c.opportunity_id,)).fetchone()
+        cached=C.read(registry.db,'SELECT payload FROM opportunities WHERE opportunity_id=?',(c.opportunity_id,)).fetchone()
         registered=json.loads(cached[0]) if cached else registry.observe(receipt.context,decision.cycle_id,p['candidate_id'],c.version_id)
         if receipt.context.canonical_json not in registered.get('context_jsons',[]):
             raise ValueError('allocator_registry_context_differs')
@@ -631,7 +631,7 @@ def deliver_allocation(db, config, current, result, market_snapshots):
     delivered=[]
     def refuse(key, reason):
         # One explicit row per refusal, not one per Kernel cycle.
-        if not db.execute('SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?', (key, reason)).fetchone():
+        if not C.read(db,'SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?', (key, reason)).fetchone():
             db.execute('INSERT INTO learning_capture_failures VALUES(?,?)', (key, reason))
     for source in current.sources:
         if not source.source_id.startswith('live-context:'):
@@ -645,16 +645,16 @@ def deliver_allocation(db, config, current, result, market_snapshots):
         intents=[i for i in all_intents if i.payload()['opportunity_id']==c.opportunity_id]
         origin=raw['candidate_id'].removesuffix(':'+c.version_id)
         event=C.stage_event(origin,p.proposal_id,c.version_id)
-        if db.execute('SELECT 1 FROM learning_registrations WHERE event_key=?',(event,)).fetchone():
+        if C.read(db,'SELECT 1 FROM learning_registrations WHERE event_key=?',(event,)).fetchone():
             delivered.append(event)
             continue
-        row=db.execute('SELECT * FROM decisions WHERE id=?',(origin,)).fetchone()
-        parent=db.execute('SELECT registration_id FROM learning_registrations WHERE event_key=?',('decision:'+origin,)).fetchone()
+        row=C.read(db,'SELECT * FROM decisions WHERE id=?',(origin,)).fetchone()
+        parent=C.read(db,'SELECT registration_id FROM learning_registrations WHERE event_key=?',('decision:'+origin,)).fetchone()
         if row is None or parent is None or len(intents)!=1:
             refuse(event,'allocation_origin_decision_or_registration_or_intent_unavailable_no_backfill')
             continue
         row=dict(row)
-        cycle=db.execute('SELECT * FROM cycles WHERE id=?',(row['cycle_id'],)).fetchone()
+        cycle=C.read(db,'SELECT * FROM cycles WHERE id=?',(row['cycle_id'],)).fetchone()
         if row['cycle_id']!=raw['cycle_id'] or cycle is None:
             refuse(event,'allocation_origin_cycle_differs')
             continue
@@ -703,9 +703,9 @@ def resolve_nontrade(db, opportunity_id, proposal_id, at_ms, event):
     """The allocator's own CASH/NO_ALLOCATION answer, on this chain's opportunity."""
     from trader.portfolio.opportunity_registry import resolve_row
     from .producers import missed
-    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='opportunities'").fetchone():
+    if not C.read(db,"SELECT 1 FROM sqlite_master WHERE name='opportunities'").fetchone():
         return None
-    if db.execute('SELECT 1 FROM opportunities WHERE opportunity_id=?',(opportunity_id,)).fetchone() is None:
+    if C.read(db,'SELECT 1 FROM opportunities WHERE opportunity_id=?',(opportunity_id,)).fetchone() is None:
         return None
     body=resolve_row(db,opportunity_id,'SKIPPED',proposal_id,at_ms)
     return missed(db,event,body)
@@ -728,5 +728,5 @@ def failed_allocation_delivery(db, current, result):
             origin = raw['candidate_id'].removesuffix(':' + candidate.version_id)
             event = C.stage_event(origin,proposal['proposal_id'],candidate.version_id)
             reason = 'terminal_source_delivery_failed_no_scan_fallback'
-            if not db.execute('SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?',(event,reason)).fetchone():
+            if not C.read(db,'SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?',(event,reason)).fetchone():
                 db.execute('INSERT INTO learning_capture_failures VALUES (?,?)',(event,reason))

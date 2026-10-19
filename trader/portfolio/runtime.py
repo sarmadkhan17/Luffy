@@ -31,7 +31,7 @@ class Consumer:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with closing(self._db()) as db, db:
-            db.executescript(E.BLOB_SCHEMA)
+            db.executescript(E.BLOB_SCHEMA + E.REPRESENTATION_SCHEMA)
             db.executescript('''
             CREATE TABLE IF NOT EXISTS state(id INTEGER PRIMARY KEY CHECK(id=1), inputs_json TEXT,
                 previous_proposal_id TEXT);
@@ -50,6 +50,9 @@ class Consumer:
             CREATE VIEW IF NOT EXISTS state_logical_v1 AS
                 SELECT id,journal_detail_v1(inputs_json) AS inputs_json,previous_proposal_id FROM state;
             ''')
+            db.execute('BEGIN IMMEDIATE')
+            from trader.persistence.storage_cleanup import portfolio_completion
+            self.lifecycle = portfolio_completion(db)
 
     def _db(self):
         return E.install(sqlite3.connect(self.path, timeout=5))
@@ -137,6 +140,8 @@ class Consumer:
             db.execute('INSERT INTO evaluations VALUES (?,?)', (cut,body_detail))
             db.execute('INSERT OR REPLACE INTO state VALUES (1,?,?)',
                 (raw_detail,proposal.proposal_id if proposal else previous_id))
+            from trader.persistence.storage_cleanup import portfolio_completion
+            self.lifecycle = portfolio_completion(db)
             return body
 
 

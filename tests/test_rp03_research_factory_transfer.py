@@ -120,8 +120,8 @@ def test_baseline_factory_cannot_see_the_experiment_evidence(population,
     bank, prod, final, later = _supported(population)
     cand = final["referee_disposition"]["factory_candidate"]
     # the spent look lives only in the experiment ledger and the Bank ...
-    with closing(sqlite3.connect(f"file:{cand['quantitative_ledger']}?mode=ro",
-                                 uri=True)) as exp_j:
+    from trader.persistence.storage_cleanup import completed_reader
+    with closing(completed_reader(bank,final['experiment_id'])) as exp_j:
         assert len(exp_j.execute("SELECT * FROM research_tests").fetchall()) == 1
     assert len(saved(bank, "bridge_tests")) == 1
     # ... not in the Journal a production consumer prices alpha against
@@ -247,7 +247,11 @@ def test_descriptive_source_results_are_never_transferable(population):
 
 # ── negative: forged / drifted evidence ──────────────────────────────────
 def _ledger(bank, final):
-    return T.experiment_ledger_path(bank, final["experiment_id"])
+    path=T.experiment_ledger_path(bank,final["experiment_id"])
+    if not path.exists():
+        from tests.retained_research_fixtures import restore_ledger
+        restore_ledger(bank,final["experiment_id"],path)
+    return path
 
 
 def test_forged_experiment_combination_row_is_refused(population, target):
@@ -291,6 +295,13 @@ def test_missing_or_foreign_experiment_ledger_is_refused(population, tmp_path):
     with pytest.raises(T.TransferRefused, match="experiment_ledger_binding"):
         T.authenticate(bank, final["result_id"])
     led.unlink()
+    # Retained immutable evidence is authoritative after normal work retirement.
+    assert T.authenticate(bank,final['result_id'])['result_id']==final['result_id']
+    # Losing BOTH representations still refuses; no empty ledger is recreated.
+    with closing(sqlite3.connect(bank)) as db:
+        db.execute('DROP TRIGGER bridge_runtime_bindings_no_delete')
+        db.execute("DELETE FROM bridge_runtime_bindings WHERE id=?",('completed-work:'+final['experiment_id'],))
+        db.commit()
     with pytest.raises(T.TransferRefused, match="experiment_ledger_missing"):
         T.authenticate(bank, final["result_id"])
 

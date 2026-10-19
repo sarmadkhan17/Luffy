@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sqlite3
 import zlib
 import time
 import threading
@@ -27,10 +28,12 @@ CREATE TABLE IF NOT EXISTS journal_evidence_blobs_v1 (
  payload BLOB NOT NULL
 );
 """
-SCHEMA = BLOB_SCHEMA + """
+REPRESENTATION_SCHEMA = """
 CREATE TABLE IF NOT EXISTS journal_representation_v1 (
  version TEXT PRIMARY KEY, status TEXT NOT NULL, manifest TEXT NOT NULL
 );
+"""
+SCHEMA = BLOB_SCHEMA + REPRESENTATION_SCHEMA + """
 CREATE VIEW IF NOT EXISTS brain_events_logical_v1 AS
  SELECT id,ts,kind,subject,journal_detail_v1(detail) AS detail FROM brain_events;
 """
@@ -171,14 +174,14 @@ _SEGMENT_BYTES = 0
 _SEGMENT_LIMIT = 64 * 1024**2
 
 
-def anchored(text, values):
+def anchored(text, values, *, min_length=BLOCK):
     """Anchor exact retained subtrees so shifted JSON prefixes share chunks.
 
     No normalization: only complete, byte-identical strings are anchored.
     """
     spans = []
     for value in set(values):
-        if len(value) < BLOCK:
+        if len(value) < min_length:
             continue
         offset = 0
         while (start := text.find(value, offset)) >= 0:
@@ -337,15 +340,26 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
 def install(conn, *, schema='main'):
     """Install the verifying SQL function on any supported direct-SQL reader."""
     name = 'journal_detail_v1' if schema == 'main' else 'journal_src_detail_v1'
-    conn.create_function(name, 1, lambda detail: resolve(conn, detail, schema=schema))
+    try:
+        conn.execute('SELECT '+name+'(NULL)').fetchone()
+    except sqlite3.OperationalError as exc:
+        if 'no such function' not in str(exc):
+            raise
+        conn.create_function(name, 1, lambda detail: resolve(conn, detail, schema=schema))
     return conn
 
 
 def read_sql(conn, sql):
-    """Route Journal SELECTs through the logical view; legacy DBs need no DDL."""
-    if not re.search(r'\bbrain_events\b', sql, re.I) or not re.match(r'\s*(SELECT|WITH)\b', sql, re.I):
+    """Route owned SELECTs through verified logical views; legacy needs no DDL."""
+    if not re.match(r'\s*(SELECT|WITH)\b', sql, re.I):
         return sql
-    if conn.execute("SELECT 1 FROM main.sqlite_master WHERE name='brain_events_logical_v1'").fetchone():
-        token = re.compile(r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\"|--[^\n]*|/\*.*?\*/|\bbrain_events\b", re.I | re.S)
-        return token.sub(lambda match: 'brain_events_logical_v1' if match.group().lower() == 'brain_events' else match.group(), sql)
-    return sql
+    names = ('brain_events', 'learning_source_blobs', 'learning_registrations',
+             'learning_outcome_captures', 'learning_actions',
+             'learning_decision_source_manifests', 'learning_produced_chains')
+    wanted = [n for n in names if re.search(r'\b'+n+r'\b',sql,re.I)]
+    mapped = {n:n+'_logical_v1' for n in wanted if conn.execute(
+        "SELECT 1 FROM main.sqlite_master WHERE type='view' AND name=?",(n+'_logical_v1',)).fetchone()}
+    if not mapped:
+        return sql
+    token = re.compile(r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\"|--[^\n]*|/\*.*?\*/|\b(?:"+'|'.join(mapped)+r")\b", re.I | re.S)
+    return token.sub(lambda m:mapped.get(m.group().lower(),m.group()),sql)

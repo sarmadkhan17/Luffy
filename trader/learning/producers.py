@@ -7,9 +7,10 @@ from . import foundation as L, capture as C
 
 def materialize(db, outcome_id):
     """Persist one replayed chain; never call any learning application API."""
-    old = db.execute('SELECT payload FROM learning_produced_chains WHERE outcome_id=?', (outcome_id,)).fetchone()
+    old = C.read(db,'SELECT payload FROM learning_produced_chains WHERE outcome_id=?', (outcome_id,)).fetchone()
     if old:
-        return json.loads(old[0])
+        C.maintain_completed(db,outcome_id)
+        return C.payload(db,old[0])
     o, retained = C.learning_outcome(db, outcome_id)
     a = L.attribute(o)
     r = L.replay(o, retained)
@@ -20,6 +21,7 @@ def materialize(db, outcome_id):
     body = dict(replay_gate='REPLAY_COMPLETE' if r.status=='COMPLETE' else 'REPLAY_INCOMPLETE',outcome=asdict(o), attribution=asdict(a), replay=asdict(r),
                 evidence=asdict(e), proposal=asdict(p), authoritative=r.status=='COMPLETE')
     C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+    C.maintain_completed(db,outcome_id)
     return body
 
 
@@ -132,7 +134,7 @@ def missed(db, event, resolved):
     _, reg = C.registration(db,event)
     sources={d['role']:C.resolve(db,d) for d in reg['dependencies'] if d['status']=='AVAILABLE'}
     opportunity(reg,sources)
-    row=db.execute('SELECT payload FROM opportunities WHERE opportunity_id=?',(resolved['opportunity_id'],)).fetchone()
+    row=C.read(db,'SELECT payload FROM opportunities WHERE opportunity_id=?',(resolved['opportunity_id'],)).fetchone()
     if row is None or json.loads(row[0])!=resolved:
         raise ValueError('exact_registered_resolution_missing')
     status=resolved['resolution']['resolution']

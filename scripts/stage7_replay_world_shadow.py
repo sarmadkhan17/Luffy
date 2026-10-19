@@ -30,16 +30,16 @@ def run(path, limit=64):
     with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True) as db:
         db.row_factory=sqlite3.Row
         db.execute('PRAGMA query_only=ON');db.execute('BEGIN')
-        tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        tables={r[0] for r in C.read(db,"SELECT name FROM sqlite_master WHERE type='table'")}
         if 'learning_registrations' in tables:
-            for row in db.execute("SELECT event_key,payload FROM learning_registrations WHERE event_key LIKE 'decision:%' ORDER BY rowid DESC LIMIT ?",(limit,)):
+            for row in C.read(db,"SELECT event_key,payload FROM learning_registrations WHERE event_key LIKE 'decision:%' ORDER BY rowid DESC LIMIT ?",(limit,)):
                 reg=json.loads(row['payload'])
                 counts['allocation_registrations' if reg.get('chain') else 'scan_registrations']+=1
                 if 'learning_actions' in tables:
-                    counts['risk_linked_registrations']+=bool(db.execute("SELECT 1 FROM learning_actions WHERE event_key=? AND json_extract(payload,'$.dependency.role')='risk_decision' LIMIT 1",(row['event_key'],)).fetchone())
+                    counts['risk_linked_registrations']+=bool(C.read(db,"SELECT 1 FROM learning_actions WHERE event_key=? AND json_extract(payload,'$.dependency.role')='risk_decision' LIMIT 1",(row['event_key'],)).fetchone())
         samples=[]
         if 'learning_outcome_captures' in tables:
-            rows=db.execute("SELECT outcome_id,payload FROM learning_outcome_captures WHERE json_extract(payload,'$.boundary')!='UNRESOLVED' ORDER BY rowid DESC LIMIT ?",(limit,)).fetchall()
+            rows=C.read(db,"SELECT outcome_id,payload FROM learning_outcome_captures WHERE json_extract(payload,'$.boundary')!='UNRESOLVED' ORDER BY rowid DESC LIMIT ?",(limit,)).fetchall()
             for row in rows:
                 counts['resolved_outcomes']+=1
                 try:

@@ -225,11 +225,14 @@ def portfolio_candidates(db, roots):
     """
     actual = {name for name, _ in tables(db)}
     expected = {'state', 'checkpoints', 'evaluations', BLOBS}
+    if 'journal_representation_v1' in actual: expected.add('journal_representation_v1')
     if actual != expected:
         return [], {'reason': 'UNKNOWN_SCHEMA_RETAINED', 'tables': sorted(actual)}
     expected_columns = {'state': ['id','inputs_json','previous_proposal_id'],
                         'checkpoints': ['event_id','payload'], 'evaluations': ['cut_id','payload'],
                         BLOBS: ['sha256','byte_length','codec','payload']}
+    if 'journal_representation_v1' in actual:
+        expected_columns['journal_representation_v1']=['version','status','manifest']
     for name, expected_cols in expected_columns.items():
         if [r[1] for r in db.execute('PRAGMA table_info('+quote(name)+')')] != expected_cols:
             return [], {'reason': 'UNKNOWN_COLUMNS_RETAINED'}
@@ -635,3 +638,354 @@ def apply_lifecycle_copy(path, family, *, after=0, limit=128):
             db.rollback()
             raise
     return dict(copy=str(path), production_apply_authorized=False, family=family, **applied)
+
+
+# Completed predictive experiments already have a Bank, a writer flock, immutable
+# results and a shared error-budget ledger. Their recovery evidence belongs there.
+RESEARCH_CAPSULE = 'research-completed-work.v1'
+RESEARCH_CAPSULE_KEY = 'completed-work:'
+RESEARCH_WORK_LIMIT = 256*1024**2
+
+
+def _cell(value):
+    import base64
+    return {'sqlite_blob_v1':base64.b64encode(value).decode()} if isinstance(value,bytes) else value
+
+
+def _uncell(value):
+    import base64
+    return base64.b64decode(value['sqlite_blob_v1'],validate=True) if isinstance(value,dict) else value
+
+
+def logical_image(db):
+    """Keep owned logical rows, rowids and DDL, discarding SQLite free pages."""
+    image=dict(schema=[list(r) for r in schema(db)],tables=[])
+    for name,ddl in tables(db):
+        if name.startswith('sqlite_') and name!='sqlite_sequence':
+            raise ValueError('UNKNOWN_SQLITE_INTERNAL_TABLE')
+        cols=[r[1] for r in db.execute('PRAGMA table_info('+quote(name)+')')]
+        without='WITHOUT ROWID' in ddl.upper()
+        data=[[ _cell(v) for v in row] for row in rows(db,name,ddl)]
+        image['tables'].append(dict(name=name,columns=cols,without_rowid=without,rows=data))
+    return image
+
+
+def restore_image(image):
+    """Recreate an exact logical experiment in RAM; never create a writable file."""
+    db=E.install(sqlite3.connect(':memory:'))
+    try:
+        for kind,name,table,ddl in image['schema']:
+            if kind=='table' and name!='sqlite_sequence': db.execute(ddl)
+        for table in image['tables']:
+            name=table['name'];cols=table['columns']
+            if name=='sqlite_sequence': db.execute('DELETE FROM sqlite_sequence')
+            prefix='' if table['without_rowid'] else 'rowid,'
+            sql='INSERT INTO '+quote(name)+'('+prefix+','.join(map(quote,cols))+') VALUES ('
+            n=len(cols)+int(not table['without_rowid'])
+            db.executemany(sql+','.join('?' for _ in range(n))+')',
+                           [tuple(_uncell(v) for v in row) for row in table['rows']])
+        for kind,name,table,ddl in image['schema']:
+            if kind!='table' and ddl: db.execute(ddl)
+        db.commit()
+        if logical_image(db)!=image: raise ValueError('RESEARCH_ARCHIVE_ROUNDTRIP')
+        db.execute('PRAGMA query_only=ON')
+        return db
+    except BaseException:
+        db.close();raise
+
+
+def completed_reader(bank, experiment_id, *, dataset=False):
+    """Existing replay/Factory consumers read either working evidence or Bank evidence."""
+    import base64
+    from trader.learning import capture as C
+    from trader.research import predictive_experiment as X
+    if not re.fullmatch('[0-9a-f]{64}',experiment_id): raise ValueError('experiment_identity')
+    bank=Path(bank).resolve()
+    name='candles.db' if dataset else 'quantitative.db'
+    path=bank.parent/(bank.stem+'-experiments')/experiment_id/name
+    if path.is_file() and not path.is_symlink(): return E.install(X.readonly(path))
+    with closing(X.readonly(bank)) as db:
+        row=db.execute('SELECT payload FROM bridge_runtime_bindings WHERE id=?',
+                       (RESEARCH_CAPSULE_KEY+experiment_id,)).fetchone()
+        if not row: raise ValueError('RESEARCH_REPRODUCTION_EVIDENCE_UNAVAILABLE')
+        capsule=C.payload(db,row[0])
+    expected=capsule.pop('capsule_id',None)
+    if expected!=hashlib.sha256(canonical(capsule).encode()).hexdigest() or capsule['experiment_id']!=experiment_id:
+        raise ValueError('RESEARCH_ARCHIVE_IDENTITY')
+    if not dataset: return restore_image(capsule['quantitative'])
+    raw=base64.b64decode(capsule['candles_b64'],validate=True)
+    if hashlib.sha256(raw).hexdigest()!=capsule['candle_sha256']: raise ValueError('RESEARCH_DATASET_HASH')
+    db=E.install(sqlite3.connect(':memory:'))
+    db.deserialize(raw)
+    db.execute('PRAGMA query_only=ON')
+    return db
+
+
+def terminal_research(result):
+    return (result.get('classification') in ('SUPPORTED','UNSUPPORTED','NOT_TESTABLE')
+            or result.get('referee_disposition',{}).get('state') in (
+                'DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR',
+                'CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE',
+                'DUPLICATE_EXPERIMENT_IDENTITY','CANCELLED','ABANDONED'))
+
+
+def retire_research_work(db, bank, ex, result):
+    """Bank-owner completion/restart hook, under its EXISTING exclusive flock.
+
+    Archive commit precedes every unlink. Restart verifies exact surviving file
+    hashes before retrying. Only two owned databases, closed WAL sidecars and the
+    producer's completed .tmp file are eligible. Unknown dependencies retain work.
+    """
+    import base64
+    from trader.research import predictive_bridge as B, predictive_receipt as M
+    from trader.learning import capture as C
+    bank=Path(bank).resolve();eid=ex['experiment_id']
+    if db.in_transaction: return dict(status='REFUSED',reason='bank_transaction_open')
+    if len(eid)!=64 or any(c not in '0123456789abcdef' for c in eid):
+        return dict(status='REFUSED',reason='experiment_identity')
+    root=bank.parent/(bank.stem+'-experiments');work=root/eid
+    try:
+        if not terminal_research(result): return dict(status='RETAINED',reason='research_incomplete')
+        # Result hash and immutable Bank registration must still bind this terminal.
+        if (result.get('result_id')!=B.P.digest({k:v for k,v in result.items() if k!='result_id'})
+                or result.get('experiment_id')!=eid): raise ValueError('terminal_result_identity')
+        held=db.execute('SELECT payload FROM bridge_bank_results WHERE id=?',(result['result_id'],)).fetchone()
+        registered=db.execute('SELECT payload FROM bridge_experiments WHERE id=?',(eid,)).fetchone()
+        if not held or C.payload(db,held[0])!=result or not registered or C.payload(db,registered[0])!=ex:
+            raise ValueError('terminal_not_committed')
+        hrow=db.execute('SELECT payload FROM bridge_hypotheses WHERE id=?',(result['hypothesis_id'],)).fetchone()
+        if not hrow: raise ValueError('hypothesis_not_committed')
+        M.validate(B.P.hypothesis_from_dict(C.payload(db,hrow[0])['hypothesis']),ex,result)
+        expected_bank_guards={f'bridge_runtime_bindings_no_{op}':f"CREATE TRIGGER bridge_runtime_bindings_no_{op} BEFORE {op.upper()} ON bridge_runtime_bindings BEGIN SELECT RAISE(ABORT,'immutable'); END" for op in ('update','delete')}
+        if dict(db.execute("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND tbl_name IN ('bridge_runtime_bindings','journal_evidence_blobs_v1')"))!=expected_bank_guards:
+            raise ValueError('unknown_bank_archive_trigger')
+        if root.is_symlink() or work.is_symlink(): raise ValueError('work_symlink')
+        old=db.execute('SELECT payload FROM bridge_runtime_bindings WHERE id=?',(RESEARCH_CAPSULE_KEY+eid,)).fetchone()
+        if old:
+            capsule=C.payload(db,old[0]);saved=capsule.pop('capsule_id',None)
+            if (saved!=B.P.digest(capsule) or capsule.get('schema')!=RESEARCH_CAPSULE
+                    or capsule.get('experiment_id')!=eid or capsule['result_id']!=result['result_id']):
+                raise ValueError('existing_archive_identity')
+        if not work.exists():
+            return dict(status='ALREADY_RETIRED' if old else 'RETAINED',reason='no_working_copy')
+        allowed={'candles.db','quantitative.db','candles.db.tmp',
+                 'quantitative.db-wal','quantitative.db-shm','candles.db-wal','candles.db-shm'}
+        files=list(work.iterdir())
+        if any(p.name not in allowed or not p.is_file() or p.is_symlink() or p.stat().st_nlink!=1 for p in files):
+            raise ValueError('unknown_work_dependency')
+        if any(p.name.endswith('-wal') and p.stat().st_size for p in files):
+            raise ValueError('unresolved_WAL_or_writer')
+        if sum(p.stat().st_size for p in files)>RESEARCH_WORK_LIMIT: raise ValueError('archive_byte_bound')
+        if not old:
+            if not (work/'candles.db').is_file() or not (work/'quantitative.db').is_file():
+                raise ValueError('working_evidence_missing')
+            initial_proofs={p.name:file_hash(p) for p in files}
+            if M.snapshot(db,ex)!=result['quantitative_evidence']:
+                raise ValueError('final_quantitative_evidence_changed')
+            with closing(B.E.readonly(work/'quantitative.db')) as q:
+                q.execute('BEGIN')
+                if q.execute('SELECT id FROM predictive_experiment_binding').fetchall()!=[(eid,)]:
+                    raise ValueError('working_binding')
+                if q.execute('SELECT 1 FROM research_batches WHERE finished IS NULL LIMIT 1').fetchone():
+                    raise ValueError('unfinished_research_batch')
+                # A bound R&D file must never host financial/execution/recovery work.
+                from trader.core.journal import Journal
+                from trader.research.ledger import Ledger
+                template=Journal(':memory:');Ledger(template).ensure();C.ensure(template._conn())
+                try:
+                    known={name:{r[1] for r in template._conn().execute('PRAGMA table_info('+quote(name)+')')} for name,_ in tables(template._conn())}
+                    objects={(kind,name):ddl for kind,name,_,ddl in schema(template._conn())}
+                finally: template._conn().close()
+                known['predictive_experiment_binding']={'id'}
+                for name,_ in tables(q):
+                    cols={r[1] for r in q.execute('PRAGMA table_info('+quote(name)+')')}
+                    if name not in known or not cols<=known[name]: raise ValueError('unknown_quantitative_schema:'+name)
+                    if not name.startswith(('research_','learning_','journal_','sqlite_')) and name not in ('predictive_experiment_binding','state_kv'):
+                        if q.execute('SELECT 1 FROM '+quote(name)+' LIMIT 1').fetchone(): raise ValueError('financial_or_recovery_dependency:'+name)
+                if q.execute("SELECT 1 FROM state_kv WHERE key NOT LIKE 'research.%' AND key NOT LIKE 'lifecycle.research.%' LIMIT 1").fetchone():
+                    raise ValueError('recovery_state_dependency')
+                for kind,name,_,ddl in schema(q):
+                    if kind in ('view','trigger') and objects.get((kind,name))!=ddl:
+                        raise ValueError('unknown_quantitative_object:'+name)
+                q.row_factory=sqlite3.Row
+                for row in q.execute('SELECT * FROM research_tests ORDER BY seq'):
+                    retained=db.execute('SELECT payload FROM bridge_tests WHERE id=?',(str(row['seq']),)).fetchone()
+                    if not retained or C.payload(db,retained[0])!=dict(row): raise ValueError('spent_look_not_in_bank')
+                budget=[dict(r) for r in q.execute('SELECT * FROM research_budget ORDER BY id')]
+                if budget:
+                    retained=db.execute("SELECT payload FROM bridge_runtime_bindings WHERE id='registered-error-budget'").fetchone()
+                    if not retained or C.payload(db,retained[0])!=budget: raise ValueError('budget_not_in_bank')
+                image=logical_image(q)
+            with closing(restore_image(image)) as check:
+                if check.execute('PRAGMA integrity_check').fetchone()[0]!='ok': raise ValueError('archive_integrity')
+            snapshot=db.execute('SELECT payload FROM bridge_snapshots WHERE id=?',(eid,)).fetchone()
+            raw=(work/'candles.db').read_bytes();sha=hashlib.sha256(raw).hexdigest()
+            if not snapshot or C.payload(db,snapshot[0])['candle_sha256']!=sha: raise ValueError('dataset_snapshot_binding')
+            capsule=dict(schema=RESEARCH_CAPSULE,experiment_id=eid,result_id=result['result_id'],
+                         final_classification=result['classification'],reason=result['referee_disposition'],
+                         quantitative=image,candles_b64=base64.b64encode(raw).decode(),candle_sha256=sha,
+                         file_proofs={p.name:file_hash(p) for p in work.iterdir() if p.name in allowed})
+            if any(capsule['file_proofs'].get(name)!=sha for name,sha in initial_proofs.items()):
+                raise ValueError('working_evidence_changed_during_archive')
+            capsule['capsule_id']=B.P.digest(capsule)
+            with db: B.append(db,'bridge_runtime_bindings',RESEARCH_CAPSULE_KEY+eid,capsule)
+            # Read the committed recovery capsule before permitting any deletion.
+            held=db.execute('SELECT payload FROM bridge_runtime_bindings WHERE id=?',(RESEARCH_CAPSULE_KEY+eid,)).fetchone()
+            if C.payload(db,held[0])!=capsule: raise ValueError('archive_commit_not_verified')
+        proofs=capsule['file_proofs'];removed=0;bytes_removed=0
+        surviving=list(work.iterdir())
+        for p in surviving:
+            if p.name not in proofs or file_hash(p)!=proofs[p.name]:
+                raise ValueError('working_file_changed_after_archive')
+        for p in surviving:
+            bytes_removed+=p.stat().st_blocks*512;p.unlink();removed+=1
+        work.rmdir()
+        return dict(status='RETIRED',files_removed=removed,allocated_bytes_removed=bytes_removed,
+                    experiment_id=eid,capsule_id=capsule.get('capsule_id',saved if old else None))
+    except (ValueError,KeyError,TypeError,OSError,sqlite3.Error) as exc:
+        return dict(status='REFUSED',reason=str(exc),experiment_id=eid)
+
+
+def file_hash(path):
+    with open(path,'rb') as stream:
+        return hashlib.file_digest(stream,'sha256').hexdigest()
+
+
+def market_completion(db):
+    """Eight historical receipts per acquisition, in its existing transaction."""
+    if not db.in_transaction: return dict(refused='transaction_required')
+    db.execute('SAVEPOINT market_lifecycle')
+    try:
+        db.execute(E.REPRESENTATION_SCHEMA)
+        if ([r[1] for r in db.execute('PRAGMA table_info(journal_representation_v1)')]!=['version','status','manifest']
+                or db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND tbl_name='journal_representation_v1' LIMIT 1").fetchone()):
+            raise ValueError('unknown_lifecycle_metadata')
+        row=db.execute("SELECT manifest FROM journal_representation_v1 WHERE version='market.lifecycle.v1'").fetchone()
+        after=json.loads(row[0])['after'] if row else 0
+        # Limit bytes read as well as record count; an oversized legacy receipt
+        # refuses locally and the next invocation progresses past it.
+        ids=list(db.execute('SELECT rowid,length(CAST(record_json AS BLOB)) FROM market_revisions WHERE rowid>? ORDER BY rowid LIMIT 8',(after,)))
+        result=dict(records=[],refused=[],scanned=0,next_rowid=after)
+        budget=0
+        for rid,n in ids:
+            if n>1024**2 or budget+n>4*1024**2:
+                result['refused'].append(dict(rowid=rid,reason='byte_bound'));result['next_rowid']=rid;continue
+            part=market_batch(db,after=rid-1,limit=1,apply=True);budget+=n
+            if isinstance(part.get('refused'),str): raise ValueError(part['refused'])
+            result['records'].extend(part['records']);result['refused'].extend(part['refused']);result['scanned']+=1;result['next_rowid']=rid
+        db.execute('INSERT OR REPLACE INTO journal_representation_v1 VALUES (?,?,?)',
+                   ('market.lifecycle.v1','bounded',canonical({'after':result['next_rowid'] if ids else 0})))
+        db.execute('RELEASE market_lifecycle');return result
+    except (ValueError,KeyError,sqlite3.Error) as exc:
+        db.execute('ROLLBACK TO market_lifecycle');db.execute('RELEASE market_lifecycle')
+        return dict(refused=str(exc))
+
+
+def portfolio_completion(db, *, max_rows=64, max_bytes=32*1024**2):
+    """Bounded private-owner reference sweep, resumed in existing codec metadata.
+
+    Append-only evaluations/checkpoints and insert-only evidence are scanned to
+    their current tails before deletion. New tails catch up across invocations;
+    mutable state is checked in the deleting transaction. Unknown dependencies
+    cancel only this witness. The same owner serializes writes and cleanup.
+    """
+    if not db.in_transaction: return dict(deleted=0,refused='transaction_required')
+    version='portfolio.lifecycle.v1';cursor=0;pending=None
+    db.execute('SAVEPOINT portfolio_lifecycle')
+    try:
+        columns={'state':['id','inputs_json','previous_proposal_id'],
+            'checkpoints':['event_id','payload'],'evaluations':['cut_id','payload'],
+            BLOBS:['sha256','byte_length','codec','payload'],
+            'journal_representation_v1':['version','status','manifest']}
+        if {name for name,_ in tables(db)}!=set(columns): raise ValueError('unknown_portfolio_schema')
+        for name,expected in columns.items():
+            if [r[1] for r in db.execute('PRAGMA table_info('+quote(name)+')')]!=expected:
+                raise ValueError('unknown_portfolio_columns')
+            if list(db.execute('PRAGMA foreign_key_list('+quote(name)+')')): raise ValueError('unknown_foreign_key')
+        expected_triggers={}
+        for table,prefix,message in (('checkpoints','checkpoint','checkpoint immutable'),('evaluations','evaluation','evaluation immutable')):
+            for op in ('update','delete'):
+                expected_triggers[prefix+'_no_'+op]=f"CREATE TRIGGER {prefix}_no_{op} BEFORE {op.upper()} ON {table} BEGIN SELECT RAISE(ABORT,'{message}'); END"
+        normalize=lambda sql:' '.join(sql.split())
+        expected_views={'evaluations_logical_v1':'CREATE VIEW evaluations_logical_v1 AS SELECT cut_id,journal_detail_v1(payload) AS payload FROM evaluations',
+            'state_logical_v1':'CREATE VIEW state_logical_v1 AS SELECT id,journal_detail_v1(inputs_json) AS inputs_json,previous_proposal_id FROM state'}
+        actual_views=dict(db.execute("SELECT name,sql FROM sqlite_master WHERE type='view'"))
+        if {k:normalize(v) for k,v in actual_views.items()}!=expected_views: raise ValueError('unknown_portfolio_view')
+        actual_triggers=dict(db.execute("SELECT name,sql FROM sqlite_master WHERE type='trigger'"))
+        if {k:normalize(v) for k,v in actual_triggers.items()}!={k:normalize(v) for k,v in expected_triggers.items()}:
+            raise ValueError('unknown_portfolio_trigger')
+        saved=db.execute('SELECT manifest FROM journal_representation_v1 WHERE version=?',(version,)).fetchone()
+        state=json.loads(saved[0]) if saved else {'after':0}
+        cursor=state['after'];pending=state.get('pending')
+        if pending is None:
+            row=db.execute('SELECT rowid,cut_id,payload FROM evaluations WHERE rowid>? ORDER BY rowid LIMIT 1',(cursor,)).fetchone()
+            if row is None:
+                state={'after':0}
+            else:
+                cursor=row[0]
+                body=json.loads(E.resolve(db,row[2],max_bytes=max_bytes//2))
+                if body.get('schema')!='runtime-portfolio-checkpoint.v1' or body.get('portfolio_cut_id')!=row[1]:
+                    raise ValueError('evaluation_identity')
+                candidates={}
+                inputs=body.get('event_receipt',{}).get('inputs',{})
+                for field in ('current','previous'):
+                    if not isinstance(inputs.get(field),dict): continue
+                    for segment in E.pieces(canonical(inputs[field])):
+                        if len(candidates)>=32: break
+                        sha=hashlib.sha256(segment.encode()).hexdigest()
+                        blob=db.execute('SELECT byte_length,codec,payload FROM '+BLOBS+' WHERE sha256=?',(sha,)).fetchone()
+                        if blob:
+                            if E._blob(blob,sha)!=segment.encode(): raise ValueError('witness_differs')
+                            candidates[sha]=hashlib.sha256(blob[2]).hexdigest()
+                pending=dict(witness=cursor,candidates=candidates,scanned={n:0 for n in ('evaluations','checkpoints',BLOBS)})
+                state={'after':state['after'],'pending':pending}
+        used=count=deleted=compressed=0
+        def scan(value):
+            nonlocal used
+            if not isinstance(value,str): return
+            n=len(value.encode())
+            if value.startswith(E.PREFIX):
+                manifest=json.loads(value[len(E.PREFIX):]);n+=manifest['byte_length']
+            if used+n>max_bytes: raise ValueError('reference_byte_bound')
+            used+=n
+            pending['candidates']={k:v for k,v in pending['candidates'].items() if k not in HEX.findall(value)}
+            logical=E.resolve(db,value,max_bytes=max_bytes-used+n)
+            if E.PREFIX in logical: raise ValueError('nested_manifest')
+            pending['candidates']={k:v for k,v in pending['candidates'].items() if k not in HEX.findall(logical)}
+        if pending:
+            for table,last in list(pending['scanned'].items()):
+                if not pending['candidates']: break
+                remaining=max_rows-count
+                if remaining<=0: break
+                columns_sql='rowid,*' if table==BLOBS else 'rowid,payload'
+                for row in db.execute('SELECT '+columns_sql+' FROM '+quote(table)+' WHERE rowid>? ORDER BY rowid LIMIT ?',(last,remaining)):
+                    # Finish this row in a later invocation if the byte budget
+                    # is spent. A single oversized root refuses this witness.
+                    n=row[2] if table==BLOBS else len(row[1].encode())+(json.loads(row[1][len(E.PREFIX):])['byte_length'] if row[1].startswith(E.PREFIX) else 0)
+                    if used+n>max_bytes:
+                        if count: break
+                        raise ValueError('reference_byte_bound')
+                    if table==BLOBS:
+                        scan(E._blob((row[2],row[3],row[4]),row[1]).decode())
+                    else: scan(row[1])
+                    pending['scanned'][table]=row[0];count+=1
+            caught_up=not pending['candidates'] or all(not db.execute('SELECT 1 FROM '+quote(t)+' WHERE rowid>? LIMIT 1',(last,)).fetchone() for t,last in pending['scanned'].items())
+            if caught_up:
+                for row in db.execute('SELECT inputs_json,previous_proposal_id FROM state'):
+                    for value in row: scan(value)
+                for sha,proof in pending['candidates'].items():
+                    blob=db.execute('SELECT byte_length,codec,payload FROM '+BLOBS+' WHERE sha256=?',(sha,)).fetchone()
+                    if blob:
+                        if hashlib.sha256(blob[2]).hexdigest()!=proof: raise ValueError('candidate_changed')
+                        E._blob(blob,sha)
+                        db.execute('DELETE FROM '+BLOBS+' WHERE sha256=?',(sha,));deleted+=1;compressed+=len(blob[2])
+                state={'after':pending['witness']}
+        db.execute('INSERT OR REPLACE INTO journal_representation_v1 VALUES (?,?,?)',(version,'bounded',canonical(state)))
+        db.execute('RELEASE portfolio_lifecycle')
+        return dict(deleted=deleted,compressed_bytes_removed=compressed,scanned=count,pending='pending' in state)
+    except (ValueError,KeyError,TypeError,sqlite3.Error) as exc:
+        db.execute('ROLLBACK TO portfolio_lifecycle');db.execute('RELEASE portfolio_lifecycle')
+        # Skip the refused witness, so uncertain work cannot starve unrelated work.
+        if cursor:
+            db.execute('INSERT OR REPLACE INTO journal_representation_v1 VALUES (?,?,?)',(version,'refused',canonical({'after':cursor})))
+        return dict(deleted=0,refused=str(exc))

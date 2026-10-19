@@ -10,6 +10,7 @@ import hashlib
 import json
 import sqlite3
 from . import foundation as L
+from trader.core import journal_evidence as E
 
 SCHEMA = 'learning-replay-manifest.v1'
 TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions', 'learning_decision_source_manifests', 'learning_produced_chains')
@@ -26,7 +27,42 @@ RESEARCH = {'question', 'plan', 'research_evidence', 'falsifier_result', 'bank',
 POST = {'action', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'execution_reference', 'position_basis', 'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run', 'opportunity'}
 
 
+def read(db, sql, params=()):
+    E.install(db)
+    return db.execute(E.read_sql(db,sql), params)
+
+
+def payload(db, text):
+    return json.loads(E.resolve(db,text))
+
+
+def packed(db, text):
+    """Existing codec; exact canonical subtrees anchor repeated stage inputs."""
+    if len(text.encode()) < 1024 or text.startswith(E.PREFIX):
+        return text
+    def anchors(value):
+        children=value.values() if isinstance(value,dict) else value if isinstance(value,list) else ()
+        selected=[part for child in children for part in anchors(child)]
+        if selected: return selected
+        encoded=L.canonical(value)
+        return [encoded] if len(encoded.encode())>=1024 else []
+    # Prefer the same innermost source bytes regardless of the stage envelope.
+    # Choosing an outer object would shift the nested payload's segment offsets.
+    return E.store(db,E.anchored(text,anchors(json.loads(text)),min_length=1024))
+
+
+
+def _guards(table, fields):
+    key=fields[0]
+    same=' AND '.join('OLD.'+c+' IS NEW.'+c for c in fields if c!='payload')
+    return {table+'_duplicate':f"CREATE TRIGGER {table}_duplicate BEFORE INSERT ON {table} WHEN EXISTS(SELECT 1 FROM {table} WHERE {key}=NEW.{key}) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END",
+        table+'_update':f"CREATE TRIGGER {table}_update BEFORE UPDATE ON {table} WHEN NOT ({same}) OR journal_detail_v1(OLD.payload) IS NOT journal_detail_v1(NEW.payload) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END",
+        table+'_delete':f"CREATE TRIGGER {table}_delete BEFORE DELETE ON {table} BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"}
+
 def ensure(db):
+    E.install(db)
+    db.execute(E.BLOB_SCHEMA)
+    db.execute(E.REPRESENTATION_SCHEMA)
     definitions = {'learning_produced_chains': 'outcome_id TEXT PRIMARY KEY,payload TEXT NOT NULL',
         'learning_decision_source_manifests': 'manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_source_blobs': 'sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL',
@@ -37,17 +73,26 @@ def ensure(db):
         db.execute(f'CREATE TABLE IF NOT EXISTS {table}({columns})')
         key = columns.split()[0]
         db.execute(f"CREATE TRIGGER IF NOT EXISTS {table}_duplicate BEFORE INSERT ON {table} WHEN EXISTS(SELECT 1 FROM {table} WHERE {key}=NEW.{key}) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END")
-        for action in ('UPDATE', 'DELETE'):
-            db.execute(f"CREATE TRIGGER IF NOT EXISTS {table}_{action.lower()} BEFORE {action} ON {table} BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END")
+        # Logical immutability allows only byte-exact representation changes.
+        old = db.execute("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?",(table+'_update',)).fetchone()
+        legacy=f"CREATE TRIGGER {table}_update BEFORE UPDATE ON {table} BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+        if old and old[0]==legacy:
+            db.execute(f'DROP TRIGGER {table}_update')
+        fields=[c.split()[0] for c in columns.split(',')]
+        for statement in _guards(table,fields).values():
+            db.execute(statement.replace('CREATE TRIGGER','CREATE TRIGGER IF NOT EXISTS',1))
+        projection=','.join('journal_detail_v1(payload) AS payload' if c=='payload' else c for c in fields)
+        db.execute(f'CREATE VIEW IF NOT EXISTS {table}_logical_v1 AS SELECT rowid AS rowid,{projection} FROM {table}')
     db.execute('CREATE TABLE IF NOT EXISTS learning_capture_failures(event_key TEXT,reason TEXT)')
 
 
 def insert(db, table, key, identity, values):
     row = db.execute(f'SELECT * FROM {table} WHERE {key}=?', (identity,)).fetchone()
     if row is not None:
-        if tuple(row) != tuple(values):
+        if (*tuple(row)[:-1], E.resolve(db,row[-1])) != tuple(values):
             raise ValueError('immutable_capture_conflict')
         return 'DUPLICATE'
+    values=(*values[:-1],packed(db,values[-1]))
     db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
     return 'INSERTED'
 
@@ -76,13 +121,13 @@ def reference(db, role, table, source_id, *, version, available_ms, producer):
         raise ValueError('mutable_or_unregistered_reference_table')
     key, col = DURABLE[table]
     # A producer table must actually protect against UPDATE and DELETE.
-    triggers = [r[0].upper() for r in db.execute("SELECT sql FROM sqlite_master WHERE type='trigger' AND tbl_name=?", (table,))]
+    triggers = [r[0].upper() for r in read(db,"SELECT sql FROM sqlite_master WHERE type='trigger' AND tbl_name=?", (table,))]
     if not all(any('BEFORE '+action in t and 'RAISE' in t for t in triggers) for action in ('UPDATE', 'DELETE')):
         raise ValueError('durable_source_not_immutable_snapshot_required')
     row = db.execute(f'SELECT {col} FROM {table} WHERE {key}=?', (source_id,)).fetchone()
     if row is None:
         return unavailable(role, 'EXACT_DURABLE_SOURCE_MISSING')
-    raw = json.loads(row[0])
+    raw = payload(db,row[0])
     if not version or version.lower() == 'latest' or type(available_ms) is not int or available_ms < 0 or not producer:
         raise ValueError('durable_source_identity_or_clock_missing')
     return dict(role=role, status='AVAILABLE', reason='EXACT_DURABLE_REFERENCE', source_id=source_id,
@@ -94,7 +139,7 @@ def resolve(db, dep):
     if dep['status'] != 'AVAILABLE':
         return None
     if dep['storage'] == 'SNAPSHOT':
-        row = db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?', (dep['locator']['sha256'],)).fetchone()
+        row = read(db,'SELECT payload FROM learning_source_blobs WHERE sha256=?', (dep['locator']['sha256'],)).fetchone()
     elif dep['storage'] == 'REFERENCE':
         table = dep['locator']['table']
         if table not in DURABLE:
@@ -105,7 +150,7 @@ def resolve(db, dep):
         raise ValueError('storage_unregistered')
     if row is None:
         raise ValueError('retained_exact_source_missing:' + dep['role'])
-    raw = json.loads(row[0])
+    raw = payload(db,row[0])
     if L.digest(raw) != dep['sha256']:
         raise ValueError('retained_source_hash_differs:' + dep['role'])
     return raw
@@ -188,7 +233,7 @@ def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile
 
 
 def registration(db, event_key):
-    row = db.execute('SELECT registration_id,payload FROM learning_registrations WHERE event_key=?', (event_key,)).fetchone()
+    row = read(db,'SELECT registration_id,payload FROM learning_registrations WHERE event_key=?', (event_key,)).fetchone()
     if row is None:
         raise ValueError('original_registration_missing_no_backfill')
     raw = json.loads(row[1])
@@ -198,7 +243,7 @@ def registration(db, event_key):
 
 
 def existing_outcome(db,outcome_key):
-    row=db.execute('SELECT outcome_id,payload FROM learning_outcome_captures WHERE outcome_key=?',(outcome_key,)).fetchone()
+    row=read(db,'SELECT outcome_id,payload FROM learning_outcome_captures WHERE outcome_key=?',(outcome_key,)).fetchone()
     if row is None: return None
     body=json.loads(row[1])
     if L.digest(body)!=row[0]: raise ValueError('outcome_capture_hash_differs')
@@ -233,7 +278,7 @@ def trade_event(db, decision_id, trade_id):
     intent's stage; every other trade resolves its original decision event.
     """
     try:
-        row = db.execute('SELECT entry_identity_json FROM trades WHERE id=?', (trade_id,)).fetchone()
+        row = read(db,'SELECT entry_identity_json FROM trades WHERE id=?', (trade_id,)).fetchone()
     except sqlite3.OperationalError:
         row = None
     identity = json.loads(row[0]) if row and row[0] else {}
@@ -255,7 +300,7 @@ def chain_event(db, decision_id, intent_id=None):
     original = 'decision:' + str(decision_id)
     if intent_id is None:
         return original
-    rows = db.execute("SELECT event_key FROM learning_registrations WHERE "
+    rows = read(db,"SELECT event_key FROM learning_registrations WHERE "
                       "json_extract(payload,'$.lineage.decision_id')=? AND "
                       "json_extract(payload,'$.lineage.intent_id')=? AND json_extract(payload,'$.chain') IS NOT NULL",
                       (str(decision_id), intent_id)).fetchall()
@@ -267,11 +312,11 @@ def chain_event(db, decision_id, intent_id=None):
 def forward_event(db, decision_id, observed_ms):
     original = 'decision:' + str(decision_id)
     _, root = registration(db, original)
-    rows = db.execute("SELECT event_key,payload FROM learning_registrations WHERE "
+    rows = read(db,"SELECT event_key,payload FROM learning_registrations WHERE "
         "json_extract(payload,'$.chain.parent_event_key')=? AND "
         "json_extract(payload,'$.decision_ms')<=?", (original, observed_ms)).fetchall()
     if not rows:
-        if db.execute("SELECT 1 FROM learning_capture_failures WHERE substr(event_key,1,?)=? LIMIT 1",
+        if read(db,"SELECT 1 FROM learning_capture_failures WHERE substr(event_key,1,?)=? LIMIT 1",
                       (len(original+'#allocation:'), original+'#allocation:')).fetchone():
             raise ValueError('terminal_allocation_registration_unavailable_no_scan_fallback')
         return original
@@ -453,7 +498,7 @@ def terminal_contract(reg, kind):
 
 
 def manifest(db, outcome_id):
-    row = db.execute('SELECT payload FROM learning_outcome_captures WHERE outcome_id=?', (outcome_id,)).fetchone()
+    row = read(db,'SELECT payload FROM learning_outcome_captures WHERE outcome_id=?', (outcome_id,)).fetchone()
     if row is None:
         raise ValueError('exact_outcome_missing')
     body = json.loads(row[0])
@@ -478,7 +523,7 @@ def manifest(db, outcome_id):
                 semantic(role, raw, reg)
                 if role=='data':
                     for sha in chunk_hashes(raw):
-                        entry=db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?',(sha,)).fetchone()
+                        entry=read(db,'SELECT payload FROM learning_source_blobs WHERE sha256=?',(sha,)).fetchone()
                         if entry is None or L.digest(json.loads(entry[0]))!=sha:
                             raise ValueError('data_chunk_missing_or_tampered')
                         blobs[sha]=json.loads(entry[0])
@@ -536,7 +581,7 @@ def retained_ancestors(db, reg):
         sources = {d['role']: resolve(db, d) for d in parent['dependencies'] if d['status']=='AVAILABLE'}
         blobs = {}
         for sha in chunk_hashes(sources.get('data')):
-            row = db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?', (sha,)).fetchone()
+            row = read(db,'SELECT payload FROM learning_source_blobs WHERE sha256=?', (sha,)).fetchone()
             if row: blobs[sha] = json.loads(row[0])
         result.append(dict(registration_id=rid, registration=parent, sources=sources, data_blobs=blobs,
                            decision_source_manifest=D.load(db,parent['decision_source_manifest_id'])))
@@ -797,3 +842,89 @@ def validate_chain(body,sources,blobs):
             raise ValueError('research_bank_chain_differs')
         for role,key in (('question','question'),('plan','plan'),('research_evidence','evidence'),('falsifier_result','result')):
             if sources[role]!=chain[key]: raise ValueError('research_chain_link_differs')
+
+
+def compact_completed(db, outcome_id, *, limit=16, max_bytes=4*1024**2):
+    """Retire inline representations after materialization, preserving exact bytes.
+
+    Only the six owned immutable capture tables are touched. Unrecognized
+    triggers/schema or incomplete dependencies refuse locally. The existing
+    producer transaction owns commit, including new chunks and old-cell removal.
+    """
+    if not db.in_transaction or not 1 <= limit <= 64:
+        return dict(compacted=0,refused=['transaction_or_bound'])
+    keys=dict(learning_source_blobs='sha256',learning_registrations='event_key',
+        learning_outcome_captures='outcome_key',learning_actions='action_id',
+        learning_decision_source_manifests='manifest_id',learning_produced_chains='outcome_id')
+    try:
+        m=manifest(db,outcome_id)
+        if m['status']!='REPLAY_COMPLETE':
+            return dict(compacted=0,refused=['incomplete_replay_manifest'])
+        body=m['capture'];reg=body['registration']
+    except (ValueError,KeyError,TypeError,sqlite3.Error):
+        return dict(compacted=0,refused=['unverified_outcome_dependencies'])
+    targets=[('learning_produced_chains',outcome_id),('learning_outcome_captures',body['outcome_key']),
+             ('learning_registrations',reg['event_key']),
+             ('learning_decision_source_manifests',reg['decision_source_manifest_id'])]
+    targets += [('learning_actions',r[0]) for r in db.execute('SELECT action_id FROM learning_actions WHERE event_key=? LIMIT 64',(reg['event_key'],))]
+    deps=list(body['dependencies'])+list(reg['dependencies'])
+    shas={d['locator']['sha256'] for d in deps if d.get('storage')=='SNAPSHOT' and d.get('status')=='AVAILABLE'}
+    shas.update(m['data_blobs'])
+    targets += [('learning_source_blobs',sha) for sha in sorted(shas)]
+    used=count=removed=0;refused=[]
+    for table,identity in dict.fromkeys(targets):
+        if count>=limit: break
+        triggers=dict(db.execute("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND tbl_name=?",(table,)))
+        allowed={table+'_duplicate',table+'_update',table+'_delete'}
+        if set(triggers)!=allowed or 'journal_detail_v1(OLD.payload)' not in triggers.get(table+'_update',''):
+            refused.append(table+':unknown_trigger');continue
+        key=keys[table]
+        expected={'learning_source_blobs':['sha256','payload'],
+            'learning_registrations':['event_key','registration_id','payload'],
+            'learning_outcome_captures':['outcome_key','outcome_id','payload'],
+            'learning_actions':['action_id','event_key','payload'],
+            'learning_decision_source_manifests':['manifest_id','event_key','payload'],
+            'learning_produced_chains':['outcome_id','payload']}
+        if [r[1] for r in db.execute(f'PRAGMA table_info({table})')]!=expected[table]:
+            refused.append(table+':unknown_schema');continue
+        if triggers!=_guards(table,expected[table]):
+            refused.append(table+':unknown_trigger');continue
+        fields=expected[table]
+        projection=','.join('journal_detail_v1(payload) AS payload' if c=='payload' else c for c in fields)
+        owned=f'CREATE VIEW {table}_logical_v1 AS SELECT rowid AS rowid,{projection} FROM {table}'
+        views=dict(db.execute("SELECT name,sql FROM sqlite_master WHERE type='view'"))
+        if (views.get(table+'_logical_v1')!=owned or any(table in sql and name!=table+'_logical_v1' for name,sql in views.items())):
+            refused.append(table+':unknown_view');continue
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND tbl_name='journal_evidence_blobs_v1' LIMIT 1").fetchone():
+            refused.append(table+':unknown_blob_trigger');continue
+        raw=db.execute(f'SELECT payload FROM {table} WHERE {key}=?',(identity,)).fetchone()
+        if not raw or raw[0].startswith(E.PREFIX) or len(raw[0].encode())<1024: continue
+        n=len(raw[0].encode())
+        if used+n>max_bytes:
+            refused.append(table+':byte_bound');continue
+        used+=n
+        db.execute('SAVEPOINT learning_representation')
+        try:
+            marker=packed(db,raw[0])
+            if E.resolve(db,marker)!=raw[0]: raise ValueError('learning_lossless_check')
+            db.execute(f'UPDATE {table} SET payload=? WHERE {key}=? AND payload=?',(marker,identity,raw[0]))
+            db.execute('RELEASE learning_representation')
+            count+=1;removed+=n-len(marker.encode())
+        except (ValueError,sqlite3.Error):
+            db.execute('ROLLBACK TO learning_representation');db.execute('RELEASE learning_representation')
+            refused.append(table+':representation_refused')
+    return dict(compacted=count,inline_bytes_removed=removed,refused=refused)
+
+
+def maintain_completed(db, outcome_id):
+    """Completion and duplicate/restart path; one older chain per invocation."""
+    result=compact_completed(db,outcome_id)
+    if not db.in_transaction: return result
+    row=db.execute("SELECT manifest FROM journal_representation_v1 WHERE version='learning.lifecycle.v1'").fetchone()
+    try: after=json.loads(row[0])['after'] if row else 0
+    except (ValueError,KeyError,TypeError): return dict(compacted=0,refused=['unknown_cursor'])
+    older=db.execute('SELECT rowid,outcome_id FROM learning_produced_chains WHERE rowid>? ORDER BY rowid LIMIT 1',(after,)).fetchone()
+    if older and older[1]!=outcome_id: compact_completed(db,older[1])
+    db.execute('INSERT OR REPLACE INTO journal_representation_v1 VALUES (?,?,?)',
+        ('learning.lifecycle.v1','bounded',L.canonical({'after':older[0] if older else 0})))
+    return result

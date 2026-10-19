@@ -53,7 +53,7 @@ def captured(journal, decision_id=None):
         return [], ['capture_store_absent']
     from trader.learning import capture as C
     with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True)) as db:
-        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='learning_registrations'").fetchone():
+        if not C.read(db,"SELECT 1 FROM sqlite_master WHERE name='learning_registrations'").fetchone():
             return [], ['historical_decision_dependencies_NOT_RECORDED']
         # Exact decision linkage is stored in canonical JSON, never guessed.
         sql = 'SELECT event_key FROM learning_registrations '
@@ -61,7 +61,7 @@ def captured(journal, decision_id=None):
         if decision_id:
             sql += "WHERE json_extract(payload,'$.lineage.decision_id')=? "
             params = (decision_id,)
-        for (event_key,) in db.execute(sql + 'ORDER BY rowid DESC LIMIT 50', params).fetchall():
+        for (event_key,) in C.read(db,sql + 'ORDER BY rowid DESC LIMIT 50', params).fetchall():
             rid, reg = C.registration(db, event_key)
             records.append(record('registration', rid, reg, source='learning_registrations',
                                   at=reg['decision_ms'], available=reg['decision_ms'], verified=True))
@@ -72,13 +72,13 @@ def captured(journal, decision_id=None):
                 value = C.resolve(db, dep)
                 records.append(record(dep['role'], dep['source_id'], value, source=dep,
                                       at=reg['decision_ms'], available=dep['available_ms'], verified=True))
-            for action in db.execute('SELECT payload FROM learning_actions WHERE event_key=? LIMIT 50', (event_key,)).fetchall():
+            for action in C.read(db,'SELECT payload FROM learning_actions WHERE event_key=? LIMIT 50', (event_key,)).fetchall():
                 action = json.loads(action[0]); dep = action['dependency']
                 if action['registration_id'] != rid:
                     raise ValueError('action_registration_binding_differs')
                 records.append(record(dep['role'], dep['source_id'], C.resolve(db, dep), source=dep,
                                       available=dep['available_ms'], verified=True))
-            for (payload,) in db.execute("SELECT payload FROM learning_outcome_captures WHERE json_extract(payload,'$.registration_id')=? LIMIT 50", (rid,)).fetchall():
+            for (payload,) in C.read(db,"SELECT payload FROM learning_outcome_captures WHERE json_extract(payload,'$.registration_id')=? LIMIT 50", (rid,)).fetchall():
                 outcome = json.loads(payload)
                 C.existing_outcome(db, outcome['outcome_key'])
                 records.append(record('outcome', C.L.digest(outcome), outcome,

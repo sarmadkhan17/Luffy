@@ -72,7 +72,7 @@ class Registry:
         if self.learning_journal is not None and resolution != 'TRADED':
             from trader.learning import capture as C, producers as P
             with self.learning_journal._tx() as db:
-                rows=db.execute("SELECT event_key FROM learning_registrations WHERE json_extract(payload,'$.lineage.opportunity_id')=?",(opportunity_id,)).fetchall()
+                rows=C.read(db,"SELECT event_key FROM learning_registrations WHERE json_extract(payload,'$.lineage.opportunity_id')=?",(opportunity_id,)).fetchall()
                 for (event,) in rows:
                     C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
         return body

@@ -138,7 +138,8 @@ def verify(manifest, reg, sources):
 
 def load(db, identity):
     import json
-    row = db.execute(f'SELECT payload FROM {TABLE} WHERE manifest_id=?', (identity,)).fetchone()
+    from . import capture as C
+    row = C.read(db,f'SELECT payload FROM {TABLE} WHERE manifest_id=?', (identity,)).fetchone()
     if row is None: raise ValueError('decision_manifest_missing_no_backfill')
     m = json.loads(row[0])
     if L.digest({k:v for k,v in m.items() if k != 'manifest_id'}) != identity:

@@ -72,7 +72,8 @@ def snapshot(db, ex):
     # Only the experiment's own bound registered ledger can supply evidence.
     bank_path = Path(db.execute('PRAGMA database_list').fetchone()[2])
     path = bank_path.parent/(bank_path.stem+'-experiments')/ex['experiment_id']/'quantitative.db'
-    with closing(E.readonly(path)) as numerical:
+    from trader.persistence.storage_cleanup import completed_reader
+    with closing(completed_reader(bank_path,ex['experiment_id'])) as numerical:
         numerical.row_factory = sqlite3.Row
         if numerical.execute('SELECT id FROM predictive_experiment_binding').fetchall()[0][0] != ex['experiment_id']:
             raise ValueError('quantitative_store_binding')
