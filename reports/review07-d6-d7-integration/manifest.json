@@ -1,0 +1,15 @@
+{
+  "base": "a11bf2495e82450e617d908a229b2ab8180a330b",
+  "implementation_commit": "a7f9397f7482826860a2d41a5e3b959efe7f2375",
+  "d6": "f10f974bf8e88820428d03f1bdb9203d3748a5d4",
+  "d7": "e6a403788715df91a0fd6350f3acce6c43ca5da5",
+  "files": {
+    "trader/strategy/vector_backtest.py": "f6a5ffba06aae264e5f8e2db805366bc8844f1ebc6044d5c213a2cdcbc00be65",
+    "trader/strategy/rolling.py": "1dea02e0646f43267ed58821a2f36899f62efead2f6ce48c5f1a38e0de2618e7",
+    "trader/strategy/null_baseline.py": "e8814d1108a189a7d4465db933dbd0036085b400e3a972af1ab3c1cd7f0b0938",
+    "trader/research/evaluate.py": "af44dcc13503153ad8634aff0da1b834fa329ea03f369249d140e5a56b6b3cb9",
+    "trader/research/portfolio_null.py": "578cbeb98a0d676c8c1b23b6d70709173824dd837b0164fca18d5cf2c0520c25",
+    "tests/test_d6_d7_vector_handoff.py": "68dda761ba4819289d47196e61fda7d5e700fd7006a9119b4bfaf79628c03c50"
+  },
+  "production_access": "none; tests use temporary SQLite fixtures and synthetic frames"
+}
