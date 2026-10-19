@@ -405,3 +405,22 @@ def test_readonly_identity_uses_injected_binding_without_provider(monkeypatch):
     monkeypatch.setattr('trader.data.feed.canonical_venue',lambda venue:'binance')
     monkeypatch.setattr(mp,'venue_source',lambda exchange:'injected-source')
     assert feed._identity('BTC/USDT')==('retained-identity','injected-source')
+
+
+def test_refused_worker_receipt_remains_untested_and_consumed(tmp_path,monkeypatch):
+    from trader.research import predictive_bridge as bridge
+    monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+    monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+    c=Combination(tuple(PARTS[:2]),'4h','fixed',evaluation_scope='existing-scope')
+    def worker(*a,**k):
+        return ChildResult(ok=True,value=dict(hash=c.hash,cut_ms=123,looked=True,
+            quantitative_receipt_refused='quantitative_wrong_cut'))
+    r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),run=worker)
+    r.ledger.record_result(result(c),'survivor','fixture',{})
+    r._combo=lambda *a:c;r._brake=lambda:1.
+    assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+    monkeypatch.setattr(bridge.P,'parts',lambda *a:c.parts)
+    classification,_,_=bridge.classify(r,SimpleNamespace(hypothesis_id='source'),{'experiment_id':'existing-scope'})
+    assert classification=='DATA_INSUFFICIENT'
+    assert len(r.ledger.tests())==1 and r.ledger.spent(c.hash)['p']==1
+    assert not r.ledger.spent(c.hash)['rejected'] and r.ledger.spent_cut('4h')==123

@@ -802,8 +802,8 @@ class ResearchRunner:
             err = res.error if not res.ok else v["error"]
             self.ledger.complete_look(h, 1.0,
                 {"error": err, "cut_ms": int(cut_ms), "evaluated": evaluated},
-                "gate1_fail", gate1={"p": 1.0, "reason": "untestable: " + str(err)},
-                reason="failed look: " + str(err))
+                "gate1_fail", gate1={"p": 1.0, "reason": str(err) if str(err).startswith("untestable:") else "untestable: " + str(err)},
+                reason=str(err) if v.get("quantitative_receipt_refused") else "failed look: " + str(err))
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, err)
             return {**out, "ok": False, "state": "gate1_fail", "error": err}
 
