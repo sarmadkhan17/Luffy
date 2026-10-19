@@ -1,0 +1,66 @@
+{
+  "source_head": "764cebc9903046b3126b37bd1c988d5b171b70c2",
+  "base": "4cda84de1f6dd65f4aa7f566cb9348ea313c1d13",
+  "branch": "sol1/review07-d7",
+  "compiler_version": "strategy-compiler.v3",
+  "feature_version": "strategy-features.v2",
+  "exit_semantics_id": "factory-exit.closed-bars.v2:c3ed729944828993dd8e006bdf04424512c84218d76cb261d4847c0c790c4a51",
+  "contract": {
+    "version": "factory-exit.closed-bars.v2",
+    "reference": "signal_bar_close",
+    "atr": "rolling_mean_true_range_14_through_signal_closed_bar",
+    "stop_floor": 0.004,
+    "initial_r": "reference_to_frozen_stop",
+    "observations": "consecutive_completed_spec_bars_after_signal_bar",
+    "ordering": "open_gap_then_stop_then_target_then_declared_signal_then_max_bars_then_next_bar_trail",
+    "ambiguity": "both_range_hits_stop_first_explicit",
+    "quantity": "full_remaining",
+    "trail": "declared_atr14_completed_bar_favorable_extreme_next_bar_only",
+    "arming": "favorable_excursion_from_reference_gte_declared_arm_at_r_times_initial_r",
+    "ratchet": "initial_stop_then_monotonic_tightening_fixed_target_retained",
+    "missing_trail_atr": "refuse_surviving_transition_price_and_time_exits_remain_effective",
+    "signal_exit": "completed_bar_decision_after_price_before_time_no_automatic_close_fill",
+    "signal_fill": "reference_exit_unset_pending_D6_first_legitimately_executable_price"
+  },
+  "tests": {
+    "verified-tests.txt": "410 passed, 2 skipped, 3 warnings in 282.17s (0:04:42)",
+    "verified-signal-tests.txt": "8 passed in 5.38s",
+    "shared-vector-candidate-tests.txt": "26 passed in 39.59s",
+    "final-dsl-sequence-tests.txt": "59 passed in 1.92s",
+    "final-regression-corrections.txt": "7 passed, 58 deselected in 6.59s"
+  },
+  "code_change": {
+    "trader": {
+      "files": 8,
+      "added": 179,
+      "removed": 46,
+      "net": 133
+    },
+    "tests": {
+      "files": 7,
+      "added": 586,
+      "removed": 9,
+      "net": 577
+    }
+  },
+  "d6_reserved_unchanged": {
+    "trader/data/feed.py": true,
+    "trader/data/market_provenance.py": true,
+    "trader/strategy/rolling.py": true,
+    "trader/strategy/vector_backtest.py": true,
+    "trader/strategy/spec_evidence.py": true,
+    "trader/research/evaluate.py": true
+  },
+  "shared_vector_patch_applied": false,
+  "signal_exit_fill_status": "PENDING_D6_EXECUTABLE_PRICE_CONTRACT_NO_SAME_CLOSE_FILL",
+  "source_commits": [
+    "764cebc fix(strategy): treat blank optional signal exits consistently",
+    "e1f6cde feat(strategy): record declared signal exits without inventing executable fills",
+    "90f3338 feat(strategy): preserve declared entries and next-bar ATR exit semantics",
+    "daf14dc fix(strategy): share frozen exit preflight and retain D7 parity probes"
+  ],
+  "independent_d7_status": "IMPLEMENTED_WITH_EXPLICIT_CROSS_OWNER_DEPENDENCIES",
+  "ready_for_standalone_deployment": false,
+  "live_support_claimed": false,
+  "scope": "synthetic offline verification only; no historical profitability/qualification claim"
+}

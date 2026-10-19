@@ -1,0 +1,25 @@
+{
+  "base": "4cda84de1f6dd65f4aa7f566cb9348ea313c1d13",
+  "worktree": "/mnt/luffy-data/sol1-review07-d7",
+  "ancestry": {
+    "ef9fca8": true,
+    "94b9000": true,
+    "dcb5c1a": true
+  },
+  "source_commits": [
+    "764cebc fix(strategy): treat blank optional signal exits consistently",
+    "e1f6cde feat(strategy): record declared signal exits without inventing executable fills",
+    "90f3338 feat(strategy): preserve declared entries and next-bar ATR exit semantics",
+    "daf14dc fix(strategy): share frozen exit preflight and retain D7 parity probes"
+  ],
+  "d6_reserved_unchanged": {
+    "trader/data/feed.py": true,
+    "trader/data/market_provenance.py": true,
+    "trader/strategy/rolling.py": true,
+    "trader/strategy/vector_backtest.py": true,
+    "trader/strategy/spec_evidence.py": true,
+    "trader/research/evaluate.py": true
+  },
+  "broader_data_research_paths_unchanged": true,
+  "operational_mutations": "NONE: no deployment, restart, production DB, orders, risk/control/CI changes"
+}

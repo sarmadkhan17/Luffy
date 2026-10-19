@@ -1,0 +1,125 @@
+--- a/trader/strategy/vector_backtest.py
++++ b/trader/strategy/vector_backtest.py
+@@ -74,7 +74,7 @@
+ 
+ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
+            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
+-           bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None):
++           bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None, exit_sig_available=None):
+     """One trade entered at bar `i`'s close: (exit_i, stop distance, P&L per
+     unit of size). Every cost scales with size, so P&L = unit P&L x amount
+     and the R multiple — unit P&L / stop distance — does not depend on the
+@@ -112,11 +112,18 @@
+             clock = row['ts']
+             ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
+             transition = E.advance(policy, state, E.Observation(ms, float(row['open']),
+-                highs[j], lows[j], closes[j]), intended_quantity)
++                highs[j], lows[j], closes[j],
++                completed=bool(row.get('observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality', 'VALID') == 'VALID'
++                               and row.get('bar_state', 'FINAL') == 'FINAL'),
++                atr=float(atr[j]),
++                signal_exit=(bool(exit_sig[j]) if exit_sig is not None and exit_sig_available is not None
++                             and exit_sig_available[j] else None)), intended_quantity)
+             if transitions_out is not None:
+                 transitions_out.append(transition)
+             state = transition.state
+             if transition.due:
++                if transition.reason == "signal":
++                    raise ValueError("signal_exit_execution_timing_requires_D6")
+                 exit_i, exit_px = j, state.reference_exit
+                 break
+             continue
+@@ -166,7 +173,7 @@
+ 
+ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
+                 funding: np.ndarray | None = None,
+-                first_bar: int = 0) -> dict:
++                first_bar: int = 0, exit_sig=None, exit_sig_available=None) -> dict:
+     """Every bar's trade, both sides, computed once: {side: (exit_i, r,
+     px_over_stop)} arrays with exit_i = -1 where no trade can open.
+ 
+@@ -188,6 +195,11 @@
+     highs = df["high"].to_numpy(float)
+     lows = df["low"].to_numpy(float)
+     atr = atr_series(df, 14).to_numpy(float)
++    if (getattr(exit_spec, "_exit_semantics_id", None) is not None
++            and exit_spec.trail.get("kind") == "atr"):
++        from .exit_policy import trail_atr_series
++        from ..core.types import TF_MS
++        atr = trail_atr_series(df, TF_MS[exit_spec._exit_timeframe]).to_numpy(float)
+     max_bars = int(exit_spec.time.get("max_bars", 32) or 32)
+     trail = exit_spec.trail or {"kind": "none"}
+     trail_mult = float(trail.get("mult", 0.0)) \
+@@ -203,8 +215,8 @@
+                 continue
+             e, sl_dist, unit = _trade(
+                 i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
+-                fee, max_bars, trail_mult, arm_at_r, None, fund_arr,
+-                funding_8h, bar_minutes)
++                fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
++                funding_8h, bar_minutes, exit_sig_available=exit_sig_available)
+             ex[i], r[i], pos[i] = e, unit / sl_dist, closes[i] / sl_dist
+         out[side] = (ex, r, pos)
+     return out
+@@ -244,7 +256,7 @@
+              exit_sig: np.ndarray | None = None,
+              funding: np.ndarray | None = None,
+              fills_out: list | None = None,
+-             score_from: int = 0, exit_evidence_out=None) -> BacktestResult:
++             score_from: int = 0, exit_evidence_out=None, exit_sig_available=None) -> BacktestResult:
+     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
+ 
+     Without it the engine charges abs(flat rate) to both sides, which bills a
+@@ -280,6 +292,11 @@
+     highs = df["high"].to_numpy(float)
+     lows = df["low"].to_numpy(float)
+     atr = atr_series(df, 14).to_numpy(float)
++    if (getattr(exit_spec, "_exit_semantics_id", None) is not None
++            and exit_spec.trail.get("kind") == "atr"):
++        from .exit_policy import trail_atr_series
++        from ..core.types import TF_MS
++        atr = trail_atr_series(df, TF_MS[exit_spec._exit_timeframe]).to_numpy(float)
+ 
+     max_bars = int(exit_spec.time.get("max_bars", 32) or 32)
+     trail = exit_spec.trail or {"kind": "none"}
+@@ -305,7 +322,7 @@
+         exit_i, sl_dist, unit_pnl = _trade(
+             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
+             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
+-            funding_8h, bar_minutes, trace)
++            funding_8h, bar_minutes, trace, exit_sig_available=exit_sig_available)
+         amount = (equity_curve[-1] * risk_frac) / sl_dist
+         if amount * px < 10:                          # dust guard
+             continue
+@@ -366,12 +383,12 @@
+             raise ValueError('retrospective symbol binding mismatch')
+     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol,
+                               universe=universe, market=market)
+-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol,
++    ex, ex_available = compiled.exit_signal_detail(frames, btc=btc, derivs=derivs, symbol=symbol,
+                               universe=universe, market=market)
+     df = frames[compiled.spec.timeframe]
+     fund = funding_for(symbol, df, risk_cfg) if df.attrs.get('read_mode') == 'retrospective' else None
+     result = simulate(lo, sh, df, compiled.spec.exit, risk_cfg, equity=equity,
+-                      genome_id=compiled.spec.id, symbol=symbol, exit_sig=ex, funding=fund)
++                      genome_id=compiled.spec.id, symbol=symbol, exit_sig=ex, funding=fund, exit_sig_available=ex_available)
+     if df.attrs.get('read_mode') == 'retrospective':
+         from . import quant_contract
+         from ..data.market_provenance import digest
+@@ -463,7 +480,7 @@
+             raise ValueError('retrospective symbol binding mismatch')
+     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
+                               universe=universe, market=market, symbol=symbol)
+-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
++    ex, ex_available = compiled.exit_signal_detail(frames, btc=btc, derivs=derivs,
+                               universe=universe, market=market, symbol=symbol)
+     cut = int(len(df) * split)
+     fund = funding_for(symbol, df, risk_cfg)
+@@ -474,6 +491,7 @@
+                         compiled.spec.exit, risk_cfg,
+                         genome_id=compiled.spec.id, symbol=symbol,
+                         exit_sig=None if ex is None else ex[sl],
++                        exit_sig_available=None if ex_available is None else ex_available[sl],
+                         funding=None if fund is None else fund[sl],
+                         score_from=score_from)
+ 

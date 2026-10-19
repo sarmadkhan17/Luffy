@@ -1,0 +1,14 @@
+D7 OFFLINE SYNTHETIC INPUTS ONLY; existing harness, no historical-evidence claim
+symbols=['SYNTHETIC/USDT']
+bars={'SYNTHETIC/USDT': 1200}
+
+{
+  "runs": 5,
+  "old_total_s": 12.75,
+  "old_per_run_s": 2.549,
+  "new_total_s": 0.109,
+  "new_per_run_s": 0.0218,
+  "speedup": 117.0
+}
+
+BENCH: PASS
