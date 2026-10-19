@@ -65,24 +65,12 @@ class SpecExit:
 
     #: the frozen stop/target kinds the runtime reproduces exactly; a
     #: version declaring anything else is refused at exact install
-    FROZEN_STOPS = ("atr", "pct")
-    FROZEN_TARGETS = ("rr", "atr", "pct", "none")
-
     @classmethod
     def frozen_unsupported(cls, spec) -> str | None:
         """Why the runtime cannot run this spec's frozen entry geometry
         exactly, or None."""
-        return cls._unsupported(spec.exit)
-
-    @classmethod
-    def _unsupported(cls, ex) -> str | None:
-        stop = (ex.stop or {}).get("kind", "atr")
-        target = (ex.target or {}).get("kind", "rr")
-        if stop not in cls.FROZEN_STOPS:
-            return f"stop={stop}"
-        if target not in cls.FROZEN_TARGETS:
-            return f"target={target}"
-        return None
+        from ..strategy.exit_policy import unsupported
+        return unsupported(spec.exit)
 
     def frozen_levels(self, price: float, atr: float,
                       side: str) -> tuple[float, float]:

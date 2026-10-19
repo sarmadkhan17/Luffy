@@ -1,0 +1,18 @@
+{
+  "branch": "sol1/review07-d5",
+  "base": "65f00d9e2b983d4cee3368d07595fae920ff5b2e",
+  "commits": [
+    {
+      "commit": "37bea0ad0dcdbaa19833bae265011d784cbb29b3",
+      "subject": "feat(research): intake Brain passages as durable question-only sources"
+    },
+    {
+      "commit": "09975cd29ebf7b2ca6adeedd64bd9be2ca860ff3",
+      "subject": "fix(research): replay passage eligibility and exact consumption state"
+    },
+    {
+      "commit": "dcb5c1aaaf6093e8b5eb3c5b97f57b53a2dd4fa2",
+      "subject": "test(research): verify passage and Investigation source coexistence"
+    }
+  ]
+}

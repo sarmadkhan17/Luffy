@@ -129,8 +129,8 @@ def test_book_is_listed_so_duplicates_are_discouraged():
 
 
 @pytest.mark.parametrize('exit_change,expected', [
-    ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
-    ({'signal_exit': 'close < ema(5)'}, 'signal_exit'),
+    ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail:invalid_arm_at_r'),
+    ({'signal_exit': 'close < unknown_exit(5)'}, 'unknown feature'),
     ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
     ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
     ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
@@ -158,7 +158,7 @@ def test_unsupported_exit_never_returns_success_after_repair_limit():
     spec, trace = sw.SpecWriter(FakeLLM([bad] * 3)).write()
     assert spec is None
     assert len(trace['attempts']) == sw.MAX_REPAIRS + 1
-    assert all('unsupported_versioned_exit:trail=atr' in str(a) for a in trace['attempts'])
+    assert all('unsupported_versioned_exit:trail:invalid_arm_at_r' in str(a) for a in trace['attempts'])
 
 
 def test_percentage_examples_use_fractional_contract():

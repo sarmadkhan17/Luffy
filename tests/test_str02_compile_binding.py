@@ -188,10 +188,10 @@ def test_material_spec_change_changes_compiled_identity(change):
 
 def test_compiler_and_feature_versions_and_contract_change_identity(monkeypatch):
     base = compile_spec(_spec())
-    monkeypatch.setattr(C, "COMPILER_VERSION", "strategy-compiler.v2")
+    monkeypatch.setattr(C, "COMPILER_VERSION", base.compiler_version + ".changed")
     assert compile_spec(_spec()).identity != base.identity
     monkeypatch.setattr(C, "COMPILER_VERSION", base.compiler_version)
-    monkeypatch.setattr(C, "FEATURE_VERSION", "strategy-features.v2")
+    monkeypatch.setattr(C, "FEATURE_VERSION", base.feature_version + ".changed")
     assert compile_spec(_spec()).identity != base.identity
 
 

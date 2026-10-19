@@ -21,11 +21,45 @@ def observations(spec, snap, state):
     frame = closed_bars(snap.df(spec.timeframe), spec.timeframe, at)
     if frame is None:
         return
-    for _, row in frame.iterrows():
+    if frame.attrs.get('read_mode') == 'retrospective':
+        raise ValueError('retrospective_observations_have_no_execution_authority')
+    signal, signal_valid = None, None
+    if spec.exit.signal_exit.strip():
+        from ..strategy.compile import compile_spec, _CTX_TF
+        from ..data.market_provenance import eligible_frame
+        frames = {}
+        for key, raw in snap.dfs.items():
+            tf = key if key in TF_MS else _CTX_TF.get(key)
+            if raw is None or tf is None:
+                continue
+            eligible = eligible_frame(raw, tf, at)
+            if eligible is not None:
+                frames[key] = closed_bars(eligible, tf, at)
+        frame = frames.get(spec.timeframe)
+        if frame is None or not len(frame):
+            raise ValueError('exit_signal_evidence_unavailable')
+        signal, signal_valid = compile_spec(spec).exit_signal_detail(frames,
+            btc={'15m': frames['BTC_1h']} if 'BTC_1h' in frames else None,
+            derivs=getattr(snap, 'derivs', None), universe=getattr(snap, 'universe', None),
+            market=getattr(snap, 'market', None), symbol=snap.symbol,
+            world=getattr(snap, 'world', None))
+    atr = (E.trail_atr_series(frame, TF_MS[spec.timeframe]).to_numpy(float)
+           if spec.exit.trail.get('kind') == 'atr' else None)
+    for i, (_, row) in enumerate(frame.iterrows()):
         ms = bar_ms(row['ts'])
         if ms > state.last_bar_ms:
+            usable = (row.get('quality', 'VALID') == 'VALID'
+                      and row.get('bar_state', 'FINAL') == 'FINAL')
+            # Consume existing receipt cuts; never infer historical availability
+            # from the candle's event timestamp. D6 owns those source receipts.
+            for key in ('available_at_ms', 'observed_at_ms'):
+                if key in row:
+                    usable = usable and bool(row[key] <= at)
             yield E.Observation(ms, float(row['open']), float(row['high']),
-                                float(row['low']), float(row['close']))
+                                float(row['low']), float(row['close']),
+                                completed=bool(usable),
+                                atr=float(atr[i]) if atr is not None else None,
+                                signal_exit=bool(signal[i]) if signal is not None and signal_valid[i] else None)
 
 
 def entry_contract(spec, snap, signal_close_ms):
@@ -105,6 +139,10 @@ class LiveExitAdapter:
                 'spec_hash': version['spec_hash'], 'intent': result.reason,
                 'intended_quantity': result.quantity, 'state': json.loads(E.encode(policy,state)),
             }
+            if result.reason == 'signal':
+                # Intent is durable, but no D6 executable-price interface has
+                # been reconciled yet. Never submit at the signal close.
+                raise ValueError('signal_exit_execution_timing_requires_D6')
             if self.executor.close(trade, exit_price_hint=snap.price, reason=result.reason):
                 return result.reason
         return None

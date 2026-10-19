@@ -1,0 +1,88 @@
+{
+  "production": [
+    {
+      "path": "trader/brain/ideas.py",
+      "before": {
+        "lines": 313,
+        "functions": 9,
+        "classes": 0
+      },
+      "after": {
+        "lines": 320,
+        "functions": 9,
+        "classes": 0
+      },
+      "delta": {
+        "lines": 7,
+        "functions": 0,
+        "classes": 0
+      }
+    },
+    {
+      "path": "trader/cognition/predictive_bank.py",
+      "before": {
+        "lines": 59,
+        "functions": 2,
+        "classes": 0
+      },
+      "after": {
+        "lines": 74,
+        "functions": 2,
+        "classes": 0
+      },
+      "delta": {
+        "lines": 15,
+        "functions": 0,
+        "classes": 0
+      }
+    },
+    {
+      "path": "trader/research/predictive_bridge.py",
+      "before": {
+        "lines": 526,
+        "functions": 13,
+        "classes": 0
+      },
+      "after": {
+        "lines": 536,
+        "functions": 13,
+        "classes": 0
+      },
+      "delta": {
+        "lines": 10,
+        "functions": 0,
+        "classes": 0
+      }
+    },
+    {
+      "path": "trader/research/brain_intake.py",
+      "before": {
+        "lines": 0,
+        "functions": 0,
+        "classes": 0
+      },
+      "after": {
+        "lines": 143,
+        "functions": 5,
+        "classes": 1
+      },
+      "delta": {
+        "lines": 143,
+        "functions": 5,
+        "classes": 1
+      }
+    }
+  ],
+  "total_delta": {
+    "lines": 175,
+    "functions": 5,
+    "classes": 1
+  },
+  "new_tables": [
+    "bridge_intake_outcomes",
+    "bridge_idea_consumption"
+  ],
+  "removed_files": [],
+  "new_workers": 0,
+  "new_provider_calls": 0
+}

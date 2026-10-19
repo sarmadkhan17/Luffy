@@ -1,0 +1,21 @@
+{
+  "question_replay": true,
+  "no_quantitative_evidence_in_handoff": true,
+  "tracked_implementation_files": [
+    "tests/test_brain_research_intake.py",
+    "trader/brain/ideas.py",
+    "trader/cognition/predictive_bank.py",
+    "trader/research/brain_intake.py",
+    "trader/research/predictive_bridge.py"
+  ],
+  "ci_untouched": true,
+  "config_untouched": true,
+  "kernel_source_untouched": true,
+  "production_database_writes": 0,
+  "service_restarts": 0,
+  "provider_calls": 0,
+  "venue_orders": 0,
+  "source_consumption": "bank-local overlay; original journal read-only",
+  "new_scheduling_activation": false,
+  "scope": "D5 only"
+}

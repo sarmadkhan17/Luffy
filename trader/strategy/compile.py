@@ -28,8 +28,8 @@ _CTX_TF = {"BTC_1h": "1h"}
 #: *contract* (names, arg specs, domains, data requirements) is hashed
 #: automatically, so a contract change alters identity even if a bump is
 #: forgotten; a pure implementation change cannot be detected and needs the bump.
-COMPILER_VERSION = "strategy-compiler.v1"
-FEATURE_VERSION = "strategy-features.v1"
+COMPILER_VERSION = "strategy-compiler.v3"
+FEATURE_VERSION = "strategy-features.v2"
 
 
 def feature_contract_sha256() -> str:
@@ -111,11 +111,27 @@ class CompiledStrategy:
 
     def exit_signal(self, frames: dict, btc=None, derivs=None,
                     universe=None, market=None, symbol: str | None = None, world=None):
+        return self.exit_signal_detail(frames, btc, derivs, universe, market, symbol, world)[0]
+
+    def exit_signal_detail(self, frames: dict, btc=None, derivs=None,
+                           universe=None, market=None, symbol: str | None = None, world=None):
+        """The declared exit plus evidence availability; UNKNOWN cannot mean hold."""
         if self._exit is None:
-            return None
+            return None, None
         ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world)
-        result = dsl.evaluate_bool(self._exit, ctx)
-        return result & ctx._world_valid if ctx._world_valid is not None else result
+        raw = dsl.evaluate(self._exit, ctx)
+        import pandas as pd
+        values = (raw.to_numpy(dtype=float, na_value=np.nan) if isinstance(raw, pd.Series)
+                  else np.full(len(ctx.index), float(raw)))
+        available = np.isfinite(values)
+        quality = 'observation_quality' if ctx.df.attrs.get('read_mode') == 'retrospective' else 'quality'
+        if quality in ctx.df:
+            available &= ctx.df[quality].eq('VALID').to_numpy()
+        if ctx._world_valid is not None:
+            available &= ctx._world_valid
+        if len(available) and self.missing_inputs(ctx):
+            available[-1] = False
+        return np.where(available, values, 0).astype(bool), available
 
     def _ctx(self, frames, btc, derivs, universe=None,
              market=None, symbol=None, world=None) -> FeatureCtx:
@@ -508,6 +524,12 @@ def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrat
         else None
     short_t = dsl.parse(spec.entry_short) if (spec.entry_short or "").strip() \
         else None
+    # Parse all declared expressions, but only permitted sides can contribute
+    # signals or input dependencies. Keep the serialized spec unchanged.
+    if spec.direction == "short":
+        long_t = None
+    elif spec.direction == "long":
+        short_t = None
     filters = [dsl.parse(f) for f in (spec.filters or []) if (f or "").strip()]
     exit_t = dsl.parse(spec.exit.signal_exit) \
         if (spec.exit.signal_exit or "").strip() else None
@@ -556,7 +578,9 @@ def compile_version(journal, version_id: str, *, spec_hash: str | None = None,
         fh.verify_install(journal, v, current=True)
     spec = StrategySpec.from_dict(v["spec"])
     declared = list(spec.data_requires)
-    compiled = compile_spec(spec)
+    from .exit_policy import EXIT_SEMANTICS_ID
+    fh.verify_exit_binding(journal, v)
+    compiled = compile_spec(spec, exit_semantics_id=EXIT_SEMANTICS_ID)
     # the frozen declaration must equal what the expressions actually need
     if sorted(declared) != sorted(compiled.data_requires):
         fh._refuse("dependency_mismatch")

@@ -39,6 +39,21 @@ def predictive_extensions(bridge_path, bank_object_id):
         for ex in experiments:
             validate_experiment(ex)
         questions=read('bridge_questions')
+        from trader.research import brain_intake
+        question_source = None
+        for identity, payload in db.execute('SELECT id,payload FROM bridge_sources'):
+            source = json.loads(payload)
+            if source.get('schema') == brain_intake.SCHEMA:
+                expected = brain_intake.question(source)
+                if identity != source['bank_id'] or [q for q in questions if q['source_bank_id'] == identity] != [expected]:
+                    raise ValueError('brain_question_binding')
+                accepted = [json.loads(p) for p, in db.execute(
+                    "SELECT payload FROM bridge_intake_outcomes WHERE json_extract(payload,'$.source_bank_id')=? "
+                    "AND json_extract(payload,'$.status')='ACCEPTED'", (identity,))]
+                if len(accepted) != 1 or accepted[0]['source'] != source or accepted[0]['observed_ms'] < expected['available_ms']:
+                    raise ValueError('brain_source_acceptance')
+                if identity == bank_object_id:
+                    question_source = source
         names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         translations=read('bridge_translations') if 'bridge_translations' in names else []
         for translation in translations:
@@ -54,6 +69,6 @@ def predictive_extensions(bridge_path, bank_object_id):
             if result.get('schema')=='predictive-research-bank-result.v2' and any(q not in questions for q in result['next_questions']):
                 raise ValueError('predictive_result_next_question_missing')
         return dict(source_bank_id=bank_object_id,authority='RESEARCH_ONLY',
-            hypotheses=hyps,experiments=experiments,results=results,
+            question_source=question_source, hypotheses=hyps,experiments=experiments,results=results,
             next_questions=[r for r in questions if r['source_bank_id']==bank_object_id],
             translations=[r for r in translations if r['hypothesis_id'] in ids])

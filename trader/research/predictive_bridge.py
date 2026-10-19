@@ -29,6 +29,7 @@ from . import predictive_receipt as M
 MAX_SOURCES, MAX_EXPERIMENTS, MAX_RECORDS = 16, 4, 4096
 TABLES = ('bridge_sources', 'bridge_hypotheses', 'bridge_experiments',
           'bridge_bank_results', 'bridge_questions', 'bridge_tests', 'bridge_snapshots',
+          'bridge_intake_outcomes', 'bridge_idea_consumption',
           'bridge_runtime_bindings', 'bridge_measurements', 'bridge_registration_checks', 'bridge_translations')
 
 
@@ -274,7 +275,8 @@ def classify(runner, h, experiment):
 
 
 def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
-          max_experiments=1, run=run_child, submit=True, quantitative_source_path=None):
+          max_experiments=1, run=run_child, submit=True, quantitative_source_path=None,
+          brain_source_path=None):
     if type(max_sources) is not int or not 1 <= max_sources <= MAX_SOURCES:
         raise ValueError('source_budget')
     if type(max_experiments) is not int or not 1 <= max_experiments <= MAX_EXPERIMENTS:
@@ -283,7 +285,8 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
         raise ValueError('cycle_clock')
     bank_path = Path(bank_path).resolve()
     quantitative_source_path=Path(quantitative_source_path or Path(source_path).parent/'luffy.db').resolve()
-    for source in (source_path, candles_path, quantitative_source_path):
+    for source in (source_path, candles_path, quantitative_source_path,
+                   *((brain_source_path,) if brain_source_path is not None else ())):
         p = Path(source).resolve()
         if bank_path == p or (bank_path.exists() and p.exists() and bank_path.samefile(p)):
             raise ValueError('source_destination_alias')
@@ -323,9 +326,15 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
             counts = dict(eligible_research_results=0, hypotheses_proposed=0, exact_duplicates=0,
                 experiment_shape_supported=0, data_insufficient=0, planner_submissions=0,
                 supported=0, unsupported=0, inconclusive=0, not_testable=0)
+            brain_counts = None
+            if brain_source_path is not None:
+                from .brain_intake import intake
+                brain_counts = intake(brain_source_path, db, append, now_ms=now_ms, limit=max_sources)
             known = {s['bank_id'] for s in records(db, 'bridge_sources')}
-            known_cases = {s['investigation_id'] for s in records(db, 'bridge_sources')}
-            sources, refusals = read_sources(source_path, known, max_sources, now_ms, known_cases)
+            known_cases = {s['investigation_id'] for s in records(db, 'bridge_sources') if 'investigation_id' in s}
+            remaining = max_sources - sum((brain_counts or {}).values())
+            sources, refusals = (read_sources(source_path, known, remaining, now_ms, known_cases)
+                                 if remaining else ([], []))
             for source in sources:
                 counts['eligible_research_results'] += 1
                 with db:
@@ -493,7 +502,7 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
             refusals.extend(dict(reason='lifecycle_cleanup_refused',cleanup=r)
                             for r in lifecycle if r.get('status')=='REFUSED')
             return dict(mode='ASYNC_RESEARCH_CONSUMER' if submit else 'READ_ONLY_SOURCE_SHADOW',
-                counts=counts,refusals=refusals,source_mutations=0,order_submissions=0,
+                counts=counts,brain_intake=brain_counts,refusals=refusals,source_mutations=0,order_submissions=0,
                 trading_behavior_changed=False)
 
 
@@ -537,6 +546,7 @@ def main():
     ap.add_argument('--once',action='store_true')
     ap.add_argument('--source',type=Path,required=True)
     ap.add_argument('--bank',type=Path,required=True)
+    ap.add_argument('--brain-source',type=Path,help='Optional read-only Brain research queue')
     ap.add_argument('--candles',type=Path,required=True)
     ap.add_argument('--quantitative-journal',type=Path,required=True)
     ap.add_argument('--config',type=Path,required=True)
@@ -560,7 +570,7 @@ def main():
         try:
             result=cycle(args.source,args.bank,args.candles,cfg,now_ms=int(time.time()*1000),
                          max_sources=args.max_sources,max_experiments=args.max_experiments,
-                         quantitative_source_path=args.quantitative_journal)
+                         quantitative_source_path=args.quantitative_journal, brain_source_path=args.brain_source)
             print(P.canonical(result),flush=True)
         finally:
             signal.alarm(0)

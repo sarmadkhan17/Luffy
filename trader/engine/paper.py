@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 
 from ..core.types import Action, ControlState, Position, Side, TF_MS, closed_bars
 from ..strategy import factory_handoff as F
-from ..strategy.compile import compile_spec
+from ..strategy.compile import compile_version
 from ..strategy.spec import StrategySpec
 from ..strategy import exit_policy as E
 from .versioned_exits import entry_contract, observations
@@ -138,11 +138,18 @@ class PaperExecutor:
         if (decision.symbol != snap.symbol or not incoming
                 or (incoming.get('params') or {}).get('spec_sha256') != v['spec_hash']):
             raise ValueError('paper_decision_identity_unverified')
+        incoming_params = incoming.get('params') or {}
+        for key, expected in (('version_id', v['version_id']), ('install_id', inst['install_id'])):
+            if key in incoming_params and incoming_params[key] != expected:
+                raise ValueError('paper_decision_' + key + '_differs')
         if snap.market_type not in spec.markets:
             raise ValueError('paper_market_not_in_frozen_spec')
         if spec.regime_filter and snap.regime not in spec.regime_filter:
             raise ValueError('paper_regime_not_in_frozen_spec')
-        compiled = compile_spec(spec)
+        compiled = compile_version(self.journal, v['version_id'])
+        if ('compile_identity' in incoming_params
+                and incoming_params['compile_identity'] != compiled.identity):
+            raise ValueError('paper_decision_compile_identity_differs')
         signal = compiled.to_evaluator()(None, snap)
         if signal is None or signal.action != decision.action:
             raise ValueError('paper_frozen_signal_absent')
@@ -349,6 +356,10 @@ class PaperExecutor:
                 evidence = json.loads(evidence_row['canonical_json'])
                 if evidence['final'] != p['exit_state_json']:
                     raise ValueError('paper_exit_evidence_state_differs')
+                if state.reason == 'signal':
+                    # Retain position/protection while D6's executable fill
+                    # handoff is unavailable; a close decision is not a fill.
+                    continue
                 for observation in observations(spec, snap, state):
                     # Missing causal history cannot be silently replaced.
                     if observation.bar_ms != state.last_bar_ms + policy.step_ms:
@@ -360,6 +371,8 @@ class PaperExecutor:
                     c.execute(f'UPDATE {TABLE} SET exit_state_json=?,last_bar_ms=?,bars_held=? WHERE id=?',
                               (E.encode(policy,state),state.last_bar_ms,state.bars_held,p['id']))
                     if result.due:
+                        if result.reason == 'signal':
+                            break
                         px = state.reference_exit
                         sign = 1 if p['side']=='long' else -1
                         c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",

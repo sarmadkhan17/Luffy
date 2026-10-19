@@ -1,0 +1,9 @@
+{
+  "preflight_calls": 25000,
+  "preflight_seconds": 0.17651606403524056,
+  "preflight_microseconds_per_call": 7.060642561409622,
+  "transitions": 24950,
+  "transition_seconds": 0.2961733019910753,
+  "transitions_per_second": 84241.21901693837,
+  "scope": "synthetic fixed shared policy; no backtest speedup or live claim"
+}
