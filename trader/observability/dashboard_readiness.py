@@ -17,13 +17,49 @@ import time
 from trader import runtime_identity
 from trader.engine.watchdog import read_heartbeat, validate_heartbeat
 from .preflight import _health
-from .safety import HeartbeatPolicy
+from .safety import HeartbeatPolicy, SafetyHealth
 
 SCHEMA = 'luffy-dashboard-readiness.v1'
 
 
 def _time(value):
     return type(value) in (int, float) and math.isfinite(value) and value >= 0
+
+
+def _heartbeat_progression(before, after):
+    try:
+        cycle = before['context'].get('last_successful_cycle_at')
+        newer_cycle = after['context'].get('last_successful_cycle_at')
+        return (before['instance_id'] == after['instance_id']
+                and before['started_at'] == after['started_at']
+                and type(before['sequence']) is int and type(after['sequence']) is int
+                and after['sequence'] >= before['sequence']
+                and _time(before['timestamp']) and _time(after['timestamp'])
+                and after['timestamp'] >= before['timestamp']
+                and (after['sequence'] != before['sequence'] or after == before)
+                and (cycle is None or (_time(newer_cycle) and newer_cycle >= cycle)))
+    except (KeyError, TypeError):
+        return False
+
+
+def _health_progression(before, after):
+    """Observer progress cannot replace containment or rewind observed evidence.
+
+    This is a cross-read invariant, not acceptance: the latest health, heartbeat,
+    controls and process must still pass the full readiness checks below.
+    """
+    try:
+        previous = before['heartbeats'].get('luffy')
+        return (after['schema'] == before['schema']
+                and after['revision'] >= before['revision']
+                and (after['revision'] > before['revision'] or after == before)
+                and after['recovery_required'] == before['recovery_required']
+                and after.get('bootstrap') == before.get('bootstrap')
+                and _time(before.get('observed_at')) and _time(after.get('observed_at'))
+                and after['observed_at'] >= before['observed_at']
+                and (previous is None or _heartbeat_progression(previous, after['heartbeats']['luffy'])))
+    except (KeyError, TypeError, AttributeError):
+        return False
 
 
 def check(root, cfg, *, expected_identity=None, clock=time.time, require_cycle=True):
@@ -52,66 +88,75 @@ def check(root, cfg, *, expected_identity=None, clock=time.time, require_cycle=T
             require(record.get('pid') == expected_identity.get('pid')
                     and str(record.get('start_ticks')) == str(expected_identity.get('start_ticks')),
                     'kernel_not_intended_process')
-        now = clock()
-        policy = HeartbeatPolicy.configured(cfg)
-        require(policy.stale_after_s is not None, 'heartbeat_policy_unknown')
-        beat = read_heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', now,
-                              require_cycle=require_cycle)
-        facts['heartbeat'] = beat
-        require(bool(record.get('instance_id')) and beat['instance_id'] == record.get('heartbeat_instance_id'),
-                'heartbeat_prior_instance')
-        require(_time(record.get('started_at')) and record['started_at'] <= beat['started_at'],
-                'heartbeat_predates_kernel')
-        if policy.stale_after_s is not None:
-            require(max(now - beat['timestamp'],
-                        now - beat['context']['last_successful_cycle_at'] if require_cycle else 0)
-                    <= policy.stale_after_s, 'heartbeat_stale')
-        require(beat['context'].get('boot_complete') is True, 'kernel_boot_incomplete')
-        require(beat['context'].get('stopping') is False, 'kernel_stopping_or_unknown')
-        require(beat['context'].get('state') == 'FROZEN', 'heartbeat_control_not_frozen')
-        health = _health(root / 'data/safety_health.json')
-        facts['health'] = health
-        for name, condition in health['conditions'].items():
-            if not require_cycle and name == 'observed_cycle:luffy':
-                continue  # startup acceptance supplies no cycle or entry authority
-            require(condition['status'] != 'ACTIVE', 'blocking_health:' + name)
-        observed_at = health.get('observed_at')
-        require(_time(observed_at) and beat['started_at'] <= observed_at <= now,
-                'health_observation_time_unknown')
-        if policy.stale_after_s is not None and _time(observed_at):
-            require(now - observed_at <= policy.stale_after_s, 'health_observation_stale')
-        observed = validate_heartbeat(health['heartbeats']['luffy'], 'luffy', now,
-                                      require_cycle=require_cycle)
-        if policy.stale_after_s is not None:
-            require(max(now - observed['timestamp'],
-                        now - observed['context']['last_successful_cycle_at'] if require_cycle else 0)
-                    <= policy.stale_after_s, 'independent_heartbeat_observation_stale')
-        require(observed['instance_id'] == beat['instance_id'] and observed['started_at'] == beat['started_at'],
-                'health_prior_instance')
-        require(observed['context'].get('boot_complete') is True
-                and observed['context'].get('state') == 'FROZEN'
-                and observed['context'].get('stopping') is False, 'health_boot_control_unconfirmed')
-        require(beat['sequence'] >= observed['sequence'] and beat['timestamp'] >= observed['timestamp']
-                and (not require_cycle or beat['context']['last_successful_cycle_at']
-                     >= observed['context']['last_successful_cycle_at']),
-                'heartbeat_chronology_regression')
-        require(beat['sequence'] != observed['sequence'] or beat == observed, 'heartbeat_sequence_restamped')
-        require(observed['timestamp'] <= observed_at if _time(observed_at) else False,
-                'health_receipt_predates_heartbeat')
-        with closing(sqlite3.connect((root / 'data/luffy.db').as_uri() + '?mode=ro', uri=True, timeout=1)) as db:
-            controls = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
-                                       "('control_state','macro_guard_operator_hold')"))
-        facts['controls'] = controls
-        require(controls == {'control_state': 'FROZEN', 'macro_guard_operator_hold': '1'},
-                'current_control_not_frozen_held')
-        if not require_cycle:
-            require(cfg.get('mode', {}).get('execution') == 'paper', 'startup_execution_not_paper')
-        # A process/record replacement during the read cannot inherit acceptance.
-        final = runtime_identity.inspect(root)
-        require(final.get('state') == 'RUNNING' and final.get('verified') is True
-                and final.get('record') == record and final.get('heartbeat_belongs_to_instance') is True,
-                'kernel_changed_during_check')
-        require(_health(root / 'data/safety_health.json') == health, 'health_changed_during_check')
+        previous_health = _health(root / 'data/safety_health.json')
+        previous_beat = read_heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', clock(),
+                                       require_cycle=False)
+        # Serialize only final local validation with existing observer publication.
+        # Git revision inspection above and venue reads outside this gate hold no
+        # health lock. Read the latest health BEFORE its corresponding heartbeat.
+        with SafetyHealth(root / 'data/safety_health.json').locked():
+            health = _health(root / 'data/safety_health.json')
+            now = clock()
+            policy = HeartbeatPolicy.configured(cfg)
+            require(policy.stale_after_s is not None, 'heartbeat_policy_unknown')
+            beat = read_heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', now,
+                                  require_cycle=require_cycle)
+            facts['heartbeat'] = beat
+            require(bool(record.get('instance_id')) and beat['instance_id'] == record.get('heartbeat_instance_id'),
+                    'heartbeat_prior_instance')
+            require(_time(record.get('started_at')) and record['started_at'] <= beat['started_at'],
+                    'heartbeat_predates_kernel')
+            if policy.stale_after_s is not None:
+                require(max(now - beat['timestamp'],
+                            now - beat['context']['last_successful_cycle_at'] if require_cycle else 0)
+                        <= policy.stale_after_s, 'heartbeat_stale')
+            require(beat['context'].get('boot_complete') is True, 'kernel_boot_incomplete')
+            require(beat['context'].get('stopping') is False, 'kernel_stopping_or_unknown')
+            require(beat['context'].get('state') == 'FROZEN', 'heartbeat_control_not_frozen')
+            facts['health'] = health
+            for name, condition in health['conditions'].items():
+                if not require_cycle and name == 'observed_cycle:luffy':
+                    continue  # startup acceptance supplies no cycle or entry authority
+                require(condition['status'] != 'ACTIVE', 'blocking_health:' + name)
+            observed_at = health.get('observed_at')
+            require(_time(observed_at) and beat['started_at'] <= observed_at <= now,
+                    'health_observation_time_unknown')
+            if policy.stale_after_s is not None and _time(observed_at):
+                require(now - observed_at <= policy.stale_after_s, 'health_observation_stale')
+            observed = validate_heartbeat(health['heartbeats']['luffy'], 'luffy', now,
+                                          require_cycle=require_cycle)
+            if policy.stale_after_s is not None:
+                require(max(now - observed['timestamp'],
+                            now - observed['context']['last_successful_cycle_at'] if require_cycle else 0)
+                        <= policy.stale_after_s, 'independent_heartbeat_observation_stale')
+            require(observed['instance_id'] == beat['instance_id'] and observed['started_at'] == beat['started_at'],
+                    'health_prior_instance')
+            require(observed['context'].get('boot_complete') is True
+                    and observed['context'].get('state') == 'FROZEN'
+                    and observed['context'].get('stopping') is False, 'health_boot_control_unconfirmed')
+            require(beat['sequence'] >= observed['sequence'] and beat['timestamp'] >= observed['timestamp']
+                    and (not require_cycle or beat['context']['last_successful_cycle_at']
+                         >= observed['context']['last_successful_cycle_at']),
+                    'heartbeat_chronology_regression')
+            require(beat['sequence'] != observed['sequence'] or beat == observed, 'heartbeat_sequence_restamped')
+            require(observed['timestamp'] <= observed_at if _time(observed_at) else False,
+                    'health_receipt_predates_heartbeat')
+            with closing(sqlite3.connect((root / 'data/luffy.db').as_uri() + '?mode=ro', uri=True, timeout=1)) as db:
+                controls = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
+                                           "('control_state','macro_guard_operator_hold')"))
+            facts['controls'] = controls
+            require(controls == {'control_state': 'FROZEN', 'macro_guard_operator_hold': '1'},
+                    'current_control_not_frozen_held')
+            if not require_cycle:
+                require(cfg.get('mode', {}).get('execution') == 'paper', 'startup_execution_not_paper')
+            # A process/record replacement during the read cannot inherit acceptance.
+            final = runtime_identity.inspect(root)
+            require(final.get('state') == 'RUNNING' and final.get('verified') is True
+                    and final.get('record') == record and final.get('heartbeat_belongs_to_instance') is True,
+                    'kernel_changed_during_check')
+            require(_health_progression(previous_health, health), 'health_changed_during_check')
+            require(_heartbeat_progression(previous_beat, beat), 'heartbeat_chronology_regression')
+            require(_health(root / 'data/safety_health.json') == health, 'health_changed_during_check')
     except Exception as exc:
         # No exception text or unknown fact is promoted to readiness.
         reasons.append('required_readiness_unreadable:' + type(exc).__name__)

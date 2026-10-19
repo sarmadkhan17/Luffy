@@ -67,6 +67,73 @@ def check(ready, **kwargs):
     return gate.check(ready.root, CFG, clock=lambda: ready.now, **kwargs)
 
 
+@pytest.mark.parametrize('advance_heartbeat', [False, True])
+@pytest.mark.parametrize('require_cycle', [False, True])
+def test_benign_observer_publication_between_health_reads_is_not_a_failure(
+        ready, monkeypatch, advance_heartbeat, require_cycle):
+    ready.health.clock = lambda: ready.now
+    if not require_cycle:
+        ready.beat.beat(dict(startup_state='STARTED_FROZEN', last_successful_cycle_at=None,
+                             state='FROZEN', boot_complete=True, stopping=False))
+        ready.health.observe('observed_cycle:luffy', 'CYCLE_PENDING')
+        SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+            ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+    original = gate._health
+    reads = []
+    def concurrent_read(path):
+        if reads == [1]:
+            ready.now += 1
+            ready.health.clock = lambda: ready.now
+            if advance_heartbeat:
+                ready.beat.clock = lambda: ready.now
+                ready.beat.pulse(state='FROZEN', boot_complete=True, stopping=False)
+            SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+                ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+        reads.append(1)
+        return original(path)
+    monkeypatch.setattr(gate, '_health', concurrent_read)
+    result = gate.check(ready.root, dict(CFG, mode={'execution': 'paper'}),
+                        clock=lambda: ready.now, require_cycle=require_cycle)
+    assert result['allow'], result['reasons']
+    assert result['facts']['health']['revision'] == ready.health.read()['revision']
+
+
+@pytest.mark.parametrize('change', ['active_fault', 'lost_recovery', 'bootstrap_identity',
+                                  'bootstrap_status', 'stale', 'invalid', 'unfrozen',
+                                  'heartbeat_identity', 'revision_rollback', 'sequence_rollback'])
+def test_final_validation_rejects_concurrent_safety_or_identity_changes(ready, monkeypatch, change):
+    ready.health.clock = lambda: ready.now
+    ready.beat.beat(json.loads(ready.beat.path.read_text())['context'])
+    original = gate._health
+    reads = []
+    def concurrent_read(path):
+        if reads == [1]:
+            value = ready.health.read()
+            if change == 'active_fault':
+                ready.health.observe('journal_write', 'FAILED')
+            else:
+                if change == 'lost_recovery': value['recovery_required'] = False
+                if change == 'bootstrap_identity': value['bootstrap'] = {'token': 'other'}
+                if change == 'bootstrap_status': value['bootstrap'] = {'status': 'FAILED'}
+                if change == 'stale': ready.now += 241
+                if change == 'invalid': value['conditions']['journal_write'] = {'status': 'UNKNOWN'}
+                if change == 'unfrozen':
+                    with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+                        db.execute("UPDATE state_kv SET value='ACTIVE' WHERE key='control_state'")
+                if change in ('heartbeat_identity', 'sequence_rollback'):
+                    beat = json.loads(ready.beat.path.read_text())
+                    if change == 'heartbeat_identity': beat['instance_id'] = 'other'
+                    else: beat['sequence'] -= 1
+                    ready.beat.path.write_text(json.dumps(beat))
+                value['revision'] = 0 if change == 'revision_rollback' else value['revision'] + 1
+                (ready.root / 'data/safety_health.json').write_text(json.dumps(value))
+        reads.append(1)
+        return original(path)
+    monkeypatch.setattr(gate, '_health', concurrent_read)
+    result = check(ready)
+    assert not result['allow'], change
+
+
 def mutate(ready, case):
     hb = read(ready, 'heartbeat_luffy.json'); health = read(ready, 'safety_health.json')
     identity = read(ready, 'kernel_instance.json')

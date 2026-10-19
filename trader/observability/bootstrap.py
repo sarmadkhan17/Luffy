@@ -47,7 +47,19 @@ def record_fence(root, token, status, revision, *, expected_health=None):
     with health.locked():
         value = preflight._health(health.path)
         if expected_health is not None and value != expected_health:
-            raise ValueError('health_changed_before_ready_publication')
+            # An observer may publish between readiness and this existing lock.
+            # Revalidate its latest state, never approve from a stale snapshot.
+            from trader.core.config import load_config
+            try:
+                ri.check_revision(revision, Path(root))
+                latest = dashboard_readiness.check(root, load_config(str(Path(root) / 'config.yaml')),
+                                                   require_cycle=status == 'READY')
+            except Exception:
+                raise ValueError('health_changed_before_ready_publication') from None
+            if (not latest['allow'] or not dashboard_readiness._health_progression(
+                    expected_health, latest['facts']['health'])):
+                raise ValueError('health_changed_before_ready_publication')
+            value = latest['facts']['health']
         if value['recovery_required'] is not True:
             raise ValueError('recovery_latch_not_retained')
         if status != 'PENDING' and value.get('bootstrap', {}).get('token') != token:

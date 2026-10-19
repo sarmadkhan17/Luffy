@@ -357,6 +357,49 @@ def test_ready_publication_cannot_accept_changed_health(local):
     assert health.bootstrap_block(health.read())
 
 
+@pytest.mark.parametrize('change', ['observer', 'fault', 'recovery', 'bootstrap'])
+def test_ready_publication_revalidates_progress_but_refuses_changed_containment(ready, monkeypatch, change):
+    from trader.observability import dashboard_readiness as gate
+    ready.health.clock = lambda: ready.now
+    B.record_fence(ready.root, 'attempt', 'PENDING', REV)
+    before = ready.health.read()
+    ready.now += 1
+    SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+        ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+    if change == 'fault': ready.health.observe('journal_write', 'FAILED')
+    if change in ('recovery', 'bootstrap'):
+        value = ready.health.read()
+        if change == 'recovery': value['recovery_required'] = False
+        else: value['bootstrap']['token'] = 'other'
+        B.publish(ready.health.path, value)
+    original = gate.check
+    monkeypatch.setattr(gate, 'check', lambda *a, **kw: original(*a, **kw, clock=lambda: ready.now))
+    if change == 'observer':
+        B.record_fence(ready.root, 'attempt', 'READY', REV, expected_health=before)
+        assert ready.health.read()['bootstrap']['status'] == 'READY'
+        assert ready.health.read()['recovery_required'] is True
+    else:
+        with pytest.raises(ValueError, match='health_changed'):
+            B.record_fence(ready.root, 'attempt', 'READY', REV, expected_health=before)
+
+
+def test_latest_protection_failure_is_not_hidden_by_benign_observer_progress(ready, monkeypatch):
+    from trader.observability import dashboard_readiness as gate
+    initialized_without_cycle(ready)
+    original = gate._health
+    reads = []
+    def concurrent_read(path):
+        if reads == [1]:
+            with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+                value = json.loads(db.execute('SELECT value FROM protection_evidence').fetchone()[0])
+                value['checks']['venue_protection'] = False
+                db.execute('UPDATE protection_evidence SET value=?', (json.dumps(value),))
+        reads.append(1)
+        return original(path)
+    monkeypatch.setattr(gate, '_health', concurrent_read)
+    assert not started_check(ready)['allow']
+
+
 def test_child_admission_requires_persisted_attempt_and_rechecks_static_facts(local, monkeypatch):
     root=local[0]; phase_a(local,monkeypatch)
     original=P.prelaunch
