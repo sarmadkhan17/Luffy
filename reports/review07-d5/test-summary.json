@@ -1,0 +1,39 @@
+{
+  "runs": [
+    {
+      "suite": "intake-final",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 107.728
+    },
+    {
+      "suite": "mixed-source",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 81.172
+    },
+    {
+      "suite": "consumers",
+      "tests": 46,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 27.612
+    },
+    {
+      "suite": "focused",
+      "tests": 176,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1672.199
+    }
+  ],
+  "overlapping_suites": true,
+  "all_passed": true,
+  "compatibility_note": "Broad run began during implementation. Final intake/queue and mixed-source runs verify the amended passage replay contract; quantitative engine code is unchanged."
+}

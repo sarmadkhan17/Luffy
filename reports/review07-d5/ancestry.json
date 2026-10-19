@@ -1,0 +1,62 @@
+{
+  "base": "65f00d9e2b983d4cee3368d07595fae920ff5b2e",
+  "branch": "sol1/review07-d5",
+  "commits": [
+    {
+      "commit": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "parents": [
+        "d7e1a320d9cb4aa5a8e7a180ad63ed2aef482cc4"
+      ],
+      "subject": "fix(startup): validate latest observer state without snapshot races",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f",
+      "parents": [
+        "ef9fca839c23d48198c5f2361bbf3623d94266fa"
+      ],
+      "subject": "fix(brain): enforce compatible proposals and attributable diagnostics",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "81565a0f37874899c1a7f34389b019629830d3d9",
+      "parents": [
+        "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+      ],
+      "subject": "docs(review07): reconcile owner decisions and retain offline proofs",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69",
+      "parents": [
+        "81565a0f37874899c1a7f34389b019629830d3d9"
+      ],
+      "subject": "fix(research): preserve held-out evidence and eligible discovery accounting",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "868f23715721136fd0686db0b6bd3252c40e0990",
+      "parents": [
+        "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69"
+      ],
+      "subject": "test(research): authenticate revised provenance in lifecycle fixtures",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "94b9000a02966dd74447c48a26eda61033e7bfe2",
+      "parents": [
+        "868f23715721136fd0686db0b6bd3252c40e0990"
+      ],
+      "subject": "fix(research): preserve untested receipt-refusal classification",
+      "ancestor_of_base": true
+    },
+    {
+      "commit": "65f00d9e2b983d4cee3368d07595fae920ff5b2e",
+      "parents": [
+        "94b9000a02966dd74447c48a26eda61033e7bfe2"
+      ],
+      "subject": "docs(research): retain D1-D4 implementation proofs and integration manifest",
+      "ancestor_of_base": true
+    }
+  ]
+}

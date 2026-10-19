@@ -1,0 +1,27 @@
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 315 file(s) not classified (no supported extension or shebang), skipped: .git, .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version (+309 more)
+  AST extraction: 100/1538 uncached files (6%) [4 workers]
+  AST extraction: 200/1538 uncached files (13%) [4 workers]
+  AST extraction: 300/1538 uncached files (19%) [4 workers]
+  AST extraction: 400/1538 uncached files (26%) [4 workers]
+  AST extraction: 500/1538 uncached files (32%) [4 workers]
+  AST extraction: 600/1538 uncached files (39%) [4 workers]
+  AST extraction: 700/1538 uncached files (45%) [4 workers]
+  AST extraction: 800/1538 uncached files (52%) [4 workers]
+  AST extraction: 900/1538 uncached files (58%) [4 workers]
+  AST extraction: 1000/1538 uncached files (65%) [4 workers]
+  AST extraction: 1100/1538 uncached files (71%) [4 workers]
+  AST extraction: 1200/1538 uncached files (78%) [4 workers]
+  AST extraction: 1300/1538 uncached files (84%) [4 workers]
+  AST extraction: 1400/1538 uncached files (91%) [4 workers]
+  AST extraction: 1500/1538 uncached files (97%) [4 workers]
+  AST extraction: 1538/1538 uncached files (100%) [4 workers]
+[graphify watch] community set changed since labeling (1151 saved labels, 1109 communities now; renamed 366 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+[graphify] backed up curated graph (5 files) -> 2026-10-19/
+Graph has 25896 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 1109 community nodes, 4872 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+[graphify watch] Rebuilt: 25896 nodes, 67456 edges, 1109 communities
+[graphify watch] graph.json, graph.html and GRAPH_REPORT.md updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.
