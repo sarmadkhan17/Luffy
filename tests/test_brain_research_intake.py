@@ -138,6 +138,11 @@ def test_provenance_tampering_and_quantitative_authority_refused(setup):
     changed['queue_row']['detail'] = '{}'
     with pytest.raises(ValueError, match='integrity'):
         Q.question(changed)
+    changed = json.loads(P.canonical(s))
+    changed['consumption_at_intake'] = [dict(kind=ideas.CONSUMED, subject=s['idea_id'], detail='{}')]
+    changed['bank_id'] = P.digest({k: v for k, v in changed.items() if k != 'bank_id'})
+    with pytest.raises(ValueError, match='already_consumed'):
+        Q.question(changed)
     with B.store(bank) as db:
         with pytest.raises(sqlite3.IntegrityError, match='immutable'):
             db.execute('DELETE FROM bridge_sources')

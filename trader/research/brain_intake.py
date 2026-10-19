@@ -29,9 +29,20 @@ def question(source):
     if stamp.tzinfo is None:
         stamp = stamp.replace(tzinfo=timezone.utc)
     available = int(stamp.timestamp() * 1000)
-    if (ideas.RESEARCH not in ideas._row_to_idea(row['subject'], row['detail'])['streams']
-            or len(passage.get('text', '')) < ideas.MIN_TEXT):
+    idea = ideas._row_to_idea(row['subject'], row['detail'])
+    if (ideas.RESEARCH not in idea['streams'] or len(idea['text']) < ideas.MIN_TEXT
+            or idea['research_score'] <= 0 or not idea['source']
+            or not idea['url'].startswith(('https://', 'http://'))):
         raise ValueError('brain_source_stream_or_text')
+    for consumed in source['consumption_at_intake']:
+        if consumed['kind'] != ideas.CONSUMED or consumed['subject'] != source['idea_id']:
+            raise ValueError('brain_consumption_binding')
+        try:
+            detail = json.loads(consumed['detail'])
+        except (TypeError, ValueError):
+            continue  # Same unreadable-row semantics as the maintained selector.
+        if detail.get('stream') in (None, ideas.RESEARCH):
+            raise ValueError('brain_source_already_consumed')
     body = dict(available_ms=available, stage=P.QUESTION, authority='QUESTION_ONLY', classification='UNTESTED',
                 source_bank_id=source['bank_id'], text='What registered predictor, target, scope and falsifier would test this unverified passage?',
                 passage=passage, source_hash=P.digest(row), suppression=None)
