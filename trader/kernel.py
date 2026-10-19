@@ -391,7 +391,11 @@ class Kernel:
             self.notifier.send(f"🔒 recovery {recovery.outcome}: {', '.join(recovery.reasons)}")
         start_stall_monitor(
             self.heartbeat,
-            stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4)
+            stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4,
+            pulse_context=(lambda: dict(state=self.state_machine.state.value,
+                boot_complete=getattr(self, '_boot_complete', False), stopping=self._stop))
+                if getattr(self, '_bootstrap_token', None) else None,
+            stopped=lambda: self._stop)
         signal.signal(signal.SIGTERM, self._graceful)
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
@@ -1475,6 +1479,7 @@ class Kernel:
         except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
             log.info('learning checkpoint refused: %s', exc)
         self.heartbeat.beat({"equity": round(balance, 2),
+                             "startup_state": "CYCLE_READY",
                              "last_successful_cycle_at": time.time(), **stats,
                              "state": self.state_machine.state.value,
                              "boot_complete": getattr(self, '_boot_complete', False),
@@ -3196,6 +3201,9 @@ class Kernel:
     def run(self) -> None:
         self.boot()
         if getattr(self, '_bootstrap_token', None):
+            self.heartbeat.beat(dict(startup_state='STARTED_FROZEN',
+                last_successful_cycle_at=None, state=self.state_machine.state.value,
+                boot_complete=self._boot_complete, stopping=self._stop))
             from .observability.bootstrap import start_protection_monitor
             start_protection_monitor(self)
         interval = float(self.cfg["timeframes"]["scan_interval_seconds"])

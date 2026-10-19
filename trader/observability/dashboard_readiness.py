@@ -26,7 +26,7 @@ def _time(value):
     return type(value) in (int, float) and math.isfinite(value) and value >= 0
 
 
-def check(root, cfg, *, expected_identity=None, clock=time.time):
+def check(root, cfg, *, expected_identity=None, clock=time.time, require_cycle=True):
     root = Path(root).resolve()
     facts, reasons = {}, []
     def require(condition, reason):
@@ -55,14 +55,16 @@ def check(root, cfg, *, expected_identity=None, clock=time.time):
         now = clock()
         policy = HeartbeatPolicy.configured(cfg)
         require(policy.stale_after_s is not None, 'heartbeat_policy_unknown')
-        beat = read_heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', now)
+        beat = read_heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', now,
+                              require_cycle=require_cycle)
         facts['heartbeat'] = beat
         require(bool(record.get('instance_id')) and beat['instance_id'] == record.get('heartbeat_instance_id'),
                 'heartbeat_prior_instance')
         require(_time(record.get('started_at')) and record['started_at'] <= beat['started_at'],
                 'heartbeat_predates_kernel')
         if policy.stale_after_s is not None:
-            require(max(now - beat['timestamp'], now - beat['context']['last_successful_cycle_at'])
+            require(max(now - beat['timestamp'],
+                        now - beat['context']['last_successful_cycle_at'] if require_cycle else 0)
                     <= policy.stale_after_s, 'heartbeat_stale')
         require(beat['context'].get('boot_complete') is True, 'kernel_boot_incomplete')
         require(beat['context'].get('stopping') is False, 'kernel_stopping_or_unknown')
@@ -70,15 +72,19 @@ def check(root, cfg, *, expected_identity=None, clock=time.time):
         health = _health(root / 'data/safety_health.json')
         facts['health'] = health
         for name, condition in health['conditions'].items():
+            if not require_cycle and name == 'observed_cycle:luffy':
+                continue  # startup acceptance supplies no cycle or entry authority
             require(condition['status'] != 'ACTIVE', 'blocking_health:' + name)
         observed_at = health.get('observed_at')
         require(_time(observed_at) and beat['started_at'] <= observed_at <= now,
                 'health_observation_time_unknown')
         if policy.stale_after_s is not None and _time(observed_at):
             require(now - observed_at <= policy.stale_after_s, 'health_observation_stale')
-        observed = validate_heartbeat(health['heartbeats']['luffy'], 'luffy', now)
+        observed = validate_heartbeat(health['heartbeats']['luffy'], 'luffy', now,
+                                      require_cycle=require_cycle)
         if policy.stale_after_s is not None:
-            require(max(now - observed['timestamp'], now - observed['context']['last_successful_cycle_at'])
+            require(max(now - observed['timestamp'],
+                        now - observed['context']['last_successful_cycle_at'] if require_cycle else 0)
                     <= policy.stale_after_s, 'independent_heartbeat_observation_stale')
         require(observed['instance_id'] == beat['instance_id'] and observed['started_at'] == beat['started_at'],
                 'health_prior_instance')
@@ -86,7 +92,8 @@ def check(root, cfg, *, expected_identity=None, clock=time.time):
                 and observed['context'].get('state') == 'FROZEN'
                 and observed['context'].get('stopping') is False, 'health_boot_control_unconfirmed')
         require(beat['sequence'] >= observed['sequence'] and beat['timestamp'] >= observed['timestamp']
-                and beat['context']['last_successful_cycle_at'] >= observed['context']['last_successful_cycle_at'],
+                and (not require_cycle or beat['context']['last_successful_cycle_at']
+                     >= observed['context']['last_successful_cycle_at']),
                 'heartbeat_chronology_regression')
         require(beat['sequence'] != observed['sequence'] or beat == observed, 'heartbeat_sequence_restamped')
         require(observed['timestamp'] <= observed_at if _time(observed_at) else False,
@@ -97,6 +104,8 @@ def check(root, cfg, *, expected_identity=None, clock=time.time):
         facts['controls'] = controls
         require(controls == {'control_state': 'FROZEN', 'macro_guard_operator_hold': '1'},
                 'current_control_not_frozen_held')
+        if not require_cycle:
+            require(cfg.get('mode', {}).get('execution') == 'paper', 'startup_execution_not_paper')
         # A process/record replacement during the read cannot inherit acceptance.
         final = runtime_identity.inspect(root)
         require(final.get('state') == 'RUNNING' and final.get('verified') is True

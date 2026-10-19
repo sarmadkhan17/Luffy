@@ -238,11 +238,11 @@ class SafetyObserver:
         reason, record = None, None
         try:
             from trader.engine.watchdog import read_heartbeat
-            record = read_heartbeat(path, producer, now)
+            record = read_heartbeat(path, producer, now, require_cycle=False)
             if policy.stale_after_s is None:
                 reason = 'POLICY_NOT_CONFIGURED'
-            elif max(now - record['timestamp'],
-                     now - record['context']['last_successful_cycle_at']) > policy.stale_after_s:
+            elif max(now - record['timestamp'], now - record['context']['last_successful_cycle_at']
+                     if record['context'].get('last_successful_cycle_at') is not None else 0) > policy.stale_after_s:
                 reason = 'STALE'
             with self.health.locked():
                 v = self.health.read()
@@ -268,6 +268,12 @@ class SafetyObserver:
         # startup never erases it and the recovery latch remains retained.
         if 'observed_cycle:' + producer in self.health.read()['conditions']:
             cycle_reason = reason
+            cycle = record['context'].get('last_successful_cycle_at') if record else None
+            if cycle_reason is None and cycle is None:
+                cycle_reason = 'CYCLE_PENDING'
+            elif (cycle_reason is None and policy.stale_after_s is not None
+                  and now - cycle > policy.stale_after_s):
+                cycle_reason = 'STALE'
             if cycle_reason is None:
                 from trader.runtime_identity import inspect
                 identity = inspect(Path(path).parent.parent)

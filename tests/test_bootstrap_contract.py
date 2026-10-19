@@ -176,6 +176,83 @@ def test_phase_b_fresh_protection_and_reconciliation_are_required(ready, bad):
     assert not phase_b(ready)['allow']
 
 
+def initialized_without_cycle(ready):
+    protection(ready)
+    ready.health.clock = lambda: ready.now
+    with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+        db.execute('CREATE TABLE execution_requests(state TEXT)')
+    ready.beat.beat(dict(startup_state='STARTED_FROZEN', last_successful_cycle_at=None,
+                         state='FROZEN', boot_complete=True, stopping=False))
+    ready.health.observe('observed_cycle:luffy', 'CYCLE_PENDING')
+    SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+        ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+
+
+def started_check(ready):
+    return B.readiness(ready.root, dict(CFG, mode={'execution': 'paper'}),
+                       ready.instance.record, dict(generation=dict(boot=1, seq=1)),
+                       clock=lambda: ready.now, require_cycle=False)
+
+
+def refresh_protection(ready):
+    with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+        value = json.loads(db.execute('SELECT value FROM protection_evidence').fetchone()[0])
+        value['checked_at'] = value['completed_at'] = datetime.fromtimestamp(
+            ready.now, timezone.utc).isoformat()
+        db.execute('UPDATE protection_evidence SET value=?', (json.dumps(value),))
+
+
+def test_real_startup_and_cycle_receipts_stay_distinct_through_a_slow_first_cycle(ready):
+    initialized_without_cycle(ready)
+    B.record_fence(ready.root, 'attempt', 'PENDING', REV)
+    B.record_fence(ready.root, 'attempt', 'STARTED_FROZEN', REV)
+    result = started_check(ready)
+    assert result['allow'], result['reasons']
+    assert not phase_b(ready)['allow']
+    ready.now += 301
+    ready.beat.clock = lambda: ready.now
+    ready.beat.pulse(state='FROZEN', boot_complete=True, stopping=False)
+    SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+        ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+    refresh_protection(ready)
+    result = started_check(ready)
+    assert result['allow'], result['reasons']
+    assert not phase_b(ready)['allow']
+    assert json.loads(ready.beat.path.read_text())['context']['last_successful_cycle_at'] is None
+    assert ready.health.entry_block() == 'contained_bootstrap_not_ready'
+    assert ready.health.read()['recovery_required'] is True
+    ready.beat.beat(dict(startup_state='CYCLE_READY', last_successful_cycle_at=ready.now,
+                         state='FROZEN', boot_complete=True, stopping=False))
+    SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+        ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+    assert phase_b(ready)['allow']
+    assert ready.health.read()['recovery_required'] is True
+
+
+@pytest.mark.parametrize('failure', ['failed_initialization', 'missing_protection', 'stale_heartbeat',
+                                   'process_death', 'reconciliation', 'unfrozen', 'journal_fault'])
+def test_initialized_frozen_acceptance_does_not_hide_required_failures(ready, failure):
+    initialized_without_cycle(ready)
+    if failure == 'failed_initialization':
+        ready.beat.beat(dict(startup_state='STARTED_FROZEN', last_successful_cycle_at=None,
+                             state='FROZEN', boot_complete=False, stopping=False))
+    if failure == 'missing_protection':
+        with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+            db.execute('DELETE FROM protection_evidence')
+    if failure == 'stale_heartbeat':
+        ready.now += 241
+        refresh_protection(ready)
+    if failure == 'process_death': ready.instance.release()
+    if failure == 'unfrozen': mutate(ready, 'current_control_active')
+    if failure == 'journal_fault': ready.health.observe('journal_write', 'FAILED')
+    if failure == 'reconciliation':
+        with sqlite3.connect(ready.root / 'data/luffy.db') as db:
+            value = json.loads(db.execute('SELECT value FROM protection_evidence').fetchone()[0])
+            value['checks']['reconciliation'] = False
+            db.execute('UPDATE protection_evidence SET value=?', (json.dumps(value),))
+    assert not started_check(ready)['allow']
+
+
 def test_independent_observer_resolves_cold_cycle_condition_only_for_current_boot(ready):
     ready.health.observe('observed_cycle:luffy', 'MISSING')
     original = ready.beat.path.read_text()
@@ -199,6 +276,7 @@ class InertHost:
         return dict(allow=self.failure!='prelaunch', facts={'protection':{'generation':{'boot':1}}})
     def fence(self,status): self.events.append(status)
     def ready(self,proof): self.events.append('READY')
+    def started_frozen(self,proof): self.events.append('STARTED_FROZEN')
     def observers_start(self):
         self.events.append('observers')
         if self.failure=='observers': raise RuntimeError()
@@ -208,7 +286,8 @@ class InertHost:
     def sample(self,baseline):
         if self.failure=='sample': raise RuntimeError()
         if self.failure=='late': self.now+=5
-        return dict(allow=self.failure is None or self.failure=='late')
+        return dict(allow=self.failure is None or self.failure=='late', cycle_ready=True,
+                    cycle_readiness={})
     def contain_stop(self):
         self.events.append('SIGTERM'); return dict(stop='UNKNOWN',observers_retained=True)
     def save(self,result): self.result=result
@@ -228,7 +307,34 @@ def test_failure_retains_observers_never_retries_or_awards_readiness(failure):
 def test_success_keeps_containment_no_active_transition():
     host=InertHost(); result=B.execute(host,timeout=2)
     assert result['allow'] and not result['trading_authority'] and host.launches==1
-    assert host.events==['PENDING','observers','launch','READY']
+    assert host.events==['PENDING','observers','launch','STARTED_FROZEN','READY']
+
+
+def test_slow_first_cycle_can_finish_after_startup_deadline_without_a_second_launch():
+    class SlowHost(InertHost):
+        def sample(self, baseline):
+            return dict(allow=True, cycle_ready=self.now >= 300, cycle_readiness={})
+        def started_frozen(self, proof):
+            super().started_frozen(proof)
+            self.initialized_at = self.now
+    host = SlowHost(); result = B.execute(host, timeout=240)
+    assert result['allow'] and result['phase'] == 'CYCLE_READY'
+    assert host.initialized_at < 240 and host.now >= 300
+    assert host.launches == 1 and 'SIGTERM' not in host.events
+    assert not result['trading_authority']
+
+
+@pytest.mark.parametrize('failure', ['stale_heartbeat', 'missing_protection', 'process_death'])
+def test_started_kernel_is_stopped_for_real_health_failure_while_cycle_pending(failure):
+    class FailedHost(InertHost):
+        def sample(self, baseline):
+            if 'STARTED_FROZEN' in self.events:
+                return dict(allow=False, reasons=[failure], fatal=failure == 'process_death')
+            return dict(allow=True, cycle_ready=False)
+    host = FailedHost(); result = B.execute(host, timeout=240)
+    assert not result['allow'] and host.launches == 1
+    assert 'FAILED' in host.events and 'SIGTERM' in host.events and 'READY' not in host.events
+    assert result['reason'] == 'contained_startup_health_failed'
 
 
 def test_owned_child_unknown_identity_never_signalled_or_cleaned(tmp_path, monkeypatch):
@@ -354,6 +460,10 @@ def test_admitted_run_wires_bounded_protection_producer_after_boot(monkeypatch):
     obj=SimpleNamespace(boot=lambda:events.append('boot'),_bootstrap_token='attempt',_stop=True,
                         cfg={'timeframes':{'scan_interval_seconds':60}},exchange=object(),
                         journal=SimpleNamespace(db_path='fixture.db'),supervisor=SimpleNamespace(_pass_lock=lock))
+    obj._boot_complete = True
+    obj.state_machine = SimpleNamespace(state=SimpleNamespace(value='FROZEN'))
+    obj.heartbeat = SimpleNamespace(beat=lambda value: events.append(
+        ('heartbeat', value['last_successful_cycle_at'], value['stopping'])))
     monitor=SimpleNamespace(loop=lambda **k:events.append(('loop',k['stopped']())))
     def make(exchange,path,**kwargs):
         assert exchange is obj.exchange and path=='fixture.db'
@@ -365,7 +475,7 @@ def test_admitted_run_wires_bounded_protection_producer_after_boot(monkeypatch):
         def start(self): self.target(**self.kwargs)
     monkeypatch.setattr(B.threading,'Thread',Thread)
     kernel.Kernel.run(obj)
-    assert events==['boot','producer',('loop',True)]
+    assert events==['boot',('heartbeat',None,True),'producer',('loop',True)]
     assert obj._bootstrap_protection_monitor is monitor
 
 

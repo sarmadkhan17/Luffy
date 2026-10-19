@@ -26,7 +26,7 @@ from . import dashboard_readiness, preflight
 from .safety import SafetyHealth, publish
 from .shutdown import service_state
 
-STARTUP_TIMEOUT_S = 240.0  # existing observed-cycle envelope, not extended
+STARTUP_TIMEOUT_S = 240.0  # initialized, protected FROZEN startup; not cycle completion
 STOP_TIMEOUT_S = 300.0    # RUN-01 graceful stop envelope
 
 
@@ -74,13 +74,15 @@ def child_admission(root, token, revision):
         raise ValueError('bootstrap_fence_missing_or_changed')
 
 
-def readiness(root, cfg, expected, baseline, *, clock=time.time):
-    """Phase B consumes OBS-02 plus fresh post-launch protection/reconciliation.
+def readiness(root, cfg, expected, baseline, *, clock=time.time, require_cycle=True):
+    """Use existing readiness facts and fresh post-launch protection.
 
-    Successful contained readiness leaves FROZEN, hold and recovery unchanged.
+    Startup checks process liveness; the default also requires a genuine cycle.
+    Both leave FROZEN, hold and recovery unchanged.
     It supplies no trading authority and is not an owner recovery approval.
     """
-    result = dashboard_readiness.check(root, cfg, expected_identity=expected, clock=clock)
+    result = dashboard_readiness.check(root, cfg, expected_identity=expected, clock=clock,
+                                       require_cycle=require_cycle)
     reasons = list(result['reasons'])
     try:
         health = preflight._health(Path(root) / 'data/safety_health.json')
@@ -89,6 +91,8 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time):
         with closing(sqlite3.connect((Path(root) / 'data/luffy.db').resolve().as_uri() + '?mode=ro',
                                      uri=True, timeout=1)) as db:
             db.row_factory = sqlite3.Row
+            if not require_cycle:
+                preflight._journal_zero(db)
             protection = preflight._protection(db, clock())
         at = datetime.fromisoformat(protection['checked_at']).timestamp()
         if (at < expected['started_at']
@@ -97,7 +101,7 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time):
         result['facts']['protection_reconciliation'] = protection
     except Exception as exc:
         reasons.append('fresh_protection_reconciliation_failed:' + type(exc).__name__)
-    return dict(result, phase='CONTAINED_BOOT_READINESS', trading_authority=False,
+    return dict(result, phase='CONTAINED_BOOT_READINESS' if require_cycle else 'STARTED_FROZEN_CHECK', trading_authority=False,
                 allow=not reasons, result='FAIL' if reasons else 'PASS', reasons=reasons)
 
 
@@ -123,6 +127,10 @@ class Host:
 
     def ready(self, phase_b):
         record_fence(self.root, self.token, 'READY', self.revision,
+                     expected_health=phase_b['facts']['health'])
+
+    def started_frozen(self, phase_b):
+        record_fence(self.root, self.token, 'STARTED_FROZEN', self.revision,
                      expected_health=phase_b['facts']['health'])
 
     def observers_start(self):
@@ -152,13 +160,19 @@ class Host:
         from trader.core.config import load_config
         # Bind to owned child PID/ticks, then require its lock record and revision.
         if service_state(self.process, self.expected) != 'LIVE':
-            return dict(allow=False, reasons=['owned_child_not_live'])
+            return dict(allow=False, fatal=True, reasons=['owned_child_not_live'])
         expected = dict(self.expected)
         record = (ri.inspect(self.root).get('record') or {})
         # Publication follows process creation: protection must start after the
         # identity record, never merely after this controller's Popen timestamp.
         expected['started_at'] = max(expected['started_at'], record.get('started_at', float('inf')))
-        return readiness(self.root, load_config(str(self.root / 'config.yaml')), expected, baseline)
+        cfg = load_config(str(self.root / 'config.yaml'))
+        result = readiness(self.root, cfg, expected, baseline, require_cycle=False)
+        result['cycle_ready'] = False
+        if result['allow']:
+            result['cycle_readiness'] = readiness(self.root, cfg, expected, baseline)
+            result['cycle_ready'] = result['cycle_readiness']['allow']
+        return result
 
     def contain_stop(self):
         if self.process is None:
@@ -184,6 +198,7 @@ def execute(host, *, timeout=STARTUP_TIMEOUT_S):
     """Single attempt; inert host fixtures exercise every lifecycle branch."""
     result = dict(allow=False, phase='PRE_LAUNCH', trading_authority=False)
     started = False
+    startup_verified = False
     try:
         if type(timeout) not in (int, float) or not math.isfinite(timeout) or not 0 < timeout <= STARTUP_TIMEOUT_S:
             raise ValueError('startup_deadline_invalid')
@@ -196,17 +211,28 @@ def execute(host, *, timeout=STARTUP_TIMEOUT_S):
         deadline = host.monotonic() + timeout
         started = True  # a partial/exceptional Popen may still own a child
         host.start()
-        while host.monotonic() < deadline:
+        while startup_verified or host.monotonic() < deadline:
             phase_b = host.sample(phase_a['facts']['protection'])
             result['readiness'] = phase_b
-            if host.monotonic() < deadline and phase_b.get('allow') is True:
-                host.ready(phase_b)
-                result.update(allow=True, phase='CONTAINED_READY', observers_retained=True)
+            if phase_b.get('fatal') or (startup_verified and phase_b.get('allow') is not True):
+                result.update(allow=False, reason='contained_startup_health_failed')
+                break
+            if not startup_verified and host.monotonic() < deadline and phase_b.get('allow') is True:
+                host.started_frozen(phase_b)
+                startup_verified = True
+                result.update(allow=True, phase='STARTED_FROZEN', cycle_ready=False,
+                              startup_verification=phase_b, observers_retained=True)
+                host.save(result)
+                continue  # sample the newly persisted STARTED_FROZEN fence
+            if startup_verified and phase_b.get('cycle_ready') is True:
+                host.ready(phase_b['cycle_readiness'])
+                result.update(allow=True, phase='CYCLE_READY', cycle_ready=True, observers_retained=True)
                 return result
             host.sleep(1)
-        result['reason'] = 'contained_startup_deadline_exceeded'
+        result.update(allow=False)
+        result.setdefault('reason', 'contained_startup_deadline_exceeded')
     except BaseException as exc:
-        result['reason'] = 'contained_startup_failed:' + type(exc).__name__
+        result.update(allow=False, reason='contained_startup_failed:' + type(exc).__name__)
     finally:
         if result['allow'] is not True and result.get('prelaunch', {}).get('allow') is True:
             try:
