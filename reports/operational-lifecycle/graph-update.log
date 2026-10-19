@@ -1,0 +1,21 @@
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 314 file(s) not classified (no supported extension or shebang), skipped: .git, .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version (+308 more)
+  AST extraction: 100/1549 uncached files (6%) [4 workers]
+  AST extraction: 200/1549 uncached files (12%) [4 workers]
+  AST extraction: 300/1549 uncached files (19%) [4 workers]
+  AST extraction: 400/1549 uncached files (25%) [4 workers]
+  AST extraction: 500/1549 uncached files (32%) [4 workers]
+  AST extraction: 600/1549 uncached files (38%) [4 workers]
+  AST extraction: 700/1549 uncached files (45%) [4 workers]
+  AST extraction: 800/1549 uncached files (51%) [4 workers]
+  AST extraction: 900/1549 uncached files (58%) [4 workers]
+  AST extraction: 1000/1549 uncached files (64%) [4 workers]
+  AST extraction: 1100/1549 uncached files (71%) [4 workers]
+  AST extraction: 1200/1549 uncached files (77%) [4 workers]
+  AST extraction: 1300/1549 uncached files (83%) [4 workers]
+  AST extraction: 1400/1549 uncached files (90%) [4 workers]
+  AST extraction: 1500/1549 uncached files (96%) [4 workers]
+  AST extraction: 1549/1549 uncached files (100%) [4 workers]
+[graphify watch] No code-graph topology changes detected; outputs left untouched.
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.

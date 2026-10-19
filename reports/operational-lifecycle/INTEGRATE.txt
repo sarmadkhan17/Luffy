@@ -1,0 +1,33 @@
+One operational lifecycle package; no deployment or production apply performed.
+
+Branch: sol1/operational-data-lifecycle
+Prerequisite: D6 f10f974 (complete committed replay/freshness contract).
+Source commit and exact hashes: verification.json.
+D7 e6a4037 merge-tree is clean; its pre-existing pending vector reconciliation
+remains D6/D7 work. This package does not modify those strategy paths.
+
+The delivery bundle contains source, focused tests, retention rules, supplied
+review evidence, actual read-only dry-run, exact sampled approval records,
+private physical rehearsal and verification logs. Generated full Graphify
+rewrites are kept local; rerun graphify update . after integration.
+
+From a repository containing the D6 prerequisite:
+  git bundle verify /path/to/sol1-operational-data-lifecycle.bundle
+  git fetch /path/to/sol1-operational-data-lifecycle.bundle refs/heads/sol1/operational-data-lifecycle
+  git show FETCH_HEAD
+Review/merge through the existing integration process. Do not deploy as part of
+this assignment. Readers must be upgraded together before new market reference
+writes; old readers cannot decode the physical markers.
+
+Do not enable lifecycle.research.backfill.approved.v1 or apply any production
+historical batch without the owner's separate first-purge approval. Sampled
+records only are identified in first-batch-approval-records.json. Unsampled
+records need a fresh bounded plan and identical eligibility verification.
+
+No source/raw blob, receipt identity, financial record, research identity or
+spent statistical look is deleted by the new lifecycle rules. Unknown dependencies
+remain retained. Runtime SQLite VACUUM and forced WAL checkpoints are forbidden.
+
+The initial mode=ro-only probe touched attention.db-shm. See REPORT.md and the
+initial syscall excerpt. The corrected run denies writes at the filesystem level
+and has zero successful operational writes/mutable shared mappings.

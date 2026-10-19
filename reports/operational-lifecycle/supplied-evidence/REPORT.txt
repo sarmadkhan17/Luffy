@@ -1,0 +1,176 @@
+LUFFY — current database inventory and three-cycle storage measurement
+READ-ONLY MEASUREMENT. Decimal MB (1 MB = 1,000,000 bytes); allocated bytes = stat.st_blocks * 512. No maintenance, checkpoints, copies, tests, jobs, restarts or runtime changes were performed by this task.
+Window: 2026-10-19T21:51:58.402+03:00 through 2026-10-19T22:05:15.051+03:00; 796.648 seconds. Four successful completion boundaries delimit three complete cycle intervals, including the natural approximately one-second inter-cycle wait.
+Kernel PID 2383750; Dashboard PID 2418305. Both process working directories: /mnt/luffy-data/luffy/release-ef9fca8. Running revision recorded by kernel_instance.json and matching checkout HEAD: ef9fca839c23d48198c5f2361bbf3623d94266fa. Runtime source/config diff against HEAD was empty. Heartbeat: FROZEN, CYCLE_READY, boot_complete=true, stopping=false. All three measured cycles logged zero deep candidates and zero decisions. This establishes the current FROZEN workload, not an ACTIVE trading or universally healthy cycle rate. Earlier logs contain disk-full failures; background acquisition OperationalErrors occurred in the first interval.
+Current data aliases resolve through prior release data directories to /mnt/luffy-data/luffy/production/data. Files are deduplicated by device/inode; symlink aliases are not counted again. Kernel logs are in the current release logs directory. Dashboard stdout is /tmp/opencode/luffy_dash.log. Current instance data plus shared production evidence are measured; historical evidence/deployment archives, browser data, development trees, CI, pytest, Graphify and agent scratch are excluded. Old monitor generations are included in shared system-log measurements, but their separate private health files are outside current-instance file totals.
+
+CURRENT_DATABASES / DATABASE_SIZES:
+Counts include SQLite autoindexes and sqlite_sequence. The 11 stores below are the current logical persistence catalog; presence does not establish an active writer. Sizes below are at the last observed boundary, not simultaneous with the initial schema enumeration.
+database | tables | views | indexes | triggers | main logical MB | main allocated MB | WAL logical MB | WAL allocated MB | SHM allocated MB | observed mode
+candles.db | 5 | 0 | 6 | 0 | 3,914.825728 | 3,914.829824 | 0.000000 | 0.000000 | 0.000000 | delete
+investigation.db | 28 | 0 | 36 | 2 | 32.989184 | 32.989184 | 0.000000 | 0.000000 | 0.000000 | delete
+derivs.db | 3 | 0 | 4 | 0 | 2,237.546496 | 2,237.554688 | 112.719112 | 112.726016 | 0.229376 | wal
+luffy.db | 80 | 1 | 116 | 72 | 5,003.988992 | 5,003.993088 | 10.658472 | 10.665984 | 0.032768 | wal
+attention.db | 7 | 1 | 8 | 0 | 32.243712 | 32.247808 | 0.000000 | 0.000000 | 0.032768 | wal
+execution-evidence.db | 2 | 0 | 1 | 2 | 0.024576 | 0.024576 | 0.000000 | 0.000000 | 0.000000 | delete
+runtime-portfolio.db | 4 | 2 | 3 | 4 | 2,300.477440 | 2,300.477440 | 0.000000 | 0.000000 | 0.000000 | delete
+attention_learning.db | 7 | 0 | 7 | 0 | 8.065024 | 8.065024 | 0.000000 | 0.000000 | 0.000000 | delete
+accounting-worker/queue.db | 4 | 0 | 5 | 0 | 0.192512 | 0.192512 | 0.000000 | 0.000000 | 0.000000 | delete
+declared-population/attention.db | 4 | 0 | 5 | 0 | 33.296384 | 33.296384 | 0.000000 | 0.000000 | 0.000000 | delete
+stage5-public/public.db | 2 | 0 | 1 | 2 | 19.337216 | 19.341312 | 0.000000 | 0.000000 | 0.000000 | delete
+.prepare-work-34ec1def50de47ce8837d4d470b326fb.db | 46 | 1 | 75 | 7 | 0.581632 | 0.581632 | 0.000000 | 0.000000 | 0.032768 | wal
+Physical paths and complete CREATE statements for every object: inventory.json. Rollback journals are transient: absent at a boundary means zero observed allocated bytes at that boundary, not no rollback-journal I/O during the interval.
+HISTORICAL_TABLE_COUNT: 143
+CURRENT_TABLE_COUNT: 146 current-catalog tables in 11 databases; 99 in the five original operational stores; 46 additional preserved dormant-preparation tables; 192 when the dormant artifact is included. Current catalog totals: 146 tables, 4 views, 192 indexes, 82 triggers. Three current tables are sqlite_sequence; excluding them gives 143 application tables, coincidentally matching the historical gross count but using a different definition. There are 127 distinct table names; same-name tables in different databases remain separately counted.
+TABLE_COUNT_DIFFERENCES: historical 143 = 97 operational + 46 dormant preparation. Current 146 = 143 - 46 dormant + 2 added journal tables + 47 tables in six auxiliary stores absent from the baseline root. Including the unchanged dormant artifact: 143 + 2 + 47 = 192. The baseline root was /mnt/luffy-data/luffy/operational/frozen-demo-de6b35fc83e8 at revision 08d574859114c6efc4b0d1b86f77d02c0f09a257. This is a comparison between operational generations, not a claim that the 47 auxiliary tables were created after October 10: five auxiliary files have October 4 mtimes and were simply absent from the selected October 10 root.
+Added to original stores: luffy.db.strategy_capacity_receipts; luffy.db.strategy_first_live_deployments. Together they add two autoindexes and five triggers. Removed from original stores: none. Dormant preparation schema: unchanged (46 tables, 1 view, 75 indexes, 7 triggers).
+Meaningful existing-table changes: candles.db.candle_floor adds window_version TEXT; luffy.db.decisions adds strategy_selection_json TEXT DEFAULT NULL and has a different physical order of existing optional columns. research_gauges min/max and research_controls status have different column order with the same declared types/defaults/constraints. candles table and attention.scan_sources_v1 differ only in DDL formatting. No other existing-table DDL changes, index removals or view changes were found against the captured baseline catalog.
+Auxiliary schema newly present in selected catalog — investigation.db: allocation_bindings, allocation_decisions, case_inputs, cases, collector_receipts, context_evidence, counterfactual_registrations, diagnostics, inputs, intelligence_traces, investigation_research_records, memory_assessed, memory_assessed_refused, memory_cases, memory_contexts, memory_measured_refused, memory_reasoning, memory_unassessable, memory_unassessable_refused, opportunity_contexts, population_events, population_meta, protocols, resource_receipts, typed_contexts, typed_outcome_meta, typed_outcomes, updates.
+Auxiliary schema newly present in selected catalog — execution-evidence.db: observations, sqlite_sequence.
+Auxiliary schema newly present in selected catalog — attention_learning.db: collector_receipts, diagnostics, episodes, forecast_sources, population_events, population_meta, protocols.
+Auxiliary schema newly present in selected catalog — accounting-worker/queue.db: attempts, jobs, learning_deliveries, meta.
+Auxiliary schema newly present in selected catalog — declared-population/attention.db: causes, scan_versions, scans, versions.
+Auxiliary schema newly present in selected catalog — stage5-public/public.db: observations, sqlite_sequence.
+Shared table names (separate physical instances, not a shared attachment or duplicate-count error):
+  market_raw_sources: candles.db, derivs.db, luffy.db
+  market_revisions: candles.db, derivs.db, luffy.db
+  collector_receipts: investigation.db, attention_learning.db
+  diagnostics: investigation.db, attention_learning.db
+  population_events: investigation.db, attention_learning.db
+  population_meta: investigation.db, attention_learning.db
+  protocols: investigation.db, attention_learning.db
+  journal_evidence_blobs_v1: luffy.db, attention.db, runtime-portfolio.db
+  journal_representation_v1: luffy.db, attention.db
+  sqlite_sequence: luffy.db, execution-evidence.db, stage5-public/public.db
+  causes: attention.db, declared-population/attention.db
+  scan_versions: attention.db, declared-population/attention.db
+  scans: attention.db, declared-population/attention.db
+  versions: attention.db, declared-population/attention.db
+  observations: execution-evidence.db, stage5-public/public.db
+
+MAIN WRITERS AND READERS:
+luffy.db: Kernel Journal, control/execution, learning capture/materialization, attention admission, optional research ledger; readers include Kernel, Dashboard Journal/owner reads, portfolio and learning replay. Existing October 10 ownership references are preserved in ownership-baseline.csv; those static references are not proof of execution.
+candles.db: DataFeed background queue and reference recorder write projections, revisions and raw payloads; Kernel features/cache and replay consumers read them. feed.background_acquisition=true in the Kernel. derivs.db: independent _derivatives_recorder thread writes through derivatives/market_provenance; Kernel feature/portfolio consumers read it.
+attention.db: observation Collector/store writes snapshots, causes and versions; Kernel, Dashboard read_latest and portfolio.current.freeze read it. runtime-portfolio.db: Kernel._portfolio_checkpoint -> portfolio.current.checkpoint writes; owner.queries and portfolio replay read it.
+investigation.db: observability.investigation worker is the static writer; Dashboard owner_view and portfolio freeze are readers. attention_learning.db: observability.learning/outcomes workers. declared-population/attention.db: declared population observation source. accounting-worker/queue.db: observability.accounting worker. stage5-public/public.db and execution-evidence.db: prospective/public execution evidence producers and replay consumers. The five October-4 auxiliary stores show no measured growth or rowid advances; execution-evidence was touched at current boot and did not grow during the window.
+Open-file evidence directly established Kernel holdings on luffy/candles/derivs (attention was also observed transiently) and Dashboard holdings on luffy. Transient SQLite readers/writers can close between observations; static catalog membership is broader than observed open descriptors. No additional configured database path was found in current configuration. No writer was established for the dormant preparation artifact; its owner is scripts/prepare_isolated_frozen.py.
+
+PER-CYCLE STORAGE:
+cycle | completion local | duration s | boundary interval s | DB allocated growth MB | evidence + app logs MB | syslog allocated MB | shared journal allocated MB | total tracked net allocated MB | monitor emitted message MB | Kernel process write MB
+266 | 2026-10-19T21:57:04.945+03:00 | 305.5 | 306.542 | 13.307904 | 0.491520 | 26.124288 | 0.000000 | 39.923712 | 153.266919 | 534.011904
+267 | 2026-10-19T22:01:16.580+03:00 | 250.6 | 251.635 | 12.513280 | 0.495616 | 21.327872 | 8.388608 | 42.725376 | 125.093023 | 309.862400
+268 | 2026-10-19T22:05:15.051+03:00 | 237.6 | 238.471 | 9.588736 | 0.483328 | 20.635648 | 0.000000 | 30.707712 | 121.047183 | 400.404480
+CYCLE_1_STORAGE_MB: 39.923712
+CYCLE_2_STORAGE_MB: 42.725376
+CYCLE_3_STORAGE_MB: 30.707712
+AVERAGE_STORAGE_MB_PER_CYCLE: 37.785600
+Total is current operational files plus measured shared system-log allocation. Shared journal files also contain unrelated processes; their LUFFY-exclusive allocation cannot be isolated from filesystem blocks. Whole-host free-space changes are recorded separately and are not charged to LUFFY. Four boundary scans took 0.261s, 0.822s, 0.684s, 0.674s. Detection lag was under 0.3s; cross-file snapshots are not atomic.
+PER_DATABASE_GROWTH: main + WAL + SHM + any observed rollback journal, allocated MB. Three cycle columns, then total:
+accounting-worker/queue.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+attention.db | -0.040960 | 3.276800 | -3.276800 | -0.040960
+attention_learning.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+candles.db | 11.509760 | 7.475200 | 7.831552 | 26.816512
+declared-population/attention.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+derivs.db | 0.000000 | 0.000000 | 3.014656 | 3.014656
+execution-evidence.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+investigation.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+luffy.db | 1.839104 | 1.761280 | 2.019328 | 5.619712
+runtime-portfolio.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+stage5-public/public.db | 0.000000 | 0.000000 | 0.000000 | 0.000000
+Portfolio added three checkpoints, three evaluations and 42 distinct compressed chunks while reusing 170 previously free pages (0.696320 MB of database pages); its main file allocated growth was zero. Across all three cycles, journal blob payloads added 2.615419 compressed MB (24.872212 logical MB), while portfolio chunks added 0.562928 compressed MB (2.658958 logical MB). The luffy and derivs WAL allocations were unchanged at the boundary endpoints. Attention allocation rose 3.276800 MB in cycle 2 and fell by the same amount in cycle 3; its full-window allocation delta was -0.040960 MB, including a 0.032768 MB SHM allocation change.
+Per-file main/WAL/SHM changes and committed page/freelist differences: summary.json. Reused pages are reported as internal occupancy changes, not new filesystem allocation.
+
+PER_TABLE_OR_EVIDENCE_FAMILY_GROWTH:
+An earlier successful indexed count verified 5,236 candle revisions for interval 1; its result is preserved after a later redundant count hit the progress limit. All table-range caveats and failed attempts remain in the machine evidence.
+Counts below are retained rows in bounded rowid intervals at inspection, not whole-table scans. Append evidence is distinguished from replacement/projection records. For state_kv, candle projections and attention records, newly assigned rowids do not imply net new business entities. Pruning and replacement can remove earlier rows; interval counts prove only the records still present when inspected. Unchanged maximum rowids do not exclude in-place updates.
+attention.db::causes | 13, 13, 13
+attention.db::scan_versions | 416, 416, 416
+attention.db::scans | 1, 1, 1
+candles.db::candles | 177, 576, 244
+candles.db::market_raw_sources | 19, 0, 0
+candles.db::market_revisions | 5236, 1799, 1880
+candles.db::refs | 22, 0, 0
+derivs.db::derivs | 0, 0, 6
+derivs.db::market_revisions | 0, 0, 2000
+luffy.db::brain_events | 2, 3, 2
+luffy.db::control_events | 1, 1, 1
+luffy.db::equity | 1, 1, 1
+luffy.db::equity_provenance | 1, 1, 1
+luffy.db::journal_evidence_blobs_v1 | 131, 110, 137
+luffy.db::learning_actions | 12, 12, 12
+luffy.db::learning_decision_source_manifests | 12, 12, 12
+luffy.db::learning_outcome_captures | 12, 12, 12
+luffy.db::learning_produced_chains | 12, 12, 12
+luffy.db::learning_registrations | 12, 12, 12
+luffy.db::learning_source_blobs | 12, 12, 12
+luffy.db::market_revisions | 14, 23, 16
+luffy.db::state_kv | 0, 0, 4
+runtime-portfolio.db::checkpoints | 1, 1, 1
+runtime-portfolio.db::evaluations | 1, 1, 1
+runtime-portfolio.db::journal_evidence_blobs_v1 | 18, 6, 18
+Revision record_json payload estimates use up to 64 uniformly sampled indexed rowids per interval; no B-tree/index bytes are assigned to individual tables. Character lengths closely approximate ASCII JSON bytes but are not guaranteed UTF-8 byte totals. Sampling error does not cover workload changes.
+Cycle 1 candles.db::market_revisions: 5236 retained records; estimated payload 5.502 MB-equivalent +/- 0.610 sampling-only; mean 1050.9 chars, range 798-2011.
+Cycle 1 luffy.db::market_revisions: 14 retained records; estimated payload 0.046 MB-equivalent +/- 0.000 sampling-only; mean 3319.1 chars, range 1945-11595.
+Cycle 2 candles.db::market_revisions: 1799 retained records; estimated payload 3.542 MB-equivalent +/- 0.012 sampling-only; mean 1968.8 chars, range 1920-2010.
+Cycle 2 luffy.db::market_revisions: 23 retained records; estimated payload 0.151 MB-equivalent +/- 0.000 sampling-only; mean 6574.3 chars, range 1941-11767.
+Cycle 3 candles.db::market_revisions: 1880 retained records; estimated payload 3.748 MB-equivalent +/- 0.008 sampling-only; mean 1993.5 chars, range 1923-2010.
+Cycle 3 derivs.db::market_revisions: 2000 retained records; estimated payload 2.283 MB-equivalent +/- 0.016 sampling-only; mean 1141.5 chars, range 1101-1190.
+Cycle 3 luffy.db::market_revisions: 16 retained records; estimated payload 0.070 MB-equivalent +/- 0.000 sampling-only; mean 4352.3 chars, range 1941-11678.
+Cycle 1 luffy.db::journal_evidence_blobs_v1: 131 distinct new blob rows, 8.613894 logical MB, 0.891038 compressed payload MB (excludes row/hash/index overhead).
+Cycle 1 runtime-portfolio.db::journal_evidence_blobs_v1: 18 distinct new blob rows, 1.152209 logical MB, 0.211175 compressed payload MB (excludes row/hash/index overhead).
+Cycle 2 luffy.db::journal_evidence_blobs_v1: 110 distinct new blob rows, 7.231565 logical MB, 0.794138 compressed payload MB (excludes row/hash/index overhead).
+Cycle 2 runtime-portfolio.db::journal_evidence_blobs_v1: 6 distinct new blob rows, 0.355100 logical MB, 0.140590 compressed payload MB (excludes row/hash/index overhead).
+Cycle 3 luffy.db::journal_evidence_blobs_v1: 137 distinct new blob rows, 9.026753 logical MB, 0.930243 compressed payload MB (excludes row/hash/index overhead).
+Cycle 3 runtime-portfolio.db::journal_evidence_blobs_v1: 18 distinct new blob rows, 1.151649 logical MB, 0.211163 compressed payload MB (excludes row/hash/index overhead).
+Learning source blobs in the recent 64-row sample averaged 435.5 characters; produced chains averaged 40,802 characters. A current chain sample was 40,777 bytes and its frozen capture 7,502 bytes; five metadata/lineage fields were exactly equal (353 canonical characters), but the complete chain outcome was not byte-identical to the capture. These are distinct registration/capture/replay stages. Per-cycle exact small-row payload lengths are in table-ranges.json.
+Research intermediate tables: no rowid advances observed; research_evidence sample empty. Existing research_combos/gauges/controls/batches data remains present. Investigation, attention_learning, declared-population, accounting queue and public/execution evidence stores showed zero observed allocated growth; no background research job was started.
+Runtime evidence main growth: safety-incidents ACTIVE/RESOLVED files. A sampled resolved incident is 239,165 logical bytes, of which context accounts for about 238,953 serialized characters; reason STALE. Heartbeat and health files are overwritten and can create substantial I/O while adding little net retained allocation.
+BACKGROUND_GROWTH_MB: 29.831168 verified physical market-store growth attributable to asynchronous candle/reference/derivative acquisition across the window; this is a lower-bound attribution for background work, not an exhaustive process split. Monitoring system logs are separate below. Journal/attention records and safety files mix cycle-triggered and independently scheduled work; no per-thread syscall tracing was installed.
+MONITORING_LOG_GROWTH_MB: syslog allocated 68.087808; shared journal allocated 8.388608; combined shared-system-log growth 76.476416. LUFFY monitor message content 399.407125 MB; content already forwarded to syslog is not added a second time. Per-cycle Python syslog content and all-monitor journal unit counters are recorded in summary.json/cycle-N-journal.json.
+Eight enabled/running timer schedules were observed: heartbeat-only and safety-only for four bootstrap generations (35851edb, 378be9ab, 8bf4b101, a922f70c). scripts.monitor prints complete safety result JSON. A first-interval sample parsed 150 process outputs; three component hashes each repeated unchanged 38 times. Journal fragments reach 49,152 message bytes while a bounded current syslog sample had uniform 8,141-byte physical lines. Thus logical message bytes, forwarded log bytes and allocated file blocks differ materially.
+
+TOP_10_STORAGE_CONSUMERS (allocated MB at final boundary):
+1. syslog [shared system files; LUFFY historical fraction unknown]: 6,976.704512
+2. luffy.db: 5,014.691840
+3. candles.db: 3,914.829824
+4. system_journal [shared system files; LUFFY historical fraction unknown]: 2,578.743296
+5. derivs.db: 2,350.510080
+6. runtime-portfolio.db: 2,300.477440
+7. runtime_evidence: 45.268992
+8. declared-population/attention.db: 33.296384
+9. investigation.db: 32.989184
+10. attention.db: 32.280576
+Current table-level allocation ranking was deliberately not produced: full dbstat over multi-GB operational tables would exceed bounded inspection. The October 11 table-size review used a different, older generation and is not substituted for current measurements.
+TOP_10_GROWTH_SOURCES (measured store/family allocation, MB across the window; ties at zero are explicit):
+1. syslog: 68.087808
+2. candles.db: 26.816512
+3. system_journal: 8.388608
+4. luffy.db: 5.619712
+5. derivs.db: 3.014656
+6. runtime_evidence: 1.466368
+7. kernel_logs: 0.004096
+8. dashboard_log: 0.000000
+9. accounting-worker/queue.db: 0.000000
+10. attention_learning.db: 0.000000
+Largest record-content sources within these stores are separately measured above: market revisions/raw-source bodies, journal compressed chunks, learning chain reconstruction, attention snapshot bodies, portfolio compressed evidence and monitoring context JSON. Their payload sizes are not added to the enclosing physical-store growth.
+
+REPEATED_DATA_FINDINGS:
+Candle indexed same-event samples: three sampled closed NXPC 4h bars each have 15 receipts with one identical content_hash; other sampled bars have 7-15 receipts and several changed payload hashes. Sampled candle record bodies repeat 1,059 bytes of source/API metadata inside roughly 1,936-2,011-byte records. These receipts retain distinct observation/request/revision identities, so equal content does not make them interchangeable evidence.
+Derivative indexed samples: BTC funding has 38 receipts with one numerical value but 38 different content hashes; OI, taker ratio and long/short samples have six receipts each with one numerical value and six hashes; basis sample has 12 receipts, two values and 12 hashes. Raw/request evidence can differ when the value does not. Samples are not global duplicate-rate estimates.
+Raw sources: current recent refresh sample includes a 1,323,486-character stablecoin historical response and an 883,928-character equal-weight alt-index source. market_raw_sources has a content-hash primary key; no byte-identical raw-body duplication rate across the full store was inferred.
+Journal brain admission events: recent logical manifests reference about 47.8 MB across 724 chunks. Adjacent sampled manifests share 384, 387 and 575 chunk references. Portfolio evaluation manifests reference about 6.13 MB across 87 chunks and share 29-42 adjacent chunk references. These are logical repeated references with existing content deduplication, not full independent physical copies. Compressed distinct-new-chunk bytes are reported above.
+Attention snapshots are large repeated full states: 23 recent rows sampled averaged about 1.258 million characters, maximum 1.512 million. Snapshot pruning, version sharing and WAL checkpoints make snapshot payload insertion differ from physical net growth. Necessary unique evidence consists of receipt clocks, changed source bodies, event/decision lineage and authority/checkpoint transitions; repeated representation includes unchanged source metadata, state/context subtrees and repeated references. This measurement makes no disposability decision.
+
+ATTRIBUTION_LIMITATIONS:
+Read-only mode=ro connections plus query_only; short metadata queries and bounded indexed rowid inspections; no immutable=1 reads of live WAL stores. A few reads hit contention or their progress limit and were recorded; no unbounded fallback scans. Per-table B-tree allocation, historical full-table duplicate rates and exact per-thread cycle/background I/O remain unmeasured. Snapshot observations span less than one second each but are not cross-database transactions; brief read locks in DELETE-mode SQLite can contend with writers. Observer output and small report artifacts are excluded from storage totals.
+Physical net allocated growth includes WAL high-water allocation, natural checkpoint/copy effects, rollback-journal presence and attention pruning. Committed page_count minus freelist_count measures database internal occupancy, not free filesystem bytes or per-table retained payload. A stable file can absorb new records in free pages. Process write_bytes counts block I/O (including overwritten/checkpointed/temporary pages), wchar counts syscall output, and cancelled_write_bytes is separately recorded. None is a retained-storage measure, and the counters must not be subtracted as though they were a storage ledger.
+Shared system journal allocation is an upper-scope observation, not exclusive LUFFY attribution. Full existing syslog/journal footprints include other processes. Python syslog bytes are independently tallied; journal unit metadata establishes the eight monitoring producers. Detached prior-release private health files were not included in current-instance runtime evidence totals. Whole-host df changes include unrelated work and open/deleted/temp files, so the gap against tracked totals is not unexplained LUFFY storage.
+These three cycles sample the present FROZEN/degraded workload. Asynchronous acquisition is bursty; three cycles cannot establish a long-run ACTIVE workload, a retention equilibrium or future checkpoint behavior. Forecasts below are conditional linear extrapolations, not guarantees. No retention, implementation or cleanup decision is made.
+
+CURRENT_FREE_SPACE at 2026-10-19T22:07:29.593+03:00: / 2,154.926080 MB, /mnt/luffy-data 12,054.863872 MB
+ESTIMATED_GROWTH_PER_DAY: tracked operational data/logs on data volume 4.000 GB/day; shared root system logs 8.294 GB/day; combined 12.294 GB/day at the observed rate.
+Independent whole-filesystem free-space consumption extrapolation (includes unrelated workloads): / 8.951 GB/day, /mnt/luffy-data 4.306 GB/day
+ESTIMATED_TIME_TO_DISK_EXHAUSTION from tracked rates: / 6.24 hours (0.26 days), /mnt/luffy-data 72.33 hours (3.01 days)
+At independent whole-filesystem observed consumption: / 5.78 hours (0.24 days), /mnt/luffy-data 67.18 hours (2.80 days)
+SAFETY: root was already 96% used at start and remains the nearer constraint. Disk-full errors were present earlier in Kernel logs. This was reported immediately. No cleanup or service action was attempted.
+Evidence: inventory.json; database-modes.json; open-database-evidence.json; ownership-baseline.csv; boundary-0..3.json; boundary-N-cycle.json; file-telemetry.jsonl; summary.json; table-ranges.json; revision-payload-estimates.json; payload-samples.json; repeated-data.json; derivative-repeat-samples.json; source-families.json; incident-sample.json; cycle-1..3-journal.json. Measurement scripts are retained alongside these small artifacts and were never installed in application code.

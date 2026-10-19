@@ -1,0 +1,82 @@
+{
+  "implementation_commit": "9eeeccfd86f7c79ca098767fb045f951fe9c8c61",
+  "base": "f10f974bf8e88820428d03f1bdb9203d3748a5d4",
+  "branch": "sol1/operational-data-lifecycle",
+  "d7_tip": "e6a403788715df91a0fd6350f3acce6c43ca5da5",
+  "d7_merge_tree": {
+    "status": "CLEAN",
+    "tree": "d7186485fc4e2de9ba01abc9c04d762eba676732"
+  },
+  "tests": [
+    {
+      "log": "focused-regression.log",
+      "passed": 219,
+      "deselected": 2,
+      "scope": "D6/replay/ledger/storage/portfolio/owner/attention; before final extra safeguards"
+    },
+    {
+      "log": "final-lifecycle-safety.log",
+      "passed": 44,
+      "scope": "final code: lifecycle, storage cleanup, research ledger"
+    },
+    {
+      "log": "retained-consumers.log",
+      "passed": 42,
+      "scope": "investigation memory exports, investigation consumers, forecast learning"
+    },
+    {
+      "log": "earlier-full-102.log",
+      "passed": 102,
+      "scope": "earlier complete focused run including two migration tests requiring 10 GiB headroom"
+    },
+    {
+      "log": "final-migrations.log",
+      "passed": 2,
+      "scope": "Final migration retry once host capacity met the unchanged 10 GiB prerequisite"
+    }
+  ],
+  "exclusions": {
+    "migration_tests": [
+      "test_interrupted_migration_never_verified",
+      "test_full_small_migration_preserves_rowid_sequence_schema"
+    ],
+    "reason": "Main 219-test repetition deselected two capacity-dependent cases; final separate retry passed both once free space met the original prerequisite.",
+    "exploratory_predictive": "Interrupted after two passing cases; not counted as a completed suite."
+  },
+  "boundary": {
+    "production_row_deletions": 0,
+    "production_checkpoints": 0,
+    "production_vacuum": 0,
+    "deployments": 0,
+    "restarts": 0,
+    "provider_requests": 0,
+    "corrected_dry_run": {
+      "filesystem": "verified read-only per store",
+      "successful_operational_writes": 0,
+      "network": "isolated"
+    },
+    "initial_exception": "mode=ro-only SQLite attempt wrote attention.db-shm; no database records changed/deleted; disclosed in REPORT.md"
+  },
+  "changed_paths": [
+    "scripts/storage_cleanup.py",
+    "tests/test_operational_lifecycle.py",
+    "trader/core/journal_evidence.py",
+    "trader/data/market_provenance.py",
+    "trader/persistence/storage_cleanup.py",
+    "trader/portfolio/runtime.py",
+    "trader/research/ledger.py",
+    "trader/research/predictive_experiment.py"
+  ],
+  "source_sha256": {
+    "scripts/storage_cleanup.py": "5afbfab8afa0a23eb141d6bcc342af1025bc230d8f9d78dea1153bbc13eba830",
+    "tests/test_operational_lifecycle.py": "cb01efa97e46464468c1ab85de01d2957256360cdd5fb27b30f0f37bc562416b",
+    "trader/core/journal_evidence.py": "6f7ed2869cbf7fe55927a487b67e1facbaa8b6b5dca8a786046b42e2802f1ff2",
+    "trader/data/market_provenance.py": "ba15b07d4bfe62dbe984790aca9cac0724406256873fefcd0fd94e33257e1f28",
+    "trader/persistence/storage_cleanup.py": "0513fc80cf8f37cab380d497bcb6668267a1de6653aed7081161fb527be340e7",
+    "trader/portfolio/runtime.py": "8dafa3cc407c15c2ee39ce276527eab7d102f1d2ea341e6958d83fc27f51e485",
+    "trader/research/ledger.py": "63f5afeb13f936a4d605dfb163d92a98ec2f3ac1ffff9d096779bc455771888f",
+    "trader/research/predictive_experiment.py": "2698f5af9ddc0791906aed40da4620029e92cf4d7f9d33912edebda22d8fe9eb"
+  },
+  "original_inventory_reused": true,
+  "new_database_tables_or_services": 0
+}

@@ -1,0 +1,2 @@
+Observed later repetition: tests/test_journal_evidence_repair.py::test_interrupted_migration_never_verified failed at scripts/compact_journal.py:64 with RuntimeError: estimate_plus_headroom_does_not_fit. HEADROOM is 10*1024**3 bytes; data-volume free space was then below that threshold. This check was not weakened. Both migration cases passed in earlier-full-102.log. The final 219-test repetition deselected these two cases.
+Final retry: both cases passed in final-migrations.log after available host free space met the unchanged prerequisite.

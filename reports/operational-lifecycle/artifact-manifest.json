@@ -1,0 +1,28 @@
+{
+  "version": "operational-lifecycle.integration.v1",
+  "files": {
+    "INTEGRATE.txt": "70e498c10addc2fa4ffbfece0c224ae7c816dd1d672123823bacae264a728cd6",
+    "MEASUREMENTS.json": "028170dc8a59ee3e3d4d4705754261b91fa0ca8bc47b29fc8d874456f7926004",
+    "REPORT.md": "2516ceec0e0265aa9ffa6a02dfeaaec0bb445a06d85d9c4e9477cc6ace6a20d2",
+    "capacity-prerequisite-note.txt": "6e6987f4a0987c2ab4559439106702a03ccb5831352ba1bb98aa299f67b70db6",
+    "earlier-full-102.log": "a3db14e58f80a4fe338b4f918fb14b2150d5740ed878ad30e5cd15aff5e660a9",
+    "exploratory-predictive-interrupted.log": "1f7935c1ff517ff71ec4a7b5720d26cfc678cadff24b36893e94af585c785d18",
+    "final-lifecycle-safety.log": "874f271d9192667ff11fe8f78c7902f2d891be4d208aa86d19ed5d03eb403ec0",
+    "final-migrations.log": "c9104009f8d316fbd88020f3dfb1ea271692c623b1a4c29dd4a2d2c07cbc4862",
+    "first-batch-approval-records.json": "445690a336b34482d35a010d28bd0196a2073e62b275644fb625b2d30f0c93e8",
+    "focused-regression.log": "f96891f4b3266b78c8720f1a569e19876a52b842a3abd1130474bd9cf88c16e7",
+    "graph-update.log": "952a0c666235ba4f4047340b7580708a3447f1f0e8a579d274bc7298461892f2",
+    "initial-ro-audit.strace": "5abb01e1d06c14faa339bb5b5c53254924f614474f4367790aa8c34a70fbce3a",
+    "measure_sample.py": "3b1a05da84a32a462a22b6dd8c2083f26e3ddf8cbc803cfcc4183b8e85313fc6",
+    "operational-dry-run.json": "002bd1591ca2ddddfd99ac70cbff8138a422a45bd8d30016e1241a3af4ed6739",
+    "protected-dry-run-syscalls.txt": "1dc8a3209725a160456222d51078c7e2c6bdbe79a08791a5ea42e26e0a2a0e7a",
+    "retained-consumers.log": "3c86a217920b0c0854dc2cc8af96118326dbf8ab9bb7d88f4389243ce21908df",
+    "retention-rules.json": "018d7dcf99e7dde98420c6ee6206a49f76da952afec08841d24d039ca9f79e4e",
+    "sample-rehearsal.json": "4a022afbb3e7927697c2676295379cdd9b66b144828a9d708d33c5f84e94484a",
+    "supplied-evidence/REPORT.txt": "3777962693c07ec3f88c55f8850979600dfd5cb811e7fd8ba1419015dd21380d",
+    "supplied-evidence/inventory.json": "f31201ea430149f3f33bb45b85eb4be3de2fa8e144662759daaf1fcd5069062e",
+    "supplied-evidence/ownership-baseline.csv": "b8757a4ede8bf7faaf39165ed165e3832a955623a926f40d5383dbdcad3ad957",
+    "supplied-evidence-sha256.json": "667753b3bb0af07564e7acbddaf44314439d0dca314b14e8cbbc530c70f741ba",
+    "verification.json": "e7a5de8630e931bea5ab73e713057f738f51288708d3740e00b83bdf94e3c9f0"
+  }
+}

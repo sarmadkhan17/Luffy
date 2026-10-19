@@ -1,0 +1,4024 @@
+{
+  "candles.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/candles.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "market_revision_cut",
+        "table": "market_revisions",
+        "ddl": "CREATE INDEX market_revision_cut\n        ON market_revisions(series_key, event_ms, available_ms, observed_ms)"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_candle_floor_1",
+        "table": "candle_floor",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_candles_1",
+        "table": "candles",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_raw_sources_1",
+        "table": "market_raw_sources",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_revisions_1",
+        "table": "market_revisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_refs_1",
+        "table": "refs",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "candle_floor",
+        "table": "candle_floor",
+        "ddl": "CREATE TABLE candle_floor (symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER NOT NULL, window_version TEXT, PRIMARY KEY (symbol, tf))"
+      },
+      {
+        "type": "table",
+        "name": "candles",
+        "table": "candles",
+        "ddl": "CREATE TABLE candles (symbol TEXT NOT NULL, tf TEXT NOT NULL, ts INTEGER NOT NULL,open REAL, high REAL, low REAL, close REAL, volume REAL,taker_buy REAL, PRIMARY KEY (symbol, tf, ts))"
+      },
+      {
+        "type": "table",
+        "name": "market_raw_sources",
+        "table": "market_raw_sources",
+        "ddl": "CREATE TABLE market_raw_sources (\n        content_hash TEXT PRIMARY KEY, source TEXT, raw_json TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "market_revisions",
+        "table": "market_revisions",
+        "ddl": "CREATE TABLE market_revisions (\n        revision_id TEXT PRIMARY KEY, series_key TEXT NOT NULL, event_ms INTEGER NOT NULL,\n        available_ms INTEGER, observed_ms INTEGER NOT NULL, record_json TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "refs",
+        "table": "refs",
+        "ddl": "CREATE TABLE refs (key TEXT NOT NULL, ts INTEGER NOT NULL, open REAL, high REAL, low REAL, close REAL, volume REAL, PRIMARY KEY (key, ts))"
+      }
+    ],
+    "counts": {
+      "index": 6,
+      "table": 5
+    },
+    "bytes": 3888009216,
+    "allocated": 3888013312,
+    "diff": {
+      "added": [],
+      "removed": [],
+      "changed": [
+        [
+          "table",
+          "candles"
+        ],
+        [
+          "table",
+          "candle_floor"
+        ]
+      ]
+    }
+  },
+  "investigation.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/investigation.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "memory_assessed_key",
+        "table": "memory_assessed",
+        "ddl": "CREATE INDEX memory_assessed_key\n        ON memory_assessed(family, catalog_id, config_id, symbol, available_ms)"
+      },
+      {
+        "type": "index",
+        "name": "one_open_symbol",
+        "table": "cases",
+        "ddl": "CREATE UNIQUE INDEX one_open_symbol ON cases(symbol) WHERE terminal_ms IS NULL"
+      },
+      {
+        "type": "index",
+        "name": "receipt_case",
+        "table": "resource_receipts",
+        "ddl": "CREATE INDEX receipt_case ON resource_receipts(case_id)"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_allocation_bindings_1",
+        "table": "allocation_bindings",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_allocation_decisions_1",
+        "table": "allocation_decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_allocation_decisions_2",
+        "table": "allocation_decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_case_inputs_1",
+        "table": "case_inputs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_cases_1",
+        "table": "cases",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_cases_2",
+        "table": "cases",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_collector_receipts_1",
+        "table": "collector_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_context_evidence_1",
+        "table": "context_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_counterfactual_registrations_1",
+        "table": "counterfactual_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_inputs_1",
+        "table": "inputs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_intelligence_traces_1",
+        "table": "intelligence_traces",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_intelligence_traces_2",
+        "table": "intelligence_traces",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_investigation_research_records_1",
+        "table": "investigation_research_records",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_investigation_research_records_2",
+        "table": "investigation_research_records",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_assessed_1",
+        "table": "memory_assessed",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_assessed_refused_1",
+        "table": "memory_assessed_refused",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_cases_1",
+        "table": "memory_cases",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_contexts_1",
+        "table": "memory_contexts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_measured_refused_1",
+        "table": "memory_measured_refused",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_reasoning_1",
+        "table": "memory_reasoning",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_unassessable_1",
+        "table": "memory_unassessable",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_memory_unassessable_refused_1",
+        "table": "memory_unassessable_refused",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_opportunity_contexts_1",
+        "table": "opportunity_contexts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_opportunity_contexts_2",
+        "table": "opportunity_contexts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_population_events_1",
+        "table": "population_events",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_population_meta_1",
+        "table": "population_meta",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_protocols_1",
+        "table": "protocols",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_resource_receipts_1",
+        "table": "resource_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_typed_contexts_1",
+        "table": "typed_contexts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_typed_outcome_meta_1",
+        "table": "typed_outcome_meta",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_typed_outcomes_1",
+        "table": "typed_outcomes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_updates_1",
+        "table": "updates",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "update_case",
+        "table": "updates",
+        "ddl": "CREATE INDEX update_case ON updates(case_id, observed_ms)"
+      },
+      {
+        "type": "table",
+        "name": "allocation_bindings",
+        "table": "allocation_bindings",
+        "ddl": "CREATE TABLE allocation_bindings(declaration_version TEXT PRIMARY KEY,\n        policy TEXT NOT NULL, bound_ms INTEGER NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "allocation_decisions",
+        "table": "allocation_decisions",
+        "ddl": "CREATE TABLE allocation_decisions(id TEXT PRIMARY KEY, scan_id TEXT NOT NULL,\n        policy_version TEXT NOT NULL, decided_ms INTEGER NOT NULL, payload TEXT NOT NULL,\n        UNIQUE(scan_id, policy_version))"
+      },
+      {
+        "type": "table",
+        "name": "case_inputs",
+        "table": "case_inputs",
+        "ddl": "CREATE TABLE case_inputs(case_id TEXT, input_id TEXT, PRIMARY KEY(case_id,input_id))"
+      },
+      {
+        "type": "table",
+        "name": "cases",
+        "table": "cases",
+        "ddl": "CREATE TABLE cases(id TEXT PRIMARY KEY, episode_id TEXT UNIQUE, symbol TEXT,\n        created_ms INTEGER, terminal_ms INTEGER, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "collector_receipts",
+        "table": "collector_receipts",
+        "ddl": "CREATE TABLE collector_receipts (key TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "context_evidence",
+        "table": "context_evidence",
+        "ddl": "CREATE TABLE context_evidence(sha256 TEXT PRIMARY KEY, payload BLOB NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "counterfactual_registrations",
+        "table": "counterfactual_registrations",
+        "ddl": "CREATE TABLE counterfactual_registrations(id TEXT PRIMARY KEY, registered_ms INTEGER, terminal_ms INTEGER, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "diagnostics",
+        "table": "diagnostics",
+        "ddl": "CREATE TABLE diagnostics(ts_ms INTEGER, detail TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "inputs",
+        "table": "inputs",
+        "ddl": "CREATE TABLE inputs(id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "intelligence_traces",
+        "table": "intelligence_traces",
+        "ddl": "CREATE TABLE intelligence_traces(id TEXT PRIMARY KEY, investigation_id TEXT NOT NULL UNIQUE, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "investigation_research_records",
+        "table": "investigation_research_records",
+        "ddl": "CREATE TABLE investigation_research_records (\n    record_type TEXT NOT NULL, record_id TEXT NOT NULL,\n    investigation_id TEXT NOT NULL,\n    record_key TEXT NOT NULL,          -- investigation id (Q, P) or update event id (E, R, run, bank)\n    canonical_sha256 TEXT NOT NULL, canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    PRIMARY KEY (record_type, record_id), UNIQUE (record_type, record_key))"
+      },
+      {
+        "type": "table",
+        "name": "memory_assessed",
+        "table": "memory_assessed",
+        "ddl": "CREATE TABLE memory_assessed(source_id TEXT PRIMARY KEY, family TEXT NOT NULL,\n        catalog_id TEXT NOT NULL, config_id TEXT NOT NULL, symbol TEXT NOT NULL, known_ms INTEGER NOT NULL,\n        available_ms INTEGER NOT NULL, case_id TEXT NOT NULL, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_assessed_refused",
+        "table": "memory_assessed_refused",
+        "ddl": "CREATE TABLE memory_assessed_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_cases",
+        "table": "memory_cases",
+        "ddl": "CREATE TABLE memory_cases(source_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_contexts",
+        "table": "memory_contexts",
+        "ddl": "CREATE TABLE memory_contexts(case_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_measured_refused",
+        "table": "memory_measured_refused",
+        "ddl": "CREATE TABLE memory_measured_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_reasoning",
+        "table": "memory_reasoning",
+        "ddl": "CREATE TABLE memory_reasoning(event_id TEXT PRIMARY KEY, case_id TEXT, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_unassessable",
+        "table": "memory_unassessable",
+        "ddl": "CREATE TABLE memory_unassessable(source_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "memory_unassessable_refused",
+        "table": "memory_unassessable_refused",
+        "ddl": "CREATE TABLE memory_unassessable_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "opportunity_contexts",
+        "table": "opportunity_contexts",
+        "ddl": "CREATE TABLE opportunity_contexts(id TEXT PRIMARY KEY,\n        investigation_id TEXT NOT NULL UNIQUE, symbol TEXT NOT NULL, as_of_ms INTEGER NOT NULL,\n        scan_sha256 TEXT NOT NULL, allocation_sha256 TEXT NOT NULL, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "population_events",
+        "table": "population_events",
+        "ddl": "CREATE TABLE population_events (id TEXT PRIMARY KEY, hash TEXT NOT NULL, local_imported_ms INTEGER NOT NULL, payload TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "population_meta",
+        "table": "population_meta",
+        "ddl": "CREATE TABLE population_meta (key TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "protocols",
+        "table": "protocols",
+        "ddl": "CREATE TABLE protocols(id TEXT PRIMARY KEY, activated_ms INTEGER, payload TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "resource_receipts",
+        "table": "resource_receipts",
+        "ddl": "CREATE TABLE resource_receipts(id TEXT PRIMARY KEY, case_id TEXT NOT NULL,\n        stage TEXT NOT NULL, execution_id TEXT NOT NULL, recorded_ms INTEGER NOT NULL,\n        payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "typed_contexts",
+        "table": "typed_contexts",
+        "ddl": "CREATE TABLE typed_contexts(case_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "typed_outcome_meta",
+        "table": "typed_outcome_meta",
+        "ddl": "CREATE TABLE typed_outcome_meta(key TEXT PRIMARY KEY, value INTEGER)"
+      },
+      {
+        "type": "table",
+        "name": "typed_outcomes",
+        "table": "typed_outcomes",
+        "ddl": "CREATE TABLE typed_outcomes(source_key TEXT PRIMARY KEY, imported_ms INTEGER, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "updates",
+        "table": "updates",
+        "ddl": "CREATE TABLE updates(id TEXT PRIMARY KEY, case_id TEXT, observed_ms INTEGER, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "trigger",
+        "name": "investigation_research_records_no_delete",
+        "table": "investigation_research_records",
+        "ddl": "CREATE TRIGGER investigation_research_records_no_delete\nBEFORE DELETE ON investigation_research_records\nBEGIN SELECT RAISE(ABORT, 'investigation_research_records is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "investigation_research_records_no_update",
+        "table": "investigation_research_records",
+        "ddl": "CREATE TRIGGER investigation_research_records_no_update\nBEFORE UPDATE ON investigation_research_records\nBEGIN SELECT RAISE(ABORT, 'investigation_research_records is immutable'); END"
+      }
+    ],
+    "counts": {
+      "index": 36,
+      "table": 28,
+      "trigger": 2
+    },
+    "bytes": 32989184,
+    "allocated": 32989184,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "context_evidence"
+        ],
+        [
+          "table",
+          "memory_assessed_refused"
+        ],
+        [
+          "table",
+          "protocols"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_allocation_bindings_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_counterfactual_registrations_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_allocation_decisions_2"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_intelligence_traces_2"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_protocols_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_population_meta_1"
+        ],
+        [
+          "table",
+          "allocation_decisions"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_opportunity_contexts_2"
+        ],
+        [
+          "table",
+          "updates"
+        ],
+        [
+          "table",
+          "diagnostics"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_collector_receipts_1"
+        ],
+        [
+          "table",
+          "typed_contexts"
+        ],
+        [
+          "index",
+          "one_open_symbol"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_intelligence_traces_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_unassessable_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_measured_refused_1"
+        ],
+        [
+          "table",
+          "memory_assessed"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_resource_receipts_1"
+        ],
+        [
+          "table",
+          "memory_contexts"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_reasoning_1"
+        ],
+        [
+          "table",
+          "population_events"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_context_evidence_1"
+        ],
+        [
+          "index",
+          "update_case"
+        ],
+        [
+          "table",
+          "resource_receipts"
+        ],
+        [
+          "table",
+          "typed_outcomes"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_unassessable_refused_1"
+        ],
+        [
+          "trigger",
+          "investigation_research_records_no_update"
+        ],
+        [
+          "table",
+          "counterfactual_registrations"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_cases_1"
+        ],
+        [
+          "table",
+          "collector_receipts"
+        ],
+        [
+          "table",
+          "typed_outcome_meta"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_case_inputs_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_investigation_research_records_2"
+        ],
+        [
+          "table",
+          "inputs"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_allocation_decisions_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_contexts_1"
+        ],
+        [
+          "trigger",
+          "investigation_research_records_no_delete"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_assessed_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_typed_outcome_meta_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_updates_1"
+        ],
+        [
+          "table",
+          "case_inputs"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_investigation_research_records_1"
+        ],
+        [
+          "table",
+          "cases"
+        ],
+        [
+          "index",
+          "receipt_case"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_memory_assessed_refused_1"
+        ],
+        [
+          "table",
+          "memory_unassessable_refused"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_population_events_1"
+        ],
+        [
+          "table",
+          "population_meta"
+        ],
+        [
+          "table",
+          "memory_measured_refused"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_typed_outcomes_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_cases_2"
+        ],
+        [
+          "index",
+          "memory_assessed_key"
+        ],
+        [
+          "table",
+          "intelligence_traces"
+        ],
+        [
+          "table",
+          "opportunity_contexts"
+        ],
+        [
+          "table",
+          "investigation_research_records"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_opportunity_contexts_1"
+        ],
+        [
+          "table",
+          "memory_reasoning"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_inputs_1"
+        ],
+        [
+          "table",
+          "memory_unassessable"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_typed_contexts_1"
+        ],
+        [
+          "table",
+          "memory_cases"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_cases_1"
+        ],
+        [
+          "table",
+          "allocation_bindings"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "derivs.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/derivs.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "market_revision_cut",
+        "table": "market_revisions",
+        "ddl": "CREATE INDEX market_revision_cut\n        ON market_revisions(series_key, event_ms, available_ms, observed_ms)"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_derivs_1",
+        "table": "derivs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_raw_sources_1",
+        "table": "market_raw_sources",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_revisions_1",
+        "table": "market_revisions",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "derivs",
+        "table": "derivs",
+        "ddl": "CREATE TABLE derivs (symbol TEXT NOT NULL, series TEXT NOT NULL, ts INTEGER NOT NULL, value REAL, PRIMARY KEY (symbol, series, ts))"
+      },
+      {
+        "type": "table",
+        "name": "market_raw_sources",
+        "table": "market_raw_sources",
+        "ddl": "CREATE TABLE market_raw_sources (\n        content_hash TEXT PRIMARY KEY, source TEXT, raw_json TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "market_revisions",
+        "table": "market_revisions",
+        "ddl": "CREATE TABLE market_revisions (\n        revision_id TEXT PRIMARY KEY, series_key TEXT NOT NULL, event_ms INTEGER NOT NULL,\n        available_ms INTEGER, observed_ms INTEGER NOT NULL, record_json TEXT NOT NULL)"
+      }
+    ],
+    "counts": {
+      "index": 4,
+      "table": 3
+    },
+    "bytes": 2234531840,
+    "allocated": 2234540032,
+    "diff": {
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "luffy.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/luffy.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "attention_fetch_outcomes_sel",
+        "table": "attention_fetch_outcomes",
+        "ddl": "CREATE INDEX attention_fetch_outcomes_sel ON attention_fetch_outcomes(selection_id,id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_cycles_ts",
+        "table": "cycles",
+        "ddl": "CREATE INDEX idx_cycles_ts ON cycles(ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_current_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_current_ts ON decisions(ts DESC)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_directional_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_directional_ts ON decisions(ts)\n    WHERE action!='HOLD'"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_exec",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_exec ON decisions(executed)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_executed_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_executed_ts ON decisions(ts) WHERE executed=1"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_rejected_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_rejected_ts ON decisions(ts)\n    WHERE action!='HOLD' AND executed=0 AND skip_reason IS NOT NULL AND skip_reason!=''"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_skipped_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_skipped_ts ON decisions(ts)\n    WHERE action!='HOLD' AND executed=0"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_symbol",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_symbol ON decisions(symbol, ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_research_combos_pick",
+        "table": "research_combos",
+        "ddl": "CREATE INDEX idx_research_combos_pick\n    ON research_combos(tf, geo, k, verdict)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_opened",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_opened ON trades(opened_at, id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_status",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_status ON trades(status)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_status_opened",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_status_opened ON trades(status, opened_at, id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_strategy",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_strategy ON trades(strategy_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_agent",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_agent ON votes(agent, ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_cycle_symbol",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_cycle_symbol ON votes(cycle_id, symbol)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_symbol",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_symbol ON votes(symbol, ts)"
+      },
+      {
+        "type": "index",
+        "name": "market_revision_cut",
+        "table": "market_revisions",
+        "ddl": "CREATE INDEX market_revision_cut\n        ON market_revisions(series_key, event_ms, available_ms, observed_ms)"
+      },
+      {
+        "type": "index",
+        "name": "owner_audit_ts",
+        "table": "owner_audit",
+        "ddl": "CREATE INDEX owner_audit_ts ON owner_audit(ts)"
+      },
+      {
+        "type": "index",
+        "name": "owner_requests_finished",
+        "table": "owner_requests",
+        "ddl": "CREATE INDEX owner_requests_finished ON owner_requests(finished_at)"
+      },
+      {
+        "type": "index",
+        "name": "paper_open_symbol",
+        "table": "versioned_paper_trades",
+        "ddl": "CREATE UNIQUE INDEX paper_open_symbol ON versioned_paper_trades(symbol) WHERE status='open'"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attention_cursor_1",
+        "table": "attention_cursor",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attention_selections_1",
+        "table": "attention_selections",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_cycles_1",
+        "table": "cycles",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_decisions_1",
+        "table": "decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_equity_1",
+        "table": "equity",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_equity_provenance_1",
+        "table": "equity_provenance",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_accounting_1",
+        "table": "execution_accounting",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_1",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_2",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_3",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_evidence_blobs_v1_1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_representation_v1_1",
+        "table": "journal_representation_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_actions_1",
+        "table": "learning_actions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_decision_source_manifests_1",
+        "table": "learning_decision_source_manifests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_decision_source_manifests_2",
+        "table": "learning_decision_source_manifests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_outcome_captures_1",
+        "table": "learning_outcome_captures",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_outcome_captures_2",
+        "table": "learning_outcome_captures",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_produced_chains_1",
+        "table": "learning_produced_chains",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_registrations_1",
+        "table": "learning_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_registrations_2",
+        "table": "learning_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_source_blobs_1",
+        "table": "learning_source_blobs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_raw_sources_1",
+        "table": "market_raw_sources",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_market_revisions_1",
+        "table": "market_revisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_outcomes_1",
+        "table": "outcomes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_owner_requests_1",
+        "table": "owner_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_paper_risk_kv_1",
+        "table": "paper_risk_kv",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_registry_contents_1",
+        "table": "registry_contents",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_registry_snapshots_1",
+        "table": "registry_snapshots",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_bank_objects_1",
+        "table": "research_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_bank_objects_2",
+        "table": "research_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_candidates_1",
+        "table": "research_candidates",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_combos_1",
+        "table": "research_combos",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_controls_1",
+        "table": "research_controls",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_evidence_1",
+        "table": "research_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_evidence_2",
+        "table": "research_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_gauges_1",
+        "table": "research_gauges",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_next_questions_1",
+        "table": "research_next_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_next_questions_2",
+        "table": "research_next_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_plans_1",
+        "table": "research_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_plans_2",
+        "table": "research_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_questions_1",
+        "table": "research_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_questions_2",
+        "table": "research_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_registrations_1",
+        "table": "research_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_registrations_2",
+        "table": "research_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_results_1",
+        "table": "research_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_results_2",
+        "table": "research_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_runs_1",
+        "table": "research_runs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_slices_1",
+        "table": "research_slices",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_bank_objects_1",
+        "table": "research_unreadable_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_bank_objects_2",
+        "table": "research_unreadable_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_evidence_1",
+        "table": "research_unreadable_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_evidence_2",
+        "table": "research_unreadable_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_plans_1",
+        "table": "research_unreadable_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_plans_2",
+        "table": "research_unreadable_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_questions_1",
+        "table": "research_unreadable_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_questions_2",
+        "table": "research_unreadable_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_results_1",
+        "table": "research_unreadable_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_results_2",
+        "table": "research_unreadable_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_runs_1",
+        "table": "research_unreadable_runs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_state_kv_1",
+        "table": "state_kv",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategies_1",
+        "table": "strategies",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_approval_decisions_1",
+        "table": "strategy_approval_decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_approval_decisions_2",
+        "table": "strategy_approval_decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_approval_requests_1",
+        "table": "strategy_approval_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_approval_requests_2",
+        "table": "strategy_approval_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_capacity_receipts_1",
+        "table": "strategy_capacity_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_first_live_deployments_1",
+        "table": "strategy_first_live_deployments",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_legacy_authorities_1",
+        "table": "strategy_legacy_authorities",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_probation_receipts_1",
+        "table": "strategy_probation_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_validation_receipts_1",
+        "table": "strategy_validation_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_validation_receipts_2",
+        "table": "strategy_validation_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_version_events_1",
+        "table": "strategy_version_events",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_version_installs_1",
+        "table": "strategy_version_installs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_version_installs_2",
+        "table": "strategy_version_installs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_versions_1",
+        "table": "strategy_versions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_trade_fills_1",
+        "table": "trade_fills",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_trades_1",
+        "table": "trades",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_universe_revisions_1",
+        "table": "universe_revisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_universe_untradeable_1",
+        "table": "universe_untradeable",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_venue_position_snapshots_1",
+        "table": "venue_position_snapshots",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versioned_paper_cost_receipts_1",
+        "table": "versioned_paper_cost_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versioned_paper_cost_sources_1",
+        "table": "versioned_paper_cost_sources",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versioned_paper_exit_evidence_1",
+        "table": "versioned_paper_exit_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versioned_paper_trades_1",
+        "table": "versioned_paper_trades",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versioned_paper_trades_2",
+        "table": "versioned_paper_trades",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "trade_accounting_bookings_trade",
+        "table": "trade_accounting_bookings",
+        "ddl": "CREATE INDEX trade_accounting_bookings_trade ON trade_accounting_bookings(trade_id,id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_order",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_order ON trade_fills(symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_scoped",
+        "table": "trade_fills",
+        "ddl": "CREATE UNIQUE INDEX trade_fills_scoped\n    ON trade_fills(market_type, symbol, fill_key)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_scoped_order",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_scoped_order\n    ON trade_fills(market_type, symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_trade",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_trade ON trade_fills(trade_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_booking",
+        "table": "trade_legs",
+        "ddl": "CREATE UNIQUE INDEX trade_legs_booking ON trade_legs(booking_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_order",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_order ON trade_legs(symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_scoped_order",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_scoped_order\n    ON trade_legs(market_type, symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_trade",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_trade ON trade_legs(trade_id, id)"
+      },
+      {
+        "type": "index",
+        "name": "venue_position_snapshots_time",
+        "table": "venue_position_snapshots",
+        "ddl": "CREATE INDEX venue_position_snapshots_time ON venue_position_snapshots(observed_at_ms)"
+      },
+      {
+        "type": "table",
+        "name": "attention_cursor",
+        "table": "attention_cursor",
+        "ddl": "CREATE TABLE attention_cursor (\n    name TEXT PRIMARY KEY,\n    value TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "attention_fetch_outcomes",
+        "table": "attention_fetch_outcomes",
+        "ddl": "CREATE TABLE attention_fetch_outcomes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    selection_id TEXT NOT NULL REFERENCES attention_selections(selection_id),\n    status TEXT NOT NULL,\n    reason TEXT NOT NULL,\n    started_ms INTEGER,\n    ended_ms INTEGER,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "attention_selections",
+        "table": "attention_selections",
+        "ddl": "CREATE TABLE attention_selections (\n    selection_id TEXT PRIMARY KEY,   -- sha256(canonical_json)\n    rule_version TEXT NOT NULL,\n    cycle_as_of_ms INTEGER NOT NULL,\n    outcome TEXT NOT NULL,\n    snapshot_id TEXT NOT NULL,\n    snapshot_as_of_ms INTEGER NOT NULL,\n    registry_age_ms INTEGER NOT NULL,\n    max_snapshot_age_ms INTEGER NOT NULL,\n    selected_id TEXT,\n    selected_symbol TEXT,\n    cursor_before TEXT,\n    cursor_after TEXT,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "brain_events",
+        "table": "brain_events",
+        "ddl": "CREATE TABLE brain_events (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    ts TEXT NOT NULL,\n    kind TEXT NOT NULL,              -- review / promote / demote / retire / propose / mutate / note\n    subject TEXT,                    -- strategy id or scope\n    detail TEXT                      -- free text / JSON\n)"
+      },
+      {
+        "type": "table",
+        "name": "control_events",
+        "table": "control_events",
+        "ddl": "CREATE TABLE control_events (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    ts TEXT NOT NULL,\n    event TEXT NOT NULL,             -- state_change / panic / mode_switch / budget_stop\n    from_state TEXT,\n    to_state TEXT,\n    actor TEXT NOT NULL,             -- operator / luffy / watchdog / risk_engine\n    detail TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "cycles",
+        "table": "cycles",
+        "ddl": "CREATE TABLE cycles (\n    id TEXT PRIMARY KEY,\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    price REAL,\n    regime TEXT,\n    adx REAL,\n    btc_trend TEXT,\n    market_type TEXT,\n    mode TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "decisions",
+        "table": "decisions",
+        "ddl": "CREATE TABLE decisions (\n    id TEXT PRIMARY KEY,\n    cycle_id TEXT NOT NULL REFERENCES cycles(id),\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    action TEXT NOT NULL,\n    score REAL NOT NULL,\n    threshold REAL NOT NULL,\n    confidence REAL NOT NULL,\n    executed INTEGER NOT NULL DEFAULT 0,\n    skip_reason TEXT,\n    size_usdt REAL DEFAULT 0,\n    entry_price REAL,\n    strategy_ids TEXT\n, signals_json TEXT DEFAULT '[]', meta_p REAL DEFAULT NULL, scan_id TEXT DEFAULT NULL, instrument_binding_json TEXT DEFAULT NULL, reason_codes TEXT DEFAULT NULL, reason_codes_version TEXT DEFAULT NULL, strategy_selection_json TEXT DEFAULT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "equity",
+        "table": "equity",
+        "ddl": "CREATE TABLE equity (\n    ts TEXT PRIMARY KEY,\n    equity REAL NOT NULL,\n    balance REAL NOT NULL,\n    open_positions INTEGER\n)"
+      },
+      {
+        "type": "table",
+        "name": "equity_provenance",
+        "table": "equity_provenance",
+        "ddl": "CREATE TABLE equity_provenance (\n    ts TEXT PRIMARY KEY,\n    provenance TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "execution_accounting",
+        "table": "execution_accounting",
+        "ddl": "CREATE TABLE execution_accounting (\n    id TEXT PRIMARY KEY,\n    payload TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "execution_requests",
+        "table": "execution_requests",
+        "ddl": "CREATE TABLE execution_requests (\n logical_id TEXT PRIMARY KEY, decision_id TEXT NOT NULL UNIQUE,\n intent_hash TEXT NOT NULL, intent_json TEXT NOT NULL,\n client_order_id TEXT NOT NULL UNIQUE, state TEXT NOT NULL,\n recovery_json TEXT, order_id TEXT, result_json TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "journal_evidence_blobs_v1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": "CREATE TABLE journal_evidence_blobs_v1 (\n sha256 TEXT PRIMARY KEY CHECK(length(sha256)=64),\n byte_length INTEGER NOT NULL CHECK(byte_length>=0),\n codec TEXT NOT NULL CHECK(codec='zlib.v1'),\n payload BLOB NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "journal_representation_v1",
+        "table": "journal_representation_v1",
+        "ddl": "CREATE TABLE journal_representation_v1 (\n version TEXT PRIMARY KEY, status TEXT NOT NULL, manifest TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "learning_actions",
+        "table": "learning_actions",
+        "ddl": "CREATE TABLE learning_actions(action_id TEXT PRIMARY KEY,event_key TEXT NOT NULL,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "learning_capture_failures",
+        "table": "learning_capture_failures",
+        "ddl": "CREATE TABLE learning_capture_failures(event_key TEXT,reason TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "learning_decision_source_manifests",
+        "table": "learning_decision_source_manifests",
+        "ddl": "CREATE TABLE learning_decision_source_manifests(manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "learning_outcome_captures",
+        "table": "learning_outcome_captures",
+        "ddl": "CREATE TABLE learning_outcome_captures(outcome_key TEXT PRIMARY KEY,outcome_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "learning_produced_chains",
+        "table": "learning_produced_chains",
+        "ddl": "CREATE TABLE learning_produced_chains(outcome_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "learning_registrations",
+        "table": "learning_registrations",
+        "ddl": "CREATE TABLE learning_registrations(event_key TEXT PRIMARY KEY,registration_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "learning_source_blobs",
+        "table": "learning_source_blobs",
+        "ddl": "CREATE TABLE learning_source_blobs(sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "market_raw_sources",
+        "table": "market_raw_sources",
+        "ddl": "CREATE TABLE market_raw_sources (\n        content_hash TEXT PRIMARY KEY, source TEXT, raw_json TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "market_revisions",
+        "table": "market_revisions",
+        "ddl": "CREATE TABLE market_revisions (\n        revision_id TEXT PRIMARY KEY, series_key TEXT NOT NULL, event_ms INTEGER NOT NULL,\n        available_ms INTEGER, observed_ms INTEGER NOT NULL, record_json TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "outcomes",
+        "table": "outcomes",
+        "ddl": "CREATE TABLE outcomes (\n    decision_id TEXT PRIMARY KEY REFERENCES decisions(id),\n    cycle_id TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    ts TEXT NOT NULL,                -- decision time\n    action TEXT NOT NULL,\n    entry_price REAL NOT NULL,\n    resolved_at TEXT,\n    fwd_ret_1h REAL,\n    fwd_ret_4h REAL,\n    fwd_ret_24h REAL,\n    correct_1h INTEGER,              -- 1/0/NULL: did direction win at horizon?\n    correct_4h INTEGER,\n    correct_24h INTEGER\n)"
+      },
+      {
+        "type": "table",
+        "name": "owner_audit",
+        "table": "owner_audit",
+        "ddl": "CREATE TABLE owner_audit (\n    id          INTEGER PRIMARY KEY AUTOINCREMENT,\n    ts          TEXT NOT NULL,\n    request_id  TEXT,\n    operation   TEXT,\n    channel     TEXT,\n    identity    TEXT,\n    principal   TEXT,\n    request_ref TEXT,\n    status      TEXT NOT NULL,\n    reasons     TEXT NOT NULL,\n    state_before TEXT,\n    state_after  TEXT,\n    event_ids   TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "owner_requests",
+        "table": "owner_requests",
+        "ddl": "CREATE TABLE owner_requests (\n    request_id  TEXT PRIMARY KEY,\n    fingerprint TEXT NOT NULL,\n    operation   TEXT NOT NULL,\n    channel     TEXT NOT NULL,\n    identity    TEXT NOT NULL,\n    principal   TEXT NOT NULL,\n    request_ref TEXT,\n    state       TEXT NOT NULL,           -- RESERVED | PENDING | DONE\n    result      TEXT,\n    boot_id     TEXT NOT NULL,\n    reserver    TEXT NOT NULL,           -- reservation token; only its owner claims\n    intent_event_id INTEGER,             -- control-intent watermark at admission\n    created_at  TEXT NOT NULL,\n    finished_at TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "paper_risk_kv",
+        "table": "paper_risk_kv",
+        "ddl": "CREATE TABLE paper_risk_kv(key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "protection_boots",
+        "table": "protection_boots",
+        "ddl": "CREATE TABLE protection_boots(boot INTEGER PRIMARY KEY AUTOINCREMENT, started_at TEXT NOT NULL, pid INTEGER NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "protection_evidence",
+        "table": "protection_evidence",
+        "ddl": "CREATE TABLE protection_evidence(slot INTEGER PRIMARY KEY CHECK (slot = 1), boot INTEGER NOT NULL CHECK (typeof(boot) = 'integer' AND boot > 0), seq INTEGER NOT NULL CHECK (typeof(seq) = 'integer' AND seq > 0), value TEXT NOT NULL CHECK (json_valid(value)))"
+      },
+      {
+        "type": "table",
+        "name": "registry_contents",
+        "table": "registry_contents",
+        "ddl": "CREATE TABLE registry_contents (\n    content_sha256 TEXT PRIMARY KEY,\n    records_json TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "registry_refreshes",
+        "table": "registry_refreshes",
+        "ddl": "CREATE TABLE registry_refreshes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    outcome TEXT NOT NULL,\n    failure_reason TEXT,\n    environment TEXT NOT NULL,\n    source TEXT NOT NULL,\n    request_start_ms INTEGER NOT NULL,\n    response_received_ms INTEGER,\n    http_status INTEGER,\n    body_sha256 TEXT,\n    snapshot_id TEXT REFERENCES registry_snapshots(snapshot_id),\n    provenance_json TEXT NOT NULL,\n    recorded_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "registry_snapshots",
+        "table": "registry_snapshots",
+        "ddl": "CREATE TABLE registry_snapshots (\n    snapshot_id TEXT PRIMARY KEY,\n    environment TEXT NOT NULL,\n    source TEXT NOT NULL,\n    schema_version INTEGER NOT NULL,\n    as_of_ms INTEGER NOT NULL,\n    account_scope TEXT NOT NULL,\n    account_trading TEXT NOT NULL,\n    record_count INTEGER NOT NULL,\n    content_sha256 TEXT NOT NULL REFERENCES registry_contents(content_sha256),\n    recorded_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_archive",
+        "table": "research_archive",
+        "ddl": "CREATE TABLE research_archive (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    tf TEXT,\n    vintage TEXT,\n    table_name TEXT,\n    row_json TEXT,\n    archived_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_bank_objects",
+        "table": "research_bank_objects",
+        "ddl": "CREATE TABLE research_bank_objects (\n    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity\n    schema TEXT NOT NULL,\n    bank_kind TEXT NOT NULL,\n    builder_id TEXT NOT NULL,\n    run_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(run_id, result_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_batches",
+        "table": "research_batches",
+        "ddl": "CREATE TABLE research_batches (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    started TEXT, finished TEXT,\n    tf TEXT, geo TEXT, round TEXT,\n    n INTEGER, ok INTEGER, elapsed_s REAL, error TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_budget",
+        "table": "research_budget",
+        "ddl": "CREATE TABLE research_budget (\n    id INTEGER PRIMARY KEY CHECK (id = 1),\n    alpha REAL NOT NULL,\n    w0 REAL NOT NULL,\n    registered_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_candidates",
+        "table": "research_candidates",
+        "ddl": "CREATE TABLE research_candidates (\n    hash TEXT PRIMARY KEY,\n    tf TEXT, geo TEXT,\n    state TEXT,                    -- queued | twin | deferred | gate1_fail |\n                                   -- gate3_fail | referee_passed |\n                                   -- reason_passed | admitted | refused\n    twin_of TEXT,\n    rank REAL,\n    gate1 TEXT, gate3 TEXT,\n    entries TEXT,                  -- JSON {symbol: [entry bar ms, ...]}\n    reason TEXT,\n    updated_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_combos",
+        "table": "research_combos",
+        "ddl": "CREATE TABLE research_combos (\n    hash TEXT PRIMARY KEY,\n    tf TEXT NOT NULL,\n    geo TEXT NOT NULL,\n    k INTEGER NOT NULL,\n    round TEXT,\n    parent TEXT,\n    trigger TEXT,\n    window TEXT,\n    parts TEXT,                    -- JSON list of canonical part keys\n    entry_long TEXT,\n    entry_short TEXT,\n    status TEXT,                   -- scored | untestable | empty | error\n    label TEXT,                    -- scored | no_edge | underpowered | ...\n    verdict TEXT,                  -- survivor | grow | prune\n    reason TEXT,\n    consistency_p REAL,\n    median_pf REAL,\n    total_pct REAL,\n    max_dd_pct REAL,\n    trades INTEGER,\n    scored_symbols INTEGER,\n    testable INTEGER,\n    ablation TEXT,                 -- JSON {removed part: what it cost}\n    result TEXT,                   -- the full evaluation, JSON\n    created_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_controls",
+        "table": "research_controls",
+        "ddl": "CREATE TABLE research_controls (\n    tf TEXT NOT NULL,\n    window TEXT NOT NULL,\n    consistency_p REAL,\n    powered INTEGER,\n    detail TEXT,\n    measured_at TEXT, status TEXT,\n    PRIMARY KEY (tf, window)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_evidence",
+        "table": "research_evidence",
+        "ddl": "CREATE TABLE research_evidence (\n    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity\n    schema TEXT NOT NULL,\n    evidence_kind TEXT NOT NULL,\n    collector_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, evidence_kind, plan_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_gauges",
+        "table": "research_gauges",
+        "ddl": "CREATE TABLE research_gauges (\n    tf TEXT NOT NULL,\n    expr TEXT NOT NULL,\n    p10 REAL, p25 REAL, p75 REAL, p90 REAL,\n    n INTEGER,\n    finite_frac REAL,\n    usable INTEGER,\n    measured_at TEXT, min REAL, max REAL,\n    PRIMARY KEY (tf, expr)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_next_questions",
+        "table": "research_next_questions",
+        "ddl": "CREATE TABLE research_next_questions (\n    next_question_id TEXT PRIMARY KEY, -- sha256 of the record identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    generator_id TEXT NOT NULL,\n    bank_object_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    hypothesis TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,    -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(bank_object_id, hypothesis)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_plans",
+        "table": "research_plans",
+        "ddl": "CREATE TABLE research_plans (\n    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity\n    schema TEXT NOT NULL,\n    plan_kind TEXT NOT NULL,\n    planner_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, plan_kind, question_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_questions",
+        "table": "research_questions",
+        "ddl": "CREATE TABLE research_questions (\n    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    trigger TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_kind TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(question_kind, source_kind, source_event_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_registrations",
+        "table": "research_registrations",
+        "ddl": "CREATE TABLE research_registrations (\n    record_type TEXT NOT NULL,       -- the record's schema\n    record_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of the record canonical JSON\n    recorded_at_ms INTEGER NOT NULL, -- first registration\n    envelope_sha256 TEXT NOT NULL UNIQUE,  -- sha256 of envelope_json\n    envelope_json TEXT NOT NULL,\n    PRIMARY KEY (record_type, record_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_results",
+        "table": "research_results",
+        "ddl": "CREATE TABLE research_results (\n    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity\n    schema TEXT NOT NULL,\n    result_kind TEXT NOT NULL,\n    resolver_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL UNIQUE,\n    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON\n    plan_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_runs",
+        "table": "research_runs",
+        "ddl": "CREATE TABLE research_runs (\n    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs\n    schema TEXT NOT NULL,\n    run_kind TEXT NOT NULL,\n    runner_id TEXT NOT NULL,\n    run_key TEXT NOT NULL,\n    run_recorded_at_ms INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json\n    telemetry_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_slices",
+        "table": "research_slices",
+        "ddl": "CREATE TABLE research_slices (\n    tf TEXT PRIMARY KEY,\n    cut_ms INTEGER,\n    counts TEXT,                   -- JSON {discovery, heldout_a, heldout_b}\n    measured_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_tests",
+        "table": "research_tests",
+        "ddl": "CREATE TABLE research_tests (\n    seq INTEGER PRIMARY KEY AUTOINCREMENT,\n    hash TEXT, tf TEXT, geo TEXT,\n    gate TEXT,                     -- gate1 (phase 4 adds gate2)\n    p REAL,\n    alpha_t REAL,\n    rejected INTEGER,\n    braked INTEGER,\n    detail TEXT,\n    at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_bank_objects",
+        "table": "research_unreadable_bank_objects",
+        "ddl": "CREATE TABLE research_unreadable_bank_objects (\n    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity\n    schema TEXT NOT NULL,\n    bank_kind TEXT NOT NULL,\n    builder_id TEXT NOT NULL,\n    run_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(run_id, result_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_evidence",
+        "table": "research_unreadable_evidence",
+        "ddl": "CREATE TABLE research_unreadable_evidence (\n    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity\n    schema TEXT NOT NULL,\n    evidence_kind TEXT NOT NULL,\n    collector_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, evidence_kind, plan_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_plans",
+        "table": "research_unreadable_plans",
+        "ddl": "CREATE TABLE research_unreadable_plans (\n    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity\n    schema TEXT NOT NULL,\n    plan_kind TEXT NOT NULL,\n    planner_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, plan_kind, question_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_questions",
+        "table": "research_unreadable_questions",
+        "ddl": "CREATE TABLE research_unreadable_questions (\n    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_kind TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(source_kind, source_event_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_results",
+        "table": "research_unreadable_results",
+        "ddl": "CREATE TABLE research_unreadable_results (\n    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity\n    schema TEXT NOT NULL,\n    result_kind TEXT NOT NULL,\n    resolver_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, result_kind, evidence_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_runs",
+        "table": "research_unreadable_runs",
+        "ddl": "CREATE TABLE research_unreadable_runs (\n    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs\n    schema TEXT NOT NULL,\n    run_kind TEXT NOT NULL,\n    runner_id TEXT NOT NULL,\n    run_key TEXT NOT NULL,\n    run_recorded_at_ms INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json\n    telemetry_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "sqlite_sequence",
+        "table": "sqlite_sequence",
+        "ddl": "CREATE TABLE sqlite_sequence(name,seq)"
+      },
+      {
+        "type": "table",
+        "name": "state_kv",
+        "table": "state_kv",
+        "ddl": "CREATE TABLE state_kv (\n    key TEXT PRIMARY KEY,\n    value TEXT NOT NULL              -- control_state, market_type, proving_trades, ...\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategies",
+        "table": "strategies",
+        "ddl": "CREATE TABLE strategies (\n    id TEXT PRIMARY KEY,\n    name TEXT NOT NULL,\n    kind TEXT NOT NULL,\n    params TEXT NOT NULL,            -- JSON genes\n    state TEXT NOT NULL,\n    description TEXT,\n    origin TEXT,\n    hypothesis TEXT,\n    invalidation TEXT,\n    regime_filter TEXT,              -- JSON list\n    markets TEXT,                    -- JSON list\n    generation INTEGER DEFAULT 0,\n    parent_id TEXT DEFAULT '',\n    created_at TEXT,\n    stats_json TEXT DEFAULT '{}'\n, retire_reason TEXT DEFAULT '', state_changed_at TEXT DEFAULT '', spec_json TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_approval_decisions",
+        "table": "strategy_approval_decisions",
+        "ddl": "CREATE TABLE strategy_approval_decisions (\n    decision_id TEXT PRIMARY KEY,\n    request_id TEXT NOT NULL UNIQUE\n        REFERENCES strategy_approval_requests(request_id),\n    decision TEXT NOT NULL,\n    actor TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_approval_requests",
+        "table": "strategy_approval_requests",
+        "ddl": "CREATE TABLE strategy_approval_requests (\n    request_id TEXT PRIMARY KEY,\n    version_id TEXT NOT NULL UNIQUE REFERENCES strategy_versions(version_id),\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_capacity_receipts",
+        "table": "strategy_capacity_receipts",
+        "ddl": "CREATE TABLE strategy_capacity_receipts (\n    receipt_id TEXT PRIMARY KEY,\n    version_id TEXT NOT NULL,\n    spec_hash TEXT NOT NULL,\n    instrument_id TEXT NOT NULL,\n    as_of_ms INTEGER NOT NULL,\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_first_live_deployments",
+        "table": "strategy_first_live_deployments",
+        "ddl": "CREATE TABLE strategy_first_live_deployments(\n version_id TEXT PRIMARY KEY REFERENCES strategy_versions(version_id),\n canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL,\n recorded_at_ms INTEGER NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_governor_events",
+        "table": "strategy_governor_events",
+        "ddl": "CREATE TABLE strategy_governor_events(\n seq INTEGER PRIMARY KEY AUTOINCREMENT, version_id TEXT NOT NULL,\n to_state TEXT NOT NULL, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_legacy_authorities",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TABLE strategy_legacy_authorities (\n strategy_id TEXT PRIMARY KEY, canonical_json TEXT NOT NULL,\n canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_probation_receipts",
+        "table": "strategy_probation_receipts",
+        "ddl": "CREATE TABLE strategy_probation_receipts (\n    receipt_id TEXT PRIMARY KEY,\n    version_id TEXT NOT NULL REFERENCES strategy_versions(version_id),\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_validation_receipts",
+        "table": "strategy_validation_receipts",
+        "ddl": "CREATE TABLE strategy_validation_receipts (\n    receipt_id TEXT PRIMARY KEY,\n    version_id TEXT NOT NULL UNIQUE REFERENCES strategy_versions(version_id),\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_version_events",
+        "table": "strategy_version_events",
+        "ddl": "CREATE TABLE strategy_version_events (\n    seq INTEGER PRIMARY KEY AUTOINCREMENT,\n    version_id TEXT NOT NULL REFERENCES strategy_versions(version_id),\n    from_state TEXT,\n    to_state TEXT NOT NULL,\n    reason_code TEXT NOT NULL,\n    ref_id TEXT,\n    actor TEXT NOT NULL,\n    at_ms INTEGER NOT NULL,\n    UNIQUE (version_id, to_state)\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_version_installs",
+        "table": "strategy_version_installs",
+        "ddl": "CREATE TABLE strategy_version_installs (\n    install_id TEXT PRIMARY KEY,\n    version_id TEXT NOT NULL UNIQUE REFERENCES strategy_versions(version_id),\n    strategy_id TEXT NOT NULL,\n    spec_hash TEXT NOT NULL,\n    mode TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_versions",
+        "table": "strategy_versions",
+        "ddl": "CREATE TABLE strategy_versions (\n    version_id TEXT PRIMARY KEY,\n    strategy_id TEXT NOT NULL,\n    spec_hash TEXT NOT NULL,\n    parent_version_id TEXT,\n    source_kind TEXT NOT NULL,\n    source_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "trade_accounting_bookings",
+        "table": "trade_accounting_bookings",
+        "ddl": "CREATE TABLE trade_accounting_bookings (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    trade_id TEXT NOT NULL,\n    payload TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "trade_fills",
+        "table": "trade_fills",
+        "ddl": "CREATE TABLE trade_fills (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    symbol TEXT NOT NULL,\n    fill_key TEXT NOT NULL,              -- '<market_type>|id:<venue fill id>' (or '|digest:<sha256>'); legacy rows unscoped\n    venue_fill_id TEXT,                  -- exactly as the venue returned\n    venue_order_id TEXT,\n    trade_id TEXT,                       -- set only when attribution = ATTRIBUTED\n    leg_id INTEGER,                      -- trade_legs.id of the attributed order\n    leg TEXT,                            -- entry | exit | unknown\n    side TEXT,\n    qty REAL,\n    price REAL,\n    commission TEXT,                     -- venue string, exact\n    commission_asset TEXT,\n    realized_pnl TEXT,                   -- venue string, exact\n    venue_ts_ms INTEGER,\n    observed_ms INTEGER NOT NULL,        -- when Luffy received it\n    attribution TEXT NOT NULL,           -- ATTRIBUTED | AMBIGUOUS | UNATTRIBUTED\n    attribution_reason TEXT NOT NULL,\n    source TEXT NOT NULL,                -- which evidence carried it\n    observation_json TEXT,               -- where it was observed; never attribution\n    fill_json TEXT NOT NULL,\n    market_type TEXT,                    -- NULL only on legacy unscoped rows\n    UNIQUE(symbol, fill_key)\n)"
+      },
+      {
+        "type": "table",
+        "name": "trade_legs",
+        "table": "trade_legs",
+        "ddl": "CREATE TABLE trade_legs (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    trade_id TEXT NOT NULL,\n    booking_id INTEGER NOT NULL,         -- trade_accounting_bookings.id\n    kind TEXT NOT NULL,                  -- the booking kind (entry / close:* / align_*)\n    purpose TEXT NOT NULL,               -- entry / partial_exit / final_exit / native_exit / ...\n    origin TEXT NOT NULL,                -- luffy_order | venue_observed | adopted\n    symbol TEXT NOT NULL,\n    side TEXT,                           -- order side (buy/sell) when known\n    venue_order_id TEXT,                 -- exactly as the venue returned; NULL if unknown\n    client_order_id TEXT,\n    protective_algo_id TEXT,\n    order_identity TEXT NOT NULL,        -- VERIFIED | UNAVAILABLE | NOT_APPLICABLE\n    requested_qty REAL,\n    booked_qty REAL,\n    booked_price REAL,\n    reference_json TEXT,                 -- slippage basis captured before submission\n    exit_attribution TEXT NOT NULL,      -- EXACT_LUFFY_ORDER_LINK | AMBIGUOUS | VENUE_EVENT_UNVERIFIED | UNKNOWN_HISTORICAL | NOT_APPLICABLE\n    exit_attribution_json TEXT,\n    fee_basis TEXT,                      -- evidence basis of the booked P&L/fee\n    source TEXT NOT NULL,                -- live_booking | backfill_receipt\n    recorded_ms INTEGER NOT NULL,\n    market_type TEXT,                    -- the trade's, from the receipt; NULL = scope unknown\n    status_transition TEXT,              -- '<before>-><after>' trade status in the receipt\n    terminal_close INTEGER               -- 1 iff this receipt moved the trade open -> closed; NULL = not recorded (legacy)\n)"
+      },
+      {
+        "type": "table",
+        "name": "trades",
+        "table": "trades",
+        "ddl": "CREATE TABLE trades (\n    id TEXT PRIMARY KEY,\n    decision_id TEXT,\n    symbol TEXT NOT NULL,\n    side TEXT NOT NULL,\n    amount REAL NOT NULL,\n    entry_price REAL NOT NULL,\n    exit_price REAL,\n    notional_usdt REAL,\n    leverage INTEGER DEFAULT 1,\n    stop_loss REAL, take_profit REAL, sl_order_id TEXT DEFAULT '',\n    strategy_id TEXT, strategy_name TEXT,\n    market_type TEXT, exec_mode TEXT,\n    opened_at TEXT NOT NULL,\n    closed_at TEXT,\n    realized_pnl REAL DEFAULT 0,\n    close_reason TEXT,\n    status TEXT NOT NULL DEFAULT 'open'   -- open | closed\n, tp1_done INTEGER DEFAULT 0, initial_risk REAL DEFAULT NULL, mfe_r REAL DEFAULT NULL, mae_r REAL DEFAULT NULL, excursion_json TEXT DEFAULT NULL, entry_identity_json TEXT DEFAULT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "universe_revisions",
+        "table": "universe_revisions",
+        "ddl": "CREATE TABLE universe_revisions (\n    revision_id TEXT NOT NULL,\n    environment TEXT NOT NULL,\n    selection_version TEXT NOT NULL,\n    source TEXT NOT NULL,\n    observed_at_ms INTEGER NOT NULL,\n    members_json TEXT NOT NULL,\n    exclusions_json TEXT NOT NULL,\n    config_json TEXT NOT NULL,\n    recorded_ms INTEGER NOT NULL,\n    PRIMARY KEY (environment, revision_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "universe_untradeable",
+        "table": "universe_untradeable",
+        "ddl": "CREATE TABLE universe_untradeable (\n    environment TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    reason TEXT NOT NULL,\n    first_seen_ms INTEGER NOT NULL,\n    PRIMARY KEY (environment, symbol)\n)"
+      },
+      {
+        "type": "table",
+        "name": "venue_position_snapshots",
+        "table": "venue_position_snapshots",
+        "ddl": "CREATE TABLE venue_position_snapshots (\n    snapshot_id TEXT PRIMARY KEY,\n    venue TEXT NOT NULL,\n    market_type TEXT NOT NULL,\n    environment TEXT NOT NULL,\n    observed_at_ms INTEGER NOT NULL,\n    book_sha256 TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "versioned_paper_cost_receipts",
+        "table": "versioned_paper_cost_receipts",
+        "ddl": "CREATE TABLE versioned_paper_cost_receipts(trade_id TEXT PRIMARY KEY, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "versioned_paper_cost_sources",
+        "table": "versioned_paper_cost_sources",
+        "ddl": "CREATE TABLE versioned_paper_cost_sources(source_id TEXT PRIMARY KEY, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "versioned_paper_exit_evidence",
+        "table": "versioned_paper_exit_evidence",
+        "ddl": "CREATE TABLE versioned_paper_exit_evidence(trade_id TEXT PRIMARY KEY, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "versioned_paper_trades",
+        "table": "versioned_paper_trades",
+        "ddl": "CREATE TABLE versioned_paper_trades(\n id TEXT PRIMARY KEY, strategy_id TEXT NOT NULL, version_id TEXT NOT NULL,\n spec_hash TEXT NOT NULL, install_id TEXT NOT NULL, exec_mode TEXT NOT NULL CHECK(exec_mode='paper'),\n decision_id TEXT, cycle_id TEXT, symbol TEXT NOT NULL, side TEXT NOT NULL,\n amount REAL NOT NULL, entry_price REAL NOT NULL, stop_loss REAL NOT NULL,\n take_profit REAL NOT NULL, notional_usdt REAL NOT NULL, leverage INTEGER NOT NULL,\n opened_at TEXT NOT NULL, closed_at TEXT, exit_price REAL, realized_pnl REAL,\n status TEXT NOT NULL, close_reason TEXT, entry_identity_json TEXT NOT NULL,\n fill_basis TEXT NOT NULL, reference_price REAL NOT NULL, fill_timestamp TEXT NOT NULL,\n commission_basis TEXT NOT NULL, commission REAL, slippage_basis TEXT NOT NULL,\n funding_basis TEXT NOT NULL, pnl_basis TEXT NOT NULL,\n entry_bar_ms INTEGER NOT NULL, last_bar_ms INTEGER NOT NULL,\n initial_risk REAL NOT NULL, best REAL NOT NULL, bars_held INTEGER NOT NULL DEFAULT 0,\n exit_fill_basis TEXT, exit_reference_price REAL, exit_state_json TEXT, exit_semantics_id TEXT, venue_environment TEXT, market_type TEXT,\n UNIQUE(version_id,symbol,entry_bar_ms)\n)"
+      },
+      {
+        "type": "table",
+        "name": "votes",
+        "table": "votes",
+        "ddl": "CREATE TABLE votes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    cycle_id TEXT NOT NULL REFERENCES cycles(id),\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    agent TEXT NOT NULL,\n    side TEXT NOT NULL,\n    conviction REAL NOT NULL,\n    confidence REAL NOT NULL,\n    rationale TEXT,\n    meta TEXT\n)"
+      },
+      {
+        "type": "trigger",
+        "name": "approval_decision_insert_authority",
+        "table": "strategy_approval_decisions",
+        "ddl": "CREATE TRIGGER approval_decision_insert_authority\nBEFORE INSERT ON strategy_approval_decisions WHEN strategy_approval_write() != 1\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "approval_request_insert_authority",
+        "table": "strategy_approval_requests",
+        "ddl": "CREATE TRIGGER approval_request_insert_authority\nBEFORE INSERT ON strategy_approval_requests WHEN strategy_approval_write() != 1\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "first_live_deployment_insert_authority",
+        "table": "strategy_first_live_deployments",
+        "ddl": "CREATE TRIGGER first_live_deployment_insert_authority\nBEFORE INSERT ON strategy_first_live_deployments WHEN strategy_approval_write() != 1\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_APPROVAL_AUTHORITY_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "governor_insert_authority",
+        "table": "strategy_governor_events",
+        "ddl": "CREATE TRIGGER governor_insert_authority\nBEFORE INSERT ON strategy_governor_events WHEN strategy_governor_write() != 1\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_actions_delete",
+        "table": "learning_actions",
+        "ddl": "CREATE TRIGGER learning_actions_delete BEFORE DELETE ON learning_actions BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_actions_duplicate",
+        "table": "learning_actions",
+        "ddl": "CREATE TRIGGER learning_actions_duplicate BEFORE INSERT ON learning_actions WHEN EXISTS(SELECT 1 FROM learning_actions WHERE action_id=NEW.action_id) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_actions_update",
+        "table": "learning_actions",
+        "ddl": "CREATE TRIGGER learning_actions_update BEFORE UPDATE ON learning_actions BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_decision_source_manifests_delete",
+        "table": "learning_decision_source_manifests",
+        "ddl": "CREATE TRIGGER learning_decision_source_manifests_delete BEFORE DELETE ON learning_decision_source_manifests BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_decision_source_manifests_duplicate",
+        "table": "learning_decision_source_manifests",
+        "ddl": "CREATE TRIGGER learning_decision_source_manifests_duplicate BEFORE INSERT ON learning_decision_source_manifests WHEN EXISTS(SELECT 1 FROM learning_decision_source_manifests WHERE manifest_id=NEW.manifest_id) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_decision_source_manifests_update",
+        "table": "learning_decision_source_manifests",
+        "ddl": "CREATE TRIGGER learning_decision_source_manifests_update BEFORE UPDATE ON learning_decision_source_manifests BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_outcome_captures_delete",
+        "table": "learning_outcome_captures",
+        "ddl": "CREATE TRIGGER learning_outcome_captures_delete BEFORE DELETE ON learning_outcome_captures BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_outcome_captures_duplicate",
+        "table": "learning_outcome_captures",
+        "ddl": "CREATE TRIGGER learning_outcome_captures_duplicate BEFORE INSERT ON learning_outcome_captures WHEN EXISTS(SELECT 1 FROM learning_outcome_captures WHERE outcome_key=NEW.outcome_key) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_outcome_captures_update",
+        "table": "learning_outcome_captures",
+        "ddl": "CREATE TRIGGER learning_outcome_captures_update BEFORE UPDATE ON learning_outcome_captures BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_produced_chains_delete",
+        "table": "learning_produced_chains",
+        "ddl": "CREATE TRIGGER learning_produced_chains_delete BEFORE DELETE ON learning_produced_chains BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_produced_chains_duplicate",
+        "table": "learning_produced_chains",
+        "ddl": "CREATE TRIGGER learning_produced_chains_duplicate BEFORE INSERT ON learning_produced_chains WHEN EXISTS(SELECT 1 FROM learning_produced_chains WHERE outcome_id=NEW.outcome_id) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_produced_chains_update",
+        "table": "learning_produced_chains",
+        "ddl": "CREATE TRIGGER learning_produced_chains_update BEFORE UPDATE ON learning_produced_chains BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_registrations_delete",
+        "table": "learning_registrations",
+        "ddl": "CREATE TRIGGER learning_registrations_delete BEFORE DELETE ON learning_registrations BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_registrations_duplicate",
+        "table": "learning_registrations",
+        "ddl": "CREATE TRIGGER learning_registrations_duplicate BEFORE INSERT ON learning_registrations WHEN EXISTS(SELECT 1 FROM learning_registrations WHERE event_key=NEW.event_key) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_registrations_update",
+        "table": "learning_registrations",
+        "ddl": "CREATE TRIGGER learning_registrations_update BEFORE UPDATE ON learning_registrations BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_source_blobs_delete",
+        "table": "learning_source_blobs",
+        "ddl": "CREATE TRIGGER learning_source_blobs_delete BEFORE DELETE ON learning_source_blobs BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_source_blobs_duplicate",
+        "table": "learning_source_blobs",
+        "ddl": "CREATE TRIGGER learning_source_blobs_duplicate BEFORE INSERT ON learning_source_blobs WHEN EXISTS(SELECT 1 FROM learning_source_blobs WHERE sha256=NEW.sha256) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "learning_source_blobs_update",
+        "table": "learning_source_blobs",
+        "ddl": "CREATE TRIGGER learning_source_blobs_update BEFORE UPDATE ON learning_source_blobs BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_delete",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_delete BEFORE DELETE ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'legacy authority is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_insert",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_insert BEFORE INSERT ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'LEGACY_AUTHORITY_IMPORT_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_update",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_update BEFORE UPDATE ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'legacy authority is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "paper_environment_immutable",
+        "table": "versioned_paper_trades",
+        "ddl": "CREATE TRIGGER paper_environment_immutable BEFORE UPDATE ON versioned_paper_trades\n                WHEN NEW.venue_environment IS NOT OLD.venue_environment\n                BEGIN SELECT RAISE(ABORT,'paper environment immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "paper_identity_immutable",
+        "table": "versioned_paper_trades",
+        "ddl": "CREATE TRIGGER paper_identity_immutable BEFORE UPDATE ON versioned_paper_trades\n WHEN NEW.entry_identity_json IS NOT OLD.entry_identity_json OR NEW.version_id IS NOT OLD.version_id\n OR NEW.spec_hash IS NOT OLD.spec_hash OR NEW.install_id IS NOT OLD.install_id\n OR NEW.strategy_id IS NOT OLD.strategy_id OR NEW.exec_mode IS NOT OLD.exec_mode\n BEGIN SELECT RAISE(ABORT,'paper identity immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_contents_no_delete",
+        "table": "registry_contents",
+        "ddl": "CREATE TRIGGER registry_contents_no_delete BEFORE DELETE ON registry_contents BEGIN SELECT RAISE(ABORT,'registry_contents is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_contents_no_update",
+        "table": "registry_contents",
+        "ddl": "CREATE TRIGGER registry_contents_no_update BEFORE UPDATE ON registry_contents BEGIN SELECT RAISE(ABORT,'registry_contents is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_refreshes_no_delete",
+        "table": "registry_refreshes",
+        "ddl": "CREATE TRIGGER registry_refreshes_no_delete BEFORE DELETE ON registry_refreshes BEGIN SELECT RAISE(ABORT,'registry_refreshes is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_refreshes_no_update",
+        "table": "registry_refreshes",
+        "ddl": "CREATE TRIGGER registry_refreshes_no_update BEFORE UPDATE ON registry_refreshes BEGIN SELECT RAISE(ABORT,'registry_refreshes is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_snapshots_no_delete",
+        "table": "registry_snapshots",
+        "ddl": "CREATE TRIGGER registry_snapshots_no_delete BEFORE DELETE ON registry_snapshots BEGIN SELECT RAISE(ABORT,'registry_snapshots is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "registry_snapshots_no_update",
+        "table": "registry_snapshots",
+        "ddl": "CREATE TRIGGER registry_snapshots_no_update BEFORE UPDATE ON registry_snapshots BEGIN SELECT RAISE(ABORT,'registry_snapshots is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_delete",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_delete\nBEFORE DELETE ON research_registrations\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_replace",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_replace\nBEFORE INSERT ON research_registrations\nWHEN EXISTS (SELECT 1 FROM research_registrations\n             WHERE (record_type=NEW.record_type AND record_id=NEW.record_id)\n                OR envelope_sha256=NEW.envelope_sha256)\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_update",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_update\nBEFORE UPDATE ON research_registrations\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_approval_decisions_no_delete",
+        "table": "strategy_approval_decisions",
+        "ddl": "CREATE TRIGGER strategy_approval_decisions_no_delete BEFORE DELETE ON strategy_approval_decisions\nBEGIN SELECT RAISE(ABORT, 'strategy_approval_decisions is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_approval_decisions_no_update",
+        "table": "strategy_approval_decisions",
+        "ddl": "CREATE TRIGGER strategy_approval_decisions_no_update BEFORE UPDATE ON strategy_approval_decisions\nBEGIN SELECT RAISE(ABORT, 'strategy_approval_decisions is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_approval_requests_no_delete",
+        "table": "strategy_approval_requests",
+        "ddl": "CREATE TRIGGER strategy_approval_requests_no_delete BEFORE DELETE ON strategy_approval_requests\nBEGIN SELECT RAISE(ABORT, 'strategy_approval_requests is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_approval_requests_no_update",
+        "table": "strategy_approval_requests",
+        "ddl": "CREATE TRIGGER strategy_approval_requests_no_update BEFORE UPDATE ON strategy_approval_requests\nBEGIN SELECT RAISE(ABORT, 'strategy_approval_requests is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_capacity_receipts_no_delete",
+        "table": "strategy_capacity_receipts",
+        "ddl": "CREATE TRIGGER strategy_capacity_receipts_no_delete BEFORE DELETE ON strategy_capacity_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_capacity_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_capacity_receipts_no_update",
+        "table": "strategy_capacity_receipts",
+        "ddl": "CREATE TRIGGER strategy_capacity_receipts_no_update BEFORE UPDATE ON strategy_capacity_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_capacity_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_first_live_deployments_no_delete",
+        "table": "strategy_first_live_deployments",
+        "ddl": "CREATE TRIGGER strategy_first_live_deployments_no_delete BEFORE DELETE ON strategy_first_live_deployments\nBEGIN SELECT RAISE(ABORT, 'strategy_first_live_deployments is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_first_live_deployments_no_update",
+        "table": "strategy_first_live_deployments",
+        "ddl": "CREATE TRIGGER strategy_first_live_deployments_no_update BEFORE UPDATE ON strategy_first_live_deployments\nBEGIN SELECT RAISE(ABORT, 'strategy_first_live_deployments is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_governor_events_no_delete",
+        "table": "strategy_governor_events",
+        "ddl": "CREATE TRIGGER strategy_governor_events_no_delete BEFORE DELETE ON strategy_governor_events\nBEGIN SELECT RAISE(ABORT, 'strategy_governor_events is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_governor_events_no_update",
+        "table": "strategy_governor_events",
+        "ddl": "CREATE TRIGGER strategy_governor_events_no_update BEFORE UPDATE ON strategy_governor_events\nBEGIN SELECT RAISE(ABORT, 'strategy_governor_events is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_probation_receipts_no_delete",
+        "table": "strategy_probation_receipts",
+        "ddl": "CREATE TRIGGER strategy_probation_receipts_no_delete BEFORE DELETE ON strategy_probation_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_probation_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_probation_receipts_no_update",
+        "table": "strategy_probation_receipts",
+        "ddl": "CREATE TRIGGER strategy_probation_receipts_no_update BEFORE UPDATE ON strategy_probation_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_probation_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_validation_receipts_no_delete",
+        "table": "strategy_validation_receipts",
+        "ddl": "CREATE TRIGGER strategy_validation_receipts_no_delete BEFORE DELETE ON strategy_validation_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_validation_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_validation_receipts_no_update",
+        "table": "strategy_validation_receipts",
+        "ddl": "CREATE TRIGGER strategy_validation_receipts_no_update BEFORE UPDATE ON strategy_validation_receipts\nBEGIN SELECT RAISE(ABORT, 'strategy_validation_receipts is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_version_events_no_delete",
+        "table": "strategy_version_events",
+        "ddl": "CREATE TRIGGER strategy_version_events_no_delete BEFORE DELETE ON strategy_version_events\nBEGIN SELECT RAISE(ABORT, 'strategy_version_events is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_version_events_no_update",
+        "table": "strategy_version_events",
+        "ddl": "CREATE TRIGGER strategy_version_events_no_update BEFORE UPDATE ON strategy_version_events\nBEGIN SELECT RAISE(ABORT, 'strategy_version_events is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_version_installs_no_delete",
+        "table": "strategy_version_installs",
+        "ddl": "CREATE TRIGGER strategy_version_installs_no_delete BEFORE DELETE ON strategy_version_installs\nBEGIN SELECT RAISE(ABORT, 'strategy_version_installs is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_version_installs_no_update",
+        "table": "strategy_version_installs",
+        "ddl": "CREATE TRIGGER strategy_version_installs_no_update BEFORE UPDATE ON strategy_version_installs\nBEGIN SELECT RAISE(ABORT, 'strategy_version_installs is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_versions_no_delete",
+        "table": "strategy_versions",
+        "ddl": "CREATE TRIGGER strategy_versions_no_delete BEFORE DELETE ON strategy_versions\nBEGIN SELECT RAISE(ABORT, 'strategy_versions is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "strategy_versions_no_update",
+        "table": "strategy_versions",
+        "ddl": "CREATE TRIGGER strategy_versions_no_update BEFORE UPDATE ON strategy_versions\nBEGIN SELECT RAISE(ABORT, 'strategy_versions is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "trades_entry_identity_immutable",
+        "table": "trades",
+        "ddl": "CREATE TRIGGER trades_entry_identity_immutable\nBEFORE UPDATE OF entry_identity_json ON trades\nWHEN OLD.entry_identity_json IS NOT NEW.entry_identity_json\nBEGIN SELECT RAISE(ABORT, 'entry_identity_immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "universe_revisions_no_delete",
+        "table": "universe_revisions",
+        "ddl": "CREATE TRIGGER universe_revisions_no_delete BEFORE DELETE ON universe_revisions BEGIN SELECT RAISE(ABORT,'universe_revisions is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "universe_revisions_no_update",
+        "table": "universe_revisions",
+        "ddl": "CREATE TRIGGER universe_revisions_no_update BEFORE UPDATE ON universe_revisions BEGIN SELECT RAISE(ABORT,'universe_revisions is append-only'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "venue_position_snapshots_no_delete",
+        "table": "venue_position_snapshots",
+        "ddl": "CREATE TRIGGER venue_position_snapshots_no_delete BEFORE DELETE ON venue_position_snapshots\nBEGIN SELECT RAISE(ABORT, 'venue_position_snapshots is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "venue_position_snapshots_no_update",
+        "table": "venue_position_snapshots",
+        "ddl": "CREATE TRIGGER venue_position_snapshots_no_update BEFORE UPDATE ON venue_position_snapshots\nBEGIN SELECT RAISE(ABORT, 'venue_position_snapshots is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "version_lifecycle_authority",
+        "table": "strategy_version_events",
+        "ddl": "CREATE TRIGGER version_lifecycle_authority\nBEFORE INSERT ON strategy_version_events\nWHEN NEW.to_state IN ('ACTIVE','PAUSED','REACTIVATED','DEGRADED','RETIRED')\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "version_strategy_delete_authority",
+        "table": "strategies",
+        "ddl": "CREATE TRIGGER version_strategy_delete_authority\nBEFORE DELETE ON strategies\nWHEN strategy_governor_write() != 1\nAND EXISTS (SELECT 1 FROM strategy_versions WHERE strategy_id=OLD.id)\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "version_strategy_insert_authority",
+        "table": "strategies",
+        "ddl": "CREATE TRIGGER version_strategy_insert_authority\nBEFORE INSERT ON strategies\nWHEN NEW.state != 'paper' AND strategy_governor_write() != 1\nAND EXISTS (SELECT 1 FROM strategy_versions WHERE strategy_id=NEW.id)\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "version_strategy_replace_authority",
+        "table": "strategies",
+        "ddl": "CREATE TRIGGER version_strategy_replace_authority\nBEFORE INSERT ON strategies\nWHEN EXISTS (SELECT 1 FROM strategies WHERE id=NEW.id AND state != NEW.state)\nAND EXISTS (SELECT 1 FROM strategy_versions WHERE strategy_id=NEW.id)\nAND strategy_governor_write() != 1\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "version_strategy_state_authority",
+        "table": "strategies",
+        "ddl": "CREATE TRIGGER version_strategy_state_authority\nBEFORE UPDATE OF state ON strategies\nWHEN NEW.state != OLD.state AND strategy_governor_write() != 1\nAND EXISTS (SELECT 1 FROM strategy_versions WHERE strategy_id=OLD.id)\nBEGIN SELECT RAISE(ABORT, 'STRATEGY_GOVERNOR_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_receipts_delete_immutable",
+        "table": "versioned_paper_cost_receipts",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_receipts_delete_immutable BEFORE DELETE ON versioned_paper_cost_receipts BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_receipts_insert_immutable",
+        "table": "versioned_paper_cost_receipts",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_receipts_insert_immutable BEFORE INSERT ON versioned_paper_cost_receipts WHEN EXISTS(SELECT 1 FROM versioned_paper_cost_receipts WHERE trade_id=NEW.trade_id) BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_receipts_update_immutable",
+        "table": "versioned_paper_cost_receipts",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_receipts_update_immutable BEFORE UPDATE ON versioned_paper_cost_receipts BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_sources_delete_immutable",
+        "table": "versioned_paper_cost_sources",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_sources_delete_immutable BEFORE DELETE ON versioned_paper_cost_sources BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_sources_insert_immutable",
+        "table": "versioned_paper_cost_sources",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_sources_insert_immutable BEFORE INSERT ON versioned_paper_cost_sources WHEN EXISTS(SELECT 1 FROM versioned_paper_cost_sources WHERE source_id=NEW.source_id) BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "versioned_paper_cost_sources_update_immutable",
+        "table": "versioned_paper_cost_sources",
+        "ddl": "CREATE TRIGGER versioned_paper_cost_sources_update_immutable BEFORE UPDATE ON versioned_paper_cost_sources BEGIN SELECT RAISE(ABORT,'finalized cost evidence immutable'); END"
+      },
+      {
+        "type": "view",
+        "name": "brain_events_logical_v1",
+        "table": "brain_events_logical_v1",
+        "ddl": "CREATE VIEW brain_events_logical_v1 AS\n SELECT id,ts,kind,subject,journal_detail_v1(detail) AS detail FROM brain_events"
+      }
+    ],
+    "counts": {
+      "index": 116,
+      "table": 80,
+      "trigger": 72,
+      "view": 1
+    },
+    "bytes": 4998369280,
+    "allocated": 4998373376,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "strategy_capacity_receipts"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_strategy_first_live_deployments_1"
+        ],
+        [
+          "trigger",
+          "strategy_capacity_receipts_no_update"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_strategy_capacity_receipts_1"
+        ],
+        [
+          "trigger",
+          "strategy_capacity_receipts_no_delete"
+        ],
+        [
+          "trigger",
+          "strategy_first_live_deployments_no_update"
+        ],
+        [
+          "trigger",
+          "first_live_deployment_insert_authority"
+        ],
+        [
+          "table",
+          "strategy_first_live_deployments"
+        ],
+        [
+          "trigger",
+          "strategy_first_live_deployments_no_delete"
+        ]
+      ],
+      "removed": [],
+      "changed": [
+        [
+          "table",
+          "decisions"
+        ],
+        [
+          "table",
+          "research_gauges"
+        ],
+        [
+          "table",
+          "research_controls"
+        ]
+      ]
+    }
+  },
+  "attention.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/attention.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_causes_1",
+        "table": "causes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_evidence_blobs_v1_1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_representation_v1_1",
+        "table": "journal_representation_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_scan_sources_v1_1",
+        "table": "scan_sources_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_scan_versions_1",
+        "table": "scan_versions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_scans_1",
+        "table": "scans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versions_1",
+        "table": "versions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "versions_key",
+        "table": "versions",
+        "ddl": "CREATE INDEX versions_key\n            ON versions(symbol, tf, open_ms, first_seen_ms)"
+      },
+      {
+        "type": "table",
+        "name": "causes",
+        "table": "causes",
+        "ddl": "CREATE TABLE causes (\n            event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)\n              ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "journal_evidence_blobs_v1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": "CREATE TABLE journal_evidence_blobs_v1 (\n sha256 TEXT PRIMARY KEY CHECK(length(sha256)=64),\n byte_length INTEGER NOT NULL CHECK(byte_length>=0),\n codec TEXT NOT NULL CHECK(codec='zlib.v1'),\n payload BLOB NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "journal_representation_v1",
+        "table": "journal_representation_v1",
+        "ddl": "CREATE TABLE journal_representation_v1 (\n version TEXT PRIMARY KEY, status TEXT NOT NULL, manifest TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "scan_sources_v1",
+        "table": "scan_sources_v1",
+        "ddl": "CREATE TABLE scan_sources_v1 (\n scan_id TEXT PRIMARY KEY REFERENCES scans(scan_id) ON DELETE CASCADE,\n detail TEXT NOT NULL\n, anchored_detail TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "scan_versions",
+        "table": "scan_versions",
+        "ddl": "CREATE TABLE scan_versions (\n            scan_id TEXT REFERENCES scans(scan_id) ON DELETE CASCADE,\n            version_id TEXT REFERENCES versions(id),\n            PRIMARY KEY(scan_id, version_id))"
+      },
+      {
+        "type": "table",
+        "name": "scans",
+        "table": "scans",
+        "ddl": "CREATE TABLE scans (\n            scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0)"
+      },
+      {
+        "type": "table",
+        "name": "versions",
+        "table": "versions",
+        "ddl": "CREATE TABLE versions (\n            id TEXT PRIMARY KEY, symbol TEXT, tf TEXT, open_ms INTEGER,\n            first_seen_ms INTEGER, value_hash TEXT, previous_value_hash TEXT,\n            payload TEXT NOT NULL)"
+      },
+      {
+        "type": "view",
+        "name": "brain_events_logical_v1",
+        "table": "brain_events_logical_v1",
+        "ddl": "CREATE VIEW brain_events_logical_v1 AS\n SELECT id,ts,kind,subject,journal_detail_v1(detail) AS detail FROM brain_events"
+      }
+    ],
+    "counts": {
+      "index": 8,
+      "table": 7,
+      "view": 1
+    },
+    "bytes": 32317440,
+    "allocated": 32321536,
+    "diff": {
+      "added": [],
+      "removed": [],
+      "changed": [
+        [
+          "table",
+          "scan_sources_v1"
+        ]
+      ]
+    }
+  },
+  "execution-evidence.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/execution-evidence.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_observations_1",
+        "table": "observations",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "observations",
+        "table": "observations",
+        "ddl": "CREATE TABLE observations(\n                      seq INTEGER PRIMARY KEY AUTOINCREMENT, observation_id TEXT UNIQUE,\n                      kind TEXT NOT NULL, captured_ms INTEGER NOT NULL, body TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "sqlite_sequence",
+        "table": "sqlite_sequence",
+        "ddl": "CREATE TABLE sqlite_sequence(name,seq)"
+      },
+      {
+        "type": "trigger",
+        "name": "obs_no_delete",
+        "table": "observations",
+        "ddl": "CREATE TRIGGER obs_no_delete BEFORE DELETE ON observations\n                      BEGIN SELECT RAISE(ABORT,'observations immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "obs_no_update",
+        "table": "observations",
+        "ddl": "CREATE TRIGGER obs_no_update BEFORE UPDATE ON observations\n                      BEGIN SELECT RAISE(ABORT,'observations immutable'); END"
+      }
+    ],
+    "counts": {
+      "index": 1,
+      "table": 2,
+      "trigger": 2
+    },
+    "bytes": 24576,
+    "allocated": 24576,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "observations"
+        ],
+        [
+          "table",
+          "sqlite_sequence"
+        ],
+        [
+          "trigger",
+          "obs_no_update"
+        ],
+        [
+          "trigger",
+          "obs_no_delete"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_observations_1"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "runtime-portfolio.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/runtime-portfolio.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_checkpoints_1",
+        "table": "checkpoints",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_evaluations_1",
+        "table": "evaluations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_evidence_blobs_v1_1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "checkpoints",
+        "table": "checkpoints",
+        "ddl": "CREATE TABLE checkpoints(event_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "evaluations",
+        "table": "evaluations",
+        "ddl": "CREATE TABLE evaluations(cut_id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "journal_evidence_blobs_v1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": "CREATE TABLE journal_evidence_blobs_v1 (\n sha256 TEXT PRIMARY KEY CHECK(length(sha256)=64),\n byte_length INTEGER NOT NULL CHECK(byte_length>=0),\n codec TEXT NOT NULL CHECK(codec='zlib.v1'),\n payload BLOB NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "state",
+        "table": "state",
+        "ddl": "CREATE TABLE state(id INTEGER PRIMARY KEY CHECK(id=1), inputs_json TEXT,\n                previous_proposal_id TEXT)"
+      },
+      {
+        "type": "trigger",
+        "name": "checkpoint_no_delete",
+        "table": "checkpoints",
+        "ddl": "CREATE TRIGGER checkpoint_no_delete BEFORE DELETE ON checkpoints\n                BEGIN SELECT RAISE(ABORT,'checkpoint immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "checkpoint_no_update",
+        "table": "checkpoints",
+        "ddl": "CREATE TRIGGER checkpoint_no_update BEFORE UPDATE ON checkpoints\n                BEGIN SELECT RAISE(ABORT,'checkpoint immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "evaluation_no_delete",
+        "table": "evaluations",
+        "ddl": "CREATE TRIGGER evaluation_no_delete BEFORE DELETE ON evaluations\n                BEGIN SELECT RAISE(ABORT,'evaluation immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "evaluation_no_update",
+        "table": "evaluations",
+        "ddl": "CREATE TRIGGER evaluation_no_update BEFORE UPDATE ON evaluations\n                BEGIN SELECT RAISE(ABORT,'evaluation immutable'); END"
+      },
+      {
+        "type": "view",
+        "name": "evaluations_logical_v1",
+        "table": "evaluations_logical_v1",
+        "ddl": "CREATE VIEW evaluations_logical_v1 AS\n                SELECT cut_id,journal_detail_v1(payload) AS payload FROM evaluations"
+      },
+      {
+        "type": "view",
+        "name": "state_logical_v1",
+        "table": "state_logical_v1",
+        "ddl": "CREATE VIEW state_logical_v1 AS\n                SELECT id,journal_detail_v1(inputs_json) AS inputs_json,previous_proposal_id FROM state"
+      }
+    ],
+    "counts": {
+      "index": 3,
+      "table": 4,
+      "trigger": 4,
+      "view": 2
+    },
+    "bytes": 2300477440,
+    "allocated": 2300477440,
+    "diff": {
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "attention_learning.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/attention_learning.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "episode_symbol",
+        "table": "episodes",
+        "ddl": "CREATE INDEX episode_symbol ON episodes(symbol,deadline_ms)"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_collector_receipts_1",
+        "table": "collector_receipts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_episodes_1",
+        "table": "episodes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_forecast_sources_1",
+        "table": "forecast_sources",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_population_events_1",
+        "table": "population_events",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_population_meta_1",
+        "table": "population_meta",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_protocols_1",
+        "table": "protocols",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "collector_receipts",
+        "table": "collector_receipts",
+        "ddl": "CREATE TABLE collector_receipts (key TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "diagnostics",
+        "table": "diagnostics",
+        "ddl": "CREATE TABLE diagnostics (ts_ms INTEGER, status TEXT, detail TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "episodes",
+        "table": "episodes",
+        "ddl": "CREATE TABLE episodes (\n        id TEXT PRIMARY KEY, protocol_id TEXT, symbol TEXT, created_ms INTEGER,\n        deadline_ms INTEGER, status TEXT, prediction TEXT, outcome TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "forecast_sources",
+        "table": "forecast_sources",
+        "ddl": "CREATE TABLE forecast_sources (episode_id TEXT, phase TEXT, payload TEXT NOT NULL, PRIMARY KEY(episode_id,phase))"
+      },
+      {
+        "type": "table",
+        "name": "population_events",
+        "table": "population_events",
+        "ddl": "CREATE TABLE population_events (id TEXT PRIMARY KEY, hash TEXT NOT NULL, local_imported_ms INTEGER NOT NULL, payload TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "population_meta",
+        "table": "population_meta",
+        "ddl": "CREATE TABLE population_meta (key TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "protocols",
+        "table": "protocols",
+        "ddl": "CREATE TABLE protocols (id TEXT PRIMARY KEY, activated_ms INTEGER, payload TEXT)"
+      }
+    ],
+    "counts": {
+      "index": 7,
+      "table": 7
+    },
+    "bytes": 8065024,
+    "allocated": 8065024,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "forecast_sources"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_protocols_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_population_meta_1"
+        ],
+        [
+          "table",
+          "protocols"
+        ],
+        [
+          "index",
+          "episode_symbol"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_population_events_1"
+        ],
+        [
+          "table",
+          "diagnostics"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_collector_receipts_1"
+        ],
+        [
+          "table",
+          "episodes"
+        ],
+        [
+          "table",
+          "population_meta"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_forecast_sources_1"
+        ],
+        [
+          "table",
+          "collector_receipts"
+        ],
+        [
+          "table",
+          "population_events"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_episodes_1"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "accounting-worker/queue.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/accounting-worker/queue.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attempts_1",
+        "table": "attempts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attempts_2",
+        "table": "attempts",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_jobs_1",
+        "table": "jobs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_learning_deliveries_1",
+        "table": "learning_deliveries",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_meta_1",
+        "table": "meta",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "attempts",
+        "table": "attempts",
+        "ddl": "CREATE TABLE attempts(\n            id TEXT PRIMARY KEY, trade_id TEXT NOT NULL, path TEXT NOT NULL UNIQUE,\n            status TEXT NOT NULL, started_ms INTEGER NOT NULL, finished_ms INTEGER,\n            reasons TEXT NOT NULL DEFAULT '[]')"
+      },
+      {
+        "type": "table",
+        "name": "jobs",
+        "table": "jobs",
+        "ddl": "CREATE TABLE jobs(\n            trade_id TEXT PRIMARY KEY, status TEXT NOT NULL, due_ms INTEGER NOT NULL,\n            attempts INTEGER NOT NULL DEFAULT 0, reasons TEXT NOT NULL DEFAULT '[]')"
+      },
+      {
+        "type": "table",
+        "name": "learning_deliveries",
+        "table": "learning_deliveries",
+        "ddl": "CREATE TABLE learning_deliveries(attempt_id TEXT PRIMARY KEY,outcome_id TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "meta",
+        "table": "meta",
+        "ddl": "CREATE TABLE meta(key TEXT PRIMARY KEY, value INTEGER NOT NULL)"
+      }
+    ],
+    "counts": {
+      "index": 5,
+      "table": 4
+    },
+    "bytes": 192512,
+    "allocated": 192512,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "learning_deliveries"
+        ],
+        [
+          "table",
+          "meta"
+        ],
+        [
+          "table",
+          "attempts"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_attempts_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_attempts_2"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_learning_deliveries_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_jobs_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_meta_1"
+        ],
+        [
+          "table",
+          "jobs"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "declared-population/attention.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/declared-population/attention.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_causes_1",
+        "table": "causes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_scan_versions_1",
+        "table": "scan_versions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_scans_1",
+        "table": "scans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_versions_1",
+        "table": "versions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "versions_key",
+        "table": "versions",
+        "ddl": "CREATE INDEX versions_key\n            ON versions(symbol, tf, open_ms, first_seen_ms)"
+      },
+      {
+        "type": "table",
+        "name": "causes",
+        "table": "causes",
+        "ddl": "CREATE TABLE causes (\n            event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)\n              ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "scan_versions",
+        "table": "scan_versions",
+        "ddl": "CREATE TABLE scan_versions (\n            scan_id TEXT REFERENCES scans(scan_id) ON DELETE CASCADE,\n            version_id TEXT REFERENCES versions(id),\n            PRIMARY KEY(scan_id, version_id))"
+      },
+      {
+        "type": "table",
+        "name": "scans",
+        "table": "scans",
+        "ddl": "CREATE TABLE scans (\n            scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0)"
+      },
+      {
+        "type": "table",
+        "name": "versions",
+        "table": "versions",
+        "ddl": "CREATE TABLE versions (\n            id TEXT PRIMARY KEY, symbol TEXT, tf TEXT, open_ms INTEGER,\n            first_seen_ms INTEGER, value_hash TEXT, previous_value_hash TEXT,\n            payload TEXT NOT NULL)"
+      }
+    ],
+    "counts": {
+      "index": 5,
+      "table": 4
+    },
+    "bytes": 33296384,
+    "allocated": 33296384,
+    "diff": {
+      "added": [
+        [
+          "index",
+          "sqlite_autoindex_scan_versions_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_versions_1"
+        ],
+        [
+          "table",
+          "causes"
+        ],
+        [
+          "table",
+          "versions"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_scans_1"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_causes_1"
+        ],
+        [
+          "index",
+          "versions_key"
+        ],
+        [
+          "table",
+          "scans"
+        ],
+        [
+          "table",
+          "scan_versions"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "stage5-public/public.db": {
+    "path": "/mnt/luffy-data/luffy/production/data/stage5-public/public.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_observations_1",
+        "table": "observations",
+        "ddl": null
+      },
+      {
+        "type": "table",
+        "name": "observations",
+        "table": "observations",
+        "ddl": "CREATE TABLE observations(\n                      seq INTEGER PRIMARY KEY AUTOINCREMENT, observation_id TEXT UNIQUE,\n                      kind TEXT NOT NULL, captured_ms INTEGER NOT NULL, body TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "sqlite_sequence",
+        "table": "sqlite_sequence",
+        "ddl": "CREATE TABLE sqlite_sequence(name,seq)"
+      },
+      {
+        "type": "trigger",
+        "name": "obs_no_delete",
+        "table": "observations",
+        "ddl": "CREATE TRIGGER obs_no_delete BEFORE DELETE ON observations\n                      BEGIN SELECT RAISE(ABORT,'observations immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "obs_no_update",
+        "table": "observations",
+        "ddl": "CREATE TRIGGER obs_no_update BEFORE UPDATE ON observations\n                      BEGIN SELECT RAISE(ABORT,'observations immutable'); END"
+      }
+    ],
+    "counts": {
+      "index": 1,
+      "table": 2,
+      "trigger": 2
+    },
+    "bytes": 19337216,
+    "allocated": 19341312,
+    "diff": {
+      "added": [
+        [
+          "table",
+          "observations"
+        ],
+        [
+          "table",
+          "sqlite_sequence"
+        ],
+        [
+          "trigger",
+          "obs_no_update"
+        ],
+        [
+          "trigger",
+          "obs_no_delete"
+        ],
+        [
+          "index",
+          "sqlite_autoindex_observations_1"
+        ]
+      ],
+      "removed": [],
+      "changed": []
+    }
+  },
+  ".prepare-work-34ec1def50de47ce8837d4d470b326fb.db": {
+    "path": "/mnt/luffy-data/luffy/operational/frozen-demo-de6b35fc83e8/data/.prepare-work-34ec1def50de47ce8837d4d470b326fb.db",
+    "objects": [
+      {
+        "type": "index",
+        "name": "attention_fetch_outcomes_sel",
+        "table": "attention_fetch_outcomes",
+        "ddl": "CREATE INDEX attention_fetch_outcomes_sel ON attention_fetch_outcomes(selection_id,id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_cycles_ts",
+        "table": "cycles",
+        "ddl": "CREATE INDEX idx_cycles_ts ON cycles(ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_current_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_current_ts ON decisions(ts DESC)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_directional_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_directional_ts ON decisions(ts)\n    WHERE action!='HOLD'"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_exec",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_exec ON decisions(executed)"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_executed_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_executed_ts ON decisions(ts) WHERE executed=1"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_rejected_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_rejected_ts ON decisions(ts)\n    WHERE action!='HOLD' AND executed=0 AND skip_reason IS NOT NULL AND skip_reason!=''"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_skipped_ts",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_skipped_ts ON decisions(ts)\n    WHERE action!='HOLD' AND executed=0"
+      },
+      {
+        "type": "index",
+        "name": "idx_decisions_symbol",
+        "table": "decisions",
+        "ddl": "CREATE INDEX idx_decisions_symbol ON decisions(symbol, ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_research_combos_pick",
+        "table": "research_combos",
+        "ddl": "CREATE INDEX idx_research_combos_pick\n    ON research_combos(tf, geo, k, verdict)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_opened",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_opened ON trades(opened_at, id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_status",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_status ON trades(status)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_status_opened",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_status_opened ON trades(status, opened_at, id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_trades_strategy",
+        "table": "trades",
+        "ddl": "CREATE INDEX idx_trades_strategy ON trades(strategy_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_agent",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_agent ON votes(agent, ts)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_cycle_symbol",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_cycle_symbol ON votes(cycle_id, symbol)"
+      },
+      {
+        "type": "index",
+        "name": "idx_votes_symbol",
+        "table": "votes",
+        "ddl": "CREATE INDEX idx_votes_symbol ON votes(symbol, ts)"
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attention_cursor_1",
+        "table": "attention_cursor",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_attention_selections_1",
+        "table": "attention_selections",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_cycles_1",
+        "table": "cycles",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_decisions_1",
+        "table": "decisions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_equity_1",
+        "table": "equity",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_equity_provenance_1",
+        "table": "equity_provenance",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_accounting_1",
+        "table": "execution_accounting",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_1",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_2",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_execution_requests_3",
+        "table": "execution_requests",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_evidence_blobs_v1_1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_journal_representation_v1_1",
+        "table": "journal_representation_v1",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_outcomes_1",
+        "table": "outcomes",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_bank_objects_1",
+        "table": "research_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_bank_objects_2",
+        "table": "research_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_candidates_1",
+        "table": "research_candidates",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_combos_1",
+        "table": "research_combos",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_controls_1",
+        "table": "research_controls",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_evidence_1",
+        "table": "research_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_evidence_2",
+        "table": "research_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_gauges_1",
+        "table": "research_gauges",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_next_questions_1",
+        "table": "research_next_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_next_questions_2",
+        "table": "research_next_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_plans_1",
+        "table": "research_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_plans_2",
+        "table": "research_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_questions_1",
+        "table": "research_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_questions_2",
+        "table": "research_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_registrations_1",
+        "table": "research_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_registrations_2",
+        "table": "research_registrations",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_results_1",
+        "table": "research_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_results_2",
+        "table": "research_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_runs_1",
+        "table": "research_runs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_slices_1",
+        "table": "research_slices",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_bank_objects_1",
+        "table": "research_unreadable_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_bank_objects_2",
+        "table": "research_unreadable_bank_objects",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_evidence_1",
+        "table": "research_unreadable_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_evidence_2",
+        "table": "research_unreadable_evidence",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_plans_1",
+        "table": "research_unreadable_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_plans_2",
+        "table": "research_unreadable_plans",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_questions_1",
+        "table": "research_unreadable_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_questions_2",
+        "table": "research_unreadable_questions",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_results_1",
+        "table": "research_unreadable_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_results_2",
+        "table": "research_unreadable_results",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_research_unreadable_runs_1",
+        "table": "research_unreadable_runs",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_state_kv_1",
+        "table": "state_kv",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategies_1",
+        "table": "strategies",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_strategy_legacy_authorities_1",
+        "table": "strategy_legacy_authorities",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_trade_fills_1",
+        "table": "trade_fills",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "sqlite_autoindex_trades_1",
+        "table": "trades",
+        "ddl": null
+      },
+      {
+        "type": "index",
+        "name": "trade_accounting_bookings_trade",
+        "table": "trade_accounting_bookings",
+        "ddl": "CREATE INDEX trade_accounting_bookings_trade ON trade_accounting_bookings(trade_id,id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_order",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_order ON trade_fills(symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_scoped",
+        "table": "trade_fills",
+        "ddl": "CREATE UNIQUE INDEX trade_fills_scoped\n    ON trade_fills(market_type, symbol, fill_key)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_scoped_order",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_scoped_order\n    ON trade_fills(market_type, symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_fills_trade",
+        "table": "trade_fills",
+        "ddl": "CREATE INDEX trade_fills_trade ON trade_fills(trade_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_booking",
+        "table": "trade_legs",
+        "ddl": "CREATE UNIQUE INDEX trade_legs_booking ON trade_legs(booking_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_order",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_order ON trade_legs(symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_scoped_order",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_scoped_order\n    ON trade_legs(market_type, symbol, venue_order_id)"
+      },
+      {
+        "type": "index",
+        "name": "trade_legs_trade",
+        "table": "trade_legs",
+        "ddl": "CREATE INDEX trade_legs_trade ON trade_legs(trade_id, id)"
+      },
+      {
+        "type": "table",
+        "name": "attention_cursor",
+        "table": "attention_cursor",
+        "ddl": "CREATE TABLE attention_cursor (\n    name TEXT PRIMARY KEY,\n    value TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "attention_fetch_outcomes",
+        "table": "attention_fetch_outcomes",
+        "ddl": "CREATE TABLE attention_fetch_outcomes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    selection_id TEXT NOT NULL REFERENCES attention_selections(selection_id),\n    status TEXT NOT NULL,\n    reason TEXT NOT NULL,\n    started_ms INTEGER,\n    ended_ms INTEGER,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "attention_selections",
+        "table": "attention_selections",
+        "ddl": "CREATE TABLE attention_selections (\n    selection_id TEXT PRIMARY KEY,   -- sha256(canonical_json)\n    rule_version TEXT NOT NULL,\n    cycle_as_of_ms INTEGER NOT NULL,\n    outcome TEXT NOT NULL,\n    snapshot_id TEXT NOT NULL,\n    snapshot_as_of_ms INTEGER NOT NULL,\n    registry_age_ms INTEGER NOT NULL,\n    max_snapshot_age_ms INTEGER NOT NULL,\n    selected_id TEXT,\n    selected_symbol TEXT,\n    cursor_before TEXT,\n    cursor_after TEXT,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "brain_events",
+        "table": "brain_events",
+        "ddl": "CREATE TABLE brain_events (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    ts TEXT NOT NULL,\n    kind TEXT NOT NULL,              -- review / promote / demote / retire / propose / mutate / note\n    subject TEXT,                    -- strategy id or scope\n    detail TEXT                      -- free text / JSON\n)"
+      },
+      {
+        "type": "table",
+        "name": "control_events",
+        "table": "control_events",
+        "ddl": "CREATE TABLE control_events (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    ts TEXT NOT NULL,\n    event TEXT NOT NULL,             -- state_change / panic / mode_switch / budget_stop\n    from_state TEXT,\n    to_state TEXT,\n    actor TEXT NOT NULL,             -- operator / luffy / watchdog / risk_engine\n    detail TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "cycles",
+        "table": "cycles",
+        "ddl": "CREATE TABLE cycles (\n    id TEXT PRIMARY KEY,\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    price REAL,\n    regime TEXT,\n    adx REAL,\n    btc_trend TEXT,\n    market_type TEXT,\n    mode TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "decisions",
+        "table": "decisions",
+        "ddl": "CREATE TABLE decisions (\n    id TEXT PRIMARY KEY,\n    cycle_id TEXT NOT NULL REFERENCES cycles(id),\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    action TEXT NOT NULL,\n    score REAL NOT NULL,\n    threshold REAL NOT NULL,\n    confidence REAL NOT NULL,\n    executed INTEGER NOT NULL DEFAULT 0,\n    skip_reason TEXT,\n    size_usdt REAL DEFAULT 0,\n    entry_price REAL,\n    strategy_ids TEXT\n, instrument_binding_json TEXT DEFAULT NULL, reason_codes TEXT DEFAULT NULL, reason_codes_version TEXT DEFAULT NULL, scan_id TEXT DEFAULT NULL, signals_json TEXT DEFAULT '[]', meta_p REAL DEFAULT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "equity",
+        "table": "equity",
+        "ddl": "CREATE TABLE equity (\n    ts TEXT PRIMARY KEY,\n    equity REAL NOT NULL,\n    balance REAL NOT NULL,\n    open_positions INTEGER\n)"
+      },
+      {
+        "type": "table",
+        "name": "equity_provenance",
+        "table": "equity_provenance",
+        "ddl": "CREATE TABLE equity_provenance (\n    ts TEXT PRIMARY KEY,\n    provenance TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "execution_accounting",
+        "table": "execution_accounting",
+        "ddl": "CREATE TABLE execution_accounting (\n    id TEXT PRIMARY KEY,\n    payload TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "execution_requests",
+        "table": "execution_requests",
+        "ddl": "CREATE TABLE execution_requests (\n logical_id TEXT PRIMARY KEY, decision_id TEXT NOT NULL UNIQUE,\n intent_hash TEXT NOT NULL, intent_json TEXT NOT NULL,\n client_order_id TEXT NOT NULL UNIQUE, state TEXT NOT NULL,\n recovery_json TEXT, order_id TEXT, result_json TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "journal_evidence_blobs_v1",
+        "table": "journal_evidence_blobs_v1",
+        "ddl": "CREATE TABLE journal_evidence_blobs_v1 (\n sha256 TEXT PRIMARY KEY CHECK(length(sha256)=64),\n byte_length INTEGER NOT NULL CHECK(byte_length>=0),\n codec TEXT NOT NULL CHECK(codec='zlib.v1'),\n payload BLOB NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "journal_representation_v1",
+        "table": "journal_representation_v1",
+        "ddl": "CREATE TABLE journal_representation_v1 (\n version TEXT PRIMARY KEY, status TEXT NOT NULL, manifest TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "outcomes",
+        "table": "outcomes",
+        "ddl": "CREATE TABLE outcomes (\n    decision_id TEXT PRIMARY KEY REFERENCES decisions(id),\n    cycle_id TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    ts TEXT NOT NULL,                -- decision time\n    action TEXT NOT NULL,\n    entry_price REAL NOT NULL,\n    resolved_at TEXT,\n    fwd_ret_1h REAL,\n    fwd_ret_4h REAL,\n    fwd_ret_24h REAL,\n    correct_1h INTEGER,              -- 1/0/NULL: did direction win at horizon?\n    correct_4h INTEGER,\n    correct_24h INTEGER\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_archive",
+        "table": "research_archive",
+        "ddl": "CREATE TABLE research_archive (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    tf TEXT,\n    vintage TEXT,\n    table_name TEXT,\n    row_json TEXT,\n    archived_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_bank_objects",
+        "table": "research_bank_objects",
+        "ddl": "CREATE TABLE research_bank_objects (\n    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity\n    schema TEXT NOT NULL,\n    bank_kind TEXT NOT NULL,\n    builder_id TEXT NOT NULL,\n    run_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(run_id, result_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_batches",
+        "table": "research_batches",
+        "ddl": "CREATE TABLE research_batches (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    started TEXT, finished TEXT,\n    tf TEXT, geo TEXT, round TEXT,\n    n INTEGER, ok INTEGER, elapsed_s REAL, error TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_budget",
+        "table": "research_budget",
+        "ddl": "CREATE TABLE research_budget (\n    id INTEGER PRIMARY KEY CHECK (id = 1),\n    alpha REAL NOT NULL,\n    w0 REAL NOT NULL,\n    registered_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_candidates",
+        "table": "research_candidates",
+        "ddl": "CREATE TABLE research_candidates (\n    hash TEXT PRIMARY KEY,\n    tf TEXT, geo TEXT,\n    state TEXT,                    -- queued | twin | deferred | gate1_fail |\n                                   -- gate3_fail | referee_passed |\n                                   -- reason_passed | admitted | refused\n    twin_of TEXT,\n    rank REAL,\n    gate1 TEXT, gate3 TEXT,\n    entries TEXT,                  -- JSON {symbol: [entry bar ms, ...]}\n    reason TEXT,\n    updated_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_combos",
+        "table": "research_combos",
+        "ddl": "CREATE TABLE research_combos (\n    hash TEXT PRIMARY KEY,\n    tf TEXT NOT NULL,\n    geo TEXT NOT NULL,\n    k INTEGER NOT NULL,\n    round TEXT,\n    parent TEXT,\n    trigger TEXT,\n    window TEXT,\n    parts TEXT,                    -- JSON list of canonical part keys\n    entry_long TEXT,\n    entry_short TEXT,\n    status TEXT,                   -- scored | untestable | empty | error\n    label TEXT,                    -- scored | no_edge | underpowered | ...\n    verdict TEXT,                  -- survivor | grow | prune\n    reason TEXT,\n    consistency_p REAL,\n    median_pf REAL,\n    total_pct REAL,\n    max_dd_pct REAL,\n    trades INTEGER,\n    scored_symbols INTEGER,\n    testable INTEGER,\n    ablation TEXT,                 -- JSON {removed part: what it cost}\n    result TEXT,                   -- the full evaluation, JSON\n    created_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_controls",
+        "table": "research_controls",
+        "ddl": "CREATE TABLE research_controls (\n    tf TEXT NOT NULL,\n    window TEXT NOT NULL,\n    consistency_p REAL,\n    powered INTEGER,\n    status TEXT,                   -- measured | uncalibrated | untestable\n    detail TEXT,\n    measured_at TEXT,\n    PRIMARY KEY (tf, window)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_evidence",
+        "table": "research_evidence",
+        "ddl": "CREATE TABLE research_evidence (\n    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity\n    schema TEXT NOT NULL,\n    evidence_kind TEXT NOT NULL,\n    collector_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, evidence_kind, plan_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_gauges",
+        "table": "research_gauges",
+        "ddl": "CREATE TABLE research_gauges (\n    tf TEXT NOT NULL,\n    expr TEXT NOT NULL,\n    p10 REAL, p25 REAL, p75 REAL, p90 REAL,\n    min REAL, max REAL,\n    n INTEGER,\n    finite_frac REAL,\n    usable INTEGER,\n    measured_at TEXT,\n    PRIMARY KEY (tf, expr)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_next_questions",
+        "table": "research_next_questions",
+        "ddl": "CREATE TABLE research_next_questions (\n    next_question_id TEXT PRIMARY KEY, -- sha256 of the record identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    generator_id TEXT NOT NULL,\n    bank_object_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    hypothesis TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,    -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(bank_object_id, hypothesis)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_plans",
+        "table": "research_plans",
+        "ddl": "CREATE TABLE research_plans (\n    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity\n    schema TEXT NOT NULL,\n    plan_kind TEXT NOT NULL,\n    planner_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, plan_kind, question_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_questions",
+        "table": "research_questions",
+        "ddl": "CREATE TABLE research_questions (\n    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    trigger TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_kind TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(question_kind, source_kind, source_event_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_registrations",
+        "table": "research_registrations",
+        "ddl": "CREATE TABLE research_registrations (\n    record_type TEXT NOT NULL,       -- the record's schema\n    record_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of the record canonical JSON\n    recorded_at_ms INTEGER NOT NULL, -- first registration\n    envelope_sha256 TEXT NOT NULL UNIQUE,  -- sha256 of envelope_json\n    envelope_json TEXT NOT NULL,\n    PRIMARY KEY (record_type, record_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_results",
+        "table": "research_results",
+        "ddl": "CREATE TABLE research_results (\n    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity\n    schema TEXT NOT NULL,\n    result_kind TEXT NOT NULL,\n    resolver_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL UNIQUE,\n    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON\n    plan_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_runs",
+        "table": "research_runs",
+        "ddl": "CREATE TABLE research_runs (\n    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs\n    schema TEXT NOT NULL,\n    run_kind TEXT NOT NULL,\n    runner_id TEXT NOT NULL,\n    run_key TEXT NOT NULL,\n    run_recorded_at_ms INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json\n    telemetry_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_slices",
+        "table": "research_slices",
+        "ddl": "CREATE TABLE research_slices (\n    tf TEXT PRIMARY KEY,\n    cut_ms INTEGER,\n    counts TEXT,                   -- JSON {discovery, heldout_a, heldout_b}\n    measured_at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_tests",
+        "table": "research_tests",
+        "ddl": "CREATE TABLE research_tests (\n    seq INTEGER PRIMARY KEY AUTOINCREMENT,\n    hash TEXT, tf TEXT, geo TEXT,\n    gate TEXT,                     -- gate1 (phase 4 adds gate2)\n    p REAL,\n    alpha_t REAL,\n    rejected INTEGER,\n    braked INTEGER,\n    detail TEXT,\n    at TEXT\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_bank_objects",
+        "table": "research_unreadable_bank_objects",
+        "ddl": "CREATE TABLE research_unreadable_bank_objects (\n    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity\n    schema TEXT NOT NULL,\n    bank_kind TEXT NOT NULL,\n    builder_id TEXT NOT NULL,\n    run_id TEXT NOT NULL,\n    result_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(run_id, result_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_evidence",
+        "table": "research_unreadable_evidence",
+        "ddl": "CREATE TABLE research_unreadable_evidence (\n    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity\n    schema TEXT NOT NULL,\n    evidence_kind TEXT NOT NULL,\n    collector_id TEXT NOT NULL,\n    plan_id TEXT NOT NULL,\n    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, evidence_kind, plan_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_plans",
+        "table": "research_unreadable_plans",
+        "ddl": "CREATE TABLE research_unreadable_plans (\n    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity\n    schema TEXT NOT NULL,\n    plan_kind TEXT NOT NULL,\n    planner_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, plan_kind, question_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_questions",
+        "table": "research_unreadable_questions",
+        "ddl": "CREATE TABLE research_unreadable_questions (\n    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity\n    schema TEXT NOT NULL,\n    question_kind TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    source_kind TEXT NOT NULL,\n    source_event_id INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(source_kind, source_event_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_results",
+        "table": "research_unreadable_results",
+        "ddl": "CREATE TABLE research_unreadable_results (\n    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity\n    schema TEXT NOT NULL,\n    result_kind TEXT NOT NULL,\n    resolver_id TEXT NOT NULL,\n    evidence_id TEXT NOT NULL,\n    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON\n    plan_id TEXT NOT NULL,\n    question_id TEXT NOT NULL,\n    scope_kind TEXT NOT NULL,\n    scope_id TEXT NOT NULL,\n    status TEXT NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL,\n    UNIQUE(schema, result_kind, evidence_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "research_unreadable_runs",
+        "table": "research_unreadable_runs",
+        "ddl": "CREATE TABLE research_unreadable_runs (\n    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs\n    schema TEXT NOT NULL,\n    run_kind TEXT NOT NULL,\n    runner_id TEXT NOT NULL,\n    run_key TEXT NOT NULL,\n    run_recorded_at_ms INTEGER NOT NULL,\n    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json\n    canonical_json TEXT NOT NULL,\n    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json\n    telemetry_json TEXT NOT NULL,\n    recorded_at_ms INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "sqlite_sequence",
+        "table": "sqlite_sequence",
+        "ddl": "CREATE TABLE sqlite_sequence(name,seq)"
+      },
+      {
+        "type": "table",
+        "name": "state_kv",
+        "table": "state_kv",
+        "ddl": "CREATE TABLE state_kv (\n    key TEXT PRIMARY KEY,\n    value TEXT NOT NULL              -- control_state, market_type, proving_trades, ...\n)"
+      },
+      {
+        "type": "table",
+        "name": "strategies",
+        "table": "strategies",
+        "ddl": "CREATE TABLE strategies (\n    id TEXT PRIMARY KEY,\n    name TEXT NOT NULL,\n    kind TEXT NOT NULL,\n    params TEXT NOT NULL,            -- JSON genes\n    state TEXT NOT NULL,\n    description TEXT,\n    origin TEXT,\n    hypothesis TEXT,\n    invalidation TEXT,\n    regime_filter TEXT,              -- JSON list\n    markets TEXT,                    -- JSON list\n    generation INTEGER DEFAULT 0,\n    parent_id TEXT DEFAULT '',\n    created_at TEXT,\n    stats_json TEXT DEFAULT '{}'\n, retire_reason TEXT DEFAULT '', state_changed_at TEXT DEFAULT '', spec_json TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "strategy_legacy_authorities",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TABLE strategy_legacy_authorities (\n strategy_id TEXT PRIMARY KEY, canonical_json TEXT NOT NULL,\n canonical_sha256 TEXT NOT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "trade_accounting_bookings",
+        "table": "trade_accounting_bookings",
+        "ddl": "CREATE TABLE trade_accounting_bookings (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    trade_id TEXT NOT NULL,\n    payload TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "trade_fills",
+        "table": "trade_fills",
+        "ddl": "CREATE TABLE trade_fills (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    symbol TEXT NOT NULL,\n    fill_key TEXT NOT NULL,              -- '<market_type>|id:<venue fill id>' (or '|digest:<sha256>'); legacy rows unscoped\n    venue_fill_id TEXT,                  -- exactly as the venue returned\n    venue_order_id TEXT,\n    trade_id TEXT,                       -- set only when attribution = ATTRIBUTED\n    leg_id INTEGER,                      -- trade_legs.id of the attributed order\n    leg TEXT,                            -- entry | exit | unknown\n    side TEXT,\n    qty REAL,\n    price REAL,\n    commission TEXT,                     -- venue string, exact\n    commission_asset TEXT,\n    realized_pnl TEXT,                   -- venue string, exact\n    venue_ts_ms INTEGER,\n    observed_ms INTEGER NOT NULL,        -- when Luffy received it\n    attribution TEXT NOT NULL,           -- ATTRIBUTED | AMBIGUOUS | UNATTRIBUTED\n    attribution_reason TEXT NOT NULL,\n    source TEXT NOT NULL,                -- which evidence carried it\n    observation_json TEXT,               -- where it was observed; never attribution\n    fill_json TEXT NOT NULL,\n    market_type TEXT,                    -- NULL only on legacy unscoped rows\n    UNIQUE(symbol, fill_key)\n)"
+      },
+      {
+        "type": "table",
+        "name": "trade_legs",
+        "table": "trade_legs",
+        "ddl": "CREATE TABLE trade_legs (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    trade_id TEXT NOT NULL,\n    booking_id INTEGER NOT NULL,         -- trade_accounting_bookings.id\n    kind TEXT NOT NULL,                  -- the booking kind (entry / close:* / align_*)\n    purpose TEXT NOT NULL,               -- entry / partial_exit / final_exit / native_exit / ...\n    origin TEXT NOT NULL,                -- luffy_order | venue_observed | adopted\n    symbol TEXT NOT NULL,\n    side TEXT,                           -- order side (buy/sell) when known\n    venue_order_id TEXT,                 -- exactly as the venue returned; NULL if unknown\n    client_order_id TEXT,\n    protective_algo_id TEXT,\n    order_identity TEXT NOT NULL,        -- VERIFIED | UNAVAILABLE | NOT_APPLICABLE\n    requested_qty REAL,\n    booked_qty REAL,\n    booked_price REAL,\n    reference_json TEXT,                 -- slippage basis captured before submission\n    exit_attribution TEXT NOT NULL,      -- EXACT_LUFFY_ORDER_LINK | AMBIGUOUS | VENUE_EVENT_UNVERIFIED | UNKNOWN_HISTORICAL | NOT_APPLICABLE\n    exit_attribution_json TEXT,\n    fee_basis TEXT,                      -- evidence basis of the booked P&L/fee\n    source TEXT NOT NULL,                -- live_booking | backfill_receipt\n    recorded_ms INTEGER NOT NULL,\n    market_type TEXT,                    -- the trade's, from the receipt; NULL = scope unknown\n    status_transition TEXT,              -- '<before>-><after>' trade status in the receipt\n    terminal_close INTEGER               -- 1 iff this receipt moved the trade open -> closed; NULL = not recorded (legacy)\n)"
+      },
+      {
+        "type": "table",
+        "name": "trades",
+        "table": "trades",
+        "ddl": "CREATE TABLE trades (\n    id TEXT PRIMARY KEY,\n    decision_id TEXT,\n    symbol TEXT NOT NULL,\n    side TEXT NOT NULL,\n    amount REAL NOT NULL,\n    entry_price REAL NOT NULL,\n    exit_price REAL,\n    notional_usdt REAL,\n    leverage INTEGER DEFAULT 1,\n    stop_loss REAL, take_profit REAL, sl_order_id TEXT DEFAULT '',\n    strategy_id TEXT, strategy_name TEXT,\n    market_type TEXT, exec_mode TEXT,\n    opened_at TEXT NOT NULL,\n    closed_at TEXT,\n    realized_pnl REAL DEFAULT 0,\n    close_reason TEXT,\n    status TEXT NOT NULL DEFAULT 'open'   -- open | closed\n, tp1_done INTEGER DEFAULT 0, initial_risk REAL DEFAULT NULL, mfe_r REAL DEFAULT NULL, mae_r REAL DEFAULT NULL, excursion_json TEXT DEFAULT NULL, entry_identity_json TEXT DEFAULT NULL)"
+      },
+      {
+        "type": "table",
+        "name": "votes",
+        "table": "votes",
+        "ddl": "CREATE TABLE votes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    cycle_id TEXT NOT NULL REFERENCES cycles(id),\n    ts TEXT NOT NULL,\n    symbol TEXT NOT NULL,\n    agent TEXT NOT NULL,\n    side TEXT NOT NULL,\n    conviction REAL NOT NULL,\n    confidence REAL NOT NULL,\n    rationale TEXT,\n    meta TEXT\n)"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_delete",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_delete BEFORE DELETE ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'legacy authority is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_insert",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_insert BEFORE INSERT ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'LEGACY_AUTHORITY_IMPORT_REQUIRED'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "legacy_authority_no_update",
+        "table": "strategy_legacy_authorities",
+        "ddl": "CREATE TRIGGER legacy_authority_no_update BEFORE UPDATE ON strategy_legacy_authorities\nBEGIN SELECT RAISE(ABORT, 'legacy authority is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_delete",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_delete\nBEFORE DELETE ON research_registrations\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_replace",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_replace\nBEFORE INSERT ON research_registrations\nWHEN EXISTS (SELECT 1 FROM research_registrations\n             WHERE (record_type=NEW.record_type AND record_id=NEW.record_id)\n                OR envelope_sha256=NEW.envelope_sha256)\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "research_registrations_no_update",
+        "table": "research_registrations",
+        "ddl": "CREATE TRIGGER research_registrations_no_update\nBEFORE UPDATE ON research_registrations\nBEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "trades_entry_identity_immutable",
+        "table": "trades",
+        "ddl": "CREATE TRIGGER trades_entry_identity_immutable\nBEFORE UPDATE OF entry_identity_json ON trades\nWHEN OLD.entry_identity_json IS NOT NEW.entry_identity_json\nBEGIN SELECT RAISE(ABORT, 'entry_identity_immutable'); END"
+      },
+      {
+        "type": "view",
+        "name": "brain_events_logical_v1",
+        "table": "brain_events_logical_v1",
+        "ddl": "CREATE VIEW brain_events_logical_v1 AS\n SELECT id,ts,kind,subject,journal_detail_v1(detail) AS detail FROM brain_events"
+      }
+    ],
+    "counts": {
+      "index": 75,
+      "table": 46,
+      "trigger": 7,
+      "view": 1
+    },
+    "bytes": 581632,
+    "allocated": 581632,
+    "diff": {
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  }
+}

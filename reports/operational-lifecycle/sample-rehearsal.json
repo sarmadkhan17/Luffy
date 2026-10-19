@@ -1,0 +1,39 @@
+{
+  "source_readonly_mount": true,
+  "source_rows_limit": 2048,
+  "production_physical_savings_bytes": 0,
+  "market_sample": {
+    "rows": 2048,
+    "records_compacted": 2048,
+    "logical_sha256": "1fbeca385c8265f14fd0b89f2e5a80050a50fa93dc7f529f602898ce1c772622",
+    "exact_logical_parity": true,
+    "source_rowid_order_preserved": true,
+    "as_of_receipts_replayed": 2010,
+    "idempotent": true,
+    "integrity": "ok",
+    "net_payload_bytes_removed": 2184076,
+    "before_bytes": 8564736,
+    "after_apply_bytes": 8564736,
+    "free_pages_after_apply": 0,
+    "filesystem_bytes_reclaimed_without_compaction": 0,
+    "after_private_vacuum_bytes": 2928640,
+    "physical_sample_savings_bytes": 5636096
+  },
+  "portfolio_sample": {
+    "checkpoints": 3,
+    "modes": {
+      "existing": {
+        "blobs": 150,
+        "compressed_bytes": 2201933,
+        "main_bytes": 2363392
+      },
+      "anchored": {
+        "blobs": 92,
+        "compressed_bytes": 1148948,
+        "main_bytes": 1249280
+      }
+    },
+    "compressed_payload_growth_reduction_bytes": 1052985,
+    "exact_logical_parity": true
+  }
+}

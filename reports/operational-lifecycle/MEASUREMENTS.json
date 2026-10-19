@@ -1,0 +1,10 @@
+{
+  "retained_page_bytes": 13860642816,
+  "preexisting_reusable_page_bytes": 13926400,
+  "estimated_payload_reclaimable_GB": 1.05592783209375,
+  "physical_production_savings_bytes": 0,
+  "estimated_retained_payload_growth_reduction_GB_per_day": 1.023040363498057,
+  "portfolio_three_checkpoint_compressed_bytes_reduction": 1052985,
+  "source": "operational-dry-run.json and sample-rehearsal.json",
+  "limitations": "Payload estimates and private-sample physical savings are different quantities; no live compaction and no whole-host df attribution."
+}
