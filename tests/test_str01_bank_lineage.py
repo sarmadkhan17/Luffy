@@ -8,6 +8,7 @@ import json
 import shutil
 import sqlite3
 from contextlib import closing
+from pathlib import Path
 
 import pytest
 
@@ -15,6 +16,7 @@ from trader.cognition import predictive_bank
 from trader.core.journal import Journal
 from trader.research import predictive_bridge as B
 from trader.strategy import factory_handoff as F
+from tests.retained_research_fixtures import restore_ledger
 from tests.test_investigation_state_feedback import paths  # noqa: F401
 from tests.test_predictive_research_bridge import (  # noqa: F401
     CFG, NumericalFixture, consume, population, saved)
@@ -32,8 +34,37 @@ def lineage(population):
     final = next(r for r in saved(bank, "bridge_bank_results")
                  if r["classification"] == "SUPPORTED" and r["experiment_id"])
     cand = final["referee_disposition"]["factory_candidate"]
-    j = Journal(cand["quantitative_ledger"])
+    # Completed working ledgers are retired once verified Bank evidence exists
+    # (operational lifecycle). Tests that need the SQLite file reproduce it
+    # explicitly from that archive, in the isolated test directory only.
+    path = Path(cand["quantitative_ledger"])
+    if not path.exists():
+        restore_ledger(bank, final["experiment_id"], path)
+    j = Journal(path)
     return j, bank, final, B.factory_source(final, bank)
+
+
+def test_lineage_ledger_is_reproduced_from_archive_not_the_retired_file(lineage):
+    j, bank, final, _src = lineage
+    cand = final["referee_disposition"]["factory_candidate"]
+    assert j.query("SELECT COUNT(*) AS n FROM research_candidates")[0]["n"] >= 1
+    # the restore is byte-faithful to the archived evidence
+    from trader.persistence.storage_cleanup import completed_reader
+    with closing(completed_reader(bank, final["experiment_id"])) as arch:
+        assert arch.serialize() == Path(cand["quantitative_ledger"]).read_bytes()
+
+
+def test_lineage_restore_refuses_when_archive_evidence_is_gone(lineage, tmp_path):
+    _j, bank, final, _src = lineage
+    cand = final["referee_disposition"]["factory_candidate"]
+    Path(cand["quantitative_ledger"]).unlink()           # retired working copy
+    with closing(sqlite3.connect(bank)) as db:
+        db.execute("DROP TRIGGER bridge_runtime_bindings_no_delete")
+        db.execute("DELETE FROM bridge_runtime_bindings WHERE id LIKE 'completed-work:%'")
+        db.commit()
+    with pytest.raises(ValueError, match="RESEARCH_REPRODUCTION_EVIDENCE_UNAVAILABLE"):
+        restore_ledger(bank, final["experiment_id"], tmp_path / "x" / "q.db")
+    assert not (tmp_path / "x" / "q.db").exists()        # nothing recreated
 
 
 def _refused(j, src, code):
