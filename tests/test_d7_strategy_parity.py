@@ -74,7 +74,7 @@ def test_missing_partial_invalid_observations_refuse_without_transition(obs):
     p,s = E.initialize(ExitSpec(),100,1,'long',0,STEP)
     with pytest.raises(ValueError):
         E.advance(p,s,obs,1)
-    assert s == E.State(0)
+    assert s == E.initialize(ExitSpec(),100,1,'long',0,STEP)[1]
     assert not E.advance(p,s,E.Observation(0,0,0,0,0),1).due
 
 
@@ -90,7 +90,6 @@ def test_runtime_preflight_is_exactly_the_initializer_contract(ex):
             E.initialize(ex,100,1,'long',0,STEP)
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="D6 shared-file boundary pending: nullable boolean bars_since warmup")
 def test_multiple_conditions_reversal_breakout_and_window_are_literal():
     df = frame(60)
     df.loc[35,'close'] = 103.
@@ -115,7 +114,6 @@ def test_missing_indicator_remains_unknown_under_not():
 
 
 @pytest.mark.parametrize('direction', ['long','short'])
-@pytest.mark.xfail(strict=True, reason="D6 shared-file boundary pending: compiler ignores declared direction")
 def test_populated_opposite_expression_never_enables_forbidden_direction(direction):
     df = frame(30)
     spec = _spec(direction=direction, filters=[],entry_long='close > 0',entry_short='close > 0')
@@ -124,7 +122,6 @@ def test_populated_opposite_expression_never_enables_forbidden_direction(directi
     assert bool(sh.all()) == (direction == 'short')
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="D6 shared-file boundary pending: nullable boolean streak warmup")
 def test_streak_preserves_unknown_warmup():
     df = frame(30)
     lo,_ = compile_spec(_spec(filters=[],entry_long='streak(close > donchian_hi(20)) > 0')).entries({'15m':df})
@@ -161,6 +158,11 @@ def test_fixed_versioned_paper_replays_the_same_intent_after_restart(tmp_path, s
     assert signal is not None
     dec = Decision('d7','d7','BTC/USDT',signal.action,1.,.5,.8,[],[])
     dec.strategy_signals = [dict(strategy_id=spec.id,action=signal.action.value,params=signal.params)]
+    for key in ('version_id','install_id','compile_identity'):
+        dec.strategy_signals[0]['params'][key] = 'different'
+        with pytest.raises(ValueError,match='paper_decision_' + key + '_differs'):
+            paper.enter(dec,snap,spec.id,reference_equity=10000.,state='ACTIVE')
+        dec.strategy_signals[0]['params'].pop(key)
     tid = paper.enter(dec,snap,spec.id,reference_equity=10000.,state='ACTIVE')
     trade = j.query('SELECT * FROM versioned_paper_trades WHERE id=?',(tid,))[0]
     identity = json.loads(trade['entry_identity_json'])
@@ -187,7 +189,6 @@ def test_fixed_versioned_paper_replays_the_same_intent_after_restart(tmp_path, s
         paper.enter(dec,snapshot(bars(220,start,tail)),spec.id,reference_equity=10000.,state='ACTIVE')
 
 
-@pytest.mark.xfail(strict=True, reason='D6 shared-file boundary pending: compile_version loses canonical exit route')
 def test_exact_version_compile_keeps_qualified_exit_semantics(tmp_path):
     from trader.core.config import load_config
     from trader.strategy.compile import compile_version
@@ -198,7 +199,7 @@ def test_exact_version_compile_keeps_qualified_exit_semantics(tmp_path):
     assert getattr(compiled.spec.exit,'_exit_semantics_id',None) == E.EXIT_SEMANTICS_ID
 
 
-def test_original_donchian_geometry_is_preserved_and_refused_honestly():
+def test_original_donchian_geometry_is_preserved_and_supported_structurally():
     from trader.strategy.geometries import GEOS
     spec = _spec(name='Donchian Breakout Trail',timeframe='4h',direction='both',
         entry_long='close > donchian_hi(100)',entry_short='close < donchian_lo(100)',
@@ -210,7 +211,18 @@ def test_original_donchian_geometry_is_preserved_and_refused_honestly():
     assert compiled.spec.exit.stop == {'kind':'atr','mult':2.}
     assert compiled.spec.exit.target == {'kind':'none'}
     assert compiled.spec.exit.time == {'max_bars':500}
-    assert E.unsupported(spec.exit) == 'trail=atr'
-    with pytest.raises(ValueError,match='exit_semantics_unavailable'):
-        compile_spec(spec,exit_semantics_id=E.EXIT_SEMANTICS_ID)
+    assert E.unsupported(spec.exit) is None
+    canonical = compile_spec(spec,exit_semantics_id=E.EXIT_SEMANTICS_ID)
+    assert canonical.spec.exit._exit_semantics_id == E.EXIT_SEMANTICS_ID
     assert spec.to_json() == original
+
+
+@pytest.mark.parametrize('direction',['long','short'])
+def test_disabled_direction_does_not_require_its_unused_data(direction):
+    spec = _spec(direction=direction,filters=[],
+        entry_long='close > 0' if direction=='long' else 'funding_z(96) > 0',
+        entry_short='close > 0' if direction=='short' else 'funding_z(96) > 0')
+    c = compile_spec(spec)
+    assert c.data_requires == ('ohlcv',)
+    lo,sh = c.entries({'15m':frame(30)})
+    assert (lo if direction=='long' else sh).all()

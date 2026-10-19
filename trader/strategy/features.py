@@ -561,7 +561,7 @@ def _bars_since(ctx, s):
     been true at least once — never-happened is unknown, not zero."""
     raw = _series(ctx, s)
     known = raw.notna()
-    b = raw.fillna(0.0).astype(bool)
+    b = (known & raw.ne(0)).astype(bool)
     idx = pd.Series(np.arange(len(b), dtype=float), index=b.index)
     result = idx - idx.where(b).ffill()
     return result.where(known)
@@ -572,7 +572,7 @@ def _streak(ctx, s):
     """Length of the current run of consecutive true bars; 0 when false."""
     raw = _series(ctx, s)
     known = raw.notna()
-    b = raw.fillna(0.0).astype(bool)
+    b = (known & raw.ne(0)).astype(bool)
     result = b.groupby((~b).cumsum()).cumsum().astype(float)
     return result.where(known)
 

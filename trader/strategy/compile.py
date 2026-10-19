@@ -28,8 +28,8 @@ _CTX_TF = {"BTC_1h": "1h"}
 #: *contract* (names, arg specs, domains, data requirements) is hashed
 #: automatically, so a contract change alters identity even if a bump is
 #: forgotten; a pure implementation change cannot be detected and needs the bump.
-COMPILER_VERSION = "strategy-compiler.v1"
-FEATURE_VERSION = "strategy-features.v1"
+COMPILER_VERSION = "strategy-compiler.v2"
+FEATURE_VERSION = "strategy-features.v2"
 
 
 def feature_contract_sha256() -> str:
@@ -505,6 +505,12 @@ def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrat
         else None
     short_t = dsl.parse(spec.entry_short) if (spec.entry_short or "").strip() \
         else None
+    # Parse all declared expressions, but only permitted sides can contribute
+    # signals or input dependencies. Keep the serialized spec unchanged.
+    if spec.direction == "short":
+        long_t = None
+    elif spec.direction == "long":
+        short_t = None
     filters = [dsl.parse(f) for f in (spec.filters or []) if (f or "").strip()]
     exit_t = dsl.parse(spec.exit.signal_exit) \
         if (spec.exit.signal_exit or "").strip() else None
@@ -553,7 +559,9 @@ def compile_version(journal, version_id: str, *, spec_hash: str | None = None,
         fh.verify_install(journal, v, current=True)
     spec = StrategySpec.from_dict(v["spec"])
     declared = list(spec.data_requires)
-    compiled = compile_spec(spec)
+    from .exit_policy import EXIT_SEMANTICS_ID
+    fh.verify_exit_binding(journal, v)
+    compiled = compile_spec(spec, exit_semantics_id=EXIT_SEMANTICS_ID)
     # the frozen declaration must equal what the expressions actually need
     if sorted(declared) != sorted(compiled.data_requires):
         fh._refuse("dependency_mismatch")

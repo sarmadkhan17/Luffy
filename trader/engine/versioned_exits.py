@@ -21,11 +21,24 @@ def observations(spec, snap, state):
     frame = closed_bars(snap.df(spec.timeframe), spec.timeframe, at)
     if frame is None:
         return
-    for _, row in frame.iterrows():
+    if frame.attrs.get('read_mode') == 'retrospective':
+        raise ValueError('retrospective_observations_have_no_execution_authority')
+    atr = (E.trail_atr_series(frame, TF_MS[spec.timeframe]).to_numpy(float)
+           if spec.exit.trail.get('kind') == 'atr' else None)
+    for i, (_, row) in enumerate(frame.iterrows()):
         ms = bar_ms(row['ts'])
         if ms > state.last_bar_ms:
+            usable = (row.get('quality', 'VALID') == 'VALID'
+                      and row.get('bar_state', 'FINAL') == 'FINAL')
+            # Consume existing receipt cuts; never infer historical availability
+            # from the candle's event timestamp. D6 owns those source receipts.
+            for key in ('available_at_ms', 'observed_at_ms'):
+                if key in row:
+                    usable = usable and bool(row[key] <= at)
             yield E.Observation(ms, float(row['open']), float(row['high']),
-                                float(row['low']), float(row['close']))
+                                float(row['low']), float(row['close']),
+                                completed=bool(usable),
+                                atr=float(atr[i]) if atr is not None else None)
 
 
 def entry_contract(spec, snap, signal_close_ms):

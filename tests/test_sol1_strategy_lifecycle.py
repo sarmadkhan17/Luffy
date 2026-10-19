@@ -236,7 +236,7 @@ REFUSED_SPECS = [
     ("other_timeframe", dict(timeframe="1h"), "qualified_timeframe_differs"),
     ("trailing_exit", dict(exit={**ExitSpec(
         trail={"kind": "atr", "mult": 3.0, "arm_at_r": 1.0}).__dict__}),
-     "unsupported_versioned_exit"),
+     "qualified_spec_not_evaluated_spec"),
     ("signal_exit", dict(exit={**ExitSpec(signal_exit="close < ema(5)"
                                           ).__dict__}),
      "unsupported_versioned_exit"),
@@ -856,7 +856,7 @@ def test_real_engine_refuses_an_unsupported_exit_before_evaluating(monkeypatch):
     a, _frames = _analyst(monkeypatch, persistent=True)
     monkeypatch.setattr(a, "evaluate", lambda *x, **k: pytest.fail("evaluated"))
     spec = _trend_spec()
-    spec.exit = ExitSpec(trail={"kind": "atr", "mult": 3.0, "arm_at_r": 1.0})
+    spec.exit = ExitSpec(trail={"kind": "atr", "mult": 3.0})  # undeclared activation is unsupported
     ok, ev, q = a.qualify(spec, [])
     assert ok is False and q is None
     assert ev["reason"].startswith("unsupported_versioned_exit")
