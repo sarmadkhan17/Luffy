@@ -231,20 +231,27 @@ def test_referee_empty_and_combined_books_keep_provenance():
 def test_stale_worker_null_receipt_uses_existing_failed_look_budget_rule(tmp_path,monkeypatch):
     from tests.test_research_runner import _setup, _passing
     from trader.research import universe
-    monkeypatch.setattr(universe,'coverage',lambda tfs=None: {
+    monkeypatch.setattr(universe,'coverage',lambda tfs=None,feed=None: {
         tf:{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}
         for tf in (tfs or ['4h'])})
     stale=_passing(); stale['rotation'].pop('accounting')
     runner,calls,_=_setup(tmp_path,examine=stale)
+    monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:
+                        {'a':{'fixture':11000},'b':{'fixture':11000}})
     assert runner.step()['kind']=='referee_select'
-    for _ in range(runner._r('referee_max_attempts')):
-        assert runner.step()['ok'] is False
+    # D1: the attempted look is reserved before dispatch and charged once;
+    # there is no retry loop (referee_max_attempts no longer exists).
+    assert runner.step()['ok'] is False
     assert len(runner.ledger.tests())==1
     look=runner.ledger.tests()[0]
     assert look['p']==1 and not look['rejected']
     assert 'portfolio_accounting_incompatible' in look['detail']
     assert runner.ledger.next_alpha(.1,.05)[0]==2
-    assert sum(c['fn']=='referee_job' for c in calls)==3
+    assert sum(c['fn']=='referee_job' for c in calls)==1
+    # the spent look is never re-dispatched or re-charged
+    assert runner._examine('4h','trail',{'hash':look['hash']},1)['state']=='refused'
+    assert sum(c['fn']=='referee_job' for c in calls)==1
+    assert len(runner.ledger.tests())==1
 
 
 def test_statistical_policy_and_frozen_evidence_unchanged():
