@@ -43,7 +43,9 @@ def test_native_partial_future_backfill_replay_and_reopen(tmp_path, tf, duration
         latest = reader.ohlcv_asof('BTC/USDT', tf, as_of_ms=late)
         assert latest.close.tolist() == [99, 30]
         replay = reader.replay_ohlcv('BTC/USDT', tf)
-        assert len(replay) == 1 and replay.iloc[0].revision_id == original.revision_id
+        # the absent event is a replay INPUT only if it arrived inside interval + TTL of its close
+        admitted = late <= P.replay_deadline_ms(T-duration, tf)
+        assert len(replay) == 1 + admitted and replay.iloc[-1].revision_id == original.revision_id
     assert venue.calls == []
 
 

@@ -23,9 +23,10 @@ CONTRACT_ID = "quant-contract.v1"
 COST_BASIS = "ESTIMATED_MODEL"          # never "ACTUAL"
 
 DEFINITIONS = {
-    "entry": "at the OPEN of the first retained bar starting at or after max(signal-bar close, receipt availability), "
-             "plus slippage; the signal uses only bars <= the signal bar. Availability later than one bar after "
-             "close, unknown availability, or no bar opening within one bar of the decision refuses the entry "
+    "entry": "at the OPEN of the first retained bar starting at or after max(signal-bar close, availability of its lookback), "
+             "plus slippage; the signal uses only bars <= the signal bar and waits for the availability of every "
+             "bar in its lookback. A fill later than interval + TTL after the signal close (the feed's existing "
+             "freshness budget), unknown availability, or a missing lookback bar refuses the entry "
              "(fill_timing.POLICY_ID)",
     "label": "exit is decided by bars from the fill bar onward only (stop before target when both touch); "
              "an open position at dataset end is censored, not scored",

@@ -13,7 +13,7 @@ import time
 import numpy as np
 
 from ..core.types import TF_MS, Action, StrategySignal, closed_bars
-from . import dsl
+from . import dsl, fill_timing
 from .features import FeatureCtx
 from .spec import StrategySpec
 from .signal_occurrence import (ENTRY_SERIES_MISALIGNED, SIGNAL_BAR_CLOSE_UNAVAILABLE, bar_open_ms, spec_fingerprint)
@@ -141,6 +141,9 @@ class CompiledStrategy:
                 symbol = declared
             elif declared and norm_symbol(symbol) != declared:
                 raise dsl.SpecError('retrospective symbol binding mismatch')
+        # the contiguous history this spec consumes: fill_timing refuses signals
+        # whose lookback has a hole (bound per spec, never a global requirement)
+        frames[tf].attrs['signal_lookback_bars'] = fill_timing.lookback_bars(self.spec)
         ctx = FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
                          universe=universe, market=market, symbol=symbol, world=world)
         if frames[tf].attrs.get('read_mode') == 'retrospective':

@@ -211,8 +211,8 @@ def test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage(
         f=pd.DataFrame(dict(ts=pd.to_datetime([event],unit='ms',utc=True),open=[price],high=[price+1],low=[price-1],close=[price],volume=[1.]))
         return mp.annotate(f,instrument_id='offline:BTCUSDT',source='offline:synthetic',kind='candle',received_ms=received,timeframe='4h')
     with writer.db:
-        # Exact-close, later revision, late backfill (beyond one bar), and partial at receipt.
-        for event,received,price in [(0,TF,100),(0,TF+1,200),(TF,3*TF+1,100),(2*TF,2*TF+1,100)]:
+        # Exact-close, later revision, late backfill (beyond interval + TTL), and partial at receipt.
+        for event,received,price in [(0,TF,100),(0,TF+1,200),(TF,4*TF,100),(2*TF,2*TF+1,100)]:
             writer._store_save('BTC/USDT','4h',bar(event,received,price))
     writer.db.close()
     reader=DataFeed(exchange=universe.NoExchange(),db_path=path,read_only=True,clock_ms=lambda:4*TF)

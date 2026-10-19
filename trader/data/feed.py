@@ -116,7 +116,7 @@ class DataFeed:
         self.data_ex = make_exchange("futures", demo=False, with_keys=False) \
             if (on_demo and exchange is None and self.retrospective is None and not self.read_only) else None
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
-        self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
+        self.ttl = ttl_by_tf or dict(mp.DEFAULT_TTL_S)
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = OrderedDict()
         self._instruments = {}
         self._db_path = str(db_path) if db_path else None   # resolved lazily

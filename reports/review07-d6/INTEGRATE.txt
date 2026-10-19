@@ -69,3 +69,23 @@ PRE-EXISTING (not caused by D6)
   fails identically on the unmodified 65f00d9 tree (3000 rows vs the expected 2100).
   tests/test_exit_ab_shadow_paths.py needs the git-ignored docs/superpowers/artifacts/exit-geometry
   files; they were copied (untracked) from the production checkout to run it.
+
+
+FINAL TIMING CONTRACT CORRECTION (follows commit 490d6d8)
+  * Universal one-bar expiry REMOVED. StrategySpec declares no entry validity, so the existing
+    freshness budget is used: interval + TTL after the signal close (market_provenance.DEFAULT_TTL_S,
+    freshness_ms; the feed and kernel's usable_current age). Measured at the fill. MISSING CONTRACT:
+    a per-strategy entry validity / TTL does not exist (Sol1 reported the same); add it to
+    StrategySpec only if the owner wants strategy-specific expiry.
+  * Receipt eligibility (replay_deadline_ms) = close + interval + TTL: a receipt later than the
+    budget could never have been acted on and stays retrospective. It admits INPUTS only.
+  * A decision waits for max availability over its lookback; refuses availability_unknown,
+    signal_stale, no_executable_bar, unexecutable_price, history_gap. fill_gap/signal_expired merged
+    into signal_stale (a one-bar-late price from a missing bar is allowed, two is not).
+  * Lookback is per strategy (fill_timing.lookback_bars, bound to the frame as
+    attrs['signal_lookback_bars'] by compile._ctx, capped at the existing WARMUP, minimum 15 for
+    ATR(14) sizing). The global 210-bar gap rule is gone. WARMUP=210 (scoring floor) and the 400-bar
+    loader floor in spec_evidence.load_frames are pre-existing, unchanged.
+  * D7 merge: `git merge-tree` of this branch with sol1/review07-d7 is clean. compile.py gets one
+    import and three lines in _ctx. _trade's keyword is `fill=None` (array); Sol1's
+    exit_sig_available stays a separate keyword.

@@ -176,7 +176,7 @@ def _scoring_evidence(recent, score_from: int) -> dict:
     else:
         try:
             atr = atr_series(recent, 14).to_numpy(float)[eff:hi]
-            fillable = fills(recent, WARMUP)[0][eff:hi] >= 0
+            fillable = fills(recent)[0][eff:hi] >= 0
             scorable_bars = int(np.count_nonzero(np.isfinite(atr) & (atr > 0) & fillable))
         except Exception:
             scorable_bars = None             # unknown, never invented

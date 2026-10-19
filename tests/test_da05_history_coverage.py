@@ -250,7 +250,8 @@ def test_legacy_inventory_gap_late_acquisition_and_multiyear_reuse(tmp_path,monk
     current=f.cached_ohlcv(s,'4h',as_of_ms=CUT)
     assert len(current)==154 and current['available_at_ms'].eq(CUT).all()
     replay=f.replay_ohlcv(s,'4h')
-    assert len(replay)==1 and replay['available_at_ms'].eq(CUT).all()  # 153 backfills stay retrospective
+    # the newest two 4h bars arrived inside interval + TTL of their close; 152 older backfills stay retrospective
+    assert len(replay)==2 and replay['available_at_ms'].eq(CUT).all()
     # Old inventory remains retained; only a bounded current window acquired.
     assert f.db.execute('SELECT count(*) FROM candles WHERE symbol=?',(s,)).fetchone()[0]==5000
     assert len(venue.calls)==1 and venue.calls[0][3]==154

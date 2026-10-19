@@ -209,7 +209,7 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
     trail_mult = float(trail.get("mult", 0.0)) \
         if trail.get("kind") == "atr" else 0.0
     arm_at_r = float(trail.get("arm_at_r", 1.0))
-    fill, _ = fill_timing.fills(df, WARMUP)
+    fill, _ = fill_timing.fills(df)
     out = {}
     for side in ("long", "short"):
         ex = np.full(n, -1, dtype=np.int64)
@@ -310,7 +310,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     peak = equity
     candidates = np.flatnonzero(long | short)
     cursor = score_from
-    fill, _ = fill_timing.fills(df, WARMUP)
+    fill, _ = fill_timing.fills(df)
 
     for raw_i in candidates:
         i = int(raw_i)

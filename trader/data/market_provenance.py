@@ -57,24 +57,25 @@ def ms(ts):
     return pd.to_datetime(ts, utc=True).to_numpy(dtype='datetime64[ms]').astype('int64')
 
 
+#: How long after its close a bar stays actionable, beyond its own interval.
+#: The one existing freshness budget (DataFeed.ttl, usable_current, kernel).
+DEFAULT_TTL_S = {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
+
+
+def freshness_ms(tf, ttl_s=None):
+    """interval + TTL: the existing age beyond which a closed bar is STALE."""
+    return TF_MS[tf] + 1000 * (DEFAULT_TTL_S.get(tf, 300) if ttl_s is None else ttl_s)
+
+
 def replay_deadline_ms(event_ms, tf):
-    """Last instant a closed bar may still drive its own decision.
+    """Last receipt time that can still be a point-in-time decision input.
 
-    A signal on a closed bar is superseded when the next bar closes, so a
-    receipt later than one bar after its close is retrospective, never replay.
-    Receipt clocks stay truthful; only the eligibility window is defined here.
+    Existing freshness contract measured from the close: a receipt later than
+    interval + TTL after its close could never have been acted on, so it is
+    retrospective, never replay. This only admits INPUTS; whether a signal may
+    still execute is fill_timing's decision. Receipt clocks are never changed.
     """
-    return event_ms + 2 * TF_MS[tf]
-
-
-def decision_ms(df, tf):
-    """Earliest legitimate decision time per row, as float ms: max(candle
-    close, receipt availability). NaN means availability is unknown and is
-    never inferred; frames carrying no receipt columns decide at close."""
-    close = (ms(df['ts']) + TF_MS[tf]).astype(float)
-    if 'available_at_ms' not in df:
-        return close
-    return np.maximum(close, pd.to_numeric(df['available_at_ms'], errors='coerce').to_numpy(float))
+    return event_ms + TF_MS[tf] + freshness_ms(tf)
 
 
 def cut(value):

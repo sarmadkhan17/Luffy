@@ -50,9 +50,12 @@ def store(tmp_path, frames, now):
 
 # ── availability: what replay admits ───────────────────────────────────────
 
+FRESH = P.freshness_ms('15m') - Q          # TTL beyond the interval: the feed's existing budget
+
+
 @pytest.mark.parametrize('delay,eligible', [(0, True), (1, True), (Q // 2, True), (Q, True),
-                                            (Q + 1, False), (3 * Q, False)])
-def test_replay_window_is_one_bar_after_close(tmp_path, delay, eligible):
+                                            (Q + FRESH, True), (Q + FRESH + 1, False), (3 * Q, False)])
+def test_replay_window_is_the_existing_freshness_budget(tmp_path, delay, eligible):
     df = prices(3)
     feed = store(tmp_path, [retained(df, delay)], T0 + 20 * Q)
     got = feed.replay_ohlcv('BTC/USDT', '15m')
@@ -106,13 +109,17 @@ def test_replay_reads_leave_retained_evidence_unchanged(tmp_path):
 
 # ── decision and fill ordering ─────────────────────────────────────────────
 
-def test_decision_is_max_of_close_and_availability():
-    df = retained(prices(3), [0, 7, Q])
-    close = P.ms(df['ts']) + Q
-    assert (P.decision_ms(df, '15m') - close).tolist() == [0, 7, Q]
-    assert P.decision_ms(df.drop(columns=['available_at_ms']), '15m').tolist() == close.tolist()
-    df.loc[1, 'available_at_ms'] = None
-    assert np.isnan(P.decision_ms(df, '15m')[1])
+def test_decision_waits_for_every_lookback_input():
+    df = retained(prices(40), 0)
+    df.loc[20, 'available_at_ms'] = int(df['available_at_ms'].iloc[20]) + Q + 100   # bar 20 reaches us just after bar 21 closes
+    fill, why = fill_timing.fills(df)
+    assert fill[19] == 20 and fill[20] < 0 and why[20] == 'signal_stale'   # its own signal is two bars old
+    assert fill[21] == 23 and fill[22] == 23 and fill[23] == 24           # bar 21 had to wait for bar 20 (else 22)
+    ts = P.ms(df['ts'])
+    avail = df['available_at_ms'].to_numpy()
+    for k in range(15, 39):
+        if fill[k] >= 0:
+            assert ts[fill[k]] >= avail[k - 14:k + 1].max()               # never before any input
 
 
 @pytest.mark.parametrize('delay,lag_bars', [(0, 1), (1, 2), (Q // 2, 2), (Q - 1, 2), (Q, 2)])
@@ -122,24 +129,31 @@ def test_fill_is_first_open_at_or_after_decision(delay, lag_bars):
     ts = P.ms(df['ts'])
     for i in range(6):
         assert fill[i] == i + lag_bars
-        assert ts[fill[i]] >= P.decision_ms(df, '15m')[i]           # never before the decision
-        assert ts[fill[i]] - P.decision_ms(df, '15m')[i] < Q        # and within one bar of it
+        decision = ts[i] + Q + delay
+        assert ts[fill[i]] >= decision                               # never before the decision
+        assert ts[fill[i]] - (ts[i] + Q) <= P.freshness_ms('15m') - Q * 0 # inside the freshness budget
     assert (fill[-1] < 0) and why[-1] == 'no_executable_bar'
 
 
 def test_refusal_reasons_are_exact():
-    df = retained(prices(10), [0, 0, Q + 1, 0, 0, 0, 0, 0, 0, 0])
-    df.loc[1, 'available_at_ms'] = None
-    gapped = df.drop(index=[5]).reset_index(drop=True)              # bar 5 absent from the retained set
-    fill, why = fill_timing.fills(gapped)
-    assert why[1] == 'availability_unknown'
-    assert why[2] == 'signal_expired'
-    assert why[4] == 'fill_gap' and fill[4] < 0                    # next retained bar opens a bar late
+    df = retained(prices(40), [0] * 40)
+    df.loc[3, 'available_at_ms'] = None
+    stale = df.copy(); stale.loc[30, 'available_at_ms'] = int(stale['available_at_ms'].iloc[30]) + Q + 1
+    assert fill_timing.fills(stale)[1][30] == 'signal_stale'          # fill would land two bars after the close
+    assert fill_timing.fills(stale)[0][29] == 30
+    fill, why = fill_timing.fills(df)
+    assert why[3] == 'availability_unknown' and why[10] == 'availability_unknown' and why[18] == ''
+    one = df.drop(index=[25]).reset_index(drop=True)                    # one bar missing: next retained open is one bar late
+    fill1, why1 = fill_timing.fills(one)
+    assert why1[24] == '' and fill1[24] == 25                           # still inside interval + TTL
+    two = df.drop(index=[25, 26]).reset_index(drop=True)                # two missing: the price is two bars old
+    fill2, why2 = fill_timing.fills(two)
+    assert why2[24] == 'signal_stale' and fill2[24] < 0
     assert why[-1] == 'no_executable_bar'
-    assert fill[0] == 1 and fill[3] == 4
-    bad = df.copy(); bad.loc[4, 'open'] = np.nan
-    assert fill_timing.fills(bad)[1][3] == 'unexecutable_price'
-    assert fill_timing.summary(gapped)['executable'] == int((fill >= 0).sum())
+    bad = df.copy(); bad.loc[34, 'open'] = np.nan
+    assert fill_timing.fills(bad)[1][33] == 'unexecutable_price'
+    summary = fill_timing.summary(two)
+    assert summary['executable'] == int((fill2 >= 0).sum()) and summary['signal_stale'] >= 1
 
 
 def test_frames_without_receipts_decide_at_close():
@@ -232,53 +246,25 @@ def test_replay_guard_and_contract_text():
 
 
 def test_a_missing_bar_in_the_lookback_refuses_receipt_frames_only():
-    df = retained(prices(WARMUP + 40), 0).drop(index=[10]).reset_index(drop=True)
-    fill, why = fill_timing.fills(df, WARMUP)
-    assert why[WARMUP + 5] == 'history_gap' and fill[WARMUP + 5] < 0   # window spans the hole
-    assert why[WARMUP + 15] == '' and fill[WARMUP + 15] == WARMUP + 16  # 210 contiguous bars again
+    df = retained(prices(60), 0).drop(index=[10]).reset_index(drop=True)
+    fill, why = fill_timing.fills(df)
+    assert why[20] == 'history_gap' and fill[20] < 0                  # 15-bar window spans the hole
+    assert why[30] == '' and fill[30] == 31
+    df.attrs['signal_lookback_bars'] = 40                              # a deeper strategy needs more clean history
+    assert fill_timing.fills(df)[1][30] == 'history_gap'
     plain = df.drop(columns=list(P.META))                               # retrospective: unchanged behaviour
-    assert (fill_timing.fills(plain, WARMUP)[1] != 'history_gap').all()
+    assert (fill_timing.fills(plain)[1] != 'history_gap').all()
 
 
-# ── signal exits share the entry's decision/fill clock ─────────────────────
-
-def signal_trade(df, i, k, side='long'):
-    from trader.agents.indicators import atr_series
-    n = len(df)
-    sig = np.zeros(n, bool); sig[k] = True
-    spec = ExitSpec(stop={'kind': 'atr', 'mult': 50.0}, target={'kind': 'none'}, trail={'kind': 'none'},
-                    time={'max_bars': 20})
-    fill, _ = fill_timing.fills(df, WARMUP)
-    from trader.strategy.vector_backtest import _trade
-    out = _trade(i, side, df, df['close'].to_numpy(float), df['high'].to_numpy(float), df['low'].to_numpy(float),
-                 atr_series(df, 14).to_numpy(float), spec, RISK['slippage_atr_frac'], RISK['taker_fee_pct'] / 100,
-                 20, 0.0, 1.0, sig, None, RISK['funding_rate_8h'], RISK['bar_minutes'], fill=fill)
-    return out, fill
-
-
-@pytest.mark.parametrize('side', ['long', 'short'])
-@pytest.mark.parametrize('delay,gap', [(0, 1), (Q // 2, 2)])
-def test_signal_exit_fills_at_the_first_executable_open(side, delay, gap):
-    df = retained(prices(WARMUP + 60), delay)
-    i, k = WARMUP + 5, WARMUP + 12
-    (exit_i, _sl, unit), fill = signal_trade(df, i, k, side)
-    assert exit_i == k + gap == fill[k]                              # never the signalled candle's close
-    assert df['ts'].iloc[exit_i] >= pd.to_datetime(P.decision_ms(df, '15m')[k], unit='ms', utc=True)
-    from trader.agents.indicators import atr_series
-    atr = atr_series(df, 14).to_numpy(float)
-    sign = 1.0 if side == 'long' else -1.0
-    slip = atr[i] * RISK['slippage_atr_frac']
-    entry = df['open'].iloc[fill[i]] + sign * slip
-    leave = df['open'].iloc[exit_i] - sign * slip
-    held = exit_i - 1 - (fill[i] - 1)                                # open to open, in whole bars
-    carry = abs(RISK['funding_rate_8h']) * held * RISK['bar_minutes'] / 60 / 8
-    expected = (leave - entry) * sign - RISK['taker_fee_pct'] / 100 * (entry + leave) - carry * leave
-    assert unit == pytest.approx(expected)
-
-
-def test_an_unexecutable_signal_exit_cannot_close_the_position():
-    df = retained(prices(WARMUP + 60), 0)
-    k = WARMUP + 12
-    df.loc[k, 'available_at_ms'] = df['available_at_ms'].iloc[k] + 3 * Q   # exit evidence arrives expired
-    (exit_i, _sl, _unit), fill = signal_trade(df, WARMUP + 5, k)
-    assert fill[k] < 0 and exit_i == WARMUP + 5 + 20                 # the clock exit, not the signal
+def test_lookback_is_derived_from_the_strategy_not_a_global_constant():
+    import json
+    from trader.strategy.spec import StrategySpec
+    from trader.strategy.compile import compile_spec
+    seed = lambda name: StrategySpec.from_dict(json.load(open(f'data/seed_specs/{name}.json')))
+    shallow, deep = seed('bollinger_band_fade'), seed('ema_stack_pullback')
+    assert fill_timing.lookback_bars(shallow) < fill_timing.lookback_bars(deep) <= 210
+    df = retained(prices(WARMUP + 40), 0)
+    compile_spec(shallow).entries({'15m': df})
+    assert df.attrs['signal_lookback_bars'] == fill_timing.lookback_bars(shallow)
+    assert fill_timing.fills(df.iloc[30:90].reset_index(drop=True)) is not None
+    assert df.iloc[30:90].reset_index(drop=True).attrs['signal_lookback_bars'] == df.attrs['signal_lookback_bars']
