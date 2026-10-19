@@ -1,0 +1,324 @@
+{
+  "mode": "INCREMENTAL_OFFLINE_VERIFICATION",
+  "single_all_green_broad_run": false,
+  "baseline": {
+    "commit": "81565a0",
+    "tests": 41,
+    "passed": 4,
+    "failed": 37,
+    "error": 0,
+    "skipped": 0
+  },
+  "receipt_refusal_checkpoint": {
+    "tests": 2,
+    "passed": 1,
+    "failed": 1,
+    "error": 0,
+    "skipped": 0,
+    "note": "Authenticated revision test passed; receipt-refusal label regression then corrected and rerun."
+  },
+  "lifecycle_checkpoint": {
+    "tests": 37,
+    "passed": 36,
+    "failed": 1,
+    "error": 0,
+    "skipped": 0,
+    "note": "36 completed cases retained; corrected failed and remaining cases rerun without repeating completed numerical evaluations."
+  },
+  "initial_broad": {
+    "tests": 774,
+    "passed": 719,
+    "failed": 8,
+    "error": 47,
+    "skipped": 0,
+    "note": "Earlier source/fixtures; failures superseded below; storage-full errors rerun on data volume."
+  },
+  "final_suites": {
+    "compatibility-final.xml": {
+      "tests": 318,
+      "passed": 318,
+      "failed": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "transfer-final.xml": {
+      "tests": 47,
+      "passed": 47,
+      "failed": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "receipt-final.xml": {
+      "tests": 73,
+      "passed": 73,
+      "failed": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "lifecycle-final.xml": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "error": 0,
+      "skipped": 0
+    }
+  },
+  "effective_unique_tests": 844,
+  "effective_results": {
+    "passed": 844,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "excluded_operational_tests": [
+    "tests/test_research_universe_depth.py::test_every_enabled_horizon_carries_enough_discovery_symbols",
+    "tests/test_research_universe_depth.py::test_four_hour_is_deep_enough_today"
+  ],
+  "numerical_inputs": "GENERATED_FIXTURES_ONLY",
+  "engine_equivalence": "PASS",
+  "vector_speedup": 113.8,
+  "added_refusal_regression": {
+    "before": {
+      "passed": 0,
+      "failed": 1,
+      "error": 0,
+      "skipped": 0
+    },
+    "after": "receipt-final.xml"
+  },
+  "unchanged_contracts": {
+    "unchanged": [
+      "trader/research/fdr.py",
+      "trader/strategy/exit_policy.py",
+      "trader/kernel.py",
+      "trader/brain/ideas.py",
+      "trader/strategy/vector_backtest.py:_trade",
+      "trader/strategy/vector_backtest.py:simulate",
+      "trader/strategy/vector_backtest.py:trade_table",
+      "trader/strategy/vector_backtest.py:walk_table"
+    ],
+    "configuration": "Only referee_max_attempts removed; all other parsed values identical",
+    "referee": false,
+    "handoff": false
+  },
+  "source_hashes": {
+    "config.yaml": "3ff22abca9f817b44edab064917b8517725d0871b88e10015a390aaa9619b4a4",
+    "scripts/calibrate_null_dependence.py": "70b90faadd97cf7591ae432285bc4d49892d800ffa11fc60561499ca3ce4f4df",
+    "scripts/predictive_research_shadow.py": "db87ee16cbf426f42895c22b038eb8cc53105e4a42c11c0d976ea7e5c443e66d",
+    "trader/data/derivatives.py": "9baf84604a141a650cb82543e8e99dff7f071197a2ab70861bf5fdc414e6c667",
+    "trader/data/feed.py": "1923c7f169e1687dd28025a32f26ad7bfd4035556168038c9366b4506592de02",
+    "trader/data/market_provenance.py": "0d2e49da23b10d455b8ce32f1c2eb80ec3ae3f200fb24f3c8a642f2e9074006f",
+    "trader/data/references.py": "227431085da268bd46d437d2427d2fde75f98b94707934b968d0eb666dd8de41",
+    "trader/research/__main__.py": "80e7ea87922d5070e20efe47f99ed94ebfe76a89b839b1d63426818dc149521c",
+    "trader/research/evaluate.py": "90e826048cd9564eedcb72a87bb4c791b6c9300aa152c6b05d1f531c1a630086",
+    "trader/research/growth.py": "cbbb4c52d44b429b30f15614f8f3664238c0f38f6a6e9b1475f2706bbdbbf318",
+    "trader/research/ledger.py": "5a910f78336ea25e2d614eb162c9983bd7367c0c32e1e52265c755c3d2a00c7a",
+    "trader/research/planner.py": "109c08d0bfb9de4ead168d0297da49bf67d9c882c7a9f3b68fe2628b2ed78708",
+    "trader/research/predictive_experiment.py": "65f15e7a08c525af502b57eda02a83c513d0e307a71669b18aef2b0ff4a5bbdb",
+    "trader/research/referee.py": "86ea4f6b7470cf5670fbf0b64e9c4666cbf484ebdd2b90fc3a4cc311279474d8",
+    "trader/research/runner.py": "c8bd575d1478b2f9380d92cca75dcc12c6c70a8db9eca693b4a134025e24a9ce",
+    "trader/research/slices.py": "ab021c31e9985c8943c3028259456ddc0bcd8478bfbc880815c2d8bd795edd67",
+    "trader/research/thresholds.py": "43325554e3565ea1fde6dd1065509183b27b323e36f0544e52818dcbd82b8d3a",
+    "trader/research/universe.py": "2e99bdb040e1dc351a1448a46395da0ce6b9c92f59af7be94a389d21be802d15",
+    "trader/strategy/spec_evidence.py": "511fd155103cb6132c37eaef88df2a943a77c17602f0e8a95c6e4933beb84591",
+    "trader/strategy/vector_backtest.py": "36c2bb489f907b74c70764ce40252d049eb69f6bf634f85650c331617fe7f0a7"
+  },
+  "source_profiles": {
+    "initial_implementation": "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69",
+    "fixture_followup": "868f23715721136fd0686db0b6bd3252c40e0990",
+    "final_runtime": "94b9000a02966dd74447c48a26eda61033e7bfe2",
+    "later_runtime_change": "Only known-refusal reason labels and duplicate-prefix formatting in runner._examine; latest receipt/runner and remaining lifecycle suites cover the change; numerical methods unchanged."
+  },
+  "defects": {
+    "QR07-01": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_uncertain_look_is_durable_before_worker_and_never_retried[returned]",
+        "test_uncertain_look_is_durable_before_worker_and_never_retried[raised]",
+        "test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice",
+        "test_duplicate_look_across_journals_is_atomic",
+        "test_finalization_failure_rolls_back_to_consumed_pending_look",
+        "test_invalid_worker_identity_cannot_create_support[receipt0]",
+        "test_invalid_worker_identity_cannot_create_support[receipt1]",
+        "test_invalid_worker_identity_cannot_create_support[receipt2]",
+        "test_refused_worker_receipt_remains_untested_and_consumed"
+      ],
+      "baseline_failures": [
+        "test_uncertain_look_is_durable_before_worker_and_never_retried[returned]",
+        "test_uncertain_look_is_durable_before_worker_and_never_retried[raised]",
+        "test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice",
+        "test_finalization_failure_rolls_back_to_consumed_pending_look",
+        "test_invalid_worker_identity_cannot_create_support[receipt0]",
+        "test_invalid_worker_identity_cannot_create_support[receipt1]",
+        "test_invalid_worker_identity_cannot_create_support[receipt2]"
+      ]
+    },
+    "QR07-02": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_large_receipts_retain_cut_and_valid_json",
+        "test_malformed_historical_evidence_refuses_resume[{broken]",
+        "test_malformed_historical_evidence_refuses_resume[[]]",
+        "test_malformed_historical_evidence_refuses_resume[null]",
+        "test_malformed_history_is_not_discardable_legacy_accounting"
+      ],
+      "baseline_failures": [
+        "test_large_receipts_retain_cut_and_valid_json",
+        "test_malformed_historical_evidence_refuses_resume[{broken]",
+        "test_malformed_historical_evidence_refuses_resume[[]]",
+        "test_malformed_historical_evidence_refuses_resume[null]",
+        "test_malformed_history_is_not_discardable_legacy_accounting"
+      ]
+    },
+    "QR07-03": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_discovery_never_requests_heldout_price_frames"
+      ],
+      "baseline_failures": [
+        "test_discovery_never_requests_heldout_price_frames"
+      ]
+    },
+    "QR07-04": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_growth_reaches_deeper_pending_children"
+      ],
+      "baseline_failures": [
+        "test_growth_reaches_deeper_pending_children"
+      ]
+    },
+    "QR07-05": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_late_ablation_refreshes_disposition_without_rescoring",
+        "test_restart_refreshes_committed_subset_without_repeating_measurements"
+      ],
+      "baseline_failures": [
+        "test_late_ablation_refreshes_disposition_without_rescoring",
+        "test_restart_refreshes_committed_subset_without_repeating_measurements"
+      ]
+    },
+    "QR07-06": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_unavailable_ablation_never_certifies_survivor[error]",
+        "test_unavailable_ablation_never_certifies_survivor[untested]",
+        "test_unavailable_ablation_never_certifies_survivor[untestable]"
+      ],
+      "baseline_failures": [
+        "test_unavailable_ablation_never_certifies_survivor[error]",
+        "test_unavailable_ablation_never_certifies_survivor[untestable]"
+      ]
+    },
+    "QR07-07": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_coverage_uses_selected_readonly_source",
+        "test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage",
+        "test_rotation_metadata_resolves_the_existing_default_source"
+      ],
+      "baseline_failures": [
+        "test_coverage_uses_selected_readonly_source",
+        "test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage",
+        "test_rotation_metadata_resolves_the_existing_default_source"
+      ]
+    },
+    "QR07-08": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_failed_context_counts_against_threshold_coverage"
+      ],
+      "baseline_failures": [
+        "test_failed_context_counts_against_threshold_coverage"
+      ]
+    },
+    "QR07-09": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_slice_units[s]",
+        "test_slice_units[ms]",
+        "test_slice_units[us]",
+        "test_slice_units[ns]"
+      ],
+      "baseline_failures": [
+        "test_slice_units[s]",
+        "test_slice_units[us]"
+      ]
+    },
+    "QR07-10": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_retrospective_control_refused_before_reader_or_worker"
+      ],
+      "baseline_failures": [
+        "test_retrospective_control_refused_before_reader_or_worker"
+      ]
+    },
+    "QR07-11": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_declared_timeframe_risk_reaches_heldout_costs"
+      ],
+      "baseline_failures": [
+        "test_declared_timeframe_risk_reaches_heldout_costs"
+      ]
+    },
+    "QR07-12": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_status_does_not_register_budget",
+        "test_top_labels_cumulative_return",
+        "test_status_main_reads_existing_store_without_migration"
+      ],
+      "baseline_failures": [
+        "test_status_does_not_register_budget",
+        "test_top_labels_cumulative_return",
+        "test_status_main_reads_existing_store_without_migration"
+      ]
+    },
+    "QR07-13": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_readonly_stores_do_not_initialize_or_create[candles]",
+        "test_readonly_stores_do_not_initialize_or_create[derivs]",
+        "test_readonly_stores_do_not_initialize_or_create[refs]",
+        "test_funding_dependency_is_bound_to_selected_readonly_store",
+        "test_readonly_identity_uses_injected_binding_without_provider"
+      ],
+      "baseline_failures": [
+        "test_readonly_stores_do_not_initialize_or_create[candles]",
+        "test_readonly_stores_do_not_initialize_or_create[derivs]",
+        "test_readonly_stores_do_not_initialize_or_create[refs]",
+        "test_funding_dependency_is_bound_to_selected_readonly_store",
+        "test_readonly_identity_uses_injected_binding_without_provider"
+      ]
+    },
+    "QR07-17": {
+      "status": "FIXED_VERIFIED_OFFLINE",
+      "regressions": [
+        "test_calibration_unknown_dependence_is_not_printed_as_one",
+        "test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity",
+        "test_top_preserves_unknown_metrics"
+      ],
+      "baseline_failures": [
+        "test_calibration_unknown_dependence_is_not_printed_as_one",
+        "test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity",
+        "test_top_preserves_unknown_metrics"
+      ]
+    }
+  },
+  "od07_06": "OPEN_NOT_END_TO_END_VERIFIED",
+  "not_implemented": [
+    "D5",
+    "D6",
+    "D7",
+    "D8"
+  ],
+  "tracker_status_changed": false,
+  "limits": [
+    "No real-market statistical calibration or profitability claim",
+    "No deployment, production database changes, activation, orders, provider calls or CI changes",
+    "Source-only shadow and synthetic lifecycle evidence do not close OD07-06"
+  ]
+}

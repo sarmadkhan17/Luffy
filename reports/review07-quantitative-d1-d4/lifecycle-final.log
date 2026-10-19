@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 58 items / 37 deselected / 21 selected
+
+tests/test_res08_governed_bridge.py ....                                 [ 19%]
+tests/test_rp02_validation_window.py .................                   [100%]
+
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/lifecycle-final.xml -
+================ 21 passed, 37 deselected in 629.11s (0:10:29) =================

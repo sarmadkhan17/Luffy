@@ -1,0 +1,10 @@
+SYNTHETIC ONLY; existing harness; seed=707; real_funding=False
+engine equivalence on SYNTHETIC/USDT (1200 bars)
+
+{"family": "ema_trend", "signals": 446, "old": {"trades": 27, "wins": 12, "pnl": 5.482}, "new": {"trades": 27, "wins": 12, "pnl": 5.482}, "match": true}
+{"family": "vwap_fade", "signals": 70, "old": {"trades": 13, "wins": 6, "pnl": -8.7396}, "new": {"trades": 13, "wins": 6, "pnl": -8.7396}, "match": true}
+{"family": "breakout_retest", "signals": 57, "old": {"trades": 19, "wins": 9, "pnl": 2.4772}, "new": {"trades": 19, "wins": 9, "pnl": 2.4772}, "match": true}
+{"family": "sweep_reversal", "signals": 101, "old": {"trades": 25, "wins": 11, "pnl": -58.331}, "new": {"trades": 25, "wins": 11, "pnl": -58.331}, "match": true}
+{"family": "rotation_momo", "signals": 0, "old": {"trades": 0, "wins": 0, "pnl": 0.0}, "new": {"trades": 0, "wins": 0, "pnl": 0.0}, "match": true}
+
+ENGINE EQUIVALENCE: PASS

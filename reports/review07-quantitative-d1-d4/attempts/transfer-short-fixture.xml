@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="23" skipped="0" tests="28" time="342.078" timestamp="2026-10-19T16:22:34.124980+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_rp03_kernel_handoff" name="test_kernel_authenticates_transfers_and_stops_at_validated[FROZEN]" time="276.344"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_kernel_authenticates_tran0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd83000deb0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd8301ba000&gt;
+control = 'FROZEN'
+
+    @pytest.mark.parametrize('control', ['FROZEN', 'RECOVERY'])
+    def test_kernel_authenticates_transfers_and_stops_at_validated(population, target, monkeypatch, control):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_kernel_authenticates_tran0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_kernel_authenticates_transfers_and_stops_at_validated[RECOVERY]" time="0.126"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_kernel_authenticates_tran1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd839ec4890&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff29070&gt;
+control = 'RECOVERY'
+
+    @pytest.mark.parametrize('control', ['FROZEN', 'RECOVERY'])
+    def test_kernel_authenticates_transfers_and_stops_at_validated(population, target, monkeypatch, control):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_kernel_authenticates_tran1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_temporary_missing_lineage_recovers_without_candidate_poisoning[bank]" time="0.124"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_temporary_missing_lineage0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f31c080&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f31cef0&gt;
+missing = 'bank'
+
+    @pytest.mark.parametrize('missing', ['bank', 'experiment'])
+    def test_temporary_missing_lineage_recovers_without_candidate_poisoning(population, target, monkeypatch, missing):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_temporary_missing_lineage0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_temporary_missing_lineage_recovers_without_candidate_poisoning[experiment]" time="0.165"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_temporary_missing_lineage1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd839e70fe0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd839e716d0&gt;
+missing = 'experiment'
+
+    @pytest.mark.parametrize('missing', ['bank', 'experiment'])
+    def test_temporary_missing_lineage_recovers_without_candidate_poisoning(population, target, monkeypatch, missing):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_temporary_missing_lineage1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable[no immutable version: research_bank_experiment_not_found]" time="0.131"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff01c70&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff01be0&gt;
+reason = 'no immutable version: research_bank_experiment_not_found'
+
+    @pytest.mark.parametrize('reason', sorted(T.RECOVERABLE_LINEAGE_REFUSALS))
+    def test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable[no immutable version: research_bank_required]" time="0.138"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f31dbb0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f31c590&gt;
+reason = 'no immutable version: research_bank_required'
+
+    @pytest.mark.parametrize('reason', sorted(T.RECOVERABLE_LINEAGE_REFUSALS))
+    def test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable[no immutable version: research_bank_result_not_found]" time="0.139"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila2/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff1e780&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff1ee40&gt;
+reason = 'no immutable version: research_bank_result_not_found'
+
+    @pytest.mark.parametrize('reason', sorted(T.RECOVERABLE_LINEAGE_REFUSALS))
+    def test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila2/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable[no immutable version: research_lineage_missing]" time="0.122"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila3/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff1c800&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff1f380&gt;
+reason = 'no immutable version: research_lineage_missing'
+
+    @pytest.mark.parametrize('reason', sorted(T.RECOVERABLE_LINEAGE_REFUSALS))
+    def test_exact_old_kernel_unavailable_lineage_refusal_is_recoverable(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_exact_old_kernel_unavaila3/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_refusal_is_not_relabelled_as_missing_lineage[gate2_failed]" time="0.173"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd839e73170&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd839e72cc0&gt;
+reason = 'gate2_failed'
+
+    @pytest.mark.parametrize('reason', ['gate2_failed', 'forged_source', 'validation_reconstruction_drift'])
+    def test_invalid_refusal_is_not_relabelled_as_missing_lineage(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_refusal_is_not_relabelled_as_missing_lineage[forged_source]" time="0.152"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f31ee40&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f31ef60&gt;
+reason = 'forged_source'
+
+    @pytest.mark.parametrize('reason', ['gate2_failed', 'forged_source', 'validation_reconstruction_drift'])
+    def test_invalid_refusal_is_not_relabelled_as_missing_lineage(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_refusal_is_not_relabelled_as_missing_lineage[validation_reconstruction_drift]" time="0.323"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re2/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd839e73650&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd839e73ce0&gt;
+reason = 'validation_reconstruction_drift'
+
+    @pytest.mark.parametrize('reason', ['gate2_failed', 'forged_source', 'validation_reconstruction_drift'])
+    def test_invalid_refusal_is_not_relabelled_as_missing_lineage(population, target, monkeypatch, reason):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_refusal_is_not_re2/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_unsupported_sources_do_not_transfer[UNSUPPORTED]" time="4.194" /><testcase classname="tests.test_rp03_kernel_handoff" name="test_unsupported_sources_do_not_transfer[DATA_INSUFFICIENT]" time="4.905" /><testcase classname="tests.test_rp03_kernel_handoff" name="test_forged_bank_cannot_transfer_or_qualify" time="0.118"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_forged_bank_cannot_transf0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f2e5400&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f2e5e80&gt;
+
+    def test_forged_bank_cannot_transfer_or_qualify(population, target, monkeypatch):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_forged_bank_cannot_transf0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_genuine_new_registration_makes_old_result_stale_without_spending" time="0.179"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_genuine_new_registration_0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f2e6570&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f2e6d50&gt;
+
+    def test_genuine_new_registration_makes_old_result_stale_without_spending(population, target, monkeypatch):
+        from trader.cognition import predictive as P
+        from trader.research import predictive_experiment as E
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:179: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_genuine_new_registration_0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_conflicting_destination_refuses_before_factory" time="0.152"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_conflicting_destination_r0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff55b80&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff567b0&gt;
+
+    def test_conflicting_destination_refuses_before_factory(population, target, monkeypatch):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_conflicting_destination_r0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_no_retroactive_fill_below_spent_later_look" time="0.227"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_no_retroactive_fill_below0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff57bc0&gt;
+
+    def test_no_retroactive_fill_below_spent_later_look(population, target):
+&gt;       bank, _prod, final, _later = _supported(population)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:215: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_no_retroactive_fill_below0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_discovery_reason_passed_label_does_not_bypass_gate2" time="1.016" /><testcase classname="tests.test_rp03_kernel_handoff" name="test_handoff_disabled_has_no_effect" time="0.128"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_handoff_disabled_has_no_e0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f31cc50&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f296f30&gt;
+
+    def test_handoff_disabled_has_no_effect(population, target, monkeypatch):
+&gt;       bank, _prod, _final, later = _supported(population)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_handoff_disabled_has_no_e0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_locked_lineage_is_retryable_and_recovers[bank]" time="1.182"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_locked_lineage_is_retryab0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f296c30&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd8300ffb30&gt;
+locked = 'bank'
+
+    @pytest.mark.parametrize('locked', ['bank', 'experiment'])
+    def test_locked_lineage_is_retryable_and_recovers(population, target, monkeypatch, locked):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_locked_lineage_is_retryab0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_locked_lineage_is_retryable_and_recovers[experiment]" time="0.239"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_locked_lineage_is_retryab1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82fe6ddc0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd8300fc800&gt;
+locked = 'experiment'
+
+    @pytest.mark.parametrize('locked', ['bank', 'experiment'])
+    def test_locked_lineage_is_retryable_and_recovers(population, target, monkeypatch, locked):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_locked_lineage_is_retryab1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_mechanism_reports_validation_without_book_addition_or_reload[0]" time="0.242"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_mechanism_reports_validat0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82f2948f0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82f2969f0&gt;
+max_book = 0
+
+    @pytest.mark.parametrize('max_book', [0, 8])
+    def test_mechanism_reports_validation_without_book_addition_or_reload(population, target, monkeypatch, max_book):
+        from tests.test_idea_pipeline import _kernel_stub, _FakeWriter
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_mechanism_reports_validat0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_mechanism_reports_validation_without_book_addition_or_reload[8]" time="0.325"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_mechanism_reports_validat1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff45ee0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff44350&gt;
+max_book = 8
+
+    @pytest.mark.parametrize('max_book', [0, 8])
+    def test_mechanism_reports_validation_without_book_addition_or_reload(population, target, monkeypatch, max_book):
+        from tests.test_idea_pipeline import _kernel_stub, _FakeWriter
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_mechanism_reports_validat1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_lineage_is_distinct_from_temporary_unavailability[binding-experiment_ledger_binding]" time="0.214"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin0/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff32ae0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ffa5490&gt;
+invalid = 'binding', code = 'experiment_ledger_binding'
+
+    @pytest.mark.parametrize('invalid,code', [('binding', 'experiment_ledger_binding'),
+        ('corrupt', 'experiment_ledger_unreadable'), ('symlink', 'experiment_ledger_alias')])
+    def test_invalid_lineage_is_distinct_from_temporary_unavailability(population, target, monkeypatch, invalid, code):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin0/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_lineage_is_distinct_from_temporary_unavailability[corrupt-experiment_ledger_unreadable]" time="0.143"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin1/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ffa70e0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ffa5370&gt;
+invalid = 'corrupt', code = 'experiment_ledger_unreadable'
+
+    @pytest.mark.parametrize('invalid,code', [('binding', 'experiment_ledger_binding'),
+        ('corrupt', 'experiment_ledger_unreadable'), ('symlink', 'experiment_ledger_alias')])
+    def test_invalid_lineage_is_distinct_from_temporary_unavailability(population, target, monkeypatch, invalid, code):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin1/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_lineage_is_distinct_from_temporary_unavailability[symlink-experiment_ledger_alias]" time="2.173"><failure message="StopIteration">population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin2/w/bridge.db'), 1822752000000)
+target = &lt;trader.core.journal.Journal object at 0x7cd82ff464e0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7cd82ff47fb0&gt;
+invalid = 'symlink', code = 'experiment_ledger_alias'
+
+    @pytest.mark.parametrize('invalid,code', [('binding', 'experiment_ledger_binding'),
+        ('corrupt', 'experiment_ledger_unreadable'), ('symlink', 'experiment_ledger_alias')])
+    def test_invalid_lineage_is_distinct_from_temporary_unavailability(population, target, monkeypatch, invalid, code):
+&gt;       bank, _prod, final, later = _supported(population)
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rp03_kernel_handoff.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+population = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/transfer/test_invalid_lineage_is_distin2/w/bridge.db'), 1822752000000)
+
+    def _supported(population):
+        bank, later = population
+&gt;       final = next(r for r in saved(bank, "bridge_bank_results")
+                     if r["classification"] == "SUPPORTED" and r["experiment_id"])
+E       StopIteration
+
+tests/test_rp03_research_factory_transfer.py:91: StopIteration</failure></testcase><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_routing_cannot_authenticate_destination_as_source[destination-source_destination_alias]" time="0.127" /><testcase classname="tests.test_rp03_kernel_handoff" name="test_invalid_routing_cannot_authenticate_destination_as_source[42-research_bank_path_invalid]" time="0.135" /></testsuite></testsuites>

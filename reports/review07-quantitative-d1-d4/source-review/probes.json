@@ -1,0 +1,102 @@
+{
+  "receipt_close_mismatch": {
+    "stored": 600,
+    "asof": 600,
+    "replay": 0,
+    "last_receipt_lag_ms": 1,
+    "exact_close_synthetic_control": 1
+  },
+  "growth_depth_starvation": {
+    "returned_depths": [
+      2
+    ],
+    "unknown_returned": 0,
+    "unseen_triple": true
+  },
+  "threshold_failed_context_omitted": {
+    "n": 10,
+    "finite_frac": 1.0,
+    "p10": 0.9,
+    "p25": 2.25,
+    "p75": 6.75,
+    "p90": 8.1,
+    "min": 0.0,
+    "max": 9.0,
+    "usable": true
+  },
+  "truncated_look_receipt": {
+    "stored_bytes": 20000,
+    "valid_json": false,
+    "spent_cut": null
+  },
+  "failed_look_retried_free": {
+    "attempts": 2,
+    "spent_looks": 0,
+    "candidate_state": "queued",
+    "errors": [
+      "synthetic error AFTER protected read",
+      "synthetic error AFTER protected read"
+    ]
+  },
+  "coverage_ignores_selected_path": {
+    "args": [
+      [
+        "4h"
+      ]
+    ],
+    "kwargs": {},
+    "selected": "/tmp/review07-quant-probes-ffl2m783/chosen.db"
+  },
+  "discovery_loads_heldout_prices": {
+    "frame_reader_calls": [
+      "BTC/USDT",
+      "ETH/USDT"
+    ],
+    "heldout_counts": {
+      "a": {
+        "ETH/USDT": 600
+      },
+      "b": {}
+    }
+  },
+  "seconds_slice_clock": {
+    "got": 1767,
+    "expected": 1767225600000
+  },
+  "errored_ablations_count_as_beaten": {
+    "verdict": "survivor"
+  },
+  "late_ablations_do_not_refresh_child": {
+    "before": "grow",
+    "after": "grow",
+    "verdict_with_completed_evidence": "survivor"
+  },
+  "retrospective_control_conflict": {
+    "reason": "retrospective_discovery_protected_symbol_refused",
+    "protected_control_symbols": [
+      "AAVE/USDT",
+      "FIL/USDT",
+      "HYPE/USDT",
+      "NEAR/USDT",
+      "SUI/USDT",
+      "TAO/USDT",
+      "UNI/USDT",
+      "ZEC/USDT"
+    ]
+  },
+  "trail_funding_timeframe": {
+    "default_15m_unit_pnl": -0.125,
+    "declared_4h_unit_pnl": -2.0
+  },
+  "status_registers_budget": {
+    "before": 0,
+    "after": 1
+  },
+  "normal_read_initializes_source_schema": {
+    "new_tables": [
+      "candle_floor",
+      "market_raw_sources",
+      "market_revisions"
+    ]
+  }
+}

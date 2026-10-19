@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="4" failures="0" skipped="0" tests="126" time="181.578" timestamp="2026-10-19T16:18:21.220570+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_review07_quantitative" name="test_large_receipts_retain_cut_and_valid_json" time="0.137" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[{broken]" time="0.112" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[[]]" time="0.106" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[null]" time="0.111" /><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[returned]" time="0.149" /><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[raised]" time="0.165" /><testcase classname="tests.test_review07_quantitative" name="test_growth_reaches_deeper_pending_children" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[error]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untested]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untestable]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_late_ablation_refreshes_disposition_without_rescoring" time="0.124" /><testcase classname="tests.test_review07_quantitative" name="test_failed_context_counts_against_threshold_coverage" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[s]" time="0.215" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ms]" time="0.003" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[us]" time="0.002" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ns]" time="0.004" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[candles]" time="0.006" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[derivs]" time="0.016" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[refs]" time="0.057" /><testcase classname="tests.test_review07_quantitative" name="test_coverage_uses_selected_readonly_source" time="0.329" /><testcase classname="tests.test_review07_quantitative" name="test_discovery_never_requests_heldout_price_frames" time="0.029" /><testcase classname="tests.test_review07_quantitative" name="test_status_does_not_register_budget" time="0.261" /><testcase classname="tests.test_review07_quantitative" name="test_top_labels_cumulative_return" time="0.165" /><testcase classname="tests.test_review07_quantitative" name="test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice" time="0.129" /><testcase classname="tests.test_review07_quantitative" name="test_duplicate_look_across_journals_is_atomic" time="0.113" /><testcase classname="tests.test_review07_quantitative" name="test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage" time="0.084" /><testcase classname="tests.test_review07_quantitative" name="test_retrospective_control_refused_before_reader_or_worker" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_declared_timeframe_risk_reaches_heldout_costs" time="0.041" /><testcase classname="tests.test_review07_quantitative" name="test_status_main_reads_existing_store_without_migration" time="0.220" /><testcase classname="tests.test_review07_quantitative" name="test_funding_dependency_is_bound_to_selected_readonly_store" time="0.002" /><testcase classname="tests.test_review07_quantitative" name="test_calibration_unknown_dependence_is_not_printed_as_one" time="0.054" /><testcase classname="tests.test_review07_quantitative" name="test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity" time="0.017" /><testcase classname="tests.test_review07_quantitative" name="test_finalization_failure_rolls_back_to_consumed_pending_look" time="0.112" /><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt0]" time="0.126" /><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt1]" time="0.133" /><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt2]" time="0.133" /><testcase classname="tests.test_review07_quantitative" name="test_top_preserves_unknown_metrics" time="0.108" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_history_is_not_discardable_legacy_accounting" time="0.118" /><testcase classname="tests.test_review07_quantitative" name="test_rotation_metadata_resolves_the_existing_default_source" time="0.043" /><testcase classname="tests.test_review07_quantitative" name="test_restart_refreshes_committed_subset_without_repeating_measurements" time="0.171" /><testcase classname="tests.test_research_ledger" name="test_the_tables_are_created_once_and_again_is_harmless" time="0.149" /><testcase classname="tests.test_research_ledger" name="test_a_result_round_trips" time="0.106" /><testcase classname="tests.test_research_ledger" name="test_recording_the_same_hash_twice_keeps_one_row" time="0.121" /><testcase classname="tests.test_research_ledger" name="test_rows_filter_by_level_and_verdict" time="0.126" /><testcase classname="tests.test_research_ledger" name="test_known_hashes_are_scoped_to_the_horizon_and_geometry" time="0.133" /><testcase classname="tests.test_research_ledger" name="test_the_ablation_is_stored_with_the_row" time="0.139" /><testcase classname="tests.test_research_ledger" name="test_the_ledger_migrates_a_gauges_table_created_before_min_max" time="0.141" /><testcase classname="tests.test_research_ledger" name="test_a_control_carries_a_status_distinct_from_powered" time="0.128" /><testcase classname="tests.test_research_ledger" name="test_tied_rows_break_the_tie_by_hash_so_the_order_is_deterministic" time="0.120" /><testcase classname="tests.test_research_ledger" name="test_measure_may_be_refused_until_the_horizon_is_archived" time="0.122" /><testcase classname="tests.test_research_ledger" name="test_gauges_round_trip_and_replace" time="0.114" /><testcase classname="tests.test_research_ledger" name="test_a_control_records_whether_the_window_has_power" time="0.143" /><testcase classname="tests.test_research_ledger" name="test_slices_record_the_cut_and_the_bar_counts" time="0.145" /><testcase classname="tests.test_research_ledger" name="test_a_batch_records_its_outcome_even_when_it_failed" time="0.146" /><testcase classname="tests.test_research_ledger" name="test_counts_summarise_the_search" time="0.129" /><testcase classname="tests.test_research_ledger" name="test_the_ledger_never_writes_the_strategies_table" time="0.001" /><testcase classname="tests.test_research_legacy_discard" name="test_report_does_not_write" time="0.142" /><testcase classname="tests.test_research_legacy_discard" name="test_discard_removes_only_unreferenced_legacy_rows_and_keeps_history" time="0.129" /><testcase classname="tests.test_research_legacy_discard" name="test_current_accounting_rows_are_never_discarded" time="0.914" /><testcase classname="tests.test_research_legacy_discard" name="test_discard_is_what_unblocks_the_planner_and_spends_no_look" time="0.289" /><testcase classname="tests.test_research_legacy_discard" name="test_a_spent_look_survives_recompute_and_cannot_be_respent" time="0.127" /><testcase classname="tests.test_research_legacy_discard" name="test_rekey_path_discards_legacy_rows_instead_of_archiving_them" time="0.149" /><testcase classname="tests.test_research_legacy_discard" name="test_cli_reports_by_default_and_only_deletes_with_apply" time="0.291" /><testcase classname="tests.test_research_runner" name="test_a_disabled_search_does_nothing" time="0.116" /><testcase classname="tests.test_research_runner" name="test_a_slow_trade_cycle_stands_the_search_down" time="0.203" /><testcase classname="tests.test_research_runner" name="test_a_normal_cycle_does_not_stand_it_down" time="0.171" /><testcase classname="tests.test_research_runner" name="test_the_first_step_measures_and_records_the_thresholds" time="0.167" /><testcase classname="tests.test_research_runner" name="test_results_are_written_with_a_verdict_and_a_reason" time="0.558" /><testcase classname="tests.test_research_runner" name="test_a_successful_evaluate_step_separates_skipped_from_deferred" time="0.408" /><testcase classname="tests.test_research_runner" name="test_a_stood_down_step_exposes_only_the_reason_string" time="0.096" /><testcase classname="tests.test_research_runner" name="test_a_control_batch_records_the_window_s_power" time="0.358" /><testcase classname="tests.test_research_runner" name="test_a_child_timeout_marks_the_batch_failed_and_raises_nothing" time="0.245" /><testcase classname="tests.test_research_runner" name="test_a_child_crash_is_recorded_not_raised" time="0.196" /><testcase classname="tests.test_research_runner" name="test_the_batch_carries_the_horizon_s_symbols_to_the_child" time="0.173" /><testcase classname="tests.test_research_runner" name="test_a_control_batch_runs_on_the_incumbent_universe" time="0.410" /><testcase classname="tests.test_research_runner" name="test_the_kernel_records_how_long_its_cycle_took" time="0.183" /><testcase classname="tests.test_research_runner" name="test_the_kernel_updates_last_cycle_s_even_when_the_cycle_raises" time="0.002" /><testcase classname="tests.test_research_runner" name="test_the_research_loop_builds_its_runner_inside_the_retry_loop" time="0.001" /><testcase classname="tests.test_research_runner" name="test_the_kernel_spawns_the_research_thread_only_when_enabled" time="0.003" /><testcase classname="tests.test_research_runner" name="test_discovery_null_draws_is_clamped_to_the_null_baseline_floor" time="0.115" /><testcase classname="tests.test_research_runner" name="test_symbols_returns_nothing_when_coverage_is_unavailable" time="0.183" /><testcase classname="tests.test_research_runner" name="test_a_crashed_control_is_left_uncontrolled_for_retry" time="0.415" /><testcase classname="tests.test_research_runner" name="test_an_empty_control_is_left_uncontrolled_for_retry" time="0.341" /><testcase classname="tests.test_research_runner" name="test_an_untestable_control_is_recorded_under_its_own_status" time="0.350" /><testcase classname="tests.test_research_runner" name="test_a_batch_is_refused_when_the_bundle_loaded_too_few_symbols" time="0.499" /><testcase classname="tests.test_research_runner" name="test_a_control_answers_to_the_control_floor_not_the_discovery_floor" time="0.332" /><testcase classname="tests.test_research_runner" name="test_the_label_gate_uses_the_configured_control_max_p" time="0.427" /><testcase classname="tests.test_research_runner" name="test_discovery_null_draws_at_or_above_the_floor_passes_through" time="0.138" /><testcase classname="tests.test_research_runner" name="test_survivors_are_queued_and_twins_cost_nothing" time="0.164" /><testcase classname="tests.test_research_runner" name="test_a_candidate_that_clears_both_gates_is_referee_passed" time="0.194" /><testcase classname="tests.test_research_runner" name="test_gate1_fail_and_gate3_fail_are_recorded_with_reasons" time="0.383" /><testcase classname="tests.test_research_runner" name="test_a_crashing_look_is_charged_once_without_retry" time="0.209" /><testcase classname="tests.test_research_runner" name="test_a_level_the_draws_cannot_resolve_defers_without_spending" time="0.187" /><testcase classname="tests.test_research_runner" name="test_the_referee_can_be_switched_off" time="6.452" /><testcase classname="tests.test_research_referee" name="test_held_out_a_is_only_bars_before_the_cut" time="2.249" /><testcase classname="tests.test_research_referee" name="test_held_out_b_trades_from_the_cut_with_warmup_from_before_it" time="2.143" /><testcase classname="tests.test_research_referee" name="test_gate1_spends_one_p_the_worst_of_three" time="0.001" /><testcase classname="tests.test_research_referee" name="test_gate1_charges_the_dependence_corrected_consistency" time="0.001" /><testcase classname="tests.test_research_referee" name="test_gate1_untestable_is_charged_as_p_one" time="0.001" /><testcase classname="tests.test_research_referee" name="test_gate3_refuses_a_duplicate_of_the_book" time="0.001" /><testcase classname="tests.test_research_referee" name="test_gate3_accepts_uncorrelated_positive_fills" time="0.003" /><testcase classname="tests.test_research_referee" name="test_gate3_refuses_return_bought_with_a_worse_drawdown_ratio" time="0.002" /><testcase classname="tests.test_research_referee" name="test_twins_are_not_looked_at" time="0.004" /><testcase classname="tests.test_research_referee" name="test_a_previous_look_makes_a_new_candidate_a_twin" time="0.005" /><testcase classname="tests.test_research_referee" name="test_entries_round_trip" time="0.005" /><testcase classname="tests.test_research_referee" name="test_examine_runs_end_to_end_on_a_real_store" time="4.407" /><testcase classname="tests.test_research_cli" name="test_once_exits_1_when_the_step_failed" time="0.157" /><testcase classname="tests.test_research_cli" name="test_once_exits_0_when_the_step_stands_down" time="0.199" /><testcase classname="tests.test_research_cli" name="test_once_exits_0_when_the_step_ran_and_succeeded" time="0.204" /><testcase classname="tests.test_research_cli" name="test_measure_refuses_a_horizon_that_already_holds_scored_combos" time="0.209" /><testcase classname="tests.test_research_cli" name="test_measure_rekey_archives_then_proceeds" time="0.191" /><testcase classname="tests.test_research_cli" name="test_top_on_an_empty_ledger_says_so_rather_than_staying_silent" time="0.217" /><testcase classname="tests.test_research_control_unavailable" name="test_impossible_controls_stop_repeating_and_work_proceeds" time="20.459" /><testcase classname="tests.test_research_control_unavailable" name="test_repeated_planning_with_unchanged_input_never_re_requests" time="30.879" /><testcase classname="tests.test_research_control_unavailable" name="test_unavailable_is_never_powered_or_a_no_edge_verdict" time="23.101" /><testcase classname="tests.test_research_control_unavailable" name="test_cut_advance_alone_does_not_reopen_while_data_is_unusable" time="0.107" /><testcase classname="tests.test_research_control_unavailable" name="test_reopens_when_the_slice_reaches_the_series" time="0.113" /><testcase classname="tests.test_research_control_unavailable" name="test_a_series_with_no_history_is_not_reopened_by_the_cut" time="0.119" /><testcase classname="tests.test_research_control_unavailable" name="test_reopens_when_the_evaluation_identity_changes" time="0.123" /><testcase classname="tests.test_research_control_unavailable" name="test_reopened_control_that_now_trades_is_recorded_as_measured" time="57.275" /><testcase classname="tests.test_research_control_unavailable" name="test_zero_trades_with_data_present_is_still_retried_not_recorded" time="0.005"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix test_zero_trades_with_data_pre in /tmp/pytest-of-sarmad/pytest-25 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x76ed014fb1a0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-25')
+prefix = 'test_zero_trades_with_data_pre', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_zero_trades_with_data_pre in /tmp/pytest-of-sarmad/pytest-25 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError</error></testcase><testcase classname="tests.test_research_control_unavailable" name="test_failed_worker_and_deferred_controls_are_not_recorded" time="0.014"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix test_failed_worker_and_deferre in /tmp/pytest-of-sarmad/pytest-25 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x76ed014f9b20&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-25')
+prefix = 'test_failed_worker_and_deferre', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_failed_worker_and_deferre in /tmp/pytest-of-sarmad/pytest-25 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError</error></testcase><testcase classname="tests.test_research_control_unavailable" name="test_an_old_child_without_coverage_keeps_the_previous_behaviour" time="0.020"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix test_an_old_child_without_cove in /tmp/pytest-of-sarmad/pytest-25 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x76ed0113d940&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-25')
+prefix = 'test_an_old_child_without_cove', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_an_old_child_without_cove in /tmp/pytest-of-sarmad/pytest-25 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError</error></testcase><testcase classname="tests.test_research_control_unavailable" name="test_a_measured_control_is_numerically_unchanged_by_coverage" time="0.048"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix test_a_measured_control_is_num in /tmp/pytest-of-sarmad/pytest-25 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x76ed0117b9c0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-25')
+prefix = 'test_a_measured_control_is_num', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_measured_control_is_num in /tmp/pytest-of-sarmad/pytest-25 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError</error></testcase><testcase classname="tests.test_research_control_unavailable" name="test_unavailable_rule_uses_the_control_floor_and_references" time="0.010" /><testcase classname="tests.test_research_control_unavailable" name="test_child_coverage_reports_slice_counts_and_first_observations" time="0.011" /></testsuite></testsuites>

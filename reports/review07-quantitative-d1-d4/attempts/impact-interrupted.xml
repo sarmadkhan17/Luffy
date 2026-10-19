@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="120" time="633.677" timestamp="2026-10-19T15:49:18.759389+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_candidate_dossier" name="test_connection_is_read_only_and_allowlisted" time="0.049" /><testcase classname="tests.test_candidate_dossier" name="test_missing_db_is_not_created" time="0.003" /><testcase classname="tests.test_candidate_dossier" name="test_source_database_is_unchanged" time="0.045" /><testcase classname="tests.test_candidate_dossier" name="test_hostile_sentinels_never_read_or_exported" time="0.044" /><testcase classname="tests.test_candidate_dossier" name="test_unknown_hash_and_bad_hash_refused" time="0.036" /><testcase classname="tests.test_candidate_dossier" name="test_deterministic_outputs_and_hashes" time="0.048" /><testcase classname="tests.test_candidate_dossier" name="test_identity_pins_rule_and_detects_tampering" time="0.069" /><testcase classname="tests.test_candidate_dossier" name="test_output_guards" time="0.038" /><testcase classname="tests.test_candidate_dossier" name="test_empty_existing_dir_is_accepted" time="0.049" /><testcase classname="tests.test_candidate_dossier" name="test_thesis_input_preserved_verbatim" time="0.050" /><testcase classname="tests.test_candidate_dossier" name="test_missing_thesis_gives_scaffold_and_exact_next_test" time="0.052" /><testcase classname="tests.test_candidate_dossier" name="test_scaffold_cannot_be_submitted_as_is" time="0.045" /><testcase classname="tests.test_candidate_dossier" name="test_well_formed_thesis_waits_for_evidence" time="0.064" /><testcase classname="tests.test_candidate_dossier" name="test_verdict_never_reaches_admission_states" time="0.004" /><testcase classname="tests.test_candidate_dossier" name="test_non_survivor_is_research_only" time="0.046" /><testcase classname="tests.test_candidate_dossier" name="test_supported_premise" time="0.044" /><testcase classname="tests.test_candidate_dossier" name="test_exact_canonical_text_is_the_only_supported_wording" time="0.049" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[Bitcoin dominance fell for most of that calendar year.]" time="0.054" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[Nineteen symbols scored since volatility shocks make alt trends persist.]" time="0.055" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[Volatility spikes are what let alt trends run on nineteen symbols.]" time="0.061" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[The rule scored on all nineteen discovery symbols.]" time="0.068" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[E.combo.scored_symbols == 19 (recorded: 19) and trends persist]" time="0.058" /><testcase classname="tests.test_candidate_dossier" name="test_true_claim_never_promotes_its_narrative[E.combo.scored_symbols &gt;= 19 (recorded: 19)]" time="0.056" /><testcase classname="tests.test_candidate_dossier" name="test_unsupported_causal_story_not_upgraded_by_label_or_metric" time="0.051" /><testcase classname="tests.test_candidate_dossier" name="test_contradicted_observation_rejects" time="0.051" /><testcase classname="tests.test_candidate_dossier" name="test_strict_schema" time="0.074" /><testcase classname="tests.test_candidate_dossier" name="test_reference_integrity" time="0.067" /><testcase classname="tests.test_candidate_dossier" name="test_entry_rule_tautology_refused[ref(&quot;alts&quot;, zscore(close, 96)) &gt; 1.232842]" time="0.039" /><testcase classname="tests.test_candidate_dossier" name="test_entry_rule_tautology_refused[ref(&quot;vix&quot;, ret(30)) &gt; 0.1]" time="0.038" /><testcase classname="tests.test_candidate_dossier" name="test_entry_rule_tautology_refused[ref(&quot;alts&quot;, zscore(close, 96)) &gt; 1.232842 and ref(&quot;vix&quot;, ret(30)) &gt; 0.155056]" time="0.041" /><testcase classname="tests.test_candidate_dossier" name="test_entry_rule_tautology_refused[not (0 - ref(&quot;alts&quot;, zscore(close, 96)) &gt; 0.994184 and 0 - ref(&quot;vix&quot;, ret(30)) &gt; 0.151715)]" time="0.046" /><testcase classname="tests.test_candidate_dossier" name="test_entry_rule_tautology_refused[ref(&quot;vix&quot;, ret(30)) &lt; 0.155056]" time="0.052" /><testcase classname="tests.test_candidate_dossier" name="test_threshold_recut_needs_review_not_valid" time="0.044" /><testcase classname="tests.test_candidate_dossier" name="test_duplicates_and_contradictory_pairs" time="0.053" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw0-unsupported_expression]" time="0.048" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw1-unsupported_expression]" time="0.052" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw2-unavailable_observable]" time="0.044" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw3-not_a_condition]" time="0.057" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw4-constant_condition]" time="0.048" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw5-unavailable_market]" time="0.043" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw6-discovery_restatement]" time="0.042" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw7-unavailable_regime]" time="0.043" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw8-discovery_era_already_seen]" time="0.041" /><testcase classname="tests.test_candidate_dossier" name="test_unavailable_or_restated_refused[kw9-era_straddles_cut]" time="0.041" /><testcase classname="tests.test_candidate_dossier" name="test_unmeasured_window_needs_review" time="0.070" /><testcase classname="tests.test_candidate_dossier" name="test_later_era_and_regime_subsets_accepted" time="0.047" /><testcase classname="tests.test_candidate_dossier" name="test_unparseable_thesis_file_is_rejected_not_crashed" time="0.129" /><testcase classname="tests.test_candidate_dossier" name="test_interval_relation_edges" time="0.001" /><testcase classname="tests.test_candidate_dossier" name="test_validation_is_pure" time="0.133" /><testcase classname="tests.test_null_dependence" name="test_the_continuous_tail_is_the_binomial_at_integers" time="0.161" /><testcase classname="tests.test_null_dependence" name="test_no_dependence_reproduces_consistency_p" time="0.009" /><testcase classname="tests.test_null_dependence" name="test_dependence_only_ever_weakens_the_evidence" time="0.001" /><testcase classname="tests.test_null_dependence" name="test_effective_n_clips_rho" time="0.001" /><testcase classname="tests.test_null_dependence" name="test_untestable_stays_none" time="0.001" /><testcase classname="tests.test_null_dependence" name="test_the_dependence_estimate_sees_a_shared_market" time="7.422" /><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[SUPPORTED]" time="37.759"><failure message="ValueError: stale_evaluation_version">population = (PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p0/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_b7511b9ab8267840"}', provenance_hash='c052dbd1197cd5a8ce4c1f2a954611a6dc001df5bf236d443ba1a4ee9a950068'))
+disposition = 'SUPPORTED'
+
+    @pytest.mark.parametrize('disposition',['SUPPORTED','UNSUPPORTED','DATA_INSUFFICIENT'])
+    def test_normal_bank_consumer_to_planner_referee_feedback(population, disposition):
+        source,bank,_,created,later,_=population
+        fake=NumericalFixture(disposition)
+        original=source.read_bytes()
+        first=consume(population,fake,created)
+        assert first['counts']['eligible_research_results']==1
+        assert first['counts']['hypotheses_proposed']==1
+        assert first['counts']['data_insufficient']==1
+        assert first['counts']['not_testable']==0
+        assert fake.calls==[] # descriptive support did not create predictive evidence
+        assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
+        for _ in range(6):
+&gt;           consume(population,fake,later)
+
+tests/test_predictive_research_bridge.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_predictive_research_bridge.py:104: in consume
+    return B.cycle(source,bank,candles,CFG,now_ms=now,run=fake,**kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+source_path = PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p0/investigation.db')
+bank_path = PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p0/bridge.db')
+candles_path = PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p0/candles.db')
+cfg = {'risk': {'risk_per_trade_pct': 0.5, 'max_open_trades': 8, 'real_funding': False}, 'research': {'enabled': True, 'referee': True, 'handoff': False, 'horizons': ['4h'], ...}}
+now_ms = 1822752000000, max_sources = 4, max_experiments = 1
+run = &lt;tests.test_predictive_research_bridge.NumericalFixture object at 0x7fc5f266edb0&gt;
+submit = True
+quantitative_source_path = PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p0/luffy.db')
+
+    def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
+              max_experiments=1, run=run_child, submit=True, quantitative_source_path=None):
+        if type(max_sources) is not int or not 1 &lt;= max_sources &lt;= MAX_SOURCES:
+            raise ValueError('source_budget')
+        if type(max_experiments) is not int or not 1 &lt;= max_experiments &lt;= MAX_EXPERIMENTS:
+            raise ValueError('experiment_budget')
+        if type(now_ms) is not int or now_ms &lt; 0:
+            raise ValueError('cycle_clock')
+        bank_path = Path(bank_path).resolve()
+        quantitative_source_path=Path(quantitative_source_path or Path(source_path).parent/'luffy.db').resolve()
+        for source in (source_path, candles_path, quantitative_source_path):
+            p = Path(source).resolve()
+            if bank_path == p or (bank_path.exists() and p.exists() and bank_path.samefile(p)):
+                raise ValueError('source_destination_alias')
+        bank_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(bank_path)+'.lock', 'a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with closing(store(bank_path)) as db:
+                binding=dict(schema='bridge-runtime-binding.v1',source=str(Path(source_path).resolve()),
+                             quantitative_source=str(quantitative_source_path))
+                with closing(E.readonly(quantitative_source_path)) as quantitative:
+                    quantitative.row_factory=sqlite3.Row
+                    base_tests=[dict(r) for r in quantitative.execute('SELECT * FROM research_tests ORDER BY seq')]
+                    base_budget=[dict(r) for r in quantitative.execute('SELECT * FROM research_budget ORDER BY id')]
+                with db:
+                    append(db,'bridge_runtime_bindings','source',binding)
+                    append(db,'bridge_runtime_bindings','initial-protected-budget',dict(tests=base_tests))
+                    if base_budget:
+                        append(db,'bridge_runtime_bindings','registered-error-budget',base_budget)
+                    for test in base_tests:
+                        append(db,'bridge_tests',str(test['seq']),test)
+                # Recover spent looks before offering ANY new experiment. A crash
+                # between the quantitative commit and feedback must not reset LORD.
+                for ex in records(db, 'bridge_experiments'):
+                    work = bank_path.parent/(bank_path.stem+'-experiments')/ex['experiment_id']
+                    path = work/'quantitative.db'
+                    if path.exists():
+                        with closing(E.readonly(path)) as journal:
+                            journal.row_factory=sqlite3.Row
+                            tests=journal.execute('SELECT * FROM research_tests ORDER BY seq').fetchall()
+                            budget=[dict(r) for r in journal.execute('SELECT * FROM research_budget ORDER BY id')]
+                        with db:
+                            if budget:
+                                append(db,'bridge_runtime_bindings','registered-error-budget',budget)
+                            for test in tests:
+                                append(db,'bridge_tests',str(test['seq']),dict(test))
+                counts = dict(eligible_research_results=0, hypotheses_proposed=0, exact_duplicates=0,
+                    experiment_shape_supported=0, data_insufficient=0, planner_submissions=0,
+                    supported=0, unsupported=0, inconclusive=0, not_testable=0)
+                known = {s['bank_id'] for s in records(db, 'bridge_sources')}
+                known_cases = {s['investigation_id'] for s in records(db, 'bridge_sources')}
+                sources, refusals = read_sources(source_path, known, max_sources, now_ms, known_cases)
+                for source in sources:
+                    counts['eligible_research_results'] += 1
+                    with db:
+                        append(db, 'bridge_sources', source.bank_id, asdict(source))
+                        for q in P.next_questions(source):
+                            append(db, 'bridge_questions', q['question_id'], q)
+                        for transformation in P.generatable():
+                            h = P.propose(source, transformation, now_ms)
+                            status, related = prior_classification(db, h)
+                            check=dict(source_bank_id=source.bank_id,transformation=transformation,
+                                proposal_id=h.hypothesis_id,classification=status,related_prior=related)
+                            append(db,'bridge_registration_checks',P.digest([source.bank_id,transformation]),check)
+                            if status == 'EXACT_DUPLICATE':
+                                counts['exact_duplicates'] += 1
+                                continue
+                            append(db, 'bridge_hypotheses', h.hypothesis_id,
+                                   dict(hypothesis=asdict(h), novelty=status, related_prior=related))
+                            counts['hypotheses_proposed'] += 1
+                offered = 0
+                translated = 0
+                for saved in records(db, 'bridge_hypotheses'):
+                    h = P.hypothesis_from_dict(saved['hypothesis'])
+                    finished = [o for o in records(db,'bridge_bank_results') if o['hypothesis_id']==h.hypothesis_id
+                                and (o['classification'] in ('SUPPORTED','UNSUPPORTED','NOT_TESTABLE')
+                                     or o['referee_disposition'].get('state') in ('DISCOVERY_ONLY','CONTROL_UNDERPOWERED','POWER_UNAVAILABLE','EVALUATION_ERROR','CONTROL_DATA_INSUFFICIENT','PROTECTED_CUT_INCOMPATIBLE','DUPLICATE_EXPERIMENT_IDENTITY'))]
+                    if finished:
+                        continue
+                    if P.TRANSFORMS[h.transformation]['shape']=='combination':
+                        if translated&gt;=max_experiments:
+                            continue
+                        translated+=1
+                    existing = [e for e in records(db,'bridge_experiments') if e['source_hypothesis_id']==h.hypothesis_id]
+                    ex = existing[0] if existing else E.translate(h, candles_path, cfg, now_ms)
+                    with db:
+                        translation=E.retain_translation(h,ex,now_ms if not existing else ex['split']['end_ms']+14_400_000)
+                        append(db,'bridge_translations',translation['translation_id'],translation)
+                    if existing and ex['minimum_evidence']['registered_policy_hash'] != P.digest(cfg.get('research') or {}):
+                        raise ValueError('stale_or_incompatible_policy')
+                    if ex['status'] == 'UNSUPPORTED_EXPERIMENT_SHAPE':
+                        counts['not_testable'] += 1
+                        with db:
+                            feedback(db,h,None,'NOT_TESTABLE',None,dict(state='UNSUPPORTED_EXPERIMENT_SHAPE'),now_ms)
+                        continue
+                    counts['experiment_shape_supported'] += 1
+                    if ex['status'] == 'DATA_INSUFFICIENT':
+                        counts['data_insufficient'] += 1
+                        with db:
+                            feedback(db,h,None,'DATA_INSUFFICIENT',None,dict(state=ex['reason']),now_ms)
+                        continue
+                    if not existing:
+                        identity = E.statistical_identity(ex)
+                        twin = next((e for e in records(db,'bridge_experiments')
+                                     if E.statistical_identity(e) == identity), None)
+                        if twin:
+                            # Same registered question under a new name: no new look.
+                            counts['exact_duplicates'] += 1
+                            with db:
+                                append(db,'bridge_registration_checks',P.digest([h.hypothesis_id,'experiment_identity']),
+                                    dict(source_bank_id=h.bank_id,transformation=h.transformation,proposal_id=h.hypothesis_id,
+                                         classification='DUPLICATE_EXPERIMENT_IDENTITY',related_prior=[twin['experiment_id']]))
+                                feedback(db,h,None,'DATA_INSUFFICIENT',None,
+                                         dict(state='DUPLICATE_EXPERIMENT_IDENTITY',identical_experiment_id=twin['experiment_id']),now_ms)
+                            continue
+                    if not submit or offered &gt;= max_experiments:
+                        continue
+                    offered += 1
+                    work = bank_path.parent/(bank_path.stem+'-experiments')/ex['experiment_id']
+                    work.mkdir(parents=True,exist_ok=True)
+                    candle_copy = work/'candles.db'
+                    numerical_path = work/'quantitative.db'
+                    if work.is_symlink() or candle_copy.is_symlink() or numerical_path.is_symlink():
+                        raise ValueError('experiment_destination_alias')
+                    if numerical_path.exists():
+                        with closing(E.readonly(numerical_path)) as check:
+                            if not check.execute("SELECT 1 FROM sqlite_master WHERE name='predictive_experiment_binding'").fetchone():
+                                raise ValueError('foreign_quantitative_store')
+                            if check.execute('SELECT id FROM predictive_experiment_binding').fetchall()!=[(ex['experiment_id'],)]:
+                                raise ValueError('quantitative_store_binding')
+                    else:
+                        with closing(sqlite3.connect(numerical_path)) as check, check:
+                            check.execute('CREATE TABLE predictive_experiment_binding(id TEXT PRIMARY KEY)')
+                            check.execute('INSERT INTO predictive_experiment_binding VALUES (?)',(ex['experiment_id'],))
+                    if ex.get('evaluation_version') and ex['evaluation_version'] != E.evaluation_version():
+&gt;                       raise ValueError('stale_evaluation_version')
+E                       ValueError: stale_evaluation_version
+
+trader/research/predictive_bridge.py:406: ValueError</failure></testcase><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[UNSUPPORTED]" time="56.067"><failure message="StopIteration">population = (PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p1/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_cf67f750f6feb9a3"}', provenance_hash='db701cb064c2ce6de39f60965146bfded2ec3bb6637bf6afa842cd9956460d06'))
+disposition = 'UNSUPPORTED'
+
+    @pytest.mark.parametrize('disposition',['SUPPORTED','UNSUPPORTED','DATA_INSUFFICIENT'])
+    def test_normal_bank_consumer_to_planner_referee_feedback(population, disposition):
+        source,bank,_,created,later,_=population
+        fake=NumericalFixture(disposition)
+        original=source.read_bytes()
+        first=consume(population,fake,created)
+        assert first['counts']['eligible_research_results']==1
+        assert first['counts']['hypotheses_proposed']==1
+        assert first['counts']['data_insufficient']==1
+        assert first['counts']['not_testable']==0
+        assert fake.calls==[] # descriptive support did not create predictive evidence
+        assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
+        for _ in range(6):
+            consume(population,fake,later)
+        outcomes=saved(bank,'bridge_bank_results')
+&gt;       final=next(r for r in outcomes if r['classification']==disposition and r['experiment_id'])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_predictive_research_bridge.py:127: StopIteration</failure></testcase><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[DATA_INSUFFICIENT]" time="50.879"><failure message="StopIteration">population = (PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_normal_bank_consumer_to_p2/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_79032ba4c8571c0a"}', provenance_hash='0054ba49a63c4a1467bff962e5978fb972a0b6eec329ebafec86a38154f264c1'))
+disposition = 'DATA_INSUFFICIENT'
+
+    @pytest.mark.parametrize('disposition',['SUPPORTED','UNSUPPORTED','DATA_INSUFFICIENT'])
+    def test_normal_bank_consumer_to_planner_referee_feedback(population, disposition):
+        source,bank,_,created,later,_=population
+        fake=NumericalFixture(disposition)
+        original=source.read_bytes()
+        first=consume(population,fake,created)
+        assert first['counts']['eligible_research_results']==1
+        assert first['counts']['hypotheses_proposed']==1
+        assert first['counts']['data_insufficient']==1
+        assert first['counts']['not_testable']==0
+        assert fake.calls==[] # descriptive support did not create predictive evidence
+        assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
+        for _ in range(6):
+            consume(population,fake,later)
+        outcomes=saved(bank,'bridge_bank_results')
+&gt;       final=next(r for r in outcomes if r['classification']==disposition and r['experiment_id'])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_predictive_research_bridge.py:127: StopIteration</failure></testcase><testcase classname="tests.test_predictive_research_bridge" name="test_hypothesis_immutable_and_registered_only" time="8.646" /><testcase classname="tests.test_predictive_research_bridge" name="test_exact_duplicates_related_and_contradicted_prior" time="8.742" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[SUPPORTED]" time="10.448" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[UNSUPPORTED]" time="11.871" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[INCONCLUSIVE]" time="10.716" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[NOT_TESTABLE]" time="9.115" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[DATA_INSUFFICIENT]" time="9.894" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[REFUTED]" time="10.071" /><testcase classname="tests.test_predictive_research_bridge" name="test_shape_leakage_and_factory_bypass_refused" time="24.900" /><testcase classname="tests.test_predictive_research_bridge" name="test_source_missing_provenance_and_stale_protocol" time="9.253" /><testcase classname="tests.test_predictive_research_bridge" name="test_feedback_retains_stage7_replay_and_no_truth_from_priority" time="12.333" /><testcase classname="tests.test_predictive_research_bridge" name="test_snapshot_scores_exclude_generation_and_search_cannot_read_protected" time="59.020" /><testcase classname="tests.test_predictive_research_bridge" name="test_normal_path_actual_numerical_jobs_no_direct_planner_injection" time="62.244" /><testcase classname="tests.test_predictive_research_bridge" name="test_crash_after_spent_look_recovers_global_budget" time="59.278"><failure message="Failed: DID NOT RAISE RuntimeError">population = (PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_crash_after_spent_look_re0/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_abfc1776fd7b40fb"}', provenance_hash='871eb46af2d2969f98fb8ef2c2da06bb7eaa81e2e7523265bc295afba5af406c'))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fc5f2926030&gt;
+
+    def test_crash_after_spent_look_recovers_global_budget(population,monkeypatch):
+        _,bank,_,created,later,_=population
+        fake=NumericalFixture()
+        consume(population,fake,created)
+        for _ in range(5): consume(population,fake,later)
+        original=B.feedback
+        def crash(*args,**kw):
+            if args[3]=='SUPPORTED': raise RuntimeError('crash_after_quantitative_commit')
+            return original(*args,**kw)
+        monkeypatch.setattr(B,'feedback',crash)
+&gt;       with pytest.raises(RuntimeError,match='crash_after'): consume(population,fake,later)
+E       Failed: DID NOT RAISE RuntimeError
+
+tests/test_predictive_research_bridge.py:293: Failed</failure></testcase><testcase classname="tests.test_predictive_research_bridge" name="test_source_alias_budget_and_immutable_checkpoint_refused" time="10.370" /><testcase classname="tests.test_predictive_research_bridge" name="test_global_existing_error_budget_is_inherited" time="27.947"><failure message="ValueError: heldout_cut_unavailable">population = (PosixPath('/tmp/pytest-of-sarmad/pytest-5/test_global_existing_error_bud0/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_6c002a2b61b0e1d1"}', provenance_hash='22443fc848b958d636fe8672dc03b12551a38d22bb58e038dce669d209900940'))
+
+    def test_global_existing_error_budget_is_inherited(population):
+        source,bank,_,created,later,_=population
+        from trader.research.ledger import Ledger
+        led=Ledger(Journal(source.parent/'luffy.db'))
+        led.ensure()
+        led.record_test('prior-protected-look','4h','fixed','gate1',.8,.001,False,{'reason':'TEST_ONLY'})
+        fake=NumericalFixture()
+        consume(population,fake,created)
+&gt;       for _ in range(6): consume(population,fake,later)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_predictive_research_bridge.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_predictive_research_bridge.py:104: in consume
+    return B.cycle(source,bank,candles,CFG,now_ms=now,run=fake,**kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/research/predictive_bridge.py:455: in cycle
+    spent_cut=runner.ledger.spent_cut('4h')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;trader.research.ledger.Ledger object at 0x7fc5eef56db0&gt;, tf = '4h'
+
+    def spent_cut(self, tf: str) -&gt; int | None:
+        """The earliest cut at which a held-out look on `tf` was spent.
+    
+        Held-out B began there; discovery may never again see a bar at or
+        after it, however far the store has grown since."""
+        cuts = []
+        for r in self.journal.query(
+                "SELECT detail FROM research_tests WHERE tf=?", (tf,)):
+            detail = _object(r["detail"], "held-out receipt")
+            c = detail.get("cut_ms")
+            if type(c) is not int or c &lt;= 0:
+&gt;               raise ValueError("heldout_cut_unavailable")
+E               ValueError: heldout_cut_unavailable
+
+trader/research/ledger.py:566: ValueError</failure></testcase><testcase classname="tests.test_predictive_research_bridge" name="test_malformed_stored_bank_refused_by_normal_consumer" time="10.230" /><testcase classname="tests.test_predictive_research_bridge" name="test_rehashed_experiment_cannot_remove_registered_null_or_leakage_guard" time="24.793" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_lineage_retained_and_correlated_outcomes_deflated" time="3.302" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_alias_copies_do_not_create_independent_samples" time="0.261" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_repeated_symbol_is_refused_even_if_inputs_differ" time="0.021" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_equal_offsets_on_different_calendars_are_not_common_controls" time="1.935" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_irregular_calendar_is_untestable" time="0.081" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_unmeasured_pairs_cannot_be_silently_discarded" time="1.597" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_relationship_versions_and_expiry_used_at_exact_cut" time="0.193" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_rebuild_after_disk_reload_reproduces_treatment_and_receipt" time="32.760" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_insufficient_draws_does_not_substitute_independent_votes" time="0.048" /><testcase classname="tests.test_qnt03_dependence_lineage" name="test_analyst_producer_forwards_common_slice_context_and_funding" time="1.679" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_discovery_and_heldout_b_are_disjoint_and_cover" time="0.918" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_future_label_leakage_control" time="2.102" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_revision_or_growth_after_the_cut_cannot_reach_discovery" time="2.781" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_load_heldout_b_context_never_trades_before_cut" time="0.844" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_missing_heldout_evidence_yields_no_frames" time="0.343" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_second_look_at_a_spent_holdout_is_refused" time="0.107" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_reset_cannot_requeue_a_spent_candidate" time="0.109" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_examine_refuses_a_spent_rule_without_a_look" time="0.105" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_cut_frozen_at_first_spent_look_and_survives_restart" time="0.100" /><testcase classname="tests.test_qnt04_holdout_separation" name="test_replay_gives_identical_split_and_bundle" time="1.300" /><testcase classname="tests.test_qnt05_error_budget" name="test_each_look_consumes_the_next_step_of_one_sequence" time="0.126" /><testcase classname="tests.test_qnt05_error_budget" name="test_alpha_for_a_given_step_never_rises_without_a_rejection" time="0.374" /><testcase classname="tests.test_qnt05_error_budget" name="test_restart_does_not_restore_spent_budget" time="0.108" /><testcase classname="tests.test_qnt05_error_budget" name="test_retry_of_the_same_candidate_spends_no_second_test" time="0.102" /><testcase classname="tests.test_qnt05_error_budget" name="test_unregistered_threshold_cannot_reject" time="0.116" /><testcase classname="tests.test_qnt05_error_budget" name="test_config_change_cannot_reset_registered_parameters" time="0.124" /><testcase classname="tests.test_qnt05_error_budget" name="test_failed_look_still_charges_and_does_not_reset" time="0.121" /><testcase classname="tests.test_qnt05_error_budget" name="test_exhausted_budget_defers_not_tests" time="0.184" /><testcase classname="tests.test_qnt05_error_budget" name="test_deferred_candidate_cannot_be_reset_to_a_free_look_by_rename" time="0.105" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_fake_candidate_without_any_look_is_refused" time="0.862" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_label_alone_never_admits" time="0.219" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_forged_loose_alpha_row_is_refused" time="0.211" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_unregistered_budget_is_refused" time="0.202" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_stale_or_wrong_cut_is_refused[patch0]" time="0.215" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_stale_or_wrong_cut_is_refused[patch1]" time="0.191" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_underresolved_look_is_refused" time="0.196" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_untested_look_cannot_admit" time="0.202" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_raw_or_missing_dependence_p_is_refused" time="0.195" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_llm_research_descriptive_or_parked_sources_cannot_admit[src0]" time="0.203" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_llm_research_descriptive_or_parked_sources_cannot_admit[src1]" time="0.200" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_llm_research_descriptive_or_parked_sources_cannot_admit[src2]" time="0.189" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_llm_research_descriptive_or_parked_sources_cannot_admit[src3]" time="0.196" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_admission_grants_no_order_capital_or_owner_authority" time="0.231" /><testcase classname="tests.test_qnt08_admission_boundary" name="test_replay_and_restart_reproduce_admission_and_refusal" time="0.238" /></testsuite></testsuites>

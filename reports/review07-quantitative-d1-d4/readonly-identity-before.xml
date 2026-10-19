@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.723" timestamp="2026-10-19T16:19:32.987257+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_review07_quantitative" name="test_readonly_identity_uses_injected_binding_without_provider" time="0.034"><failure message="RuntimeError: read-only provider access forbidden">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ab0a1338e00&gt;
+
+    def test_readonly_identity_uses_injected_binding_without_provider(monkeypatch):
+        from trader.data import market_provenance as mp
+        ex=SimpleNamespace(id='binanceusdm')
+        feed=DataFeed(exchange=ex,read_only=True)
+        feed._instruments['BTC/USDT']=SimpleNamespace(venue='binance',value='retained-identity')
+        monkeypatch.setattr(mp,'venue_identity',lambda exchange,sym:(None,None))
+        monkeypatch.setattr('trader.data.feed.canonical_venue',lambda venue:'binance')
+        monkeypatch.setattr(mp,'venue_source',lambda exchange:'injected-source')
+&gt;       assert feed._identity('BTC/USDT')==('retained-identity','injected-source')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:407: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:684: in _identity
+    if binding is not None and binding.venue == canonical_venue(getattr(self.ex,'id',None)):
+                                                                        ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;trader.data.feed.DataFeed object at 0x7ab09fb352b0&gt;
+
+    @property
+    def ex(self):
+        """Exchange used for market data (production public when on demo)."""
+        if self.read_only or self.retrospective is not None:
+&gt;           raise RuntimeError('read-only provider access forbidden')
+E           RuntimeError: read-only provider access forbidden
+
+trader/data/feed.py:145: RuntimeError</failure></testcase></testsuite></testsuites>

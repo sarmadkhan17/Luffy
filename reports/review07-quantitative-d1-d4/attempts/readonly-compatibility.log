@@ -1,0 +1,39 @@
+...............................................F
+=================================== FAILURES ===================================
+_______ test_complete_sixteen_symbol_bundle_and_evaluator_are_repeatable _______
+
+discovery = ({'research': {'referee': False, 'handoff': False, 'retrospective': {'dataset_id': 'synthetic-audited-discovery', 'cut...ndles.db'}}, 'risk': {'real_funding': False}}, ['S0/USDT', 'S1/USDT', 'S2/USDT', 'S3/USDT', 'S4/USDT', 'S5/USDT', ...])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e90fc80fa40>
+
+    def test_complete_sixteen_symbol_bundle_and_evaluator_are_repeatable(discovery, monkeypatch):
+        cfg, symbols = discovery
+        from trader.data.feed import DataFeed
+        reads=[]
+        original=DataFeed.cached_ohlcv
+        def bounded(self, symbol, *args, **kw):
+            assert symbol != 'HELD/USDT'
+            reads.append(symbol)
+            return original(self, symbol, *args, **kw)
+        monkeypatch.setattr(DataFeed,'cached_ohlcv',bounded)
+        b=ev.load_bundle('4h',symbols,cfg,paths=cfg['research']['paths'],heldout_symbols=['HELD/USDT'])
+        assert len(b.frames)==16 and len(reads)==16
+        assert all(len(df)==600 for df in b.frames.values())
+        assert all((df.event_time_ms+TF <= b.cut).all() for df in b.frames.values())
+        assert b.heldout_bars == {'a': {'HELD/USDT':800}, 'b':{}}
+        assert all('input_identity' in value for value in b.evidence['inputs'].values())
+        p=Part('synthetic-ema','state','synthetic-ema','close > ema(20)','close < ema(20)')
+        combo=Combination((p,),'4h','trail')
+        payload={'tf':'4h','symbols':symbols,'cfg':cfg,'paths':cfg['research']['paths'],
+                 'requires':['ohlcv'],'combos':[combo.as_dict()],'min_symbols':16,'draws':20,'seed':17}
+        one=job.evaluate_job(payload);two=job.evaluate_job(payload)
+        assert one['admission']['admitted'] and one['done']==1
+        assert one['results']==two['results']
+>       assert one['results'][0]['evidence']['factory_validated'] is False
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'evidence'
+
+tests/test_retrospective_research.py:68: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_retrospective_research.py::test_complete_sixteen_symbol_bundle_and_evaluator_are_repeatable
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 47 passed in 12.55s

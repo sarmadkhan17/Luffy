@@ -1,0 +1,15 @@
+{
+  "unchanged": [
+    "trader/research/fdr.py",
+    "trader/strategy/exit_policy.py",
+    "trader/kernel.py",
+    "trader/brain/ideas.py",
+    "trader/strategy/vector_backtest.py:_trade",
+    "trader/strategy/vector_backtest.py:simulate",
+    "trader/strategy/vector_backtest.py:trade_table",
+    "trader/strategy/vector_backtest.py:walk_table"
+  ],
+  "configuration": "Only referee_max_attempts removed; all other parsed values identical",
+  "referee": false,
+  "handoff": false
+}

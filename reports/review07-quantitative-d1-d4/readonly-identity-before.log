@@ -1,0 +1,37 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_readonly_identity_uses_injected_binding_without_provider _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ab0a1338e00>
+
+    def test_readonly_identity_uses_injected_binding_without_provider(monkeypatch):
+        from trader.data import market_provenance as mp
+        ex=SimpleNamespace(id='binanceusdm')
+        feed=DataFeed(exchange=ex,read_only=True)
+        feed._instruments['BTC/USDT']=SimpleNamespace(venue='binance',value='retained-identity')
+        monkeypatch.setattr(mp,'venue_identity',lambda exchange,sym:(None,None))
+        monkeypatch.setattr('trader.data.feed.canonical_venue',lambda venue:'binance')
+        monkeypatch.setattr(mp,'venue_source',lambda exchange:'injected-source')
+>       assert feed._identity('BTC/USDT')==('retained-identity','injected-source')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:407: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:684: in _identity
+    if binding is not None and binding.venue == canonical_venue(getattr(self.ex,'id',None)):
+                                                                        ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.data.feed.DataFeed object at 0x7ab09fb352b0>
+
+    @property
+    def ex(self):
+        """Exchange used for market data (production public when on demo)."""
+        if self.read_only or self.retrospective is not None:
+>           raise RuntimeError('read-only provider access forbidden')
+E           RuntimeError: read-only provider access forbidden
+
+trader/data/feed.py:145: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/test_review07_quantitative.py::test_readonly_identity_uses_injected_binding_without_provider
+1 failed, 40 deselected in 2.72s

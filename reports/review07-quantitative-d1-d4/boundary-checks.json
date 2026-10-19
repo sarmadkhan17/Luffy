@@ -1,0 +1,6 @@
+{
+  "production_db": "REVIEW_DB_BOUNDARY_REFUSED before sqlite connect",
+  "outbound_socket": "REVIEW_NETWORK_REFUSED before socket connect",
+  "guard_sha256": "da89fdb5c58ecc5aafeca0d17f9851609d5f073cc91b8919e3a146c3b49ba674",
+  "runtime_actions": []
+}

@@ -1,0 +1,36 @@
+Exact integration artifact
+
+Implementation: c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69
+Fixture compatibility: 868f23715721136fd0686db0b6bd3252c40e0990
+Receipt-refusal compatibility: 94b9000a02966dd74447c48a26eda61033e7bfe2
+Branch: sol1/review07-quantitative-d1-d4
+Parent: 81565a0 (includes Brain ef53aa3 and its retained proofs)
+Running-release ancestor: ef9fca839c23d48198c5f2361bbf3623d94266fa
+
+The accompanying sol1-review07-quantitative-d1-d4.bundle preserves the full
+branch above the running-release ancestor. Its SHA-256 sidecar identifies the
+exact bundle. The evidence commit is the branch head listed by the bundle.
+If Brain is already integrated, only the implementation and evidence commits
+are new. No CI commit or unrelated worktree state is included.
+
+Inspect in an isolated integration checkout:
+  git bundle verify /path/to/sol1-review07-quantitative-d1-d4.bundle
+  git bundle list-heads /path/to/sol1-review07-quantitative-d1-d4.bundle
+  git fetch /path/to/sol1-review07-quantitative-d1-d4.bundle refs/heads/sol1/review07-quantitative-d1-d4
+  git log --oneline ef9fca8..FETCH_HEAD
+
+REPORT.txt describes scope and remaining decisions. verification.json contains
+per-defect regression evidence and the incremental test result reconciliation;
+MANIFEST.sha256 covers the retained report files. implementation-files-sha256.json
+pins exactly the source/test files in the implementation commit.
+
+The test reproduction script uses its own scratch paths under ignored data/
+and refuses database paths outside the checkout or /tmp, plus outbound sockets.
+It excludes the two production-depth checks. Existing quantitative engines and
+all statistical thresholds are reused. Synthetic receipts are test fixtures,
+never repairs or substitutes for genuine historical availability.
+
+Generated Graphify graphs/caches and synthetic databases are local scratch and
+are excluded from both commits and bundle. The AST-only update log is retained.
+This artifact performs no deployment, restart, activation or production write.
+D5–D8 are separate; OD07-06 remains open.

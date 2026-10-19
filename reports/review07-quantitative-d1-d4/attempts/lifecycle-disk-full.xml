@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="14" time="544.360" timestamp="2026-10-19T16:11:45.397477+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[SUPPORTED]" time="149.574" /><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[UNSUPPORTED]" time="85.980" /><testcase classname="tests.test_predictive_research_bridge" name="test_normal_bank_consumer_to_planner_referee_feedback[DATA_INSUFFICIENT]" time="96.428" /><testcase classname="tests.test_predictive_research_bridge" name="test_hypothesis_immutable_and_registered_only" time="17.016" /><testcase classname="tests.test_predictive_research_bridge" name="test_exact_duplicates_related_and_contradicted_prior" time="15.542" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[SUPPORTED]" time="16.133" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[UNSUPPORTED]" time="15.755" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[INCONCLUSIVE]" time="22.604" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[NOT_TESTABLE]" time="19.460" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[DATA_INSUFFICIENT]" time="16.364" /><testcase classname="tests.test_predictive_research_bridge" name="test_bounded_next_question_generator_all_outcomes[REFUTED]" time="15.552" /><testcase classname="tests.test_predictive_research_bridge" name="test_shape_leakage_and_factory_bypass_refused" time="37.240" /><testcase classname="tests.test_predictive_research_bridge" name="test_source_missing_provenance_and_stale_protocol" time="15.320" /><testcase classname="tests.test_predictive_research_bridge" name="test_feedback_retains_stage7_replay_and_no_truth_from_priority" time="16.760"><error message="failed on setup with &quot;sqlite3.OperationalError: database or disk is full&quot;">paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/investigation.db'), 1792411260000)
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79f54a7f8f50&gt;
+
+    @pytest.fixture
+    def population(paths, tmp_path, monkeypatch):
+        from trader.research.ledger import Ledger
+        Ledger(Journal(tmp_path/'luffy.db')).ensure()
+        _, source, _ = paths
+        iid, end = measured(paths, 'same_direction')
+        result = R.run(source, iid, recorded_at_ms=end+2)
+        assert result['status']=='OK'
+        chain = R.chain(source, iid)
+        s = P.source_from_chain(chain,chain['runs'][-1],end+2)
+        candles = tmp_path/'candles.db'
+        start=(end//I.TF+1)*I.TF
+        with sqlite3.connect(candles) as db:
+            db.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,open REAL,high REAL,low REAL,close REAL,volume REAL,taker_buy REAL,PRIMARY KEY(symbol,tf,ts))')
+            for sym in DISCOVERY+HELDOUT:
+                db.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)',
+                    [(sym,'4h',start+i*I.TF,100+i*.01,101+i*.01,99+i*.01,100.1+i*.01,
+                      100+(i%37)**2,50) for i in range(3000)])
+        from tests.retained_candle_fixtures import qualify
+&gt;       qualify(candles)
+
+tests/test_predictive_research_bridge.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/candles.db')
+source = 'offline:synthetic-first-use', tf = '4h'
+
+    def qualify(path,*,source='offline:synthetic-first-use',tf='4h'):
+        """Retain deterministic artificial receipts for explicitly generated test bars.
+    
+        Each fixture bar was observed exactly at its close by construction. This
+        helper cannot be used by normal production acquisition or migration.
+        """
+        feed=DataFeed(exchange=NoExchange(),db_path=path)
+        db=feed.db
+        rows=db.execute('SELECT symbol,tf,ts,open,high,low,close,volume,taker_buy FROM candles WHERE tf=? ORDER BY symbol,ts',(tf,)).fetchall()
+        records=[]
+        for symbol,timeframe,event,*numbers in rows:
+            values=dict(zip(P.VALUES,numbers))
+            at=event+P.TF_MS[timeframe]
+            raw={'event_ms':event,**values}
+            body=dict(instrument_id='offline:futures:'+symbol.replace('/','').split(':')[0],
+                source=source,kind='candle',event_time_ms=event,observed_at_ms=at,available_at_ms=at,
+                request_started_ms=at,request_id=P.digest([source,symbol,timeframe,event]),
+                content_hash=P.digest({'raw':raw,'value':values}),supersedes=None,quality='VALID',bar_state='FINAL',
+                raw_json=P.encode(raw),transform_version="TEST_ONLY_GENERATED_DATA",max_age_ms=None)
+            body['revision_id']=P.digest({k:v for k,v in body.items() if k!='supersedes'})
+            record=dict(body,**values)
+            records.append((body['revision_id'],DataFeed._series_key(symbol,timeframe),event,at,at,P.encode(record)))
+&gt;       with db:db.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)',records)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       sqlite3.OperationalError: database or disk is full
+
+tests/retained_candle_fixtures.py:29: OperationalError</error></testcase></testsuite></testsuites>

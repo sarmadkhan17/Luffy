@@ -1,0 +1,1723 @@
+{
+  "inventory_path": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json",
+  "subsystem": {
+    "id": "research",
+    "name": "Quantitative research",
+    "purpose": "Discovery jobs, budget, evidence ledger, held-out referee and opt-in predictive/external workers",
+    "execution_class": "runtime",
+    "subcomponents": [
+      {
+        "id": "research.1",
+        "name": "planner and combo discovery",
+        "files": [
+          "docs/tracker/evidence/str01-canonical-sol1/independent-proof.py",
+          "scripts/calibrate_null_dependence.py",
+          "scripts/candidate_dossier.py",
+          "scripts/gate2_calibrate_stationary.py",
+          "scripts/gate2_calibrate_studentized.py",
+          "scripts/gate2_calibrate_synthetic.py",
+          "scripts/thesis_validate_frozen.py",
+          "tests/test_candidate_dossier.py",
+          "tests/test_null_dependence.py",
+          "tests/test_qnt03_dependence_lineage.py",
+          "tests/test_qnt04_holdout_separation.py",
+          "tests/test_qnt05_error_budget.py",
+          "tests/test_qnt08_admission_boundary.py",
+          "tests/test_res03_source_governance.py",
+          "tests/test_res04_preprocessing.py",
+          "tests/test_res07_competing_hypotheses.py",
+          "tests/test_research_combo.py",
+          "tests/test_research_planner.py",
+          "tests/test_single_creation_path.py",
+          "tests/test_thesis_validate_frozen.py",
+          "tests/test_wrld05_normal_context.py",
+          "trader/research/combo.py",
+          "trader/research/planner.py"
+        ],
+        "file_count": 23,
+        "implementation_references": [
+          {
+            "path": "trader/research/combo.py",
+            "line": 1,
+            "sha256": "6702bdfffec8a930a25fb5a0efff917451c96eba1c36a4610d865b1f1347a16d"
+          },
+          {
+            "path": "trader/research/planner.py",
+            "line": 1,
+            "sha256": "3a44e39b659889c30ad9c63ed33e1f7aab3169efd6f1f26d582ff3b304f1de8e"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "research.2",
+        "name": "isolated quantitative jobs",
+        "files": [
+          "tests/test_research_job.py",
+          "trader/research/job.py"
+        ],
+        "file_count": 2,
+        "implementation_references": [
+          {
+            "path": "trader/research/job.py",
+            "line": 1,
+            "sha256": "bd5c46c5ad4a2b27e606e4a815e531f6d6617826adbb69db370a3dc696131fd2"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "research.3",
+        "name": "ledger slices and FDR",
+        "files": [
+          "tests/test_research_fdr.py",
+          "tests/test_research_ledger.py",
+          "tests/test_research_slices.py",
+          "trader/research/fdr.py",
+          "trader/research/ledger.py",
+          "trader/research/slices.py"
+        ],
+        "file_count": 6,
+        "implementation_references": [
+          {
+            "path": "trader/research/fdr.py",
+            "line": 1,
+            "sha256": "30f864ada9e959196b192a7c710ccf49efd5a0d115b95af75201ebb2c4f504de"
+          },
+          {
+            "path": "trader/research/ledger.py",
+            "line": 1,
+            "sha256": "b30e0c87f89e38acbbcb71d4b108bdea20e35f6dc921baa037fe83200ad7a073"
+          },
+          {
+            "path": "trader/research/slices.py",
+            "line": 1,
+            "sha256": "8866775b031515069a68844014e5d18194572ed5aa0183ca8ea1fa1b0de668c3"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "research.4",
+        "name": "referee and handoff",
+        "files": [
+          "tests/test_generated_question_handoff_negative_memory.py",
+          "tests/test_research_referee.py",
+          "tests/test_strategy_factory_handoff.py",
+          "trader/research/referee.py"
+        ],
+        "file_count": 4,
+        "implementation_references": [
+          {
+            "path": "trader/research/referee.py",
+            "line": 1,
+            "sha256": "5fdd868b1aa9b194c219f51a24b1f0690974f17aa8b1654b050da1e5c4649b5e"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "research.5",
+        "name": "predictive bridge",
+        "files": [
+          "scripts/predictive_research_shadow.py",
+          "tests/test_predictive_research_bridge.py",
+          "tests/test_res08_governed_bridge.py",
+          "trader/research/predictive_bridge.py",
+          "trader/research/predictive_experiment.py",
+          "trader/research/predictive_receipt.py"
+        ],
+        "file_count": 6,
+        "implementation_references": [
+          {
+            "path": "trader/research/predictive_bridge.py",
+            "line": 1,
+            "sha256": "d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524"
+          },
+          {
+            "path": "trader/research/predictive_experiment.py",
+            "line": 1,
+            "sha256": "de0e53da4f62512d6711fbc0e549663906dde5d62fb525d28a0a98f7988e6df8"
+          },
+          {
+            "path": "trader/research/predictive_receipt.py",
+            "line": 1,
+            "sha256": "1b8971dfeffe1eb7e5ad348ac40ea165635d53632399aa966ac1294a11c0ad5b"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "research.6",
+        "name": "external research worker",
+        "files": [
+          "tests/test_research_calibration.py",
+          "tests/test_research_cli.py",
+          "tests/test_research_control.py",
+          "tests/test_research_evaluate.py",
+          "tests/test_research_growth.py",
+          "tests/test_research_runner.py",
+          "tests/test_research_thresholds.py",
+          "tests/test_research_universe_depth.py",
+          "tests/test_research_vocab.py",
+          "trader/research/__init__.py",
+          "trader/research/__main__.py",
+          "trader/research/control.py",
+          "trader/research/dependence.py",
+          "trader/research/evaluate.py",
+          "trader/research/external_research.py",
+          "trader/research/generated_question_source.py",
+          "trader/research/growth.py",
+          "trader/research/portfolio_null.py",
+          "trader/research/runner.py",
+          "trader/research/thesis.py",
+          "trader/research/thresholds.py",
+          "trader/research/universe.py",
+          "trader/research/vocab.py"
+        ],
+        "file_count": 23,
+        "implementation_references": [
+          {
+            "path": "trader/research/__init__.py",
+            "line": 1,
+            "sha256": "0e5f945bbef4113ce81035ead3cb5140296a183bf3fd33e9e3499e323988a756"
+          },
+          {
+            "path": "trader/research/__main__.py",
+            "line": 1,
+            "sha256": "94b0f06cbf552626e7ada0e8f0ff51b2879ff35ecc3741486029c968bf598597"
+          },
+          {
+            "path": "trader/research/control.py",
+            "line": 1,
+            "sha256": "3f3128454e193222ea727f50fdab7bc4f857c80ee97a6e1724b228a61390ea55"
+          },
+          {
+            "path": "trader/research/dependence.py",
+            "line": 1,
+            "sha256": "7d3e69219599eb3c2e27144f534479765e5aa80cebf0e0d2a7d2718a5d6f9c48"
+          },
+          {
+            "path": "trader/research/evaluate.py",
+            "line": 1,
+            "sha256": "db338c68cc6faa65aa18ee8594bfe8a28b7527627a5f0d8c175db0b79ea0f664"
+          },
+          {
+            "path": "trader/research/external_research.py",
+            "line": 1,
+            "sha256": "8e5808a3fab1fd336d87741b26aae744fb1a7e760bbc2976937076557923c601"
+          },
+          {
+            "path": "trader/research/generated_question_source.py",
+            "line": 1,
+            "sha256": "9618bb103183733e88fcc63477dcc0a11f89a76476019bbcef3c4c9c6b53add0"
+          },
+          {
+            "path": "trader/research/growth.py",
+            "line": 1,
+            "sha256": "19801ce1d9d1ef2ade81170bb395d17acc31f19a2c6da55472588e627c8fd322"
+          },
+          {
+            "path": "trader/research/portfolio_null.py",
+            "line": 1,
+            "sha256": "d99ea82c83515c3c79d8e87af825a3446fa1522615c53d5c04393864c9cab736"
+          },
+          {
+            "path": "trader/research/runner.py",
+            "line": 1,
+            "sha256": "b8c7b4b40fd297ac6c5edc831754329607fca575f202dc48b27799b8f7a1c21e"
+          },
+          {
+            "path": "trader/research/thesis.py",
+            "line": 1,
+            "sha256": "2d1e7648a0d73e95c1ead964bbd7abb868aefab5b4184602ab6f3e8620d95636"
+          },
+          {
+            "path": "trader/research/thresholds.py",
+            "line": 1,
+            "sha256": "cb0b6db83037ed3cd33f2709044edb36dd7dd81dd4a4b8df5c293d8df63b5983"
+          },
+          {
+            "path": "trader/research/universe.py",
+            "line": 1,
+            "sha256": "2440287cbee405dbe3aba732ebb09dd4687fb84d2d348346ebc85ace955503dc"
+          },
+          {
+            "path": "trader/research/vocab.py",
+            "line": 1,
+            "sha256": "bdddf45e4f5d9d3ff45a0e72b142d410deee0fa68a06fbe903b45627055733bf"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      }
+    ],
+    "anchor": "trader/research/__main__.py",
+    "counts": {
+      "python_source": 25,
+      "frontend": 0,
+      "configuration": 0,
+      "script": 7,
+      "test": 32,
+      "other": 0,
+      "python_files_including_scripts_and_tests": 64,
+      "source_files": 32,
+      "test_files": 32,
+      "other_files": 0,
+      "total_files": 64,
+      "source_lines": 17428,
+      "all_text_lines": 17428,
+      "binary_files": 0
+    },
+    "files": [
+      "docs/tracker/evidence/str01-canonical-sol1/independent-proof.py",
+      "scripts/calibrate_null_dependence.py",
+      "scripts/candidate_dossier.py",
+      "scripts/gate2_calibrate_stationary.py",
+      "scripts/gate2_calibrate_studentized.py",
+      "scripts/gate2_calibrate_synthetic.py",
+      "scripts/predictive_research_shadow.py",
+      "scripts/thesis_validate_frozen.py",
+      "tests/test_candidate_dossier.py",
+      "tests/test_generated_question_handoff_negative_memory.py",
+      "tests/test_null_dependence.py",
+      "tests/test_predictive_research_bridge.py",
+      "tests/test_qnt03_dependence_lineage.py",
+      "tests/test_qnt04_holdout_separation.py",
+      "tests/test_qnt05_error_budget.py",
+      "tests/test_qnt08_admission_boundary.py",
+      "tests/test_res03_source_governance.py",
+      "tests/test_res04_preprocessing.py",
+      "tests/test_res07_competing_hypotheses.py",
+      "tests/test_res08_governed_bridge.py",
+      "tests/test_research_calibration.py",
+      "tests/test_research_cli.py",
+      "tests/test_research_combo.py",
+      "tests/test_research_control.py",
+      "tests/test_research_evaluate.py",
+      "tests/test_research_fdr.py",
+      "tests/test_research_growth.py",
+      "tests/test_research_job.py",
+      "tests/test_research_ledger.py",
+      "tests/test_research_planner.py",
+      "tests/test_research_referee.py",
+      "tests/test_research_runner.py",
+      "tests/test_research_slices.py",
+      "tests/test_research_thresholds.py",
+      "tests/test_research_universe_depth.py",
+      "tests/test_research_vocab.py",
+      "tests/test_single_creation_path.py",
+      "tests/test_strategy_factory_handoff.py",
+      "tests/test_thesis_validate_frozen.py",
+      "tests/test_wrld05_normal_context.py",
+      "trader/research/__init__.py",
+      "trader/research/__main__.py",
+      "trader/research/combo.py",
+      "trader/research/control.py",
+      "trader/research/dependence.py",
+      "trader/research/evaluate.py",
+      "trader/research/external_research.py",
+      "trader/research/fdr.py",
+      "trader/research/generated_question_source.py",
+      "trader/research/growth.py",
+      "trader/research/job.py",
+      "trader/research/ledger.py",
+      "trader/research/planner.py",
+      "trader/research/portfolio_null.py",
+      "trader/research/predictive_bridge.py",
+      "trader/research/predictive_experiment.py",
+      "trader/research/predictive_receipt.py",
+      "trader/research/referee.py",
+      "trader/research/runner.py",
+      "trader/research/slices.py",
+      "trader/research/thesis.py",
+      "trader/research/thresholds.py",
+      "trader/research/universe.py",
+      "trader/research/vocab.py"
+    ],
+    "non_database_inputs": "Discovery slices, registered policy/budget, data cache, candidates and opt-in Research Bank sources",
+    "non_database_outputs": "Quantitative job receipts, ledger evidence, candidates and refused/approved gate classifications",
+    "initialization_path": "Kernel research thread -> lazy ResearchRunner -> isolated child; separate CLI/bridge/external workers",
+    "configuration_evidence": {
+      "artifact": "inputs/configuration-switches.json",
+      "runtime_activation_not_implied": true
+    },
+    "depends_on": [
+      "attention",
+      "brain",
+      "cognition",
+      "execution",
+      "investigation",
+      "learning",
+      "market_data",
+      "platform",
+      "research_memory",
+      "strategy",
+      "world"
+    ],
+    "used_by": [
+      "brain",
+      "cognition",
+      "dashboard",
+      "engineering",
+      "kernel",
+      "learning",
+      "owner",
+      "strategy"
+    ],
+    "static_application_dependencies": [
+      "attention",
+      "brain",
+      "cognition",
+      "investigation",
+      "learning",
+      "market_data",
+      "platform",
+      "research_memory",
+      "strategy",
+      "world"
+    ],
+    "offline_utility_dependencies": [
+      "attention",
+      "cognition",
+      "investigation",
+      "market_data",
+      "platform",
+      "strategy"
+    ],
+    "test_dependencies": [
+      "attention",
+      "brain",
+      "cognition",
+      "execution",
+      "investigation",
+      "kernel",
+      "learning",
+      "legacy",
+      "market_data",
+      "platform",
+      "portfolio",
+      "research_memory",
+      "strategy",
+      "world"
+    ],
+    "databases": [
+      "luffy.db"
+    ],
+    "entry_points": [
+      {
+        "path": "trader/research/__main__.py",
+        "line": 1,
+        "sha256": "94b0f06cbf552626e7ada0e8f0ff51b2879ff35ecc3741486029c968bf598597"
+      }
+    ],
+    "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+    "source_entry_functions": [
+      {
+        "path": "scripts/candidate_dossier.py",
+        "line": 756,
+        "name": "main"
+      },
+      {
+        "path": "scripts/gate2_calibrate_stationary.py",
+        "line": 505,
+        "name": "main"
+      },
+      {
+        "path": "scripts/gate2_calibrate_studentized.py",
+        "line": 476,
+        "name": "main"
+      },
+      {
+        "path": "scripts/gate2_calibrate_synthetic.py",
+        "line": 452,
+        "name": "main"
+      },
+      {
+        "path": "scripts/thesis_validate_frozen.py",
+        "line": 640,
+        "name": "main"
+      },
+      {
+        "path": "trader/research/__main__.py",
+        "line": 106,
+        "name": "main"
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 627,
+        "name": "main"
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 462,
+        "name": "main"
+      }
+    ],
+    "initialization_and_schedule": [
+      {
+        "source": "kernel",
+        "interaction": "STARTUP_BACKGROUND",
+        "detail": "Configured research thread schedules bounded isolated jobs and yields to slow trading cycles.",
+        "evidence": [
+          {
+            "path": "trader/kernel.py",
+            "line": 418,
+            "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+          }
+        ]
+      },
+      {
+        "source": "research",
+        "interaction": "CALL",
+        "detail": "Quantitative evaluator receives point-in-time WorldModel context.",
+        "evidence": [
+          {
+            "path": "trader/research/evaluate.py",
+            "line": 29,
+            "sha256": "db338c68cc6faa65aa18ee8594bfe8a28b7527627a5f0d8c175db0b79ea0f664"
+          }
+        ]
+      },
+      {
+        "source": "research",
+        "interaction": "QUEUE",
+        "detail": "Opt-in predictive bridge consumes retained Research Bank evidence into isolated numerical jobs.",
+        "evidence": [
+          {
+            "path": "trader/research/predictive_bridge.py",
+            "line": 262,
+            "sha256": "d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524"
+          }
+        ]
+      }
+    ],
+    "interfaces": [
+      {
+        "direction": "exposed_to",
+        "peer": "kernel",
+        "interaction": "STARTUP_BACKGROUND",
+        "detail": "Configured research thread schedules bounded isolated jobs and yields to slow trading cycles."
+      },
+      {
+        "direction": "consumes",
+        "peer": "world",
+        "interaction": "CALL",
+        "detail": "Quantitative evaluator receives point-in-time WorldModel context."
+      },
+      {
+        "direction": "consumes",
+        "peer": "research_memory",
+        "interaction": "QUEUE",
+        "detail": "Opt-in predictive bridge consumes retained Research Bank evidence into isolated numerical jobs."
+      }
+    ],
+    "runtime_data_inputs": [
+      {
+        "database": "luffy.db",
+        "table": "brain_events"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_bank_objects"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_batches"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_budget"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_candidates"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_combos"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_controls"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_gauges"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_questions"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_registrations"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_slices"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_tests"
+      },
+      {
+        "database": "luffy.db",
+        "table": "strategies"
+      },
+      {
+        "database": "luffy.db",
+        "table": "strategy_versions"
+      },
+      {
+        "database": "luffy.db",
+        "table": "trades"
+      }
+    ],
+    "runtime_data_outputs": [
+      {
+        "database": "luffy.db",
+        "table": "brain_events"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_archive"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_bank_objects"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_batches"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_budget"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_candidates"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_combos"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_controls"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_gauges"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_slices"
+      },
+      {
+        "database": "luffy.db",
+        "table": "research_tests"
+      }
+    ],
+    "failure_and_recovery_dependencies": [
+      {
+        "peer": "kernel",
+        "basis": "referee=false and handoff=false; no current kernel process.",
+        "evidence": [
+          {
+            "path": "trader/kernel.py",
+            "line": 418,
+            "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+          }
+        ]
+      },
+      {
+        "peer": "world",
+        "basis": "Static source wiring; no quantitative run performed.",
+        "evidence": [
+          {
+            "path": "trader/research/evaluate.py",
+            "line": 29,
+            "sha256": "db338c68cc6faa65aa18ee8594bfe8a28b7527627a5f0d8c175db0b79ea0f664"
+          }
+        ]
+      },
+      {
+        "peer": "research_memory",
+        "basis": "Separate CLI; canonical kernel does not start it; no observed bridge process.",
+        "evidence": [
+          {
+            "path": "trader/research/predictive_bridge.py",
+            "line": 262,
+            "sha256": "d0ee628d864825e473dd3527696ecfb5c1d79aea9b849c18884ab3dbd8e25524"
+          }
+        ]
+      }
+    ],
+    "public_contracts": [
+      {
+        "path": "trader/research/__main__.py",
+        "line": 106,
+        "name": "main",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/combo.py",
+        "line": 42,
+        "name": "window_key",
+        "kind": "function",
+        "summary": "What this rule needs BEYOND candles \u2014 the window it can be seen in."
+      },
+      {
+        "path": "trader/research/combo.py",
+        "line": 52,
+        "name": "compatible",
+        "kind": "function",
+        "summary": "Can these parts stand in one rule?"
+      },
+      {
+        "path": "trader/research/combo.py",
+        "line": 66,
+        "name": "Combination",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/combo.py",
+        "line": 175,
+        "name": "evaluated_record",
+        "kind": "function",
+        "summary": "The exact rule a referee look evaluated: every part as rendered, its"
+      },
+      {
+        "path": "trader/research/combo.py",
+        "line": 190,
+        "name": "subsets",
+        "kind": "function",
+        "summary": "Every rule reachable by removing exactly one part \u2014 the ablation."
+      },
+      {
+        "path": "trader/research/control.py",
+        "line": 61,
+        "name": "incumbent_universe",
+        "kind": "function",
+        "summary": "The declared 16, read from the book when it is available."
+      },
+      {
+        "path": "trader/research/control.py",
+        "line": 95,
+        "name": "mask_part",
+        "kind": "function",
+        "summary": "A part that is true wherever `req`'s series exists, and NaN before."
+      },
+      {
+        "path": "trader/research/control.py",
+        "line": 108,
+        "name": "control_combo",
+        "kind": "function",
+        "summary": "The incumbent rule, confined to `window`. None when it cannot be."
+      },
+      {
+        "path": "trader/research/control.py",
+        "line": 130,
+        "name": "powered",
+        "kind": "function",
+        "summary": "Could an edge of the incumbent's size register in this window?"
+      },
+      {
+        "path": "trader/research/control.py",
+        "line": 138,
+        "name": "label",
+        "kind": "function",
+        "summary": "What a result in this window is allowed to be called."
+      },
+      {
+        "path": "trader/research/dependence.py",
+        "line": 33,
+        "name": "source_lineage",
+        "kind": "function",
+        "summary": "Fingerprint named upstream sources without converting shared refs into votes."
+      },
+      {
+        "path": "trader/research/dependence.py",
+        "line": 49,
+        "name": "contributor",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/dependence.py",
+        "line": 61,
+        "name": "relationship_controls",
+        "kind": "function",
+        "summary": "Use exact bar cuts only. Retain accepted and rejected relationship wires."
+      },
+      {
+        "path": "trader/research/dependence.py",
+        "line": 93,
+        "name": "assess_joint",
+        "kind": "function",
+        "summary": "Frozen-input dependence receipt for a timing claim on a shared grid."
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "line": 53,
+        "name": "Bundle",
+        "kind": "class",
+        "summary": "Everything one horizon's evaluations need, already truncated."
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "line": 74,
+        "name": "load_bundle",
+        "kind": "function",
+        "summary": "Read the stores, cut at the discovery boundary, build the context."
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "line": 165,
+        "name": "load_world",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "line": 188,
+        "name": "evaluate",
+        "kind": "function",
+        "summary": "Score `c` over the bundle's discovery slice."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 52,
+        "name": "result_fields",
+        "kind": "function",
+        "summary": "The collector has no claim classifier or evaluation authority."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 64,
+        "name": "RetryEligibility",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 74,
+        "name": "ReconsiderationPolicy",
+        "kind": "class",
+        "summary": "Registered future scheduling authority; never rewrites attempt history."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 85,
+        "name": "retry_eligibility",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 102,
+        "name": "Bounds",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 125,
+        "name": "canonical",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 129,
+        "name": "sha",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 133,
+        "name": "normalize_url",
+        "kind": "function",
+        "summary": "Keep meaningful query parameters; drop fragments/tracking only."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 144,
+        "name": "request_url",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 168,
+        "name": "crossref_request",
+        "kind": "function",
+        "summary": "Only public Crossref endpoints, streamed bytes cap, no redirects/auth/retries."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 243,
+        "name": "SearchBroker",
+        "kind": "class",
+        "summary": "Parent owns durable claims and deadlines; children perform only retrieval."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 336,
+        "name": "relevant",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 341,
+        "name": "relevant_passage",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 355,
+        "name": "extraction",
+        "kind": "function",
+        "summary": "Cheap bounded rendering/relevance, then content dedup before evidence use."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 380,
+        "name": "filter_metadata",
+        "kind": "function",
+        "summary": "Cheap relevance and URL/title dedup before page retrieval/extraction."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 396,
+        "name": "registered_question",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 428,
+        "name": "verify_bank",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 584,
+        "name": "research_pass",
+        "kind": "function",
+        "summary": "Normal bounded registered-question consumer; hold a cross-process single writer lock."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "line": 627,
+        "name": "main",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "line": 27,
+        "name": "gamma",
+        "kind": "function",
+        "summary": "The j-th term (j >= 1) of the spending sequence."
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "line": 35,
+        "name": "alpha_at",
+        "kind": "function",
+        "summary": "The level test `t` (1-based) is held to, given earlier rejection"
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "line": 49,
+        "name": "run",
+        "kind": "function",
+        "summary": "Walk a whole sequence; True where the p-value is rejected."
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "line": 65,
+        "name": "brake_factor",
+        "kind": "function",
+        "summary": "0.5 while more than `target` of finished forward windows failed."
+      },
+      {
+        "path": "trader/research/generated_question_source.py",
+        "line": 13,
+        "name": "GeneratedQuestionSource",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/generated_question_source.py",
+        "line": 80,
+        "name": "verify",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/growth.py",
+        "line": 52,
+        "name": "carries_information",
+        "kind": "function",
+        "summary": "Worth extending. Not 'is an edge' \u2014 worth spending compute on."
+      },
+      {
+        "path": "trader/research/growth.py",
+        "line": 62,
+        "name": "earns_place",
+        "kind": "function",
+        "summary": "Is `child` better than `other` on BOTH measures?"
+      },
+      {
+        "path": "trader/research/growth.py",
+        "line": 76,
+        "name": "ablation",
+        "kind": "function",
+        "summary": "{removed part key: what the rule loses without it}."
+      },
+      {
+        "path": "trader/research/growth.py",
+        "line": 91,
+        "name": "decide",
+        "kind": "function",
+        "summary": "(verdict, reason, ablation)."
+      },
+      {
+        "path": "trader/research/job.py",
+        "line": 39,
+        "name": "measure_job",
+        "kind": "function",
+        "summary": "Percentiles for every gauge, and how much of the slice it exists on."
+      },
+      {
+        "path": "trader/research/job.py",
+        "line": 66,
+        "name": "evaluate_job",
+        "kind": "function",
+        "summary": "Score a batch of combinations that share one horizon and geometry."
+      },
+      {
+        "path": "trader/research/job.py",
+        "line": 113,
+        "name": "select_job",
+        "kind": "function",
+        "summary": "Discovery entry sets for survivors about to be queued \u2014 twin"
+      },
+      {
+        "path": "trader/research/job.py",
+        "line": 130,
+        "name": "referee_job",
+        "kind": "function",
+        "summary": "Gates 1 and 3 for ONE candidate. The only job that reads held-out"
+      },
+      {
+        "path": "trader/research/ledger.py",
+        "line": 144,
+        "name": "Ledger",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/planner.py",
+        "line": 46,
+        "name": "Batch",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/planner.py",
+        "line": 59,
+        "name": "seed_parts",
+        "kind": "function",
+        "summary": "The book's own strategies, as parts to grow context around."
+      },
+      {
+        "path": "trader/research/planner.py",
+        "line": 180,
+        "name": "needs_ablation",
+        "kind": "function",
+        "summary": "Subsets of grown children that have not been scored yet."
+      },
+      {
+        "path": "trader/research/planner.py",
+        "line": 231,
+        "name": "next_batch",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "line": 44,
+        "name": "Leg",
+        "kind": "class",
+        "summary": "One symbol's entries and the frame they were computed on."
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "line": 86,
+        "name": "fills_for",
+        "kind": "function",
+        "summary": "Every leg's fills on one bar grid, entries rolled by `offset` bars."
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "line": 102,
+        "name": "draws_for",
+        "kind": "function",
+        "summary": "Draws that let a p-value reach `alpha` \u2014 p >= 1/(draws+1) \u2014 with"
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "line": 114,
+        "name": "common_rotation",
+        "kind": "function",
+        "summary": "{actual_total_pct, null_median, percentile, p, draws, trades}."
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "line": 150,
+        "name": "legs_for",
+        "kind": "function",
+        "summary": "Entries for every symbol in an `evaluate.Bundle`, computed once."
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 35,
+        "name": "store",
+        "kind": "function",
+        "summary": "Append-only Bank extensions; never initialize an existing foreign DB."
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 53,
+        "name": "append",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 66,
+        "name": "records",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 70,
+        "name": "read_sources",
+        "kind": "function",
+        "summary": "Exact persisted Bank records only; a made-up chain is never an input."
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 117,
+        "name": "prior_classification",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 133,
+        "name": "feedback",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 166,
+        "name": "replay_feedback",
+        "kind": "function",
+        "summary": "Stage7 replays existing receipts, never assigns new statistical gates."
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 202,
+        "name": "factory_source",
+        "kind": "function",
+        "summary": "The one StrategyVersion creation source for a SUPPORTED Bank result:"
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 218,
+        "name": "classify",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 262,
+        "name": "cycle",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "line": 462,
+        "name": "main",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 19,
+        "name": "evidence_policy",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 30,
+        "name": "readonly",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 39,
+        "name": "evaluation_version",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 50,
+        "name": "data_provenance",
+        "kind": "function",
+        "summary": "Content fingerprints of exact source/protected rows and retained revisions."
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 82,
+        "name": "translation_contract",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 92,
+        "name": "retain_translation",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 100,
+        "name": "translate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 164,
+        "name": "validate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 203,
+        "name": "freeze_candles",
+        "kind": "function",
+        "summary": "Copy only post-generation closed bars; never open production writable."
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "line": 249,
+        "name": "planner_batch",
+        "kind": "function",
+        "summary": "The existing control gate is the ONLY path to an evaluate batch."
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 19,
+        "name": "binding",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 26,
+        "name": "semantic",
+        "kind": "function",
+        "summary": "Worker timing is not scientific evidence or a new result version."
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 35,
+        "name": "step",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 41,
+        "name": "validate_step",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 71,
+        "name": "snapshot",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 87,
+        "name": "check_measured",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 110,
+        "name": "validate_quantitative",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 163,
+        "name": "build",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "line": 206,
+        "name": "validate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 54,
+        "name": "load_heldout",
+        "kind": "function",
+        "summary": "Held-out A (`symbols` before the cut) or B (from the cut on)."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 155,
+        "name": "null_dependence",
+        "kind": "function",
+        "summary": "Mean pairwise rank correlation of the legs' null profit factors when"
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 205,
+        "name": "consistency",
+        "kind": "function",
+        "summary": "Per-symbol rotation percentiles and their cross-symbol p, respecting"
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 271,
+        "name": "gate1",
+        "kind": "function",
+        "summary": "Combine the three readings into ONE p-value and a reason."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 307,
+        "name": "gate3",
+        "kind": "function",
+        "summary": "Does the book make more money with the candidate in it?"
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 336,
+        "name": "entry_set",
+        "kind": "function",
+        "summary": "(symbol, bar) of every entry \u2014 the unit overlap is measured in."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 347,
+        "name": "overlap",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 353,
+        "name": "pick",
+        "kind": "function",
+        "summary": "Choose who gets a look."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 377,
+        "name": "encode_entries",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 384,
+        "name": "decode_entries",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 391,
+        "name": "discovery_entries",
+        "kind": "function",
+        "summary": "{hash: encoded entry set} over the discovery bundle \u2014 what twin"
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 410,
+        "name": "book_fills",
+        "kind": "function",
+        "summary": "The live book's fills over held-out B, on the candidate's bar grid."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 443,
+        "name": "current_cut",
+        "kind": "function",
+        "summary": "The LATEST cut any discovery evaluation can have used."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 466,
+        "name": "bound_book",
+        "kind": "function",
+        "summary": "Restore only separately asserted exact-version semantic bindings."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "line": 490,
+        "name": "examine",
+        "kind": "function",
+        "summary": "Gate 1 and gate 3 for one candidate. `looked` flips to True the"
+      },
+      {
+        "path": "trader/research/runner.py",
+        "line": 55,
+        "name": "ResearchRunner",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 50,
+        "name": "cut_ms",
+        "kind": "function",
+        "summary": "The one timestamp that separates discovery from held-out B."
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 64,
+        "name": "before",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 70,
+        "name": "after",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 85,
+        "name": "discovery",
+        "kind": "function",
+        "summary": "Every bar that had closed before the cut."
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 90,
+        "name": "heldout_b",
+        "kind": "function",
+        "summary": "The later era. Phase 2 counts its BARS and never reads its prices."
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 95,
+        "name": "bar_counts",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/slices.py",
+        "line": 100,
+        "name": "usable_bars",
+        "kind": "function",
+        "summary": "Bars a slice can actually trade on, after the engine's warmup."
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 99,
+        "name": "sha256_json",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 155,
+        "name": "bound",
+        "kind": "function",
+        "summary": "`X op c` as (render(X), op, c); `0 - X op c` becomes `X flip(op) -c`."
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 226,
+        "name": "rule_sides",
+        "kind": "function",
+        "summary": "Pre-rendered texts and bounds of the rule's long and short sides."
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 244,
+        "name": "window_key",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 424,
+        "name": "canonical_observation",
+        "kind": "function",
+        "summary": "The only wording this contract vouches for: rendered from the checked"
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 526,
+        "name": "validate",
+        "kind": "function",
+        "summary": "Police one thesis against discovery context. Pure and deterministic."
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "line": 671,
+        "name": "verdict",
+        "kind": "function",
+        "summary": "The dossier's decision state. Gate evidence is never available to this"
+      },
+      {
+        "path": "trader/research/thresholds.py",
+        "line": 40,
+        "name": "measure",
+        "kind": "function",
+        "summary": "{expr: {p10, p25, p75, p90, n, finite_frac, usable}}."
+      },
+      {
+        "path": "trader/research/universe.py",
+        "line": 41,
+        "name": "NoExchange",
+        "kind": "class",
+        "summary": "A DataFeed built for research reads must never reach the network."
+      },
+      {
+        "path": "trader/research/universe.py",
+        "line": 54,
+        "name": "coverage",
+        "kind": "function",
+        "summary": "{tf: {symbol: bars}} for every symbol carrying at least MIN_BARS, or"
+      },
+      {
+        "path": "trader/research/universe.py",
+        "line": 88,
+        "name": "deepen",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 45,
+        "name": "Gauge",
+        "kind": "class",
+        "summary": "A scalar quantity and its mirror. `tfs` empty = every horizon."
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 54,
+        "name": "Part",
+        "kind": "class",
+        "summary": "One condition, already resolved to concrete boolean expressions."
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 204,
+        "name": "gauges_for",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 208,
+        "name": "expressions",
+        "kind": "function",
+        "summary": "Every scalar expression needing a measured percentile at `tf`."
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 243,
+        "name": "parts_for",
+        "kind": "function",
+        "summary": "The concrete catalogue at this horizon."
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "line": 291,
+        "name": "part_requires",
+        "kind": "function",
+        "summary": "What data this part needs \u2014 DERIVED from the expressions."
+      }
+    ],
+    "module_responsibilities": [
+      {
+        "path": "trader/research/__init__.py",
+        "summary": "The research pipeline: discover, explain, prove, repeat."
+      },
+      {
+        "path": "trader/research/__main__.py",
+        "summary": "Look at the search from outside the kernel."
+      },
+      {
+        "path": "trader/research/combo.py",
+        "summary": "One searched rule: a set of AND-ed parts, both directions, one geometry."
+      },
+      {
+        "path": "trader/research/control.py",
+        "summary": "The known-good rule, confined to the same window as the challengers."
+      },
+      {
+        "path": "trader/research/dependence.py",
+        "summary": "Receipts for one joint timing hypothesis; no independence fallback."
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "summary": "Score one combination on the discovery slice."
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "summary": "Opt-in question-driven external evidence worker, independent of Kernel."
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "summary": "The error budget: LORD++ online false-discovery control, plus the brake."
+      },
+      {
+        "path": "trader/research/generated_question_source.py",
+        "summary": "Read-only adapter for questions committed by the existing shadow producer."
+      },
+      {
+        "path": "trader/research/growth.py",
+        "summary": "Does this part earn its place?"
+      },
+      {
+        "path": "trader/research/job.py",
+        "summary": "What the child process does, and nothing else."
+      },
+      {
+        "path": "trader/research/ledger.py",
+        "summary": "Every combination the search ever looked at, kept or not."
+      },
+      {
+        "path": "trader/research/planner.py",
+        "summary": "What to evaluate next."
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "summary": "Does the whole book of entries beat itself fired at one random offset?"
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "summary": "Normal opt-in asynchronous Research Bank consumer, independent of Kernel."
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "summary": "Exact translation into existing planner/runner jobs and registered policy."
+      },
+      {
+        "path": "trader/research/predictive_receipt.py",
+        "summary": "Content-bound RES-08 receipts around the registered quantitative machinery."
+      },
+      {
+        "path": "trader/research/referee.py",
+        "summary": "The referee \u2014 held-out gates for the search's discovery survivors."
+      },
+      {
+        "path": "trader/research/runner.py",
+        "summary": "One step of the search: plan, run a child, write, decide."
+      },
+      {
+        "path": "trader/research/slices.py",
+        "summary": "Where the search is allowed to look."
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "summary": "The thesis contract: what a proposed explanation of a survivor must say,"
+      },
+      {
+        "path": "trader/research/thresholds.py",
+        "summary": "Measure every gauge on the discovery slice: where its percentiles sit,"
+      },
+      {
+        "path": "trader/research/universe.py",
+        "summary": "The two universes the search is scored on, and how deep the store is."
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "summary": "What a searched condition may say."
+      }
+    ],
+    "http_interfaces": [],
+    "input_output_context": "Discovery jobs, budget, evidence ledger, held-out referee and opt-in predictive/external workers; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+    "previous_status": "DORMANT",
+    "previous_status_basis": "No research process; research.enabled=true is configuration only; referee=false and handoff=false retain denied paths.",
+    "classifications": {
+      "implementation": "Unknown",
+      "integration": "Partially Connected",
+      "configuration": "Conditional",
+      "runtime": "Not Verified",
+      "product_necessity": "Required"
+    },
+    "status_evidence_reference": "subsystem-status-evidence.json#subsystem=research",
+    "previous_status_evidence": [
+      {
+        "path": "trader/research/__main__.py",
+        "line": 1,
+        "sha256": "94b0f06cbf552626e7ada0e8f0ff51b2879ff35ecc3741486029c968bf598597"
+      },
+      {
+        "artifact": "inputs/scan-provenance.json"
+      }
+    ]
+  },
+  "inventory_sha256": "dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb"
+}

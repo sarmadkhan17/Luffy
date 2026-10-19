@@ -1,0 +1,75 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 58 items
+
+tests/test_predictive_research_bridge.py .............E
+
+==================================== ERRORS ====================================
+_ ERROR at setup of test_feedback_retains_stage7_replay_and_no_truth_from_priority _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/investigation.db'), 1792411260000)
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79f54a7f8f50>
+
+    @pytest.fixture
+    def population(paths, tmp_path, monkeypatch):
+        from trader.research.ledger import Ledger
+        Ledger(Journal(tmp_path/'luffy.db')).ensure()
+        _, source, _ = paths
+        iid, end = measured(paths, 'same_direction')
+        result = R.run(source, iid, recorded_at_ms=end+2)
+        assert result['status']=='OK'
+        chain = R.chain(source, iid)
+        s = P.source_from_chain(chain,chain['runs'][-1],end+2)
+        candles = tmp_path/'candles.db'
+        start=(end//I.TF+1)*I.TF
+        with sqlite3.connect(candles) as db:
+            db.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,open REAL,high REAL,low REAL,close REAL,volume REAL,taker_buy REAL,PRIMARY KEY(symbol,tf,ts))')
+            for sym in DISCOVERY+HELDOUT:
+                db.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)',
+                    [(sym,'4h',start+i*I.TF,100+i*.01,101+i*.01,99+i*.01,100.1+i*.01,
+                      100+(i%37)**2,50) for i in range(3000)])
+        from tests.retained_candle_fixtures import qualify
+>       qualify(candles)
+
+tests/test_predictive_research_bridge.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-sarmad/pytest-21/test_feedback_retains_stage7_r0/candles.db')
+source = 'offline:synthetic-first-use', tf = '4h'
+
+    def qualify(path,*,source='offline:synthetic-first-use',tf='4h'):
+        """Retain deterministic artificial receipts for explicitly generated test bars.
+    
+        Each fixture bar was observed exactly at its close by construction. This
+        helper cannot be used by normal production acquisition or migration.
+        """
+        feed=DataFeed(exchange=NoExchange(),db_path=path)
+        db=feed.db
+        rows=db.execute('SELECT symbol,tf,ts,open,high,low,close,volume,taker_buy FROM candles WHERE tf=? ORDER BY symbol,ts',(tf,)).fetchall()
+        records=[]
+        for symbol,timeframe,event,*numbers in rows:
+            values=dict(zip(P.VALUES,numbers))
+            at=event+P.TF_MS[timeframe]
+            raw={'event_ms':event,**values}
+            body=dict(instrument_id='offline:futures:'+symbol.replace('/','').split(':')[0],
+                source=source,kind='candle',event_time_ms=event,observed_at_ms=at,available_at_ms=at,
+                request_started_ms=at,request_id=P.digest([source,symbol,timeframe,event]),
+                content_hash=P.digest({'raw':raw,'value':values}),supersedes=None,quality='VALID',bar_state='FINAL',
+                raw_json=P.encode(raw),transform_version="TEST_ONLY_GENERATED_DATA",max_age_ms=None)
+            body['revision_id']=P.digest({k:v for k,v in body.items() if k!='supersedes'})
+            record=dict(body,**values)
+            records.append((body['revision_id'],DataFeed._series_key(symbol,timeframe),event,at,at,P.encode(record)))
+>       with db:db.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)',records)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       sqlite3.OperationalError: database or disk is full
+
+tests/retained_candle_fixtures.py:29: OperationalError
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/lifecycle.xml -
+=========================== short test summary info ============================
+ERROR tests/test_predictive_research_bridge.py::test_feedback_retains_stage7_replay_and_no_truth_from_priority
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+=================== 13 passed, 1 error in 544.36s (0:09:04) ====================

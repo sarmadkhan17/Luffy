@@ -1,0 +1,179 @@
+{
+  "QR07-01": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_uncertain_look_is_durable_before_worker_and_never_retried[returned]",
+      "test_uncertain_look_is_durable_before_worker_and_never_retried[raised]",
+      "test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice",
+      "test_duplicate_look_across_journals_is_atomic",
+      "test_finalization_failure_rolls_back_to_consumed_pending_look",
+      "test_invalid_worker_identity_cannot_create_support[receipt0]",
+      "test_invalid_worker_identity_cannot_create_support[receipt1]",
+      "test_invalid_worker_identity_cannot_create_support[receipt2]",
+      "test_refused_worker_receipt_remains_untested_and_consumed"
+    ],
+    "baseline_failures": [
+      "test_uncertain_look_is_durable_before_worker_and_never_retried[returned]",
+      "test_uncertain_look_is_durable_before_worker_and_never_retried[raised]",
+      "test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice",
+      "test_finalization_failure_rolls_back_to_consumed_pending_look",
+      "test_invalid_worker_identity_cannot_create_support[receipt0]",
+      "test_invalid_worker_identity_cannot_create_support[receipt1]",
+      "test_invalid_worker_identity_cannot_create_support[receipt2]"
+    ]
+  },
+  "QR07-02": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_large_receipts_retain_cut_and_valid_json",
+      "test_malformed_historical_evidence_refuses_resume[{broken]",
+      "test_malformed_historical_evidence_refuses_resume[[]]",
+      "test_malformed_historical_evidence_refuses_resume[null]",
+      "test_malformed_history_is_not_discardable_legacy_accounting"
+    ],
+    "baseline_failures": [
+      "test_large_receipts_retain_cut_and_valid_json",
+      "test_malformed_historical_evidence_refuses_resume[{broken]",
+      "test_malformed_historical_evidence_refuses_resume[[]]",
+      "test_malformed_historical_evidence_refuses_resume[null]",
+      "test_malformed_history_is_not_discardable_legacy_accounting"
+    ]
+  },
+  "QR07-03": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_discovery_never_requests_heldout_price_frames"
+    ],
+    "baseline_failures": [
+      "test_discovery_never_requests_heldout_price_frames"
+    ]
+  },
+  "QR07-04": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_growth_reaches_deeper_pending_children"
+    ],
+    "baseline_failures": [
+      "test_growth_reaches_deeper_pending_children"
+    ]
+  },
+  "QR07-05": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_late_ablation_refreshes_disposition_without_rescoring",
+      "test_restart_refreshes_committed_subset_without_repeating_measurements"
+    ],
+    "baseline_failures": [
+      "test_late_ablation_refreshes_disposition_without_rescoring",
+      "test_restart_refreshes_committed_subset_without_repeating_measurements"
+    ]
+  },
+  "QR07-06": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_unavailable_ablation_never_certifies_survivor[error]",
+      "test_unavailable_ablation_never_certifies_survivor[untested]",
+      "test_unavailable_ablation_never_certifies_survivor[untestable]"
+    ],
+    "baseline_failures": [
+      "test_unavailable_ablation_never_certifies_survivor[error]",
+      "test_unavailable_ablation_never_certifies_survivor[untestable]"
+    ]
+  },
+  "QR07-07": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_coverage_uses_selected_readonly_source",
+      "test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage",
+      "test_rotation_metadata_resolves_the_existing_default_source"
+    ],
+    "baseline_failures": [
+      "test_coverage_uses_selected_readonly_source",
+      "test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage",
+      "test_rotation_metadata_resolves_the_existing_default_source"
+    ]
+  },
+  "QR07-08": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_failed_context_counts_against_threshold_coverage"
+    ],
+    "baseline_failures": [
+      "test_failed_context_counts_against_threshold_coverage"
+    ]
+  },
+  "QR07-09": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_slice_units[s]",
+      "test_slice_units[ms]",
+      "test_slice_units[us]",
+      "test_slice_units[ns]"
+    ],
+    "baseline_failures": [
+      "test_slice_units[s]",
+      "test_slice_units[us]"
+    ]
+  },
+  "QR07-10": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_retrospective_control_refused_before_reader_or_worker"
+    ],
+    "baseline_failures": [
+      "test_retrospective_control_refused_before_reader_or_worker"
+    ]
+  },
+  "QR07-11": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_declared_timeframe_risk_reaches_heldout_costs"
+    ],
+    "baseline_failures": [
+      "test_declared_timeframe_risk_reaches_heldout_costs"
+    ]
+  },
+  "QR07-12": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_status_does_not_register_budget",
+      "test_top_labels_cumulative_return",
+      "test_status_main_reads_existing_store_without_migration"
+    ],
+    "baseline_failures": [
+      "test_status_does_not_register_budget",
+      "test_top_labels_cumulative_return",
+      "test_status_main_reads_existing_store_without_migration"
+    ]
+  },
+  "QR07-13": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_readonly_stores_do_not_initialize_or_create[candles]",
+      "test_readonly_stores_do_not_initialize_or_create[derivs]",
+      "test_readonly_stores_do_not_initialize_or_create[refs]",
+      "test_funding_dependency_is_bound_to_selected_readonly_store",
+      "test_readonly_identity_uses_injected_binding_without_provider"
+    ],
+    "baseline_failures": [
+      "test_readonly_stores_do_not_initialize_or_create[candles]",
+      "test_readonly_stores_do_not_initialize_or_create[derivs]",
+      "test_readonly_stores_do_not_initialize_or_create[refs]",
+      "test_funding_dependency_is_bound_to_selected_readonly_store",
+      "test_readonly_identity_uses_injected_binding_without_provider"
+    ]
+  },
+  "QR07-17": {
+    "status": "FIXED_VERIFIED_OFFLINE",
+    "regressions": [
+      "test_calibration_unknown_dependence_is_not_printed_as_one",
+      "test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity",
+      "test_top_preserves_unknown_metrics"
+    ],
+    "baseline_failures": [
+      "test_calibration_unknown_dependence_is_not_printed_as_one",
+      "test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity",
+      "test_top_preserves_unknown_metrics"
+    ]
+  }
+}

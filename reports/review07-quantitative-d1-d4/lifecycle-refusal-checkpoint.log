@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 58 items / 36 deselected / 22 selected
+
+tests/test_res08_governed_bridge.py .F
+
+=================================== FAILURES ===================================
+_________ test_referee_wrong_cut_is_untested_and_still_spends_the_look _________
+
+case = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/lifecycle-remaining/test_refer...t_id":"update_320e7e450210e0f4"}', provenance_hash='89c102dfa1f5d3b032e887df3c944f6c277222759c7bf17b025bc0942fd1fe3e'))
+
+    def test_referee_wrong_cut_is_untested_and_still_spends_the_look(case):
+        class WrongCut(NumericalFixture):
+            def __call__(self,fn,payload,**kw):
+                result=super().__call__(fn,payload,**kw)
+                if fn.__name__=='referee_job': result.value['cut_ms']+=14_400_000
+                return result
+        fake=WrongCut()
+        cycle(case,fake,case[3])
+        for _ in range(6): cycle(case,fake,case[4])
+        measured=[r for r in rows(case[1],'bridge_bank_results') if r['experiment_id']]
+        final=measured[-1]
+>       assert final['classification']=='DATA_INSUFFICIENT'
+E       AssertionError: assert 'INCONCLUSIVE' == 'DATA_INSUFFICIENT'
+E         
+E         - DATA_INSUFFICIENT
+E         + INCONCLUSIVE
+
+tests/test_res08_governed_bridge.py:247: AssertionError
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/lifecycle-final.xml -
+=========================== short test summary info ============================
+FAILED tests/test_res08_governed_bridge.py::test_referee_wrong_cut_is_untested_and_still_spends_the_look
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============ 1 failed, 1 passed, 36 deselected in 362.37s (0:06:02) ============

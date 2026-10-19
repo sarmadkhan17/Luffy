@@ -1,0 +1,14 @@
+SYNTHETIC ONLY; existing harness; seed=707; real_funding=False
+symbols=['SYNTHETIC/USDT']
+bars={'SYNTHETIC/USDT': 1200}
+
+{
+  "runs": 5,
+  "old_total_s": 15.49,
+  "old_per_run_s": 3.099,
+  "new_total_s": 0.136,
+  "new_per_run_s": 0.0272,
+  "speedup": 113.8
+}
+
+BENCH: PASS

@@ -1,0 +1,1410 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="27" failures="23" skipped="0" tests="66" time="32.010" timestamp="2026-10-19T16:21:02.482580+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_review07_quantitative" name="test_large_receipts_retain_cut_and_valid_json" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_large_receipts_retain_cut0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_large_receipts_retain_cut0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[{broken]" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[[]]" time="0.017"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid1')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid1/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[null]" time="0.025"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid2')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_historical_evid2/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[returned]" time="0.207"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_uncertain_look_is_durable0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fda20410&gt;
+failure = 'returned'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_uncertain_look_is_durable0/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[raised]" time="0.084"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_uncertain_look_is_durable1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd854980&gt;
+failure = 'raised'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_uncertain_look_is_durable1/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_growth_reaches_deeper_pending_children" time="0.003" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[error]" time="0.030" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untested]" time="0.030" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untestable]" time="0.012" /><testcase classname="tests.test_review07_quantitative" name="test_late_ablation_refreshes_disposition_without_rescoring" time="0.040"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_late_ablation_refreshes_d0')
+
+    def test_late_ablation_refreshes_disposition_without_rescoring(tmp_path):
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=False)))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_late_ablation_refreshes_d0/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_failed_context_counts_against_threshold_coverage" time="0.003" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[s]" time="0.528" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ms]" time="0.041" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[us]" time="0.011" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ns]" time="0.014" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[candles]" time="0.007"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in0')
+which = 'candles'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+        reader=constructors[which]()
+&gt;       with pytest.raises(sqlite3.OperationalError):reader.db
+                                                     ^^^^^^^^^
+
+tests/test_review07_quantitative.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:402: in db
+    conn = sqlite3.connect(uri, uri=True, timeout=self.BUSY_TIMEOUT_S)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = 'file:///mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in0/candles.db?mode=ro'
+args = (), kwargs = {'uri': True, 'timeout': 5.0}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[derivs]" time="0.003"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in1')
+which = 'derivs'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+        reader=constructors[which]()
+&gt;       with pytest.raises(sqlite3.OperationalError):reader.db
+                                                     ^^^^^^^^^
+
+tests/test_review07_quantitative.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/derivatives.py:92: in db
+    conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = 'file:///mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in1/derivs.db?mode=ro'
+args = (), kwargs = {'uri': True}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[refs]" time="0.112"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in2')
+which = 'refs'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+        reader=constructors[which]()
+&gt;       with pytest.raises(sqlite3.OperationalError):reader.db
+                                                     ^^^^^^^^^
+
+tests/test_review07_quantitative.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/references.py:113: in db
+    conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = 'file:///mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_readonly_stores_do_not_in2/refs.db?mode=ro'
+args = (), kwargs = {'uri': True}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_coverage_uses_selected_readonly_source" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_coverage_uses_selected_re0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd854200&gt;
+
+    def test_coverage_uses_selected_readonly_source(tmp_path,monkeypatch):
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(paths=dict(candles=str(tmp_path/'chosen.db')))))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_coverage_uses_selected_re0/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_discovery_never_requests_heldout_price_frames" time="0.026" /><testcase classname="tests.test_review07_quantitative" name="test_status_does_not_register_budget" time="0.001"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_status_does_not_register_0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_status_does_not_register_0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_top_labels_cumulative_return" time="0.001"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_top_labels_cumulative_ret0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_top_labels_cumulative_ret0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_pending_receipt_cannot_be0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_pending_receipt_cannot_be0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_duplicate_look_across_journals_is_atomic" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_duplicate_look_across_jou0')
+
+    def test_duplicate_look_across_journals_is_atomic(tmp_path):
+        from concurrent.futures import ThreadPoolExecutor
+&gt;       path=tmp_path/'race.db';l=Ledger(Journal(path));l.ensure();alpha=l.next_alpha(.1,.05)[1]
+                                         ^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_duplicate_look_across_jou0/race.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_replay_metadata_matches_a0')
+
+    def test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage(tmp_path):
+        from trader.data import market_provenance as mp
+        path=tmp_path/'c.db';writer=DataFeed(exchange=universe.NoExchange(),db_path=path)
+        def bar(event,received,price=100):
+            f=pd.DataFrame(dict(ts=pd.to_datetime([event],unit='ms',utc=True),open=[price],high=[price+1],low=[price-1],close=[price],volume=[1.]))
+            return mp.annotate(f,instrument_id='offline:BTCUSDT',source='offline:synthetic',kind='candle',received_ms=received,timeframe='4h')
+&gt;       with writer.db:
+             ^^^^^^^^^
+
+tests/test_review07_quantitative.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:406: in db
+    conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_replay_metadata_matches_a0/c.db'
+args = (), kwargs = {'timeout': 5.0}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_retrospective_control_refused_before_reader_or_worker" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_declared_timeframe_risk_reaches_heldout_costs" time="0.079" /><testcase classname="tests.test_review07_quantitative" name="test_status_main_reads_existing_store_without_migration" time="0.008"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_status_main_reads_existin0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd856f30&gt;
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x77c0fd85a000&gt;
+
+    def test_status_main_reads_existing_store_without_migration(tmp_path,monkeypatch,capsys):
+        import sys
+        from trader.research import __main__ as cli
+        (tmp_path/'data').mkdir();path=tmp_path/'data'/'luffy.db'
+&gt;       lg=Ledger(Journal(path));lg.ensure()
+                  ^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_status_main_reads_existin0/data/luffy.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_funding_dependency_is_bound_to_selected_readonly_store" time="0.003" /><testcase classname="tests.test_review07_quantitative" name="test_calibration_unknown_dependence_is_not_printed_as_one" time="0.069" /><testcase classname="tests.test_review07_quantitative" name="test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity" time="0.885"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_source_shadow_does_not_cl0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd8597c0&gt;
+
+    def test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity(tmp_path,monkeypatch):
+        import importlib.util
+        path=Path(__file__).parents[1]/'scripts/predictive_research_shadow.py'
+        spec=importlib.util.spec_from_file_location('review07_source_shadow',path)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        source=tmp_path/'source.db'
+&gt;       with sqlite3.connect(source):pass
+             ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_source_shadow_does_not_cl0/source.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_finalization_failure_rolls_back_to_consumed_pending_look" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_finalization_failure_roll0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_finalization_failure_roll0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt0]" time="0.239"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd8c3ce0&gt;
+receipt = {'looked': True, 'hash': 'wrong', 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+
+tests/test_review07_quantitative.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c0/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt1]" time="0.029"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd8c08c0&gt;
+receipt = {'looked': True, 'hash': None, 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+
+tests/test_review07_quantitative.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c1/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt2]" time="0.014"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd8c1430&gt;
+receipt = {'looked': True, 'hash': 'correct'}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:None)
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+
+tests/test_review07_quantitative.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_invalid_worker_identity_c2/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_top_preserves_unknown_metrics" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_top_preserves_unknown_met0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_top_preserves_unknown_met0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_malformed_history_is_not_discardable_legacy_accounting" time="0.007"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_history_is_not_0')
+
+    @pytest.fixture
+    def led(tmp_path):
+&gt;       l=Ledger(Journal(tmp_path/'journal.db'));l.ensure();return l
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_malformed_history_is_not_0/journal.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_review07_quantitative" name="test_rotation_metadata_resolves_the_existing_default_source" time="0.005"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_rotation_metadata_resolve0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x77c0fd8c0f80&gt;
+
+    def test_rotation_metadata_resolves_the_existing_default_source(tmp_path,monkeypatch):
+        from trader.core import config
+        from trader.research import referee
+        (tmp_path/'data').mkdir();path=tmp_path/'data'/'candles.db'
+        writer=DataFeed(exchange=universe.NoExchange(),db_path=path)
+&gt;       writer.db.close()
+        ^^^^^^^^^
+
+tests/test_review07_quantitative.py:370: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:406: in db
+    conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_rotation_metadata_resolve0/data/candles.db'
+args = (), kwargs = {'timeout': 5.0}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_restart_refreshes_committed_subset_without_repeating_measurements" time="0.005"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_restart_refreshes_committ0')
+
+    def test_restart_refreshes_committed_subset_without_repeating_measurements(tmp_path):
+        from trader.research.vocab import BOOL_PARTS
+&gt;       r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=False)))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:385: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_restart_refreshes_committ0/j.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_readonly_identity_uses_injected_binding_without_provider" time="0.003" /><testcase classname="tests.test_retrospective_feed" name="test_explicit_readonly_projection_close_cut_and_unknown_clocks" time="0.008"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_explicit_readonly_project0')
+
+    def test_explicit_readonly_projection_close_cut_and_unknown_clocks(tmp_path):
+&gt;       path = dataset(tmp_path)
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_feed.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_retrospective_feed.py:18: in dataset
+    with sqlite3.connect(path) as con:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_explicit_readonly_project0/history.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_feed" name="test_heldout_coverage_selects_metadata_only" time="0.005"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_heldout_coverage_selects_0')
+
+    def test_heldout_coverage_selects_metadata_only(tmp_path):
+&gt;       path = dataset(tmp_path)
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_feed.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_retrospective_feed.py:18: in dataset
+    with sqlite3.connect(path) as con:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_heldout_coverage_selects_0/history.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_feed" name="test_late_receipts_preserved_but_replay_still_refuses" time="0.005"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_late_receipts_preserved_b0')
+
+    def test_late_receipts_preserved_but_replay_still_refuses(tmp_path):
+&gt;       path = dataset(tmp_path)
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_feed.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_retrospective_feed.py:18: in dataset
+    with sqlite3.connect(path) as con:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_late_receipts_preserved_b0/history.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_feed" name="test_requires_explicit_identity_and_existing_db" time="0.051"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_requires_explicit_identit0')
+
+    def test_requires_explicit_identity_and_existing_db(tmp_path):
+        with pytest.raises(ValueError,match='explicit database'):
+            DataFeed(retrospective={'dataset_id':'fixture','cut_ms':1})
+        with pytest.raises(ValueError):
+            DataFeed(db_path=tmp_path/'missing',retrospective={'cut_ms':1})
+        feed=DataFeed(db_path=tmp_path/'missing',retrospective={'dataset_id':'fixture','cut_ms':1})
+        with pytest.raises(sqlite3.OperationalError):
+&gt;           feed.cached_ohlcv('BTC/USDT','1h')
+
+tests/test_retrospective_feed.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/data/feed.py:856: in cached_ohlcv
+    return self.retrospective_ohlcv(symbol, tf, limit=limit)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/data/feed.py:799: in retrospective_ohlcv
+    predicate, args, tables = self._retrospective_query(symbol, tf)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/data/feed.py:760: in _retrospective_query
+    tables = {r[0] for r in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+                            ^^^^^^^
+trader/data/feed.py:402: in db
+    conn = sqlite3.connect(uri, uri=True, timeout=self.BUSY_TIMEOUT_S)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = 'file:///mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_requires_explicit_identit0/missing?mode=ro'
+args = (), kwargs = {'uri': True, 'timeout': 5.0}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_feed" name="test_receipt_tamper_refuses" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_receipt_tamper_refuses0')
+
+    def test_receipt_tamper_refuses(tmp_path):
+&gt;       path=dataset(tmp_path)
+             ^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_feed.py:94: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_retrospective_feed.py:18: in dataset
+    with sqlite3.connect(path) as con:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_receipt_tamper_refuses0/history.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_feed" name="test_unverified_flow_proxy_is_missing_and_matching_source_flow_works" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_unverified_flow_proxy_is_0')
+
+    def test_unverified_flow_proxy_is_missing_and_matching_source_flow_works(tmp_path):
+&gt;       path = dataset(tmp_path)
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_feed.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_retrospective_feed.py:18: in dataset
+    with sqlite3.connect(path) as con:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_unverified_flow_proxy_is_0/history.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_research" name="test_complete_sixteen_symbol_bundle_and_evaluator_are_repeatable" time="0.006"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_complete_sixteen_symbol_b0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_complete_sixteen_symbol_b0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_cut_source_mismatch_refuses_before_data_read" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_cut_source_mismatch_refus0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_cut_source_mismatch_refus0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_missing_derivative_dataset_is_explicit" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_missing_derivative_datase0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_missing_derivative_datase0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_retrospective_runner_cannot_spend_or_reuse_old_ledger" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_retrospective_runner_cann0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_retrospective_runner_cann0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_retrospective_result_is_immutable" time="0.002"><failure message="RuntimeError: REVIEW_DB_BOUNDARY_REFUSED">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_retrospective_result_is_i0')
+
+    def test_retrospective_result_is_immutable(tmp_path):
+&gt;       journal=Journal(tmp_path/'output.db');ledger=Ledger(journal);ledger.ensure()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/core/journal.py:569: in __init__
+    with self._conn() as c:
+         ^^^^^^^^^^^^
+trader/core/journal.py:643: in _conn
+    conn = sqlite3.connect(str(self.db_path), timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_retrospective_result_is_i0/output.db'
+args = (), kwargs = {'timeout': 30}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</failure></testcase><testcase classname="tests.test_retrospective_research" name="test_runner_resumes_only_identical_retrospective_binding" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_runner_resumes_only_ident0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_runner_resumes_only_ident0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_unavailable_real_funding_is_untested_not_empty" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_unavailable_real_funding_0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_unavailable_real_funding_0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_projection_only_change_reopens_deterministic_refusal[append]" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_projection_only_change_re0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_projection_only_change_re0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_projection_only_change_reopens_deterministic_refusal[correct]" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_projection_only_change_re1')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_projection_only_change_re1/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_changed_source_refuses_resume_without_replacing_gauges" time="0.002"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_changed_source_refuses_re0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_changed_source_refuses_re0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_bound_ledger_measurements_are_immutable_and_idempotent" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_bound_ledger_measurements0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_bound_ledger_measurements0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_original_discovery_bar_threshold_is_preserved[420]" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_original_discovery_bar_th0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_original_discovery_bar_th0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_original_discovery_bar_threshold_is_preserved[499]" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_original_discovery_bar_th1')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_original_discovery_bar_th1/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_research" name="test_short_retrospective_bundle_refuses_before_missing_dependency" time="0.004"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_short_retrospective_bundl0')
+
+    @pytest.fixture
+    def discovery(tmp_path):
+        candles = tmp_path / 'candles.db'
+&gt;       con = sqlite3.connect(candles)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_research.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_short_retrospective_bundl0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_end_to_end" name="test_sixteen_symbol_discovery_evaluator_and_backtest_reproduce" time="0.006"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_sixteen_symbol_discovery_0')
+
+    @pytest.fixture
+    def historical(tmp_path):
+        candles, ledger = tmp_path / "candles.db", tmp_path / "preserved.db"
+        rng = np.random.default_rng(17)
+&gt;       with sqlite3.connect(candles) as con:
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_end_to_end.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_sixteen_symbol_discovery_0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_end_to_end" name="test_discovery_cut_authentication_refuses_changed_source" time="0.003"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_discovery_cut_authenticat0')
+
+    @pytest.fixture
+    def historical(tmp_path):
+        candles, ledger = tmp_path / "candles.db", tmp_path / "preserved.db"
+        rng = np.random.default_rng(17)
+&gt;       with sqlite3.connect(candles) as con:
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_end_to_end.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_discovery_cut_authenticat0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_end_to_end" name="test_protected_symbols_have_no_price_loader_access" time="0.018"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_protected_symbols_have_no0')
+
+    @pytest.fixture
+    def historical(tmp_path):
+        candles, ledger = tmp_path / "candles.db", tmp_path / "preserved.db"
+        rng = np.random.default_rng(17)
+&gt;       with sqlite3.connect(candles) as con:
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_end_to_end.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_protected_symbols_have_no0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_end_to_end" name="test_protected_symbol_cannot_be_relabelled_as_discovery" time="0.010"><error message="failed on setup with &quot;RuntimeError: REVIEW_DB_BOUNDARY_REFUSED&quot;">tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_protected_symbol_cannot_b0')
+
+    @pytest.fixture
+    def historical(tmp_path):
+        candles, ledger = tmp_path / "candles.db", tmp_path / "preserved.db"
+        rng = np.random.default_rng(17)
+&gt;       with sqlite3.connect(candles) as con:
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_retrospective_end_to_end.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-64/test_protected_symbol_cannot_b0/candles.db')
+args = (), kwargs = {}
+
+    def connect(database, *args, **kwargs):
+        raw = os.fspath(database)
+        if raw != ':memory:' and not raw.startswith('file::memory:'):
+            filename = unquote(raw.removeprefix('file:').split('?')[0])
+            p = Path(filename).resolve()
+            if not (p.is_relative_to(ROOT) or p.is_relative_to(Path('/tmp'))):
+&gt;               raise RuntimeError('REVIEW_DB_BOUNDARY_REFUSED')
+E               RuntimeError: REVIEW_DB_BOUNDARY_REFUSED
+
+reports/review07-quantitative-d1-d4/guard/sitecustomize.py:14: RuntimeError</error></testcase><testcase classname="tests.test_retrospective_end_to_end" name="test_empty_explicit_contract_refuses_before_any_store_access" time="0.008" /></testsuite></testsuites>

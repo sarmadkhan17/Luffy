@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 829 items / 2 deselected / 827 selected
+
+tests/test_candidate_dossier.py ........................................ [  4%]
+.........                                                                [  5%]
+tests/test_null_dependence.py ......                                     [  6%]
+tests/test_predictive_research_bridge.py 
+
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/impact.xml -
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/json/encoder.py:258: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+================= 55 passed, 2 deselected in 77.23s (0:01:17) ==================

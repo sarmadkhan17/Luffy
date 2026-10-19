@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 58 items
+
+tests/test_predictive_research_bridge.py .....................           [ 36%]
+tests/test_res08_governed_bridge.py ...............F
+
+=================================== FAILURES ===================================
+___________ test_changed_protected_revision_and_cut_are_new_versions ___________
+
+base = (PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/lifecycle/res08-base0/investig...t_id":"update_6df870b116a2d3c5"}', provenance_hash='5346bfb475b7afd5a5b5da71099d4c4b06233abdbcf17dc0cbd130f104d7e6fc'))
+tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-quantitative-d1-d4/data/review07-verification/lifecycle/test_changed_protected_revisio0')
+
+    def test_changed_protected_revision_and_cut_are_new_versions(base,tmp_path):
+        _,_,candles,created,later,s=base
+        h=P.propose(s,'volume_breakout_context.v1',created)
+        copy=tmp_path/'revised.db'; shutil.copyfile(candles,copy)
+        a=E.translate(h,copy,CFG,later)
+        assert E.translate(h,copy,CFG,later)==a
+        with sqlite3.connect(copy) as db:
+            rid,raw=db.execute('SELECT revision_id,record_json FROM market_revisions WHERE event_ms>=? LIMIT 1',
+                              (a['split']['cut_ms'],)).fetchone()
+            record=json.loads(raw); record['transform_version']='TEST_ONLY_REVISED'
+            db.execute('UPDATE market_revisions SET record_json=? WHERE revision_id=?',(P.canonical(record),rid))
+        b=E.translate(h,copy,CFG,later)
+        c=E.translate(h,copy,CFG,later+14_400_000)
+>       assert len({a['experiment_id'],b['experiment_id'],c['experiment_id']})==3
+                                       ^^^^^^^^^^^^^^^^^^
+E       KeyError: 'experiment_id'
+
+tests/test_res08_governed_bridge.py:219: KeyError
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/lifecycle-final.xml -
+=========================== short test summary info ============================
+FAILED tests/test_res08_governed_bridge.py::test_changed_protected_revision_and_cut_are_new_versions
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/json/__init__.py:234: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+================== 1 failed, 36 passed in 1383.74s (0:23:03) ===================

@@ -1,0 +1,28 @@
+{
+  "branch": "sol1/review07-quantitative-d1-d4",
+  "integration_parent": "81565a0",
+  "brain_ancestor": "ef53aa3",
+  "running_release_ancestor": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "source_deployed": false,
+  "ci_modified": false,
+  "code_delta": {
+    "runtime": {
+      "added": 365,
+      "removed": 207,
+      "net_added": 158
+    },
+    "tests": {
+      "added": 508,
+      "removed": 52,
+      "net_added": 456
+    }
+  },
+  "files_removed_or_merged": [],
+  "generated_graph_in_commit": false,
+  "implementation_commits": [
+    "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69",
+    "868f23715721136fd0686db0b6bd3252c40e0990",
+    "94b9000a02966dd74447c48a26eda61033e7bfe2"
+  ],
+  "initial_implementation_commit": "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69"
+}

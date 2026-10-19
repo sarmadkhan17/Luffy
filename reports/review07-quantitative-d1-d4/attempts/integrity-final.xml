@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="60" time="210.137" timestamp="2026-10-19T16:11:27.429479+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="tests.test_review07_quantitative" name="test_large_receipts_retain_cut_and_valid_json" time="0.124" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[{broken]" time="0.108" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[[]]" time="0.101" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_historical_evidence_refuses_resume[null]" time="0.359" /><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[returned]" time="0.262"><failure message="assert 0 == 1&#10; +  where 0 = len([])">tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_uncertain_look_is_durable0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d11364b5eb0&gt;
+failure = 'returned'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+        try:r._examine('4h','fixed',dict(hash=c.hash),123)
+        except RuntimeError:pass
+&gt;       assert len(calls)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_review07_quantitative.py:71: AssertionError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_uncertain_look_is_durable_before_worker_and_never_retried[raised]" time="0.114"><failure message="assert 0 == 1&#10; +  where 0 = len([])">tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_uncertain_look_is_durable1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d11364b7410&gt;
+failure = 'raised'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+        try:r._examine('4h','fixed',dict(hash=c.hash),123)
+        except RuntimeError:pass
+&gt;       assert len(calls)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_review07_quantitative.py:71: AssertionError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_growth_reaches_deeper_pending_children" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[error]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untested]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_unavailable_ablation_never_certifies_survivor[untestable]" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_late_ablation_refreshes_disposition_without_rescoring" time="0.103" /><testcase classname="tests.test_review07_quantitative" name="test_failed_context_counts_against_threshold_coverage" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[s]" time="0.011" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ms]" time="0.003" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[us]" time="0.002" /><testcase classname="tests.test_review07_quantitative" name="test_slice_units[ns]" time="0.002" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[candles]" time="0.005" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[derivs]" time="0.006" /><testcase classname="tests.test_review07_quantitative" name="test_readonly_stores_do_not_initialize_or_create[refs]" time="0.005" /><testcase classname="tests.test_review07_quantitative" name="test_coverage_uses_selected_readonly_source" time="0.100" /><testcase classname="tests.test_review07_quantitative" name="test_discovery_never_requests_heldout_price_frames" time="0.125" /><testcase classname="tests.test_review07_quantitative" name="test_status_does_not_register_budget" time="0.097" /><testcase classname="tests.test_review07_quantitative" name="test_top_labels_cumulative_return" time="0.103" /><testcase classname="tests.test_review07_quantitative" name="test_pending_receipt_cannot_be_rewritten_as_another_cut_or_finalized_twice" time="0.109" /><testcase classname="tests.test_review07_quantitative" name="test_duplicate_look_across_journals_is_atomic" time="0.105" /><testcase classname="tests.test_review07_quantitative" name="test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage" time="0.086" /><testcase classname="tests.test_review07_quantitative" name="test_retrospective_control_refused_before_reader_or_worker" time="0.001" /><testcase classname="tests.test_review07_quantitative" name="test_declared_timeframe_risk_reaches_heldout_costs" time="0.035" /><testcase classname="tests.test_review07_quantitative" name="test_status_main_reads_existing_store_without_migration" time="0.175" /><testcase classname="tests.test_review07_quantitative" name="test_funding_dependency_is_bound_to_selected_readonly_store" time="0.002" /><testcase classname="tests.test_review07_quantitative" name="test_calibration_unknown_dependence_is_not_printed_as_one" time="0.058" /><testcase classname="tests.test_review07_quantitative" name="test_source_shadow_does_not_claim_quantitative_pass_or_unmeasured_maturity" time="0.016" /><testcase classname="tests.test_review07_quantitative" name="test_finalization_failure_rolls_back_to_consumed_pending_look" time="0.092" /><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt0]" time="0.104"><failure message="AssertionError: assert 'deferred' == 'gate1_fail'&#10;  &#10;  - gate1_fail&#10;  + deferred">tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d113632ecf0&gt;
+receipt = {'looked': True, 'hash': 'wrong', 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+&gt;       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt1]" time="0.115"><failure message="AssertionError: assert 'deferred' == 'gate1_fail'&#10;  &#10;  - gate1_fail&#10;  + deferred">tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d113632fef0&gt;
+receipt = {'looked': True, 'hash': None, 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+&gt;       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_invalid_worker_identity_cannot_create_support[receipt2]" time="0.108"><failure message="AssertionError: assert 'deferred' == 'gate1_fail'&#10;  &#10;  - gate1_fail&#10;  + deferred">tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d1136332300&gt;
+receipt = {'looked': True, 'hash': 'correct'}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+&gt;       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError</failure></testcase><testcase classname="tests.test_review07_quantitative" name="test_top_preserves_unknown_metrics" time="0.095" /><testcase classname="tests.test_review07_quantitative" name="test_malformed_history_is_not_discardable_legacy_accounting" time="0.094" /><testcase classname="tests.test_review07_quantitative" name="test_rotation_metadata_resolves_the_existing_default_source" time="0.035" /><testcase classname="tests.test_research_legacy_discard" name="test_report_does_not_write" time="0.097" /><testcase classname="tests.test_research_legacy_discard" name="test_discard_removes_only_unreferenced_legacy_rows_and_keeps_history" time="0.103" /><testcase classname="tests.test_research_legacy_discard" name="test_current_accounting_rows_are_never_discarded" time="0.765" /><testcase classname="tests.test_research_legacy_discard" name="test_discard_is_what_unblocks_the_planner_and_spends_no_look" time="0.248" /><testcase classname="tests.test_research_legacy_discard" name="test_a_spent_look_survives_recompute_and_cannot_be_respent" time="0.098" /><testcase classname="tests.test_research_legacy_discard" name="test_rekey_path_discards_legacy_rows_instead_of_archiving_them" time="0.106" /><testcase classname="tests.test_research_legacy_discard" name="test_cli_reports_by_default_and_only_deletes_with_apply" time="0.221" /><testcase classname="tests.test_research_control_unavailable" name="test_impossible_controls_stop_repeating_and_work_proceeds" time="35.163" /><testcase classname="tests.test_research_control_unavailable" name="test_repeated_planning_with_unchanged_input_never_re_requests" time="38.730" /><testcase classname="tests.test_research_control_unavailable" name="test_unavailable_is_never_powered_or_a_no_edge_verdict" time="46.121" /><testcase classname="tests.test_research_control_unavailable" name="test_cut_advance_alone_does_not_reopen_while_data_is_unusable" time="0.178" /><testcase classname="tests.test_research_control_unavailable" name="test_reopens_when_the_slice_reaches_the_series" time="0.173" /><testcase classname="tests.test_research_control_unavailable" name="test_a_series_with_no_history_is_not_reopened_by_the_cut" time="0.182" /><testcase classname="tests.test_research_control_unavailable" name="test_reopens_when_the_evaluation_identity_changes" time="0.211" /><testcase classname="tests.test_research_control_unavailable" name="test_reopened_control_that_now_trades_is_recorded_as_measured" time="57.575" /><testcase classname="tests.test_research_control_unavailable" name="test_zero_trades_with_data_present_is_still_retried_not_recorded" time="0.343" /><testcase classname="tests.test_research_control_unavailable" name="test_failed_worker_and_deferred_controls_are_not_recorded" time="0.599" /><testcase classname="tests.test_research_control_unavailable" name="test_an_old_child_without_coverage_keeps_the_previous_behaviour" time="0.374" /><testcase classname="tests.test_research_control_unavailable" name="test_a_measured_control_is_numerically_unchanged_by_coverage" time="23.808" /><testcase classname="tests.test_research_control_unavailable" name="test_unavailable_rule_uses_the_control_floor_and_references" time="0.001" /><testcase classname="tests.test_research_control_unavailable" name="test_child_coverage_reports_slice_counts_and_first_observations" time="0.004" /></testsuite></testsuites>

@@ -1,0 +1,56 @@
+{
+  "status": "REMEDIATION_PLAN_ONLY",
+  "implementation_performed": false,
+  "owner_authorized_scope": "Review and remediation planning only",
+  "OD07_06": "OPEN_NOT_END_TO_END_VERIFIED",
+  "choices": [
+    {
+      "id": "D1",
+      "choice": "Failed-look accounting, intact JSON and atomic ledger disposition",
+      "status": "REQUIRES_OWNER_IMPLEMENTATION_SCOPE",
+      "verification_required": "Synthetic explicit looked error and interrupted worker/restart each consume once; metadata-only preflight defers before protected reads; oversize receipts stay valid; malformed frozen history refuses resume."
+    },
+    {
+      "id": "D2",
+      "choice": "Metadata-only mirrors, chosen-source eligibility, denominator and timestamp fixes",
+      "status": "REQUIRES_OWNER_IMPLEMENTATION_SCOPE_AND_MARKET_DATA_INTERFACE_APPROVAL",
+      "verification_required": "Deny discovery price reads of protected symbols; exact reader/count parity on retained final/late/unknown/partial/revised rows; custom store path; exception denominator; s/us/ms/ns units."
+    },
+    {
+      "id": "D3",
+      "choice": "Pending growth depths and usable late-ablation decisions",
+      "status": "REQUIRES_OWNER_IMPLEMENTATION_SCOPE",
+      "verification_required": "Coexisting shallow/deep parents progress; late subsets refresh child without new numerical reads; errored and unavailable subsets cannot certify survivor; beam/window/statistical floors unchanged."
+    },
+    {
+      "id": "D4",
+      "choice": "Declared-timeframe Referee risk and pure diagnostic reads",
+      "status": "REQUIRES_OWNER_IMPLEMENTATION_SCOPE",
+      "verification_required": "Actual/null funding unit equality on 4h trail and canonical fixed; CLI status/top authorizer rejects writes and preserves budget; diagnostics preserve unknown values."
+    },
+    {
+      "id": "D5",
+      "choice": "Brain intake: extend existing bridge QUESTION_ONLY source variant or retire routing",
+      "status": "OWNER_CHOICE_CROSS_SUBSYSTEM",
+      "verification_required": "Provenance-exact accepted/refused/deferred outcomes; restart across destination commit/source consumption; independent strategy stream; no fabricated investigation or automatic numeric PASS from a passage."
+    },
+    {
+      "id": "D6",
+      "choice": "Replay decision/fill timing at truthful retained availability",
+      "status": "OWNER_CHOICE_MARKET_DATA_AND_STRATEGY_POLICY",
+      "verification_required": "Genuine retained data and exact cuts prove no feature/entry/fill before availability; actual/null share achievable delay/cost assumptions; late backfill remains retrospective; unchanged statistical gates and FROZEN."
+    },
+    {
+      "id": "D7",
+      "choice": "Shared versioned ATR parity or supported-exit alternative",
+      "status": "OWNER_CHOICE_STRATEGY_AND_EXECUTION_POLICY",
+      "verification_required": "Exact long/short transition/cost traces across canonical backtest/table/paper, closed-bar ATR, arming, gaps/ambiguity/max bars/restart/censoring; semantic version/evidence binding; equivalence and >20x engine benchmark if changed."
+    },
+    {
+      "id": "D8",
+      "choice": "Optional calibration/storage/brake consolidation",
+      "status": "DEFER_UNTIL_CORRECTNESS",
+      "verification_required": "Preserve distinct quantitative methods, historical source hashes, frozen artifacts and consumer replay; quantify savings before changes; brake remains without new authority."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+..........F............                                                  [100%]
+=================================== FAILURES ===================================
+__________ test_late_ablation_refreshes_disposition_without_rescoring __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-1/test_late_ablation_refreshes_d0')
+
+    def test_late_ablation_refreshes_disposition_without_rescoring(tmp_path):
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=False)))
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        a=Combination((PARTS[0],),'4h','fixed');b=Combination((PARTS[1],),'4h','fixed',round='ablation',parent=c.hash)
+        r.ledger.record_control('4h','ohlcv',dict(consistency_p=.001),True)
+        r.ledger.record_result(result(a,.1,10),'grow','fixture',{})
+        r._record(result(c),c,planner.Batch('evaluate','4h','fixed','grow',[c]))
+        stored=r.ledger.result(c.hash)
+        r._record(result(b,.1,10),b,planner.Batch('evaluate','4h','fixed','ablation',[b]))
+>       assert r.ledger.rows('4h','fixed',k=2)[0]['verdict']=='survivor'
+E       AssertionError: assert 'grow' == 'survivor'
+E         
+E         - survivor
+E         + grow
+
+tests/test_review07_quantitative.py:105: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review07_quantitative.py::test_late_ablation_refreshes_disposition_without_rescoring
+1 failed, 22 passed in 3.55s

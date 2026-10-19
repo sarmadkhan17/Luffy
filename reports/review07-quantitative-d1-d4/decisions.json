@@ -1,0 +1,43 @@
+{
+  "owner_approved": [
+    "D1",
+    "D2",
+    "D3",
+    "D4"
+  ],
+  "mechanisms_reused": [
+    "research_tests/research_budget/candidate ledger",
+    "market_provenance.load/eligible_frame receipts",
+    "selected read-only SQLite stores",
+    "existing growth/ablation and LORD functions",
+    "risk_for and actual/null backtest methods"
+  ],
+  "removed": [
+    "retry-after-look path and referee_max_attempts",
+    "encoded JSON text slicing",
+    "raw projection-count eligibility",
+    "handwritten timestamp scaling",
+    "unreachable diagnostic branch"
+  ],
+  "preserved": [
+    "registered statistical budgets and thresholds",
+    "frozen historical identities",
+    "FROZEN/PAPER",
+    "referee=false",
+    "handoff=false",
+    "provider acquisition defaults",
+    "unsupported exit refusals"
+  ],
+  "scheduled_not_implemented": [
+    "D5",
+    "D6",
+    "D7",
+    "D8"
+  ],
+  "od07_06": "OPEN_NOT_END_TO_END_VERIFIED",
+  "implementation_commits": [
+    "c9cfe7aa1410eddec98d0dd28ad390dcb6fd3e69",
+    "868f23715721136fd0686db0b6bd3252c40e0990",
+    "94b9000a02966dd74447c48a26eda61033e7bfe2"
+  ]
+}

@@ -1,0 +1,61 @@
+........................................FF...                            [100%]
+=================================== FAILURES ===================================
+_______________ test_current_accounting_rows_are_never_discarded _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-16/test_current_accounting_rows_a0')
+
+    def test_current_accounting_rows_are_never_discarded(tmp_path):
+        reply, st = _world(first_ms=[])
+        r = _runner(tmp_path, reply)
+        _drive(r, steps=6)
+        n = r.journal.query("SELECT COUNT(*) n FROM research_combos")[0]["n"]
+>       assert n
+E       assert 0
+
+tests/test_research_legacy_discard.py:82: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+_________ test_discard_is_what_unblocks_the_planner_and_spends_no_look _________
+
+aged = <trader.research.ledger.Ledger object at 0x7b0d4c199010>
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-16/test_discard_is_what_unblocks_0')
+
+    def test_discard_is_what_unblocks_the_planner_and_spends_no_look(aged, tmp_path):
+        reply, st = _world(first_ms=[])
+        from trader.research.runner import ResearchRunner
+        r = ResearchRunner(aged.journal, NO_REFEREE,
+                           run=lambda fn, payload, **kw: reply(fn, payload))
+        assert r.step()["skipped"] == "portfolio_accounting_incompatible"
+        assert st["calls"] == []
+        stable = _stable(aged.journal)
+        aged.discard_legacy_accounting(apply=True)
+        outs = _drive(r, steps=12)
+        assert not any(o.get("skipped") == "portfolio_accounting_incompatible"
+                       for o in outs)
+>       assert st["calls"], "planner did not resume"
+E       AssertionError: planner did not resume
+E       assert []
+
+tests/test_research_legacy_discard.py:99: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+WARNING  trader.research.runner:runner.py:175 research coverage unavailable: registered_coverage.<locals>.<lambda>() got an unexpected keyword argument 'feed'
+=========================== short test summary info ============================
+FAILED tests/test_research_legacy_discard.py::test_current_accounting_rows_are_never_discarded
+FAILED tests/test_research_legacy_discard.py::test_discard_is_what_unblocks_the_planner_and_spends_no_look
+2 failed, 43 passed in 5.75s

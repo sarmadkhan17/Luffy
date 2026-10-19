@@ -1,0 +1,69 @@
+{
+  "tracker_modified": false,
+  "automatic_closure": false,
+  "rows": [
+    {
+      "id": "DATA-02",
+      "status": "CLOSED",
+      "required_behavior": "Retain event, receipt, availability, transform and quality provenance.",
+      "latest_evidence": "Candles, derivatives, references, order book, registry capability, Attention admission, Portfolio and execution/accounting receipts mapped; clocks/source/quality/transform retention PROVEN by existing tests (Portfolio and execution by code read). One gap fixed: journaled decision lineage held revision ids that nothing resolved or verified; resolve_lineage now rebuilds exact receipts and refuses missing/future/non-VALID/tampered/schema- or transform-mismatched lineage, wired into the owner decision read (fails closed into unavailable). 21 new tests. Limits: owner/queries.py path passes no stores; universe_* acquisition receipts not resolved; no runtime proof.",
+      "next_proof": "None for DATA-02. Dependents DATA-03, DATA-05, RISK-01 remain separate."
+    },
+    {
+      "id": "DATA-03",
+      "status": "CLOSED",
+      "required_behavior": "Reject future data in current and historical reads, including caches.",
+      "latest_evidence": "Original closing condition satisfied at architecture/offline scope. Normal/replay candles, membership, derivatives, references and features use source-cut-qualified shared readers; future cache and later revisions cannot be rebased. Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership refuses without retained ancestry. Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries requalify inner receipt clocks; restart preserves exact bytes.",
+      "next_proof": "None for DATA-03 at architecture/offline engineering scope. Dependent rows retain their own acceptance conditions."
+    },
+    {
+      "id": "DATA-05",
+      "status": "CLOSED",
+      "required_behavior": "Preserve append-only revisions and distinguish latest from as-of.",
+      "latest_evidence": "Original closing condition satisfied by retained fc16e07 proof: append-only revision retention; exact latest/as-of/bar-close selection; original hashes/source/lineage reconstruction; index-clock corruption and missing/future/tampered originals fail closed; database reopen preserves earlier historical and newest latest selection. 208 recorded offline passes include 33 new DATA-05 tests. Retained report, shared revision-reader and DATA-05 test bytes match fc16e07. No implementation added or tests repeated in this reconciliation.",
+      "next_proof": "None for DATA-05 at architecture/offline engineering scope. WRLD-03 and DATA-05 now satisfy WRLD-05 dependencies; its normal consumer integration remains separate."
+    },
+    {
+      "id": "RES-08",
+      "status": "CLOSED",
+      "required_behavior": "Connect hypotheses to protected experiments and exact result feedback.",
+      "latest_evidence": "Normal bridge binds exact hypothesis/experiment/measurement/registered referee/Bank lineage, source/data revisions, cut and evaluation version. Feedback cannot self-certify; insufficient evidence stays UNTESTED. Duplicate/restart preserves identity; changed revisions yield new immutable lineage. Retained 65 final checks, 93 bridge/Bank and 86 quantitative regressions (overlapping revision-scoped counts). Paired-null remains unsupported/UNTESTED. Evidence: docs/tracker/evidence/res08-canonical-sol1/REPORT.md.",
+      "next_proof": "None for RES-08 architecture/offline closure. Paired-null and exact-volume-path translations remain explicitly unsupported/UNTESTED; no numerical support is invented. Preserve quantitative admission and downstream authority gates."
+    },
+    {
+      "id": "QNT-03",
+      "status": "CLOSED",
+      "required_behavior": "Handle correlated symbols and shared evidence lineage.",
+      "latest_evidence": "Original condition satisfied at architecture/offline scope: analyst admission requires the max of dependence-corrected consistency and common-rotation p (raw independent p is diagnostic only); missing/unaligned/incomplete dependence evidence is untestable; contributors are retained with frozen-input fingerprints, exact alias copies count once; WRLD-07 relationships are read at exact historical cuts. Limit: synthetic offline proof, no real-market calibration; 5 adjacent test_analyst failures reproduce on the pinned 45e825d baseline.",
+      "next_proof": "None for QNT-03 at architecture/offline engineering scope; dependent rows retain their own closing conditions."
+    },
+    {
+      "id": "QNT-04",
+      "status": "CLOSED",
+      "required_behavior": "Separate discovery, held-out eras/markets and prospective proof.",
+      "latest_evidence": "Original condition satisfied at architecture/offline scope: discovery is physically truncated at one calendar cut so no label window crosses it; held-out B trades only from the cut with pre-cut context; the first spent held-out look freezes the cut (discovery capped via cap_ms, measure/select/evaluate/referee all pinned) so store growth cannot leak spent B into discovery; a spent held-out cannot be re-recorded, re-queued or re-examined. Limit: synthetic offline proof; no real-data held-out look; predictive experiments already had a frozen split.",
+      "next_proof": "None for QNT-04 at architecture/offline engineering scope; dependent rows retain their own closing conditions."
+    },
+    {
+      "id": "QNT-05",
+      "status": "CLOSED",
+      "required_behavior": "Enforce multiple-testing/error budgets calibrated by controls.",
+      "latest_evidence": "Original condition satisfied at architecture/offline scope: LORD++ (alpha, w0) is registered in the ledger at the first look and the registered values win over later config; every look consumes the next step of one persisted sequence; record_test refuses a level above the registered sequence level (a brake may only lower it); retry of a spent candidate, restart, rename/duplicate hash, and failed-run charging cannot restore budget; an exhausted budget defers without spending. Limit: synthetic offline proof; crashing looks below referee_max_attempts (3) retry without charge (existing design, unchanged).",
+      "next_proof": "None for QNT-05 at architecture/offline engineering scope; dependent rows retain their own closing conditions."
+    },
+    {
+      "id": "QNT-06",
+      "status": "CLOSED",
+      "required_behavior": "Keep underpowered UNTESTED distinct from FAIL and PASS.",
+      "latest_evidence": "Original condition satisfied at architecture/offline scope: insufficient evidence returns outcome UNTESTED with required/observed sufficiency and reason; null/empty never FAIL or PASS; adequate positive/no-edge controls read PASS/FAIL; research controls label underpowered, never no_edge; outcomes recompute identically on retry. No threshold invented. Limit: synthetic offline proof; analyst.admit does not yet pass outcome through.",
+      "next_proof": "None for QNT-06 at architecture/offline engineering scope; dependent rows retain their own closing conditions."
+    },
+    {
+      "id": "QNT-08",
+      "status": "CLOSED",
+      "required_behavior": "Keep Referee admission distinct from execution/owner approval.",
+      "latest_evidence": "Registered quantitative look, LORD++ budget ceiling, frozen-cut metadata, resolvable draws, QNT-03 corrected p, gate3 and exact evaluated-spec lineage required; UNTESTED/fake/malformed/bypass sources refused. Admission creates VALIDATED version/receipt only, without live/execution/owner authority. Fresh 26 admission/creation-path and 13 boundary checks passed. First-look cut_ms has no independent external recorder. Evidence: docs/tracker/evidence/qnt08-canonical-sol1/REPORT.md.",
+      "next_proof": "None for architecture/offline QNT-08 closure. Preserve first-look cut provenance limitation: no independent external recorder. Builder/Governor/owner/execution gates remain downstream."
+    }
+  ]
+}

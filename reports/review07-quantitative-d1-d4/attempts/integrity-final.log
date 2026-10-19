@@ -1,0 +1,136 @@
+....FF...........................FFF........................             [100%]
+=================================== FAILURES ===================================
+___ test_uncertain_look_is_durable_before_worker_and_never_retried[returned] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_uncertain_look_is_durable0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d11364b5eb0>
+failure = 'returned'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+        try:r._examine('4h','fixed',dict(hash=c.hash),123)
+        except RuntimeError:pass
+>       assert len(calls)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_review07_quantitative.py:71: AssertionError
+____ test_uncertain_look_is_durable_before_worker_and_never_retried[raised] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_uncertain_look_is_durable1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d11364b7410>
+failure = 'raised'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+        try:r._examine('4h','fixed',dict(hash=c.hash),123)
+        except RuntimeError:pass
+>       assert len(calls)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_review07_quantitative.py:71: AssertionError
+_________ test_invalid_worker_identity_cannot_create_support[receipt0] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d113632ecf0>
+receipt = {'looked': True, 'hash': 'wrong', 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+>       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError
+_________ test_invalid_worker_identity_cannot_create_support[receipt1] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d113632fef0>
+receipt = {'looked': True, 'hash': None, 'cut_ms': 123}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+>       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError
+_________ test_invalid_worker_identity_cannot_create_support[receipt2] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-19/test_invalid_worker_identity_c2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d1136332300>
+receipt = {'looked': True, 'hash': 'correct'}
+
+    @pytest.mark.parametrize('receipt',[dict(looked=True,hash='wrong',cut_ms=123),
+                                      dict(looked=True,hash=None,cut_ms=123),
+                                      dict(looked=True,hash='correct')])
+    def test_invalid_worker_identity_cannot_create_support(tmp_path,monkeypatch,receipt):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True)),
+            run=lambda *a,**k:ChildResult(ok=True,value=dict(receipt,gate1=dict(p=.000001,reason='fake'),gate3=dict(passed=True))))
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r._combo=lambda *a:c;r._brake=lambda:1.
+>       assert r._examine('4h','fixed',dict(hash=c.hash),123)['state']=='gate1_fail'
+E       AssertionError: assert 'deferred' == 'gate1_fail'
+E         
+E         - gate1_fail
+E         + deferred
+
+tests/test_review07_quantitative.py:343: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review07_quantitative.py::test_uncertain_look_is_durable_before_worker_and_never_retried[returned]
+FAILED tests/test_review07_quantitative.py::test_uncertain_look_is_durable_before_worker_and_never_retried[raised]
+FAILED tests/test_review07_quantitative.py::test_invalid_worker_identity_cannot_create_support[receipt0]
+FAILED tests/test_review07_quantitative.py::test_invalid_worker_identity_cannot_create_support[receipt1]
+FAILED tests/test_review07_quantitative.py::test_invalid_worker_identity_cannot_create_support[receipt2]
+5 failed, 55 passed in 210.16s (0:03:30)

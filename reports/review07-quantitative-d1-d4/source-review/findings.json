@@ -1,0 +1,306 @@
+[
+  {
+    "id": "QR07-01",
+    "priority": "P1",
+    "kind": "correctness",
+    "owner": "research",
+    "functions": [
+      "runner.ResearchRunner._examine",
+      "job.referee_job",
+      "ledger.Ledger.record_test",
+      "predictive_bridge.cycle"
+    ],
+    "finding": "A worker error after looked=True is retried up to referee_max_attempts without spending/fixing the held-out cut; crash before the third attempt or before record_test permits an unrecorded look. The special wrong-receipt branch already charges once; generic failures do not.",
+    "evidence": "probes.failed_look_retried_free: two explicit looked errors, zero tests, candidate queued. test_research_runner.test_a_crashing_look_retries_then_is_charged deliberately codifies retries. QNT05 tests only protect already-persisted looks.",
+    "minimal_correction": "Remove retry-after-look behavior. Preserve one durable pending/spent identity in the existing ledger before protected worker work; recover uncertainty as a consumed inconclusive/failed look before any new offer. Proven metadata-only deferral must happen before charging. Atomically bind final test and candidate disposition, and recover bridge sequence before any next experiment. No invented p or retry may imply support.",
+    "approval_scope": "Research error-budget execution semantics: owner decision needed before implementation. Keep referee=false and handoff=false.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-02",
+    "priority": "P1",
+    "kind": "correctness",
+    "owner": "research",
+    "functions": [
+      "ledger.Ledger.record_control",
+      "ledger.Ledger.record_result",
+      "ledger.Ledger.record_test",
+      "ledger.Ledger.spent_cut",
+      "ledger.Ledger.result"
+    ],
+    "finding": "JSON receipts are sliced at 20000/200000 characters after encoding. Oversize valid inputs persist invalid JSON. spent_cut then ignores the malformed receipt; result() returns None, so failure of storage integrity can erase usable provenance while a row remains.",
+    "evidence": "probes.truncated_look_receipt: 20000 stored characters, invalid JSON, spent_cut None despite intended cut 123. Other JSON slices use the same mechanism; production incidence not measured.",
+    "minimal_correction": "Keep complete structured JSON; use explicit structured size refusal before protected reads or compact only fields whose removal is permitted. Preserve authoritative cut/evaluated snapshot and tests. Malformed historical receipts must refuse resume/admission, not silently reopen cuts. Do not rewrite existing historical bytes without separate adjudication.",
+    "approval_scope": "In-scope integrity fix can be prepared after owner implementation go-ahead; any repair of frozen old receipts requires separate owner disposition.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-03",
+    "priority": "P1",
+    "kind": "boundary implementation",
+    "owner": "research",
+    "functions": [
+      "evaluate.load_bundle",
+      "job.measure_job",
+      "job.select_job",
+      "referee.rotation_capacity"
+    ],
+    "finding": "Default discovery loader reads full cached_ohlcv frames for heldout_symbols to count them, contradicting its counts-only boundary. No use of their prices in threshold/scoring is shown, but prices are inside the discovery process. Retrospective loader already uses metadata-only mirror counts.",
+    "evidence": "probes.discovery_loads_heldout_prices records both BTC discovery and ETH held-out frame-reader calls. Source load_bundle held_full and subsequent bar_counts. No protected real prices read in this review.",
+    "minimal_correction": "Use one eligible timestamp/count metadata reader for mirror counts and capacity, sharing the exact replay predicates and slice/warmup rules. Add a discovery price-read tripwire for protected symbols. Preserve current counts/floors, never expose held-out outcomes to proposal code.",
+    "approval_scope": "Research caller correction; Market Data owns shared eligibility metadata contract if no existing reader exposes it.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-04",
+    "priority": "P2",
+    "kind": "functional gap",
+    "owner": "research",
+    "functions": [
+      "planner._grow_children",
+      "planner._gate",
+      "planner.next_batch"
+    ],
+    "finding": "Growth stops at the first depth with syntactically compatible children, even when all those hashes are known; an existing growing shallow parent strands unseen descendants of deeper growing parents.",
+    "evidence": "probes.growth_depth_starvation: returned depths [2], unknown_returned 0, a valid unseen triple exists.",
+    "minimal_correction": "Filter known children before returning a depth or continue to the next depth when the current set is exhausted. Preserve beam, compatibility, windows, max_parts and known-hash dedup.",
+    "approval_scope": "Bounded in-scope functional correction; no threshold/policy expansion.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-05",
+    "priority": "P2",
+    "kind": "functional gap",
+    "owner": "research",
+    "functions": [
+      "runner.ResearchRunner._record",
+      "planner.needs_ablation",
+      "growth.decide",
+      "ledger.Ledger.record_result"
+    ],
+    "finding": "When a missing ablation arrives, only its own result is decided; the waiting child retains its incomplete grow verdict forever because known hashes are not re-enqueued. Ablation metadata parent points to the child and can also inappropriately subject the subset to child-improvement pruning.",
+    "evidence": "probes.late_ablations_do_not_refresh_child: before grow, after grow, same complete retained evidence yields survivor when growth.decide is called. No numerical rescore required.",
+    "minimal_correction": "After storing subset results, recompute only affected discovery parent verdicts/ablation maps from retained measurements. Distinguish ablation lineage from a growth parent comparison. Do not reopen protected looks or rerun prices; preserve immutable measurement bytes separately from derived disposition.",
+    "approval_scope": "Bounded in-scope functional correction; retrospective immutable result/disposition interaction needs explicit tests.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-06",
+    "priority": "P1",
+    "kind": "correctness",
+    "owner": "research",
+    "functions": [
+      "growth._p",
+      "growth._pct",
+      "growth.earns_place",
+      "growth.decide"
+    ],
+    "finding": "An errored ablation is mapped to p=1, return=-infinity and counted as beaten. A complete set of errored subset keys can label a child survivor, claiming every part earns its place without evaluated comparisons.",
+    "evidence": "probes.errored_ablations_count_as_beaten returns survivor with two error subsets. Existing test permits untestable comparisons but does not distinguish unavailable computation from a measured alternative.",
+    "minimal_correction": "Require complete usable ablation evidence before survivor. Keep errors/unavailable data as unresolved comparisons; retain underpowered vs no-edge labels. Decide separately how a genuinely measured empty alternative should compare, rather than folding it together with failures.",
+    "approval_scope": "Owner confirmation of evidence semantics required; do not weaken any statistical gate.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-07",
+    "priority": "P2",
+    "kind": "input compatibility",
+    "owner": "research + market_data",
+    "functions": [
+      "runner.ResearchRunner._symbols",
+      "universe.coverage",
+      "evaluate.load_bundle",
+      "predictive_experiment.translate",
+      "referee.rotation_capacity",
+      "data.market_provenance.load"
+    ],
+    "finding": "Coverage and capacity count raw candles, while the evaluator reads revision-qualified replay. Metadata can report sufficient history but load zero bars. Normal _symbols also ignores research.paths.candles, inspecting default store instead of selected input. Predictive translate can accept >=420 discovery bars but load_bundle first demands >=500 full-window bars.",
+    "evidence": "probes.coverage_ignores_selected_path shows coverage([4h]) without feed/path. Receipt probe demonstrates stored 600/replay 0. Source shows projection SQL vs replay reader and differing 420/500/210 warmup rules.",
+    "minimal_correction": "Use selected NoExchange feed for coverage; distinguish raw count, replay count and pre-cut eligible count. Reuse the same eligible metadata query for translate and rotation_capacity, with the exact loader filters. Keep raw inventory as descriptive only; preserve all symbol/trade/rotation floors.",
+    "approval_scope": "Research path fix is in-scope; any shared Market Data eligibility reader change requires its owner. Raw availability must not be fabricated.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-08",
+    "priority": "P2",
+    "kind": "correctness",
+    "owner": "research",
+    "functions": [
+      "thresholds.measure"
+    ],
+    "finding": "Context evaluation exceptions are skipped before total += arr.size. Failed markets disappear from finite_frac, allowing a partly unavailable gauge to become usable on the remaining contexts.",
+    "evidence": "probes.threshold_failed_context_omitted: one successful context and one failed context produce finite_frac 1.0 and usable true.",
+    "minimal_correction": "Count intended input rows before attempting feature evaluation, retain per-context failure diagnostics and apply the existing minimum fraction/sample floors to the complete intended domain. Reuse FeatureCtx index length.",
+    "approval_scope": "Bounded in-scope correctness fix; no floor changes.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-09",
+    "priority": "P2 latent",
+    "kind": "correctness",
+    "owner": "research",
+    "functions": [
+      "slices._ms"
+    ],
+    "finding": "Unknown datetime unit is silently treated as ns. Valid datetime64[s] timestamps map a 2026 timestamp to 1767 milliseconds; us also mis-scales. Current standard fixture/feed ms/ns paths work.",
+    "evidence": "probes.seconds_slice_clock: got 1767, expected 1767225600000.",
+    "minimal_correction": "Reuse explicit datetime unit conversion from _clock/market_provenance.ms and refuse invalid/NaT inputs. Preserve calendar-cut and WARMUP meanings.",
+    "approval_scope": "Bounded in-scope correction; add unit-family coverage rather than broad numerical retesting.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-10",
+    "priority": "P2 inactive mode",
+    "kind": "functional incompatibility",
+    "owner": "research",
+    "functions": [
+      "evaluate._retrospective_bundle",
+      "runner.ResearchRunner._bundle_request",
+      "runner.ResearchRunner._evaluate",
+      "control.incumbent_universe"
+    ],
+    "finding": "Explicit retrospective discovery refuses any HELDOUT symbol before reading, but normal control batches request eight of those held-out symbols from the recorded incumbent universe. A fresh retrospective runner cannot complete its ordinary control stage.",
+    "evidence": "probes.retrospective_control_conflict: precise protected-symbol refusal; protected overlap AAVE,FIL,HYPE,NEAR,SUI,TAO,UNI,ZEC. Existing retrospective tests exercise direct bundle scoring/bindings, not successful planner control lifecycle.",
+    "minimal_correction": "Preserve protection. Refuse this incompatible control mode early and clearly; offer existing retrospective reader for bounded descriptive discovery only. Completing a different known control requires an owner-reviewed protocol, not silently changing symbols or importing old power as newly measured.",
+    "approval_scope": "Owner decision required for any alternative control. No protected-symbol whitelist bypass.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-11",
+    "priority": "P2",
+    "kind": "cost correctness",
+    "owner": "research",
+    "functions": [
+      "referee.examine",
+      "referee.load_heldout",
+      "strategy.spec_evidence.risk_for",
+      "strategy.vector_backtest._trade"
+    ],
+    "finding": "Referee normalizes bar_minutes only for canonical bound exits. Legacy trail uses raw risk config; absent bar_minutes defaults to 15 in trade_table/simulate, while discovery load_bundle uses declared 4h. Flat and signed funding scale incorrectly for trail held-out evidence.",
+    "evidence": "probes.trail_funding_timeframe: otherwise identical four-bar flat trade costs -0.125 at default 15m vs -2.0 at declared 4h, factor 16. Normal source cfg risk lacks bar_minutes; canonical _trade overrides it correctly.",
+    "minimal_correction": "Always derive risk=spec_evidence.risk_for(cfg risk, tf) before held-out leg/table/null computation and supply it consistently to Bundle. Do not alter fee/slippage/funding values. Existing trail diagnostic evidence must not certify new semantic parity.",
+    "approval_scope": "Research-owned caller correction; no shared backtest or funding-policy modification needed.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-12",
+    "priority": "P2",
+    "kind": "diagnostic side effect",
+    "owner": "research",
+    "functions": [
+      "__main__.main",
+      "__main__._referee_status",
+      "ledger.Ledger.next_alpha",
+      "ledger.Ledger.register_budget"
+    ],
+    "finding": "Nominal status initializes/migrates Journal/Ledger and next_alpha registers the budget, despite the parameter contract saying fixed at first look. Merely inspecting a fresh ledger can bind config values before any evaluation. Top calls total_pct CAGR%.",
+    "evidence": "probes.status_registers_budget: zero budget rows before status, one after. Source main constructs writable journal; top header vs total_pct mapping.",
+    "minimal_correction": "Use read-only existing-schema access for status/top, and pure fdr.alpha_at from retained-or-explicit-proposed parameters without register_budget. Keep initialization/maintenance on explicit mutation commands. Label cumulative return as total%.",
+    "approval_scope": "Bounded in-scope read-path correction; preserve already-registered production parameters.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-13",
+    "priority": "P2",
+    "kind": "cross-owner read isolation",
+    "owner": "market_data with research callers",
+    "functions": [
+      "data.feed.DataFeed.db",
+      "data.derivatives.DerivFeed.db",
+      "data.references.RefStore.db",
+      "evaluate.load_bundle",
+      "referee.load_heldout",
+      "universe.coverage"
+    ],
+    "finding": "NoExchange blocks providers, but normal store properties open writable SQLite and initialize schema/indexes/migrations. Research child read-only claims/tests only count rows; opening a source can change schema. Explicit retrospective mode is already mode=ro, but cannot stand in for PIT replay.",
+    "evidence": "probes.normal_read_initializes_source_schema: normal reader adds candle_floor, market_raw_sources, market_revisions to a local source. Source DerivFeed.db/RefStore.db similarly initialize outside retrospective mode.",
+    "minimal_correction": "Market Data exposes a read-only connection option for the existing readers without changing observation mode; source initialization stays with acquisition owner. Research requests it for coverage/loaders/children. Strengthen read-only tests with SQLite authorizer; never fake retrospective to obtain read-only behavior.",
+    "approval_scope": "Cross-owned implementation requires Market Data owner approval; no changes made.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-14",
+    "priority": "P1 functional dependency",
+    "kind": "missing capability",
+    "owner": "research + brain + cognition",
+    "functions": [
+      "brain.ideas.next_idea",
+      "brain.ideas.mark_consumed",
+      "predictive_bridge.read_sources",
+      "predictive_bridge.cycle",
+      "cognition.predictive.source_from_dict",
+      "cognition.predictive.propose",
+      "cognition.predictive_bank.predictive_extensions"
+    ],
+    "finding": "Brain research routing has no application reader. Maintained Bank consumer accepts exact terminal volume-anomaly investigation records, not arbitrary scraped passages. Former external worker/generated-question source and their producers were deliberately removed by RP-04.",
+    "evidence": "Scoped application search finds only Kernel next_idea(stream=strategy). read_sources requires investigation_research_records, R.chain, P.source_from_chain. Git 137e3c3 deleted five owned inventory entries.",
+    "minimal_correction": "Preferred extension point is existing async predictive_bridge intake, with a small explicit external-passage QUESTION_ONLY source variant and immutable provenance/consumption checkpoint. Generic passage-to-testable hypothesis is not currently implemented; unsupported mappings stay questions, never fake investigation results or validated evidence. Alternative retire unused research routing and consolidate only strategy-form leads into existing strategy intake.",
+    "approval_scope": "Owner must choose typed intake extension vs retirement/consolidation; Brain event-consumption and Cognition source contracts are cross-owned. No new worker/Bank/engine/approval mechanism.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-15",
+    "priority": "P1 functional dependency",
+    "kind": "availability contract incompatibility",
+    "owner": "market_data + strategy execution timing",
+    "functions": [
+      "data.feed.DataFeed._received_frame",
+      "data.market_provenance.annotate",
+      "data.market_provenance.load",
+      "data.feed.DataFeed.replay_ohlcv",
+      "data.feed.DataFeed.cached_ohlcv",
+      "strategy.spec_evidence",
+      "strategy.rolling",
+      "strategy.vector_backtest._trade",
+      "brain.harvester"
+    ],
+    "finding": "Final receipt requires received >= event+tf; replay requires available <= event+tf; annotate sets available=observed=received. Thus final after-close data pass only if received equals exact close, not for ordinary polling or late backfill. Genuine stored candles do not establish availability at those past decisions.",
+    "evidence": "probes.receipt_close_mismatch: 600 retained genuine synthetic FINAL observations, asof 600, replay zero when last receipt is one millisecond after its close; exact-close synthetic control replays one. Prior preserved qualification-result and receipt-examples recorded zero eligible bars across 15 real symbol/timeframe combinations at ef9fca8; not remeasured here.",
+    "minimal_correction": "Keep truthful receipt clocks. For historical-knowledge replay, choose explicit real decision cuts at/after retained availability and execution after it, via existing asof/closed-bar readers plus delayed fill contract; exact policy requires owner approval. Late backfills remain retrospective observations only. Harvester availability brief must separate stored/retrospective/PIT coverage. No tolerance/backdating/unknown-to-VALID shortcut.",
+    "approval_scope": "Cross-owned availability/execution policy work requires owner approval and future end-to-end evidence. Waiting alone cannot repair the exact-close predicate.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-16",
+    "priority": "P1 functional dependency",
+    "kind": "supported capability limit",
+    "owner": "strategy + execution; research consumer",
+    "functions": [
+      "strategy.geometries.GEOS",
+      "research.combo.Combination.to_spec",
+      "strategy.exit_policy.unsupported",
+      "strategy.exit_policy.bind_research",
+      "strategy.exit_policy.initialize",
+      "strategy.exit_policy.advance",
+      "strategy.vector_backtest._trade",
+      "engine.paper.unsupported",
+      "engine.paper.PaperExecutor.manage",
+      "engine.exits.SpecExit.frozen_levels",
+      "engine.versioned_exits.entry_contract",
+      "engine.versioned_exits.observations",
+      "engine.versioned_exits.LiveExitAdapter.manage",
+      "strategy.factory_handoff.verify_exit_binding"
+    ],
+    "finding": "Research trail geometry is 2 ATR stop, no target, 4 ATR trail armed at 1R/max500. It uses legacy backtest diagnostics; Factory contract explicitly supports none-only trails and paper delegates to it. SpecExit._unsupported only checks stop/target kinds; actual frozen initialization/versioned adapter remains strict. A trail result cannot produce current-semantic qualification. This refusal is correct, not a whitelist bug.",
+    "evidence": "Current shared exit_policy.CONTRACT and unsupported; GEOS; _trade legacy vs canonical branches. Preserved genuine Donchian qualification refused unsupported_versioned_exit:trail=atr.",
+    "minimal_correction": "To retain unchanged trail strategy, extend the existing shared exit policy/state/observation for ATR high-water/arming/trail, declared timeframe ATR and deterministic bar ordering, then use the same transitions in canonical backtest/table and paper/exit adapters. Version semantics, bind evidence and keep old artifacts immutable. Owner must choose next-bar vs same-bar update/ambiguity rules. Alternative keep trail as labelled discovery-only and qualify an unchanged already-supported fixed candidate after data eligibility exists.",
+    "approval_scope": "Strategy owns contract/version/qualification; Execution owns adapters. Cross-owned policy approval required. Removing the trail creates a different strategy and does not close parity.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  },
+  {
+    "id": "QR07-17",
+    "priority": "P3",
+    "kind": "diagnostic correctness",
+    "owner": "research",
+    "functions": [
+      "scripts.calibrate_null_dependence.__main__",
+      "scripts.predictive_research_shadow.run",
+      "research.__main__._top"
+    ],
+    "finding": "Missing dependence can print as rho=1 because generic None->1 applies to all columns; source-only shadow unconditionally reports PASS and a generic maturity blocker; top calls cumulative return CAGR.",
+    "evidence": "Static formatting/control-flow proof; these commands were not run against real data.",
+    "minimal_correction": "Keep unknown rho unknown and print coverage; derive shadow status/reason from actual source and translation disposition and submit=False; accurately label return. No change to significance calculations or admission.",
+    "approval_scope": "Low-risk diagnostics; no operational runs needed.",
+    "status": "CONFIRMED_REVIEW_ONLY"
+  }
+]

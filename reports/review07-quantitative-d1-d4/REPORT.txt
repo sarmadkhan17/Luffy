@@ -1,0 +1,152 @@
+SOL1 — REVIEW 07 QUANTITATIVE RESEARCH D1–D4
+Owner-approved targeted implementation, 2026-10-19
+
+IMPLEMENTATION_COMMITS:
+Implementation and required compatibility followups are enumerated in
+integration.json; integrate the full commit range. The evidence commit is
+identified by the final Git bundle. Isolated branch:
+sol1/review07-quantitative-d1-d4. Parent 81565a0 includes Brain ef53aa3;
+running-release ancestor ef9fca839c23d48198c5f2361bbf3623d94266fa.
+No deployment, restart, CI submission, provider calls or production DB writes.
+
+D1_RESULT:
+Known quantitative receipt refusals retain DATA_INSUFFICIENT/UNTESTED; generic
+uncertain failures remain inconclusive. Both consume the look.
+The existing research_tests ledger reserves a pending look before worker
+execution, with its exact cut and evaluated identity. Pending/error/timeout/
+interrupted work remains spent, conservatively non-rejected at p=1. This is
+accounting of uncertainty, never a measured null result or support. Only the
+new pending row can be finalized, atomically with its candidate disposition;
+a completed historical receipt cannot be replaced. Finalization refuses a
+changed cut/identity or a sequence that has already advanced. Atomic writer
+locking also prevents duplicate reservations and stale alpha overspending.
+Metadata preflight can defer BEFORE dispatch/reservation; a later worker
+failure or deferral cannot refund the look. Retry machinery and its config key
+are removed. Existing registered alpha/w0, LORD calculations and cut identities
+remain authoritative. JSON is stored intact; malformed receipts/results refuse
+resume, ranking and legacy-discard rather than disappearing as absent data.
+No repair or rewrite of old production evidence was performed.
+
+D2_RESULT:
+Market Data's existing authenticated revision loader now exposes replay
+metadata using its same revision selection and final/availability rules. It
+returns identities/clocks, not OHLCV/raw_json. Receipt contents are authenticated
+inside the owning reader; metadata does not bypass provenance integrity.
+Discovery mirror counts, source-selected coverage, predictive translation and
+rotation capacity use that interface. Stored projection count is reported
+separately from replay-eligible metadata count. Selected-window 500-bar loader,
+420-bar slice, context and rotation requirements remain intact. Coverage honors
+research.paths.candles; capacity also resolves the existing default store.
+Threshold coverage includes failed contexts in its denominator. Timestamp
+conversion reuses the existing unit-aware reader and refuses NaT.
+Research readers use mode=ro plus query_only for candles, derivatives and
+references, without schema initialization or store creation. Funding dependencies
+are bound to the selected read-only research store and cannot reuse a cache
+key that authenticates candles alone. Ordinary acquisition remains the default;
+its provider/storage behavior is unchanged when read_only=False.
+A governed test now rejects a tampered receipt before checking a valid synthetic
+transform revision; its fixture clocks are preserved. No receipt availability,
+replay eligibility or historical fills were fabricated.
+
+D3_RESULT:
+Known children are filtered before a growth depth is considered productive,
+allowing valid deeper candidates while preserving beam/compatibility limits.
+A completed subset refreshes only affected waiting dispositions, from retained
+measurements. Restart recovery refreshes waiting dispositions without repeating
+numerical evaluation. Result bytes, creation timestamps and candidate identities
+remain unchanged; selected candidates are not revised. Ablation lineage is not
+mistaken for a growth-parent comparison. Errored, unavailable and untestable
+comparisons cannot certify a survivor. Existing measured-empty semantics and
+all statistical requirements remain unchanged.
+
+D4_RESULT:
+Referee actual and null costs use risk_for(declared timeframe), including trail
+geometry. A generated 4h funding case checks simulate against the null trade
+table with identical costs. Retrospective incumbent controls containing protected
+symbols are explicitly refused before worker or reader access. Status/top use
+existing-schema read-only connections without Journal migration or budget
+registration. Cumulative return is total%, unknown metrics remain n/a, unknown
+rho remains unknown with measured coverage, and source-only shadow output no
+longer claims PASS or invents a maturity diagnosis. Referee/handoff stay false.
+
+TEST_RESULTS:
+844 unique selected tests have final passing evidence after incremental
+reconciliation; zero unresolved failures/errors and two operational depth
+checks excluded. See verification.json and retained JUnit/log artifacts for
+exact final counts,
+commands, source hashes, exclusions and superseded runs. All numerical inputs
+are generated fixtures. Counterexamples: 42 pass on the corrected branch. The original 41-case set
+has 37 failures and four compatibility controls on untouched parent 81565a0.
+An additional direct receipt-refusal regression reproduced a label regression
+in the initial implementation and passes after the compatibility correction.
+API-introduction negatives are distinguished from original behavioral probes:
+source-review/probe.py and probes.json retain the prior direct failures.
+Existing engine equivalence harness PASS with nonzero matching trades for four
+seed families; the fifth emits no signals on this fixture. Existing vector
+benchmark PASS, 113.8x on five runs of 1,200 generated 15m bars. This is offline
+compatibility/throughput evidence, not profitability or real-market calibration.
+Compatibility fixtures now use 3,000 generated bars: 900 protected-B bars
+provide 478 offsets, enough for the unchanged first alpha requiring 399. The
+old 2,100-bar fixture provided only 208 offsets. Stricter inherited alphas
+remain deferred; no fake worker can waive their resolution requirement.
+Metadata authenticates retained receipts and can cost more than raw COUNT;
+no production-store latency or real-data performance claim is made.
+The AST-only Graphify update is retained in logs; no semantic extraction/API
+calls or generated graph/cache bulk belong to the implementation commits.
+
+DEFECTS_FIXED:
+D1: QR07-01, QR07-02.
+D2: QR07-03, QR07-07, QR07-08, QR07-09, QR07-13.
+D3: QR07-04, QR07-05, QR07-06.
+D4: QR07-10, QR07-11, QR07-12, QR07-17.
+See defect-test-map.json for per-defect positive/negative regression mapping.
+
+FILES_REMOVED_OR_MERGED:
+None. Removed the retry path/config key, raw candle-count implementations,
+handwritten timestamp conversion, JSON text slicing and unreachable CLI branch.
+Their consumers are covered by the scoped interface/lifecycle regressions.
+No optional D8 consolidation or new engine/scheduler/approval/ledger framework.
+
+NET_CODE_REDUCTION:
+Runtime: +365 / -207 = +158 lines. Tests: +508 / -52 = +456 lines.
+Exact deltas are also recorded in integration.json. Net runtime code grows: durable accounting and explicit read-only interfaces
+require additional checks. No artificial deletion is claimed as a reduction.
+
+CROSS_OWNER_CHANGES:
+trader/data/feed.py: read_only constructor/db/provider guards; replay_metadata.
+trader/data/market_provenance.py: load(metadata_only=True), same authenticated
+revision selection and eligibility. Existing price-returning mode unchanged.
+trader/data/derivatives.py and references.py: read_only constructor/db/write/
+acquisition guards. Normal acquisition defaults preserved.
+trader/strategy/spec_evidence.py: dependency_store binds research read paths.
+trader/strategy/vector_backtest.py: funding_for bypasses candle-only cache for
+those explicitly bound dependencies. _trade, simulate, trade_table, walk_table
+and exit_policy are unchanged; compatibility is verified offline.
+These narrow interfaces are explicitly authorized by D2 in this assignment.
+No Brain, Factory authority, Kernel, Risk or CI source was modified.
+
+REMAINING_BLOCKERS:
+D5 intake connection, D6 replay decision/fill timing, D7 ATR trailing-exit parity
+and D8 optional consolidation remain unimplemented. Historical data observed
+after its bar close still cannot prove availability at that earlier close.
+Unsupported exits remain refused. Malformed historical production evidence
+requires separate owner disposition; this branch does not repair its bytes.
+No real-data held-out evaluation, Factory qualification or runtime observation
+is claimed. OD07-06 remains OPEN, without end-to-end closure evidence.
+
+TRACKER_IMPACT:
+No tracker status, closure or operating-level field was changed. tracker-overlap.json
+pins existing DATA-02/03/05, QNT-03/04/05/06/08 and RES-08 entries. In particular,
+QNT-05's retained historical limitation explicitly permits retries below three
+attempts; D1 removes that demonstrated gap. Existing CLOSED labels are not new
+runtime proof. D2 strengthens Research's use of existing DATA provenance; it does
+not revise DATA historical eligibility. D3 supports complete ablation/admission
+and underpowered distinctions. D4 preserves unsupported-exit/refusal boundaries.
+RP-02/03 are named compatibility suites and retain separate lifecycle requirements.
+The Review 07 findings are an implementation map, not an automatic tracker closure.
+
+READY_FOR_D5_D7:
+Yes as a verified code/evidence foundation for the separately scheduled work.
+No as a claim that intake, genuine replay or ATR Factory parity is complete.
+Integrate the exact implementation/evidence commits, retain FROZEN/PAPER and
+existing disabled flags, then execute the separately scoped D5–D7 assignments.

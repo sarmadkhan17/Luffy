@@ -1,0 +1,454 @@
+FFFFFFFF.FFFF.F.FFFFFFF                                                  [100%]
+=================================== FAILURES ===================================
+________________ test_large_receipts_retain_cut_and_valid_json _________________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4bfddeb0>
+
+    def test_large_receipts_retain_cut_and_valid_json(led):
+        detail=dict(padding='x'*21000,cut_ms=123)
+        led.record_test('large','4h','fixed','gate1',1.,led.next_alpha(.1,.05)[1],False,detail)
+>       assert json.loads(led.tests()[0]['detail'])==detail
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7bab552f0830>
+s = '{"padding": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+>           obj, end = self.scan_once(s, idx)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+E           json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 13 (char 12)
+
+/usr/lib/python3.12/json/decoder.py:353: JSONDecodeError
+__________ test_malformed_historical_evidence_refuses_resume[{broken] __________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4a4183e0>
+payload = '{broken'
+
+    @pytest.mark.parametrize('payload',['{broken','[]','null'])
+    def test_malformed_historical_evidence_refuses_resume(led,payload):
+        with led.journal._tx() as db:
+            db.execute("INSERT INTO research_tests(hash,tf,gate,detail) VALUES('h','4h','gate1',?)",(payload,))
+>       with pytest.raises(ValueError):led.spent_cut('4h')
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_review07_quantitative.py:48: Failed
+____________ test_malformed_historical_evidence_refuses_resume[[]] _____________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4a419160>, payload = '[]'
+
+    @pytest.mark.parametrize('payload',['{broken','[]','null'])
+    def test_malformed_historical_evidence_refuses_resume(led,payload):
+        with led.journal._tx() as db:
+            db.execute("INSERT INTO research_tests(hash,tf,gate,detail) VALUES('h','4h','gate1',?)",(payload,))
+>       with pytest.raises(ValueError):led.spent_cut('4h')
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_review07_quantitative.py:48: Failed
+___________ test_malformed_historical_evidence_refuses_resume[null] ____________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4a41a3c0>, payload = 'null'
+
+    @pytest.mark.parametrize('payload',['{broken','[]','null'])
+    def test_malformed_historical_evidence_refuses_resume(led,payload):
+        with led.journal._tx() as db:
+            db.execute("INSERT INTO research_tests(hash,tf,gate,detail) VALUES('h','4h','gate1',?)",(payload,))
+>       with pytest.raises(ValueError):led.spent_cut('4h')
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_review07_quantitative.py:48: Failed
+___ test_uncertain_look_is_durable_before_worker_and_never_retried[returned] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_uncertain_look_is_durable0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bab4a41ac90>
+failure = 'returned'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+>       try:r._examine('4h','fixed',dict(hash=c.hash),123)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/research/runner.py:711: in _examine
+    res = self.run(job.referee_job, {
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fn = <function referee_job at 0x7bab4a561b20>
+payload = {'combo': {'parts': [{'key': 'A', 'kind': 'state', 'gauge': 'A', 'long': 'close > ema(20)', ...}, {'key': 'B', 'kind':...research': {'enabled': True, 'referee': True, 'horizons': ['4h'], 'geometries': ['fixed']}}, 'spent_cut_ms': None, ...}
+kw = {'timeout_s': 900.0, 'nice': 19}
+
+    def worker(fn,payload,**kw):
+        # This is checked inside the worker boundary, before any possible access.
+        persisted=Ledger(Journal(tmp_path/'j.db'))
+>       assert persisted.spent(c.hash)
+E       AssertionError: assert None
+E        +  where None = spent('2bf99d22ccda785e')
+E        +    where spent = <trader.research.ledger.Ledger object at 0x7bab4b042120>.spent
+E        +    and   '2bf99d22ccda785e' = Combination(parts=(Part(key='A', kind='state', gauge='A', long='close > ema(20)', short='close < ema(20)'), Part(key='...ema(20)', short='close < ema(20)')), tf='4h', geo='fixed', trigger='', round='singles', parent='', evaluation_scope='').hash
+
+tests/test_review07_quantitative.py:60: AssertionError
+____ test_uncertain_look_is_durable_before_worker_and_never_retried[raised] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_uncertain_look_is_durable1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bab4a419010>
+failure = 'raised'
+
+    @pytest.mark.parametrize('failure',['returned','raised'])
+    def test_uncertain_look_is_durable_before_worker_and_never_retried(tmp_path,monkeypatch,failure):
+        monkeypatch.setattr(universe,'coverage',lambda *a,**k:{'4h':{s:11000 for s in universe.DISCOVERY+universe.HELDOUT}})
+        calls=[]
+        def worker(fn,payload,**kw):
+            # This is checked inside the worker boundary, before any possible access.
+            persisted=Ledger(Journal(tmp_path/'j.db'))
+            assert persisted.spent(c.hash)
+            assert persisted.spent_cut('4h')==123
+            calls.append(payload)
+            if failure=='raised':raise RuntimeError('uncertain child termination')
+            return ChildResult(ok=True,value=dict(looked=True,error='after protected read'))
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=True,horizons=['4h'],geometries=['fixed'])),run=worker)
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        r.ledger.record_result(result(c),'survivor','fixture',{})
+        r.ledger.set_candidate(c.hash,'4h','fixed','queued');r._combo=lambda *a:c;r._brake=lambda:1.
+>       try:r._examine('4h','fixed',dict(hash=c.hash),123)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/research/runner.py:711: in _examine
+    res = self.run(job.referee_job, {
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fn = <function referee_job at 0x7bab4a561b20>
+payload = {'combo': {'parts': [{'key': 'A', 'kind': 'state', 'gauge': 'A', 'long': 'close > ema(20)', ...}, {'key': 'B', 'kind':...research': {'enabled': True, 'referee': True, 'horizons': ['4h'], 'geometries': ['fixed']}}, 'spent_cut_ms': None, ...}
+kw = {'timeout_s': 900.0, 'nice': 19}
+
+    def worker(fn,payload,**kw):
+        # This is checked inside the worker boundary, before any possible access.
+        persisted=Ledger(Journal(tmp_path/'j.db'))
+>       assert persisted.spent(c.hash)
+E       AssertionError: assert None
+E        +  where None = spent('2bf99d22ccda785e')
+E        +    where spent = <trader.research.ledger.Ledger object at 0x7bab4a36c830>.spent
+E        +    and   '2bf99d22ccda785e' = Combination(parts=(Part(key='A', kind='state', gauge='A', long='close > ema(20)', short='close < ema(20)'), Part(key='...ema(20)', short='close < ema(20)')), tf='4h', geo='fixed', trigger='', round='singles', parent='', evaluation_scope='').hash
+
+tests/test_review07_quantitative.py:60: AssertionError
+_________________ test_growth_reaches_deeper_pending_children __________________
+
+    def test_growth_reaches_deeper_pending_children():
+        one=Combination((PARTS[0],),'4h','fixed');pair=Combination(tuple(PARTS[:2]),'4h','fixed')
+        known={Combination((PARTS[0],p),'4h','fixed').hash for p in PARTS[1:]}
+        class L:
+            def rows(self,tf,geo,k=None,verdict=None):
+                c={1:one,2:pair}.get(k)
+                return [dict(hash=c.hash,parts=json.dumps(list(c.keys)))] if c else []
+            def known(self,*a):return known
+        children=planner._grow_children(L(),'4h','fixed',{p.key:p for p in PARTS},12,6)
+>       assert children and {c.k for c in children}=={3}
+E       AssertionError: assert ([Combination(parts=(Part(key='A', kind='state', gauge='A', long='close > ema(20)', short='close < ema(20)'), Part(key=...='close < ema(20)')), tf='4h', geo='fixed', trigger='A', round='grow', parent='2e5c95888bac45b2', evaluation_scope='')] and {2} == {3}
+E         
+E         Extra items in the left set:
+E         2
+E         Extra items in the right set:
+E         3
+E         Use -v to get more diff)
+
+tests/test_review07_quantitative.py:87: AssertionError
+__________ test_unavailable_ablation_never_certifies_survivor[error] ___________
+
+verdict = 'error'
+
+    @pytest.mark.parametrize('verdict',['error','untested','untestable'])
+    def test_unavailable_ablation_never_certifies_survivor(verdict):
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        bad=dict(verdict=verdict,portfolio=result(c)['portfolio'])
+>       assert growth.decide(result(c),subset_results={k:bad for k in c.keys})[0]!='survivor'
+E       AssertionError: assert 'survivor' != 'survivor'
+
+tests/test_review07_quantitative.py:93: AssertionError
+________ test_unavailable_ablation_never_certifies_survivor[untestable] ________
+
+verdict = 'untestable'
+
+    @pytest.mark.parametrize('verdict',['error','untested','untestable'])
+    def test_unavailable_ablation_never_certifies_survivor(verdict):
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        bad=dict(verdict=verdict,portfolio=result(c)['portfolio'])
+>       assert growth.decide(result(c),subset_results={k:bad for k in c.keys})[0]!='survivor'
+E       AssertionError: assert 'survivor' != 'survivor'
+
+tests/test_review07_quantitative.py:93: AssertionError
+__________ test_late_ablation_refreshes_disposition_without_rescoring __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_late_ablation_refreshes_d0')
+
+    def test_late_ablation_refreshes_disposition_without_rescoring(tmp_path):
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(enabled=True,referee=False)))
+        c=Combination(tuple(PARTS[:2]),'4h','fixed')
+        a=Combination((PARTS[0],),'4h','fixed');b=Combination((PARTS[1],),'4h','fixed',round='ablation',parent=c.hash)
+        r.ledger.record_control('4h','ohlcv',dict(consistency_p=.001),True)
+        r.ledger.record_result(result(a,.1,10),'grow','fixture',{})
+        r._record(result(c),c,planner.Batch('evaluate','4h','fixed','grow',[c]))
+        stored=r.ledger.result(c.hash)
+        r._record(result(b,.1,10),b,planner.Batch('evaluate','4h','fixed','ablation',[b]))
+>       assert r.ledger.rows('4h','fixed',k=2)[0]['verdict']=='survivor'
+E       AssertionError: assert 'grow' == 'survivor'
+E         
+E         - survivor
+E         + grow
+
+tests/test_review07_quantitative.py:105: AssertionError
+____________ test_failed_context_counts_against_threshold_coverage _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bab4a33bef0>
+
+    def test_failed_context_counts_against_threshold_coverage(monkeypatch):
+        contexts=[SimpleNamespace(symbol='good',index=np.arange(10)),SimpleNamespace(symbol='bad',index=np.arange(90))]
+        def values(tree,ctx):
+            if ctx.symbol=='bad':raise ValueError('unavailable')
+            return np.arange(10,dtype=float)
+        monkeypatch.setattr(thresholds,'_values',values)
+        m=thresholds.measure(['ret(6)'],contexts,min_samples=5,min_finite_frac=.5)['ret(6)']
+>       assert m['finite_frac']==.1 and not m['usable']
+E       assert (1.0 == 0.1)
+
+tests/test_review07_quantitative.py:116: AssertionError
+_____________________________ test_slice_units[s] ______________________________
+
+unit = 's'
+
+    @pytest.mark.parametrize('unit',['s','ms','us','ns'])
+    def test_slice_units(unit):
+        ts=pd.Series(pd.to_datetime(['2026-01-01','2026-01-02'],utc=True)).astype('datetime64['+unit+', UTC]')
+>       assert slices._ms(pd.DataFrame({'ts':ts})).tolist()==[1767225600000,1767312000000]
+E       assert [1767, 1767] == [1767225600000, 1767312000000]
+E         
+E         At index 0 diff: 1767 != 1767225600000
+E         Use -v to get more diff
+
+tests/test_review07_quantitative.py:121: AssertionError
+_____________________________ test_slice_units[us] _____________________________
+
+unit = 'us'
+
+    @pytest.mark.parametrize('unit',['s','ms','us','ns'])
+    def test_slice_units(unit):
+        ts=pd.Series(pd.to_datetime(['2026-01-01','2026-01-02'],utc=True)).astype('datetime64['+unit+', UTC]')
+>       assert slices._ms(pd.DataFrame({'ts':ts})).tolist()==[1767225600000,1767312000000]
+E       assert [1767225600, 1767312000] == [1767225600000, 1767312000000]
+E         
+E         At index 0 diff: 1767225600 != 1767225600000
+E         Use -v to get more diff
+
+tests/test_review07_quantitative.py:121: AssertionError
+__________ test_readonly_stores_do_not_initialize_or_create[candles] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_readonly_stores_do_not_in0')
+which = 'candles'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+>       reader=constructors[which]()
+               ^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                  'refs':lambda:RefStore(p,read_only=True)}
+E   TypeError: DataFeed.__init__() got an unexpected keyword argument 'read_only'
+
+tests/test_review07_quantitative.py:128: TypeError
+___________ test_readonly_stores_do_not_initialize_or_create[derivs] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_readonly_stores_do_not_in1')
+which = 'derivs'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+>       reader=constructors[which]()
+               ^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    'refs':lambda:RefStore(p,read_only=True)}
+E   TypeError: DerivFeed.__init__() got an unexpected keyword argument 'read_only'
+
+tests/test_review07_quantitative.py:129: TypeError
+____________ test_readonly_stores_do_not_initialize_or_create[refs] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_readonly_stores_do_not_in2')
+which = 'refs'
+
+    @pytest.mark.parametrize('which',['candles','derivs','refs'])
+    def test_readonly_stores_do_not_initialize_or_create(tmp_path,which):
+        from trader.data.derivatives import DerivFeed
+        from trader.data.references import RefStore
+        p=tmp_path/(which+'.db')
+        constructors={'candles':lambda:DataFeed(exchange=universe.NoExchange(),db_path=p,read_only=True),
+                      'derivs':lambda:DerivFeed(db_path=p,read_only=True),
+                      'refs':lambda:RefStore(p,read_only=True)}
+>       reader=constructors[which]()
+               ^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review07_quantitative.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   'refs':lambda:RefStore(p,read_only=True)}
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: RefStore.__init__() got an unexpected keyword argument 'read_only'
+
+tests/test_review07_quantitative.py:130: TypeError
+_________________ test_coverage_uses_selected_readonly_source __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-0/test_coverage_uses_selected_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bab4a0f1370>
+
+    def test_coverage_uses_selected_readonly_source(tmp_path,monkeypatch):
+        r=ResearchRunner(Journal(tmp_path/'j.db'),dict(research=dict(paths=dict(candles=str(tmp_path/'chosen.db')))))
+        seen=[]
+        def coverage(tfs,feed=None):
+            assert feed is not None and feed._db_path==str(tmp_path/'chosen.db')
+            assert feed.read_only
+            seen.append(feed);return {'4h':{}}
+        monkeypatch.setattr(universe,'coverage',coverage)
+>       assert r._symbols('4h')==([],[]) and len(seen)==1
+E       assert (([], []) == ([], [])
+E         
+E         Use -v to get more diff and 0 == 1)
+E        +  where 0 = len([])
+
+tests/test_review07_quantitative.py:150: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.research.runner:runner.py:173 research coverage unavailable: assert (None is not None)
+______________ test_discovery_never_requests_heldout_price_frames ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bab4a0f1d90>
+
+    def test_discovery_never_requests_heldout_price_frames(monkeypatch):
+        frame=pd.DataFrame(dict(ts=pd.date_range('2020',periods=1000,freq='4h',tz='UTC'),open=100.,high=101.,low=99.,close=100.,volume=1.))
+        class Feed:
+            def __init__(self,*a,**kw):pass
+            def cached_ohlcv(self,sym,*a,**kw):
+                assert sym=='BTC/USDT';return frame
+            def replay_metadata(self,sym,*a,**kw):
+                return frame[['ts']].copy()
+        monkeypatch.setattr('trader.data.feed.DataFeed',Feed)
+        b=evaluate.load_bundle('4h',['BTC/USDT'],dict(risk={}),heldout_symbols=['ETH/USDT'])
+>       assert b.heldout_bars['a']['ETH/USDT']==1000
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'ETH/USDT'
+
+tests/test_review07_quantitative.py:163: KeyError
+_____________________ test_status_does_not_register_budget _____________________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4a0f3da0>
+capsys = <_pytest.capture.CaptureFixture object at 0x7bab4a0f3f20>
+
+    def test_status_does_not_register_budget(led,capsys):
+        from trader.research.__main__ import _referee_status
+        _referee_status(led,dict(research={}))
+>       assert not led.journal.query('SELECT * FROM research_budget')
+E       AssertionError: assert not [{'id': 1, 'alpha': 0.1, 'w0': 0.05, 'registered_at': '2026-10-19T12:40:18.392638+00:00'}]
+E        +  where [{'id': 1, 'alpha': 0.1, 'w0': 0.05, 'registered_at': '2026-10-19T12:40:18.392638+00:00'}] = query('SELECT * FROM research_budget')
+E        +    where query = <trader.core.journal.Journal object at 0x7bab4a0f2e40>.query
+E        +      where <trader.core.journal.Journal object at 0x7bab4a0f2e40> = <trader.research.ledger.Ledger object at 0x7bab4a0f3da0>.journal
+
+tests/test_review07_quantitative.py:169: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+referee                : OFF · handoff closed
+  held-out looks spent : 0 (0 rejected the null)
+  next look            : test 1 at alpha=2.50e-03 — resolvable
+  candidates by state  : none yet
+______________________ test_top_labels_cumulative_return _______________________
+
+led = <trader.research.ledger.Ledger object at 0x7bab4a0a9220>
+capsys = <_pytest.capture.CaptureFixture object at 0x7bab4a0a9310>
+
+    def test_top_labels_cumulative_return(led,capsys):
+        from trader.research.__main__ import _top
+        c=Combination((PARTS[0],),'4h','fixed');led.record_result(result(c),'grow','fixture',{})
+        _top(led,{'research':{'horizons':['4h']}},1)
+        text=capsys.readouterr().out
+>       assert 'CAGR' not in text and 'total%' in text
+E       AssertionError: assert ('CAGR' not in '\n[4h] best...row      A\n'
+E         
+E         'CAGR' is contained here:
+E           p    PF   CAGR%  k verdict   parts
+E         ?           ++++
+E               1.0e-02  0.00    20.0  1 grow      A)
+
+tests/test_review07_quantitative.py:177: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review07_quantitative.py::test_large_receipts_retain_cut_and_valid_json
+FAILED tests/test_review07_quantitative.py::test_malformed_historical_evidence_refuses_resume[{broken]
+FAILED tests/test_review07_quantitative.py::test_malformed_historical_evidence_refuses_resume[[]]
+FAILED tests/test_review07_quantitative.py::test_malformed_historical_evidence_refuses_resume[null]
+FAILED tests/test_review07_quantitative.py::test_uncertain_look_is_durable_before_worker_and_never_retried[returned]
+FAILED tests/test_review07_quantitative.py::test_uncertain_look_is_durable_before_worker_and_never_retried[raised]
+FAILED tests/test_review07_quantitative.py::test_growth_reaches_deeper_pending_children
+FAILED tests/test_review07_quantitative.py::test_unavailable_ablation_never_certifies_survivor[error]
+FAILED tests/test_review07_quantitative.py::test_unavailable_ablation_never_certifies_survivor[untestable]
+FAILED tests/test_review07_quantitative.py::test_late_ablation_refreshes_disposition_without_rescoring
+FAILED tests/test_review07_quantitative.py::test_failed_context_counts_against_threshold_coverage
+FAILED tests/test_review07_quantitative.py::test_slice_units[s] - assert [176...
+FAILED tests/test_review07_quantitative.py::test_slice_units[us] - assert [17...
+FAILED tests/test_review07_quantitative.py::test_readonly_stores_do_not_initialize_or_create[candles]
+FAILED tests/test_review07_quantitative.py::test_readonly_stores_do_not_initialize_or_create[derivs]
+FAILED tests/test_review07_quantitative.py::test_readonly_stores_do_not_initialize_or_create[refs]
+FAILED tests/test_review07_quantitative.py::test_coverage_uses_selected_readonly_source
+FAILED tests/test_review07_quantitative.py::test_discovery_never_requests_heldout_price_frames
+FAILED tests/test_review07_quantitative.py::test_status_does_not_register_budget
+FAILED tests/test_review07_quantitative.py::test_top_labels_cumulative_return
+20 failed, 3 passed in 4.43s

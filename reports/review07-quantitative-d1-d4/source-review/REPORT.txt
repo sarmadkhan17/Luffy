@@ -1,0 +1,452 @@
+SOL1 — LUFFY REVIEW 07: QUANTITATIVE RESEARCH + OD07-06
+REVIEW AND REMEDIATION PLAN — NO RUNTIME IMPLEMENTATION
+
+FILES_REVIEWED:
+64 exact-owned inventory entries reconciled: 59 present files (30 source/tools,
+29 tests), 17,149 current lines; five intentional RP-04 deletions. This is not
+64 current files. Each entry has actual logic, consumers, SDD alignment,
+correctness/failure handling, complexity/storage observations, disposition,
+minimal correction, source revision and SHA256 in FILE_REPORT.txt/files.json.
+
+Inventory: existing subsystem 'research' in
+/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json
+SHA256 dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb.
+No global inventory created/updated. Original Brain review and OD07-01–05 were
+not repeated. Boundary files were traced only as dependencies, not added to
+owned file counts. Two later research modules, factory_transfer.py and
+refusal.py, are outside the frozen exact-owned list; their consumer role was
+traced without silently enlarging that list.
+
+Worktree: /mnt/luffy-data/sol1-review07-quantitative-20261019
+Branch: sol1/review07-quantitative-20261019
+Base: 81565a0 (includes ef53aa3 and 81565a0 work requested as previous work).
+
+ENGINEERING_VERDICT:
+Useful quantitative primitives and strict Factory authority exist. The package
+is not a complete autonomous research lifecycle. Its operating mechanisms are
+bounded combinatorial discovery and one typed investigation-to-experiment
+translation, with substantial integrity checks. Research-stream intake is not
+connected, normal historical replay excludes ordinary after-close receipts,
+and ATR-trail diagnostics cannot qualify against the current Factory/paper
+semantics. Separate discovery/ledger defects would remain after those three
+external dependencies were addressed. OD07-06 remains OPEN.
+
+Keep existing nulls, validators, provenance readers, account-return comparisons,
+immutable receipts and one Factory path. Repair or retire unsupported promises
+before expanding capability. No new research engine, Bank, scheduler, optimizer,
+approval mechanism or threshold relaxation is justified by this review.
+
+FILE_CLASSIFICATIONS:
+26 KEEP / 30 SIMPLIFY / 3 MERGE / 5 REMOVE.
+The five REMOVE entries are ALREADY REMOVED in 137e3c3; no fresh deletion is
+proposed for an absent file. MERGE means optional consolidation of identical
+calibration scaffolding, with distinct methods preserved. KEEP is an engineering
+disposition, not a claim of activation, statistical approval or defect freedom.
+Full one-entry-per-file decisions are in FILE_REPORT.txt and files.csv/json.
+
+CONFIRMED_DEFECTS:
+findings.json has exact functions, evidence, minimal corrections and owner
+boundaries. Priorities below are review-local, not tracker mutations.
+
+P1 / evidence integrity:
+- QR07-01: runner._examine retries explicit looked=True failed evaluations
+  without a spent test until the third failure; interruption can leave a free
+  held-out look. Synthetic probe: two such attempts, zero research_tests,
+  candidate still queued. Existing retry test codifies the defect. Protect the
+  look durably before uncertain worker work; recover uncertainty once; no
+  retry-after-look. Proven metadata-only deferral stays before protected reads.
+- QR07-02: Ledger slices serialized JSON at 20k/200k characters. Probe stores
+  invalid JSON and loses spent_cut even though a cut was supplied. Store intact
+  structured receipts or refuse size before evaluation; malformed history must
+  refuse resume, not reopen evidence. Frozen old bytes need separate disposition.
+- QR07-03: default load_bundle loads held-out price frames just to count bars.
+  No numeric scoring use of those prices was found, but discovery's promised
+  counts-only input boundary is false. Probe records the mirror price-reader
+  call. Use eligibility metadata, as the retrospective path already does.
+- QR07-06: growth treats an errored ablation as p=1/return=-infinity. Two error
+  subsets can label a child survivor and say every part earns its place. Require
+  usable comparisons; unavailable/underpowered is not proof of improvement.
+
+P2 / demonstrated function and correctness gaps:
+- QR07-04: first shallow growth level with syntactic children is returned even
+  when every child is known; deeper growing parents never get their unseen
+  children. Filter pending before selecting a level; preserve existing beam.
+- QR07-05: recording a late ablation never refreshes its waiting child's
+  verdict. Probe leaves child grow although existing completed evidence yields
+  survivor. Re-derive affected discovery dispositions from stored measurements,
+  keeping immutable measurements unchanged; no additional price look.
+- QR07-07: raw projection coverage/capacity differs from replay eligibility;
+  normal _symbols ignores the configured candle path. Predictive translation
+  and bundle loading also use mismatched 420/500/warmup inclusion rules. Bind
+  coverage to the selected source and exact same eligibility/slice predicates.
+- QR07-08: a threshold context exception disappears from finite_frac's
+  denominator. Probe marks partial availability as 1.0/usable. Count intended
+  rows first and retain failures; keep the existing statistical floors.
+- QR07-09 (latent supported input issue): slices._ms silently mis-scales s/us
+  timestamps. Probe turns a 2026 timestamp into 1767 ms. Reuse explicit unit
+  conversion; reject invalid timestamps instead of assuming ns.
+- QR07-10 (explicit retrospective mode): the incumbent control includes eight
+  protected symbols which retrospective discovery correctly refuses. A fresh
+  normal control lifecycle cannot complete in that mode. Keep the protection;
+  refuse the incompatible mode clearly. Another control is a protocol decision.
+- QR07-11: referee risk normalization is conditional on canonical exits. Trail
+  diagnostics use default 15m funding units when risk.bar_minutes is absent,
+  whereas discovery used declared 4h. Probe costs differ by 16x. Always use
+  existing spec_evidence.risk_for for that timeframe, actual and null alike.
+- QR07-12: CLI status initializes/migrates stores and registers the error budget
+  through next_alpha. Probe creates a budget row merely by status inspection.
+  Read status/top without registration; retain explicit mutation commands.
+- QR07-13 (Market Data owner): NoExchange blocks network but normal DataFeed,
+  DerivFeed and RefStore open writable stores and initialize schema. Probe normal
+  candle read adds three tables. Request a read-only option on existing readers;
+  retrospective mode cannot be abused as a substitute for PIT semantics.
+
+QR07-14/15/16 are the OD07-06 capability dependencies below, not three hidden
+Research-only code edits. QR07-17 records minor diagnostic misstatements:
+missing rho printed as 1.0, source-only shadow called PASS with a generic
+maturity reason, and cumulative total_pct labelled CAGR. No statistical values
+or current operational decisions were changed.
+
+All new numerical counterexamples use generated data or fake worker receipts.
+They demonstrate control flow/integrity, not real profitable strategies.
+
+SIMPLIFICATION_AND_REMOVAL_CANDIDATES:
+1. Remove retry-after-look machinery and misleading source-only PASS language;
+   preserve one durable failed/inconclusive accounting path in the existing
+   ledger. This reduces behavior while fixing correctness.
+2. Replace held-out frame loads with shared eligible metadata. Avoid a new
+   coverage calculator whose predicates can drift from actual readers.
+3. Reuse risk_for, existing timestamp conversions, growth.decide and retained
+   results for corrections; do not add alternative quantitative engines.
+4. Keep RP-04 external_research/generated_question_source and their three owned
+   tests removed. Reintroducing those retired families would restore their removed source/store
+   dependencies without supplying a compatible Brain passage consumer.
+5. Optional: consolidate byte-identical generator, exact binomial bounds,
+   reporting and stream scaffolding across the three calibration scripts into
+   the existing synthetic base script. Preserve IID contrast, studentized and
+   stationary/HAC methods and scenarios; future manifests must hash imported
+   helpers too. Keep frozen past sources/results unchanged. No immediate
+   correctness dependency requires this refactor.
+6. Dossier and frozen validator enforce different boundaries and should remain
+   separate. Joint-null, thesis-form and Factory-authority validators also serve
+   distinct necessary roles; do not merge them into one permissive checker.
+7. Bridge repeatedly stores full snapshots, hypotheses and measurement receipts;
+   repeated scans and fingerprints can amplify work/storage. Existing immutable
+   content IDs offer a consolidation route, but byte savings/production latency
+   were not measured. Do not prune error-budget, negative or frozen evidence.
+8. Runner's forward brake reads legacy unversioned trades, not current Factory
+   paper attribution. Before reliance, reuse the existing authenticated Factory
+   outcome assessment, as Brain reporting now does, or leave the brake explicitly
+   unavailable. Changing brake input/unknown behavior requires owner approval.
+
+INTELLIGENCE_CAPABILITIES:
+Idea acquisition: Brain cleans/ranks/queues whole passages with URL and text.
+This is lexical triage and queue learning, not claim authentication.
+
+Question research: investigation_research.research_pass/run builds a verifiable
+question -> plan -> evidence -> result -> Bank chain for one existing frozen
+volume_anomaly protocol. It measures persistence/normalization/opposite paths
+and retains unresolved/contradictory evidence. SUPPORTED there is descriptive,
+not predictive edge, causal identification, profitability or trading authority.
+
+Hypothesis generation: cognition.predictive.propose uses registered deterministic
+templates and explicit source/contradiction lineage. Only
+volume_breakout_context.v1 is newly generatable in the current supported shape.
+Legacy exact-volume and paired no-benefit alternatives can replay, but are not
+operating quantitative experiment types. No generic raw-text hypothesis extractor
+or operating multi-alternative causal research engine was found.
+
+Experiment: predictive_experiment.translate creates a post-generation calendar
+split, fixed geometry, source/revision/implementation identity and evidence
+policy, then existing planner controls/ablations and runner jobs. Insufficient
+coverage, unsupported shapes and incompatible protected cuts refuse/defer.
+Existing translator machinery can test already-typed supported hypotheses; it
+cannot turn any scraped passage into one by an eight-line queue adapter.
+
+Backtest: shared simulate/_trade/trade_table/walk_table, signed/fallback funding,
+fees/slippage and one-account concurrency curve. Discovery estimates thresholds
+on discovery only and evaluates part removal. Actual/null costs share code.
+Correctness limits include replay availability, error comparisons and trail
+funding normalization. No real-data scoring was run during this review.
+
+Evidence: exact contributor/source hashes, dependence-corrected consistency,
+common rotation, explicit power, budget/cut/identity receipts and replay refusal
+are real implemented mechanisms. Synthetic tests exercise these. They produce
+useful downstream evidence only when all their input/identity/completeness
+conditions are satisfied. Fake passing numerical test receipts are not real
+quantitative PASS evidence.
+
+Reasoning/thesis: thesis.py and frozen validator check form, structured numeric
+claims and syntactic novelty. They correctly label prose unverified and cannot
+write reason_passed. Gate2 thesis-prediction evaluation is not implemented;
+the three calibration scripts remain blocked synthetic proxies.
+
+Factory: Bank SUPPORTED receipt -> predictive_bridge.factory_source ->
+factory_transfer.authenticate/transfer -> Factory create_version -> VALIDATED
+is connected conditionally. It preserves the same registered evidence sequence
+and exact lineage; no new installation or trade authority is granted by that
+handoff. Brain's separate ordinary qualification route also remains conditional
+on a genuine backtest PASS. Existing validators/readers suffice for those
+supported routes; they do not supply missing data or exits.
+
+Learning: classification and next-question records reach the existing RESEARCH
+capture profile and Bank readers. Duplicate/prior/contradictory results are
+retained. Next questions are not automatically a recursive research work queue.
+No verified end-to-end economic learning loop is established by this review.
+
+INACTIVE_OR_DISCONNECTED_PATHS:
+- Brain stream='research' has no current application consumer.
+- General question-driven external source/router/worker chain was retired RP-04.
+- Predictive bridge is explicit opt-in asynchronous CLI; no normal Kernel
+  scheduler invokes it. Configured combinatorial search and this Bank consumer
+  are distinct routes, not two names for an operating general Researcher.
+- research.referee=false and research.handoff=false are recorded intentional
+  stops. Code defaults are not permission to enable them. research.enabled=true
+  only schedules discovery, with 300s initial sleep and live-latency backoff.
+- No Gate2 thesis prediction evaluator or ordinary reason_passed producer.
+- Stored bridge_questions and investigation followups have readers but no
+  generic automatic experiment consumer; unsupported experiment forms stay so.
+- Trail geometry is useful only as explicitly labelled legacy research
+  diagnostics until shared Factory parity is implemented and re-evaluated.
+- Explicit retrospective discovery cannot run its current incumbent control
+  without violating its protected-symbol rule. Its bounded observation reader
+  remains useful; it is not a hidden qualification escape hatch.
+
+RESEARCH_PIPELINE_STATUS:
+Idea -> Brain research intake: WRITER/QUEUE IMPLEMENTED, CONSUMER ABSENT.
+Investigation -> question/evidence/Bank: IMPLEMENTED for one bounded family;
+  source/call/test-connected. No production run or fresh runtime health census
+  performed here; runtime operation is not inferred from source/config alone.
+Bank -> typed hypothesis: IMPLEMENTED one currently supported template.
+Hypothesis -> experiment -> jobs/backtest: IMPLEMENTED conditionally; input
+  eligibility and separate planner/decision defects prevent completion claims.
+Discovery -> protected evidence: IMPLEMENTED, INTENTIONALLY STOPPED; look
+  accounting/integrity defects must be corrected before reliance.
+Thesis -> tested reasoning: FORM VALIDATOR EXISTS, Gate2 NOT IMPLEMENTED.
+Supported predictive result -> Factory VALIDATED: CONDITIONAL SOURCE CONNECTION;
+  synthetic fixtures validate it; no genuine new end-to-end result proven here.
+Factory -> paper/live: separate exact install, controls, Risk, costs, lifecycle
+  and owner requirements remain. FROZEN is preserved; no new paper entry.
+
+Useful real evidence retained from the preceding qualification run: Donchian
+refusal for trail=atr and supported-exit comparison UNTESTED with no replay
+frames. These are honest blockers, not profitability failures or qualification
+success. Snapshot was ef9fca8 and sequential across stores; its observations are
+historical evidence, not a new live-state assertion.
+
+OD07_06_RESEARCH_INTAKE:
+Existing maintained destination: predictive_bridge's asynchronous intake/Bank
+question boundary, not combinatorial planner.seed_parts, numerical evaluate_job,
+Factory or the deliberately removed external_research worker.
+
+No existing consumer accepts Brain raw passages unchanged. read_sources requires
+an exact terminal investigation_research_records Bank row and authenticates its
+case/measurement chain; cognition.predictive.source_from_dict and next_questions
+are specifically investigation-bound. A generic external passage cannot honestly
+be wrapped as that ResearchSource. A source URL/text is not a measured result.
+
+Recommended implementation choice IF the owner wants this capability retained:
+- Extend the existing bridge intake with a discriminated external-passage source
+  and QUESTION_ONLY record in its existing append-only storage. Read through
+  ideas.next_idea/pending(stream='research') within existing source budget; do not
+  add another process, Bank or provider call.
+- Retain original idea ID, URL, full text/hash, recorded/available timestamps,
+  source classification and exact source event identity. Make restarts dedup by
+  the existing source identity/checkpoint pattern. Never replace whole-source
+  provenance with a paraphrase or confidence score.
+- Passage acceptance means retained unverified question/context only. Numerical
+  submission requires an explicit typed predictor/target/horizon expressible by
+  current vocabulary and experiment contracts. Keep unsupported translations
+  NOT_TESTABLE/question-only. There is no existing general translation algorithm
+  to wire in; defining one is an additional scoped owner decision, not completion
+  of intake. Do not apply the volume template to every external source.
+- Commit accepted/refused intake disposition in the destination first, then
+  ideas.mark_consumed(... stream='research', outcome=accepted/refused,
+  detail={destination identity, reason, source hash}). Cross-store restart must
+  reuse committed acceptance and complete consumption without duplicate work.
+  A deferred temporary source/destination failure is not terminal consumption;
+  store a retryable existing checkpoint/reason, preserve item and its identity.
+- Update existing Cognition source/question/Bank reader discriminators while
+  keeping historical volume source identities and validators byte-compatible.
+  Existing R.verify_case/chain must remain strict for actual investigation data.
+
+Smaller alternative: retire unused research-stream production/membership and
+research-only queue promises in Brain, retaining historical events; route only
+strategy-form leads through its existing strategy stream and Analyst qualification.
+Research-only scientific passages then have no automatic consumer, explicitly.
+That is cheaper and honest if general passage research is not required. Do not
+mislabel it research lifecycle completion. Neither choice is implemented.
+
+OD07_06_HISTORICAL_REPLAY:
+Exact producer/reader contradiction:
+  E = candle interval-open timestamp, D = timeframe duration, R = local receipt.
+  FINAL at acquisition: E + D <= R.
+  annotate: available_ms = observed_ms = R (publication clock remains unknown).
+  default replay: retained FINAL and available_ms <= E + D,
+                  plus observed_ms/available_ms <= overall query cut.
+For normal truthful acquisitions these jointly require R = E + D. A receipt one
+millisecond late fails. A multi-year backfill received today fails every past
+close, and pre-provenance projections cannot supply missing clocks. Sources with
+separate observed/available clocks must satisfy both at the real decision cut.
+No amount of ordinary after-close accumulation fixes this exact equality.
+
+Retained earlier real observation: 15 measured symbol/timeframe combinations had
+zero replay-eligible bars despite substantial stored 4h and finer history. This
+review reuses those preserved observations and reproduces the algebra using
+synthetic receipts; it did not reopen production databases or evaluate real
+protected prices.
+
+Research defects: projection-based coverage, wrong selected path, metadata vs
+full mirror reads, mismatched loader floors, retrospective control incompatibility
+and misleading empty/underpowered diagnostics. Correct those independently;
+none makes missing historical availability exist.
+
+Market Data defects/dependencies: default replay exact-close contract versus
+truthful local receipt timing; no general read-only store option; Harvester
+brief says full OHLCV history without distinguishing replay/retrospective scope.
+Market Data must expose exact eligible metadata and preserve receipt lineage.
+
+Minimum honest paths using existing mechanisms:
+A. Explicit retrospective reader for labelled discovery observations only, with
+   preserved cut/hash/source limitation; no Factory validation, no conversion of
+   UNKNOWN provenance, and no pretending previously inspected history is untouched.
+   Existing control incompatibility must remain an explicit limit.
+B. For actual PIT qualification, historical decisions must occur at/after retained
+   availability with an achievable post-availability fill/delay contract. Reuse
+   existing ohlcv_asof/eligible_frame/closed_bars, feature availability and shared
+   trade machinery. Market Data and Strategy must agree the decision/fill policy
+   and apply it equally to actual/null/reference/derivative evidence. A looser
+   WHERE predicate alone would put a fill before the information existed.
+C. Historical backfill with no contemporaneous receipts remains retrospective;
+   future collection can retain real usable decision evidence under B. No
+   backdating, fabricated source publication or fixed tolerance masquerading as
+   known availability. Retest unchanged supported candidates only once eligible.
+
+OD07_06_EXIT_COMPATIBILITY:
+Actual Research shapes: GEOS.fixed (3 ATR stop, 3R target, no trail, max96) binds
+current Factory semantics. GEOS.trail (2 ATR stop, no target, 4 ATR trail,
+arm_at_r=1, max500) is deliberately unbound and uses legacy _trade. Current
+exit_policy.CONTRACT is none-only trail; unsupported() refuses atr trail, and
+paper.unsupported and Factory delegate to that contract. SpecExit._unsupported
+checks only stop/target kinds; its name does not establish full trail support.
+SpecExit.frozen_levels calls the strict shared initialize, while versioned
+ExitManager.manage routes through versioned_exits.LiveExitAdapter.
+The refusal is correct. A legacy trail backtest is not current paper parity.
+
+Owner: Strategy specification/governance owns exit_policy.CONTRACT, semantic
+version, whitelist, canonical transition, compile/qualification/evidence binding
+and shared vector_backtest adapters. Execution owns PaperExecutor.manage,
+versioned_exits.entry_contract/observations/LiveExitAdapter.manage, and
+SpecExit/ExitManager persistence/protection adapters. Research consumes the
+contract, preserves unsupported refusals and needs its separate funding-unit fix.
+
+Minimum parity work IF retaining ATR strategies:
+1. Agree deterministic trailing semantics in existing shared exit policy:
+   initial-R and signal reference; arming; high-water state; declared-timeframe
+   ATR; closed-bar availability; gap and stop/target/trail/time ordering;
+   same-bar tightening vs next-bar activation and ambiguity. Legacy research
+   updates best using the current bar before testing its range; the OHLC path
+   is not known. Copying that branch alone cannot claim observed intrabar parity.
+2. Add validated trail parameters/state and necessary closed-bar ATR observation
+   to Policy/State/Observation and initialize/advance/encode/decode. Version the
+   semantics and preserve old receipts; whitelist only implemented forms.
+3. Canonical _trade/trade_table/simulate must invoke those same transitions;
+   PaperExecutor.manage and versioned_exits.LiveExitAdapter.manage feed identical closed-bar
+   observations and persist state across retries/restart. No separate trail
+   algorithm or direct legacy admission. Bind exact cost and semantic IDs.
+4. Verify long/short arming threshold, monotone tightening, changing ATR, gaps,
+   both-hit ambiguity, max bars, missing/gapped observations, restart and censored
+   tails; compare exact transition traces and net costs, not just PF. Preserve
+   backtest equivalence PASS and documented >20x benchmark for engine changes.
+5. Re-evaluate the unchanged candidate under the new frozen semantic version.
+   Prior legacy performance cannot certify this new contract.
+
+Smaller alternative: retain trail as discovery-only diagnostics and use an
+unchanged already-supported fixed/no-trail candidate after replay is fixed.
+Removing a trail from Donchian creates a new strategy; silently dropping it or
+adding atr to unsupported() is not a compatible correction. Signal exits remain
+separately unsupported and are not added by ATR work.
+
+MINIMAL_IMPLEMENTATION_DECISIONS:
+D1 — READY TO SCOPE: one-spend failed-look accounting + intact authoritative JSON
+and atomic disposition/recovery; keep existing ledger, no retry engine. Resolve
+pending-look/metadata-only preflight boundary before coding.
+D2 — READY TO SCOPE: discovery metadata-only mirrors, selected-path eligibility,
+threshold coverage denominator and explicit timestamp conversion. Reuse readers;
+Market Data read-only/metadata API changes need that owner.
+D3 — READY TO SCOPE: skip exhausted growth depths; refresh dependent discovery
+verdicts from completed usable ablations; refuse errored comparisons. No extra
+price evaluation or statistics change.
+D4 — READY TO SCOPE: always risk_for(tf) in Referee and pure read-only CLI status;
+correct minor output labels. Current shared numerical methods remain.
+D5 — OWNER CHOICE: bridge question-only passage adapter vs retire/consolidate
+unused research routing. Full generic text-to-hypothesis is not part of a small
+queue wiring patch and cannot be claimed implemented.
+D6 — OWNER CHOICE: truthful decision-after-availability replay/fill semantics;
+retrospective observations remain discovery-only. No close-cut relaxation.
+D7 — OWNER CHOICE: shared ATR parity extension vs retain diagnostic-only trail
+and qualify supported alternatives. Requires Strategy/Execution ownership.
+D8 — DEFER: optional calibration scaffold consolidation, snapshot storage
+normalization and legacy forward-brake replacement. Correctness first; no
+speculative pruning, budget, risk or control change.
+
+All are planning decisions, not owner approvals or implemented changes. No
+proposed policy-changing or cross-owned fix was applied in this review.
+
+CROSS_SUBSYSTEM_DEPENDENCIES:
+Brain: ideas.next_idea/pending/mark_consumed and scraper.streams_for for explicit
+intake or retirement. Preserve MIN_TEXT, research score, original source bytes,
+legacy rows and independent stream consumption. OD07-01–05 remain intact.
+Cognition: predictive.ResearchSource/source_from_dict/propose/next_questions and
+predictive_bank.predictive_extensions for honest source discrimination. Current
+volume chain must not be weakened to accept generic prose.
+Investigation: investigation_research.verify_case/chain/research_pass remain
+strict; no raw external passage is accepted as measured investigation evidence.
+Market Data: DataFeed._received_frame/db/ohlcv_asof/replay_ohlcv/cached_ohlcv,
+market_provenance.annotate/load/eligible_frame, DerivFeed.db, RefStore.db and
+Harvester availability brief. Preserve true identity/quality/receipt timestamps.
+Strategy: exit_policy.unsupported/initialize/advance/encode/decode/CONTRACT;
+compile_spec/bind_research; vector_backtest._trade/trade_table/simulate;
+rolling/spec_evidence historical decision/fill/cost contracts;
+Factory gate_evidence/create_version/verify_exit_binding/verify_validation.
+Execution: PaperExecutor.enter/manage, versioned_exits.entry_contract/observations/
+LiveExitAdapter.manage and SpecExit/ExitManager versioned routing,
+restart state, exact exit/cost traces and independent protective orders. No
+activation, control exemption, paper entry or provider acquisition in this work.
+Kernel: existing _research_loop and _research_handoff are dependency callers;
+no new scheduler, restart or runtime change. factory_transfer/refusal are scoped
+boundary dependencies outside this inventory, not duplicate replacement engines.
+
+READY_FOR_REMEDIATION:
+YES for a bounded implementation assignment covering D1–D4, after confirming its
+scope and preserving the statistical/operational stops. D5–D7 require explicit
+owner choices and the named cross-owner work. NO for activation, real-data
+protected evaluation, rollout, trading or claiming OD07-06 closure.
+
+NEXT_STEP:
+Authorize the concrete D1–D4 correction scope and choose D5 intake retention vs
+retirement, D6 real availability/execution contract, and D7 ATR parity vs
+supported-exit alternative. Prepare each chosen change in isolation and verify
+its actual producer->consumer receipts. Do not close OD07-06 until the selected
+intake boundary, genuine historically eligible evaluation and exact supported
+Factory evidence have been demonstrated end-to-end. Keep FROZEN/PAPER and all
+current downstream permission requirements intact throughout.
+
+VERIFICATION AND BOUNDARIES:
+459 tests passed, two operational depth cases deselected, zero failures/skips
+(899.95s pytest wall time). See test-summary.json/pytest.xml/pytest.log.
+Fourteen synthetic probe groups in probes.json/probe.py reproduce the stated
+counterexamples; finalize.py verifies their critical outcomes and source hashes. Synthetic first-use clocks are explicitly fixtures,
+never production repairs. Prior-evidence.json pins the reused qualification
+metadata/receipts and their observation date/revision. No profitability claim.
+
+No runtime source edits, config/control changes, source deletion, database
+migration, provider calls, strategy activation, research-referee activation,
+Kernel/Dashboard restart, production database access or CI changes performed.
+No Opus checkout/process was touched. Graphify scoped query used the existing
+code graph; only its incidental last_query_stamp changed. No semantic graph
+extraction or graph rebuild was needed for a report-only review.
+
+Local Claude execution check returned 'Not logged in'; review/probes/reports
+were completed directly by Codex. No runtime implementation was transferred or
+performed. Reports, guards and synthetic probe files are local review artifacts.

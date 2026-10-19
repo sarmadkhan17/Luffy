@@ -1,0 +1,33 @@
+{
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "observation_cut_ms": 1792376440099,
+  "not_a_current_runtime_measurement": true,
+  "scope": "Previously preserved qualification refusal and stored/replay coverage; no new real-data evaluation or production DB access.",
+  "files": [
+    {
+      "path": "/mnt/luffy-data/sol1-strategy-qualification-20261019/REPORT.md",
+      "sha256": "f69f6c68b2eb4b66701287df8c182f0082e31154a5b2c5a88f6028a816c38460",
+      "reused_read_only": true
+    },
+    {
+      "path": "/mnt/luffy-data/sol1-strategy-qualification-20261019/qualification-result.json",
+      "sha256": "8f6c7aca9e4245ad76f10bcc1315fbe993cebabf7cfb0a15e4957cffee6337fe",
+      "reused_read_only": true
+    },
+    {
+      "path": "/mnt/luffy-data/sol1-strategy-qualification-20261019/receipt-examples.json",
+      "sha256": "fabc5b687126cbbb564256f25d3537ded796e1bc0d155c4415cedfe0d31d1076",
+      "reused_read_only": true
+    },
+    {
+      "path": "/mnt/luffy-data/sol1-strategy-qualification-20261019/snapshot.json",
+      "sha256": "8e1a096667132399416fb5631471f1f1bf32655cbf9f28bfe61935607a496bb6",
+      "reused_read_only": true
+    },
+    {
+      "path": "/mnt/luffy-data/sol1-strategy-qualification-20261019/artifact-manifest.json",
+      "sha256": "1f354bd573975c77eb58597b4d34767119215de4c3675be1c79cb974092935cd",
+      "reused_read_only": true
+    }
+  ]
+}

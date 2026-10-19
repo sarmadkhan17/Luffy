@@ -1,0 +1,45 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /mnt/luffy-data/sol1-review07-quantitative-d1-d4
+configfile: pytest.ini
+plugins: anyio-4.14.2
+collected 829 items
+
+tests/test_candidate_dossier.py ........................................ [  4%]
+.........                                                                [  5%]
+tests/test_null_dependence.py ......                                     [  6%]
+tests/test_predictive_research_bridge.py F
+
+=================================== FAILURES ===================================
+_______ test_normal_bank_consumer_to_planner_referee_feedback[SUPPORTED] _______
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-8/test_normal_bank_consumer_to_p0/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_b95436052019c8c1"}', provenance_hash='b5a2f1c5bdbfd4312cd358f461da2aae353a08046353fea9cf068a20ba976662'))
+disposition = 'SUPPORTED'
+
+    @pytest.mark.parametrize('disposition',['SUPPORTED','UNSUPPORTED','DATA_INSUFFICIENT'])
+    def test_normal_bank_consumer_to_planner_referee_feedback(population, disposition):
+        source,bank,_,created,later,_=population
+        fake=NumericalFixture(disposition)
+        original=source.read_bytes()
+        first=consume(population,fake,created)
+        assert first['counts']['eligible_research_results']==1
+        assert first['counts']['hypotheses_proposed']==1
+        assert first['counts']['data_insufficient']==1
+        assert first['counts']['not_testable']==0
+        assert fake.calls==[] # descriptive support did not create predictive evidence
+        assert all(r['classification']!='SUPPORTED' for r in saved(bank,'bridge_bank_results'))
+        for _ in range(6):
+            consume(population,fake,later)
+        outcomes=saved(bank,'bridge_bank_results')
+>       final=next(r for r in outcomes if r['classification']==disposition and r['experiment_id'])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_predictive_research_bridge.py:127: StopIteration
+- generated xml file: /mnt/luffy-data/sol1-review07-quantitative-d1-d4/reports/review07-quantitative-d1-d4/impact.xml -
+=========================== short test summary info ============================
+FAILED tests/test_predictive_research_bridge.py::test_normal_bank_consumer_to_planner_referee_feedback[SUPPORTED]
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/json/encoder.py:258: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+=================== 1 failed, 55 passed in 104.74s (0:01:44) ===================

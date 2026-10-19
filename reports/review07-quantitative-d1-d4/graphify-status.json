@@ -1,0 +1,13 @@
+{
+  "command": "nice -n 19 graphify update .",
+  "exit_code": 0,
+  "mode": "AST_ONLY",
+  "semantic_extraction": false,
+  "generated_bulk_committed": false,
+  "log": "graphify-update-final.log",
+  "last_artifact_update": {
+    "command": "nice -n 19 graphify update .",
+    "exit_code": 0,
+    "log": "graphify-update-artifact.log"
+  }
+}

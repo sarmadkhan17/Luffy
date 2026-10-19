@@ -1,0 +1,107 @@
+........................................................................ [ 50%]
+..........FF......FF.F................................................   [100%]
+=================================== FAILURES ===================================
+____________ test_capacity_counts_bars_and_mirrors_loader_inclusion ____________
+
+store = '/tmp/pytest-of-sarmad/pytest-6/test_capacity_counts_bars_and_0/candles.db'
+
+    def test_capacity_counts_bars_and_mirrors_loader_inclusion(store):
+        cut = 1000 * TF_MS
+        cap = rf.rotation_capacity("4h", cut, ["A", "B"], ["A", "B", "LATE"], {}, {"candles": store})
+>       assert cap["a"] == {"A": 1000, "B": 1000}
+               ^^^^^^^^
+E       TypeError: 'NoneType' object is not subscriptable
+
+tests/test_rp02_validation_window.py:118: TypeError
+__________________ test_capacity_honours_the_registered_split __________________
+
+store = '/tmp/pytest-of-sarmad/pytest-6/test_capacity_honours_the_regi0/candles.db'
+
+    def test_capacity_honours_the_registered_split(store):
+        cut = 1000 * TF_MS
+        cfg = {"research": {"predictive_split": {"start_ms": 400 * TF_MS, "cut_ms": cut,
+                                                 "end_ms": 1299 * TF_MS}}}
+        cap = rf.rotation_capacity("4h", cut, ["A"], ["A"], cfg, {"candles": store})
+>       assert cap == {"a": {"A": 600}, "b": {"A": 300}}
+E       AssertionError: assert None == {'a': {'A': 600}, 'b': {'A': 300}}
+
+tests/test_rp02_validation_window.py:128: AssertionError
+_________________ test_examine_defers_before_any_price_is_read _________________
+
+store = '/tmp/pytest-of-sarmad/pytest-6/test_examine_defers_before_any0/candles.db'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7859f5428770>
+
+    def test_examine_defers_before_any_price_is_read(store, monkeypatch):
+        from trader.research.combo import Combination
+        from trader.research.vocab import Part
+        monkeypatch.setattr(rf, "load_heldout", lambda *a, **k: pytest.fail("price read"))
+        donch = Part("ev:donch20", "event", "ev:donch20", "close > donchian_hi(20)",
+                     "close < donchian_lo(20)")
+        c = Combination((donch,), "4h", "trail")
+>       out = rf.examine(c, {"cfg": {"research": {}, "risk": RISK}, "paths": {"candles": store},
+                             "cut_ms": 1000 * TF_MS, "spent_cut_ms": 1000 * TF_MS,
+                             "discovery_symbols": ["A"], "heldout_symbols": ["B"],
+                             "draws": 199, "alpha": 0.0025, "max_draws": 19999, "seed": 1})
+
+tests/test_rp02_validation_window.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/research/referee.py:604: in examine
+    a_b = load_heldout(tf, "a", payload["heldout_symbols"], cut, cfg,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = ('4h', 'a', ['B'], 14400000000, {'research': {}, 'risk': {'risk_per_trade_pct': 0.5, 'taker_fee_pct': 0.04, 'slippage_atr_frac': 0.015, 'bar_minutes': 240, ...}})
+k = {'requires': ('ohlcv',), 'paths': {'candles': '/tmp/pytest-of-sarmad/pytest-6/test_examine_defers_before_any0/candles.db'}}
+
+>   monkeypatch.setattr(rf, "load_heldout", lambda *a, **k: pytest.fail("price read"))
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: price read
+
+tests/test_rp02_validation_window.py:142: Failed
+__________ test_examine_defers_when_alpha_exceeds_rotation_resolution __________
+
+store = '/tmp/pytest-of-sarmad/pytest-6/test_examine_defers_when_alpha0/candles.db'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7859f54288f0>
+
+    def test_examine_defers_when_alpha_exceeds_rotation_resolution(store, monkeypatch):
+        # B = 500 bars -> 78 distinct offsets: below the 199-draw floor.
+        cut = 1000 * TF_MS
+        cap = rf.rotation_capacity("4h", cut, ["B"], ["A", "B"], {}, {"candles": store})
+>       assert pn.rotation_offsets(min(cap["b"].values())) == 78
+                                       ^^^^^^^^
+E       TypeError: 'NoneType' object is not subscriptable
+
+tests/test_rp02_validation_window.py:157: TypeError
+____________ test_translation_waits_for_the_referees_rotation_floor ____________
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-6/test_translation_waits_for_the0/investigation.db'), PosixPath('/tmp/pytest-...t_id":"update_0fa299f5c86e4b6c"}', provenance_hash='bf182aeff8a5bb9eb93537ae8093697f3bdbc6d1088c1f6643e8b353061a27cc'))
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-6/test_translation_waits_for_the0')
+
+    def test_translation_waits_for_the_referees_rotation_floor(population, tmp_path):
+        from trader.cognition import predictive as P
+        from trader.research import predictive_experiment as E
+        from tests.test_predictive_research_bridge import CFG
+        _, _, candles, created, later, s = population
+        h = P.propose(s, "volume_breakout_context.v1", created)
+        assert E.translate(h, candles, CFG, later)["status"] == "READY"
+    
+        cut_rows = tmp_path / "short.db"
+        import shutil
+        shutil.copy(candles, cut_rows)
+        with sqlite3.connect(cut_rows) as db:
+            first = db.execute("SELECT MIN(ts) FROM candles").fetchone()[0]
+            db.execute("DELETE FROM candles WHERE ts>=?", (first + 1800 * TF_MS,))
+        short = E.translate(h, cut_rows, CFG, later)
+>       assert short["status"] == "DATA_INSUFFICIENT"
+E       AssertionError: assert 'READY' == 'DATA_INSUFFICIENT'
+E         
+E         - DATA_INSUFFICIENT
+E         + READY
+
+tests/test_rp02_validation_window.py:194: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_rp02_validation_window.py::test_capacity_counts_bars_and_mirrors_loader_inclusion
+FAILED tests/test_rp02_validation_window.py::test_capacity_honours_the_registered_split
+FAILED tests/test_rp02_validation_window.py::test_examine_defers_before_any_price_is_read
+FAILED tests/test_rp02_validation_window.py::test_examine_defers_when_alpha_exceeds_rotation_resolution
+FAILED tests/test_rp02_validation_window.py::test_translation_waits_for_the_referees_rotation_floor
+5 failed, 137 passed in 100.85s (0:01:40)

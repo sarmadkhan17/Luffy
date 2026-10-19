@@ -1,0 +1,99 @@
+{
+  "scope": {
+    "D1": [
+      "QR07-01",
+      "QR07-02"
+    ],
+    "D2": [
+      "QR07-03",
+      "QR07-07",
+      "QR07-08",
+      "QR07-09",
+      "QR07-13"
+    ],
+    "D3": [
+      "QR07-04",
+      "QR07-05",
+      "QR07-06"
+    ],
+    "D4": [
+      "QR07-10",
+      "QR07-11",
+      "QR07-12",
+      "QR07-17"
+    ]
+  },
+  "regression_file": "tests/test_review07_quantitative.py",
+  "test_name_fragments": {
+    "QR07-01": [
+      "uncertain_look",
+      "pending_receipt",
+      "finalization_failure",
+      "invalid_worker_identity",
+      "duplicate_look",
+      "refused_worker_receipt"
+    ],
+    "QR07-02": [
+      "large_receipts",
+      "malformed_historical",
+      "malformed_history"
+    ],
+    "QR07-03": [
+      "discovery_never_requests_heldout"
+    ],
+    "QR07-04": [
+      "growth_reaches_deeper"
+    ],
+    "QR07-05": [
+      "late_ablation",
+      "restart_refreshes"
+    ],
+    "QR07-06": [
+      "unavailable_ablation"
+    ],
+    "QR07-07": [
+      "coverage_uses_selected",
+      "replay_metadata_matches",
+      "rotation_metadata_resolves"
+    ],
+    "QR07-08": [
+      "failed_context_counts"
+    ],
+    "QR07-09": [
+      "slice_units"
+    ],
+    "QR07-10": [
+      "retrospective_control_refused"
+    ],
+    "QR07-11": [
+      "declared_timeframe_risk"
+    ],
+    "QR07-12": [
+      "status_does_not_register",
+      "status_main_reads",
+      "top_labels"
+    ],
+    "QR07-13": [
+      "readonly_stores",
+      "funding_dependency",
+      "readonly_identity"
+    ],
+    "QR07-17": [
+      "calibration_unknown",
+      "source_shadow",
+      "top_preserves_unknown"
+    ]
+  },
+  "baseline_commit": "81565a0",
+  "baseline_controls": 4,
+  "baseline_failures": 37,
+  "corrected_counterexamples": 42,
+  "not_in_scope": [
+    "D5",
+    "D6",
+    "D7",
+    "D8"
+  ],
+  "od07_06": "OPEN_NOT_END_TO_END_VERIFIED",
+  "baseline_tests": 41
+}
