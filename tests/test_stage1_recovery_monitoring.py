@@ -429,7 +429,8 @@ def test_mutant_allowing_write_failure_entry_detected(tmp_path, monkeypatch):
 
 def test_mutant_stale_as_fresh_detected(monitor):
     now, _, _, observer, hb = monitor; hb.beat({'last_successful_cycle_at': hb.clock()}); now[0] += 11
-    mutated_method(observer, 'heartbeat', "max(now - record['timestamp'],\n                 now - record['context']['last_successful_cycle_at']) > policy.stale_after_s", 'False')
+    # Mutate the classification of an over-age heartbeat as STALE, not the formatting of the age expression.
+    mutated_method(observer, 'heartbeat', "            reason = 'STALE'\n        with self.health.locked", "            pass\n        with self.health.locked")
     with pytest.raises(AssertionError, match='stale accepted fresh'):
         assert observer.heartbeat(hb.path, 'luffy', HeartbeatPolicy(10))['status'] == 'STALE', 'stale accepted fresh'
 
