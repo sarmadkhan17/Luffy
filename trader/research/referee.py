@@ -72,7 +72,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
     split = (cfg.get('research') or {}).get('predictive_split')
     if split and cut != split['cut_ms']:
         raise ValueError('protected_cut_differs')
-    feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
+    feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"), read_only=True)
     frames, first_bars = {}, {}
     for sym in symbols:
         try:
@@ -97,6 +97,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
                 continue            # listed after the cut: no context, no B
         if len(sl) - first < slices.MIN_SLICE_BARS - WARMUP:
             continue
+        sl.attrs["research_read_paths"] = dict(paths)
         frames[sym], first_bars[sym] = sl, first
 
     sym_frames = {}
@@ -110,7 +111,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
     keep = slices.before if part == "a" else (lambda df, _cut: df)
     derivs = {s: {} for s in frames}
     if any(r not in ("ohlcv", "world") and not r.startswith("ref:") for r in requires):
-        dfeed = DerivFeed(db_path=paths.get("derivs"))
+        dfeed = DerivFeed(db_path=paths.get("derivs"), read_only=True)
         for sym in frames:
             got = spec_evidence.load_derivs(sym, requires, dfeed)
             derivs[sym] = {k: keep(v, cut) for k, v in got.items()}
@@ -119,7 +120,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
     ref_keys = [r.split(":", 1)[1] for r in requires
                 if isinstance(r, str) and r.startswith("ref:")]
     if ref_keys:
-        store = RefStore(paths.get("candles"))
+        store = RefStore(paths.get("refs") or paths.get("candles"), read_only=True)
         market = {}
         for k in ref_keys:
             df = store.load(k)
@@ -131,7 +132,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
     rcfg = cfg.get("risk", {}) or {}
     b = Bundle(tf=tf, frames=frames, sym_frames=sym_frames,
                universe={s: {tf: d} for s, d in frames.items()},
-               btc=btc, market=market, derivs=derivs, risk=rcfg, cut=int(cut),
+               btc=btc, market=market, derivs=derivs, risk=spec_evidence.risk_for(rcfg, tf), cut=int(cut),
                equity=float(cfg.get("research", {}).get("equity", 2000.0)),
                risk_pct=float(rcfg.get("risk_per_trade_pct", 0.5)),
                max_open=int(rcfg.get("max_open_trades", 8)),
@@ -456,40 +457,39 @@ def rotation_capacity(tf: str, cut: int, a_symbols, b_symbols, cfg: dict,
     stand). The inclusion rules mirror `load_heldout` exactly.
     """
     import sqlite3
-    from contextlib import closing
     from pathlib import Path
-    path = (paths or {}).get("candles")
-    if not path or not Path(path).exists():
+    from ..core.config import ROOT
+    path = (paths or {}).get("candles") or ROOT / "data" / "candles.db"
+    if not Path(path).exists():
         return None
     split = (cfg.get('research') or {}).get('predictive_split')
     lo = int(split['start_ms']) if split else None
     hi = int(split['end_ms']) if split else None
     try:
-        with closing(sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro',
-                                     uri=True, timeout=1)) as db:
-            def count(sym, a, b):
-                clauses, args = ["symbol=?", "tf=?"], [sym, tf]
-                if a is not None:
-                    clauses.append("ts>=?"); args.append(int(a))
-                if b is not None:
-                    clauses.append("ts<?"); args.append(int(b))
-                return int(db.execute("SELECT COUNT(*) FROM candles WHERE "
-                                      + " AND ".join(clauses), args).fetchone()[0])
-            out = {"a": {}, "b": {}}
-            for sym in a_symbols:
-                n = count(sym, lo, int(cut))
-                if n >= slices.MIN_SLICE_BARS - WARMUP:
-                    out["a"][sym] = n
-            for sym in b_symbols:
-                at = count(sym, lo, int(cut))
-                n = count(sym, int(cut), None if hi is None else hi + 1)
-                if min(B_CONTEXT_BARS, at) < WARMUP:
-                    continue
-                if n >= slices.MIN_SLICE_BARS - WARMUP:
-                    out["b"][sym] = n
-            return out
+        from ..data.feed import DataFeed
+        from .universe import NoExchange
+        feed = DataFeed(exchange=NoExchange(), db_path=path, read_only=True)
+        out = {"a": {}, "b": {}}
+        for sym in set(a_symbols) | set(b_symbols):
+            metadata = feed.replay_metadata(sym, tf)
+            if metadata is None:
+                continue
+            if split:
+                metadata = slices.before(slices.after(metadata, lo), hi + 1)
+            before = len(slices.before(metadata, cut))
+            after = len(slices.after(metadata, cut))
+            if sym in a_symbols and before >= slices.MIN_SLICE_BARS - WARMUP:
+                out["a"][sym] = before
+            if (sym in b_symbols and min(B_CONTEXT_BARS, before) >= WARMUP
+                    and after >= slices.MIN_SLICE_BARS - WARMUP):
+                out["b"][sym] = after
+        return out
     except (sqlite3.Error, OSError):
         return None
+    finally:
+        if 'feed' in locals() and getattr(feed._local, 'conn', None) is not None:
+            feed.db.close()
+            feed._local.conn = None
 
 
 def rotation_deferral(capacity: dict | None, draws: int) -> str | None:
@@ -502,7 +502,9 @@ def rotation_deferral(capacity: dict | None, draws: int) -> str | None:
         return None
     for part in ("a", "b"):
         ns = capacity[part]
-        if ns and max(pn.rotation_offsets(n) for n in ns.values()) < CONSISTENCY_DRAWS:
+        if not ns:
+            return f"held-out {part.upper()}: no replay-eligible observations"
+        if max(pn.rotation_offsets(n) for n in ns.values()) < CONSISTENCY_DRAWS:
             return (f"held-out {part.upper()}: no symbol carries "
                     f"{CONSISTENCY_DRAWS} distinct rotation offsets")
     if capacity["b"]:
@@ -523,7 +525,7 @@ def current_cut(tf: str, discovery_symbols, paths: dict | None,
     bar discovery could have seen, so it takes the later of the two."""
     from ..data.feed import DataFeed
     from .universe import NoExchange
-    feed = DataFeed(exchange=NoExchange(), db_path=(paths or {}).get("candles"))
+    feed = DataFeed(exchange=NoExchange(), db_path=(paths or {}).get("candles"), read_only=True)
     frames = {}
     for sym in discovery_symbols:
         try:
@@ -601,8 +603,7 @@ def examine(c, payload: dict) -> dict:
     payload = dict(payload, draws=int(draws))
     compiled = compile_spec(c.to_spec())
     risk = cfg.get("risk") or {}
-    if getattr(compiled.spec.exit, "_exit_semantics_id", None):
-        risk = spec_evidence.risk_for(risk, tf)
+    risk = spec_evidence.risk_for(risk, tf)
 
     a_b = load_heldout(tf, "a", payload["heldout_symbols"], cut, cfg,
                        requires=c.requires, paths=paths)

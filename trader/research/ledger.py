@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+from contextlib import nullcontext
 
 from ..core.types import now_utc
 from ..strategy.portfolio_evidence import (is_current_accounting,
@@ -261,7 +262,7 @@ class Ledger:
                 "(tf, window, consistency_p, powered, status, detail, "
                 "measured_at) VALUES (?,?,?,?,?,?,?)",
                 (tf, window, res.get("consistency_p"), 1 if powered else 0,
-                 status, json.dumps(res)[:20000], now_utc().isoformat()))
+                 status, json.dumps(res), now_utc().isoformat()))
 
     def observe_cut(self, tf: str, cut_ms) -> None:
         if cut_ms:
@@ -277,10 +278,7 @@ class Ledger:
         advancing, while the series is still outside it, changes nothing.
         """
         from . import control
-        try:
-            ev = json.loads(detail or "{}")
-        except ValueError:
-            return False
+        ev = _object(detail, "window control")
         if ev.get("identity") != control.evidence_identity():
             return True
         cut = self._cuts.get(tf)
@@ -296,6 +294,7 @@ class Ledger:
             (tf, window))
         if not rows:
             return None
+        _object(rows[0]["detail"], "window control")
         if rows[0].get("status") == "unavailable" \
                 and self._reopened(tf, rows[0].get("detail")):
             return None
@@ -312,7 +311,7 @@ class Ledger:
             prior = c.execute("SELECT result FROM research_combos WHERE hash=?",
                               (res["hash"],)).fetchone()
             if prior:
-                old = json.loads(prior[0] or "{}")
+                old = _object(prior[0], "discovery result")
                 require_compatible_accounting(old.get("portfolio") or {}, pf)
                 if old.get("evidence") or res.get("evidence"):
                     if old != _slim(res):
@@ -339,8 +338,14 @@ class Ledger:
                  int(res.get("scored_symbols", 0)),
                  1 if res.get("testable") else 0,
                  json.dumps(ablation or {}),
-                 json.dumps(_slim(res))[:200000],
+                 json.dumps(_slim(res)),
                  now_utc().isoformat()))
+
+    def record_disposition(self, h, verdict, reason, ablation):
+        """Derived discovery decision only; never replace a measured result."""
+        with self.journal._tx() as c:
+            c.execute("UPDATE research_combos SET verdict=?,reason=?,ablation=? WHERE hash=?",
+                      (verdict,reason[:500],json.dumps(ablation),h))
 
     def has(self, h: str) -> bool:
         return bool(self.journal.query(
@@ -356,10 +361,7 @@ class Ledger:
             "SELECT result FROM research_combos WHERE hash=?", (h,))
         if not rows:
             return None
-        try:
-            return json.loads(rows[0]["result"] or "{}")
-        except Exception:                               # noqa: BLE001
-            return None
+        return _object(rows[0]["result"], "research result")
 
     def rows(self, tf: str, geo: str | None = None, k: int | None = None,
              verdict: str | None = None, limit: int | None = None) -> list:
@@ -379,7 +381,7 @@ class Ledger:
         rows = self.journal.query(sql, tuple(args))
         # Stored legacy rows remain readable/replayable. A mixed ranking is
         # refused, never silently used as a beam or candidate comparison.
-        require_compatible_accounting(*(json.loads(r["result"] or "{}").get("portfolio") or {}
+        require_compatible_accounting(*(_object(r["result"], "discovery result").get("portfolio") or {}
                                         for r in rows))
         return rows[:int(limit)] if limit else rows
 
@@ -422,10 +424,7 @@ class Ledger:
             sql, args = sql + " WHERE tf=?", (tf,)
         drop, held = [], []
         for h, res in c.execute(sql, args).fetchall():
-            try:
-                pf = (json.loads(res or "{}") or {}).get("portfolio") or {}
-            except ValueError:
-                pf = {}
+            pf = _object(res, "discovery result").get("portfolio") or {}
             if is_current_accounting(pf):
                 continue
             (held if h in ref else drop).append(h)
@@ -499,15 +498,22 @@ class Ledger:
 
     # ── the error budget ─────────────────────────────────────────────────
     def tests(self) -> list:
-        return self.journal.query(
-            "SELECT * FROM research_tests ORDER BY seq")
+        rows = self.journal.query("SELECT * FROM research_tests ORDER BY seq")
+        for row in rows:
+            _object(row["detail"], "held-out receipt")
+        return rows
 
     def next_alpha(self, alpha: float, w0: float,
-                   brake: float = 1.0) -> tuple[int, float]:
+                   brake: float = 1.0, *, register: bool = True) -> tuple[int, float]:
         """(t, alpha_t) for the next look — the sequence survives restarts
         because it IS the table."""
         from . import fdr
-        alpha, w0 = self.register_budget(alpha, w0)
+        if register:
+            alpha, w0 = self.register_budget(alpha, w0)
+        else:
+            saved = self.journal.query("SELECT alpha,w0 FROM research_budget WHERE id=1")
+            if saved:
+                alpha, w0 = saved[0]["alpha"], saved[0]["w0"]
         rows = self.tests()
         t = len(rows) + 1
         rej = [i for i, r in enumerate(rows, start=1) if r["rejected"]]
@@ -551,31 +557,66 @@ class Ledger:
         cuts = []
         for r in self.journal.query(
                 "SELECT detail FROM research_tests WHERE tf=?", (tf,)):
-            try:
-                c = (json.loads(r["detail"] or "{}") or {}).get("cut_ms")
-            except ValueError:
-                continue
-            if c:
-                cuts.append(int(c))
+            detail = _object(r["detail"], "held-out receipt")
+            c = detail.get("cut_ms")
+            if type(c) is not int or c <= 0:
+                raise ValueError("heldout_cut_unavailable")
+            cuts.append(c)
         return min(cuts) if cuts else None
 
     def record_test(self, h: str, tf: str, geo: str, gate: str, p: float,
                     alpha_t: float, braked: bool, detail: dict) -> bool:
-        if self.spent(h, gate):
-            raise ValueError("holdout_already_spent")
         # the level must be the registered sequence's (a brake may only
         # lower it): no caller-chosen threshold can reject a test
-        t, ceiling = self.next_alpha(*self._registered_or_default())
-        if float(alpha_t) > ceiling + 1e-12:
-            raise ValueError("unregistered_alpha")
-        rejected = p is not None and float(p) <= float(alpha_t)
+        from . import fdr
         with self.journal._tx() as c:
+            c.execute("BEGIN IMMEDIATE")
+            if c.execute("SELECT 1 FROM research_tests WHERE hash=? AND gate=?", (h, gate)).fetchone():
+                raise ValueError("holdout_already_spent")
+            budget = self._registered_or_default()
+            # Callers normally registered before dispatch. Preserve direct-ledger
+            # API defaults without nesting committing transactions.
+            c.execute("INSERT OR IGNORE INTO research_budget VALUES (1,?,?,?)",
+                      (*budget, now_utc().isoformat()))
+            rows = self.tests()
+            ceiling = fdr.alpha_at(len(rows)+1,
+                [i for i,r in enumerate(rows,1) if r["rejected"]], *budget)
+            if not 0 < float(alpha_t) <= ceiling + 1e-12:
+                raise ValueError("unregistered_alpha")
+            if p is not None and not 0 <= float(p) <= 1:
+                raise ValueError("invalid_pvalue")
+            rejected = p is not None and float(p) <= float(alpha_t)
             c.execute(
-                "INSERT INTO research_tests (hash, tf, geo, gate, p, alpha_t, "
-                "rejected, braked, detail, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (h, tf, geo, gate, p, float(alpha_t), 1 if rejected else 0,
-                 1 if braked else 0, json.dumps(detail)[:20000],
-                 now_utc().isoformat()))
+                "INSERT INTO research_tests (hash,tf,geo,gate,p,alpha_t,rejected,braked,detail,at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (h,tf,geo,gate,p,float(alpha_t),int(rejected),int(braked),
+                 json.dumps(detail),now_utc().isoformat()))
+        return rejected
+
+    def complete_look(self, h: str, p: float, detail: dict, state: str,
+                      **fields) -> bool:
+        """Finalize only this process's new pending receipt and disposition.
+
+        Interrupted pending rows remain conservative spent p=1 forever. No
+        historical completed receipt can be replaced, and no later test may
+        have used this still-pending test's rejection status.
+        """
+        with self.journal._tx() as c:
+            c.execute("BEGIN IMMEDIATE")
+            old = self.spent(h)
+            if not old or _object(old["detail"], "held-out receipt").get("look_state") != "pending":
+                raise ValueError("heldout_not_pending")
+            pending = _object(old["detail"], "held-out receipt")
+            if (detail.get("cut_ms") != pending.get("cut_ms")
+                    or detail.get("evaluated") != pending.get("evaluated")
+                    or c.execute("SELECT MAX(seq) FROM research_tests").fetchone()[0] != old["seq"]):
+                raise ValueError("heldout_pending_identity_changed")
+            if not 0 <= float(p) <= 1:
+                raise ValueError("invalid_pvalue")
+            rejected = float(p) <= old["alpha_t"]
+            c.execute("UPDATE research_tests SET p=?,rejected=?,detail=? WHERE seq=?",
+                      (p,int(rejected),json.dumps(dict(detail,look_state="complete")),old["seq"]))
+            self.set_candidate(h,old["tf"],old["geo"],state,connection=c,**fields)
         return rejected
 
     # ── the referee's candidates ─────────────────────────────────────────
@@ -595,7 +636,7 @@ class Ledger:
                                   tuple(args))
 
     def set_candidate(self, h: str, tf: str, geo: str, state: str,
-                      **fields) -> None:
+                      connection=None, **fields) -> None:
         cur = self.candidate(h) or {}
         if state in ("queued", "deferred") and self.spent(h):
             log.warning(f"research candidate {h}: held-out already spent; "
@@ -606,7 +647,7 @@ class Ledger:
                "entries": cur.get("entries"), "reason": cur.get("reason")}
         for k, v in fields.items():
             row[k] = json.dumps(v) if isinstance(v, (dict, list)) else v
-        with self.journal._tx() as c:
+        with (nullcontext(connection) if connection is not None else self.journal._tx()) as c:
             c.execute(
                 "INSERT OR REPLACE INTO research_candidates (hash, tf, geo, "
                 "state, twin_of, rank, gate1, gate3, entries, reason, "
@@ -646,3 +687,14 @@ def _slim(res: dict) -> dict:
     pf.pop("order", None)
     out["portfolio"] = pf
     return out
+
+
+def _object(raw, label):
+    """Missing/corrupt retained evidence is a refusal, never absence."""
+    try:
+        value = json.loads(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("malformed_" + label.replace(" ", "_")) from exc
+    if not isinstance(value, dict):
+        raise ValueError("malformed_" + label.replace(" ", "_"))
+    return value

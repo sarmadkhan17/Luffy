@@ -412,6 +412,9 @@ def funding_for(symbol: str, df, risk_cfg: dict):
         return None
     if df is None or not len(df) or "ts" not in getattr(df, "columns", ()):
         return None
+    if df.attrs.get('research_read_paths') is not None:
+        from . import spec_evidence
+        return spec_evidence.funding_series(symbol, df)
     if df.attrs.get('read_mode') == 'retrospective':
         # A candle-only cache key cannot authenticate dependency corrections.
         # Read the explicitly bound retained settlements each time instead.

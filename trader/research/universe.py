@@ -52,14 +52,13 @@ class NoExchange:
 
 
 def coverage(tfs=None, feed=None) -> dict:
-    """{tf: {symbol: bars}} for every symbol carrying at least MIN_BARS, or
+    """{tf: {symbol: replay-eligible bars}} at the selected store, or
     `{"skipped": "coverage_unavailable"}` when the store could not be read
     at all.
 
-    COUNTED in SQL, not loaded: the research thread asks this on every step,
-    and reading 36 full frames to learn their lengths would put seconds of
-    pandas work on a kernel thread to answer a question SQLite answers in
-    one pass.
+    Uses authenticated timestamp metadata from the exact replay reader,
+    not raw stored projection counts and never returned price frames.
+    DataFeed.replay_metadata also reports stored_bars separately.
 
     A locked store or a schema change must read as "we could not look",
     never as "nothing exists here" — the empty map used to mean the LATTER,
@@ -69,7 +68,7 @@ def coverage(tfs=None, feed=None) -> dict:
     `sqlite3.Error` is swallowed into that signal; anything else is a real
     bug and must surface.
     """
-    feed = feed or DataFeed(exchange=NoExchange())
+    feed = feed or DataFeed(exchange=NoExchange(), read_only=True)
     want = set(DISCOVERY + HELDOUT)
     if getattr(feed, "retrospective", None):
         out = {}
@@ -94,14 +93,15 @@ def coverage(tfs=None, feed=None) -> dict:
     out = {}
     for tf in (tfs or list(TARGETS)):
         try:
-            rows = feed.db.execute(
-                "SELECT symbol, COUNT(*) FROM candles WHERE tf=? "
-                "GROUP BY symbol", (tf,)).fetchall()
+            rows = {}
+            for sym in sorted(want):
+                metadata = feed.replay_metadata(sym, tf)
+                if metadata is not None and len(metadata) >= MIN_BARS:
+                    rows[sym] = len(metadata)
         except sqlite3.Error as e:
             log.warning(f"research coverage unavailable for {tf}: {e}")
             return {"skipped": "coverage_unavailable"}
-        out[tf] = {sym: int(n) for sym, n in rows
-                   if sym in want and int(n) >= MIN_BARS}
+        out[tf] = rows
     return out
 
 

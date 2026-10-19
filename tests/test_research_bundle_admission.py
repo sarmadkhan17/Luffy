@@ -235,7 +235,7 @@ CFG = {"risk": {"risk_per_trade_pct": 0.5, "max_open_trades": 8},
 @pytest.fixture
 def covered(monkeypatch):
     from trader.research import universe
-    monkeypatch.setattr(universe, "coverage", lambda tfs=None: {
+    monkeypatch.setattr(universe, "coverage", lambda tfs=None, feed=None: {
         tf: {s: 11000 for s in universe.DISCOVERY + universe.HELDOUT}
         for tf in (tfs or ["4h"])})
 

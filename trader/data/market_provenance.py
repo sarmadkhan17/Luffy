@@ -256,13 +256,15 @@ def append(conn, key, df=None, *, prepared=None):
                      tuple(value for row in writes for value in row))
 
 
-def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None):
+def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False):
     """Last retained revision of EACH event eligible at the exact decision cut.
 
     Replay additionally requires first-use eligibility at that bar's close.
     UNKNOWN legacy rows never receive inferred receipt clocks.
     """
     cut(as_of_ms)
+    if metadata_only and (not replay_tf or revision_stream or include_partial):
+        raise ValueError('metadata_requires_final_replay')
     if window_start_ms is not None:
         cut(window_start_ms)
         if window_start_ms > as_of_ms or replay_tf or revision_stream:
@@ -334,8 +336,20 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
             continue
         if r['bar_state'] == 'PARTIAL' and not include_partial:
             continue
-        selected[event] = r
-        stream.append(r)
+        if metadata_only:
+            # Same final/clock filter as eligible_frame, without constructing or
+            # returning protected OHLCV columns to a discovery caller.
+            if (event > as_of_ms or r['available_at_ms'] > as_of_ms
+                    or r['observed_at_ms'] > as_of_ms
+                    or r['bar_state'] != 'FINAL'
+                    or event + TF_MS[replay_tf] > as_of_ms):
+                continue
+            selected[event] = {k: r[k] for k in ('event_time_ms', 'revision_id',
+                                'available_at_ms', 'observed_at_ms', 'quality')}
+        else:
+            selected[event] = r
+        if not metadata_only:
+            stream.append(r)
     if not selected:
         return None
     df = pd.DataFrame(stream if revision_stream else list(selected.values())[-limit:])

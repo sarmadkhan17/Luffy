@@ -64,6 +64,8 @@ def test_a_locked_store_is_reported_as_unavailable_not_as_empty():
 
     class _BrokenFeed:
         db = _BrokenDB()
+        def replay_metadata(self, *args):
+            return self.db.execute(*args)
 
     assert coverage(["4h"], feed=_BrokenFeed()) == \
         {"skipped": "coverage_unavailable"}
@@ -81,6 +83,8 @@ def test_a_non_sql_failure_is_not_swallowed_into_the_skip_signal():
 
     class _WeirdFeed:
         db = _WeirdDB()
+        def replay_metadata(self, *args):
+            return self.db.execute(*args)
 
     with pytest.raises(ValueError):
         coverage(["4h"], feed=_WeirdFeed())

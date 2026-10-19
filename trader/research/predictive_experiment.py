@@ -109,28 +109,35 @@ def translate(h, candles_path, cfg, as_of_ms):
         start += 14_400_000
     end = as_of_ms - 14_400_000
     try:
-        with closing(readonly(candles_path)) as db:
-            db.execute('BEGIN')
-            rows = db.execute('SELECT symbol,MIN(ts),MAX(ts),COUNT(*) FROM candles '
-                "WHERE tf='4h' AND ts>=? AND ts<=? GROUP BY symbol", (start, end)).fetchall()
-            valid = [r for r in rows if r[0] in DISCOVERY]
-            if not valid:
-                return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
-                            reason='no_closed_post_generation_tuning_window')
-            lo, hi = min(r[1] for r in valid), max(r[2] for r in valid)
-            cut = lo + int((hi-lo) * slices.DISCOVERY_FRAC)
-            counts = {part: dict(db.execute('SELECT symbol,COUNT(*) FROM candles '
-                "WHERE tf='4h' AND ts>=? AND ts<? GROUP BY symbol", bounds))
-                for part, bounds in (('discovery', (start, cut)), ('protected_b', (cut, end+1)))}
-    except (sqlite3.Error, OSError):
+        from ..data.feed import DataFeed
+        from .universe import NoExchange
+        feed = DataFeed(exchange=NoExchange(), db_path=candles_path,
+                        clock_ms=lambda: as_of_ms, read_only=True)
+        metadata = {}
+        try:
+            for sym in DISCOVERY + HELDOUT:
+                clocks = feed.replay_metadata(sym, '4h')
+                if clocks is not None:
+                    metadata[sym] = slices.before(slices.after(clocks, start), end+1)
+        finally:
+            if getattr(feed._local, 'conn', None) is not None:
+                feed.db.close()
+        valid = {s:d for s,d in metadata.items() if s in DISCOVERY and len(d) >= 500}
+        if not valid:
+            return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
+                        reason='no_closed_post_generation_tuning_window')
+        cut = slices.cut_ms(valid)
+        counts = {part:{sym:len(fn(d,cut)) for sym,d in metadata.items()}
+                  for part,fn in (('discovery',slices.before),('protected_b',slices.after))}
+    except (sqlite3.Error, OSError, ValueError):
         return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,
                     reason='candle_metadata_unavailable')
     r = cfg.get('research') or {}
     if '4h' not in r.get('horizons',['4h']) or 'fixed' not in r.get('geometries',['trail','fixed']):
         return dict(status='UNSUPPORTED_EXPERIMENT_SHAPE',source_hypothesis_id=h.hypothesis_id)
     minimum = int(r.get('min_discovery_symbols', 16))
-    disc = [s for s in DISCOVERY if counts['discovery'].get(s, 0) >= slices.MIN_SLICE_BARS]
-    held = [s for s in HELDOUT if counts['discovery'].get(s, 0) >= slices.MIN_SLICE_BARS]
+    disc = [s for s in DISCOVERY if counts['discovery'].get(s, 0) >= slices.MIN_SLICE_BARS and len(metadata.get(s, ())) >= 500]
+    held = [s for s in HELDOUT if counts['discovery'].get(s, 0) >= slices.MIN_SLICE_BARS and len(metadata.get(s, ())) >= 500]
     later = [s for s in DISCOVERY + HELDOUT if counts['protected_b'].get(s, 0) >= slices.MIN_SLICE_BARS]
     if len(disc) < minimum or len(held) < null_baseline.MIN_SYMBOLS or len(later) < null_baseline.MIN_SYMBOLS:
         return dict(status='DATA_INSUFFICIENT', source_hypothesis_id=h.hypothesis_id,

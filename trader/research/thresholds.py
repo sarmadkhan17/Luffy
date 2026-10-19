@@ -58,12 +58,12 @@ def measure(exprs, ctxs, min_samples: int = MIN_SAMPLES,
             continue
         total, vals = 0, []
         for ctx in ctxs:
+            total += len(ctx.index)
             try:
                 arr = _values(tree, ctx)
             except Exception as e:                      # noqa: BLE001
                 log.debug(f"threshold {expr} on {ctx.symbol}: {e}")
                 continue
-            total += int(arr.size)
             vals.append(arr[np.isfinite(arr)])
         finite = np.concatenate(vals) if vals else np.array([], dtype=float)
         n = int(finite.size)

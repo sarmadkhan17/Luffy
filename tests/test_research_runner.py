@@ -19,7 +19,9 @@ import pytest
 def registered_coverage(monkeypatch):
     """Runner protocol fixtures must not depend on a production candle store."""
     from trader.research import universe
-    monkeypatch.setattr(universe, 'coverage', lambda tfs=None: {
+    monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:
+                        {'a': {'fixture': 11000}, 'b': {'fixture': 11000}})
+    monkeypatch.setattr(universe, 'coverage', lambda tfs=None, feed=None: {
         tf: {symbol: 11000 for symbol in universe.DISCOVERY + universe.HELDOUT}
         for tf in (tfs or ['4h'])})
 
@@ -451,7 +453,10 @@ def _referee_reply(entries, examine=None, fail=False):
         if fn.__name__ == "referee_job":
             if fail:
                 return ChildResult(ok=False, elapsed_s=1.0, error="boom")
-            return ChildResult(ok=True, elapsed_s=1.0, value=examine)
+            from trader.research.combo import Combination
+            value = dict(examine, hash=Combination.from_dict(payload["combo"]).hash,
+                         cut_ms=payload["cut_ms"]) if examine else examine
+            return ChildResult(ok=True, elapsed_s=1.0, value=value)
         return _measured(fn, payload)
     return reply
 
@@ -517,19 +522,15 @@ def test_gate1_fail_and_gate3_fail_are_recorded_with_reasons(tmp_path):
     assert r2.step()["state"] == "gate3_fail"
 
 
-def test_a_crashing_look_retries_then_is_charged(tmp_path):
-    r, _c, combos = _setup(tmp_path, fail=True)
-    r.step()                                             # select
-    for _ in range(2):
-        assert r.step()["ok"] is False
-        assert Ledger(r.journal).tests() == []
-        assert Ledger(r.journal).candidate(combos[0].hash)["state"] == \
-            "queued"
-    r.step()                                             # third failure
+def test_a_crashing_look_is_charged_once_without_retry(tmp_path):
+    r, calls, combos = _setup(tmp_path, fail=True)
+    r.step()  # select
+    assert r.step()["ok"] is False
     tests = Ledger(r.journal).tests()
     assert len(tests) == 1 and tests[0]["p"] == 1.0
-    assert Ledger(r.journal).candidate(combos[0].hash)["state"] == \
-        "gate1_fail"
+    assert Ledger(r.journal).candidate(combos[0].hash)["state"] == "gate1_fail"
+    assert r._examine("4h", "trail", {"hash": combos[0].hash}, 1)["state"] == "refused"
+    assert len([c for c in calls if c["fn"] == "referee_job"]) == 1
 
 
 def test_a_level_the_draws_cannot_resolve_defers_without_spending(tmp_path):

@@ -53,7 +53,6 @@ DEFAULTS = {
     "lord_w0": 0.05,
     "referee_max_draws": 19999,
     "referee_select_batch": 20,
-    "referee_max_attempts": 3,
 }
 
 
@@ -168,7 +167,10 @@ class ResearchRunner:
                                     self.cfg, tf, self.ledger.spent_cut(tf)))
                 cov = coverage([tf], feed=feed)
             else:
-                cov = coverage([tf])
+                from ..data.feed import DataFeed
+                from .universe import NoExchange
+                cov = coverage([tf], feed=DataFeed(exchange=NoExchange(),
+                               db_path=self._paths().get("candles"), read_only=True))
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research coverage unavailable: {e}")
             return [], []
@@ -213,6 +215,12 @@ class ResearchRunner:
                     require_current_accounting(json.loads(row["result"] or "{}").get("portfolio") or {})
         except AccountingMismatch as exc:
             return {"ok": False, "skipped": "portfolio_accounting_incompatible", "error": str(exc)}
+
+        # Recover a crash between storing a subset and refreshing its derived
+        # decision, without reading prices or changing any measured result.
+        for tf in self._r("horizons"):
+            for geo in self._r("geometries"):
+                self._refresh_dispositions(tf, geo)
 
         # A queued candidate is a pending decision, so the referee goes
         # before any new round. It lives here and not in planner.py, which
@@ -336,6 +344,10 @@ class ResearchRunner:
 
     def _evaluate(self, batch, disc, held) -> dict:
         symbols = disc
+        if batch.round == "control" and (self.cfg.get("research") or {}).get("retrospective"):
+            return {"kind": "evaluate", "tf": batch.tf, "round": batch.round,
+                    "ok": False, "skipped": "retrospective_control_incompatible",
+                    "reason": "incumbent_control_contains_protected_symbols"}
         if batch.round == "control":
             symbols = control.incumbent_universe(self.journal)
         reqs = {"ohlcv"}
@@ -514,7 +526,8 @@ class ResearchRunner:
         ctrl = self.ledger.control(batch.tf, r.get("window", "ohlcv"))
         label = control.label(r, bool(ctrl and ctrl["powered"]),
                               max_p=float(self._r("control_max_p")))
-        parent = self.ledger.result(r["parent"]) if r.get("parent") else None
+        parent = (self.ledger.result(r["parent"])
+                  if r.get("parent") and r.get("round") != "ablation" else None)
         subset_results = {}
         if c is not None and c.k >= 2:
             for i, s in enumerate(subsets(c)):
@@ -528,6 +541,32 @@ class ResearchRunner:
             reason = (f"{reason} — but the known-good rule cannot register "
                       f"in this window either: UNDERPOWERED, not no-edge")
         self.ledger.record_result(r, verdict, reason, abl, label=label)
+        if c is not None:
+            self._refresh_dispositions(c.tf, c.geo, c)
+
+    def _refresh_dispositions(self, tf, geo, completed=None):
+        """Price-free refresh of waiting decisions whose subset just arrived."""
+        for row in self.ledger.rows(tf, geo,
+                                    k=completed.k + 1 if completed else None, verdict="grow"):
+            if row["k"] < 2:
+                continue
+            if self.ledger.candidate(row["hash"]) is not None:
+                continue  # never revise a selected or spent candidate
+            child = self._combo(row, tf, geo)
+            if child is None:
+                continue
+            subs = subsets(child)
+            if completed is not None and not any(s.hash == completed.hash for s in subs):
+                continue
+            measured = self.ledger.result(child.hash)
+            comparisons = {child.parts[i].key: got for i,s in enumerate(subs)
+                           if (got := self.ledger.result(s.hash)) is not None}
+            parent = (self.ledger.result(measured["parent"])
+                      if measured.get("parent") and measured.get("round") != "ablation" else None)
+            verdict, reason, abl = growth.decide(measured, parent=parent,
+                subset_results=comparisons, max_p=float(self._r("grow_max_p")))
+            self.ledger.record_disposition(child.hash, verdict, reason, abl)
+
 
     # ── the referee ──────────────────────────────────────────────────────
     def _referee_step(self) -> dict | None:
@@ -695,6 +734,20 @@ class ResearchRunner:
             return {**out, "ok": True, "state": "deferred", "alpha": alpha}
 
         disc, held = self._symbols(tf)
+        from . import referee
+        split = (self.cfg.get("research") or {}).get("predictive_split")
+        cut_ms = (int(split["cut_ms"]) if split else self.ledger.spent_cut(tf)
+                  or referee.current_cut(tf, disc, self._paths(), int(cut_ms)))
+        capacity = referee.rotation_capacity(tf, cut_ms, held, disc + held,
+                                              self.cfg, self._paths())
+        if capacity is not None and capacity["b"]:
+            room = pn.rotation_offsets(min(capacity["b"].values()))
+            draws = pn.draws_for(alpha, min(int(self._r("referee_max_draws")), room))
+        reason = ("registered alpha cannot resolve retained replay" if draws is None
+                  else referee.rotation_deferral(capacity, draws))
+        if reason:
+            self.ledger.set_candidate(h, tf, geo, "deferred", reason=reason)
+            return {**out, "ok": True, "state": "deferred", "alpha": alpha}
         book_specs = [spec for _r, spec in self.journal.list_specs(['paper','active'])] \
             if hasattr(self.journal, 'list_specs') else []
         book = [spec.to_dict() for spec in book_specs]
@@ -708,9 +761,12 @@ class ResearchRunner:
         evaluated = evaluated_record(c)
         bid = self.ledger.start_batch(tf, geo, rnd, 1)
         t0 = time.monotonic()
+        self.ledger.record_test(h, tf, geo, "gate1", 1.0, alpha, brake < 1.0,
+            {"look_state": "pending", "cut_ms": int(cut_ms), "evaluated": evaluated,
+             "reason": "dispatched_or_interrupted; no retry permitted"})
         res = self.run(job.referee_job, {
             "combo": c.as_dict(), "cut_ms": int(cut_ms), "cfg": self.cfg,
-            "spent_cut_ms": self.ledger.spent_cut(tf),
+            "spent_cut_ms": int(cut_ms),
             "paths": self._paths(),
             "discovery_symbols": list(disc or DISCOVERY),
             "heldout_symbols": list(held or HELDOUT),
@@ -720,26 +776,16 @@ class ResearchRunner:
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}
-        if res.ok and v.get('looked') and v.get('quantitative_receipt_refused'):
-            # The bridge already rejected the worker's identity/cut receipt.
-            # Its numerical portfolios are unusable. Charge the actual look
-            # once, without asking that worker to read protected prices again.
-            reason = 'untestable: ' + str(v['quantitative_receipt_refused'])
-            self.ledger.record_test(h, tf, geo, 'gate1', 1.0, alpha,
-                                    brake < 1.0, {'error': reason,
-                                    'cut_ms': int(cut_ms), 'evaluated': evaluated})
-            self.ledger.set_candidate(h, tf, geo, 'gate1_fail',
-                                      gate1={'p': 1.0, 'reason': reason}, reason=reason)
-            self.ledger.finish_batch(bid, False, time.monotonic() - t0, reason)
-            return {**out, 'ok': False, 'state': 'gate1_fail', 'error': reason}
-        if res.ok and v.get("deferred") and not v.get("looked"):
-            # Decided from bar counts before any held-out price was read: no
-            # look is taken, no budget step is charged (cf. the alpha deferral).
-            self.ledger.set_candidate(h, tf, geo, "deferred", reason=v["deferred"])
-            self.ledger.finish_batch(bid, True, time.monotonic() - t0)
-            log.warning(f"research referee: {h} deferred — {v['deferred']}")
-            return {**out, "ok": True, "state": "deferred", "alpha": alpha}
-
+        if v.get("quantitative_receipt_refused"):
+            v = dict(v, error="untestable: " + str(v["quantitative_receipt_refused"]))
+        if v.get("deferred") and not v.get("looked"):
+            # Metadata was preflighted before reserving. A later source change
+            # cannot refund an uncertain dispatched look or restore its identity.
+            v = dict(v, error="untestable: post-dispatch deferral: " + str(v["deferred"]))
+        if v.get("cut_ms") != cut_ms:
+            v = dict(v, error="untestable: protected cut changed")
+        if res.ok and not v.get("error") and (v.get("hash") != h or v.get("looked") is not True):
+            v = dict(v, error="untestable: protected result identity unavailable")
         if res.ok and not v.get("error"):
             try:
                 portfolios = [v.get("rotation") or {},
@@ -754,28 +800,15 @@ class ResearchRunner:
                 v = {**v, "error": str(exc)}
         if not res.ok or v.get("error"):
             err = res.error if not res.ok else v["error"]
+            self.ledger.complete_look(h, 1.0,
+                {"error": err, "cut_ms": int(cut_ms), "evaluated": evaluated},
+                "gate1_fail", gate1={"p": 1.0, "reason": "untestable: " + str(err)},
+                reason="failed look: " + str(err))
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, err)
-            attempts = len(self.journal.query(
-                "SELECT 1 FROM research_batches WHERE round=? AND ok=0",
-                (rnd,)))
-            if attempts >= int(self._r("referee_max_attempts")):
-                # it has almost certainly read held-out prices by now; a
-                # look that keeps failing is charged, never retried forever
-                self.ledger.record_test(h, tf, geo, "gate1", 1.0, alpha,
-                                        brake < 1.0, {"error": err,
-                                                      "cut_ms": int(cut_ms),
-                                                      "evaluated": evaluated})
-                self.ledger.set_candidate(h, tf, geo, "gate1_fail",
-                                          reason=f"failed {attempts}x: {err}")
-            return {**out, "ok": False, "error": err}
+            return {**out, "ok": False, "state": "gate1_fail", "error": err}
 
         g1 = v.get("gate1") or {"p": 1.0, "reason": "no gate1 result"}
-        rejected = self.ledger.record_test(
-            h, tf, geo, "gate1", float(g1["p"]), alpha, brake < 1.0,
-            {"evaluated": evaluated, "cut_ms": v.get("cut_ms") or int(cut_ms),
-             "a": v.get("a"), "b": v.get("b"),
-             "rotation": v.get("rotation"),
-             "draws": (v.get("rotation") or {}).get("draws", draws), "t": t})
+        rejected = float(g1["p"]) <= alpha
         g3 = v.get("gate3") or {"passed": False, "reason": "no gate3 result"}
         if not rejected:
             state, reason = "gate1_fail", \
@@ -785,9 +818,12 @@ class ResearchRunner:
         else:
             state, reason = "referee_passed", \
                 f"{g1['reason']} <= alpha_{t}={alpha:.2e}; {g3.get('reason')}"
-        self.ledger.set_candidate(h, tf, geo, state, gate1={
-            **g1, "alpha": alpha, "t": t, "a": v.get("a"), "b": v.get("b"),
-            "rotation": v.get("rotation")}, gate3=g3, reason=reason)
+        self.ledger.complete_look(h, float(g1["p"]),
+            {"evaluated": evaluated, "cut_ms": int(cut_ms), "a": v.get("a"),
+             "b": v.get("b"), "rotation": v.get("rotation"),
+             "draws": (v.get("rotation") or {}).get("draws", draws), "t": t}, state,
+            gate1={**g1, "alpha": alpha, "t": t, "a": v.get("a"), "b": v.get("b"),
+                   "rotation": v.get("rotation")}, gate3=g3, reason=reason)
         self.ledger.finish_batch(bid, True, time.monotonic() - t0)
         log.info(f"research referee {h} {tf}/{geo}: {state} — {reason}")
         return {**out, "ok": True, "state": state, "p": g1["p"],

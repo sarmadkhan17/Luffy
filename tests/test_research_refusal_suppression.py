@@ -55,7 +55,7 @@ def env(tmp_path, monkeypatch):
     db = str(tmp_path / "candles.db")
     inc = control.INCUMBENT_UNIVERSE
     _store(db, list(inc) + list(universe.DISCOVERY))
-    monkeypatch.setattr(universe, "coverage", lambda tfs=None: {
+    monkeypatch.setattr(universe, "coverage", lambda tfs=None, feed=None: {
         tf: {s: 11000 for s in universe.DISCOVERY + universe.HELDOUT}
         for tf in (tfs or ["4h"])})
     return {"db": db, "tmp": tmp_path}

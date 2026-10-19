@@ -109,6 +109,8 @@ def store(tmp_path):
             db.executemany("INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                            [(sym, "4h", i * TF_MS, 1, 1, 1, 1, 1, 1)
                             for i in range(first, 1000 + 500)])
+    from tests.retained_candle_fixtures import qualify
+    qualify(path)
     return str(path)
 
 
@@ -159,27 +161,20 @@ def test_examine_defers_when_alpha_exceeds_rotation_resolution(store, monkeypatc
 
 
 # ── runner: a child deferral is a state, not a charged look ─────────────
-def test_runner_records_a_child_deferral_without_spending_a_test(tmp_path, monkeypatch):
+def test_runner_preflights_metadata_deferral_without_spending(tmp_path, monkeypatch):
     from trader.research import universe
-    monkeypatch.setattr(universe, "coverage", lambda tfs=None: {
-        tf: {s: 11000 for s in universe.DISCOVERY + universe.HELDOUT}
+    monkeypatch.setattr(universe, "coverage", lambda tfs=None, feed=None: {
+        tf: {s:11000 for s in universe.DISCOVERY+universe.HELDOUT}
         for tf in (tfs or ["4h"])})
     from tests.test_research_runner import _setup
-    from trader.research.ledger import Ledger
-    deferred = {"hash": "x", "looked": False,
-                "deferred": "common rotation needs 199 distinct offsets; "
-                            "shortest held-out B leg carries 0"}
-    r, calls, combos = _setup(tmp_path, examine=deferred)
-    r.step()                                             # select
-    out = r.step()                                       # examine best
-    assert out.get("state") == "deferred" and out["ok"] is True, out
-    led = Ledger(r.journal)
-    assert led.tests() == []                             # no look, no budget step
-    cand = led.candidate(combos[0].hash)
-    assert cand["state"] == "deferred" and "distinct offsets" in cand["reason"]
-    payload = [c for c in calls if c["fn"] == "referee_job"][0]["payload"]
-    assert payload["alpha"] == pytest.approx(0.0025, rel=1e-2) and payload["max_draws"] > 0
-    assert led.spent(combos[0].hash) is None             # held-out stays unspent
+    monkeypatch.setattr(rf, "rotation_capacity", lambda *a,**k:
+                        {"a":{"A":700},"b":{"B":210}})
+    r,calls,combos = _setup(tmp_path)
+    r.step()
+    out=r.step()
+    assert out["state"]=="deferred" and out["ok"]
+    assert r.ledger.tests()==[] and r.ledger.spent(combos[0].hash) is None
+    assert not [c for c in calls if c["fn"]=="referee_job"]
 
 
 # ── registration: a frozen window the referee could never test ──────────
@@ -197,6 +192,7 @@ def test_translation_waits_for_the_referees_rotation_floor(population, tmp_path)
     with sqlite3.connect(cut_rows) as db:
         first = db.execute("SELECT MIN(ts) FROM candles").fetchone()[0]
         db.execute("DELETE FROM candles WHERE ts>=?", (first + 1800 * TF_MS,))
+        db.execute("DELETE FROM market_revisions WHERE event_ms>=?", (first + 1800 * TF_MS,))
     short = E.translate(h, cut_rows, CFG, later)
     assert short["status"] == "DATA_INSUFFICIENT"
     assert short["reason"] == "referee_rotation_floor"

@@ -65,8 +65,9 @@ def to_binance(symbol: str) -> str:
 
 
 class DerivFeed:
-    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None, *, retrospective=None):
+    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None, *, retrospective=None, read_only=False):
         self._db_path = str(db_path) if db_path else None
+        self.read_only = bool(read_only)
         self.retrospective = deepcopy(retrospective) if retrospective is not None else None
         if self.retrospective is not None:
             if not db_path or not self.retrospective.get('dataset_id'):
@@ -82,9 +83,12 @@ class DerivFeed:
     def db(self):
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            if self.retrospective is not None:
+            if self.read_only or self.retrospective is not None:
                 import sqlite3
                 from pathlib import Path
+                if self._db_path is None:
+                    from ..core.config import ROOT
+                    self._db_path = str(ROOT / "data" / "derivs.db")
                 conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
                 conn.execute('PRAGMA query_only=ON')
                 self._local.conn = conn
@@ -124,7 +128,7 @@ class DerivFeed:
         return ts.astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
 
     def save(self, symbol: str, series: str, df: pd.DataFrame) -> None:
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency is read-only')
         if df is None or df.empty:
             return
@@ -194,7 +198,7 @@ class DerivFeed:
 
     # ── fetch ────────────────────────────────────────────────────────────
     def _get(self, path: str, params: dict, base: str = FAPI) -> list:
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency forbids provider calls')
         import uuid
         self._local.receipts = []
@@ -480,7 +484,7 @@ class DerivFeed:
         2024 has no 2021 frame to reach and asking for one only burns pages
         against an empty window.
         """
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
         since = since or {}
@@ -523,7 +527,7 @@ class DerivFeed:
     def record_all(self, symbols: list, delay: float = 0.3) -> dict:
         """One pass over every symbol and series. Rows already stored are
         replaced, so this is safe to run at any cadence and safe to retry."""
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
         # A duplicated universe member is the same acquisition in this pass.

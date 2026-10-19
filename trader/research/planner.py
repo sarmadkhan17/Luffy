@@ -223,6 +223,7 @@ def _grow_children(led, tf, geo, parts_by_key: dict, beam, max_parts) -> list:
                     continue
                 out.append(Combination(cand, tf, geo, trigger=keys[0],
                                        round="grow", parent=row["hash"]))
+        out = _pending(out, led, tf, geo)
         if out:
             return out
     return []

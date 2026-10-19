@@ -65,13 +65,12 @@ def test_the_filter_result_that_motivated_this_rule_is_refused():
     assert not ok
 
 
-def test_a_subset_that_cannot_be_scored_counts_as_beaten():
-    """If removing a part makes the rule untestable, the part is doing the
-    work that makes it judgeable at all."""
+def test_a_subset_that_cannot_be_scored_is_unavailable():
+    """Insufficient evidence does not demonstrate an economic improvement."""
     child = _res(p=0.01, pct=20.0)
     dead = _res(p=None, pct=0.0, verdict="untestable", testable=False)
-    ok, _ = growth.earns_place(child, dead)
-    assert ok
+    ok, why = growth.earns_place(child, dead)
+    assert not ok and "unavailable" in why
 
 
 def test_a_survivor_beats_every_ablation():

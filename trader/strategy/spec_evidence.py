@@ -32,6 +32,12 @@ _SERIES_FOR = {"funding": "funding", "open_interest": "oi",
 
 def dependency_store(frame, kind, supplied=None):
     """Bind existing stores to the selected retrospective dataset, never globals."""
+    research_paths = getattr(frame, 'attrs', {}).get('research_read_paths')
+    if research_paths is not None:
+        if kind == 'derivs':
+            return DerivFeed(db_path=research_paths.get('derivs'), read_only=True)
+        from ..data.references import RefStore
+        return RefStore(db_path=research_paths.get('refs') or research_paths.get('candles'), read_only=True)
     d = getattr(frame, 'attrs', {}).get('retrospective')
     if d is None:
         return supplied

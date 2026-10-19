@@ -63,7 +63,7 @@ def _referee_status(led: Ledger, cfg: dict) -> None:
     r = cfg.get("research") or {}
     tests = led.tests()
     t, alpha = led.next_alpha(float(r.get("fdr_target", 0.10)),
-                              float(r.get("lord_w0", 0.05)))
+                              float(r.get("lord_w0", 0.05)), register=False)
     cap = int(r.get("referee_max_draws", 19999))
     reachable = pn.draws_for(alpha, cap) is not None
     print(f"\nreferee                : {'ON' if r.get('referee') else 'OFF'}"
@@ -71,7 +71,7 @@ def _referee_status(led: Ledger, cfg: dict) -> None:
     print(f"  held-out looks spent : {len(tests)} "
           f"({sum(1 for x in tests if x['rejected'])} rejected the null)")
     print(f"  next look            : test {t} at alpha={alpha:.2e} — "
-          + ("resolvable" if reachable else
+          + (f"alpha resolvable at {cap} draws; data capacity unchecked" if reachable else
              f"BUDGET CANNOT RESOLVE IT at {cap} draws; looks defer"))
     by = {}
     for row in led.candidates():
@@ -89,13 +89,13 @@ def _top(led: Ledger, cfg: dict, n: int) -> None:
         printed_any = True
         print(f"\n[{tf}] best discovery results — DISCOVERY EVIDENCE ONLY, "
               f"which is a description of the markets it was found on")
-        print(f"  {'p':>9} {'PF':>5} {'CAGR%':>7} {'k':>2} {'verdict':<9} "
+        print(f"  {'p':>9} {'PF':>5} {'total%':>7} {'k':>2} {'verdict':<9} "
               f"parts")
         for r in rows:
             p = r["consistency_p"]
             print(f"  {('%.1e' % p) if p is not None else 'n/a':>9} "
-                  f"{(r['median_pf'] or 0):>5.2f} "
-                  f"{(r['total_pct'] or 0):>7.1f} {r['k']:>2} "
+                  f"{('%.2f' % r['median_pf']) if r['median_pf'] is not None else 'n/a':>5} "
+                  f"{('%.1f' % r['total_pct']) if r['total_pct'] is not None else 'n/a':>7} {r['k']:>2} "
                   f"{r['verdict'] or '':<9} "
                   f"{','.join(json.loads(r['parts'] or '[]'))}")
     if not printed_any:
@@ -128,6 +128,26 @@ def main() -> int:
     cfg = load_config()
     if args.tf:
         cfg.setdefault("research", {})["horizons"] = [args.tf]
+    if not (args.once or args.measure or args.discard_legacy_accounting):
+        # No Journal construction/migration and no parameter registration on a
+        # diagnostic read. Existing data is opened with SQLite's read-only URI.
+        from contextlib import closing
+        from types import SimpleNamespace
+        import sqlite3
+        from .predictive_experiment import readonly
+        try:
+            with closing(readonly(ROOT / "data" / "luffy.db")) as db:
+                db.row_factory = sqlite3.Row
+                led = Ledger(SimpleNamespace(query=lambda sql, args=():
+                             [dict(row) for row in db.execute(sql, args)]))
+                if args.top:
+                    _top(led, cfg, args.top)
+                else:
+                    _status(led, cfg)
+        except (sqlite3.Error, ValueError) as exc:
+            print(f"research status unavailable: {exc}")
+            return 1
+        return 0
     j = _journal()
     led = Ledger(j)
     led.ensure()
@@ -174,11 +194,7 @@ def main() -> int:
         rep = ResearchRunner(j, cfg).step()
         print(json.dumps(rep, indent=2, default=str))
         return 1 if rep.get("ok") is False else 0
-    if args.top:
-        _top(led, cfg, args.top)
-        return 0
-    _status(led, cfg)
-    return 0
+
 
 
 if __name__ == "__main__":

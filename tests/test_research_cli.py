@@ -126,6 +126,14 @@ def test_measure_rekey_archives_then_proceeds(monkeypatch, tmp_path, capsys):
 def test_top_on_an_empty_ledger_says_so_rather_than_staying_silent(
         monkeypatch, tmp_path, capsys):
     _use_tmp_journal(monkeypatch, tmp_path)
+    from trader.research.ledger import Ledger
+    Ledger(cli._journal()).ensure()
+    (tmp_path / "data").mkdir()
+    # Snapshot this synthetic Journal, never production.
+    import sqlite3
+    with sqlite3.connect(tmp_path / "data" / "luffy.db") as db:
+        cli._journal()._conn().backup(db)
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(sys, "argv",
                         ["trader.research", "--top", "5", "--tf", "4h"])
     assert cli.main() == 0

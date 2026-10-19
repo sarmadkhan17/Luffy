@@ -69,8 +69,8 @@ if __name__ == "__main__":
     t = time.time(); rows = []
     for s in range(seeds):
         rows.append(one(kind, s, beta, idio))
-    a = np.array([[x if x is not None else 1.0 for x in r] for r in rows])
+    a = np.array([[x if x is not None else np.nan for x in r] for r in rows])
     print(f"{kind} beta={beta} idio={idio} seeds={seeds} {time.time()-t:.0f}s "
-          f"rho_bar med={np.median(a[:,2]):.3f}")
+          f"rho_bar med={np.nanmedian(a[:,2]) if np.isfinite(a[:,2]).any() else None} known={np.isfinite(a[:,2]).sum()}/{seeds}")
     for lvl in (0.05, 0.01, 0.0025):
-        print(f"  p<={lvl}: raw {np.mean(a[:,0]<=lvl):.3f}  dep {np.mean(a[:,1]<=lvl):.3f}")
+        print(f"  p<={lvl}: raw {np.mean(np.where(np.isfinite(a[:,0]), a[:,0], 1.0)<=lvl):.3f}  dep {np.mean(np.where(np.isfinite(a[:,1]), a[:,1], 1.0)<=lvl):.3f}")

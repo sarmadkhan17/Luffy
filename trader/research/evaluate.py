@@ -119,7 +119,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
             raise ValueError('explicit retrospective research requires a nonempty dataset contract')
         return _retrospective_bundle(tf, symbols, cfg, requires,
                                      heldout_symbols, paths, cap_ms, min_symbols)
-    feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
+    feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"), read_only=True)
     full = {}
     dropped = {}
     for sym in symbols:
@@ -132,6 +132,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
                             "error": f"{type(e).__name__}: {e}"[:200]}
             continue
         if df is not None and len(df) >= 500:
+            df.attrs["research_read_paths"] = dict(paths)
             full[sym] = df
         else:
             dropped[sym] = {"reason": "short_history",
@@ -155,7 +156,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     held_full = {}
     for sym in heldout_symbols:
         try:
-            df = feed.cached_ohlcv(sym, tf, limit=200000)
+            df = feed.replay_metadata(sym, tf, limit=200000)
         except Exception:                               # noqa: BLE001
             continue
         if df is not None and len(df) >= 500:
@@ -179,7 +180,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     derivs = {}
     first_obs: dict = {}
     if any(r not in ("ohlcv", "world") and not r.startswith("ref:") for r in requires):
-        dfeed = DerivFeed(db_path=paths.get("derivs"))
+        dfeed = DerivFeed(db_path=paths.get("derivs"), read_only=True)
         for sym in disc:
             got = spec_evidence.load_derivs(sym, requires, dfeed)
             for req, series in spec_evidence._SERIES_FOR.items():
@@ -194,7 +195,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     ref_keys = [r.split(":", 1)[1] for r in requires
                 if isinstance(r, str) and r.startswith("ref:")]
     if ref_keys:
-        store = RefStore(paths.get("candles"))
+        store = RefStore(paths.get("refs") or paths.get("candles"), read_only=True)
         market = {}
         for k in ref_keys:
             df = store.load(k)
@@ -424,7 +425,13 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             out.update(verdict="untested", untested=True, context_gaps=gaps)
             return out
     if b.evidence or "world" in compiled.data_requires:
-        gaps = spec_evidence.missing_data(spec, list(b.frames), frames=b.frames, world=b.world)
+        # Retrospective missing_data already binds only required dependencies;
+        # do not require an unused derivatives path for an OHLCV-only study.
+        context_frame = next(iter(b.frames.values()), None) if not b.evidence else None
+        gaps = spec_evidence.missing_data(spec, list(b.frames),
+            feed=spec_evidence.dependency_store(context_frame, "derivs"),
+            ref_store=spec_evidence.dependency_store(context_frame, "candles"),
+            frames=b.frames, world=b.world)
         if gaps:
             out.update(verdict="untested", untested=True, context_gaps=gaps)
             return out

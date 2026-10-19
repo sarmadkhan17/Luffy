@@ -176,7 +176,6 @@ research:                        # the search — docs/superpowers/specs/
   # cannot reach.
   referee_max_draws: 19999
   referee_select_batch: 20       # survivors given entry sets per select step
-  referee_max_attempts: 3        # a look that keeps crashing is charged p=1
   # CLOSED until phase 4 adds the reasoning test: the spec admits nothing
   # without a tested thesis. The kernel reads only `reason_passed`
   # candidates, and nothing in phase 3 writes that state.

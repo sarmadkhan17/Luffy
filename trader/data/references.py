@@ -92,9 +92,10 @@ class RefStore:
     #: seconds a statement waits on a lock before "database is locked"
     BUSY_TIMEOUT_S = BUSY_TIMEOUT_S
 
-    def __init__(self, db_path=None, clock_ms=None, *, retrospective=None):
+    def __init__(self, db_path=None, clock_ms=None, *, retrospective=None, read_only=False):
         self._db_path = str(db_path) if db_path else \
             str(ROOT / "data" / "candles.db")
+        self.read_only = bool(read_only)
         self.retrospective = deepcopy(retrospective) if retrospective is not None else None
         if self.retrospective is not None:
             if not db_path or not self.retrospective.get('dataset_id'):
@@ -107,7 +108,7 @@ class RefStore:
     def db(self):
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            if self.retrospective is not None:
+            if self.read_only or self.retrospective is not None:
                 from pathlib import Path
                 conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
                 conn.execute('PRAGMA query_only=ON')
@@ -129,7 +130,7 @@ class RefStore:
 
     def save(self, key: str, df, now_ms: int | None = None) -> int:
         """Persist CLOSED bars with a measured close. Returns rows written."""
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency is read-only')
         ref = REFS[key]
         raw = df.attrs.get('raw_source_record') if df is not None else None

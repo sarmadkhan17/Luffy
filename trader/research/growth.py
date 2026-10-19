@@ -65,6 +65,10 @@ def earns_place(child, other) -> tuple[bool, str]:
     """Is `child` better than `other` on BOTH measures?"""
     require_compatible_accounting((child or {}).get("portfolio") or {},
                                  (other or {}).get("portfolio") or {})
+    if (not other or other.get("verdict") not in ("scored", "empty")
+            or any(r.get("error") or r.get("null_error")
+                   for r in (other.get("symbols") or {}).values())):
+        return False, "comparison evidence unavailable"
     cp, op = _p(child), _p(other)
     cpct, opct = _pct(child), _pct(other)
     if cp >= op:

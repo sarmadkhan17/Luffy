@@ -258,10 +258,13 @@ def test_registered_budget_is_copied_with_its_spent_sequence(case):
     fake=NumericalFixture()
     cycle(case,fake,case[3])
     for _ in range(6): cycle(case,fake,case[4])
-    supported=next(r for r in rows(case[1],'bridge_bank_results') if r['classification']=='SUPPORTED')
-    budget=supported['quantitative_evidence']['registered_budget'][0]
+    with B.store(case[1]) as db:
+        budget=json.loads(db.execute("SELECT payload FROM bridge_runtime_bindings WHERE id='registered-error-budget'").fetchone()[0])[0]
     assert (budget['alpha'],budget['w0'])==(.02,.01)
-    assert [r['seq'] for r in rows(case[1],'bridge_tests')]==[1,2]
+    assert [r['seq'] for r in rows(case[1],'bridge_tests')]==[1]
+    assert not [n for n,_ in fake.calls if n=='referee_job']
+    with sqlite3.connect(next(case[1].parent.glob('bridge-experiments/*/quantitative.db'))) as db:
+        assert db.execute('SELECT state FROM research_candidates').fetchone()[0]=='deferred'
 
 
 def test_changed_source_version_is_retained_as_related_not_suppressed(base,tmp_path):

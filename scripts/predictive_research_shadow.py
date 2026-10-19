@@ -49,12 +49,12 @@ def run(investigation,journal,candles,cfg,*,as_of_ms,max_sources):
         result=B.cycle(investigation,Path(tmp)/'bank.db',candles,cfg,
             now_ms=as_of_ms,max_sources=max_sources,max_experiments=1,submit=False,
             quantitative_source_path=journal)
-    return dict(package='LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1',status='PASS',
+    return dict(package='LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1',status='SOURCE_SHADOW_ONLY',
         as_of_ms=as_of_ms,bounds=dict(max_sources=max_sources,max_experiments=1),
         investigation=actual,journal=quantitative,investigations_inspected=inspected,
         investigation_refusals=reasons,**result,
         real_evidence_blocked=['No eligible persisted Research Bank source' ] if not result['counts']['eligible_research_results'] else
-            ['Protected post-generation quantitative evidence is not yet mature'],
+            ['Numerical submission disabled (submit=False); inspect exact translation counts/refusals above'],
         limitation='Zero real support is reported literally; fixture results are never substituted for real evidence.')
 
 

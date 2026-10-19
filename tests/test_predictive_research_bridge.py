@@ -49,12 +49,14 @@ def population(paths, tmp_path, monkeypatch):
         for sym in DISCOVERY+HELDOUT:
             db.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)',
                 [(sym,'4h',start+i*I.TF,100+i*.01,101+i*.01,99+i*.01,100.1+i*.01,
-                  100+(i%37)**2,50) for i in range(2100)])
+                  100+(i%37)**2,50) for i in range(3000)])
     from tests.retained_candle_fixtures import qualify
     qualify(candles)
     # These artificial bars extend beyond wall time; observe at their actual fixture cut.
-    monkeypatch.setattr('trader.data.feed.time.time', lambda: (start+2100*I.TF)/1000)
-    return source, tmp_path/'bridge.db', candles, end+3, start+2100*I.TF, s
+    # At alpha_1=.0025 the common null needs 399 offsets, beyond the 199
+    # absolute floor: 900 protected bars provide 478 without changing alpha.
+    monkeypatch.setattr('trader.data.feed.time.time', lambda: (start+3000*I.TF)/1000)
+    return source, tmp_path/'bridge.db', candles, end+3, start+3000*I.TF, s
 
 
 class NumericalFixture:
@@ -313,17 +315,24 @@ def test_source_alias_budget_and_immutable_checkpoint_refused(population):
 
 
 def test_global_existing_error_budget_is_inherited(population):
-    source,bank,_,created,later,_=population
+    source,bank,candles,created,later,s=population
     from trader.research.ledger import Ledger
     led=Ledger(Journal(source.parent/'luffy.db'))
     led.ensure()
-    led.record_test('prior-protected-look','4h','fixed','gate1',.8,.001,False,{'reason':'TEST_ONLY'})
+    h=P.propose(s,'volume_breakout_context.v1',created)
+    ex=E.translate(h,candles,CFG,later)
+    led.record_test('prior-protected-look','4h','fixed','gate1',.8,.001,False,
+                    dict(reason='TEST_ONLY',cut_ms=ex['split']['cut_ms']))
     fake=NumericalFixture()
     consume(population,fake,created)
     for _ in range(6): consume(population,fake,later)
     tests=saved(bank,'bridge_tests')
-    assert len(tests)==2 and [r['seq'] for r in tests]==[1,2]
-    assert tests[1]['alpha_t']!=tests[0]['alpha_t']
+    assert len(tests)==1 and tests[0]['seq']==1
+    # The inherited second alpha requires more distinct offsets than this
+    # fixture retains. No fake child may waive that capacity requirement.
+    assert not [n for n,_ in fake.calls if n=='referee_job']
+    with sqlite3.connect(next(bank.parent.glob('bridge-experiments/*/quantitative.db'))) as db:
+        assert db.execute('SELECT state FROM research_candidates').fetchone()[0]=='deferred'
 
 
 def test_malformed_stored_bank_refused_by_normal_consumer(population):

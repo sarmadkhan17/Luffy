@@ -28,23 +28,11 @@ def _ms(df) -> pd.Series:
     Handles both datetime64[ms] and datetime64[ns] resolutions.
     Returns milliseconds since epoch as a Series.
     """
-    ts = df["ts"]
-    # Get the underlying integer values in the native unit
-    # datetime64[ms] -> int64 in milliseconds
-    # datetime64[ns] -> int64 in nanoseconds
-    int_vals = ts._values.view("int64")
-
-    # Determine the resolution and convert to milliseconds
-    dtype_str = str(ts.dtype)
-    if "ms" in dtype_str:
-        # Already in milliseconds
-        return pd.Series(int_vals, index=ts.index)
-    elif "ns" in dtype_str:
-        # Convert from nanoseconds to milliseconds
-        return pd.Series(int_vals // 10 ** 6, index=ts.index)
-    else:
-        # Unknown resolution, assume nanoseconds (the brief's default)
-        return pd.Series(int_vals // 10 ** 6, index=ts.index)
+    from ..data.references import to_ms
+    ts = pd.to_datetime(df["ts"], utc=True)
+    if ts.isna().any():
+        raise ValueError("invalid research timestamp")
+    return pd.Series(to_ms(ts), index=df.index)
 
 
 def cut_ms(frames: dict, frac: float = DISCOVERY_FRAC) -> int | None:

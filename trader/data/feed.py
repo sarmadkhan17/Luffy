@@ -87,7 +87,8 @@ class DataFeed:
     MAX_CACHE_SERIES = 128
 
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
-                 db_path=None, clock_ms=None, retrospective=None):
+                 db_path=None, clock_ms=None, retrospective=None, *, read_only=False):
+        self.read_only = bool(read_only)
         self.retrospective = deepcopy(retrospective) if retrospective is not None else None
         if self.retrospective is not None:
             if not db_path or not isinstance(self.retrospective.get('dataset_id'), str) or not self.retrospective['dataset_id'].strip():
@@ -113,7 +114,7 @@ class DataFeed:
         from ..core.config import Env
         on_demo = Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes")
         self.data_ex = make_exchange("futures", demo=False, with_keys=False) \
-            if (on_demo and exchange is None and self.retrospective is None) else None
+            if (on_demo and exchange is None and self.retrospective is None and not self.read_only) else None
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = OrderedDict()
@@ -140,8 +141,8 @@ class DataFeed:
     @property
     def ex(self):
         """Exchange used for market data (production public when on demo)."""
-        if self.retrospective is not None:
-            raise RuntimeError('retrospective provider access forbidden')
+        if self.read_only or self.retrospective is not None:
+            raise RuntimeError('read-only provider access forbidden')
         if self.data_ex is not None:
             return self.data_ex
         if self._ex is None:
@@ -395,7 +396,7 @@ class DataFeed:
             if self._db_path is None:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "candles.db")
-            if self.retrospective is not None:
+            if self.read_only or self.retrospective is not None:
                 from pathlib import Path
                 uri = Path(self._db_path).resolve().as_uri() + '?mode=ro'
                 conn = sqlite3.connect(uri, uri=True, timeout=self.BUSY_TIMEOUT_S)
@@ -676,12 +677,13 @@ class DataFeed:
         self._instruments[norm_symbol(symbol)] = instrument_id
 
     def _identity(self,symbol):
-        iid,source=mp.venue_identity(self.ex,symbol)
+        exchange = self._ex if self.read_only or self.retrospective is not None else self.ex
+        iid,source=mp.venue_identity(exchange,symbol)
         if iid:
             return iid,source
         binding=self._instruments.get(norm_symbol(symbol))
-        if binding is not None and binding.venue == canonical_venue(getattr(self.ex,'id',None)):
-            return binding.value,mp.venue_source(self.ex)
+        if binding is not None and binding.venue == canonical_venue(getattr(exchange,'id',None)):
+            return binding.value,mp.venue_source(exchange)
         return None,None
 
     @staticmethod
@@ -713,6 +715,23 @@ class DataFeed:
     def latest_ohlcv(self, symbol, tf='15m', limit=20000):
         """Explicit current offline view; unsuitable for historical decisions."""
         return self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=limit)
+
+    def replay_metadata(self, symbol, tf='15m', limit=200000):
+        """Exact replay timestamps/identities only; never return price frames.
+
+        The provenance reader authenticates the same selected receipts internally.
+        This does not grant eligibility to projections or after-close backfills.
+        """
+        at = self._clock_ms()
+        metadata = mp.load(self.db, self._series_key(symbol, tf), as_of_ms=at,
+                           limit=limit, replay_tf=tf, metadata_only=True)
+        if metadata is None:
+            metadata = pd.DataFrame({"ts": pd.Series([], dtype="datetime64[ms, UTC]")})
+        stored = self.db.execute("SELECT COUNT(*) FROM candles WHERE symbol=? AND tf=?",
+                                 (norm_symbol(symbol), tf)).fetchone()[0]
+        metadata.attrs.update(evidence_scope="replay_eligible_metadata",
+                              stored_bars=int(stored), replay_eligible_bars=len(metadata))
+        return metadata
 
     def replay_ohlcv(self, symbol, tf='15m', limit=20000):
         """Bar-close replay from revisions actually retained by each bar cut.
@@ -851,7 +870,7 @@ class DataFeed:
         # Caller contract errors retain their public API behavior.
         if as_of_ms is not None:
             mp.cut(as_of_ms)
-        elif self.retrospective is not None:
+        elif self.read_only or self.retrospective is not None:
             raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
         self._local.acquisition_failure = None
         self._local.persistence_failure = None
@@ -891,7 +910,7 @@ class DataFeed:
         if as_of_ms is not None:
             return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
         symbol = norm_symbol(symbol)
-        if self.retrospective is not None:
+        if self.read_only or self.retrospective is not None:
             raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
         if self.background_acquisition and not getattr(self._local, 'acquiring', False):
             current = self.latest_ohlcv(symbol, tf, limit)
