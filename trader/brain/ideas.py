@@ -20,6 +20,7 @@ match and every idea would be retried forever.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import html as _html
 import json
 import logging
@@ -220,7 +221,8 @@ def mark_consumed(journal, idea_id: str, outcome: str,
 
 
 def pending(journal, max_age_days: float = MAX_AGE_DAYS,
-            limit: int = POOL, stream: str | None = None) -> list[dict]:
+            limit: int = POOL, stream: str | None = None, *,
+            now_ms: int | None = None, retain_queue_row: bool = False) -> list[dict]:
     """Unconsumed ideas that carry enough text to be worth a prompt,
     best material first.
 
@@ -233,12 +235,15 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
 
     An idea is excluded if it was consumed FOR this stream. Legacy consumption
     rows (no stream key) suppress the idea for ALL streams.
+    An explicit clock and exact row snapshot support read-only bridge replay.
     """
     rows = journal.query(
-        "SELECT subject, detail FROM brain_events e WHERE e.kind=? "
-        "AND e.ts >= datetime('now', ?) "
-        "ORDER BY e.ts DESC LIMIT ?",
-        (KIND, f"-{float(max_age_days)} days", POOL * 6))
+        "SELECT id, ts, kind, subject, detail FROM brain_events e WHERE e.kind=? "
+        "AND julianday(e.ts) >= julianday(COALESCE(?, 'now'), ?) "
+        "ORDER BY e.ts DESC, e.id DESC LIMIT ?",
+        (KIND, None if now_ms is None else datetime.fromtimestamp(
+            now_ms / 1000, timezone.utc).isoformat(),
+         f"-{float(max_age_days)} days", POOL * 6))
     seen: set[str] = set()             # an upgraded idea has two rows;
     out: list[dict] = []               # ts DESC means the newest one wins
     for r in rows:
@@ -257,6 +262,8 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
                 continue
             if stream is not None and stream not in idea["streams"]:
                 continue
+            if retain_queue_row:
+                idea["queue_row"] = dict(r)
             out.append(idea)
     out.sort(key=lambda i: i["score"], reverse=True)
     return out[:limit]
