@@ -1,0 +1,51 @@
+[
+ {
+  "delay_ms": 0,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 0,
+  "replay_eligible": 1
+ },
+ {
+  "delay_ms": 1,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 1,
+  "replay_eligible": 1
+ },
+ {
+  "delay_ms": 1000,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 1000,
+  "replay_eligible": 1
+ },
+ {
+  "delay_ms": 450000,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 450000,
+  "replay_eligible": 1
+ },
+ {
+  "delay_ms": 900000,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 900000,
+  "replay_eligible": 1
+ },
+ {
+  "delay_ms": 900001,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 900001,
+  "replay_eligible": 0
+ },
+ {
+  "delay_ms": 2700000,
+  "bar_state": "FINAL",
+  "quality": "VALID",
+  "available_minus_close": 2700000,
+  "replay_eligible": 0
+ }
+]

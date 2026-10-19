@@ -185,7 +185,8 @@ def test_latest_asof_and_replay_separate(store,monkeypatch):
     persist(f,frame(),c.at)
     monkeypatch.setattr(f,'latest_ohlcv',lambda *a,**kw: (_ for _ in ()).throw(AssertionError('latest')))
     assert f.ohlcv_asof('BTC/USDT',as_of_ms=c.at).iloc[0].close==10
-    assert f.cached_ohlcv('BTC/USDT') is None  # receipt after nominal decision close
+    replay=f.cached_ohlcv('BTC/USDT')  # received 100ms after close: eligible, never backdated to the close
+    assert replay.iloc[0].available_at_ms==c.at and replay.iloc[0].available_at_ms>T+Q
     assert f.cached_ohlcv('BTC/USDT',as_of_ms=c.at).iloc[0].close==10
 
 

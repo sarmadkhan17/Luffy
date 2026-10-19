@@ -23,8 +23,11 @@ CONTRACT_ID = "quant-contract.v1"
 COST_BASIS = "ESTIMATED_MODEL"          # never "ACTUAL"
 
 DEFINITIONS = {
-    "entry": "at the CLOSE of the signal bar plus slippage; the signal uses only bars <= that bar",
-    "label": "exit is decided by bars strictly after entry only (stop before target when both touch); "
+    "entry": "at the OPEN of the first retained bar starting at or after max(signal-bar close, receipt availability), "
+             "plus slippage; the signal uses only bars <= the signal bar. Availability later than one bar after "
+             "close, unknown availability, or no bar opening within one bar of the decision refuses the entry "
+             "(fill_timing.POLICY_ID)",
+    "label": "exit is decided by bars from the fill bar onward only (stop before target when both touch); "
              "an open position at dataset end is censored, not scored",
     "slippage": "slippage_atr_frac x ATR(signal bar), paid on entry and again on exit",
     "fees": "taker_fee_pct/100 x (entry price + exit price) per unit; both sides",
@@ -78,8 +81,9 @@ def data_digest(df, *, include_dependent=False) -> str:
 
 def engine_digest() -> str:
     """Hash of the engine source that defines a trade, so a code change is visible."""
-    from . import vector_backtest as vb
-    src = "".join(inspect.getsource(f) for f in (vb._trade, vb.simulate, vb.walk_table, vb.trade_table))
+    from . import fill_timing, vector_backtest as vb
+    src = "".join(inspect.getsource(f) for f in (vb._trade, vb.simulate, vb.walk_table, vb.trade_table,
+                                                 fill_timing.fills))
     return hashlib.sha256(src.encode()).hexdigest()
 
 
@@ -89,7 +93,7 @@ def retrospective_source_identity():
     root = Path(__file__).resolve().parents[1]
     names = ('strategy/compile.py', 'strategy/features.py', 'strategy/features_deriv.py',
              'strategy/features_xs.py', 'strategy/dsl.py', 'strategy/backtest.py',
-             'strategy/vector_backtest.py', 'strategy/rolling.py',
+             'strategy/vector_backtest.py', 'strategy/fill_timing.py', 'strategy/rolling.py',
              'strategy/quant_contract.py', 'strategy/spec_evidence.py',
              'strategy/portfolio_evidence.py', 'data/feed.py',
              'data/market_provenance.py', 'data/derivatives.py', 'data/references.py')

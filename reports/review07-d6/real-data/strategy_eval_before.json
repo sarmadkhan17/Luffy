@@ -1,0 +1,47 @@
+{
+ "code_root": "/mnt/luffy-data/test-tmp/sarmad/claude-1000/-mnt-luffy-data/22c9c57f-c1c1-4218-aa46-555f77713c9c/scratchpad/base",
+ "spec": "seed_bollinger_band_fade",
+ "timeframe": "15m",
+ "now_ms": 1792421705219,
+ "gauntlet": {
+  "passed": false,
+  "symbols_loaded": [],
+  "outcome": null,
+  "untested": true,
+  "reason": "no candle data",
+  "test_trades": null,
+  "per_symbol": {}
+ },
+ "frames": {
+  "BTC/USDT": {
+   "stored": 38721,
+   "replay_eligible": 0
+  },
+  "ETH/USDT": {
+   "stored": 38665,
+   "replay_eligible": 0
+  },
+  "SOL/USDT": {
+   "stored": 38710,
+   "replay_eligible": 0
+  },
+  "XRP/USDT": {
+   "stored": 38662,
+   "replay_eligible": 0
+  },
+  "SUI/USDT": {
+   "stored": 38672,
+   "replay_eligible": 0
+  }
+ },
+ "requirements": {
+  "load_frames_min_bars": 400,
+  "engine_warmup_bars": 210,
+  "min_oos_trades": 20
+ },
+ "engine_on_best_frame": {
+  "symbol": "BTC/USDT",
+  "bars": 0,
+  "error": "no replay-eligible bars"
+ }
+}

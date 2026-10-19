@@ -162,9 +162,11 @@ def _missing_context(compiled, derivs, market) -> list:
 
 def _scoring_evidence(recent, score_from: int) -> dict:
     """Where simulate() could actually open a trade in `recent`: bars
-    [max(WARMUP, score_from), len-1) with a finite positive ATR — the same
-    gates simulate() applies before looking at a signal. Diagnostics only."""
+    [max(WARMUP, score_from), len-1) with a finite positive ATR and an
+    executable fill — the same gates simulate() applies before looking at a
+    signal. Diagnostics only."""
     from ..agents.indicators import atr_series
+    from .fill_timing import fills
     n = len(recent)
     eff = max(WARMUP, int(score_from))
     hi = n - 1                               # the last bar can never open
@@ -174,7 +176,8 @@ def _scoring_evidence(recent, score_from: int) -> dict:
     else:
         try:
             atr = atr_series(recent, 14).to_numpy(float)[eff:hi]
-            scorable_bars = int(np.count_nonzero(np.isfinite(atr) & (atr > 0)))
+            fillable = fills(recent, WARMUP)[0][eff:hi] >= 0
+            scorable_bars = int(np.count_nonzero(np.isfinite(atr) & (atr > 0) & fillable))
         except Exception:
             scorable_bars = None             # unknown, never invented
     return {"source_bars": n,

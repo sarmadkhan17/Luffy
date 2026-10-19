@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from ..agents.indicators import atr_series
+from . import fill_timing
 from .backtest import BacktestResult
 from .portfolio_evidence import Fill
 from .spec import ExitSpec
@@ -74,14 +75,22 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 
 def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
-           bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None):
-    """One trade entered at bar `i`'s close: (exit_i, stop distance, P&L per
-    unit of size). Every cost scales with size, so P&L = unit P&L x amount
-    and the R multiple — unit P&L / stop distance — does not depend on the
-    balance. `simulate` and the research rotation table both call this, so
-    there is one definition of a trade."""
+           bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None,
+           fill=None):
+    """One trade signalled on bar `i`: (exit_i, stop distance, P&L per unit
+    of size). `fill` is `fill_timing.fills`: the entry fills at the OPEN of
+    bar fill[i], and a declared signal exit seen on bar j at the open of bar
+    fill[j]; with no array both default to the next bar. Signal ATR and swing
+    context stop at bar `i`. A max_bars exit is a clock event, not a data
+    decision, so it stays at the final held bar's close.
+    Every cost scales with size, so P&L = unit P&L x amount and the R
+    multiple — unit P&L / stop distance — does not depend on the balance.
+    `simulate` and the research rotation table both call this, so there is
+    one definition of a trade."""
     sign = 1.0 if side == "long" else -1.0
-    px = closes[i]
+    f = i + 1 if fill is None else int(fill[i])
+    e = f - 1                       # the notional entry bar: the trade starts as it ends
+    px = float(df["open"].iloc[f])
     slip = atr[i] * slip_frac
     entry = px + sign * slip
     n = len(closes)
@@ -97,16 +106,21 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
             raise ValueError("exit_semantics_mismatch")
         step = TF_MS[exit_spec._exit_timeframe]
         bar_minutes = step / 60_000
-        clock = df["ts"].iloc[i]
+        clock = df["ts"].iloc[e]
         entry_ms = int(clock.timestamp()*1000) if hasattr(clock, "timestamp") else int(clock)
         policy, state = E.initialize(exit_spec, px, atr[i], side, entry_ms, step)
     sl = entry - sign * sl_dist
     tp = entry + sign * tp_dist if tp_dist is not None else None
 
-    end = min(i + max_bars, n - 1)
+    end = min(e + max_bars, n - 1)
     exit_i, exit_px = end, closes[end]
     best = entry
-    for j in range(i + 1, end + 1):
+    due = -1                        # bar whose open fills a signalled exit
+    at_open = 0
+    for j in range(f, end + 1):
+        if j == due:
+            exit_i, exit_px, at_open = j, float(df["open"].iloc[j]), 1
+            break
         if canonical:
             row = df.iloc[j]
             clock = row['ts']
@@ -136,13 +150,14 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
         if hit_tp:
             exit_i, exit_px = j, tp
             break
-        if exit_sig is not None and exit_sig[j]:
-            exit_i, exit_px = j, closes[j]
-            break
+        if exit_sig is not None and exit_sig[j] and due < 0:
+            g = j + 1 if fill is None else int(fill[j])
+            if g > j:                                 # unexecutable signals cannot exit
+                due = g
 
     if canonical:
         if exit_evidence_out is not None:
-            exit_evidence_out.append({'entry_i': i, 'exit_i': exit_i if state.reason else None,
+            exit_evidence_out.append({'entry_i': e, 'exit_i': exit_i if state.reason else None,
                 'exit_semantics_id': E.EXIT_SEMANTICS_ID, 'state': json.loads(E.encode(policy,state)),
                 'censored': not bool(state.reason), 'authority': 'STRATEGY'})
         if not state.reason:
@@ -150,11 +165,12 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     exit_px = exit_px - sign * slip                   # exits pay the spread too
     gross = (exit_px - entry) * sign
     fees = fee * (entry + exit_px)
-    hours = (exit_i - i) * bar_minutes / 60.0
+    held_to = exit_i - at_open      # an open fill ends the previous bar
+    hours = (held_to - e) * bar_minutes / 60.0
     if fund_arr is None:
         carry = abs(funding_8h) * (hours / 8.0)
     else:
-        held = fund_arr[i:exit_i]
+        held = fund_arr[e:held_to]
         known = held[np.isfinite(held)]
         per_bar = bar_minutes / 60.0 / 8.0
         # the real signed rate where the venue told us, the flat
@@ -193,18 +209,19 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
     trail_mult = float(trail.get("mult", 0.0)) \
         if trail.get("kind") == "atr" else 0.0
     arm_at_r = float(trail.get("arm_at_r", 1.0))
+    fill, _ = fill_timing.fills(df, WARMUP)
     out = {}
     for side in ("long", "short"):
         ex = np.full(n, -1, dtype=np.int64)
         r = np.zeros(n)
         pos = np.zeros(n)
         for i in range(max(WARMUP, int(first_bar)), n - 1):
-            if not np.isfinite(atr[i]) or atr[i] <= 0:
+            if fill[i] < 0 or not np.isfinite(atr[i]) or atr[i] <= 0:
                 continue
             e, sl_dist, unit = _trade(
                 i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
                 fee, max_bars, trail_mult, arm_at_r, None, fund_arr,
-                funding_8h, bar_minutes)
+                funding_8h, bar_minutes, fill=fill)
             ex[i], r[i], pos[i] = e, unit / sl_dist, closes[i] / sl_dist
         out[side] = (ex, r, pos)
     return out
@@ -293,10 +310,11 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     peak = equity
     candidates = np.flatnonzero(long | short)
     cursor = score_from
+    fill, _ = fill_timing.fills(df, WARMUP)
 
     for raw_i in candidates:
         i = int(raw_i)
-        if i < cursor or i >= n - 1:
+        if i < cursor or i >= n - 1 or fill[i] < 0:
             continue
         if not np.isfinite(atr[i]) or atr[i] <= 0:
             continue
@@ -305,7 +323,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         exit_i, sl_dist, unit_pnl = _trade(
             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-            funding_8h, bar_minutes, trace)
+            funding_8h, bar_minutes, trace, fill=fill)
         amount = (equity_curve[-1] * risk_frac) / sl_dist
         if amount * px < 10:                          # dust guard
             continue

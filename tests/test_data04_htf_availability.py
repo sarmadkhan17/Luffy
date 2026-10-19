@@ -120,7 +120,7 @@ def test_aggregate_observation_clock_fences_feature_inputs():
 
 @pytest.mark.parametrize('tf,duration,count', [('1h', H, 4), ('4h', 4*H, 16)])
 def test_late_missing_child_backfill_never_repairs_earlier_cut(tmp_path, tf, duration, count):
-    late = T+duration+Q
+    late = T+duration+2*Q   # beyond the child's one-bar replay window
     path = tmp_path/'backfill.db'
     feed = DataFeed(exchange=Venue([]), db_path=path, clock_ms=Clock(late))
     for i in range(count-1):

@@ -171,7 +171,10 @@ def test_queue_preserves_provenance_closed_bars_and_offline_replay(tmp_path, mon
     assert current['request_started_ms'].notna().all()
     assert current['available_at_ms'].notna().all()
     assert current['bar_state'].eq('FINAL').all()
-    assert feed.replay_ohlcv('BTC/USDT', '15m', limit=100) is None
+    replay = feed.replay_ohlcv('BTC/USDT', '15m', limit=100)
+    # only the newest bar was received inside its own window; the 99 backfills stay retrospective
+    assert len(replay) == 1 and replay['ts'].iloc[0] == current['ts'].iloc[-1]
+    assert replay['available_at_ms'].iloc[0] == current['available_at_ms'].iloc[-1]
     calls = len(ex.calls)
     assert feed.cached_ohlcv('BTC/USDT', '15m', limit=100, as_of_ms=asof) is not None
     assert len(ex.calls) == calls

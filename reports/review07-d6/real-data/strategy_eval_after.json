@@ -1,0 +1,95 @@
+{
+ "code_root": "/mnt/luffy-data/opus-review07-d6",
+ "spec": "seed_bollinger_band_fade",
+ "timeframe": "15m",
+ "now_ms": 1792421705219,
+ "gauntlet": {
+  "passed": false,
+  "symbols_loaded": [],
+  "outcome": null,
+  "untested": true,
+  "reason": "no candle data",
+  "test_trades": null,
+  "per_symbol": {}
+ },
+ "frames": {
+  "BTC/USDT": {
+   "stored": 38721,
+   "replay_eligible": 110,
+   "longest_contiguous_run": 50,
+   "runs": 18,
+   "timing": {
+    "policy": "next-executable-open.v1",
+    "executable": 88,
+    "fill_gap": 20,
+    "no_executable_bar": 2
+   },
+   "earliest_decision_ms": 1791079842474
+  },
+  "ETH/USDT": {
+   "stored": 38665,
+   "replay_eligible": 55,
+   "longest_contiguous_run": 13,
+   "runs": 16,
+   "timing": {
+    "policy": "next-executable-open.v1",
+    "executable": 33,
+    "fill_gap": 21,
+    "no_executable_bar": 1
+   },
+   "earliest_decision_ms": 1791079849817
+  },
+  "SOL/USDT": {
+   "stored": 38710,
+   "replay_eligible": 59,
+   "longest_contiguous_run": 13,
+   "runs": 16,
+   "timing": {
+    "policy": "next-executable-open.v1",
+    "executable": 36,
+    "fill_gap": 22,
+    "no_executable_bar": 1
+   },
+   "earliest_decision_ms": 1791079856167
+  },
+  "XRP/USDT": {
+   "stored": 38662,
+   "replay_eligible": 56,
+   "longest_contiguous_run": 13,
+   "runs": 14,
+   "timing": {
+    "policy": "next-executable-open.v1",
+    "executable": 36,
+    "fill_gap": 19,
+    "no_executable_bar": 1
+   },
+   "earliest_decision_ms": 1791079859954
+  },
+  "SUI/USDT": {
+   "stored": 38672,
+   "replay_eligible": 60,
+   "longest_contiguous_run": 13,
+   "runs": 15,
+   "timing": {
+    "policy": "next-executable-open.v1",
+    "executable": 37,
+    "fill_gap": 21,
+    "no_executable_bar": 2
+   },
+   "earliest_decision_ms": 1791079856983
+  }
+ },
+ "requirements": {
+  "load_frames_min_bars": 400,
+  "engine_warmup_bars": 210,
+  "min_oos_trades": 20
+ },
+ "engine_on_best_frame": {
+  "symbol": "BTC/USDT",
+  "bars": 110,
+  "context_frames": "ValueError: historical engine requires valid market evidence",
+  "trades": 0,
+  "pnl_usdt": 0.0,
+  "profit_factor": 0.0
+ }
+}

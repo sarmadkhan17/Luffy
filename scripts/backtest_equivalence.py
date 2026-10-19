@@ -4,7 +4,12 @@ Two independent claims, tested separately:
 
   engine_equivalence  — identical signals + identical exit geometry must
                         produce identical trades in both engines. Isolates
-                        the fill and accounting model.
+                        the fill and accounting model. The legacy engine fills
+                        at the signal close and the vector engine at the next
+                        open (D6). The comparison therefore gives the vector
+                        engine a continuous-market frame (each open = prior
+                        close); an opening gap is a real fill difference, not
+                        an accounting one.
   signal_equivalence  — a ported spec's DSL entry array must match the
                         legacy evaluator's bar-by-bar signals. Isolates the
                         translation. Deltas here are expected for families
@@ -98,7 +103,8 @@ def engine_equivalence(genome, df: pd.DataFrame, risk_cfg: dict,
     lo, sh = legacy_signals(genome, df, ctx)
     old = legacy_backtest(genome, df, risk_cfg, ctx=ctx)
     max_hold = int(genome.params.get("max_hold_bars", 32))
-    new = simulate(lo, sh, df, config_equivalent_exit(risk_cfg, max_hold),
+    continuous = df.assign(open=df["close"].shift(1).fillna(df["open"]))
+    new = simulate(lo, sh, continuous, config_equivalent_exit(risk_cfg, max_hold),
                    risk_cfg, genome_id=genome.strategy_id)
     match = (old.trades == new.trades and old.wins == new.wins
              and abs(old.pnl_usdt - new.pnl_usdt)

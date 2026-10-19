@@ -57,6 +57,26 @@ def ms(ts):
     return pd.to_datetime(ts, utc=True).to_numpy(dtype='datetime64[ms]').astype('int64')
 
 
+def replay_deadline_ms(event_ms, tf):
+    """Last instant a closed bar may still drive its own decision.
+
+    A signal on a closed bar is superseded when the next bar closes, so a
+    receipt later than one bar after its close is retrospective, never replay.
+    Receipt clocks stay truthful; only the eligibility window is defined here.
+    """
+    return event_ms + 2 * TF_MS[tf]
+
+
+def decision_ms(df, tf):
+    """Earliest legitimate decision time per row, as float ms: max(candle
+    close, receipt availability). NaN means availability is unknown and is
+    never inferred; frames carrying no receipt columns decide at close."""
+    close = (ms(df['ts']) + TF_MS[tf]).astype(float)
+    if 'available_at_ms' not in df:
+        return close
+    return np.maximum(close, pd.to_numeric(df['available_at_ms'], errors='coerce').to_numpy(float))
+
+
 def cut(value):
     if type(value) is not int or value < 0:
         raise ValueError('explicit nonnegative as_of_ms required')
@@ -259,7 +279,9 @@ def append(conn, key, df=None, *, prepared=None):
 def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False):
     """Last retained revision of EACH event eligible at the exact decision cut.
 
-    Replay additionally requires first-use eligibility at that bar's close.
+    Replay instead takes each event's FIRST eligible receipt, and requires it
+    within one bar after the bar's close (replay_deadline_ms); later receipts
+    are retrospective only.
     UNKNOWN legacy rows never receive inferred receipt clocks.
     """
     cut(as_of_ms)
@@ -283,7 +305,7 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
         args.append(source)
     if replay_tf:
         clauses += ' AND available_ms<=event_ms+?'
-        args.append(TF_MS[replay_tf])
+        args.append(replay_deadline_ms(0, replay_tf))
     if not include_partial:
         clauses += " AND json_extract(record_json,'$.bar_state')!='PARTIAL'"
     if revision_stream:
@@ -295,8 +317,11 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
             ORDER BY event_ms DESC LIMIT ?) ORDER BY event_ms,observed_ms,rowid"""
         args += [key,as_of_ms,as_of_ms,limit]
     else:
+        # Replay decides on a bar's FIRST eligible receipt: a later correction was
+        # not known then and must not reach that bar's signal.
+        order = 'observed_ms,rowid' if replay_tf else 'observed_ms DESC,rowid DESC'
         query = f"""SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM (SELECT record_json,revision_id,event_ms,available_ms,observed_ms,
-            ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+            ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY {order}) AS ordinal
             FROM market_revisions {clauses}) WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?"""
         if window_start_ms is not None:
             # Filter AFTER exact revision selection. Before the first supplied
@@ -332,7 +357,7 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
                 r['revision_id'], r['event_time_ms'], r['available_at_ms'], r['observed_at_ms']):
             raise ValueError('market_revision_index_corrupt')
         event = r['event_time_ms']
-        if replay_tf and r['available_at_ms'] > event + TF_MS[replay_tf]:
+        if replay_tf and r['available_at_ms'] > replay_deadline_ms(event, replay_tf):
             continue
         if r['bar_state'] == 'PARTIAL' and not include_partial:
             continue

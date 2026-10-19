@@ -1,0 +1,71 @@
+REVIEW 07 D6 — INTEGRATION NOTES (Opus)
+
+Branch opus/review07-d6-replay, based on 65f00d9 (D1-D4 tip 94b9000 + evidence).
+ef9fca8 (running release) is an ancestor. Nothing here is deployed; no kernel or
+dashboard restart is required or implied. Apply as a normal merge after review.
+
+SOURCE FILES (6 changed, 1 new)
+  trader/data/market_provenance.py   replay_deadline_ms(), decision_ms(); load() uses them
+                                     once (SQL + python guard); first-use revision for replay
+  trader/strategy/fill_timing.py     NEW. fills(df, history) -> (fill_i, reason); summary()
+  trader/strategy/vector_backtest.py _trade(..., fill=None); trade_table/simulate build fills once
+  trader/strategy/quant_contract.py  entry DEFINITION text; engine_digest and source identity include fill_timing
+  trader/strategy/rolling.py         _scoring_evidence counts fillable bars (diagnostic only)
+  scripts/backtest_equivalence.py    vector side gets a continuous-open frame (see EQUIVALENCE)
+  tests: new tests/test_d6_replay_timing.py; 5 tests updated to the one-bar window (below)
+
+D7 RECONCILIATION (Sol1 PENDING-D6-vector-ATR-observations.patch)
+  Conflicting hunks are textual only:
+   * _trade signature: both append a keyword after transitions_out. Keep both:
+       ..., transitions_out=None, fill=None, exit_sig_available=None
+   * trade_table/simulate _trade(...) call sites: keep fill=fill and add exit_sig_available.
+   * trade_table must pass the exit_sig it now receives; D6 builds `fill` before the side loop.
+  Replacing the patch's explicit barrier ("signal_exit_execution_timing_requires_D6"):
+   in the canonical branch, when a transition is due with reason == "signal", do what the
+   legacy exit_sig branch now does -- set due = int(fill[j]) (skip if fill[j] <= j: an
+   unexecutable signal cannot exit), keep advancing protective/trail state until j == due,
+   then exit_i, exit_px, at_open = j, open[j], 1. `at_open` already shortens held time/funding
+   by one bar (open-to-open). Costs (fee, slippage, funding) are unchanged and identical for
+   actual and null runs because both go through _trade with the same `fill` array.
+  Entry for canonical ATR trails: entry_ms now uses ts[e] where e = fill_index - 1 (the
+   notional entry bar, identical to the old signal bar when there is no delay).
+  Do NOT reapply the D7 diff blindly; run verify_shared_vector.py's handoff tests on the merged
+  source and tests/test_d6_replay_timing.py together.
+
+CONTRACT CHANGES THE REVIEWER SHOULD EXPECT
+  1. Replay window: a FINAL, VALID receipt is replay-eligible if available_at_ms <=
+     event + 2*tf (one bar after close). Exact-close-only is gone; later receipts remain
+     retrospective. Receipt clocks are never changed.
+  2. Replay takes each bar's FIRST eligible receipt. A later correction cannot reach the signal
+     it post-dates (previously the last revision within the cut).
+  3. Fill: open of the first retained bar starting at or after max(close, availability), within
+     one bar of the decision. Signal exits use the same rule. max_bars exits stay at the final
+     held bar's close (a clock event, not a data decision).
+  4. Frames with receipt columns also refuse signals whose preceding WARMUP bars contain a
+     missing bar (history_gap). Explicit retrospective datasets keep their declared contract
+     (decide at close, labelled retrospective_observation / factory_validated=False) and do not
+     gain this refusal.
+  5. Evidence identity changes: engine_digest and the retrospective source hashes include
+     fill_timing, so any pre-D6 run identity will (correctly) not match a D6 recomputation.
+     Immutable stored evidence is untouched.
+
+TESTS UPDATED (old assertion encoded exact-close-only)
+  test_stage1_data_provenance_pit::test_latest_asof_and_replay_separate
+  test_contained_background_data::test_queue_preserves_provenance_closed_bars_and_offline_replay
+  test_da05_history_coverage::test_legacy_inventory_gap_late_acquisition_and_multiyear_reuse
+  test_review07_quantitative::test_replay_metadata_matches_authenticated_reader_and_distinguishes_storage
+  test_data04_htf_availability::test_late_missing_child_backfill_never_repairs_earlier_cut
+  Each now asserts the one-bar window: a receipt inside it is replayed with its true availability;
+  receipts beyond it (all historical backfills) stay out.
+
+EQUIVALENCE
+  The legacy engine fills at the signal close and the vector engine at the next open. Equivalence
+  is therefore asserted on a continuous-open frame (each open = prior close); an opening gap is a
+  real fill difference, not an accounting one. scripts/backtest_equivalence.py PASS and
+  bench_vector_backtest.py PASS (>20x) were run through the existing synthetic harness.
+
+PRE-EXISTING (not caused by D6)
+  tests/test_final_audit_research_snapshot.py::test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate
+  fails identically on the unmodified 65f00d9 tree (3000 rows vs the expected 2100).
+  tests/test_exit_ab_shadow_paths.py needs the git-ignored docs/superpowers/artifacts/exit-geometry
+  files; they were copied (untracked) from the production checkout to run it.

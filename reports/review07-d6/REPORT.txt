@@ -1,0 +1,31 @@
+REVIEW 07 D6 - HISTORICAL REPLAY AVAILABILITY AND EXECUTION TIMING (Opus)
+
+IMPLEMENTATION_COMMITS: see `git log opus/review07-d6-replay` (base 65f00d9; D1-D4 tip 94b9000; running release ef9fca8 is an ancestor).
+FILES_CHANGED: trader/data/market_provenance.py, trader/strategy/{fill_timing.py (new), vector_backtest.py, quant_contract.py, rolling.py}, scripts/backtest_equivalence.py, tests/test_d6_replay_timing.py (new) + 5 updated tests, reports/review07-d6/*.
+
+ROOT_CAUSE: annotate() sets available=observed=received; final needs received>=close; replay (market_provenance.load) required available<=close. Only an exact-close receipt could pass. Probe (root-cause-before/after.json): delay 0 ms -> 1 eligible; 1 ms -> 0. Real store: 0 of ~1.3M receipts exact-close.
+
+AVAILABILITY_CONTRACT: candle close, receipt availability and decision stay separate. decision = max(close, available_at). Replay admits a FINAL VALID receipt with available <= close + 1 bar (replay_deadline_ms); later receipts and all backfills stay retrospective. Replay uses each bar's FIRST eligible receipt (later corrections cannot reach the signal). Unknown availability refuses; receipt clocks are never altered.
+
+EXECUTION_TIMING (owner decision: next-executable-open): fill = open of first retained bar starting at/after the decision, within one bar of it; never the signal candle close. Signal exits use the same rule; max_bars exit stays at the held bar's close (clock event). Refusals: availability_unknown, signal_expired, fill_gap, no_executable_bar, unexecutable_price, history_gap (receipt frames only). Fees/slippage/funding formulas unchanged.
+
+REAL_DATA_BEFORE_AFTER (read-only copy of production candles, snapshot 2026-10-19; real-data/summary.json):
+ 4h : stored 531,444 | eligible 0 -> 1,630 (max 14/series) | executable signal bars 0 -> 664
+ 1h : stored 1,107,792 | eligible 0 -> 1,091 (max 37) | 0 -> 385
+ 15m: stored 1,595,975 | eligible 0 -> 2,175 (max 110) | 0 -> 1,183
+ Earliest legitimate decision 2026-10-04T02:10Z. Refusals after: fill_gap, no_executable_bar. Series able to run a backtest: 0 -> 0.
+
+BACKTEST_RESULT: seed_bollinger_band_fade (15m) through the production gauntlet: UNTESTED, "no candle data" before and after. BTC 15m has 110 eligible bars, longest contiguous run 50, vs warm-up 210 and loader minimum 400. No trades, no PF; no PASS manufactured.
+
+TEST_RESULTS: 57 targeted (vector, exit A/B, D6) pass; D6 suite 33 tests; earlier 1,058-test impact run: 16 failures, 15 traced to the old exact-close assertion (updated) and 1 pre-existing (test_final_audit_research_snapshot, fails on unmodified 65f00d9). Equivalence PASS and benchmark 98x (>20x) on the synthetic harness. FULL SUITE: re-run in progress after a disk-full abort; result not yet available.
+
+PROVENANCE_AND_NO_LOOKAHEAD: tests prove fill >= decision and within one bar, long and short, exact boundaries (0, 1 ms, 1 bar, 1 bar+1 ms), partial/unknown/late/revised receipts, signal exits, missing-bar lookback; replay reads leave market_revisions byte-identical.
+
+ACTUAL_NULL_PARITY: simulate, trade_table and walk_table share one fills array through _trade; test asserts identical entries/exits/R and that refused bars open nothing in either. Deterministic.
+
+COMPLEXITY_CHANGE: trader source +148/-28 lines (new 81-line module). Two copies of the replay predicate collapsed to one helper; no net reduction. No new engine, config key or database.
+
+REMAINING_GAPS: replay coverage is ~15 days and sparse (acquisition cadence), so nothing is backtestable yet; research slices cut by event time, not decision time (<=1 bar); canonical ATR-trail and paper/live signal-exit wiring are D7; Fill.entry_i remains the signal bar; legacy engine equivalence holds on continuous-open data only; one-bar signal validity and history_gap are my derivations from existing quantities - confirm.
+
+D6_STATUS: IMPLEMENTED, offline, not deployed; full-suite confirmation pending.
+READY_FOR_D7: yes, with reconciliation per INTEGRATE.txt (signature/call-site merge; replace Sol1's signal barrier with the fill[j] open rule).
