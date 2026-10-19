@@ -239,7 +239,7 @@ REFUSED_SPECS = [
      "qualified_spec_not_evaluated_spec"),
     ("signal_exit", dict(exit={**ExitSpec(signal_exit="close < ema(5)"
                                           ).__dict__}),
-     "unsupported_versioned_exit"),
+     "qualified_spec_not_evaluated_spec"),
 ]
 
 

@@ -4,7 +4,7 @@ Observation contract: consecutive COMPLETED bars on the declared timeframe.
 Entry geometry uses signal-bar close and ATR(14) through that closed bar.
 An open beyond a level precedes range checks. Otherwise OHLC has no intrabar
 sequence: stop wins a both-hit range, with ambiguity recorded explicitly.
-Price exits precede unconditional max_bars. A surviving completed bar can arm
+Price exits precede a declared signal decision, which precedes max_bars. A surviving completed bar can arm
 and tighten its declared ATR trail for the NEXT bar only. No entry-bar exit.
 """
 from __future__ import annotations
@@ -19,14 +19,15 @@ CONTRACT = {
     'reference': 'signal_bar_close', 'atr': 'rolling_mean_true_range_14_through_signal_closed_bar',
     'stop_floor': 0.004, 'initial_r': 'reference_to_frozen_stop',
     'observations': 'consecutive_completed_spec_bars_after_signal_bar',
-    'ordering': 'open_gap_then_stop_then_target_then_unconditional_max_bars',
+    'ordering': 'open_gap_then_stop_then_target_then_declared_signal_then_max_bars_then_next_bar_trail',
     'ambiguity': 'both_range_hits_stop_first_explicit',
     'quantity': 'full_remaining',
     'trail': 'declared_atr14_completed_bar_favorable_extreme_next_bar_only',
     'arming': 'favorable_excursion_from_reference_gte_declared_arm_at_r_times_initial_r',
     'ratchet': 'initial_stop_then_monotonic_tightening_fixed_target_retained',
     'missing_trail_atr': 'refuse_surviving_transition_price_and_time_exits_remain_effective',
-    'signal_exit': 'refused',
+    'signal_exit': 'completed_bar_decision_after_price_before_time_no_automatic_close_fill',
+    'signal_fill': 'reference_exit_unset_pending_D6_first_legitimately_executable_price',
 }
 EXIT_SEMANTICS_ID = CONTRACT['version'] + ':' + hashlib.sha256(
     json.dumps(CONTRACT, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -54,8 +55,8 @@ def unsupported(ex):
             arm = value.get('arm_at_r')
             if isinstance(arm, bool) or not isinstance(arm, (int, float)) or not math.isfinite(arm) or arm < 0:
                 return 'trail:invalid_arm_at_r'
-    if ex.signal_exit:
-        return 'signal_exit:runtime_parity_unavailable'
+    if not isinstance(ex.signal_exit, str):
+        return 'signal_exit:invalid_expression'
     t = ex.time
     if not isinstance(t, dict) or set(t) != {'max_bars'} or type(t['max_bars']) is not int or not 1 <= t['max_bars'] <= 500:
         return 'time:max_bars_unsupported'
@@ -91,6 +92,7 @@ class Policy:
     semantics_id: str = EXIT_SEMANTICS_ID
     trail_mult: float = 0.0
     arm_at_r: float = 0.0
+    signal_exit: bool = False
 
 
 @dataclass(frozen=True)
@@ -115,6 +117,7 @@ class Observation:
     close: float
     completed: bool = True
     atr: float | None = None
+    signal_exit: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -143,7 +146,8 @@ def initialize(ex, reference, atr, side, entry_bar_ms, step_ms):
     policy = Policy(reference - sign*d, reference + sign*distance if distance else 0,
                     d, reference, atr, side, ex.time['max_bars'], int(step_ms),
                     trail_mult=ex.trail['mult'] if ex.trail['kind'] == 'atr' else 0.0,
-                    arm_at_r=ex.trail['arm_at_r'] if ex.trail['kind'] == 'atr' else 0.0)
+                    arm_at_r=ex.trail['arm_at_r'] if ex.trail['kind'] == 'atr' else 0.0,
+                    signal_exit=bool(ex.signal_exit))
     if not all(math.isfinite(v) for v in (policy.stop,policy.target,policy.initial_r)) or policy.stop <= 0 or (policy.target and policy.target <= 0):
         raise ValueError('exit_geometry_nonpositive')
     return policy, State(int(entry_bar_ms), trail='dormant' if policy.trail_mult else 'none',
@@ -177,8 +181,14 @@ def advance(policy, state, observation, remaining):
         reason, px = ('stop' if stop_gap else 'target'), o
     elif stop or target:
         reason, px = ('stop', active_stop) if stop else ('target', policy.target)
-    elif state.bars_held + 1 >= policy.max_bars:
-        reason, px = 'time', c
+    else:
+        if policy.signal_exit:
+            if type(observation.signal_exit) is not bool:
+                raise ValueError('exit_signal_evidence_unavailable')
+            if observation.signal_exit:
+                reason = 'signal'  # decision only; D6 must supply a legitimate fill
+        if not reason and state.bars_held + 1 >= policy.max_bars:
+            reason, px = 'time', c
     best, trail = state.best, state.trail
     if policy.trail_mult and not reason:
         atr = observation.atr

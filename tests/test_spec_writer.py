@@ -130,7 +130,7 @@ def test_book_is_listed_so_duplicates_are_discouraged():
 
 @pytest.mark.parametrize('exit_change,expected', [
     ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail:invalid_arm_at_r'),
-    ({'signal_exit': 'close < ema(5)'}, 'signal_exit'),
+    ({'signal_exit': 'close < unknown_exit(5)'}, 'unknown feature'),
     ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
     ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
     ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),

@@ -988,7 +988,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     # create, install, govern or retire one (compiling grants no authority).
     compile_src = pathlib.Path('trader/strategy/compile.py').read_text()
     assert set(re.findall(r"\bfh\.(\w+)", compile_src)) <= {
-        'load_version', 'verify_validation', 'verify_install', 'state_of',
+        'load_version', 'verify_validation', 'verify_install', 'verify_exit_binding', 'state_of',
         'VERSION_SCHEMA', 'RETIRED', 'REJECTED', '_refuse', 'HandoffRefused'}
     # Final admission reads only the same immutable live-entry fence as Executor.
     admission = pathlib.Path('trader/engine/entry_authority.py').read_text()

@@ -94,7 +94,7 @@ def verify(journal, trade, version, install):
         raise ValueError('canonical_exit_quantity_invalid')
     state = initial
     for raw in observations:
-        if not isinstance(raw, dict) or set(raw) != {'bar_ms', 'open', 'high', 'low', 'close', 'completed', 'atr'}:
+        if not isinstance(raw, dict) or set(raw) != {'bar_ms', 'open', 'high', 'low', 'close', 'completed', 'atr', 'signal_exit'}:
             raise ValueError('canonical_exit_observations_invalid')
         observation = E.Observation(**raw)
         if (state.reason or type(observation.bar_ms) is not int

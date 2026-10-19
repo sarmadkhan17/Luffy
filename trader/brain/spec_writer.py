@@ -102,7 +102,10 @@ _MEASURED = """Historical research context (not a current qualification receipt)
   (`trail: {"kind":"atr","mult":4.0,"arm_at_r":1.0}`; declare both values).
   A completed bar first tests its previously active stop/target; a surviving
   bar arms/tightens the trail from its favorable extreme and ATR(14) for the
-  NEXT bar only. Fixed targets remain active. No signal exit, and a time limit
+  NEXT bar only. Fixed targets remain active. Optional signal_exit is an exact
+  DSL condition evaluated after price exits and before the time limit. It
+  creates an exit decision, never a guaranteed same-close fill; execution
+  requires the legitimate executable-price contract. A time limit
   `time.max_bars` between 1 and 500 (at most 200 with no target or trail).
   Anything else cannot be tested and is
   refused before it is evaluated.

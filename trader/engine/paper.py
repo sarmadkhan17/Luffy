@@ -356,6 +356,10 @@ class PaperExecutor:
                 evidence = json.loads(evidence_row['canonical_json'])
                 if evidence['final'] != p['exit_state_json']:
                     raise ValueError('paper_exit_evidence_state_differs')
+                if state.reason == 'signal':
+                    # Retain position/protection while D6's executable fill
+                    # handoff is unavailable; a close decision is not a fill.
+                    continue
                 for observation in observations(spec, snap, state):
                     # Missing causal history cannot be silently replaced.
                     if observation.bar_ms != state.last_bar_ms + policy.step_ms:
@@ -367,6 +371,8 @@ class PaperExecutor:
                     c.execute(f'UPDATE {TABLE} SET exit_state_json=?,last_bar_ms=?,bars_held=? WHERE id=?',
                               (E.encode(policy,state),state.last_bar_ms,state.bars_held,p['id']))
                     if result.due:
+                        if result.reason == 'signal':
+                            break
                         px = state.reference_exit
                         sign = 1 if p['side']=='long' else -1
                         c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",
