@@ -194,12 +194,28 @@ def started_check(ready):
                        clock=lambda: ready.now, require_cycle=False)
 
 
-def refresh_protection(ready):
+def refresh_protection(ready, age=.1):
+    # isoformat() rounds to the nearest microsecond, which can land a fraction of a microsecond
+    # AFTER the mocked clock and be refused as 'future'. Stamp a deterministic, strictly earlier instant.
     with sqlite3.connect(ready.root / 'data/luffy.db') as db:
         value = json.loads(db.execute('SELECT value FROM protection_evidence').fetchone()[0])
         value['checked_at'] = value['completed_at'] = datetime.fromtimestamp(
-            ready.now, timezone.utc).isoformat()
+            ready.now - age, timezone.utc).isoformat()
         db.execute('UPDATE protection_evidence SET value=?', (json.dumps(value),))
+
+
+@pytest.mark.parametrize('age,accepted', [(.1, True), (119., True), (-60., False), (121., False), (3600., False)])
+def test_protection_timestamp_current_accepted_future_and_stale_refused(ready, age, accepted):
+    # The production rule (P._protection) is exercised unchanged; only the fixture stamp varies.
+    initialized_without_cycle(ready)
+    refresh_protection(ready, age)
+    with sqlite3.connect((ready.root / 'data/luffy.db').as_uri() + '?mode=ro', uri=True) as db:
+        db.row_factory = sqlite3.Row
+        if accepted:
+            assert P._protection(db, ready.now)['checked_at']
+        else:
+            with pytest.raises(ValueError, match='protection_stale_or_future'):
+                P._protection(db, ready.now)
 
 
 def test_real_startup_and_cycle_receipts_stay_distinct_through_a_slow_first_cycle(ready):
