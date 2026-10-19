@@ -1,8 +1,5 @@
 """TV Harness unit tests — pure logic, no browser, no network."""
-import json
-
-from trader.brain.tv_harness import (TVHarness, evaluate_manifest,
-                                     parse_metrics, sha_code)
+from trader.brain.tv_harness import TVHarness, parse_metrics, sha_code
 
 
 def _harness(tmp_path, monkeypatch, budget=20):
@@ -103,83 +100,72 @@ def test_runs_today_counts_events(tmp_path, monkeypatch):
     assert h.runs_today() == 1
 
 
-def test_evaluate_manifest_verdict_logic(tmp_path, monkeypatch):
-    import tempfile, pathlib, yaml
-    from trader.brain import pine as pine_mod
-    from trader.core.journal import Journal
-    monkeypatch.setattr(pine_mod, "PINE_DIR", pathlib.Path(tempfile.mkdtemp()))
-    sid_dir = pine_mod.PINE_DIR / "s1"
-    sid_dir.mkdir(parents=True)
-    (sid_dir / "full.pine").write_text("//@version=5\nstrategy('x')")
-    for i in (1, 2, 3):
-        (sid_dir / f"fold{i}.pine").write_text(f"// fold{i}")
-    cfg = yaml.safe_load(open("config.yaml")) or {}
-    h = TVHarness(Journal(pathlib.Path(tempfile.mkdtemp()) / "j.db"), cfg)
 
-    good_metrics = {"net_profit_pct": 14.9, "total_trades": 66,
-                    "win_rate_pct": 66.7, "sharpe": 7.4,
-                    "max_drawdown_pct": 3.2, "profit_factor": 2.4}
-    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": 5},
-                    {"net_profit_usd": -2}]
-    calls = {"n": 0}
+# Ordinary test doubles exercise the existing browser adapter without a browser.
+class _Page:
+    def __init__(self, label='1h', fail=False):
+        self.label, self.fail = label, fail
+        self.keyboard = self
+        self.first = self
+    def locator(self, *a): return self
+    def click(self, **kw):
+        if self.fail: raise RuntimeError('focus lost')
+    def type(self, *a, **kw): pass
+    def press(self, *a): pass
+    def wait_for_timeout(self, *a): pass
+    def inner_text(self, **kw): return self.label
+    def goto(self, *a, **kw): pass
+    def wait_for_selector(self, *a, **kw): pass
+    def screenshot(self, *a, **kw): pass
 
-    def stub(code, s="BINANCE:BTCUSDT", t="1h", force=False):
-        calls["n"] += 1
-        if calls["n"] == 1:
-            return {"ok": True, "metrics": good_metrics}
-        return {"ok": True,
-                "metrics": fold_metrics.pop(0) if fold_metrics else {}}
 
-    monkeypatch.setattr(h, "backtest", stub)
-    manifest = {"strategy_id": "s1"}
-    verdict = evaluate_manifest(h, manifest)
-    assert verdict["valid"] and verdict["judge"] == "real_tv"
-    assert verdict["positive_folds"] == 2
+def test_timeframe_setting_requires_observed_interval(tmp_path, monkeypatch):
+    import pytest
+    h = _harness(tmp_path, monkeypatch)
+    h._set_timeframe(_Page('1h'), '1h')
+    for page in (_Page('4h'), _Page(''), _Page('1h', fail=True)):
+        with pytest.raises(RuntimeError):
+            h._set_timeframe(page, '1h')
 
-    # failing drawdown gate → invalid
-    bad = {**good_metrics, "max_drawdown_pct": 33.0}
-    calls["n"] = 0
-    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": 5},
-                    {"net_profit_usd": -2}]
-    monkeypatch.setattr(h, "backtest",
-                        lambda code, s="B", t="1h", force=False:
-                        {"ok": True, "metrics": bad})
-    v2 = evaluate_manifest(h, manifest)
-    assert not v2["valid"] and not v2["checks"]["drawdown_ok"]
 
-    # harness failure surfaces reason
-    monkeypatch.setattr(h, "backtest",
-                        lambda *a, **k: {"ok": False,
-                                         "error": "selector broke"})
-    v3 = evaluate_manifest(h, manifest)
-    assert not v3["valid"] and "selector" in v3["reason"]
+def _browser(monkeypatch, page):
+    import sys
+    from types import SimpleNamespace as N
+    class Context:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def new_page(self): return page
+        def grant_permissions(self, *a, **kw): pass
+        def close(self): pass
+    ctx = Context()
+    ctx.chromium = N(launch_persistent_context=lambda *a, **kw: ctx)
+    monkeypatch.setitem(sys.modules, 'playwright.sync_api', N(sync_playwright=lambda: ctx))
 
-    # free-plan metrics (no trades/sharpe) → those checks simply absent
-    free = {"net_profit_pct": 5.0, "max_drawdown_pct": 4.0}
-    calls["n"] = 0
-    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": -30},
-                    {"net_profit_usd": 8}]
-    monkeypatch.setattr(h, "backtest",
-                        lambda code, s="B", t="1h", force=False:
-                        {"ok": True, "metrics": free})
-    v4 = evaluate_manifest(h, manifest)
-    assert "enough_trades" not in v4["checks"]
-    assert "quality" not in v4["checks"]
-    assert v4["valid"] is False            # only 1/3 folds positive
 
-    # low-WR trend profile passes quality on profit factor
-    trend = {"net_profit_pct": 5.0, "max_drawdown_pct": 4.0,
-             "win_rate_pct": 34.0, "profit_factor": 1.3}
-    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": -30},
-                    {"net_profit_usd": 8}]
-    monkeypatch.setattr(h, "backtest",
-                        lambda code, s="B", t="1h", force=False:
-                        {"ok": True, "metrics": trend})
-    v5 = evaluate_manifest(h, manifest)
-    assert v5["checks"]["quality"] is True
-    # ...but a breakeven PF fails it
-    trend["profit_factor"] = 1.02
-    v6 = evaluate_manifest(h, manifest)
-    assert v6["checks"]["quality"] is False
+def test_wrong_interval_run_is_neither_successful_nor_cached(tmp_path, monkeypatch):
+    h = _harness(tmp_path, monkeypatch)
+    monkeypatch.setattr('trader.brain.tv_harness.PROFILE_DIR', tmp_path / 'profile')
+    monkeypatch.setattr('trader.brain.tv_harness.SHOT_DIR', tmp_path)
+    _browser(monkeypatch, _Page('4h'))
+    res = h.backtest('code', tf='1h')
+    assert not res['ok'] and 'timeframe_unverified' in res['error']
+    assert h.cached(sha_code('code', tf='1h')) is None
 
-    assert json.dumps(v4)                  # serializable for the brain dossier
+
+def test_verified_interval_result_is_cached_with_matching_identity(tmp_path, monkeypatch):
+    h = _harness(tmp_path, monkeypatch)
+    monkeypatch.setattr('trader.brain.tv_harness.PROFILE_DIR', tmp_path / 'profile')
+    _browser(monkeypatch, _Page('1h'))
+    for method in ('_open_pine_editor', '_paste_script', '_add_to_chart'):
+        monkeypatch.setattr(h, method, lambda *a: None)
+    monkeypatch.setattr(h, '_read_tester', lambda *a: {'profit_factor': 1.4})
+    res = h.backtest('code')
+    assert res['ok'] and res['interval_verified'] is True
+    assert h.backtest('code')['cached'] is True
+
+
+def test_legacy_unverified_cache_does_not_supply_evidence(tmp_path, monkeypatch):
+    h = _harness(tmp_path, monkeypatch, budget=0)
+    key = sha_code('code')
+    h._cache_save({key: {'ok': True, 'metrics': {'profit_factor': 10.}, 'tf': '1h', 'symbol': 'BINANCE:BTCUSDT'}})
+    assert h.backtest('code')['skipped'] == 'daily_budget'

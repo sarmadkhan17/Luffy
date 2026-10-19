@@ -16,6 +16,7 @@ import json
 import logging
 import re
 import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -50,40 +51,8 @@ STRATEGY_TERMS = re.compile(
     r"|momentum|liquidity|order.?block|fair.value.gap|imbalance"
     r"|wyckoff|elliott|harmonic|candlestick|pattern|stop[- ]loss|take[- ]profit"
     r"|risk.reward|rr ratio|leverage|long position|short position)\b", re.I)
-HYPE = re.compile(
-    r"(price prediction|price target|to hit \$|\d+x potential|moon\b"
-    r"|buy now|giveaway|airdrop|1000x|next 100x|get rich)", re.I)
-
-#: research prose asserts that an observable predicts something, in a scope,
-#: ideally with a magnitude. It rarely contains a single word from
-#: STRATEGY_TERMS, which is why a second screen is needed rather than a
-#: looser one.
-CLAIM_TERMS = re.compile(
-    r"\b(predict\w*|forecast\w*|correlat\w+|regress\w+|significan\w+"
-    r"|hypothes\w+|evidence|out[- ]of[- ]sample|in[- ]sample|p[- ]value"
-    r"|t[- ]stat\w*|sharpe|information ratio|anomal\w+|risk premium|factor"
-    r"|cross[- ]section\w*|autocorrelat\w+|persist\w+|decay|half[- ]life"
-    r"|microstructure|adverse selection|inventory|order flow|toxicity"
-    r"|decile|quantile|percentile|basis points?|bps)\b", re.I)
-#: a claim with a number attached is worth more than one without
-MAGNITUDE = re.compile(r"\b\d+(\.\d+)?\s?(%|bps|basis points|x)\b", re.I)
-#: does it say WHERE the claim holds?
-SCOPE_TERMS = re.compile(
-    r"\b(regime|horizon|timeframe|intraday|daily|weekly|hours?|days?"
-    r"|bull|bear|trending|ranging|volatil\w+)\b", re.I)
-
-
-def research_score(item: dict) -> int:
-    """Screen for a market CLAIM rather than a trade setup."""
-    hay = f"{item.get('title', '')} {item.get('text', '')[:1200]}"
-    score = 2 * len(CLAIM_TERMS.findall(hay))
-    if MAGNITUDE.search(hay):
-        score += 4
-    if SCOPE_TERMS.search(hay):
-        score += 2
-    if HYPE.search(hay):
-        score -= 8
-    return score
+# The queue and feed screen use the same research relevance contract.
+research_score = ideas.research_score
 
 
 def streams_for(item: dict) -> set[str]:
@@ -101,7 +70,7 @@ def idea_score(item: dict) -> int:
     expressible trading idea; negative = pure hype/news."""
     hay = f"{item.get('title', '')} {item.get('text', '')[:400]}"
     score = 2 * len(STRATEGY_TERMS.findall(hay))
-    if HYPE.search(hay):
+    if ideas.HYPE.search(hay):
         score -= 4
     return score
 
@@ -244,37 +213,6 @@ def _parse_feed(feed_url: str, text: str) -> tuple[list[dict], int]:
     return out, len(blocks)
 
 
-def repair_params(family: str, raw: dict) -> dict:
-    """Coerce sloppy LLM gene output into valid params.
-
-    Models copy range strings ('5..50'), emit ints for floats, or drift
-    outside bounds — every case maps onto the spec's clamped value or
-    its default instead of losing the whole genome."""
-    from ..strategy.genome import FAMILY_GENE_SPECS
-    spec = FAMILY_GENE_SPECS.get(family, {})
-    raw = raw if isinstance(raw, dict) else {}
-    out = {}
-    for k, (typ, lo, hi, default) in spec.items():
-        v = raw.get(k, default)
-        if isinstance(v, str):
-            m = re.fullmatch(r"\s*(-?[\d.]+)\s*(?:\.\.|-|to)\s*(-?[\d.]+)\s*",
-                             v)
-            try:
-                v = float(m.group(2)) if m else float(v)
-            except (TypeError, ValueError):
-                out[k] = default
-                continue
-        try:
-            v = typ(v)
-        except (TypeError, ValueError):
-            out[k] = default
-            continue
-        if lo is not None and hi is not None:
-            v = min(max(v, lo), hi)
-        out[k] = v
-    return out
-
-
 class Scraper:
     def __init__(self, journal: Journal, cfg: dict, feed,
                  notifier=None):
@@ -346,47 +284,42 @@ class Scraper:
         return n > 0
 
     # ── ranking ──────────────────────────────────────────────────────────
+    @staticmethod
+    def _source(source: str) -> str:
+        return urlparse(source if "://" in source else "//" + source).netloc.lower()
+
     def _rank_key(self, item: dict, src_scores: dict[str, float]) -> tuple:
-        """Ranking key for candidates: productive sources first, then
-        strategy-speak density, then textual substance.
+        return (src_scores.get(self._source(item.get("source", "")), 0.05),
+                idea_score(item), min(len(item.get("text", "")), 500))
 
-        Returns a tuple (source_score, idea_score, text_length) suitable for
-        sorting in descending order: highest source yield, highest idea score,
-        longest text.
-        """
-        base = item.get("source", "")
-        key = ".".join(base.split("//")[-1].split("/")[:1]) or base
-        return (src_scores.get(key, 0.05), idea_score(item),
-                min(len(item.get("text", "")), 500))
-
-    # ── source yield learning ────────────────────────────────────────────
     def _source_scores(self) -> dict[str, float]:
-        """Yield per source from past cycles: queued / (scraped + 5).
-        Laplace-smoothed; >0.3 is a productive source.
+        """Accepted queue items / (genuine fetched items + 5).
 
-        Sources are normalized to hostname only (e.g. "arxiv.org") so that
-        multiple feeds from the same domain are learned together, and this
-        matches the normalization done in _rank().
+        Pre-correction cycle rows counted selected items as fetched. They
+        cannot establish this measurement and are intentionally not reused.
+        This is intake yield, never strategy performance or economic value.
         """
-        scores: dict[str, float] = {}
-        try:
-            rows = self.journal.query(
+        totals = {}
+        for row in self.journal.query(
                 "SELECT detail FROM brain_events WHERE kind='harvest_cycle' "
-                "ORDER BY ts DESC LIMIT 30")
-            agg: dict[str, dict] = {}
-            for r in rows:
-                for src, s in (json.loads(r["detail"]).get(
-                        "per_source") or {}).items():
-                    # Normalize source to hostname, matching _rank() logic
-                    norm_src = ".".join(src.split("//")[-1].split("/")[:1]) or src
-                    a = agg.setdefault(norm_src, {"scraped": 0, "queued": 0})
-                    for k in a:
-                        a[k] += s.get(k, 0)
-            for src, a in agg.items():
-                scores[src] = a["queued"] / (a["scraped"] + 5)
-        except Exception:
-            pass
-        return scores
+                "ORDER BY ts DESC LIMIT 30"):
+            try:
+                detail = json.loads(row["detail"])
+                if detail.get("source_intake") != "fetched_selected_queued.v1":
+                    continue
+                for source, counts in detail["per_source"].items():
+                    fetched, selected, queued = (counts[k] for k in
+                                                  ("fetched", "selected", "queued"))
+                    if (any(type(n) is not int for n in (fetched, selected, queued))
+                            or not 0 <= queued <= selected <= fetched):
+                        continue
+                    total = totals.setdefault(self._source(source), [0, 0])
+                    total[0] += fetched
+                    total[1] += queued
+            except (ValueError, TypeError, KeyError, AttributeError):
+                continue
+        return {source: queued / (fetched + 5)
+                for source, (fetched, queued) in totals.items()}
 
     # ── the cycle ────────────────────────────────────────────────────────
     def harvest_once(self) -> dict:
@@ -404,6 +337,11 @@ class Scraper:
             scraped += got
         scraped += self.scrape_feeds()
         stats["scraped"] = len(scraped)
+        stats["source_intake"] = "fetched_selected_queued.v1"
+        for item in scraped:
+            counts = per_source.setdefault(item["source"],
+                {"fetched": 0, "selected": 0, "queued": 0})
+            counts["fetched"] += 1
 
         fresh = [i for i in scraped
                  if not self._already_processed(i["idea_id"])]
@@ -430,12 +368,13 @@ class Scraper:
         rest = [c for c in candidates
                 if "tradingview.com" not in c.get("source", "")]
         batch = rest[:int(budget * 0.6)] + tv[:budget - int(budget * 0.6)]
-        batch = batch[:budget]
-        for idea in batch:
-            per_source.setdefault(idea["source"], {"scraped": 0, "queued": 0})
-            per_source[idea["source"]]["scraped"] += 1
-            # mark processed only what we actually spend tokens on —
-            # the rest of the pool stays fresh for later cycles.
+        # Use unfilled source seats without exceeding the same total budget.
+        chosen = {item["idea_id"] for item in batch}
+        batch += [item for item in candidates if item["idea_id"] not in chosen][
+            :max(0, budget - len(batch))]
+        for idea in batch[:budget]:
+            per_source[idea["source"]]["selected"] += 1
+            # Queue only selected intake; no LLM or provider tokens are spent.
             # Record the idea WHOLE, once, with every stream it qualifies
             # for: the text is the part that holds the mechanism, and the
             # Strategist/Researcher both read it out of this one row.

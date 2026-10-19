@@ -68,7 +68,7 @@ def test_every_nonfactory_state_writer_is_legacy_only_and_guarded():
     pat = re.compile(r"UPDATE strategies SET state")
     found = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                    if pat.search(p.read_text()))
-    assert found == ["brain/tv.py", "core/journal.py",
+    assert found == ["core/journal.py",
                      "kernel.py", "strategy/factory_handoff.py"]
 
 

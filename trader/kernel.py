@@ -2389,7 +2389,7 @@ class Kernel:
             try:
                 from .brain.postmortem import run_postmortem
                 from .knowledge.vault import Vault
-                rep = run_postmortem(self.journal, Vault(self.journal))
+                rep = run_postmortem(self.journal, Vault(self.journal), cfg=self.cfg)
                 if rep.get("changed"):
                     log.info(f"postmortem: verdicts changed {rep['changed']}")
             except Exception as e:
@@ -3179,7 +3179,7 @@ class Kernel:
         elif msg.startswith("/judge"):
             try:
                 from .brain.postmortem import summary_text
-                reply(summary_text(self.journal))
+                reply(summary_text(self.journal, self.cfg))
             except Exception as e:
                 reply(f"/judge failed: {e}")
         elif msg.startswith("/tv"):

@@ -61,7 +61,7 @@ def _admit_with(monkeypatch, percentiles, rho=0.0, common_p=0.001):
     monkeypatch.setattr(Analyst, "evaluate",
                         lambda self, spec: (True, {"chosen_timeframe": "4h"}))
     monkeypatch.setattr(Analyst, "redundancy",
-                        lambda self, spec, tf, book: (0.1, ""))
+                        lambda self, spec, tf, book: {"status": "MEASURED", "max_overlap": 0.1, "twin": ""})
     monkeypatch.setattr(Analyst, "persistence", lambda self, spec, tf: {})
     from trader.strategy import null_baseline as nb
     monkeypatch.setattr(Analyst, "_null_evidence",

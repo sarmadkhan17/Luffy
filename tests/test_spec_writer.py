@@ -126,3 +126,49 @@ def test_book_is_listed_so_duplicates_are_discouraged():
     llm = FakeLLM([GOOD])
     sw.SpecWriter(llm).write(avoid=["Aggressor Thrust Breakout"])
     assert "Aggressor Thrust Breakout" in llm.prompts[0]
+
+
+@pytest.mark.parametrize('exit_change,expected', [
+    ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+    ({'signal_exit': 'close < ema(5)'}, 'signal_exit'),
+    ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+    ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+    ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+    ({'stop': None}, 'malformed or invalid spec'),
+])
+def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+    import copy
+    from trader.strategy.exit_policy import unsupported
+    bad = copy.deepcopy(GOOD)
+    bad['exit'].update(exit_change)
+    original = copy.deepcopy(bad)
+    llm = FakeLLM([bad, GOOD])
+    spec, trace = sw.SpecWriter(llm).write()
+    assert spec is not None and unsupported(spec.exit) is None
+    assert bad == original  # no silent shape substitution
+    if expected:
+        assert expected in llm.prompts[1]
+        assert len(trace['attempts']) == 2
+
+
+def test_unsupported_exit_never_returns_success_after_repair_limit():
+    import copy
+    bad = copy.deepcopy(GOOD)
+    bad['exit']['trail'] = {'kind': 'atr', 'mult': 3.0}
+    spec, trace = sw.SpecWriter(FakeLLM([bad] * 3)).write()
+    assert spec is None
+    assert len(trace['attempts']) == sw.MAX_REPAIRS + 1
+    assert all('unsupported_versioned_exit:trail=atr' in str(a) for a in trace['attempts'])
+
+
+def test_percentage_examples_use_fractional_contract():
+    import copy
+    prompt = sw._prompt(None, None, [])
+    assert '"kind":"pct","v":0.02' in prompt
+    assert '"kind":"pct","v":0.05' in prompt
+    body = copy.deepcopy(GOOD)
+    body['exit'].update(stop={'kind': 'pct', 'v': .02}, target={'kind': 'pct', 'v': .05})
+    spec, _ = sw.SpecWriter(FakeLLM([body])).write()
+    from trader.strategy.exit_policy import initialize
+    policy, _ = initialize(spec.exit, 100, 2, 'long', 0, 3600000)
+    assert policy.stop == 98 and policy.target == 105

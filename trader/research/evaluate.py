@@ -43,7 +43,7 @@ from . import slices
 log = logging.getLogger(__name__)
 
 #: a symbol carrying fewer test trades than this cannot carry a percentile —
-#: the same floor Analyst._null_percentiles applies
+#: Per-symbol diagnostic floor; joint admission gates remain separate.
 MIN_SYMBOL_TRADES = 8
 #: the held-out projection: this many trades on this many markets
 MIN_PROJECTED_TRADES = 8

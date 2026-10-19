@@ -1,90 +1,88 @@
-"""The Theorist, as arithmetic: is each live strategy still inside the
-envelope it was admitted on?
+"""Change-only book reports backed by the Factory's exact paper assessment.
 
-Replaces the LLM autopsy (removed 2026-09-11; ~55% of all tokens, output
-was prose doctrine drawn from 2-9-trade samples). A spec carries the
-out-of-sample win rate it was admitted on in `provenance.expected_winrate`;
-`strategy.health.assess_health` asks whether the live record is consistent
-with it. A note reaches the vault only when a verdict changes, so a quiet
-book stays quiet.
+This is presentation and historical observation. Factory owns attribution,
+exit/cost completeness and probation arithmetic; diagnostics never advance
+probation, write approvals or change strategy lifecycle.
 """
 from __future__ import annotations
 
 import json
+import sqlite3
 from datetime import datetime, timezone
 
-from ..strategy.health import assess_health
+from ..strategy import factory_handoff as factory
 
 
-def book_health(journal) -> list[dict]:
+def book_health(journal, cfg: dict) -> list[dict]:
+    at_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     out = []
-    for row, spec in journal.list_specs(["paper", "active"]):
-        t = journal.query(
-            "SELECT COUNT(*) n, "
-            "SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) w, "
-            "SUM(realized_pnl) pnl FROM trades "
-            "WHERE strategy_id=? AND status='closed'", (spec.id,))[0]
-        n, wins = int(t["n"] or 0), int(t["w"] or 0)
-        exp = (spec.provenance or {}).get("expected_winrate")
-        health = None
-        if isinstance(exp, (int, float)) and exp > 0:
-            h = assess_health(float(exp), wins, max(0, n - wins))
-            health = {"verdict": h.verdict, "expected_winrate": float(exp),
-                      "observed_winrate": round(h.observed_winrate, 4),
-                      "p_underperform": round(h.p_underperform, 4),
-                      "trades": h.trades, "summary": h.summary}
-        out.append({"id": spec.id, "name": spec.name, "state": row["state"],
-                    "live_trades": n, "wins": wins,
-                    "pnl_usdt": round(float(t["pnl"] or 0), 2),
-                    "health": health})
+    for row in journal.query("SELECT id,name,state FROM strategies WHERE "
+                             "kind='spec' AND state IN ('paper','active')"):
+        entry = {**row, "version_id": None, "install_id": None,
+                 "basis": "exact installed version; attributable paper outcomes"}
+        try:
+            inst = factory.resolve_current_install(journal, row["id"])
+            entry.update(version_id=inst["version_id"], install_id=inst["install_id"],
+                         spec_hash=inst["spec_hash"])
+            version = factory.load_version(journal, inst["version_id"])
+            assessment = factory._assess(journal, cfg, version,
+                                         inst["installed_at_ms"], at_ms)
+            # Guard against a replacement while this read-only report was built.
+            if factory.resolve_current_install(journal, row["id"]) != inst:
+                raise ValueError("installed_version_changed")
+            stats = assessment.get("stats")
+            summary = assessment["status"]
+            if stats is not None:
+                summary += (f": {stats['trades']} attributable closed paper trades, "
+                            f"net P&L {stats['pnl']:.2f} USDT")
+            else:
+                summary += ": attributable net outcome evidence is incomplete"
+            health = {"verdict": assessment["status"], "summary": summary,
+                      "stats": stats, "excluded_trades": assessment["excluded_trades"],
+                      "missing_cost_evidence": assessment.get("missing_cost_evidence", [])}
+        except (ValueError, TypeError, KeyError, sqlite3.Error) as exc:
+            health = {"verdict": "UNAVAILABLE", "stats": None,
+                      "summary": f"exact-version paper health unavailable: {exc}"}
+        out.append({**entry, "health": health})
     return out
 
 
-def _verdict(r: dict) -> str:
-    return (r["health"] or {}).get("verdict", "NO_ENVELOPE")
-
-
-def run_postmortem(journal, vault=None) -> dict:
-    rows = book_health(journal)
-    verdicts = {r["id"]: _verdict(r) for r in rows}
+def run_postmortem(journal, vault=None, *, cfg: dict) -> dict:
+    rows = book_health(journal, cfg)
+    verdicts = {r["id"]: r["health"]["verdict"] for r in rows}
+    identities = {r["id"]: [r["version_id"], r["install_id"]] for r in rows}
     last = journal.query(
         "SELECT detail FROM brain_events WHERE kind='postmortem' "
         "ORDER BY id DESC LIMIT 1")
     try:
-        prev = json.loads(last[0]["detail"]).get("verdicts", {}) if last else {}
-    except Exception:
+        prev = json.loads(last[0]["detail"]) if last else {}
+    except (ValueError, TypeError):
         prev = {}
-    changed = {k: v for k, v in verdicts.items() if prev.get(k) != v}
-    rep = {"ts": datetime.now(timezone.utc).isoformat(),
-           "verdicts": verdicts, "changed": changed, "book": rows}
+    changed = {k: v for k, v in verdicts.items()
+               if (prev.get("verdicts", {}).get(k) != v
+                   or prev.get("identities", {}).get(k) != identities[k])}
+    rep = {"ts": datetime.now(timezone.utc).isoformat(), "authority": "DIAGNOSTIC_ONLY",
+           "verdicts": verdicts, "identities": identities, "changed": changed, "book": rows}
     journal.log_brain_event("postmortem", "book", rep)
     note = ""
     if changed and vault is not None:
-        body = "\n".join(
-            f"- **{r['name']}** — " + (r["health"]["summary"] if r["health"]
-                                       else f"{r['live_trades']} closed "
-                                            f"trades, no validated envelope")
-            for r in rows if r["id"] in changed)
+        body = "\n".join(f"- **{r['name']}** — {r['health']['summary']}"
+                         for r in rows if r["id"] in changed)
         vault.incident_note("Book health", body)
         note = "Book health"
     return {"ran": True, **rep, "note": note}
 
 
-def summary_text(journal) -> str:
-    """What `/judge` answers: the book's health and the week's rent, from
-    data. No model is asked anything."""
-    lines = ["🧠 book health (data, no LLM)"]
-    rows = book_health(journal)
-    for r in rows:
-        h = r["health"]
-        lines.append(f"· {r['name'][:28]}: " + (
-            h["summary"] if h else
-            f"{r['live_trades']} closed trades, no validated envelope"))
+def summary_text(journal, cfg: dict) -> str:
+    """Existing /judge report; exact paper evidence plus recorded rent."""
+    lines = ["🧠 exact-version paper health (data, no LLM)"]
+    rows = book_health(journal, cfg)
+    lines.extend(f"· {r['name'][:28]}: {r['health']['summary']}" for r in rows)
     if not rows:
         lines.append("· no strategies in the book")
     try:
         rent = json.loads(journal.kv_get("rent_state") or "{}")
-    except Exception:
+    except (ValueError, TypeError):
         rent = {}
     if rent:
         lines.append(f"rent: week of {rent.get('week_start', '?')} net "

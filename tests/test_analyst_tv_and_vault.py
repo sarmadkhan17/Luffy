@@ -81,7 +81,7 @@ def test_a_profitable_tv_run_agrees(analyst, monkeypatch):
             return 1
 
         def backtest(self, code, symbol=None, tf=None, force=False):
-            return {"ok": True, "profit_factor": 1.4}
+            return {"ok": True, "metrics": {"profit_factor": 1.4}}
 
     monkeypatch.setattr("trader.brain.tv_harness.TVHarness", _H)
     out = analyst.confirm_on_tv(_spec())
@@ -101,7 +101,7 @@ def test_a_losing_tv_run_disagrees_but_is_still_only_advice(analyst,
             return 1
 
         def backtest(self, *a, **kw):
-            return {"ok": True, "profit_factor": 0.4}
+            return {"ok": True, "metrics": {"profit_factor": 0.4}}
 
     monkeypatch.setattr("trader.brain.tv_harness.TVHarness", _H)
     out = analyst.confirm_on_tv(_spec())
@@ -110,52 +110,6 @@ def test_a_losing_tv_run_disagrees_but_is_still_only_advice(analyst,
     rows = analyst.journal.query("SELECT subject FROM brain_events "
                                  "WHERE kind='tv_confirmation'")
     assert rows and rows[0]["subject"] == "spec_t"
-
-
-# ── the active SET, not a single winner ─────────────────────────────────
-def test_the_set_is_ordered_by_weight_with_non_trading_specs_last(
-        analyst, monkeypatch):
-    monkeypatch.setattr(analyst, "current_regime",
-                        lambda tf="1h": {"regime": "RANGING"})
-    out = analyst.active_set(
-        [_spec(id="a", name="Trend One", regime_filter=["TRENDING_UP"]),
-         _spec(id="b", name="Range One", regime_filter=["RANGING"])])
-    assert out["members"][0]["spec"] == "b"
-    assert out["members"][0]["trades_now"] is True
-    assert out["members"][1]["trades_now"] is False
-    assert out["active"] == 1
-
-
-def test_the_whole_book_is_returned_never_one_winner(analyst, monkeypatch):
-    """The point of the correction: combine the set, do not pick one."""
-    monkeypatch.setattr(analyst, "current_regime",
-                        lambda tf="1h": {"regime": "RANGING"})
-    specs = [_spec(id=f"s{i}", name=f"S{i}", regime_filter=["RANGING"])
-             for i in range(4)]
-    out = analyst.active_set(specs)
-    assert out["active"] == 4 and len(out["members"]) == 4
-    assert out["combined_weight"] > 0
-
-
-def test_each_member_carries_the_weight_the_orchestrator_will_apply(
-        analyst, monkeypatch):
-    """One source of truth: no second ordering nothing consumes."""
-    monkeypatch.setattr(analyst, "current_regime",
-                        lambda tf="1h": {"regime": "RANGING"})
-    ev = {"RANGING": {"windows": 9, "hit_rate": 0.85, "median_pf": 1.8}}
-    strong = _spec(id="strong", name="Strong", regime_filter=["RANGING"])
-    strong.provenance = {"regime_evidence": ev}
-    weak = _spec(id="weak", name="Weak", regime_filter=["RANGING"])
-    out = analyst.active_set([weak, strong])
-    assert out["members"][0]["spec"] == "weak"
-    assert out["members"][0]["weight"] == out["members"][1]["weight"] == 1.0
-
-
-def test_a_spec_with_no_regime_filter_always_trades(analyst, monkeypatch):
-    monkeypatch.setattr(analyst, "current_regime",
-                        lambda tf="1h": {"regime": "VOLATILE"})
-    assert analyst.active_set([_spec(regime_filter=[])])["members"][0][
-        "trades_now"]
 
 
 # ── the Librarian files the mechanism, not an empty gene block ───────────

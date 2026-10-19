@@ -22,7 +22,7 @@ from ..core.journal import Journal
 from ..strategy import health_observation, rolling, spec_evidence
 from ..strategy.compile import compile_spec
 from ..strategy.spec import StrategySpec
-from ..strategy.vector_backtest import funding_for, vector_walk_forward
+from ..strategy.vector_backtest import funding_for
 
 log = logging.getLogger(__name__)
 
@@ -285,50 +285,93 @@ class Analyst:
         return rf
 
     # ── portfolio ────────────────────────────────────────────────────────
-    def redundancy(self, spec: StrategySpec, tf: str,
-                   book: list) -> tuple[float, str]:
-        """Highest signal correlation against anything already trading.
+    def redundancy(self, spec: StrategySpec, tf: str, book: list) -> dict:
+        """Compare every shared market on its actual symbol and timeframe.
 
-        A profit factor of 1.05 that fires when nothing else does is worth
-        more to a book than 1.30 that duplicates an existing member.
+        Cross-timeframe alignment has no registered contract here. Refuse that
+        comparison rather than rewriting an installed strategy's timeframe.
+        Missing inputs/calendars are unavailable evidence, never diversification.
         """
-        frames, btc, derivs_for, _risk = self._ctx(tf, spec)
-        syms = [k for k in frames if not k.startswith("_")]
-        if not syms:
-            return 0.0, ""
-        sym = syms[0]
-        universe = {s: {tf: frames[s]} for s in syms
-                    if frames[s] is not None}
+        from ..core.types import norm_symbol
+        from ..strategy.vector_backtest import WARMUP
+
+        result = {"status": "NOT_APPLICABLE", "max_overlap": 0.0,
+                  "twin": "", "comparisons": []}
+        peers = [other for other in book if other.id != spec.id]
+        if not peers:
+            return result
         try:
-            cand = self._compile(
-                StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
-            a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
-                                      derivs=derivs_for(sym),
-                                      universe=universe,
-                                      market=frames.get("_market"),
-                                      symbol=sym)
-        except Exception:
-            return 0.0, ""
-        worst, who = 0.0, ""
-        for other in book:
-            if other.id == spec.id:
-                continue
-            try:
-                oc = compile_spec(
-                    StrategySpec.from_dict({**other.to_dict(),
-                                            "timeframe": tf}))
-                b_lo, b_sh = oc.entries(
-                    {tf: frames[sym]}, btc=btc,
-                    derivs=spec_evidence.load_derivs(sym, other.data_requires),
-                    universe=universe,
-                    market=spec_evidence.load_refs(other.data_requires) or None,
-                    symbol=sym)
-            except Exception:
-                continue
-            r = signal_overlap(a_lo, a_sh, b_lo, b_sh)
-            if r > worst:
-                worst, who = r, other.id
-        return worst, who
+            probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
+            cand = self._compile(probe)
+            frames, btc, derivs_for, _risk = self._ctx(tf, probe)
+
+            def symbols(strategy, available):
+                u = strategy.universe or {}
+                include = {norm_symbol(s) for s in u.get("include") or ()}
+                exclude = {norm_symbol(s) for s in u.get("exclude") or ()}
+                return (include or {norm_symbol(s) for s in available
+                                    if not s.startswith("_")}) - exclude
+
+            def signals(compiled, context, symbol):
+                fs, leader, derivatives, _ = context
+                df = fs.get(symbol)
+                if df is None or len(df) <= WARMUP + 1:
+                    raise ValueError(f"insufficient_history:{symbol}")
+                if (not df["ts"].is_monotonic_increasing
+                        or df["ts"].duplicated().any()):
+                    raise ValueError(f"invalid_calendar:{symbol}")
+                universe = {s: {tf: f} for s, f in fs.items()
+                            if not s.startswith("_") and f is not None}
+                lo, sh, diag = compiled.entries_detail(
+                    spec_evidence.frames_for(df, tf), btc=leader,
+                    derivs=derivatives(symbol), universe=universe,
+                    market=fs.get("_market"), symbol=symbol)
+                if diag["missing"] or not np.all(diag["quality_ok"][WARMUP:]):
+                    raise ValueError(f"missing_signal_context:{symbol}:{diag['missing']}")
+                world = diag.get("world_ok")
+                if world is not None and not np.all(world[WARMUP:]):
+                    raise ValueError(f"missing_world_context:{symbol}")
+                if len(lo) != len(df) or len(sh) != len(df):
+                    raise ValueError(f"signal_calendar_mismatch:{symbol}")
+                return lo[WARMUP:], sh[WARMUP:]
+
+            context = (frames, btc, derivs_for, _risk)
+            candidate_symbols = symbols(probe, frames)
+            if not candidate_symbols:
+                raise ValueError("candidate_comparison_universe_unavailable")
+            for other in peers:
+                # Compile the actual installed declaration, never a tf-refitted copy.
+                oc = compile_spec(StrategySpec.from_dict(other.to_dict()))
+                other_ctx = self._ctx(other.timeframe, oc.spec)
+                other_symbols = symbols(other, other_ctx[0])
+                if not other_symbols:
+                    raise ValueError(f"comparison_universe_unavailable:{other.id}")
+                common = candidate_symbols & other_symbols
+                if not common:
+                    continue  # explicitly disjoint declared/evaluated markets
+                if other.timeframe != tf:
+                    raise ValueError(f"cross_timeframe_comparison_unavailable:{other.id}:"
+                                     f"{tf}:{other.timeframe}")
+                for symbol in sorted(common):
+                    left, right = frames.get(symbol), other_ctx[0].get(symbol)
+                    if (left is None or right is None
+                            or not left["ts"].equals(right["ts"])):
+                        raise ValueError(f"comparison_calendar_unavailable:{other.id}:{symbol}")
+                    overlap = signal_overlap(*signals(cand, context, symbol),
+                                             *signals(oc, other_ctx, symbol))
+                    if not np.isfinite(overlap):
+                        raise ValueError(f"nonfinite_overlap:{other.id}:{symbol}")
+                    result["comparisons"].append(
+                        {"spec": other.id, "symbol": symbol, "timeframe": tf,
+                         "max_overlap": overlap})
+                    if overlap > result["max_overlap"]:
+                        result.update(max_overlap=overlap, twin=other.id)
+            if result["comparisons"]:
+                result["status"] = "MEASURED"
+            return result
+        except Exception as exc:
+            return {**result, "status": "UNAVAILABLE", "max_overlap": None,
+                    "reason": str(exc)}
 
     @staticmethod
     def _with_null_evidence(ev: dict, per_symbol_pct: dict) -> dict:
@@ -352,8 +395,12 @@ class Analyst:
         if not ok:
             return False, ev
         tf = ev["chosen_timeframe"]
-        overlap, twin = self.redundancy(spec, tf, book)
-        ev["redundancy"] = {"max_overlap": round(overlap, 3), "twin": twin}
+        redundancy = self.redundancy(spec, tf, book)
+        ev["redundancy"] = redundancy
+        if redundancy["status"] == "UNAVAILABLE":
+            return False, {**ev, "untested": True, "reason":
+                           "redundancy_unavailable:" + redundancy["reason"]}
+        overlap, twin = redundancy["max_overlap"], redundancy["twin"]
         ev["persistence"] = self.persistence(spec, tf)
         if overlap > MAX_SIGNAL_OVERLAP:
             return False, {**ev, "reason": f"signal overlap {overlap:.2f} with "
@@ -462,40 +509,6 @@ class Analyst:
             log.warning(f"joint null unavailable for {spec.id}: {e}")
             return {"reason": "joint null unavailable: " + str(e)}
 
-    def _null_percentiles(self, spec: StrategySpec, tf: str) -> dict:
-        """{symbol: share of its own rotations this spec beats}, best effort."""
-        from ..strategy import null_baseline
-        out: dict = {}
-        try:
-            probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
-            compiled = self._compile(probe)
-            frames, btc, derivs_for, risk = self._ctx(tf, probe)
-            # a cross-sectional feature needs the rest of the book; without
-            # `universe` xs_rank/breadth/dispersion evaluate to NaN and the
-            # spec silently takes zero trades rather than failing loudly
-            universe = {s: {tf: f} for s, f in frames.items()
-                        if not s.startswith("_") and f is not None}
-            for sym in [k for k in frames if not k.startswith("_")]:
-                sf = spec_evidence.frames_for(frames[sym], tf)
-                r = vector_walk_forward(compiled, sf, risk, btc=btc,
-                                        derivs=derivs_for(sym), symbol=sym,
-                                        universe=universe,
-                                        market=frames.get("_market"))
-                if r["test"].trades < 8:
-                    continue           # a 2-trade profit factor is noise
-                # the null must be charged what the actual was charged
-                fund = funding_for(sym, sf[tf], risk)
-                a = null_baseline.assess(
-                    compiled, sf, risk, r["test"].profit_factor, btc=btc,
-                    derivs=derivs_for(sym), universe=universe, symbol=sym,
-                    market=frames.get("_market"),
-                    draws=40, split=0.7, part="test", funding=fund)
-                if a.get("percentile") is not None:
-                    out[sym] = a["percentile"]
-        except Exception as e:
-            log.warning(f"null baseline unavailable for {spec.id}: {e}")
-        return out
-
     # ── tradingview confirmation ─────────────────────────────────────────
     #: TradingView symbol for a pair, e.g. BTC/USDT -> BINANCE:BTCUSDT
     @staticmethod
@@ -543,38 +556,12 @@ class Analyst:
         if not out["ran"]:
             out["reason"] = res.get("skipped") or "tester run failed"
             return out
-        tv_pf = res.get("profit_factor")
+        tv_pf = (res.get("metrics") or {}).get("profit_factor")
         if tv_pf is not None:
             out["tv_pf"] = tv_pf
             out["agree"] = bool(float(tv_pf) >= 1.0)
         self.journal.log_brain_event("tv_confirmation", spec.id, out)
         return out
-
-    # ── the active set, for the regime we are actually in ────────────────
-    def active_set(self, specs: list, tf: str = "1h") -> dict:
-        """Historical diagnostic weights, never current strategy selection.
-
-        Regime membership is descriptive. Stored weights/default one are not
-        comparable reliability evidence or plan-owner authority.
-        """
-        from ..strategy.blend import strategy_weights
-        reg = self.current_regime(tf) or {}
-        now = reg.get("regime") or reg.get("label") or ""
-        weights = strategy_weights(self.journal, specs, now)
-        members = []
-        for spec in specs:
-            filt = list(getattr(spec, "regime_filter", []) or [])
-            members.append({
-                "spec": spec.id, "name": spec.name,
-                "regime_filter": filt,
-                # the orchestrator gates on exactly this test
-                "trades_now": (not filt) or (now in filt),
-                "weight": weights.get(spec.id, 1.0)})
-        members.sort(key=lambda m: (not m["trades_now"], -m["weight"]))
-        active = [m for m in members if m["trades_now"]]
-        return {"regime": now, "active": len(active),
-                "members": members,
-                "combined_weight": round(sum(m["weight"] for m in active), 3)}
 
     # ── retirement ───────────────────────────────────────────────────────
     def review_deployed(self, specs: list) -> list:
@@ -643,7 +630,7 @@ class Analyst:
             sweep.observed(spec, dead, ev, diag, risk)
         sweep.finish()
         if actions and self.notifier:
-            self.notifier.send("📉 Retiring decayed strategies:\n" + "\n".join(
+            self.notifier.send("📉 Decay diagnostics (no lifecycle change):\n" + "\n".join(
                 f"{a['name']}: {a['evidence']['verdict']}" for a in actions))
         return actions
 

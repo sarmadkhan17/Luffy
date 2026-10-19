@@ -1,9 +1,5 @@
-"""Scraper source-widening tests: prefilter screen, param repair,
+"""Scraper source-widening tests: prefilter screen,
 Atom parsing, source-yield learning."""
-import json
-
-import pytest
-
 
 def _idea(title="EMA cross strategy", text="use ema 20/50 crossover entry",
           source="tradingview.com/ideas/btcusdt", iid=None):
@@ -34,39 +30,12 @@ def test_screen_drops_hype_and_news():
 
 
 # ── helpers ────────────────────────────────────────────────────────────
-class FakeLLM:
-    available = True
-
-    def __init__(self, reply, replies=None):
-        self.reply = reply
-        self.replies = list(replies or [])   # consumed per call, then repeat
-        self.calls = 0
-
-    def chat_json(self, prompt, deep=False):
-        self.calls += 1
-        if len(self.replies) >= self.calls:
-            return self.replies[self.calls - 1]
-        return self.reply
-
-
-def _scraper_with(llm):
-    import tempfile, pathlib, yaml
+def _scraper_with():
+    import tempfile, pathlib
     from trader.brain.scraper import Scraper
     from trader.core.journal import Journal
-    cfg = yaml.safe_load(open("config.yaml"))
-    j = Journal(pathlib.Path(tempfile.mkdtemp()) / "h.db")
-    h = Scraper(j, cfg, feed=None)
-    h.llm = llm
-    return h
-
-
-def test_genome_repairs_range_strings():
-    from trader.brain.scraper import repair_params
-    p = repair_params("ma_cross", {"fast_len": "5..50",
-                                   "slow_len": "30..200"})
-    assert p == {"fast_len": 50, "slow_len": 200}   # clamped to bounds
-    p2 = repair_params("rsi_extreme", {})
-    assert p2["rsi_len"] == 14                      # defaults fill gaps
+    return Scraper(Journal(pathlib.Path(tempfile.mkdtemp()) / "h.db"),
+                   {"scraper": {"tv_tags": [], "rss_feeds": []}}, feed=None)
 
 
 # ── Atom / entity parsing ────────────────────────────────────────────────
@@ -95,12 +64,11 @@ def test_source_scores_rank_productive_sources():
     import tempfile, pathlib
     from trader.core.journal import Journal
     j = Journal(pathlib.Path(tempfile.mkdtemp()) / "sy.db")
-    good = {"tradingview.com/ideas/btcusdt": {"scraped": 10, "queued": 6}}
-    bad = {"medium.com/feed/tag/algorithmic-trading": {"scraped": 40,
-                                                       "queued": 0}}
-    j.log_brain_event("harvest_cycle", "harvester", {"per_source": good})
-    j.log_brain_event("harvest_cycle", "harvester", {"per_source": bad})
-    h = _scraper_with(FakeLLM(None))
+    good = {"tradingview.com/ideas/btcusdt": {"fetched": 10, "selected": 6, "queued": 6}}
+    bad = {"medium.com/feed/tag/algorithmic-trading": {"fetched": 40, "selected": 4, "queued": 0}}
+    j.log_brain_event("harvest_cycle", "harvester", {"source_intake": "fetched_selected_queued.v1", "per_source": good})
+    j.log_brain_event("harvest_cycle", "harvester", {"source_intake": "fetched_selected_queued.v1", "per_source": bad})
+    h = _scraper_with()
     h.journal = j
     s = h._source_scores()
     # Sources are normalized to hostname only
@@ -125,7 +93,7 @@ def test_scrape_tv_scripts_requests_the_scripts_section(monkeypatch):
         return _R()
 
     monkeypatch.setattr(S.requests, "get", _get)
-    s = _scraper_with(None)         # existing helper in this file, takes an llm
+    s = _scraper_with()
     s.tv_pages = 1
     s.scrape_tv_scripts("meanreversion")
 
@@ -145,7 +113,7 @@ def test_the_scraper_no_longer_creates_strategies():
             f"population-writing creation path")
 
 
-def test_stats_keys_for_all_streams_exist():
+def test_stats_keys_for_all_streams_exist(monkeypatch):
     """Every stream that streams_for() can return must have a stats key."""
     from trader.brain import scraper as S
     from trader.brain import ideas as I
@@ -168,7 +136,9 @@ def test_stats_keys_for_all_streams_exist():
         streams = S.streams_for(item)
         all_possible_streams.update(streams)
 
-    # Now run harvest_once and verify that every stream has a stats key
+    # All configured acquisition methods are replaced before the cycle.
+    monkeypatch.setattr(scraper, "scrape_tv_scripts", lambda tag: [])
+    monkeypatch.setattr(scraper, "scrape_feeds", lambda: [])
     stats = scraper.harvest_once()
 
     for stream in all_possible_streams:
@@ -194,9 +164,9 @@ def test_source_yield_ranking_actually_affects_order():
     bad_url = "https://medium.com/feed/tag/algorithmic-trading"
 
     j.log_brain_event("harvest_cycle", "harvester",
-                      {"per_source": {good_url: {"scraped": 10, "queued": 6}}})
+                      {"source_intake": "fetched_selected_queued.v1", "per_source": {good_url: {"fetched": 10, "selected": 6, "queued": 6}}})
     j.log_brain_event("harvest_cycle", "harvester",
-                      {"per_source": {bad_url: {"scraped": 40, "queued": 0}}})
+                      {"source_intake": "fetched_selected_queued.v1", "per_source": {bad_url: {"fetched": 40, "selected": 4, "queued": 0}}})
 
     scraper = S.Scraper(j, cfg, feed=None)
 

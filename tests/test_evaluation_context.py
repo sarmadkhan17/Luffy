@@ -8,7 +8,7 @@ not work, rather than as one that was never evaluated.
 
 That is not hypothetical. `scripts/screen_mechanisms.py` omitted all three
 for its entire life, so every cross-sectional, carry and BTC-relative
-mechanism it ever printed took zero trades, and `Analyst._null_percentiles`
+mechanism it ever printed took zero trades, and `Analyst._null_evidence`
 omitted `universe`, putting the same hole in the admission path. Measured at
 4h on ten symbols: a cross-sectional momentum rule took 0 trades without
 context and 874 with it.
@@ -82,18 +82,29 @@ def test_btc_relative_needs_the_leader(book):
     assert _entries(spec, book, "S0/USDT", btc=btc) > 0
 
 
-def test_the_admission_path_supplies_the_universe():
-    """The regression that matters: `Analyst._null_percentiles` evaluated
-    specs with no `universe`, so a cross-sectional spec would have been
-    admitted or refused on zero trades."""
-    import inspect
-
+def test_the_admission_path_supplies_universe_and_identical_funding(book, monkeypatch):
+    """The maintained joint-null path receives real peer signals and carry."""
     from trader.brain.analyst import Analyst
-    src = inspect.getsource(Analyst._null_percentiles)
-    assert "universe=universe" in src, \
-        "the admission path must pass the universe to the evaluator"
-    assert "funding=" in src, \
-        "the null must be charged the same carry as the actual result"
+    from trader.research import dependence
+    from trader.strategy import spec_evidence
+    from trader.world import context
+    a = Analyst(None, {"risk": {}})
+    monkeypatch.setattr(a, "frames", lambda tf, extra=(): book)
+    monkeypatch.setattr(spec_evidence, "load_refs", lambda *a: {})
+    monkeypatch.setattr(spec_evidence, "load_derivs", lambda *a: {})
+    monkeypatch.setattr(context, "load_context", lambda **k: None)
+    monkeypatch.setattr("trader.brain.analyst.funding_for",
+                        lambda sym, df, risk: np.full(len(df), .123))
+    captured = []
+    def joint(legs, *args, **kwargs):
+        captured.extend(legs)
+        return {"observed": True}
+    monkeypatch.setattr(dependence, "assess_joint", joint)
+    assert a._null_evidence(_spec("xs_rank(ret(30)) > 0.8",
+                                 "xs_rank(ret(30)) < 0.2"), TF) == {"observed": True}
+    assert len(captured) == len(book)
+    assert sum(np.sum(leg.long) + np.sum(leg.short) for leg in captured) > 0
+    assert all(np.all(leg.funding == .123) for leg in captured)
 
 
 def test_the_screen_supplies_the_context():

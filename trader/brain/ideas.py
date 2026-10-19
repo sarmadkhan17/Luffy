@@ -75,6 +75,42 @@ def score(text: str, title: str = "") -> float:
     return round(s, 3)
 
 
+HYPE = re.compile(
+    r"(price prediction|price target|to hit \$|\d+x potential|moon\b"
+    r"|buy now|giveaway|airdrop|1000x|next 100x|get rich)", re.I)
+
+#: research prose asserts that an observable predicts something, in a scope,
+#: ideally with a magnitude. It rarely contains a single word from
+#: strategy terms, which is why a second screen is needed rather than a
+#: looser one.
+CLAIM_TERMS = re.compile(
+    r"\b(predict\w*|forecast\w*|correlat\w+|regress\w+|significan\w+"
+    r"|hypothes\w+|evidence|out[- ]of[- ]sample|in[- ]sample|p[- ]value"
+    r"|t[- ]stat\w*|sharpe|information ratio|anomal\w+|risk premium|factor"
+    r"|cross[- ]section\w*|autocorrelat\w+|persist\w+|decay|half[- ]life"
+    r"|microstructure|adverse selection|inventory|order flow|toxicity"
+    r"|decile|quantile|percentile|basis points?|bps)\b", re.I)
+#: a claim with a number attached is worth more than one without
+MAGNITUDE = re.compile(r"\b\d+(\.\d+)?\s?(%|bps|basis points|x)\b", re.I)
+#: does it say WHERE the claim holds?
+SCOPE_TERMS = re.compile(
+    r"\b(regime|horizon|timeframe|intraday|daily|weekly|hours?|days?"
+    r"|bull|bear|trending|ranging|volatil\w+)\b", re.I)
+
+
+def research_score(item: dict) -> int:
+    """Screen for a market CLAIM rather than a trade setup."""
+    hay = f"{item.get('title', '')} {item.get('text', '')[:1200]}"
+    score = 2 * len(CLAIM_TERMS.findall(hay))
+    if MAGNITUDE.search(hay):
+        score += 4
+    if SCOPE_TERMS.search(hay):
+        score += 2
+    if HYPE.search(hay):
+        score -= 8
+    return score
+
+
 _TAG = re.compile(r"<[^>]{0,400}>")
 _SCRIPT = re.compile(r"<(script|style)\b.*?</\1>", re.I | re.S)
 
@@ -107,7 +143,8 @@ def _row_to_idea(subject: str, detail: str) -> dict | None:
             "source": d.get("source", ""),
             "url": d.get("url", ""),
             "score": float(d.get("score", 0.0) or 0.0),
-            "streams": streams}
+            "streams": streams,
+            "research_score": max(float(d.get("score", 0.0) or 0.0), research_score(d))}
 
 
 def record(journal, idea: dict, streams=(DEFAULT_STREAM,)) -> bool:
@@ -209,6 +246,11 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
             continue
         seen.add(r["subject"])
         idea = _row_to_idea(r["subject"], r["detail"])
+        if idea:
+            if stream == RESEARCH:
+                idea["score"] = idea["research_score"]
+            elif stream is None and RESEARCH in idea["streams"]:
+                idea["score"] = max(idea["score"], idea["research_score"])
         if idea and len(idea["text"]) >= MIN_TEXT and idea["score"] > 0:
             # Check if this idea was consumed for this stream
             if _is_consumed_for_stream(journal, r["subject"], stream):

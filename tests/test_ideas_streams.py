@@ -119,19 +119,8 @@ def test_record_accepts_bare_string_as_single_stream(tmp_path):
     assert not any(i["idea_id"] == "bare1" for i in strategy_pending)
 
 
-def test_kernel_strategist_consumption_preserves_research_stream(tmp_path):
-    """Regression: kernel.py._mechanism_once() (lines 343-345, 350-353) was
-    calling mark_consumed() without stream= argument, which recorded a
-    legacy-style consumption row that suppressed the idea for ALL streams.
-    This destroyed research prose that the future Researcher agent needs.
-
-    FIX: kernel.py must pass stream="strategy" when the Strategist consumes
-    an idea, so only the strategy stream is marked consumed. The research
-    prose remains available for the Researcher.
-
-    This test exercises the real mark_consumed() path and verifies that when
-    called with stream="strategy", the research stream is NOT affected.
-    """
+def test_strategy_consumption_preserves_research_stream(tmp_path):
+    """Queue API isolation; actual Kernel handoff is covered in idea_pipeline."""
     j = _j(tmp_path)
 
     # Queue one idea for BOTH streams (both Strategist and Researcher can use it)
@@ -143,9 +132,7 @@ def test_kernel_strategist_consumption_preserves_research_stream(tmp_path):
     assert any(i["idea_id"] == "dual_idea" for i in ideas.pending(j, stream="strategy"))
     assert any(i["idea_id"] == "dual_idea" for i in ideas.pending(j, stream="research"))
 
-    # kernel.py._mechanism_once() at line 343-345 and 350-353 consumes the idea.
-    # After the fix, it passes stream="strategy" to mark_consumed.
-    # This ensures the research prose stays in the queue for the Researcher.
+    # Consuming one stream must retain the other stream's independent state.
     ideas.mark_consumed(j, "dual_idea", outcome="admitted", stream="strategy",
                         spec_id="spec_123")
 

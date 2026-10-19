@@ -193,3 +193,83 @@ def test_evaluate_reports_fitness_for_the_current_regime(analyst):
     r = ev["regime"]
     assert "current" in r and "fit" in r and "fit_for_now" in r
     assert r["fit_for_now"] == (r["current"] in r["fit"])
+
+
+def _redundancy_analyst(monkeypatch, frames):
+    a = Analyst(_Journal(), CFG)
+    monkeypatch.setattr(a, '_ctx', lambda tf, spec: (frames, None, lambda s: {}, {}))
+    return a
+
+
+def test_redundancy_checks_later_symbols_and_preserves_identity(monkeypatch):
+    flat, varied = _frame(300), _frame(300, seed=9)
+    # A is silent; B has a variable entry. The first-market shortcut misses B.
+    flat.loc[:, ['open', 'high', 'low', 'close']] = 100.
+    a = _redundancy_analyst(monkeypatch, {'BTC/USDT': flat, 'ETH/USDT': varied})
+    cand, other = _spec('new'), _spec('installed')
+    before = other.to_dict()
+    evidence = a.redundancy(cand, '1h', [other])
+    assert evidence['status'] == 'MEASURED'
+    assert {c['symbol'] for c in evidence['comparisons']} == {'BTC/USDT', 'ETH/USDT'}
+    assert evidence['max_overlap'] == pytest.approx(1.)
+    assert evidence['twin'] == other.id
+    assert other.to_dict() == before
+
+
+@pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+    frames = {'BTC/USDT': _frame(300)}
+    a = _redundancy_analyst(monkeypatch, frames)
+    cand, other = _spec('new'), _spec('installed')
+    if failure == 'empty':
+        frames.clear()
+    elif failure == 'missing_symbol':
+        cand.universe = other.universe = {'include': ['ETH/USDT']}
+    elif failure == 'calendar':
+        frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+    elif failure == 'missing_context':
+        other.entry_long = 'funding > 0'
+    elif failure == 'cross_tf':
+        other.timeframe = '4h'
+    elif failure == 'bad_spec':
+        other.entry_long = 'nope(3) > 0'
+    before = other.to_dict()
+    evidence = a.redundancy(cand, '1h', [other])
+    assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+    assert evidence['reason']
+    assert other.to_dict() == before
+
+
+def test_unavailable_redundancy_refuses_before_null(monkeypatch):
+    a = _redundancy_analyst(monkeypatch, {})
+    monkeypatch.setattr(a, 'evaluate', lambda s: (True, {'chosen_timeframe': '1h'}))
+    monkeypatch.setattr(a, '_null_evidence', lambda *a: pytest.fail('unavailable diversity admitted'))
+    ok, ev = a.admit(_spec('new'), [_spec('installed')])
+    assert not ok and ev['untested'] and ev['redundancy']['max_overlap'] is None
+
+
+def test_empty_book_and_explicit_disjoint_universes_are_not_measured_zero(monkeypatch):
+    a = _redundancy_analyst(monkeypatch, {})
+    cand, other = _spec('new'), _spec('installed')
+    cand.universe = {'include': ['BTC/USDT']}
+    other.universe = {'include': ['ETH/USDT']}
+    for book in ([], [other]):
+        ev = a.redundancy(cand, '1h', book)
+        assert ev['status'] == 'NOT_APPLICABLE' and ev['comparisons'] == []
+
+
+def test_later_incomplete_market_invalidates_partial_redundancy(monkeypatch):
+    frames = {'BTC/USDT': _frame(300), 'ETH/USDT': _frame(300, seed=8)}
+    frames['ETH/USDT']['quality'] = 'VALID'
+    frames['ETH/USDT'].loc[299, 'quality'] = 'MISSING'
+    a = _redundancy_analyst(monkeypatch, frames)
+    ev = a.redundancy(_spec('new'), '1h', [_spec('installed')])
+    assert ev['comparisons']  # the first valid market was actually evaluated
+    assert ev['status'] == 'UNAVAILABLE' and ev['max_overlap'] is None
+
+
+def test_genuine_silent_signal_comparison_can_measure_zero(monkeypatch):
+    a = _redundancy_analyst(monkeypatch, {'BTC/USDT': _frame(300)})
+    ev = a.redundancy(_spec('new', entry='close > 100000000'), '1h', [_spec('installed')])
+    assert ev['status'] == 'MEASURED' and ev['max_overlap'] == 0.
+    assert ev['comparisons'][0]['symbol'] == 'BTC/USDT'

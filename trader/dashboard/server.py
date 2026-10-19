@@ -487,7 +487,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             from ..knowledge.vault import Vault
             loop = asyncio.get_event_loop()
             rep = await loop.run_in_executor(
-                None, lambda: run_postmortem(journal, Vault(journal)))
+                None, lambda: run_postmortem(journal, Vault(journal), cfg=cfg))
             return rep
         except Exception as e:
             return JSONResponse({"ran": False, "reason": str(e)},

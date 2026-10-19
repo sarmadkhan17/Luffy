@@ -183,12 +183,8 @@ research:                        # the search — docs/superpowers/specs/
   handoff: false
 
 strategies:
-  # TradingView confirmation is ADVISORY (Analyst.confirm_on_tv) and never
-  # gates admission; these keys only parameterize scripts/validate_population.py.
-  tv_interval: 1h
-  tv_period: 1y
-  tv_min_oos_trades: 5
-  tv_require_positive_oos: true
+  # Optional TradingView advice uses the exact spec timeframe and tv_harness.*;
+  # it never gates quantitative admission.
   # A profit factor is a statement about arithmetic until it is compared
   # with something. TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7% of the
   # time whatever the entry says, and ALWAYS-LONG scored PF 1.28 on real
@@ -269,8 +265,7 @@ strategies:
 tv_harness:
   enabled: true                  # REAL Strategy Tester via browser automation
   daily_runs: 2                  # hard budget; folds consume runs too
-  budget_enabled: true           # DEV PHASE: unlimited tester runs until finalization
-  run_timeout_s: 90
+  budget_enabled: true           # enforce the configured advisory run cap
 
 harvester:                     # numbers: series acquisition + coverage brief
   enabled: true
@@ -374,11 +369,7 @@ crawler:
   interval_minutes: 360        # deep-read walk every 6h
   max_pages_per_cycle: 25
   max_depth: 2                 # links followed from seeds / rss items
-  passages_per_mine: 10        # token budget: top-scored passages per cycle
-  passages_per_queue: 40       # passages handed to the Strategist's idea
-                               # queue — wider than the mine budget:
-                               # expressing an idea costs one prompt,
-                               # mining it costs a batch
+  passages_per_queue: 40       # deterministic passage queue cap; no LLM calls
   per_host_delay_s: 1.5
   seeds:
     - https://chartschool.stockcharts.com/table-of-contents/market-indicators

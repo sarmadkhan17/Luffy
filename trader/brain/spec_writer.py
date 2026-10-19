@@ -19,6 +19,7 @@ import logging
 import re
 
 from ..strategy import dsl
+from ..strategy.exit_policy import unsupported
 from ..strategy.compile import compile_spec
 from ..strategy.features import FEATURES
 from ..strategy.spec import (MIN_INVALIDATION, MIN_THESIS, StrategySpec,
@@ -74,7 +75,7 @@ _RULES = """DSL rules (violations are rejected, not repaired for you):
 
 #: Facts this firm established by measurement, as opposed to beliefs it
 #: currently holds. Doctrine is the Theorist's to rewrite; this is not.
-_MEASURED = """What measurement has already established here — do not re-litigate it:
+_MEASURED = """Historical research context (not a current qualification receipt):
 - A profit factor on its own is a statement about arithmetic. Exit geometry
   sets a win rate by itself: TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7%
   of the time whatever the entry says. An ALWAYS-LONG rule scored PF 1.28 on
@@ -99,7 +100,8 @@ _MEASURED = """What measurement has already established here — do not re-litig
   strategy is backtested under exactly that engine. It supports: a stop
   (`atr` or `pct`), a target (`rr`, `atr`, `pct` or `none`), NO trailing stop
   (`trail` must be `{"kind":"none"}`), NO signal exit, and a time limit
-  `time.max_bars` between 1 and 500. Anything else cannot be tested and is
+  `time.max_bars` between 1 and 500 (at most 200 with no target or trail).
+  Anything else cannot be tested and is
   refused before it is evaluated.
 - 4h beat 1h on every mechanism tested, because cost is charged per round trip.
 - Declare `universe`: a liquidity floor is part of the strategy. The largest
@@ -156,12 +158,13 @@ def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
         '  "regime_filter": ["TRENDING_UP"|"TRENDING_DOWN"|"RANGING"|"VOLATILE"],\n'
         '  "universe": {"include": [], "exclude": [],\n'
         '               "min_volume_usdt": 100000000},\n'
-        '  "exit": {"stop": {"kind":"atr","mult":2.5} | {"kind":"pct","v":2.0},\n'
+        '  "exit": {"stop": {"kind":"atr","mult":2.5} | {"kind":"pct","v":0.02},\n'
         '           "target": {"kind":"rr","v":3.0} | {"kind":"atr","mult":4.0}'
-        ' | {"kind":"pct","v":5.0} | {"kind":"none"},\n'
+        ' | {"kind":"pct","v":0.05} | {"kind":"none"},\n'
         '           "trail": {"kind":"none"},\n'
         '           "time": {"max_bars": 200}}\n'
-        "}")
+        "}\nPercentage values are fractions: 0.02 means 2%, 0.05 means 5%. "
+        "A valid candidate still requires quantitative qualification.")
 
 
 #: a liquidity floor is part of a strategy, not a global setting. The largest
@@ -202,10 +205,10 @@ def _to_spec(raw: dict, provenance: dict) -> StrategySpec:
         entry_short=(raw.get("entry_short") or "").strip(),
         filters=[f for f in (raw.get("filters") or []) if (f or "").strip()],
         exit=ExitSpec(
-            stop=ex.get("stop") or {"kind": "atr", "mult": 2.0},
-            target=ex.get("target") or {"kind": "rr", "v": 2.0},
-            trail=ex.get("trail") or {"kind": "none"},
-            time=ex.get("time") or {"max_bars": 32},
+            stop=ex.get("stop", {"kind": "atr", "mult": 2.0}),
+            target=ex.get("target", {"kind": "rr", "v": 2.0}),
+            trail=ex.get("trail", {"kind": "none"}),
+            time=ex.get("time", {"max_bars": 32}),
             signal_exit=(ex.get("signal_exit") or "")),
         regime_filter=raw.get("regime_filter") or ["RANGING"],
         markets=["futures"])
@@ -240,18 +243,17 @@ class SpecWriter:
                           "source_url": (idea or {}).get("url", "")}
             try:
                 spec = _to_spec(raw, provenance)
-            except Exception as e:
-                trace["attempts"].append({"error": f"malformed: {e}"})
-                continue
-
-            errs = StrategySpec.validate(spec)
-            if not errs:
-                try:
+                errs = StrategySpec.validate(spec)
+                bad = unsupported(spec.exit)
+                if bad:
+                    errs.append(f"unsupported_versioned_exit:{bad}")
+                if not errs:
                     compile_spec(spec)      # also derives data_requires
                     trace["attempts"].append({"ok": True, "name": spec.name})
                     return spec, trace
-                except dsl.SpecError as e:
-                    errs = [str(e)]
+            except (ValueError, TypeError, AttributeError, KeyError, OverflowError,
+                    dsl.SpecError) as e:
+                errs = [f"malformed or invalid spec: {e}"]
 
             trace["attempts"].append({"errors": errs[:4],
                                       "name": raw.get("name")})

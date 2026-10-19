@@ -1,49 +1,14 @@
-"""The Theorist without an LLM: is each live strategy still inside the
-envelope it was admitted on?
-
-The LLM Theorist spent ~55% of all tokens rewriting prose doctrine off
-2-9-trade samples. What the book actually needs every 6h is this check,
-which is arithmetic: Donchian Breakout Trail was admitted at a 38.85%
-win rate, so 0 wins from 3 is an ordinary Tuesday, and 2 from 60 is broken.
-"""
+"""Postmortem reuses exact Factory paper evidence without granting authority."""
 import inspect
 import json
+import sqlite3
+
+import pytest
 
 from trader.brain import postmortem as PM
-from trader.strategy.spec import ExitSpec, StrategySpec
-
-
-def _spec(sid, expected_wr=None):
-    prov = {"expected_winrate": expected_wr} if expected_wr is not None else {}
-    return StrategySpec(
-        id=sid, name=sid, thesis="t", invalidation="i", provenance=prov,
-        universe={"include": []}, timeframe="4h", direction="both",
-        entry_long="close > ema(50)", entry_short="close < ema(50)",
-        filters=[], exit=ExitSpec(), regime_filter=[], markets=["futures"])
-
-
-class _Journal:
-    def __init__(self, specs, trades, last=None, kv=None):
-        self._specs, self._trades, self._last = specs, trades, last
-        self.kv = kv or {}
-        self.events = []
-
-    def list_specs(self, states=None):
-        return [({"state": "paper"}, s) for s in self._specs]
-
-    def query(self, sql, args=()):
-        if "FROM trades" in sql:
-            w, n = self._trades.get(args[0], (0, 0))
-            return [{"n": n, "w": w, "pnl": 0.0}]
-        if "kind='postmortem'" in sql:
-            return [{"detail": json.dumps(self._last)}] if self._last else []
-        return []
-
-    def log_brain_event(self, kind, subject, detail):
-        self.events.append((kind, subject, detail))
-
-    def kv_get(self, key, default=None):
-        return self.kv.get(key, default)
+from trader.strategy import factory_handoff as F
+from tests.test_sol1_paper_cost import Run, cfg, no_public_network  # noqa: F401
+from tests.authority_factory_fixtures import _trades, T0, DAY
 
 
 class _Vault:
@@ -54,63 +19,112 @@ class _Vault:
         self.notes.append((title, body))
 
 
-def test_a_spec_with_a_validated_rate_gets_a_health_verdict():
-    rows = PM.book_health(_Journal([_spec("s1", 0.3885)], {"s1": (2, 60)}))
-    assert rows[0]["health"]["verdict"] == "DIVERGED"
-    assert rows[0]["health"]["expected_winrate"] == 0.3885
+def test_native_paper_outcomes_use_exact_identity_and_net_costs(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    tid = r.trade('win')
+    r.complete()
+    before = r.j._conn().total_changes
+    writes = {getattr(sqlite3, name) for name in (
+        'SQLITE_INSERT', 'SQLITE_UPDATE', 'SQLITE_DELETE', 'SQLITE_CREATE_TABLE',
+        'SQLITE_CREATE_INDEX', 'SQLITE_CREATE_TRIGGER', 'SQLITE_DROP_TABLE',
+        'SQLITE_DROP_INDEX', 'SQLITE_DROP_TRIGGER', 'SQLITE_ALTER_TABLE',
+        'SQLITE_ATTACH', 'SQLITE_DETACH', 'SQLITE_TRANSACTION', 'SQLITE_SAVEPOINT')}
+    denied = []
+    def read_only(action, *args):
+        if action in writes:
+            denied.append(action)
+            return sqlite3.SQLITE_DENY
+        return sqlite3.SQLITE_OK
+    r.j._conn().set_authorizer(read_only)
+    try:
+        health = PM.book_health(r.j, cfg)[0]
+    finally:
+        r.j._conn().set_authorizer(None)
+    assert not denied and r.j._conn().total_changes == before
+    assert health['version_id'] == r.vid
+    assert health['install_id'] == F.resolve_current_install(r.j, r.v['strategy_id'])['install_id']
+    stats = health['health']['stats']
+    costs = r.receipt(tid)['known_costs']
+    assert stats['trades'] == 1
+    assert stats['pnl'] == pytest.approx(r.row(tid)['realized_pnl'] - costs)
+    assert health['health']['verdict'] == F.P_INSUFFICIENT
+    assert F.state_of(r.j, r.vid) == F.SHADOW
+    assert F.approval_request(r.j, r.vid) is None
 
 
-def test_a_young_strategy_reads_insufficient_not_broken():
-    rows = PM.book_health(_Journal([_spec("s1", 0.3885)], {"s1": (0, 3)}))
-    assert rows[0]["health"]["verdict"] == "INSUFFICIENT"
+def test_missing_costs_cannot_be_reported_as_economically_healthy(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    r.trade('win')
+    h = PM.book_health(r.j, cfg)[0]['health']
+    assert h['verdict'] == F.P_COST_INCOMPLETE
+    assert h['stats'] is None and h['missing_cost_evidence']
 
 
-def test_a_strategy_performing_as_validated_reads_consistent():
-    rows = PM.book_health(_Journal([_spec("s1", 0.3885)], {"s1": (39, 61)}))
-    assert rows[0]["health"]["verdict"] == "CONSISTENT"
+def test_unattributed_legacy_outcomes_are_not_assigned_to_current_version(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    r.trade('win')
+    r.complete()
+    _trades(r.j, r.v['strategy_id'], [10000.], T0 + 6 * DAY, prefix='legacy', identity=None)
+    h = PM.book_health(r.j, cfg)[0]['health']
+    assert h['verdict'] == F.P_INCOMPLETE and h['stats'] is None
+    assert {'id': 'legacy0', 'reason': 'unattributed'} in h['excluded_trades']
 
 
-def test_no_validated_rate_reports_no_health_rather_than_inventing_one():
-    rows = PM.book_health(_Journal([_spec("s1")], {"s1": (1, 4)}))
-    assert rows[0]["health"] is None
+def test_preinstall_outcomes_never_inflate_current_health(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    r.trade('loss')
+    r.complete()
+    _trades(r.j, r.v['strategy_id'], [10000.], T0 - DAY, prefix='old', identity=None)
+    h = PM.book_health(r.j, cfg)[0]['health']
+    assert h['stats']['trades'] == 1 and h['stats']['pnl'] < 0
 
 
-def test_the_first_run_records_every_verdict_as_a_change():
-    j = _Journal([_spec("s1", 0.3885)], {"s1": (0, 3)})
-    v = _Vault()
-    rep = PM.run_postmortem(j, v)
-    assert rep["ran"] is True
-    assert rep["changed"] == {"s1": "INSUFFICIENT"}
-    assert j.events[0][0] == "postmortem"
-    assert len(v.notes) == 1
+def test_unversioned_spec_has_no_fabricated_health_or_identity(tmp_path, cfg):
+    from tests.test_sol1_strategy_lifecycle import _journal, _spec
+    j = _journal(tmp_path)
+    j.upsert_spec(_spec(), state='paper')
+    h = PM.book_health(j, cfg)[0]
+    assert h['version_id'] is h['install_id'] is None
+    assert h['health']['verdict'] == 'UNAVAILABLE'
+    assert h['health']['stats'] is None
 
 
-def test_an_unchanged_book_writes_no_note():
-    j = _Journal([_spec("s1", 0.3885)], {"s1": (0, 3)},
-                 last={"verdicts": {"s1": "INSUFFICIENT"}})
-    v = _Vault()
-    rep = PM.run_postmortem(j, v)
-    assert rep["changed"] == {}
-    assert v.notes == []
-    assert j.events and j.events[0][0] == "postmortem"
+def test_read_reports_satisfied_without_advancing_probation(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    for _ in range(10):
+        r.trade('win')
+        r.complete()
+    assert PM.book_health(r.j, cfg)[0]['health']['verdict'] == F.P_SATISFIED
+    assert F.state_of(r.j, r.vid) == F.SHADOW
+    assert not r.j.query('SELECT * FROM strategy_approval_requests')
 
 
-def test_the_summary_names_each_strategy_and_the_rent():
-    j = _Journal([_spec("Donchian", 0.3885)], {"Donchian": (0, 3)},
-                 kv={"rent_state": json.dumps(
-                     {"week_start": "2026-09-07", "net": 11.83, "bar": 50.0,
-                      "status": "IN_PROGRESS"})})
-    text = PM.summary_text(j)
-    assert "Donchian" in text
-    assert "11.83" in text and "2026-09-07" in text
+def test_change_only_notes_follow_exact_install_and_verdict(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    vault = _Vault()
+    first = PM.run_postmortem(r.j, vault, cfg=cfg)
+    assert first['changed'] and len(vault.notes) == 1
+    second = PM.run_postmortem(r.j, vault, cfg=cfg)
+    assert not second['changed'] and len(vault.notes) == 1
+    # Same status under an old or missing identity is not the same health report.
+    r.j.log_brain_event('postmortem', 'book', {'verdicts': first['verdicts'], 'identities': {}})
+    assert PM.run_postmortem(r.j, vault, cfg=cfg)['changed']
+    assert len(vault.notes) == 2
+    assert first['authority'] == 'DIAGNOSTIC_ONLY'
 
 
-def test_the_post_mortem_spends_no_tokens():
-    src = inspect.getsource(PM)
-    assert "BrainLLM" not in src and ".chat" not in src
+def test_judge_summary_includes_attributed_health_and_recorded_rent(tmp_path, cfg):
+    r = Run(tmp_path, cfg)
+    r.j.kv_set('rent_state', json.dumps({'week_start': '2026-09-07', 'net': 11.83, 'bar': 50.}))
+    text = PM.summary_text(r.j, cfg)
+    assert r.v['spec']['name'] in text
+    assert '11.83' in text and '2026-09-07' in text
+    assert 'exact-version paper health' in text
 
 
-def test_doctrine_loads_read_only():
+def test_postmortem_keeps_no_model_or_legacy_health_calculation():
+    source = inspect.getsource(PM)
+    assert 'BrainLLM' not in source and '.chat' not in source
+    assert 'assess_health' not in source and 'expected_winrate' not in source
     from trader.brain.doctrine import load_doctrine
-    d = load_doctrine()
-    assert "beliefs" in d and "version" in d
+    assert {'beliefs', 'version'} <= load_doctrine().keys()

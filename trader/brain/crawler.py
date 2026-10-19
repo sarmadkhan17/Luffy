@@ -26,7 +26,7 @@ import requests
 
 from . import ideas
 from ..core.journal import Journal
-from .scraper import (DEFAULT_RSS_FEEDS, STRATEGY_TERMS, UA, Scraper,
+from .scraper import (DEFAULT_RSS_FEEDS, STRATEGY_TERMS, UA,
                         scrape_feed)
 
 log = logging.getLogger(__name__)
@@ -49,11 +49,6 @@ ALLOW_DOMAINS = {
     "babypips.com",          # kept: if they unblock us someday, we resume
     "oxfordstrat.com", "quantpedia.com", "federalreserve.gov",
     "bis.org", "elitetrader.com", "tradingview.com", "xueqiu.com",
-}
-#: aggregators whose outbound links are worth one hop anywhere
-#: (robots.txt still governs; those targets' own links are never recursed)
-TRUSTED_AGGREGATORS = {
-    "quantocracy.com", "habr.com",
 }
 SKIP_EXT = re.compile(
     r"\.(pdf|jpg|jpeg|png|gif|svg|css|js|zip|gz|mp4|webp|ico|woff2?)($|\?)",
@@ -88,8 +83,7 @@ def allowed_domain(url: str) -> bool:
 
 
 def extract_links(html: str, base_url: str) -> list[str]:
-    """Absolute, non-asset links. Allowlisting happens at enqueue time
-    (push) so trusted aggregators can vouch for off-allowlist targets."""
+    """Absolute, non-asset links; allowlisting happens at enqueue."""
     try:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(html, "html.parser")
@@ -161,16 +155,12 @@ class DeepCrawler:
     def __init__(self, journal: Journal, cfg: dict, feed, notifier=None):
         self.journal = journal
         self.cfg = cfg
-        self.feed = feed
-        self.notifier = notifier
         c = cfg.get("crawler", {})
         self.max_pages = int(c.get("max_pages_per_cycle", 25))
         self.max_depth = int(c.get("max_depth", 2))
         self.seeds = list(c.get("seeds", SEEDS))
-        self.mine_budget = int(c.get("passages_per_mine", 10))
         self.queue_budget = int(c.get("passages_per_queue", 40))
         self.per_host_delay = float(c.get("per_host_delay_s", 1.5))
-        self.scraper = Scraper(journal, cfg, feed, notifier)
         self._robots: dict[str, tuple[float, RobotFileParser | None]] = {}
         self._last_hit: dict[str, float] = {}
 
@@ -215,10 +205,8 @@ class DeepCrawler:
               - timedelta(days=self.RECRAWL_AFTER_DAYS)).isoformat()))[0]["n"]
         return n > 0
 
-    def _fetch(self, url: str, via_trusted: bool = False) -> \
-            tuple[str, list[str]] | None:
-        if not (allowed_domain(url) or via_trusted) or \
-                not self._can_fetch(url):
+    def _fetch(self, url: str) -> tuple[str, list[str]] | None:
+        if not allowed_domain(url) or not self._can_fetch(url):
             return None
         self._throttle(url)
         try:
@@ -234,20 +222,19 @@ class DeepCrawler:
 
     # ── the cycle ────────────────────────────────────────────────────────
     def crawl_once(self) -> dict:
-        stats = {"pages": 0, "docs": 0, "passages": 0, "mined": 0,
-                 "extracted": 0, "accepted": 0, "rejected": 0}
+        stats = {"pages": 0, "docs": 0, "passages": 0}
 
-        frontier: deque[tuple[str, int, bool]] = deque()   # (url, depth, via_trusted)
+        frontier: deque[tuple[str, int]] = deque()
         enqueued: set[str] = set()
 
-        def push(url: str, depth: int, via_trusted: bool = False):
+        def push(url: str, depth: int):
             u = normalize(url)
             if u in enqueued or self._seen_doc(u):
                 return
-            if not (allowed_domain(u) or via_trusted):
+            if not allowed_domain(u):
                 return
             enqueued.add(u)
-            frontier.append((u, depth, via_trusted))
+            frontier.append((u, depth))
 
         for s in self.seeds:
             push(s, 0)
@@ -261,14 +248,13 @@ class DeepCrawler:
 
         mined: list[dict] = []
         while frontier and stats["pages"] < self.max_pages:
-            url, depth, via_trusted = frontier.popleft()
-            got = self._fetch(url, via_trusted)
+            url, depth = frontier.popleft()
+            got = self._fetch(url)
             if got is None:
                 continue
             text, links = got
             stats["pages"] += 1
-            trusted_page = host_of(url) in TRUSTED_AGGREGATORS
-            if len(text) < 400 and not trusted_page:
+            if len(text) < 400:
                 continue
             uid = hashlib.md5(url.encode()).hexdigest()[:16]
             chunks = [c for c in passages_from(text)
@@ -288,16 +274,11 @@ class DeepCrawler:
                               "score": chunk_score(c), "text": c})
             if depth < self.max_depth:
                 for l in links[:20]:
-                    # aggregator outbound links get one hop anywhere;
-                    # their targets' own links are never recursed into
-                    push(l, depth + 1,
-                         via_trusted=trusted_page and depth + 1 <= 1)
+                    push(l, depth + 1)
 
-        # top passages only — tokens go to the densest material
+        # Queue the densest material within the configured passage cap.
         mined.sort(key=lambda p: p["score"], reverse=True)
-        batch = mined[:self.mine_budget]
         stats["passages"] = len(mined)
-        stats["mined"] = len(batch)
 
         # Queue the densest passages for the Strategist — the only path
         # that turns mined text into a strategy. The crawler's job ends

@@ -933,8 +933,32 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # Postmortem delegates only to these existing read-only Factory readers.
+    # No writer/alias escape is permitted by this exception.
+    import ast
+    postmortem = ast.parse(pathlib.Path('trader/brain/postmortem.py').read_text())
+    factory_imports = [n for n in ast.walk(postmortem) if isinstance(n, ast.ImportFrom)
+                       and any(a.name == 'factory_handoff' for a in n.names)]
+    assert len(factory_imports) == 1
+    assert [(a.name, a.asname) for a in factory_imports[0].names] == [('factory_handoff', 'factory')]
+    assert not any(isinstance(n, ast.ImportFrom) and 'factory_handoff' in (n.module or '')
+                   or isinstance(n, ast.Import) and any('factory_handoff' in a.name for a in n.names)
+                   or isinstance(n, ast.Attribute) and n.attr == 'factory_handoff'
+                   for n in ast.walk(postmortem))
+    allowed_readers = {'resolve_current_install', 'load_version', '_assess'}
+    parents = {child: parent for parent in ast.walk(postmortem) for child in ast.iter_child_nodes(parent)}
+    seen = set()
+    for node in ast.walk(postmortem):
+        if isinstance(node, ast.Name) and node.id == 'factory':
+            attribute = parents[node]
+            assert isinstance(attribute, ast.Attribute) and attribute.value is node
+            call = parents[attribute]
+            assert isinstance(call, ast.Call) and call.func is attribute
+            assert attribute.attr in allowed_readers
+            seen.add(attribute.attr)
+    assert seen == allowed_readers
     # Glacier's exception is restricted to these exact inspection calls.
     # A Factory writer, module escape or alternate import still fails here.
     import ast

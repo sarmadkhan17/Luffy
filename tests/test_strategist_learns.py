@@ -1,21 +1,5 @@
-"""The Strategist must be told what measurement established.
-
-Two things in the prompt actively taught the failing shape:
-
-  * the worked example ended `"trail": {"kind":"none"}` with a fixed RR
-    target and `max_bars: 32`. Every sweep run with that geometry scored at
-    or below the no-edge line, and the one mechanism that beat its controls
-    needed no target, a 4 ATR trail and a 500-bar hold. The example was
-    anchoring on the shape that does not work.
-
-  * `universe` was hardcoded to include/exclude empty with a zero liquidity
-    floor, so no generated spec could declare where it wanted to trade — the
-    scan planner then had nothing to act on, and MAGMA/USDT (-$199.24, the
-    largest single loss on record) stayed eligible.
-
-The measured facts are properties of the search space, not market opinions
-that the Theorist should be free to overwrite, so they belong in the prompt
-rather than only in doctrine.
+"""The prompt distinguishes historical lessons from the current Factory exit
+contract and preserves declared universes. Conversion alone is not admission.
 """
 from trader.brain.spec_writer import _prompt
 

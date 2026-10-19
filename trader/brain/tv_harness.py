@@ -1,13 +1,7 @@
-"""TV Harness — REAL TradingView Strategy Tester results via browser.
+"""Optional TradingView Strategy Tester advice, never admission authority.
 
-Free-plan compatible: uses only Pine Editor + Strategy Tester (no
-alerts/webhooks). Persistent browser profile means you log in once;
-sessions persist for months. Every run is cached by script hash,
-budget-capped daily, screenshot-on-failure, and degrades gracefully —
-the gauntlet falls back to the Yahoo judge when this is unhealthy.
-
-Selectors live in ONE dict; when TradingView ships a redesign, fix
-SELECTORS and nothing else.
+Browser login and UI availability are external prerequisites. A run is only
+labelled/cached for an interval verified from the chart's interval control.
 """
 from __future__ import annotations
 
@@ -28,18 +22,8 @@ PROFILE_DIR = ROOT / "data" / "tv_profile"
 CACHE_PATH = ROOT / "data" / "tv_cache.json"
 SHOT_DIR = ROOT / "logs"
 
-CHART_URL = "https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT"
-
-
 def chart_url(symbol: str = "BINANCE:BTCUSDT") -> str:
-    """Chart URL for a specific symbol.
-
-    backtest() has always ACCEPTED a `symbol`, cached under it and journaled
-    it — but then navigated to the hardcoded CHART_URL, so every run actually
-    executed on BTCUSDT no matter what was requested. Results were therefore
-    mislabelled, and any family whose logic references BTC (rotation_momo)
-    compared BTC against itself.
-    """
+    """Chart URL for the requested instrument."""
     from urllib.parse import quote
     return f"https://www.tradingview.com/chart/?symbol={quote(symbol, safe='')}"
 
@@ -47,25 +31,12 @@ SELECTORS = {
     # 2026-08 UI: Pine Editor is a floating overlay launched from the
     # right toolbar; editor surface is Monaco; tester tab appears in the
     # same overlay after a strategy is added.
+    "interval": "button[data-name='header-intervals']",
     "pine_toolbar_btn": "button[aria-label='Pine']",
     "editor_surface": ".monaco-editor .view-lines, .monaco-editor",
     "add_to_chart": "button:has-text('Add to chart')",
     "chart_loaded": "div[class*='chart-container'], canvas",
 }
-
-
-def _find_tester_tab(page):
-    """Strategy Tester tab in the overlay panel (role/text agnostic)."""
-    for sel in ("[role='tab']:has-text('Strategy Tester')",
-                "button:has-text('Strategy Tester')",
-                "div:has-text('Strategy Tester')"):
-        try:
-            loc = page.locator(sel).first
-            if loc.count() and loc.is_visible():
-                return loc
-        except Exception:
-            continue
-    return None
 
 
 def sha_code(code: str, symbol: str = "BINANCE:BTCUSDT", tf: str = "1h") -> str:
@@ -75,7 +46,7 @@ def sha_code(code: str, symbol: str = "BINANCE:BTCUSDT", tf: str = "1h") -> str:
     core = "\n".join(
         ln for ln in code.splitlines()
         if ln.strip() and not ln.strip().startswith("//"))
-    return hashlib.sha256(f"{core}|{symbol}|{tf}".encode()).hexdigest()[:16]
+    return hashlib.sha256(f"verified-interval.v1|{core}|{symbol}|{tf}".encode()).hexdigest()[:16]
 
 
 def parse_metrics(text: str) -> dict:
@@ -142,7 +113,6 @@ class TVHarness:
         self.daily_budget = int(c.get("daily_runs", 20))
         # development switch: unlimited tester runs until Luffy finalizes
         self.budget_enabled = bool(c.get("budget_enabled", True))
-        self.run_timeout_s = int(c.get("run_timeout_s", 90))
 
     # ── cache ────────────────────────────────────────────────────────────
     @staticmethod
@@ -185,14 +155,15 @@ class TVHarness:
         key = sha_code(code, symbol, tf)
         if not force:
             hit = self.cached(key)
-            if hit:
+            if (hit and hit.get("interval_verified") is True
+                    and hit.get("tf") == tf and hit.get("symbol") == symbol):
                 return {**hit, "cached": True}
         if self.budget_enabled and \
                 self.runs_today() >= self.daily_budget:
             log.warning("TV harness daily budget exhausted")
             return {"ok": False, "skipped": "daily_budget"}
 
-        from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+        from playwright.sync_api import sync_playwright
         PROFILE_DIR.mkdir(parents=True, exist_ok=True)
         result: dict = {"ok": False}
         with sync_playwright() as p:
@@ -216,7 +187,9 @@ class TVHarness:
                 self._paste_script(page, code)
                 self._add_to_chart(page)
                 metrics = self._read_tester(page)
+                self._verify_timeframe(page, tf)
                 result = {"ok": bool(metrics), "metrics": metrics,
+                          "interval_verified": True,
                           "symbol": symbol, "tf": tf,
                           "seconds": round(time.time() - t0, 1)}
             except Exception as e:
@@ -240,17 +213,22 @@ class TVHarness:
         return result
 
     # ── UI interactions (selectors may need repair as TV evolves) ───────
+    def _verify_timeframe(self, page, tf: str) -> None:
+        labels = {"5m": {"5", "5m"}, "15m": {"15", "15m"},
+                  "1h": {"60", "1h"}, "4h": {"240", "4h"}}
+        actual = page.locator(SELECTORS["interval"]).first.inner_text(
+            timeout=5000).strip().lower()
+        if actual not in labels.get(tf, set()):
+            raise RuntimeError(f"timeframe_unverified: requested={tf}, observed={actual!r}")
+
     def _set_timeframe(self, page, tf: str) -> None:
-        """TV quick-interval: type the tf while chart has focus."""
-        try:
-            page.locator(SELECTORS["chart_loaded"]).first.click(
-                timeout=5000, position={"x": 600, "y": 400})
-            page.keyboard.type(tf, delay=60)
-            page.keyboard.press("Enter")
-            page.wait_for_timeout(2500)
-            log.info(f"timeframe set to {tf} via quick-input")
-        except Exception as e:
-            log.debug(f"timeframe set skipped ({e}); keeping chart default")
+        """Set and verify the interval; failures invalidate this advisory run."""
+        page.locator(SELECTORS["chart_loaded"]).first.click(
+            timeout=5000, position={"x": 600, "y": 400})
+        page.keyboard.type(tf, delay=60)
+        page.keyboard.press("Enter")
+        page.wait_for_timeout(2500)
+        self._verify_timeframe(page, tf)
 
     def _open_pine_editor(self, page) -> None:
         page.locator(SELECTORS["pine_toolbar_btn"]).first.click(
@@ -420,86 +398,8 @@ class TVHarness:
         log.info("TV profile saved")
 
 
-# ── manifest evaluation (walk-forward on real tester data) ───────────────
-# Families whose Pine logic references another instrument must NOT be tested
-# on that same instrument. rotation_momo pulls BINANCE:BTCUSDT via
-# request.security and requires `myRet < btcRet * 0.7` while `myRet > 0` — on a
-# BTC chart btcRet == myRet, so the condition is unsatisfiable and the family
-# could never produce a single TV trade.
-FAMILY_TEST_SYMBOL = {
-    "rotation_momo": "BINANCE:ETHUSDT",
-}
-
-
-def test_symbol_for(family: str, default: str = "BINANCE:BTCUSDT") -> str:
-    return FAMILY_TEST_SYMBOL.get(family, default)
-
-
-def evaluate_manifest(harness: TVHarness, manifest: dict,
-                      symbol: str = "BINANCE:BTCUSDT",
-                      tf: str = "1h",
-                      min_oos_trades: int = 5) -> dict:
-    """Run full + fold variants through the real tester → same verdict
-    shape as trader.brain.tv.TVClient.walk_forward, so the gauntlet can
-    consume either judge interchangeably."""
-    from ..brain.pine import PINE_DIR
-    sid = manifest["strategy_id"]
-    symbol = test_symbol_for(manifest.get("family", ""), symbol)
-    full_path = PINE_DIR / sid / "full.pine"
-    if not full_path.exists():
-        return {"valid": False, "reason": "no forged script"}
-    res = harness.backtest(full_path.read_text(), symbol, tf)
-    if not res.get("ok"):
-        return {"valid": False, "reason":
-                res.get("error") or res.get("skipped") or "harness failed",
-                "harness": harness.health()}
-    folds = []
-    for i in range(1, 4):
-        fp = PINE_DIR / sid / f"fold{i}.pine"
-        if not fp.exists():
-            continue
-        fr = harness.backtest(fp.read_text(), symbol, tf)
-        folds.append(fr.get("metrics") or {})
-    m = res["metrics"]
-    pos_folds = sum(1 for fm in folds
-                    if (fm.get("net_profit_usd") or 0) > 0)
-    # Free-plan reality: the tester exposes PnL + drawdown (+ per-fold
-    # PnL) only. Trade-count and sharpe/winrate gates are enforced by
-    # the internal backtest stage in the gauntlet, which has full
-    # metrics — so here they apply only when the data exists (paid).
-    checks = {
-        "profitable_oos": (m.get("net_profit_pct") or -100) > 0,
-        "drawdown_ok": abs(m.get("max_drawdown_pct") or 100) <= 20.0,
-        "folds_positive": pos_folds >= max(1, len(folds) // 2 + 1),
-    }
-    if m.get("total_trades") is not None:
-        checks["enough_trades"] = m["total_trades"] >= min_oos_trades
-    if m.get("sharpe") is not None or m.get("win_rate_pct") is not None \
-            or m.get("profit_factor") is not None:
-        # trend systems legitimately run low WR with big winners — PF
-        # is the honest quality signal when WR alone would mislead
-        checks["quality"] = ((m.get("sharpe") or 0) >= 1.0) or \
-            ((m.get("win_rate_pct") or 0) >= 50.0) or \
-            ((m.get("profit_factor") or 0) >= 1.15)
-    return {
-        "valid": all(checks.values()), "checks": checks,
-        "judge": "real_tv",
-        "net_profit_pct": m.get("net_profit_pct"),
-        "net_profit_usd": m.get("net_profit_usd"),
-        "trades": m.get("total_trades"),
-        "win_rate": m.get("win_rate_pct"),
-        "profit_factor": m.get("profit_factor"),
-        "max_dd": m.get("max_drawdown_pct"),
-        "sharpe": m.get("sharpe"),
-        "buy_hold_pct": m.get("buy_hold_pct"),
-        "positive_folds": pos_folds, "fold_count": len(folds),
-        "fold_metrics": folds,
-    }
-
-
 def main() -> None:
     import argparse
-    import yaml
     ap = argparse.ArgumentParser(prog="tv-harness")
     ap.add_argument("--login", action="store_true")
     ap.add_argument("--check", action="store_true")
