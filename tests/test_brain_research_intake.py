@@ -10,6 +10,8 @@ from trader.core.journal import Journal
 from trader.research.ledger import Ledger
 from trader.research import predictive_bridge as B, brain_intake as Q
 from trader.cognition import predictive as P, predictive_bank
+from tests.test_predictive_research_bridge import population
+from tests.test_investigation_state_feedback import paths
 
 NOW = 1_790_000_000_000
 TEXT = ('Intraday order flow autocorrelation predicts daily volatility decay. '
@@ -220,3 +222,23 @@ with B.store(sys.argv[2]) as db:
     out = subprocess.check_output([sys.executable, '-c', code, str(brain), str(bank), str(NOW+1)], text=True)
     assert out.strip() == "{'accepted': 0, 'refused': 0, 'deferred': 0}"
     assert len(rows(bank, 'bridge_questions')) == 1
+
+
+def test_passage_and_investigation_sources_share_existing_bank(population, tmp_path):
+    source, bank, candles, created, _, retained = population
+    brain = tmp_path / 'brain-queue.db'
+    j = Journal(brain)
+    ideas.record(j, dict(idea_id='mixed-passage', title='Research', text=TEXT,
+                        source='fixture-feed', url='https://example.test/mixed'), streams='research')
+    with j._tx() as db:
+        db.execute('UPDATE brain_events SET ts=?', (stamp(created-1),))
+    cfg = {'research': {'enabled': False, 'referee': False, 'handoff': False}}
+    def run():
+        return B.cycle(source, bank, candles, cfg, now_ms=created, submit=False, brain_source_path=brain)
+    result = run()
+    assert result['brain_intake']['accepted'] == result['counts']['eligible_research_results'] == 1
+    assert len(rows(bank, 'bridge_sources')) == 2
+    attachment = predictive_bank.predictive_extensions(bank, retained.bank_id)
+    assert attachment['question_source'] is None and attachment['hypotheses']
+    assert run()['counts']['eligible_research_results'] == 0
+    assert len(rows(bank, 'bridge_sources')) == 2
