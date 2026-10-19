@@ -147,7 +147,7 @@ def initialize(ex, reference, atr, side, entry_bar_ms, step_ms):
                     d, reference, atr, side, ex.time['max_bars'], int(step_ms),
                     trail_mult=ex.trail['mult'] if ex.trail['kind'] == 'atr' else 0.0,
                     arm_at_r=ex.trail['arm_at_r'] if ex.trail['kind'] == 'atr' else 0.0,
-                    signal_exit=bool(ex.signal_exit))
+                    signal_exit=bool(ex.signal_exit.strip()))
     if not all(math.isfinite(v) for v in (policy.stop,policy.target,policy.initial_r)) or policy.stop <= 0 or (policy.target and policy.target <= 0):
         raise ValueError('exit_geometry_nonpositive')
     return policy, State(int(entry_bar_ms), trail='dormant' if policy.trail_mult else 'none',

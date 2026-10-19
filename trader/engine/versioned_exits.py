@@ -24,7 +24,7 @@ def observations(spec, snap, state):
     if frame.attrs.get('read_mode') == 'retrospective':
         raise ValueError('retrospective_observations_have_no_execution_authority')
     signal, signal_valid = None, None
-    if spec.exit.signal_exit:
+    if spec.exit.signal_exit.strip():
         from ..strategy.compile import compile_spec, _CTX_TF
         from ..data.market_provenance import eligible_frame
         frames = {}

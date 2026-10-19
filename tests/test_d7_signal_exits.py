@@ -9,6 +9,14 @@ from tests.test_d7_strategy_parity import STEP,frame
 from tests.test_compile import _spec
 
 
+def test_optional_blank_signal_exit_matches_compiler():
+    ex=ExitSpec(signal_exit='  ',time={'max_bars':1})
+    p,s=E.initialize(ex,100,1,'long',0,STEP)
+    assert not p.signal_exit
+    assert compile_spec(_spec(exit=ex)).exit_signal({'15m':frame(20)}) is None
+    assert E.advance(p,s,E.Observation(STEP,100,101,99,100),1).reason=='time'
+
+
 @pytest.mark.parametrize('side',['long','short'])
 def test_signal_decision_precedes_time_and_trail_but_never_claims_a_fill(side):
     ex=ExitSpec(signal_exit='close < ema(5)',time={'max_bars':1},
