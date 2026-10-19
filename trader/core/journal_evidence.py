@@ -140,6 +140,11 @@ def store(conn, detail):
             flush()
 
     for part in raw_parts:
+        if isinstance(detail, FrozenJSON):
+            # Explicit boundaries include short tails and surrounding JSON.
+            # Coalescing a tail with a suffix defeats complete subtree reuse.
+            save(part)
+            continue
         # Preserve pre-frozen segment boundaries. Ordinary tiny JSON tokens
         # accumulate in bounded blocks; never build the giant event string.
         if len(part) >= BLOCK:
@@ -164,6 +169,30 @@ _SEGMENT_HASHES = OrderedDict()
 _SEGMENT_LOCK = threading.Lock()
 _SEGMENT_BYTES = 0
 _SEGMENT_LIMIT = 64 * 1024**2
+
+
+def anchored(text, values):
+    """Anchor exact retained subtrees so shifted JSON prefixes share chunks.
+
+    No normalization: only complete, byte-identical strings are anchored.
+    """
+    spans = []
+    for value in set(values):
+        if len(value) < BLOCK:
+            continue
+        offset = 0
+        while (start := text.find(value, offset)) >= 0:
+            spans.append((start, start + len(value)))
+            offset = start + len(value)
+    parts, offset = [], 0
+    for start, end in sorted(spans, key=lambda span: (span[0], -span[1])):
+        if start < offset:
+            continue
+        parts.extend(pieces(text[offset:start]))
+        parts.extend(pieces(text[start:end]))
+        offset = end
+    parts.extend(pieces(text[offset:]))
+    return FrozenJSON(tuple(parts))
 
 
 def _chunk_sha(data):

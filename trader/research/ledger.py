@@ -495,6 +495,24 @@ class Ledger:
                 "error=? WHERE id=?",
                 (now_utc().isoformat(), 1 if ok else 0, float(elapsed_s),
                  (error or "")[:500], int(batch_id)))
+            # Historical compaction is opt-in after owner approval; normal
+            # future result writes already enforce _slim without this switch.
+            approved = c.execute("SELECT value FROM state_kv WHERE key='lifecycle.research.backfill.approved.v1'").fetchone()
+            if not approved or approved[0] != '1':
+                return
+            from ..persistence.storage_cleanup import research_batch
+            cursor = c.execute("SELECT value FROM state_kv WHERE key='lifecycle.research.rowid.v1'").fetchone()
+            try:
+                after = int(cursor[0]) if cursor else 0
+            except (ValueError, TypeError):
+                return  # Unknown cleanup cursor cannot roll back completed work.
+            if after < 0:
+                return
+            report = research_batch(c, after=after, apply=True)
+            if 'scanned' not in report:
+                return  # Local schema/trigger refusal still commits batch completion.
+            c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES ('lifecycle.research.rowid.v1',?)",
+                      (str(report['next_rowid'] if report['scanned'] else 0),))
 
     # ── the error budget ─────────────────────────────────────────────────
     def tests(self) -> list:

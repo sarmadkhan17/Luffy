@@ -131,7 +131,8 @@ class Consumer:
                     db.rollback()
                     return self._consume(current, processed_at=processed_at, serialized=True)
             db.executemany('INSERT OR IGNORE INTO checkpoints VALUES (?,?)', checkpoints)
-            body_detail = E.store(db,body_text) if len(body_text.encode()) > 65536 else body_text
+            anchors = [canonical(v) for v in event.payload()['inputs'].values() if isinstance(v, dict)]
+            body_detail = E.store(db,E.anchored(body_text, anchors)) if len(body_text.encode()) > 65536 else body_text
             raw_detail = E.store(db,raw_text) if len(raw_text.encode()) > 65536 else raw_text
             db.execute('INSERT INTO evaluations VALUES (?,?)', (cut,body_detail))
             db.execute('INSERT OR REPLACE INTO state VALUES (1,?,?)',

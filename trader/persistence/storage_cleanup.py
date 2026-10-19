@@ -1,14 +1,17 @@
-"""DA-10 conservative, copy-only historical cleanup.
+"""Existing cleanup owner, with bounded operational lifecycle helpers.
 
-Only redundant, unreferenced portfolio state segments are eligible. Unique
-orphan bytes, receipt revisions, research budgets, all events and unknown
-schemas are retained. No production apply entry point exists.
+Historical portfolio GC and CLI backfills apply only to identified copies.
+Market/R&D helpers preserve logical identities in caller-owned transactions.
+Unknown dependencies, unique evidence and statistical expenditure are retained.
+No production historical-purge CLI exists.
 """
 from __future__ import annotations
 
 from contextlib import closing
 import hashlib
+from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import sqlite3
@@ -401,3 +404,234 @@ def rehearse(directory, report_path, *, inventory_directory=None):
     finally:
         for db in connections.values():
             db.close()
+
+
+# Operational lifecycle additions reuse the existing owners and transactions.
+# These functions never commit, checkpoint, vacuum, discover stores or unlink files.
+MAX_BATCH = 128
+
+
+def market_batch(db, *, after=0, limit=MAX_BATCH, apply=False):
+    """Losslessly share source/raw strings in a bounded receipt rowid range.
+
+    Unknown schemas/records refuse individually. The caller owns a stable read
+    snapshot or write transaction. Old logical receipts and every ID survive.
+    """
+    from trader.data import market_provenance as mp
+    if type(limit) is not int or not 1 <= limit <= MAX_BATCH or type(after) is not int or after < 0:
+        raise ValueError('INVALID_LIFECYCLE_BOUND')
+    expected = ['revision_id','series_key','event_ms','available_ms','observed_ms','record_json']
+    if [r[1] for r in db.execute('PRAGMA table_info(market_revisions)')] != expected:
+        return dict(refused='UNKNOWN_MARKET_SCHEMA', records=[], next_rowid=after)
+    if [r[1] for r in db.execute('PRAGMA table_info(market_raw_sources)')] != ['content_hash','source','raw_json']:
+        return dict(refused='UNKNOWN_SOURCE_SCHEMA', records=[], next_rowid=after)
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND tbl_name IN ('market_revisions','market_raw_sources') LIMIT 1").fetchone():
+        return dict(refused='UNKNOWN_MARKET_TRIGGER', records=[], next_rowid=after)
+    if apply and not db.in_transaction:
+        raise ValueError('WRITE_TRANSACTION_REQUIRED')
+    pending, records, refused, delta = {}, [], [], 0
+    rows = db.execute('SELECT rowid,* FROM market_revisions WHERE rowid>? ORDER BY rowid LIMIT ?', (after,limit)).fetchall()
+    for rowid, rid, key, event, available, observed, raw in rows:
+        try:
+            r = mp.read_record(db, raw)
+            values = {k:r[k] for k in mp.VALUES if k in r}
+            body = {k:r[k] for k in mp.META if k not in ('revision_id','supersedes')}
+            if (r['content_hash'] != mp.digest({'raw':json.loads(r['raw_json']), 'value':values})
+                    or r['revision_id'] != mp.digest(body)
+                    or (rid,event,available,observed) != (r['revision_id'],r['event_time_ms'],r['available_at_ms'],r['observed_at_ms'])):
+                raise ValueError('MARKET_RECEIPT_IDENTITY_REFUSED')
+            if mp.TEXT_REF not in raw and raw != mp.encode(r):
+                raise ValueError('NONCANONICAL_SERIALIZED_PROVENANCE_RETAINED')
+            physical = dict(r)
+            additions = {}
+            for field in ('source','raw_json'):
+                text = r[field]
+                if not isinstance(text,str) or len(text.encode()) < mp.TEXT_MIN:
+                    continue
+                marker = mp.text_reference(text); sha = marker[len(mp.TEXT_REF):]
+                old = db.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?',(sha,)).fetchone()
+                if (old is not None and old[0] != text) or (sha in pending and pending[sha] != text):
+                    raise ValueError('MARKET_SOURCE_CONFLICT')
+                if old is None and field == 'raw_json':
+                    continue
+                if old is None and sha not in pending:
+                    additions[sha] = text
+                physical[field] = marker
+            changed = mp.encode(physical)
+            if changed == raw:
+                continue
+            # Never expand one legacy record just to normalize its formatting.
+            saving = len(raw.encode()) - len(changed.encode())
+            source_bytes = sum(len(t.encode()) + len(h) + len('immutable-text.v1') for h,t in additions.items())
+            # A first shared value can cost one small row; subsequent receipts
+            # amortize it. Future append uses exactly the same representation.
+            pending.update(additions)
+            delta += saving - source_bytes
+            records.append(dict(rowid=rowid, revision_id=rid, before_sha256=hashlib.sha256(raw.encode()).hexdigest(),
+                                after_sha256=hashlib.sha256(changed.encode()).hexdigest(),
+                                record_bytes_removed=saving, source_payload_bytes_added=source_bytes))
+            if apply:
+                db.execute('SAVEPOINT lifecycle_record')
+                try:
+                    stored = mp.store_record(db,r)
+                    if mp.read_record(db,stored) != r:
+                        raise ValueError('MARKET_ROUNDTRIP_REFUSED')
+                    db.execute('UPDATE market_revisions SET record_json=? WHERE rowid=? AND record_json=?',(stored,rowid,raw))
+                    db.execute('RELEASE lifecycle_record')
+                except Exception:
+                    db.execute('ROLLBACK TO lifecycle_record'); db.execute('RELEASE lifecycle_record')
+                    raise
+        except (ValueError,KeyError,TypeError) as exc:
+            refused.append(dict(rowid=rowid,revision_id=rid,reason=str(exc)))
+    return dict(records=records, refused=refused, scanned=len(rows), next_rowid=rows[-1][0] if rows else after,
+                net_payload_bytes_removed=delta, physical_bytes_reclaimed=0)
+
+
+def research_batch(db, *, after=0, limit=32, apply=False):
+    """Apply the ledger's existing _slim contract only after all batch work ends.
+
+    Failed and successful identities/statistics remain known. Registrations,
+    tests, candidates, archives and reproducible evidence are never rewritten.
+    """
+    from trader.research.ledger import _slim
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND tbl_name='research_combos' LIMIT 1").fetchone():
+        return dict(refused='UNKNOWN_RESEARCH_TRIGGER', records=[], next_rowid=after)
+    if type(limit) is not int or not 1 <= limit <= MAX_BATCH or type(after) is not int or after < 0:
+        raise ValueError('INVALID_LIFECYCLE_BOUND')
+    if apply and not db.in_transaction:
+        raise ValueError('WRITE_TRANSACTION_REQUIRED')
+    rows = db.execute('SELECT rowid,hash,result,tf,geo,created_at FROM research_combos WHERE rowid>? ORDER BY rowid LIMIT ?', (after,limit)).fetchall()
+    records, refused = [], []
+    for rowid, identity, text, tf, geo, created in rows:
+        try:
+            value = json.loads(text)
+            if not isinstance(value,dict) or not isinstance(value.get('portfolio'),dict):
+                raise ValueError('UNKNOWN_RESULT_SHAPE')
+            if 'order' not in value['portfolio']:
+                continue
+            if value.get('evidence') or value.get('hash') != identity:
+                raise ValueError('IMMUTABLE_OR_UNKNOWN_RESULT')
+            if (db.execute('SELECT 1 FROM research_tests WHERE hash=? LIMIT 1',(identity,)).fetchone()
+                    or db.execute('SELECT 1 FROM research_candidates WHERE hash=? OR twin_of=? LIMIT 1',(identity,identity)).fetchone()):
+                raise ValueError('REFERENCED_RESULT')
+            if db.execute('SELECT 1 FROM research_batches WHERE tf=? AND geo=? AND finished IS NULL LIMIT 1',(tf,geo)).fetchone():
+                raise ValueError('ACTIVE_RESEARCH')
+            if not created or not db.execute('SELECT 1 FROM research_batches WHERE tf=? AND geo=? AND finished>=? LIMIT 1',(tf,geo,created)).fetchone():
+                raise ValueError('COMPLETION_NOT_ESTABLISHED')
+            slim = _slim(value)
+            changed = json.dumps(slim)
+            records.append(dict(rowid=rowid, hash=identity, before_sha256=hashlib.sha256(text.encode()).hexdigest(),
+                                after_sha256=hashlib.sha256(changed.encode()).hexdigest(),
+                                bytes_removed=len(text.encode())-len(changed.encode()), field='portfolio.order'))
+            if apply:
+                db.execute('UPDATE research_combos SET result=? WHERE rowid=? AND result=?',(changed,rowid,text))
+        except (ValueError,TypeError,KeyError) as exc:
+            refused.append(dict(rowid=rowid,hash=identity,reason=str(exc)))
+    return dict(records=records,refused=refused,scanned=len(rows),next_rowid=rows[-1][0] if rows else after,
+                net_payload_bytes_removed=sum(r['bytes_removed'] for r in records),physical_bytes_reclaimed=0)
+
+
+OPERATIONAL_STORES = ('candles.db', 'derivs.db', 'luffy.db', 'attention.db',
+    'investigation.db', 'runtime-portfolio.db', 'attention_learning.db',
+    'execution-evidence.db', 'accounting-worker/queue.db',
+    'declared-population/attention.db', 'stage5-public/public.db')
+
+
+def operational_dry_run(directory, report_path, *, windows=8, limit=128):
+    """Bounded read-only evidence from the already verified operational catalog.
+
+    Each store has its own short read transaction. Live WAL is read normally;
+    immutable=1 is deliberately forbidden. No DDL, writes, temp files,
+    checkpoints, VACUUM, providers or runtime imports are invoked.
+    """
+    if type(windows) is not int or not 1 <= windows <= 32 or not 1 <= limit <= MAX_BATCH:
+        raise ValueError('INVALID_DRY_RUN_BOUND')
+    directory = Path(directory).resolve()
+    if not os.statvfs(directory).f_flag & os.ST_RDONLY:
+        raise ValueError('READONLY_FILESYSTEM_REQUIRED_FOR_OPERATIONAL_DRY_RUN')
+    output = Path(report_path).resolve()
+    if directory == output or directory in output.parents:
+        raise ValueError('REPORT_WITHIN_OPERATIONAL_STORAGE_REFUSED')
+    report = dict(version='operational-lifecycle.v1', started_utc=datetime.now(timezone.utc).isoformat(),
+                  read_only=True, production_apply_authorized=False,
+                  stores={}, approval_records=[], physical_storage_savings_bytes=0,
+                  filesystem_write_denial='READONLY_MOUNT_VERIFIED_PER_STORE',
+                  physical_savings_reason='No production writes, checkpoints or compaction',
+                  catalog_evidence='/mnt/luffy-data/storage-measurement-20261019/inventory.json',
+                  estimate_scope='Stratified bounded rowid windows; net payload estimate excludes B-tree/index/row overhead and compaction. Rowid gaps and workload shifts limit extrapolation.')
+    for name in OPERATIONAL_STORES:
+        path = directory/name
+        if not path.is_file():
+            report['stores'][name] = dict(refused='STORE_UNAVAILABLE'); continue
+        if not os.statvfs(path.resolve()).f_flag & os.ST_RDONLY:
+            report['stores'][name] = dict(refused='WRITABLE_STORE_MOUNT'); continue
+        result = report['stores'][name] = dict(path=str(path.resolve()), action='RETAIN')
+        files = {}
+        for suffix in ('','-wal','-shm','-journal'):
+            item = Path(str(path)+suffix)
+            if item.exists():
+                st = item.stat(); files[suffix or 'main'] = dict(bytes=st.st_size,allocated_bytes=st.st_blocks*512)
+        result['files'] = files
+        with closing(sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=.05)) as db:
+            db.execute('PRAGMA query_only=ON'); db.execute('PRAGMA temp_store=MEMORY')
+            started = time.monotonic()
+            db.set_progress_handler(lambda: int(time.monotonic()-started > 3),1000)
+            try:
+                db.execute('BEGIN')
+                size = db.execute('PRAGMA page_size').fetchone()[0]
+                pages = db.execute('PRAGMA page_count').fetchone()[0]
+                free = db.execute('PRAGMA freelist_count').fetchone()[0]
+                result.update(page_bytes=size, retained_page_bytes=(pages-free)*size,
+                              reusable_page_bytes=free*size)
+                targets = [('market_revisions',market_batch)] if name in ('candles.db','derivs.db') else [('research_combos',research_batch)] if name == 'luffy.db' else []
+                for table, inspect in targets:
+                    last = db.execute('SELECT rowid FROM '+table+' ORDER BY rowid DESC LIMIT 1').fetchone()
+                    high = last[0] if last else 0
+                    offsets = sorted({max(0, int((high-limit)*i/max(1,windows-1))) for i in range(windows)})
+                    batches = []
+                    for after in offsets:
+                        # Reset the query deadline per bounded range; no long snapshot.
+                        started = time.monotonic()
+                        batch = inspect(db,after=after,limit=limit)
+                        batches.append(batch)
+                        report['approval_records'].extend(dict(database=name,table=table,**r) for r in batch.get('records',()))
+                    scanned = sum(b.get('scanned',0) for b in batches)
+                    net = sum(b.get('net_payload_bytes_removed',0) for b in batches)
+                    result.update(action='LOSSLESS_REPRESENTATION_COMPACTION_ONLY', table=table,
+                                  maximum_rowid=high,batches=batches,sampled_rows=scanned,
+                                  sampled_net_payload_bytes_removed=net,
+                                  estimated_net_payload_bytes_removed=net*high/scanned if scanned else 0,
+                                  estimate_assumes_dense_rowids=True)
+            except (sqlite3.Error,ValueError) as exc:
+                result['refused'] = str(exc)
+            finally:
+                db.rollback()
+    report['retained_page_bytes'] = sum(s.get('retained_page_bytes',0) for s in report['stores'].values())
+    report['reusable_page_bytes'] = sum(s.get('reusable_page_bytes',0) for s in report['stores'].values())
+    report['estimated_reclaimable_payload_GB'] = sum(s.get('estimated_net_payload_bytes_removed',0) for s in report['stores'].values())/1e9
+    report['completed_utc'] = datetime.now(timezone.utc).isoformat()
+    report['approval_scope'] = 'Only these exact sampled records are identified; unsampled records require a fresh bounded manifest and the same eligibility checks under the applying write transaction.'
+    output.parent.mkdir(parents=True,exist_ok=True)
+    output.write_text(json.dumps(report,indent=2))
+    return report
+
+
+def apply_lifecycle_copy(path, family, *, after=0, limit=128):
+    """Bounded historical rehearsal on a recognized existing DA-10 copy only."""
+    path = guard_copy(path)
+    methods = {'market': market_batch, 'research': research_batch}
+    if family not in methods:
+        raise ValueError('UNKNOWN_LIFECYCLE_FAMILY')
+    inspect = methods[family]
+    with closing(read_copy(path)) as db:
+        db.execute('BEGIN IMMEDIATE')
+        try:
+            planned = inspect(db,after=after,limit=limit)
+            applied = inspect(db,after=after,limit=limit,apply=True)
+            if applied != planned:
+                raise ValueError('LIFECYCLE_PLAN_CHANGED')
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+    return dict(copy=str(path), production_apply_authorized=False, family=family, **applied)

@@ -94,6 +94,68 @@ def init(conn):
         ON market_revisions(series_key, event_ms, available_ms, observed_ms)''')
 
 
+# Physical references only. Logical source/raw strings and receipt hashes are
+# reconstructed and checked before any consumer receives a receipt.
+TEXT_REF = '!luffy-market-text.v1!'
+TEXT_MIN = 256
+
+
+def text_reference(text):
+    return TEXT_REF + hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
+def store_record(conn, record, *, text_cache=None):
+    physical = dict(record)
+    for field in ('source', 'raw_json'):
+        text = physical.get(field)
+        if not isinstance(text, str) or len(text.encode()) < TEXT_MIN:
+            continue
+        marker = text_reference(text)
+        key = marker[len(TEXT_REF):]
+        if text_cache is not None and key in text_cache:
+            old = (text_cache[key],) if text_cache[key] is not None else None
+        else:
+            old = conn.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
+        if old is not None and old[0] != text:
+            raise ValueError('market_source_content_conflict')
+        # Raw bodies may include acquisition-specific clocks. Reuse an
+        # existing exact immutable body, but do not create a second copy of
+        # a unique raw response just to introduce a reference.
+        if old is None and field == 'raw_json':
+            continue
+        if old is None:
+            conn.execute('INSERT INTO market_raw_sources VALUES (?,?,?)', (key, 'immutable-text.v1', text))
+        if text_cache is not None:
+            text_cache[key] = text
+        physical[field] = marker
+    return encode(physical)
+
+
+def read_record(conn, raw):
+    record = json.loads(raw)
+    for field in ('source', 'raw_json'):
+        marker = record.get(field)
+        if not isinstance(marker, str) or not marker.startswith(TEXT_REF):
+            continue
+        key = marker[len(TEXT_REF):]
+        if len(key) != 64 or any(c not in '0123456789abcdef' for c in key):
+            raise ValueError('market_source_reference_invalid')
+        row = conn.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
+        if row is None or text_reference(row[0]) != marker:
+            raise ValueError('market_source_reference_missing_or_corrupt')
+        record[field] = row[0]
+    return record
+
+
+def logical_record_json(conn, raw):
+    """Preserve legacy serialization fingerprints; expand physical refs only."""
+    physical = json.loads(raw)
+    if any(isinstance(physical.get(f), str) and physical[f].startswith(TEXT_REF)
+           for f in ('source', 'raw_json')):
+        return encode(read_record(conn, raw))
+    return raw
+
+
 def venue_source(exchange):
     from urllib.parse import urlsplit,urlunsplit
     def unsigned(value):
@@ -252,13 +314,22 @@ def append(conn, key, df=None, *, prepared=None):
                 FROM market_revisions WHERE series_key=? AND event_ms IN ('''
             query += ','.join('?' for _ in events) + ''')
                 AND json_extract(record_json,'$.instrument_id') IS ?
-                AND json_extract(record_json,'$.source') IS ?) WHERE ordinal=1'''
+                AND (json_extract(record_json,'$.source') IS ? OR json_extract(record_json,'$.source') IS ?)) WHERE ordinal=1'''
             # Aggregate bounded metadata in SQLite to avoid per-row cursor
             # crossings under background CPU contention.
             result = conn.execute('SELECT json_group_array(json_array(revision_id,event_ms,observed_ms)) '
-                                  'FROM (' + query + ')', (key, *events, instrument, source)).fetchone()[0]
+                                  'FROM (' + query + ')', (key, *events, instrument, source, text_reference(source) if isinstance(source, str) else None)).fetchone()[0]
             for rid, event, observed in json.loads(result):
                 parents[(instrument, source, event)] = (rid, observed)
+        # Fetch shared content once per bounded batch, preserving append's
+        # bounded SQLite crossings under acquisition-thread contention.
+        source_cache = {text_reference(r[f])[len(TEXT_REF):]: None for r in batch
+                        for f in ('source','raw_json')
+                        if isinstance(r.get(f),str) and len(r[f].encode()) >= TEXT_MIN}
+        if source_cache:
+            keys = tuple(source_cache)
+            source_cache.update(conn.execute('SELECT content_hash,raw_json FROM market_raw_sources WHERE content_hash IN ('
+                + ','.join('?' for _ in keys) + ')', keys).fetchall())
         writes = []
         for original in batch:
             record = dict(original)
@@ -266,7 +337,7 @@ def append(conn, key, df=None, *, prepared=None):
             prior = parents.get(identity)
             rid, observed = record['revision_id'], record['observed_at_ms']
             record['supersedes'] = prior[0] if prior and prior[0] != rid else None
-            writes.append((rid, key, record['event_time_ms'], record['available_at_ms'], observed, encode(record)))
+            writes.append((rid, key, record['event_time_ms'], record['available_at_ms'], observed, store_record(conn, record, text_cache=source_cache)))
             # New equal-clock rows win by rowid, exactly as the sequential
             # INSERT does. Ignored retries and older observations cannot win.
             if rid not in existing and (prior is None or observed >= prior[1]):
@@ -302,8 +373,8 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
         if len({row[0] for row in identities if row[0] is not None})>1:
             return None  # an unqualified alias cannot choose a market
     if source is not None:
-        clauses += " AND json_extract(record_json,'$.source')=?"
-        args.append(source)
+        clauses += " AND json_extract(record_json,'$.source') IN (?,?)"
+        args.extend((source, text_reference(source)))
     if replay_tf:
         clauses += ' AND available_ms<=event_ms+?'
         args.append(replay_deadline_ms(0, replay_tf))
@@ -347,7 +418,7 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
     selected = {}
     stream = []
     for raw, rid, indexed_event, indexed_available, indexed_observed in rows:
-        r = json.loads(raw)
+        r = read_record(conn, raw)
         value = {k: r[k] for k in VALUES if k in r}
         body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
         if r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value':value}) or r['revision_id'] != digest(body):
@@ -488,7 +559,7 @@ def resolve_lineage(conns, lineage, *, transforms=None):
                 break
         if not row:
             raise ValueError('lineage_receipt_missing')
-        r = json.loads(row[0])
+        r = read_record(conn, row[0])
         value = {k: r[k] for k in VALUES if k in r}
         body = {k: r[k] for k in META if k not in ('revision_id', 'supersedes')}
         if (r['revision_id'] != rid or r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value': value})
@@ -533,7 +604,7 @@ def retrospective_load(conn, key, *, cut_ms, tf=None, start_ms=0,
         clauses+') WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?', args+[limit]).fetchall()
     selected = []
     for raw, rid, event, available, observed in reversed(rows):
-        r = json.loads(raw)
+        r = read_record(conn, raw)
         value = {k:r[k] for k in VALUES if k in r}
         body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
         if r['content_hash'] != digest({'raw':json.loads(r['raw_json']),'value':value}) or r['revision_id'] != digest(body):

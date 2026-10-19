@@ -70,6 +70,9 @@ def data_provenance(db, split):
                             split['end_ms']+14_400_000, split['end_ms']+14_400_000)))
             for key, (query, args) in queries.items():
                 for row in db.execute(query, args):
+                    if key == 'revisions':
+                        from ..data import market_provenance as provenance
+                        row = (*row[:-1], provenance.logical_record_json(db, row[-1]))
                     counts[key] += 1
                     hashes[key].update((P.canonical(tuple(row))+'\n').encode())
         result[label] = dict(counts=counts, sha256={k:v.hexdigest() for k,v in hashes.items()})
@@ -276,9 +279,10 @@ def freeze_candles(source, dest, experiment):
                 revisions = src.execute("SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? AND available_ms<=? AND observed_ms<=? ORDER BY event_ms,revision_id",
                     (DataFeed._series_key(sym,'4h'),s['start_ms'],s['end_ms'],
                      s['end_ms']+14_400_000,s['end_ms']+14_400_000)).fetchall()
-                dst.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)', revisions)
+                dst.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+                    [(*row[:-1], provenance.logical_record_json(src, row[-1])) for row in revisions])
                 for row in revisions:
-                    record = json.loads(row[-1])
+                    record = provenance.read_record(src, row[-1])
                     raw = src.execute('SELECT * FROM market_raw_sources WHERE content_hash=?',
                                       (record['content_hash'],)).fetchone()
                     if raw:
