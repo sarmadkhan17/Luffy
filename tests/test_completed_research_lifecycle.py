@@ -60,7 +60,7 @@ def test_terminal_automatic_restart_cleanup_replay_budget_and_factory(copy):
         out=B.cycle(f['source_root']/'investigation.db',f['bank'],f['root']/'candles.db',CFG,
                     now_ms=f['later'],run=forbidden,submit=False)
         if not work(f).exists(): break
-    assert not work(f).exists(),out['lifecycle']
+    assert not work(f).exists(),out['refusals']
     assert not calls and state(f)==before
     with closing(B.store(f['bank'])) as db: assert M.snapshot(db,f['ex'])==evidence
     with closing(S.completed_reader(f['bank'],f['ex']['experiment_id'],dataset=True)) as db:

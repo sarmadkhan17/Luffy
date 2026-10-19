@@ -490,8 +490,10 @@ def cycle(source_path, bank_path, candles_path, cfg, *, now_ms, max_sources=4,
                 runner.journal._local.conn=None
                 lifecycle.extend(cleanup_completed(db,bank_path,limit=1,experiment_id=ex['experiment_id']))
                 counts[classification.lower()] += 1
+            refusals.extend(dict(reason='lifecycle_cleanup_refused',cleanup=r)
+                            for r in lifecycle if r.get('status')=='REFUSED')
             return dict(mode='ASYNC_RESEARCH_CONSUMER' if submit else 'READ_ONLY_SOURCE_SHADOW',
-                counts=counts,refusals=refusals,lifecycle=lifecycle,source_mutations=0,order_submissions=0,
+                counts=counts,refusals=refusals,source_mutations=0,order_submissions=0,
                 trading_behavior_changed=False)
 
 
