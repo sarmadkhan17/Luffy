@@ -215,6 +215,16 @@ def test_changed_protected_revision_and_cut_are_new_versions(base,tmp_path):
         record=json.loads(raw); record['transform_version']='TEST_ONLY_REVISED'
         db.execute('UPDATE market_revisions SET record_json=? WHERE revision_id=?',(P.canonical(record),rid))
     b=E.translate(h,copy,CFG,later)
+    assert b['status']=='DATA_INSUFFICIENT' and b['reason']=='candle_metadata_unavailable'
+    # A tampered hash-bound transform is not a valid data revision. Retain
+    # the same artificial clocks, but authenticate the changed fixture receipt.
+    from trader.data import market_provenance as mp
+    record['revision_id']=mp.digest({k:record[k] for k in mp.META
+                                     if k not in ('revision_id','supersedes')})
+    with sqlite3.connect(copy) as db:
+        db.execute('UPDATE market_revisions SET revision_id=?,record_json=? WHERE revision_id=?',
+                   (record['revision_id'],mp.encode(record),rid))
+    b=E.translate(h,copy,CFG,later)
     c=E.translate(h,copy,CFG,later+14_400_000)
     assert len({a['experiment_id'],b['experiment_id'],c['experiment_id']})==3
     assert a['data_provenance']['slices']['protected_b']!=b['data_provenance']['slices']['protected_b']
