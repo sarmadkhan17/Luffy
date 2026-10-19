@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="24" skipped="0" tests="24" time="3.666" timestamp="2026-10-19T14:38:18.834554+03:00" hostname="sarmad-VMware-Virtual-Platform"><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change0-unsupported_versioned_exit:trail=atr]" time="0.099"><failure message="AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'trail=atr' is None)&#10; +  where 'trail=atr' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'atr', 'mult': 3.0}, time={'max_bars': 48}, signal_exit=''))&#10; +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'atr', 'mult': 3.0}, time={'max_bars': 48}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit">exit_change = {'trail': {'kind': 'atr', 'mult': 3.0}}
+expected = 'unsupported_versioned_exit:trail=atr'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+        spec, trace = sw.SpecWriter(llm).write()
+&gt;       assert spec is not None and unsupported(spec.exit) is None
+E       AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'trail=atr' is None)
+E        +  where 'trail=atr' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'atr', 'mult': 3.0}, time={'max_bars': 48}, signal_exit=''))
+E        +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'atr', 'mult': 3.0}, time={'max_bars': 48}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:147: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change1-signal_exit]" time="0.003"><failure message="AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...se &lt; ema(5)'), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'signal_exit:runtime_parity_unavailable' is None)&#10; +  where 'signal_exit:runtime_parity_unavailable' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='close &lt; ema(5)'))&#10; +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='close &lt; ema(5)') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...se &lt; ema(5)'), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit">exit_change = {'signal_exit': 'close &lt; ema(5)'}, expected = 'signal_exit'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+        spec, trace = sw.SpecWriter(llm).write()
+&gt;       assert spec is not None and unsupported(spec.exit) is None
+E       AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...se &lt; ema(5)'), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'signal_exit:runtime_parity_unavailable' is None)
+E        +  where 'signal_exit:runtime_parity_unavailable' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='close &lt; ema(5)'))
+E        +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='close &lt; ema(5)') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...se &lt; ema(5)'), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:147: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change2-time:max_bars_unsupported]" time="0.003"><failure message="AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'time:max_bars_unsupported' is None)&#10; +  where 'time:max_bars_unsupported' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 24.5}, signal_exit=''))&#10; +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 24.5}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit">exit_change = {'time': {'max_bars': 24.5}}
+expected = 'time:max_bars_unsupported'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+        spec, trace = sw.SpecWriter(llm).write()
+&gt;       assert spec is not None and unsupported(spec.exit) is None
+E       AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'time:max_bars_unsupported' is None)
+E        +  where 'time:max_bars_unsupported' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 24.5}, signal_exit=''))
+E        +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 24.5}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:147: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change3-stop:undeclared_fields]" time="0.002"><failure message="AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'stop:undeclared_fields' is None)&#10; +  where 'stop:undeclared_fields' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0, 'extra': 1}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit=''))&#10; +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0, 'extra': 1}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit">exit_change = {'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}
+expected = 'stop:undeclared_fields'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+        spec, trace = sw.SpecWriter(llm).write()
+&gt;       assert spec is not None and unsupported(spec.exit) is None
+E       AssertionError: assert (StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is not None and 'stop:undeclared_fields' is None)
+E        +  where 'stop:undeclared_fields' = &lt;function unsupported at 0x74a0093e6020&gt;(ExitSpec(stop={'kind': 'atr', 'mult': 2.0, 'extra': 1}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit=''))
+E        +    where ExitSpec(stop={'kind': 'atr', 'mult': 2.0, 'extra': 1}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='') = StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']).exit
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:147: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change4-malformed or invalid spec]" time="0.001"><failure message="ValueError: could not convert string to float: 'oops'">exit_change = {'stop': {'kind': 'atr', 'mult': 'oops'}}
+expected = 'malformed or invalid spec'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+&gt;       spec, trace = sw.SpecWriter(llm).write()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/brain/spec_writer.py:247: in write
+    errs = StrategySpec.validate(spec)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/strategy/spec.py:113: in validate
+    errs.extend(_validate_exit(s.exit))
+                ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+e = ExitSpec(stop={'kind': 'atr', 'mult': 'oops'}, target={'kind': 'rr', 'v': 2.0}, trail={'kind': 'none'}, time={'max_bars': 48}, signal_exit='')
+
+    def _validate_exit(e: ExitSpec) -&gt; list[str]:
+        errs: list[str] = []
+        if not isinstance(e, ExitSpec):
+            return ["exit must be an ExitSpec"]
+        if e.stop.get("kind") not in STOP_KINDS:
+            errs.append(f"exit.stop kind must be one of {sorted(STOP_KINDS)}")
+        elif e.stop["kind"] == "atr" and not (
+&gt;               0.2 &lt;= float(e.stop.get("mult", 0)) &lt;= 6.0):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               ValueError: could not convert string to float: 'oops'
+
+trader/strategy/spec.py:124: ValueError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_factory_compatibility_and_malformed_replies_reach_repairs[exit_change5-malformed or invalid spec]" time="0.002"><failure message="IndexError: list index out of range">exit_change = {'stop': None}, expected = 'malformed or invalid spec'
+
+    @pytest.mark.parametrize('exit_change,expected', [
+        ({'trail': {'kind': 'atr', 'mult': 3.0}}, 'unsupported_versioned_exit:trail=atr'),
+        ({'signal_exit': 'close &lt; ema(5)'}, 'signal_exit'),
+        ({'time': {'max_bars': 24.5}}, 'time:max_bars_unsupported'),
+        ({'stop': {'kind': 'atr', 'mult': 2.0, 'extra': 1}}, 'stop:undeclared_fields'),
+        ({'stop': {'kind': 'atr', 'mult': 'oops'}}, 'malformed or invalid spec'),
+        ({'stop': None}, 'malformed or invalid spec'),
+    ])
+    def test_factory_compatibility_and_malformed_replies_reach_repairs(exit_change, expected):
+        import copy
+        from trader.strategy.exit_policy import unsupported
+        bad = copy.deepcopy(GOOD)
+        bad['exit'].update(exit_change)
+        original = copy.deepcopy(bad)
+        llm = FakeLLM([bad, GOOD])
+        spec, trace = sw.SpecWriter(llm).write()
+        assert spec is not None and unsupported(spec.exit) is None
+        assert bad == original  # no silent shape substitution
+        if expected:
+&gt;           assert expected in llm.prompts[1]
+                               ^^^^^^^^^^^^^^
+E           IndexError: list index out of range
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:150: IndexError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_unsupported_exit_never_returns_success_after_repair_limit" time="0.002"><failure message="AssertionError: assert StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is None">def test_unsupported_exit_never_returns_success_after_repair_limit():
+        import copy
+        bad = copy.deepcopy(GOOD)
+        bad['exit']['trail'] = {'kind': 'atr', 'mult': 3.0}
+        spec, trace = sw.SpecWriter(FakeLLM([bad] * 3)).write()
+&gt;       assert spec is None
+E       AssertionError: assert StrategySpec(id='spec_funding_squeeze_reclaim', name='Funding Squeeze Reclaim', thesis='Deeply negative funding means ...gnal_exit=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']) is None
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:159: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_spec_writer" name="test_percentage_examples_use_fractional_contract" time="0.002"><failure message="assert '&quot;kind&quot;:&quot;pct&quot;,&quot;v&quot;:0.02' in 'You are the Strategist for an autonomous crypto futures trading firm. Write ONE new trading strategy.\n\nAvailable fe...ind&quot;:&quot;pct&quot;,&quot;v&quot;:5.0} | {&quot;kind&quot;:&quot;none&quot;},\n           &quot;trail&quot;: {&quot;kind&quot;:&quot;none&quot;},\n           &quot;time&quot;: {&quot;max_bars&quot;: 200}}\n}'">def test_percentage_examples_use_fractional_contract():
+        import copy
+        prompt = sw._prompt(None, None, [])
+&gt;       assert '"kind":"pct","v":0.02' in prompt
+E       assert '"kind":"pct","v":0.02' in 'You are the Strategist for an autonomous crypto futures trading firm. Write ONE new trading strategy.\n\nAvailable fe...ind":"pct","v":5.0} | {"kind":"none"},\n           "trail": {"kind":"none"},\n           "time": {"max_bars": 200}}\n}'
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_spec_writer.py:167: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_checks_later_symbols_and_preserves_identity" time="0.018"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7db6f60&gt;
+
+    def test_redundancy_checks_later_symbols_and_preserves_identity(monkeypatch):
+        flat, varied = _frame(300), _frame(300, seed=9)
+        # A is silent; B has a variable entry. The first-market shortcut misses B.
+        flat.loc[:, ['open', 'high', 'low', 'close']] = 100.
+        a = _redundancy_analyst(monkeypatch, {'BTC/USDT': flat, 'ETH/USDT': varied})
+        cand, other = _spec('new'), _spec('installed')
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'MEASURED'
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:212: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[empty]" time="0.005"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7db6de0&gt;
+failure = 'empty'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[missing_symbol]" time="0.010"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7db77a0&gt;
+failure = 'missing_symbol'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[calendar]" time="0.013"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7cb4050&gt;
+failure = 'calendar'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[missing_context]" time="0.011"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7efed50&gt;
+failure = 'missing_context'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[cross_tf]" time="0.011"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7db61b0&gt;
+failure = 'cross_tf'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_redundancy_incomplete_is_unavailable_not_zero[bad_spec]" time="0.009"><failure message="TypeError: tuple indices must be integers or slices, not str">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7db7ef0&gt;
+failure = 'bad_spec'
+
+    @pytest.mark.parametrize('failure', ['empty', 'missing_symbol', 'calendar', 'missing_context', 'cross_tf', 'bad_spec'])
+    def test_redundancy_incomplete_is_unavailable_not_zero(monkeypatch, failure):
+        frames = {'BTC/USDT': _frame(300)}
+        a = _redundancy_analyst(monkeypatch, frames)
+        cand, other = _spec('new'), _spec('installed')
+        if failure == 'empty':
+            frames.clear()
+        elif failure == 'missing_symbol':
+            cand.universe = other.universe = {'include': ['ETH/USDT']}
+        elif failure == 'calendar':
+            frames['BTC/USDT'].loc[1, 'ts'] = frames['BTC/USDT'].loc[0, 'ts']
+        elif failure == 'missing_context':
+            other.entry_long = 'funding &gt; 0'
+        elif failure == 'cross_tf':
+            other.timeframe = '4h'
+        elif failure == 'bad_spec':
+            other.entry_long = 'nope(3) &gt; 0'
+        before = other.to_dict()
+        evidence = a.redundancy(cand, '1h', [other])
+&gt;       assert evidence['status'] == 'UNAVAILABLE' and evidence['max_overlap'] is None
+               ^^^^^^^^^^^^^^^^^^
+E       TypeError: tuple indices must be integers or slices, not str
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:238: TypeError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst" name="test_unavailable_redundancy_refuses_before_null" time="0.002"><failure message="Failed: unavailable diversity admitted">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x74a0092298b0&gt;
+
+    def test_unavailable_redundancy_refuses_before_null(monkeypatch):
+        a = _redundancy_analyst(monkeypatch, {})
+        monkeypatch.setattr(a, 'evaluate', lambda s: (True, {'chosen_timeframe': '1h'}))
+        monkeypatch.setattr(a, '_null_evidence', lambda *a: pytest.fail('unavailable diversity admitted'))
+&gt;       ok, ev = a.admit(_spec('new'), [_spec('installed')])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:247:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/brain/analyst.py:361: in admit
+    joint = self._null_evidence(spec, tf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (StrategySpec(id='new', name='Analyst Probe', thesis='A hypothesis of sufficient length for the validator, naming a pl...it=''), regime_filter=['TRENDING_UP'], markets=['futures'], generation=0, parent_id='', data_requires=['ohlcv']), '1h')
+
+&gt;   monkeypatch.setattr(a, '_null_evidence', lambda *a: pytest.fail('unavailable diversity admitted'))
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: unavailable diversity admitted
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst.py:246: Failed</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_scraper_queues_ideas" name="test_source_yield_records_fetched_selected_and_accepted" time="0.180"><failure message="AssertionError: assert {'scraped': 2, 'queued': 2} == {'fetched': 1..., 'queued': 4}&#10;  &#10;  Differing items:&#10;  {'queued': 2} != {'queued': 4}&#10;  Left contains 1 more item:&#10;  {'scraped': 2}&#10;  Right contains 2 more items:&#10;  {'fetched': 10, 'selected': 4}&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_source_yield_records_fetc0')
+
+    def test_source_yield_records_fetched_selected_and_accepted(tmp_path):
+        import json
+        items = [{'idea_id': f'i{i}', 'source': 'https://example.org/feed',
+                  'title': 'Momentum entry', 'text': 'When momentum rises, enter long with a stop loss and exit on reversal. ' * 2}
+                 for i in range(10)]
+        j, s = _scraper(tmp_path, items)
+        # A preexisting usable item is fetched again but neither selected nor requeued.
+        idea_queue.record(j, items[0])
+        stats = s.harvest_once()
+        event = json.loads(j.query("SELECT detail FROM brain_events WHERE kind='harvest_cycle'")[0]['detail'])
+        counts = event['per_source']['https://example.org/feed']
+&gt;       assert counts == {'fetched': 10, 'selected': 4, 'queued': 4}
+E       AssertionError: assert {'scraped': 2, 'queued': 2} == {'fetched': 1..., 'queued': 4}
+E
+E         Differing items:
+E         {'queued': 2} != {'queued': 4}
+E         Left contains 1 more item:
+E         {'scraped': 2}
+E         Right contains 2 more items:
+E         {'fetched': 10, 'selected': 4}
+E         Use -v to get more diff
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_scraper_queues_ideas.py:181: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_scraper_queues_ideas" name="test_legacy_selected_only_measurement_cannot_drive_source_rank" time="0.074"><failure message="AssertionError: assert {'example.org...6666666666666} == {}&#10;  &#10;  Left contains 1 more item:&#10;  {'example.org': 0.16666666666666666}&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_legacy_selected_only_meas0')
+
+    def test_legacy_selected_only_measurement_cannot_drive_source_rank(tmp_path):
+        j, s = _scraper(tmp_path, [])
+        j.log_brain_event('harvest_cycle', 'harvester', {
+            'per_source': {'example.org': {'scraped': 1, 'queued': 1}}})
+&gt;       assert s._source_scores() == {}
+E       AssertionError: assert {'example.org...6666666666666} == {}
+E
+E         Left contains 1 more item:
+E         {'example.org': 0.16666666666666666}
+E         Use -v to get more diff
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_scraper_queues_ideas.py:190: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_scraper_queues_ideas" name="test_pure_research_passage_reaches_queue_even_with_zero_strategy_score" time="0.079"><failure message="AssertionError: assert [] == ['pure']&#10;  &#10;  Right contains one more item: 'pure'&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_pure_research_passage_rea0')
+
+    def test_pure_research_passage_reaches_queue_even_with_zero_strategy_score(tmp_path):
+        finding = {'idea_id': 'pure', 'source': 'arxiv.org',
+                   'title': 'Empirical market relationships',
+                   'text': 'We document that a predictor correlates significantly with future returns over weekly horizons. Regression evidence predicts subsequent price changes across markets.'}
+        assert idea_queue.score(finding['text'], finding['title']) == 0
+        j, s = _scraper(tmp_path, [finding])
+        assert s.harvest_once()['queued_research'] == 1
+&gt;       assert [i['idea_id'] for i in idea_queue.pending(j, stream='research')] == ['pure']
+E       AssertionError: assert [] == ['pure']
+E
+E         Right contains one more item: 'pure'
+E         Use -v to get more diff
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_scraper_queues_ideas.py:200: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_scraper_queues_ideas" name="test_selected_intake_does_not_count_rejected_queue_writes" time="0.109"><failure message="AssertionError: assert {'scraped': 2, 'queued': 0} == {'fetched': 1..., 'queued': 2}&#10;  &#10;  Differing items:&#10;  {'queued': 0} != {'queued': 2}&#10;  Left contains 1 more item:&#10;  {'scraped': 2}&#10;  Right contains 2 more items:&#10;  {'fetched': 10, 'selected': 4}&#10;  Use -v to get more diff">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_selected_intake_does_not_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7ceaa20&gt;
+
+    def test_selected_intake_does_not_count_rejected_queue_writes(tmp_path, monkeypatch):
+        import json
+        items = [{'idea_id': f'i{i}', 'source': 'example.org', 'title': 'Momentum entry',
+                  'text': 'When momentum rises enter long with a stop loss and exit on reversal. ' * 2}
+                 for i in range(10)]
+        j, s = _scraper(tmp_path, items)
+        record = idea_queue.record
+        monkeypatch.setattr(idea_queue, 'record', lambda j, item, **kw:
+                            False if item['idea_id'] in {'i0', 'i1'} else record(j, item, **kw))
+        s.harvest_once()
+        event = json.loads(j.query("SELECT detail FROM brain_events WHERE kind='harvest_cycle'")[0]['detail'])
+&gt;       assert event['per_source']['example.org'] == {'fetched': 10, 'selected': 4, 'queued': 2}
+E       AssertionError: assert {'scraped': 2, 'queued': 0} == {'fetched': 1..., 'queued': 2}
+E
+E         Differing items:
+E         {'queued': 0} != {'queued': 2}
+E         Left contains 1 more item:
+E         {'scraped': 2}
+E         Right contains 2 more items:
+E         {'fetched': 10, 'selected': 4}
+E         Use -v to get more diff
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_scraper_queues_ideas.py:217: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst_tv_and_vault" name="test_a_profitable_tv_run_agrees" time="0.100"><failure message="assert (True and None is True)">analyst = &lt;trader.brain.analyst.Analyst object at 0x749ff7ceb5f0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7ce8e00&gt;
+
+    def test_a_profitable_tv_run_agrees(analyst, monkeypatch):
+        class _H:
+            def __init__(self, *a, **kw):
+                pass
+
+            def health(self):
+                return {"state": "healthy"}
+
+            def runs_today(self):
+                return 1
+
+            def backtest(self, code, symbol=None, tf=None, force=False):
+                return {"ok": True, "metrics": {"profit_factor": 1.4}}
+
+        monkeypatch.setattr("trader.brain.tv_harness.TVHarness", _H)
+        out = analyst.confirm_on_tv(_spec())
+&gt;       assert out["ran"] and out["agree"] is True and out["tv_pf"] == 1.4
+E       assert (True and None is True)
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst_tv_and_vault.py:88: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_analyst_tv_and_vault" name="test_a_losing_tv_run_disagrees_but_is_still_only_advice" time="0.083"><failure message="assert None is False">analyst = &lt;trader.brain.analyst.Analyst object at 0x749ff7ceb050&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7cea780&gt;
+
+    def test_a_losing_tv_run_disagrees_but_is_still_only_advice(analyst,
+                                                                monkeypatch):
+        class _H:
+            def __init__(self, *a, **kw):
+                pass
+
+            def health(self):
+                return {"state": "healthy"}
+
+            def runs_today(self):
+                return 1
+
+            def backtest(self, *a, **kw):
+                return {"ok": True, "metrics": {"profit_factor": 0.4}}
+
+        monkeypatch.setattr("trader.brain.tv_harness.TVHarness", _H)
+        out = analyst.confirm_on_tv(_spec())
+&gt;       assert out["agree"] is False
+E       assert None is False
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_analyst_tv_and_vault.py:108: AssertionError</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_tv_harness" name="test_timeframe_setting_requires_observed_interval" time="0.260"><failure message="Failed: DID NOT RAISE RuntimeError">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_timeframe_setting_require0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7cf2c60&gt;
+
+    def test_timeframe_setting_requires_observed_interval(tmp_path, monkeypatch):
+        import pytest
+        h = _harness(tmp_path, monkeypatch)
+        h._set_timeframe(_Page('1h'), '1h')
+        for page in (_Page('4h'), _Page(''), _Page('1h', fail=True)):
+&gt;           with pytest.raises(RuntimeError):
+E           Failed: DID NOT RAISE RuntimeError
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_tv_harness.py:129: Failed</failure></testcase><testcase classname="reports.review07-remediation.baseline-tests.test_tv_harness" name="test_legacy_unverified_cache_does_not_supply_evidence" time="0.136"><failure message="KeyError: 'skipped'">tmp_path = PosixPath('/mnt/luffy-data/sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tmp/test_legacy_unverified_cache_d0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x749ff7cfd400&gt;
+
+    def test_legacy_unverified_cache_does_not_supply_evidence(tmp_path, monkeypatch):
+        h = _harness(tmp_path, monkeypatch, budget=0)
+        key = sha_code('code')
+        h._cache_save({key: {'ok': True, 'metrics': {'profit_factor': 10.}, 'tf': '1h', 'symbol': 'BINANCE:BTCUSDT'}})
+&gt;       assert h.backtest('code')['skipped'] == 'daily_budget'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'skipped'
+
+../sol1-review07-remediation-20261019/reports/review07-remediation/baseline-tests/test_tv_harness.py:173: KeyError</failure></testcase></testsuite></testsuites>

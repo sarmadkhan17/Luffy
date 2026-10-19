@@ -1,0 +1,32 @@
+{
+  "removed_symbol_executable_references": [],
+  "postmortem_calls": [
+    {
+      "path": "trader/kernel.py",
+      "line": 2392,
+      "call": "run_postmortem(self.journal, Vault(self.journal), cfg=self.cfg)"
+    },
+    {
+      "path": "trader/kernel.py",
+      "line": 3182,
+      "call": "summary_text(self.journal, self.cfg)"
+    },
+    {
+      "path": "trader/dashboard/server.py",
+      "line": 490,
+      "call": "run_postmortem(journal, Vault(journal), cfg=cfg)"
+    }
+  ],
+  "research_stream_application_readers": [],
+  "source_producers": [
+    "trader/brain/scraper.py:Scraper.harvest_once",
+    "trader/brain/crawler.py:DeepCrawler.crawl_once (strategy only)"
+  ],
+  "research_requirement": "Designate the existing question/Bank/experiment intake reader; preserve idea ID/URL/text lineage and per-stream accepted/refused/deferred consumption. No parallel engine or scheduling activation.",
+  "retained_historical_consumers": [
+    "dashboard.owner_reads._postmortem",
+    "dashboard.server.last_autopsy",
+    "frontend Evidence historical postmortem view"
+  ],
+  "deleted_legacy_dependency": "trader/brain/tv.py: CLI was sole application importer; no source references remain"
+}

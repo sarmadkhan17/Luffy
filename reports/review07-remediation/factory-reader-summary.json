@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller",
+    "tests/test_postmortem.py",
+    "tests/test_str04_governor_lifecycle.py::test_every_nonfactory_state_writer_is_legacy_only_and_guarded",
+    "--basetemp=reports/review07-remediation/factory-reader-tmp",
+    "--junitxml=reports/review07-remediation/factory-reader.xml"
+  ]
+}

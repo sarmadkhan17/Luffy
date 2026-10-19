@@ -1,0 +1,34 @@
+tests/test_activation_risk_baseline.py:89:def test_every_kernel_active_setter_is_inventoried():
+tests/test_analyst_tv_and_vault.py:120:    out = analyst.active_set(
+tests/test_analyst_tv_and_vault.py:135:    out = analyst.active_set(specs)
+tests/test_analyst_tv_and_vault.py:149:    out = analyst.active_set([weak, strong])
+tests/test_analyst_tv_and_vault.py:157:    assert analyst.active_set([_spec(regime_filter=[])])["members"][0][
+tests/test_evaluation_context.py:11:mechanism it ever printed took zero trades, and `Analyst._null_percentiles`
+tests/test_evaluation_context.py:86:    """The regression that matters: `Analyst._null_percentiles` evaluated
+tests/test_evaluation_context.py:92:    src = inspect.getsource(Analyst._null_percentiles)
+tests/test_scraper_sources.py:64:    from trader.brain.scraper import repair_params
+tests/test_scraper_sources.py:65:    p = repair_params("ma_cross", {"fast_len": "5..50",
+tests/test_scraper_sources.py:68:    p2 = repair_params("rsi_extreme", {})
+tests/test_activation_risk_baseline_v2.py:11:5. an AST inventory of ACTIVE setters (tests/active_setter_inventory.py);
+tests/test_activation_risk_baseline_v2.py:36:from tests.active_setter_inventory import load
+tests/test_activation_risk_baseline_v2.py:767:def test_every_active_setter_is_inventoried():
+tests/test_tv_harness.py:4:from trader.brain.tv_harness import (TVHarness, evaluate_manifest,
+tests/test_tv_harness.py:106:def test_evaluate_manifest_verdict_logic(tmp_path, monkeypatch):
+tests/test_tv_harness.py:135:    verdict = evaluate_manifest(h, manifest)
+tests/test_tv_harness.py:147:    v2 = evaluate_manifest(h, manifest)
+tests/test_tv_harness.py:154:    v3 = evaluate_manifest(h, manifest)
+tests/test_tv_harness.py:165:    v4 = evaluate_manifest(h, manifest)
+tests/test_tv_harness.py:178:    v5 = evaluate_manifest(h, manifest)
+tests/test_tv_harness.py:182:    v6 = evaluate_manifest(h, manifest)
+trader/brain/analyst.py:465:    def _null_percentiles(self, spec: StrategySpec, tf: str) -> dict:
+trader/brain/analyst.py:554:    def active_set(self, specs: list, tf: str = "1h") -> dict:
+trader/brain/scraper.py:247:def repair_params(family: str, raw: dict) -> dict:
+trader/brain/tv_harness.py:34:def chart_url(symbol: str = "BINANCE:BTCUSDT") -> str:
+trader/brain/tv_harness.py:211:                page.goto(chart_url(symbol), timeout=45_000)
+trader/brain/tv_harness.py:214:                self._set_timeframe(page, tf)
+trader/brain/tv_harness.py:243:    def _set_timeframe(self, page, tf: str) -> None:
+trader/brain/tv_harness.py:434:def test_symbol_for(family: str, default: str = "BINANCE:BTCUSDT") -> str:
+trader/brain/tv_harness.py:438:def evaluate_manifest(harness: TVHarness, manifest: dict,
+trader/brain/tv_harness.py:447:    symbol = test_symbol_for(manifest.get("family", ""), symbol)
+trader/research/evaluate.py:46:#: the same floor Analyst._null_percentiles applies
+scripts/validate_population.py:27:tv = TVClient(interval=cfg["strategies"].get("tv_interval", "1h"),

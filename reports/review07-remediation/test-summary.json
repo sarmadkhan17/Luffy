@@ -1,0 +1,20 @@
+{
+  "exit_code": 0,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_spec_writer.py",
+    "tests/test_analyst.py",
+    "tests/test_admission_null_gate.py",
+    "tests/test_idea_pipeline.py",
+    "tests/test_ideas_streams.py",
+    "tests/test_scraper_sources.py",
+    "tests/test_scraper_queues_ideas.py",
+    "tests/test_crawler.py",
+    "tests/test_postmortem.py",
+    "tests/test_tv_harness.py",
+    "tests/test_analyst_tv_and_vault.py",
+    "tests/test_evaluation_context.py",
+    "--basetemp=reports/review07-remediation/test-tmp",
+    "--junitxml=reports/review07-remediation/focused.xml"
+  ]
+}

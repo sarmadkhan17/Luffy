@@ -1,0 +1,150 @@
+{
+  "baseline": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f",
+  "branch": "sol1/review07-remediation-20261019",
+  "deployed": false,
+  "changes": [
+    {
+      "status": "M",
+      "path": "config.yaml",
+      "sha256": "a11a7d191da70766687114ad9a480697d51887dceb07cca6867f4bb23f0e5667"
+    },
+    {
+      "status": "D",
+      "path": "scripts/validate_population.py"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_admission_null_gate.py",
+      "sha256": "473eb9d47555c5291b9aa07c25baad58066c642ec7afa3c2ad10fce11a99bdfb"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_admission_records_null.py",
+      "sha256": "347ca352b85a12f1518787f1247ec10f34dcb61a899b96eabd8981347baa3b68"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_analyst.py",
+      "sha256": "3dda2e0a6b525e6214f7b369cb758902da89d1d6fbb26298312288e4d15819f6"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_analyst_tv_and_vault.py",
+      "sha256": "82ef7f1cf178fc4da1e960abaa23cda913cac6ecf384d2003bce5588d2baa551"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_crawler.py",
+      "sha256": "d1d52a72bdf5d96fe12ab67fff323ef77c9db3b75ddfd26efaa77cf87b34453e"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_evaluation_context.py",
+      "sha256": "28e6dd225a64482a13ab736827d93879330aaf04e1386fd20e776973eb469c99"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_ideas_streams.py",
+      "sha256": "f2cf34538887a7ea21ec313d989788c8076e342fa2770c4c5143f11c49092315"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_postmortem.py",
+      "sha256": "0c0a47fe42660784509aead6bb991c678a6c4e8ad34444476ce54d875f33aa18"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_scraper_queues_ideas.py",
+      "sha256": "fbb4bb837bd85332496881f462900c8277f2fc3906e2c647f1bc5a8d39ffab49"
+    },
+    {
+      "status": "D",
+      "path": "tests/test_scraper_research_stream.py"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_scraper_sources.py",
+      "sha256": "d81760e1d89e05d3116d70eaa11790aae9f0e2e61cbe62449c5ff7cd3299d8ad"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_spec_writer.py",
+      "sha256": "599d19fa81a75f84adf3da108185c482f3d94fb3273c70513f684e59709f681c"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_str04_governor_lifecycle.py",
+      "sha256": "8ac7a0dfb6273cf35fe69d1f8788d55daa57e598e9a420bd220f344bcb74ebc2"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_strategist_learns.py",
+      "sha256": "c1211486eeb40e10ab0a98e1ea08e9586e4ac4ea12e519d7afb202cd5b2f5958"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_strategy_factory_handoff.py",
+      "sha256": "e9cc9fad8db40efaf36a74e49149cf7dfbcc444e0cc2265eba3bd9d70804f294"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_tv_harness.py",
+      "sha256": "e75965b7798c74eacc150ee7ab6ac2aa3a1b2f95a1a080566ba31f3dc9ec7925"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/analyst.py",
+      "sha256": "99ccb82804d2d8da0d6d91ae76027d25c9d762907f6d6b241b63f9089e8ced56"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/crawler.py",
+      "sha256": "2f88f0b83a3c1a2ce0c74abf8c5d8c3e0b2c83cdeee2b5e51b2d668c6f5927e2"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/ideas.py",
+      "sha256": "f4135fce8e93fa03965ecb6674b9cac402637ddf9a3e0e2e06d572e5ede0037f"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/postmortem.py",
+      "sha256": "c7d75af881d3c3e104be26721d57e92ebf1056118844a4802d0d7b15272dbb9f"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/scraper.py",
+      "sha256": "3ca82e789545d9c7013a9a236a7b3247e4d970353cb28abd9fc760f9d18125e9"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/spec_writer.py",
+      "sha256": "ca9190177cd9c9a864bc011dfe727b0cf3b455c2089ff1164cfd38f8b39d5784"
+    },
+    {
+      "status": "D",
+      "path": "trader/brain/tv.py"
+    },
+    {
+      "status": "M",
+      "path": "trader/brain/tv_harness.py",
+      "sha256": "9d0140cb46e11516b159d596eece52f07c0845bfff0b7d071f5920427d67f4e1"
+    },
+    {
+      "status": "M",
+      "path": "trader/dashboard/server.py",
+      "sha256": "bcbdda5251a41a9213f6491470180d853ae2eaa956e8f19036eecb4ffbf12b93"
+    },
+    {
+      "status": "M",
+      "path": "trader/kernel.py",
+      "sha256": "02e2dbdd8df0b916b93b511441d2ffbddb401950447c8a4ac3c3c0d46c19139c"
+    },
+    {
+      "status": "M",
+      "path": "trader/research/evaluate.py",
+      "sha256": "eca410e7e76e0858f0c6114856dfef8d08ea1e2a3d5a5689bdc4fbe9a84c7254"
+    }
+  ]
+}

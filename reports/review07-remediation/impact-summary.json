@@ -1,0 +1,27 @@
+{
+  "exit_code": 1,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_admission_records_null.py",
+    "tests/test_deep_token_cap.py",
+    "tests/test_final_audit_llm_reservation.py",
+    "tests/test_journal_evidence_repair.py",
+    "tests/test_legacy_learning_replay_gate.py",
+    "tests/test_llm_disabled_boundary.py",
+    "tests/test_llm_purpose_budget.py",
+    "tests/test_single_creation_path.py",
+    "tests/test_theorist_removed.py",
+    "tests/test_judge_removed.py",
+    "tests/test_strategy_health.py",
+    "tests/test_strategy_health_observation.py",
+    "tests/test_sol1_strategy_lifecycle.py",
+    "tests/test_sol1_paper_cost.py",
+    "tests/test_sol1_paper_funding.py",
+    "tests/test_strategy_factory_handoff.py",
+    "tests/test_entry_control_fence.py",
+    "tests/test_control_state_recovery.py",
+    "tests/test_review06_strategy_selection.py",
+    "--basetemp=reports/review07-remediation/impact-fixed-tmp",
+    "--junitxml=reports/review07-remediation/impact.xml"
+  ]
+}

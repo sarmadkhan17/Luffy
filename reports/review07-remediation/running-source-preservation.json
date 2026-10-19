@@ -1,0 +1,152 @@
+{
+  "release": "/mnt/luffy-data/luffy/release-ef9fca8",
+  "read_only_verification": true,
+  "all_29_reviewed_change_paths_unchanged": true,
+  "checks": [
+    {
+      "path": "config.yaml",
+      "matches_baseline": true,
+      "sha256": "ac4199396adc652afb6888d117d82a5d7b821524a60e31532cf422b13708ad26"
+    },
+    {
+      "path": "scripts/validate_population.py",
+      "matches_baseline": true,
+      "sha256": "70ca09d80ba9478a48c85f5351a78764c78959cb3da235390d9280883d184319"
+    },
+    {
+      "path": "tests/test_admission_null_gate.py",
+      "matches_baseline": true,
+      "sha256": "7c8b8cc03c897eacf4b0f0ecbd54dcf8372c775bcb643bf8eb8135ff8a87e4de"
+    },
+    {
+      "path": "tests/test_admission_records_null.py",
+      "matches_baseline": true,
+      "sha256": "4d643c86ce60f4e9749a073aa0deeac90e15709b84a9b20ac009cbcd8748e120"
+    },
+    {
+      "path": "tests/test_analyst.py",
+      "matches_baseline": true,
+      "sha256": "357b19a0016c721c748a0f146c64b432b05f19c3456166e51ea07c2ad1d52822"
+    },
+    {
+      "path": "tests/test_analyst_tv_and_vault.py",
+      "matches_baseline": true,
+      "sha256": "550bf6405dac41ebaf6e2e4dcbe5f534b6eb84da0a804e1190c4c12b82bbb02f"
+    },
+    {
+      "path": "tests/test_crawler.py",
+      "matches_baseline": true,
+      "sha256": "4da5702b82f8f893f692cfdc7615da889204fb9aecec6f2ebb5940639a9b7de6"
+    },
+    {
+      "path": "tests/test_evaluation_context.py",
+      "matches_baseline": true,
+      "sha256": "28a477d59a5ee8a56527d4ec22b74f477f47be09f5d1a0f067b8389e9543cc2c"
+    },
+    {
+      "path": "tests/test_ideas_streams.py",
+      "matches_baseline": true,
+      "sha256": "7d2e23a812778428f8ee768896bee83f32c92bd84a8a820b9e028957650ddf84"
+    },
+    {
+      "path": "tests/test_postmortem.py",
+      "matches_baseline": true,
+      "sha256": "a7ad470958f8c33ba99f92250bee9162444e9fdf7eb978ab1ee6023dfb1cd2f1"
+    },
+    {
+      "path": "tests/test_scraper_queues_ideas.py",
+      "matches_baseline": true,
+      "sha256": "de314f71b6937a8364681ebc8f0ccf0ede1ef62045e473ad9539bdb894f596dc"
+    },
+    {
+      "path": "tests/test_scraper_research_stream.py",
+      "matches_baseline": true,
+      "sha256": "c842b48f94d7a38ef4a001e4c3e64972542fb5f0724ce74cf219c875b5b6cd3a"
+    },
+    {
+      "path": "tests/test_scraper_sources.py",
+      "matches_baseline": true,
+      "sha256": "75c7632382118f504ba7828cb5fef96ffe42457cb8edd6d3242086e9fb5eced0"
+    },
+    {
+      "path": "tests/test_spec_writer.py",
+      "matches_baseline": true,
+      "sha256": "f211b1b3a1e4047a1a93b0f7d5c70bff0fef6294706866f1d9d47b205a3db033"
+    },
+    {
+      "path": "tests/test_str04_governor_lifecycle.py",
+      "matches_baseline": true,
+      "sha256": "aa94139e5f7661b519f153acb4e5bbbad992ea7786ee1c64fbd2ff949f5fe3e8"
+    },
+    {
+      "path": "tests/test_strategist_learns.py",
+      "matches_baseline": true,
+      "sha256": "ab37db90bb11d264884d0e5d0f27414d08167e58ad00302d50e575f0c7673fa3"
+    },
+    {
+      "path": "tests/test_strategy_factory_handoff.py",
+      "matches_baseline": true,
+      "sha256": "236405beeeba491163fce726c2197f35d1203db7d492eca83e5f3920d8769bb8"
+    },
+    {
+      "path": "tests/test_tv_harness.py",
+      "matches_baseline": true,
+      "sha256": "2cf365be2cbf360187c3b1ef4ab2e866dbb802ae35cc9edffbf171d9ab8eef1d"
+    },
+    {
+      "path": "trader/brain/analyst.py",
+      "matches_baseline": true,
+      "sha256": "8ba518da6f3b0a82936b4ece661af8c294fbb90e0079164f7d88a34c7b656348"
+    },
+    {
+      "path": "trader/brain/crawler.py",
+      "matches_baseline": true,
+      "sha256": "a68f318288df1819314978b925a257126d28f010095043e4cfce8b5702707a53"
+    },
+    {
+      "path": "trader/brain/ideas.py",
+      "matches_baseline": true,
+      "sha256": "eb5011fd83cafe4a58f2054212101e7c3dc6a293a99c8e7875357daeebd53a99"
+    },
+    {
+      "path": "trader/brain/postmortem.py",
+      "matches_baseline": true,
+      "sha256": "36308c29c9213ddfe2b63d68cbc7e1ff4fd7389fca3bd2c9b9fad6f20f12b488"
+    },
+    {
+      "path": "trader/brain/scraper.py",
+      "matches_baseline": true,
+      "sha256": "8d05f3c352b034f94e523afa7ef9f191f2a191c0dddc0f96f3605c5f2e652a1d"
+    },
+    {
+      "path": "trader/brain/spec_writer.py",
+      "matches_baseline": true,
+      "sha256": "74e397323e42529133e43d8ecd5063cad83468a00a51f2155fa0252654e059f3"
+    },
+    {
+      "path": "trader/brain/tv.py",
+      "matches_baseline": true,
+      "sha256": "dbaf82abec7c05004a4cdf1dc01e91e4df4aefae02926a21ed8fc7d35e8e0ff1"
+    },
+    {
+      "path": "trader/brain/tv_harness.py",
+      "matches_baseline": true,
+      "sha256": "160451a99f006ca8b39c33d047b510fb9898d5e382455e7d965ce8ecb28f94b1"
+    },
+    {
+      "path": "trader/dashboard/server.py",
+      "matches_baseline": true,
+      "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+    },
+    {
+      "path": "trader/kernel.py",
+      "matches_baseline": true,
+      "sha256": "d09fcfa595b29e1fad4254c67328ca2509afde5c787398e94c3c410ae80deb78"
+    },
+    {
+      "path": "trader/research/evaluate.py",
+      "matches_baseline": true,
+      "sha256": "f01d553357509a8643063c84468d9308eb059404c3d672d37b5ac45be89436d1"
+    }
+  ]
+}

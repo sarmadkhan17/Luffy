@@ -1,0 +1,14 @@
+{
+  "native_paper_rows": 1,
+  "legacy_health": [
+    {
+      "id": "spec_probe_trend",
+      "name": "Probe Trend",
+      "state": "paper",
+      "live_trades": 0,
+      "wins": 0,
+      "pnl_usdt": 0.0,
+      "health": null
+    }
+  ]
+}

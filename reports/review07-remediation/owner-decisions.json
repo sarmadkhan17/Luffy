@@ -1,0 +1,87 @@
+{
+  "decisions": [
+    {
+      "id": "OD07-01",
+      "status": "IMPLEMENTED_OFFLINE_VERIFIED",
+      "decision": "Writer/redundancy defect acceptance and minimal scope",
+      "owner_response": "Authorized by the current OD07-01 through OD07-05 implementation assignment",
+      "implementation_authorized": true,
+      "findings": [
+        "B07-01",
+        "B07-02",
+        "B07-03",
+        "B07-04"
+      ],
+      "evidence": "RECONCILIATION.md; test-results.json; boundary-verification.json; consumer-checks.json",
+      "deployed": false,
+      "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+    },
+    {
+      "id": "OD07-02",
+      "status": "IMPLEMENTED_OFFLINE_VERIFIED",
+      "decision": "Fix or retire source-yield preference/research routing",
+      "owner_response": "Authorized by the current OD07-01 through OD07-05 implementation assignment",
+      "implementation_authorized": true,
+      "findings": [
+        "B07-05",
+        "B07-08"
+      ],
+      "evidence": "RECONCILIATION.md; test-results.json; boundary-verification.json; consumer-checks.json",
+      "deployed": false,
+      "remaining_cross_owner_requirement": "No application research-stream reader exists. Exact intake/lineage/consumption requirement recorded for the next review; queue correctness is fixed without inventing that reader.",
+      "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+    },
+    {
+      "id": "OD07-03",
+      "status": "IMPLEMENTED_OFFLINE_VERIFIED",
+      "decision": "Legacy health labelling versus exact-version reader adaptation",
+      "owner_response": "Authorized by the current OD07-01 through OD07-05 implementation assignment",
+      "implementation_authorized": true,
+      "findings": [
+        "B07-07"
+      ],
+      "evidence": "RECONCILIATION.md; test-results.json; boundary-verification.json; consumer-checks.json",
+      "deployed": false,
+      "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+    },
+    {
+      "id": "OD07-04",
+      "status": "IMPLEMENTED_OFFLINE_VERIFIED",
+      "decision": "Optional TV fixes/retirement and legacy/orphan removal",
+      "owner_response": "Authorized by the current OD07-01 through OD07-05 implementation assignment",
+      "implementation_authorized": true,
+      "findings": [
+        "B07-06",
+        "B07-09",
+        "B07-10"
+      ],
+      "evidence": "RECONCILIATION.md; test-results.json; boundary-verification.json; consumer-checks.json",
+      "deployed": false,
+      "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+    },
+    {
+      "id": "OD07-05",
+      "status": "IMPLEMENTED_OFFLINE_VERIFIED",
+      "decision": "Hermetic tests/doc reconciliation and small test merge",
+      "owner_response": "Authorized by the current OD07-01 through OD07-05 implementation assignment",
+      "implementation_authorized": true,
+      "findings": [
+        "B07-11"
+      ],
+      "evidence": "RECONCILIATION.md; test-results.json; boundary-verification.json; consumer-checks.json",
+      "deployed": false,
+      "implementation_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+    },
+    {
+      "id": "OD07-06",
+      "status": "PENDING",
+      "decision": "Reconcile findings/defer external dependencies/decide readiness for Quantitative Research",
+      "owner_response": null,
+      "implementation_authorized": false
+    }
+  ],
+  "quantitative_research_started": false,
+  "gate": "findings reconciled and owner decisions recorded",
+  "OD07_06_started": false,
+  "next_review_readiness": "Authorized brain corrections reconciled; ready for the owner to initiate the next subsystem review with recorded dependencies. No next review or OD07-06 implementation performed."
+}

@@ -1,0 +1,114 @@
+{
+  "writer_unsupported_trail": {
+    "returned_spec": true,
+    "writer_trace": {
+      "attempts": [
+        {
+          "ok": true,
+          "name": "Funding Squeeze Reclaim"
+        }
+      ]
+    },
+    "factory_refusal": "trail=atr",
+    "qualification": [
+      false,
+      {
+        "spec": "spec_funding_squeeze_reclaim",
+        "untested": true,
+        "reason": "unsupported_versioned_exit:trail=atr"
+      },
+      null
+    ]
+  },
+  "writer_percent_example": {
+    "returned_spec": false,
+    "trace": {
+      "attempts": [
+        {
+          "errors": [
+            "exit.stop pct v must be in [0.001, 0.2]"
+          ],
+          "name": "Funding Squeeze Reclaim"
+        },
+        {
+          "errors": [
+            "exit.stop pct v must be in [0.001, 0.2]"
+          ],
+          "name": "Funding Squeeze Reclaim"
+        },
+        {
+          "errors": [
+            "exit.stop pct v must be in [0.001, 0.2]"
+          ],
+          "name": "Funding Squeeze Reclaim"
+        }
+      ],
+      "reason": "no valid spec after repairs"
+    },
+    "prompt_contains_2": true
+  },
+  "writer_malformed_number": {
+    "exception": "ValueError:could not convert string to float: 'oops'",
+    "expected_repair": "would be able to consume GOOD on next call"
+  },
+  "tv_metric_contract": {
+    "spec": "spec_funding_squeeze_reclaim",
+    "tv_testable": true,
+    "ran": true,
+    "agree": null,
+    "tv": {
+      "ok": true,
+      "metrics": {
+        "profit_factor": 1.5
+      }
+    }
+  },
+  "redundancy_missing_evaluation": [
+    0.0,
+    ""
+  ],
+  "redundancy_first_symbol_only": {
+    "returned": [
+      0.0,
+      ""
+    ],
+    "unexamined_B_identical": true
+  },
+  "source_yield_denominator": {
+    "scraped": 10,
+    "new": 10,
+    "screened": 0,
+    "skipped": 0,
+    "queued_strategy": 1,
+    "queued_research": 0,
+    "screened_out": 0,
+    "per_source": {
+      "example.org": {
+        "scraped": 1,
+        "queued": 1
+      }
+    }
+  },
+  "research_route_score": {
+    "routes": [
+      "research"
+    ],
+    "queue_score": 0.0
+  },
+  "active_set_regime": {
+    "regime": "",
+    "active": 0,
+    "members": [
+      {
+        "spec": "spec_funding_squeeze_reclaim",
+        "name": "Funding Squeeze Reclaim",
+        "regime_filter": [
+          "TRENDING_UP"
+        ],
+        "trades_now": false,
+        "weight": 1.0
+      }
+    ],
+    "combined_weight": 0
+  }
+}

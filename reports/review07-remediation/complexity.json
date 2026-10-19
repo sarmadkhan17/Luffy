@@ -1,0 +1,29 @@
+{
+  "runtime_and_tools": {
+    "added": 301,
+    "removed": 700,
+    "net_lines": -399
+  },
+  "tests": {
+    "added": 499,
+    "removed": 413,
+    "net_lines": 86
+  },
+  "configuration": {
+    "added": 4,
+    "removed": 13,
+    "net_lines": -9
+  },
+  "net_source_test_config_lines": -322,
+  "files_removed": [
+    "scripts/validate_population.py",
+    "trader/brain/tv.py",
+    "tests/test_scraper_research_stream.py"
+  ],
+  "files_merged": {
+    "tests/test_scraper_research_stream.py": "tests/test_scraper_queues_ideas.py"
+  },
+  "runtime_or_test_files_added": 0,
+  "net_runtime_tool_test_file_count": -3,
+  "evidence_and_generated_graph_excluded": true
+}

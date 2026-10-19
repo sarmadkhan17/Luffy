@@ -1,0 +1,126 @@
+{
+  "artifacts": {
+    "focused.xml.gz": "419a02475caebeb21d78f4dd331bd7b7e7b5c6eb5e2a1f456b2bbb0d714e7f93",
+    "impact.xml": "1d9004abc21cffc477507c40cb7d330f5ccd34baa56c20dd9628757868593c32",
+    "running-source-preservation.json": "3090d9e6497525de460b6caa68cb760ac4cbde374fdf329ee6cd312205d0b90e",
+    "native_health_after.py": "8721f86c2ff54ddec62513c11327c195996c4def95a2b11a7accb78095754862",
+    "consumers.log.gz": "1a2a5ac069ad892662f9a172e88341679cec18f76cb87877f8c3353614f4185b",
+    "RECONCILIATION.md": "8a8d34ef6312eee409043347830e8f05e4a72a94a422a73d4ef0e233650e8abf",
+    "consumers.xml.gz": "ad2c642806aa6398a0d44c7897ea67096fcf04a64a94f6bd49294c8765119e73",
+    "before.xml.gz": "ab8c5894caf33caea08a8d449c70978efb50397ad7af02e8e62b2412cb124f76",
+    "before_after.py": "f530f181fa9daee8436d38a8a94bc00a1cdcc5e67f667d4f723e9131906d4420",
+    "test-results.json": "48be5d8658a2166bcfdd7be1452feaddc2bb022fce39d90cb4cd8dabd6d6173b",
+    "impact.xml.gz": "fd268ace5eb2b08b367756eadccf791b387da1886f604f3d7613a764714fbce0",
+    "before-summary.json": "98a3f3bb9e1d71ce0fb60556925732541f8e85d83e4573765337d114b0acf8df",
+    "implementation-commits.json": "a8988b1cb82c0106dbf92e903503dbc3917384956703e13cebbfa745a183275b",
+    "owner-decisions.json": "c5d447a21785f52a0b983e77337f647c470b7bb0f82d7813a903ccfb11b1c1c4",
+    "redundancy-summary.json": "5547b69f512b3d3732d3b9994a97efa65aef0ef7db17f0e6252c135db5f60586",
+    "boundary-verification.json": "3e2218e448fbffec625331d26a11a78191a911d88f78e05be4503c5349518a79",
+    "redundancy.xml": "e797efba17ee453026cdf172ef2adbbffbb9d0ecbfaed379ab9768aa10ca2cda",
+    "run_tests.py": "4fcbba3b94d6399570b8b050e15416c7a2abbeb9f5c3efdbd3f4f9e12fb6b7db",
+    "test-summary.json": "ab9ff222fd896f41c4ad27e76f4482c63749118610e7c6d20e2edb31bcbb2d4e",
+    "before-probes.json": "5ac007fa1d061f6b43bee6ff8d52bd9d7ccfa694d950b580010be35c30c16190",
+    "before.xml": "855deecd0ce822ef200e0267ea4eb14beb932c471b10860f415815602c02f07c",
+    "before-native-health.json": "9270e6a53c2ac964985840076a48685e137796a46b782e7789a351239e1c7a41",
+    "factory-reader.log.gz": "1d749e730c2f970e8fc8c31c6194baa295798435c8b5b2a5a8764372652110fd",
+    "final-boundary.log.gz": "29efc7b6ec45ee9e32b424409b116ba5e8de150b0bfc3b44c2a5e906be428689",
+    "before-cleanup-consumers.txt": "4d0114e2fc9406e8d5b77a9ce46e8b99d00d0e5abef494d281b43686fdd28145",
+    "impact-harness-interrupted.log.gz": "efeb991a9c4208d7e4a2afe98c460e38158d35ee77784e94f1db764f3b449b93",
+    "focused.xml": "8897c46d2621b0671a4b09fc3f344a04897339efda3a70152837857650358987",
+    "complexity.json": "01722c1cd7e832e11a8a84159158520abdbf1132750701ce835322b6c91a270f",
+    "redundancy.xml.gz": "c126ee05fadf43eb88697e49cf72711b9cbf3ac5b2e2a66a84273ae42f9af784",
+    "factory-reader.xml.gz": "ed847660e2b0dd138f9c3579e0465ff7bf8db0159b378e68ebfcfaa328389129",
+    "record_results.py": "0ac0d5eb485249bb0c7897198997b3ef8feea78f1d97d4e079652d5742fda92a",
+    "impact.log.gz": "fab45fcefeb9cb67307bc46858af9793eb431b686bb8bbc5974d60bd044a8350",
+    "consumer-checks.json": "7b9923a3e97eefd6544e868fc28226c21f61d8aa7838c58fe4d75bb4cb69b4a9",
+    "graphify-update.log.gz": "5b927b3cd2fd0df05820d3163900b59a1b42a5358bcd68098528ee4e5be7d96b",
+    "after-native-health.json": "519e87c7fad795e6d961400f0c1de232e608c7aa20041d2e0e149ecf2dffea43",
+    "factory-reader-summary.json": "77f516d668c53b1e4a32cb1ea6e7bc158d617c184e7eba3b70605f70bf0d2888",
+    "final-boundary.xml.gz": "0ab24b215644e523c237f2b57d896bf68dc752f34caca7b354219df567b7a143",
+    "focused-summary.json": "ab9ff222fd896f41c4ad27e76f4482c63749118610e7c6d20e2edb31bcbb2d4e",
+    "factory-reader.xml": "ba27dd17fc28b10f3ff23cf59ece832dc8d391e86760e9b26fad6ca14559663f",
+    "consumers-summary.json": "25c6d0fa882361c0d280952d3084f1477ea97631699ebb85931f1358ee97576c",
+    "focused.log.gz": "509b6a454d9880827fa55cbd91a701877387148d7d694d936a51ab697bd4bead",
+    "impact-summary.json": "b798241ca875cd56637c10bc1706215ff2706e15e65964b44357c3b3987127e0",
+    "consumers.xml": "f16b5717d840f982b457ec3575048dcd6aacff264881ec88670b5238a0538361",
+    "cleanup.json": "4bbd268969c3227c370f4073f2fe080026e26bd2bc990dda450f51c6ccdd8952",
+    "final-boundary.xml": "034d5a5c19ac19e9f2cabbd3d84798e10a473caddacf360a895fbc61a2a22faf",
+    "verify_boundaries.py": "05efcf47ea2fb166e3116d40b1ca7d21f92daa7e391634dd3ae623512ee6b64f",
+    "redundancy.log.gz": "5e05b30997998d586e81cc2a1b4c7f01c308725a9d406cdb1859ab3160e12d36",
+    "graphify-final.log.gz": "5292a7c5f78ab1702c47deb52e09a35e7e6487d7ed0fdcc822c844825245eaf6",
+    "before.log.gz": "d4b12f019a4c923e84178383e282828afbd932a3ea655a2911a4e20e0ffc9085",
+    "final-boundary-summary.json": "afa9e2f648237a578b54d2a299a990a94e79a16f8b36c7c575ddfd5f87fe1aa9"
+  },
+  "raw_captures": {
+    "impact.xml": {
+      "sha256": "b469b8f34337eae34113704dccc4934566a447595a31bb4a910a0478738b0ef9",
+      "archive": "impact.xml.gz"
+    },
+    "factory-reader.log": {
+      "sha256": "914dddf31b430760fd6af5510dbcaf9f6c348b9ad3ad8c022b2c175c083358cf",
+      "archive": "factory-reader.log.gz"
+    },
+    "impact.log": {
+      "sha256": "7d1143d6a9d99e27be2638c2155849f37a7c29ae031ddc025e29d6eedf2636d2",
+      "archive": "impact.log.gz"
+    },
+    "focused.log": {
+      "sha256": "989a7bd46ec4cdbfb6ffc72dbdc76e31a8c745450134135e92586f0eaf199be2",
+      "archive": "focused.log.gz"
+    },
+    "final-boundary.log": {
+      "sha256": "2c8988c692dc698f6b0937d14d38e38403d4610edc1e4d08288fba8bb7d9a5aa",
+      "archive": "final-boundary.log.gz"
+    },
+    "redundancy.log": {
+      "sha256": "b6f47ba1cd1f403a96f8664893e78daff7bf8aa1ee64ff45ef7163f6d8ac0b86",
+      "archive": "redundancy.log.gz"
+    },
+    "graphify-final.log": {
+      "sha256": "194d802713807782a53cf5ade1ab081074bbb9028fe777d13b011608228b92be",
+      "archive": "graphify-final.log.gz"
+    },
+    "redundancy.xml": {
+      "sha256": "649a66923703705aad3cf374c815d76930b348984d55c692cdf7a3af0bf24e4a",
+      "archive": "redundancy.xml.gz"
+    },
+    "before.xml": {
+      "sha256": "f21b41d6ff9acb4b81f5e7e39f32e3ee6d73f1f9b459ff5013f9c231cef5548c",
+      "archive": "before.xml.gz"
+    },
+    "graphify-update.log": {
+      "sha256": "e02324c1bfc50291f547795d01d109f4fb5b6c914e9764b6c57a5a05ed0730a0",
+      "archive": "graphify-update.log.gz"
+    },
+    "focused.xml": {
+      "sha256": "9b84c94d9a852701dcd520032e1784bab6b2b73109ee2162c8d3c6e9cbe74739",
+      "archive": "focused.xml.gz"
+    },
+    "before.log": {
+      "sha256": "b52c2c7574dbb3b030cd3dac72ee7dde755bf460c5a3821cb1e37bc839db8815",
+      "archive": "before.log.gz"
+    },
+    "impact-harness-interrupted.log": {
+      "sha256": "9370d5229e5ce219fe74bf8bd8f27b46243dc656104302cf3fa1bfd8440c6c16",
+      "archive": "impact-harness-interrupted.log.gz"
+    },
+    "factory-reader.xml": {
+      "sha256": "84f9ae04f45a58ce3ee07a17b34ddfe357aed48490bc0a9508908ad2f5b1a1c9",
+      "archive": "factory-reader.xml.gz"
+    },
+    "consumers.xml": {
+      "sha256": "9d0e42c070390b8b9c99266853d086ea26b11f4e154b90aebbb228ac23c0ae33",
+      "archive": "consumers.xml.gz"
+    },
+    "final-boundary.xml": {
+      "sha256": "a5718746b1ace2402ae34904ec3283eb5457fe915c3cb0caa31797125e90dae8",
+      "archive": "final-boundary.xml.gz"
+    },
+    "consumers.log": {
+      "sha256": "5941bdf9b7df844dc892a5a0bd39debca8598587bc4f4eae56cf37bdd67328dd",
+      "archive": "consumers.log.gz"
+    }
+  },
+  "fixture_databases_retained": false,
+  "source_commit": "ef53aa3a529f8cdc1864abaab18004d420159f6f"
+}

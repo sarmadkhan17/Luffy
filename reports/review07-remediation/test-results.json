@@ -1,0 +1,111 @@
+{
+  "runs": [
+    {
+      "name": "focused",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "161",
+          "time": "17.559",
+          "timestamp": "2026-10-19T14:36:45.329550+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    },
+    {
+      "name": "consumers",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "170",
+          "time": "116.374",
+          "timestamp": "2026-10-19T14:42:27.138158+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    },
+    {
+      "name": "redundancy",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "28",
+          "time": "6.703",
+          "timestamp": "2026-10-19T14:45:23.336437+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    },
+    {
+      "name": "impact",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "1",
+          "skipped": "0",
+          "tests": "357",
+          "time": "259.893",
+          "timestamp": "2026-10-19T14:44:18.682608+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    },
+    {
+      "name": "factory-reader",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "11",
+          "time": "10.397",
+          "timestamp": "2026-10-19T14:48:45.791917+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    },
+    {
+      "name": "final-boundary",
+      "suites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "3",
+          "time": "8.087",
+          "timestamp": "2026-10-19T14:50:29.080802+03:00",
+          "hostname": "sarmad-VMware-Virtual-Platform"
+        }
+      ]
+    }
+  ],
+  "unique_final_cases": 638,
+  "unique_final_status_counts": {
+    "passed": 638,
+    "failed": 0,
+    "skipped": 0
+  },
+  "unresolved_failures": {},
+  "network_attempts": {
+    "focused": 0,
+    "consumers": 0,
+    "redundancy": 0,
+    "impact": 0,
+    "factory-reader": 0,
+    "final-boundary": 0,
+    "before": 0
+  },
+  "scope": "Focused/impact suites only; overlapping runs are not summed; the stale import-audit failure is superseded by strict reader-guard reruns."
+}

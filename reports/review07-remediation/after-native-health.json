@@ -1,0 +1,33 @@
+{
+  "native_paper_rows": 1,
+  "health": [
+    {
+      "id": "spec_probe_trend",
+      "name": "Probe Trend",
+      "state": "paper",
+      "version_id": "ce198d8ffab2920d106cb30f8d923198cc52952c9e05e3bcf3275ff6fdc671e0",
+      "install_id": "86371a422104c04be9c9325d04bb8427a322970713e56f1d3947b4d7e428d894",
+      "basis": "exact installed version; attributable paper outcomes",
+      "spec_hash": "5cb1194d95b3d0ec2c1854869dab5de6b5c9d9b7d2735a26d49b3e2635fa0b90",
+      "health": {
+        "verdict": "INSUFFICIENT_TRADES",
+        "summary": "INSUFFICIENT_TRADES: 1 attributable closed paper trades, net P&L 47.08 USDT",
+        "stats": {
+          "trades": 1,
+          "wins": 1,
+          "winrate": 1.0,
+          "winrate_basis": "NET",
+          "profit_factor": 99.0,
+          "pnl": 47.079708163865334,
+          "pnl_source": "gross paper P&L less evidenced costs",
+          "paper_cost_basis": "NET_WITH_COMPLETE_COST_EVIDENCE"
+        },
+        "excluded_trades": [],
+        "missing_cost_evidence": []
+      }
+    }
+  ],
+  "read_only": true,
+  "lifecycle_after": "SHADOW",
+  "approval_request": null
+}

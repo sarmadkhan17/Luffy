@@ -1,0 +1,18 @@
+{
+  "exit_code": 0,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_crawler.py",
+    "tests/test_spec_writer.py",
+    "tests/test_ideas_streams.py",
+    "tests/test_scraper_sources.py",
+    "tests/test_tv_harness.py",
+    "tests/test_str04_governor_lifecycle.py",
+    "tests/test_glacier_truth.py",
+    "tests/test_owner_reads.py",
+    "tests/test_owner_reads_m2.py",
+    "tests/test_strategy_health_kernel_persistence.py",
+    "--basetemp=reports/review07-remediation/consumers-tmp",
+    "--junitxml=reports/review07-remediation/consumers.xml"
+  ]
+}

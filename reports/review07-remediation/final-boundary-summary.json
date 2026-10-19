@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller",
+    "tests/test_postmortem.py::test_native_paper_outcomes_use_exact_identity_and_net_costs",
+    "tests/test_deep_token_cap.py::test_tradingview_budget_is_actually_enforced",
+    "--basetemp=reports/review07-remediation/final-boundary-tmp",
+    "--junitxml=reports/review07-remediation/final-boundary.xml"
+  ]
+}

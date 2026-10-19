@@ -1,0 +1,9 @@
+{
+  "exit_code": 0,
+  "network_attempts": 0,
+  "args": [
+    "tests/test_analyst.py",
+    "--basetemp=reports/review07-remediation/redundancy-tmp",
+    "--junitxml=reports/review07-remediation/redundancy.xml"
+  ]
+}

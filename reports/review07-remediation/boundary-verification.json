@@ -1,0 +1,136 @@
+{
+  "protected_sources": [
+    {
+      "path": "SDD.md",
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/qualification.py",
+      "sha256": "d643c1f5662e3f59a1db8bfb6d260cf3ef346cae9f3b5b077afba9a37fd59b0e",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/exit_policy.py",
+      "sha256": "ef9b1f90665a63b088a462bc79128470de07a9596b5630776c243d2a15736333",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/factory_handoff.py",
+      "sha256": "7fb29dcadd8003027c8f29ed65f9e8e62f47b291571b22040d8b81e6d2915ab5",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/vector_backtest.py",
+      "sha256": "79976f983cba8653f9af663a8f0b924b8911261b1d2f7205fcc11bd96e06f43e",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/rolling.py",
+      "sha256": "be2f18848c40c0db17955202dbf46855eef703008800dc644e9543de5d6d635d",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/spec.py",
+      "sha256": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7",
+      "unchanged": true
+    },
+    {
+      "path": "trader/strategy/compile.py",
+      "sha256": "6306968ac321c3ddeaf5bd17fdc60377c7b57947b5d1415f277df9962d3b9e93",
+      "unchanged": true
+    },
+    {
+      "path": "trader/data/feed.py",
+      "sha256": "c101bda44a75eee4d14d06b8416609f1399180b39720a314de87a8577177290b",
+      "unchanged": true
+    },
+    {
+      "path": "trader/data/market_provenance.py",
+      "sha256": "387d5ac6ae21fd54dcd74ee5edcb54bc4e9d981beb08d447510ffd4fe70aeae2",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/paper.py",
+      "sha256": "66c93d1de8874dc54464f642336173066f223be70a2104fc9ddac35cc07160af",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/risk.py",
+      "sha256": "e7bc2c744419d88292f68f75b3c54ce0d85a00c0bc9e73a684808aa10a498ee5",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/executor.py",
+      "sha256": "ec826867a0a995c2af460a351742469c901ec41a8414c264fb369c38e5aa692d",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/state.py",
+      "sha256": "3cd4c49d60cf42cc7c502c9ba28baa50ec2dd5cb16394ad1084065b5d55a578a",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/control_fence.py",
+      "sha256": "f48635f44b5541166605078de1d55a7c9caf7c51752c22c6aff10e1ddeabb807",
+      "unchanged": true
+    },
+    {
+      "path": "trader/engine/entry_authority.py",
+      "sha256": "ac1f0050167fcfc65e9db9ddfdf4aed7db67a220094988d35c32bdf34ebe7198",
+      "unchanged": true
+    },
+    {
+      "path": "trader/brain/llm.py",
+      "sha256": "6562821e1516f4913a4bdb417c6fbda258705f788e434cfd0845dea4a02ba25a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+      "sha256": "9e5291393299441431e060c3120f0a8f0d8a4cc9060e030c4ef49abacb19e4de",
+      "unchanged": true
+    }
+  ],
+  "kernel_dashboard_only_forward_config": {
+    "trader/kernel.py": true,
+    "trader/dashboard/server.py": true
+  },
+  "configuration_only_deletes_six_unused_keys": true,
+  "config_brain_enabled": false,
+  "research_referee": false,
+  "research_handoff": false,
+  "research_switches_unchanged": true,
+  "removed_files": [
+    "scripts/validate_population.py",
+    "trader/brain/tv.py",
+    "tests/test_scraper_research_stream.py"
+  ],
+  "merged_test_ASTs": [
+    "test_named_constants_exist_and_are_distinct",
+    "test_default_stream_is_strategy",
+    "test_research_prose_scores_on_the_research_screen",
+    "test_the_strategy_screen_would_have_discarded_that_finding",
+    "test_a_setup_routes_to_the_strategy_stream",
+    "test_a_finding_routes_to_the_research_stream"
+  ],
+  "complexity": {
+    "runtime_and_tools": {
+      "added": 301,
+      "removed": 700,
+      "net_lines": -399
+    },
+    "tests": {
+      "added": 499,
+      "removed": 413,
+      "net_lines": 86
+    },
+    "configuration": {
+      "added": 4,
+      "removed": 13,
+      "net_lines": -9
+    }
+  },
+  "no_new_runtime_or_test_module": true,
+  "OD07_06_implemented": false,
+  "quantitative_research_review_started": false
+}

@@ -1,0 +1,14 @@
+{
+  "removed_review_only_fixture_directories": [
+    "baseline-tests",
+    "test-tmp",
+    "factory-reader-tmp",
+    "native-tmp",
+    "consumers-tmp",
+    "final-boundary-tmp",
+    "baseline-tmp",
+    "impact-fixed-tmp",
+    "impact-tmp"
+  ],
+  "production_files_or_databases_removed": false
+}
