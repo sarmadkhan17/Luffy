@@ -1,0 +1,90 @@
+{
+  "source_readonly_mount": true,
+  "production_bytes_reclaimed": 0,
+  "sample_scope": "Bounded actual operational rows, not a whole-store physical projection",
+  "learning": {
+    "rows": {
+      "learning_source_blobs": 16,
+      "learning_registrations": 16,
+      "learning_outcome_captures": 16,
+      "learning_actions": 16,
+      "learning_decision_source_manifests": 16,
+      "learning_produced_chains": 16
+    },
+    "baseline": {
+      "file_bytes": 1007616,
+      "allocated_bytes": 1011712,
+      "pages": 246,
+      "free_pages": 0,
+      "page_size": 4096
+    },
+    "after_representations": {
+      "file_bytes": 1024000,
+      "allocated_bytes": 1028096,
+      "pages": 250,
+      "free_pages": 128,
+      "page_size": 4096
+    },
+    "after_one_future_source": {
+      "file_bytes": 1024000,
+      "allocated_bytes": 1028096,
+      "pages": 250,
+      "free_pages": 127,
+      "page_size": 4096
+    },
+    "after_private_vacuum": {
+      "file_bytes": 319488,
+      "allocated_bytes": 323584,
+      "pages": 78,
+      "free_pages": 0,
+      "page_size": 4096
+    },
+    "inline_bytes_removed": 830256,
+    "compressed_blob_bytes": 104231,
+    "physical_bytes_reclaimed": 688128,
+    "pages_reused": 1,
+    "exact_logical_row_parity": true,
+    "caveat": "Representation/forward-write measurement; actual lifecycle eligibility separately tested with complete replay manifests. No arbitrary learning row is eligible for logical deletion."
+  },
+  "portfolio_latest_expanded_bytes": [
+    6277141,
+    6280128,
+    6280135
+  ],
+  "portfolio": {
+    "checkpoints": 3,
+    "baseline": {
+      "file_bytes": 1470464,
+      "allocated_bytes": 1474560,
+      "pages": 359,
+      "free_pages": 0,
+      "page_size": 4096
+    },
+    "after_cleanup": {
+      "file_bytes": 1470464,
+      "allocated_bytes": 1474560,
+      "pages": 359,
+      "free_pages": 21,
+      "page_size": 4096
+    },
+    "after_private_vacuum": {
+      "file_bytes": 1384448,
+      "allocated_bytes": 1388544,
+      "pages": 338,
+      "free_pages": 0,
+      "page_size": 4096
+    },
+    "steps": 6,
+    "deleted_blobs": 2,
+    "compressed_bytes_removed": 80517,
+    "physical_bytes_reclaimed": 86016,
+    "last": {
+      "deleted": 0,
+      "compressed_bytes_removed": 0,
+      "scanned": 24,
+      "pending": false
+    },
+    "exact_logical_row_parity": true,
+    "source": "Actual latest three operational evaluations; old representation reconstructed on private copy"
+  }
+}

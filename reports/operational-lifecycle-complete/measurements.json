@@ -1,0 +1,22 @@
+{
+  "retained_occupied_page_bytes": 14030417920,
+  "existing_reusable_page_bytes": 10362880,
+  "estimated_reclaimable_payload_GB": 0.9183596712050781,
+  "production_physical_bytes_reclaimed": 0,
+  "growth_projection": {
+    "source": "Supplied 2026-10-19 three-cycle FROZEN measurement, not a new acquisition campaign",
+    "receipts": 8915,
+    "seconds": 796.648,
+    "sampled_bytes_avoided_per_receipt": 902.908203125,
+    "estimated_market_payload_GB_per_day": 0.8729959290756395,
+    "learning_portfolio_research_daily_projection": null,
+    "limitation": "No measured production physical saving, active-workload forecast or additive cross-family extrapolation."
+  },
+  "measured_isolated_physical_bytes": {
+    "learning": 688128,
+    "portfolio": 86016,
+    "research_success_synthetic": 84910080,
+    "research_failure_synthetic": 84914176
+  },
+  "market_prior_package_measurement": "Inherited unchanged: ../operational-lifecycle/sample-rehearsal.json (5,636,096 bytes private sample, 2,048 actual receipts); not re-run or counted as a new measurement."
+}

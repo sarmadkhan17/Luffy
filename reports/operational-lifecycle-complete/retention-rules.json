@@ -1,0 +1,1056 @@
+{
+  "source_catalog_sha256": "f31201ea430149f3f33bb45b85eb4be3de2fa8e144662759daaf1fcd5069062e",
+  "tables": [
+    {
+      "database": "candles.db",
+      "table": "candle_floor",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "candles.db",
+      "table": "candles",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "candles.db",
+      "table": "market_raw_sources",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN_ALL_SHARED_AND_UNCLASSIFIED_SOURCE_CONTENT",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "candles.db",
+      "table": "market_revisions",
+      "family": "historical_market_data_and_provenance",
+      "action": "SHARE_EXACT_SOURCE_TEXT_NO_LOGICAL_ROW_DELETION",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "candles.db",
+      "table": "refs",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "allocation_bindings",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "allocation_decisions",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "case_inputs",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "cases",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "collector_receipts",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "context_evidence",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "counterfactual_registrations",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "diagnostics",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "inputs",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "intelligence_traces",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "investigation_research_records",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_assessed",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_assessed_refused",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_cases",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_contexts",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_measured_refused",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_reasoning",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_unassessable",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "memory_unassessable_refused",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "opportunity_contexts",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "population_events",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "population_meta",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "protocols",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "resource_receipts",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "typed_contexts",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "typed_outcome_meta",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "typed_outcomes",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "investigation.db",
+      "table": "updates",
+      "family": "investigation_and_retained_outcomes",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/investigation.py"
+    },
+    {
+      "database": "derivs.db",
+      "table": "derivs",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "derivs.db",
+      "table": "market_raw_sources",
+      "family": "historical_market_data_and_provenance",
+      "action": "RETAIN_ALL_SHARED_AND_UNCLASSIFIED_SOURCE_CONTENT",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "derivs.db",
+      "table": "market_revisions",
+      "family": "historical_market_data_and_provenance",
+      "action": "SHARE_EXACT_SOURCE_TEXT_NO_LOGICAL_ROW_DELETION",
+      "owner": "trader/data/market_provenance.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "attention_cursor",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "attention_fetch_outcomes",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "attention_selections",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "brain_events",
+      "family": "journal_exact_evidence",
+      "action": "RETAIN",
+      "owner": "trader/core/journal_evidence.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "control_events",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "cycles",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "decisions",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "equity",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "equity_provenance",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "execution_accounting",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "execution_requests",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "journal_evidence_blobs_v1",
+      "family": "journal_exact_evidence",
+      "action": "RETAIN",
+      "owner": "trader/core/journal_evidence.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "journal_representation_v1",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_actions",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_capture_failures",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_decision_source_manifests",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_outcome_captures",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_produced_chains",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_registrations",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "learning_source_blobs",
+      "family": "immutable_learning_outcomes_and_replay",
+      "action": "RETAIN_LOGICAL_ROWS_IDENTITIES_AND_REPLAY; SHARE_EXACT_SOURCE_BYTES_ON_NEW_WRITES; COMPLETED_VERIFIED_MANIFEST_INLINE_COMPACTION_ONLY",
+      "owner": "trader/learning/capture.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "market_raw_sources",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "market_revisions",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "outcomes",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "owner_audit",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "owner_requests",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "paper_risk_kv",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "protection_boots",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "protection_evidence",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "registry_contents",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "registry_refreshes",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "registry_snapshots",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_archive",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_bank_objects",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_batches",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_budget",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_candidates",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_combos",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "COMPACT_ONLY_PROVEN_COMPLETED_UNREFERENCED_LEGACY_PORTFOLIO_ORDER",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_controls",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_evidence",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_gauges",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_next_questions",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_plans",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_questions",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_registrations",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_results",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_runs",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_slices",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_tests",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_bank_objects",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_evidence",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_plans",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_questions",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_results",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "research_unreadable_runs",
+      "family": "research_identity_results_budget_and_reproduction",
+      "action": "RETAIN",
+      "owner": "trader/research/ledger.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "sqlite_sequence",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "state_kv",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategies",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_approval_decisions",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_approval_requests",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_capacity_receipts",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_first_live_deployments",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_governor_events",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_legacy_authorities",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_probation_receipts",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_validation_receipts",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_version_events",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_version_installs",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "strategy_versions",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "trade_accounting_bookings",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "trade_fills",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "trade_legs",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "trades",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "universe_revisions",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "universe_untradeable",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "venue_position_snapshots",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "versioned_paper_cost_receipts",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "versioned_paper_cost_sources",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "versioned_paper_exit_evidence",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "versioned_paper_trades",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "luffy.db",
+      "table": "votes",
+      "family": "financial_trading_control_and_recovery",
+      "action": "RETAIN",
+      "owner": "trader/core/journal.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "causes",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "journal_evidence_blobs_v1",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "journal_representation_v1",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "scan_sources_v1",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "scan_versions",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "scans",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "attention.db",
+      "table": "versions",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "execution-evidence.db",
+      "table": "observations",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "execution-evidence.db",
+      "table": "sqlite_sequence",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "runtime-portfolio.db",
+      "table": "checkpoints",
+      "family": "portfolio_replay_and_restart",
+      "action": "RETAIN",
+      "owner": "trader/portfolio/runtime.py"
+    },
+    {
+      "database": "runtime-portfolio.db",
+      "table": "evaluations",
+      "family": "portfolio_replay_and_restart",
+      "action": "RETAIN",
+      "owner": "trader/portfolio/runtime.py"
+    },
+    {
+      "database": "runtime-portfolio.db",
+      "table": "journal_evidence_blobs_v1",
+      "family": "portfolio_replay_and_restart",
+      "action": "AUTOMATIC_BOUND_REFERENCE_SWEEP; DELETE_ONLY_UNREFERENCED_EXACT_RECONSTRUCTABLE_STATE_SEGMENTS",
+      "owner": "trader/portfolio/runtime.py"
+    },
+    {
+      "database": "runtime-portfolio.db",
+      "table": "state",
+      "family": "portfolio_replay_and_restart",
+      "action": "RETAIN",
+      "owner": "trader/portfolio/runtime.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "collector_receipts",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "diagnostics",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "episodes",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "forecast_sources",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "population_events",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "population_meta",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "attention_learning.db",
+      "table": "protocols",
+      "family": "forecast_outcomes_and_sources",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/learning.py"
+    },
+    {
+      "database": "accounting-worker/queue.db",
+      "table": "attempts",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "accounting-worker/queue.db",
+      "table": "jobs",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "accounting-worker/queue.db",
+      "table": "learning_deliveries",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "accounting-worker/queue.db",
+      "table": "meta",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "declared-population/attention.db",
+      "table": "causes",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "declared-population/attention.db",
+      "table": "scan_versions",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "declared-population/attention.db",
+      "table": "scans",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "declared-population/attention.db",
+      "table": "versions",
+      "family": "transient_attention_source_delivery",
+      "action": "NO_NEW_DELETION_EXISTING_OWNER_RETENTION",
+      "owner": "trader/observability/store.py"
+    },
+    {
+      "database": "stage5-public/public.db",
+      "table": "observations",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    },
+    {
+      "database": "stage5-public/public.db",
+      "table": "sqlite_sequence",
+      "family": "protected_operational_evidence",
+      "action": "RETAIN",
+      "owner": "existing store owner"
+    }
+  ],
+  "unknown_policy": "RETAIN_UNKNOWN_DEPENDENCY_LOCAL_REFUSAL",
+  "base_catalog": "Inherited verified catalog, not re-enumerated",
+  "research_work_rule": "Existing Bank experiment-owned files only, committed terminal and verified capsule first; exact dataset bytes + typed quantitative rows retained in existing codec; unknown/active/financial/recovery/WAL dependencies refuse.",
+  "market_rule": "Eight bounded historical receipts per new acquisition, <=4 MiB selected inline bytes, preserving exact receipt body, identities and clocks; source content never garbage-collected.",
+  "automatic_bounds": {
+    "learning": {
+      "new_write_compression_min_bytes": 1024,
+      "per_outcome_rows": 16,
+      "per_outcome_bytes": 4194304,
+      "additional_older_chains": 1
+    },
+    "market": {
+      "rows": 8,
+      "bytes": 4194304,
+      "maximum_single_inline_record_bytes": 1048576
+    },
+    "portfolio": {
+      "rows_per_invocation": 64,
+      "logical_scan_bytes": 33554432,
+      "candidate_chunks": 32,
+      "one_evaluation_witness": true
+    },
+    "research": {
+      "experiments_per_cycle": "1..4 existing cycle budget",
+      "working_file_bytes": 268435456,
+      "files_per_experiment": 7
+    }
+  },
+  "monitoring_logs": "Existing seven-day retention unchanged; no new log retention implementation."
+}

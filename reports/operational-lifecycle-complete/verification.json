@@ -1,0 +1,103 @@
+{
+  "version": "sol1-completed-lifecycle.v1",
+  "branch": "sol1/operational-data-lifecycle-complete",
+  "final_source_commit": "5d152bc1928ca8f6afef1a6528ba2063ae70162b",
+  "implementation_commits": [
+    "e58b3635033608deee443f1c5aff9926b70f0445",
+    "5d152bc1928ca8f6afef1a6528ba2063ae70162b"
+  ],
+  "prior_package": "3795fa9bd66f885f6ddc1fef4e45a8bd5f0b51ad",
+  "d6": "f10f974bf8e88820428d03f1bdb9203d3748a5d4",
+  "d7": "e6a403788715df91a0fd6350f3acce6c43ca5da5",
+  "tests": [
+    {
+      "log": "d6-replay-consumers.log",
+      "passed": 139,
+      "additive": false
+    },
+    {
+      "log": "owner-accounting.log",
+      "passed": 89,
+      "additive": false
+    },
+    {
+      "log": "retained-memory.log",
+      "passed": 50,
+      "additive": false
+    },
+    {
+      "log": "learning-final.log",
+      "passed": 52,
+      "additive": false
+    },
+    {
+      "log": "dependency-guards-final.log",
+      "passed": 10,
+      "additive": false
+    },
+    {
+      "log": "research-final.log",
+      "passed": 15,
+      "additive": false
+    },
+    {
+      "log": "d7-intake-integration.log",
+      "passed": 3,
+      "additive": false
+    }
+  ],
+  "stage_attribution": {
+    "d6_replay_and_owner_accounting": "Before final representation/guard refinements; unchanged timing, numerical and accounting rules",
+    "learning_and_dependency_guards": "Final retention core e58b363",
+    "research": "Full 15-case run loaded retention core e58b363; response-only compatibility change 5d152bc separately exercised by final-cycle-contract.json and D7 composite tests",
+    "final_cycle": "Fresh final source: unknown-dependency refusal, subsequent automatic retirement, spent-look preservation, retained Factory authentication",
+    "d7": "Three focused intake/restart/rollback tests on clean detached composite; not a qualification of entire D7 numerical work"
+  },
+  "exclusions": {
+    "full_suite": "Not run",
+    "capacity_dependent_migration_cases": "Two unchanged cases excluded from new 139-case run; prior results inherited",
+    "test_totals": "Groups overlap; never sum"
+  },
+  "integration": {
+    "implementation": "5d152bc1928ca8f6afef1a6528ba2063ae70162b",
+    "d7": "e6a403788715df91a0fd6350f3acce6c43ca5da5",
+    "merge_tree": "f7ce8322d218ba935619ab89c3e681f8fe75524e",
+    "composite_commit": "fee7326d052728d5fbc97213e48952ddf2af3107",
+    "checkout": "/mnt/luffy-data/sol1-lifecycle-d7-integration-check",
+    "deployment": false
+  },
+  "boundary": {
+    "scope": "Completion assignment",
+    "production_deletions": 0,
+    "production_checkpoints": 0,
+    "production_vacuum": 0,
+    "deployments": 0,
+    "kernel_dashboard_restarts": 0,
+    "provider_calls": 0,
+    "trading_ci_changes": 0,
+    "operational_sql_reads": "Read-only filesystem namespace and isolated networking",
+    "prior_package_exception": "Earlier SHM exception remains disclosed by the prior package"
+  },
+  "source_sha256": {
+    "scripts/learning_capture_inventory.py": "75986c4d9a90f64ee0436ca534e3bc8c31b550691bf61a139be790cdbb129b92",
+    "scripts/stage7_replay_world_shadow.py": "17395326d2aa2dadd01b7dc529f1b86b9bdbda6e3999bed34800dc4298d44909",
+    "tests/retained_research_fixtures.py": "0f4ffa9b2cfb0f94521f35b35a18c3801c790ae6dd1b02956b9953339ba0498e",
+    "tests/test_completed_operational_lifecycle.py": "ce00bbe65034a56d20dd3fb2da75b2478a5c5b5812b92dd1d65cf1f27e7f6fd3",
+    "tests/test_completed_research_lifecycle.py": "3aec2b28e5110fc18f053f9235781e91913ffb58b46f603ca6ca1b76ef8c0046",
+    "tests/test_predictive_research_bridge.py": "9b9ca594c9e93fe2a8c91b54e2ffb08eaa38124d3262dd7a4f46ac2b6699d198",
+    "tests/test_rp03_research_factory_transfer.py": "0723f03d8568d138f23e6ce38e42c1893e0c10737a226a57a83bc42d873e377e",
+    "trader/core/journal_evidence.py": "c1ad20e0fb6f4d8ec37163ee5844649b0c9369cf1fdbb29ae1037f647d2156ae",
+    "trader/data/market_provenance.py": "a3854a385421771921ede48cfd3a9183c60732ea6c75d31027d0d3f3e00c927e",
+    "trader/learning/capture.py": "82502d7051baf8640a11069a9d325298b8c99e472a218cc657db5e5b0323f6a1",
+    "trader/learning/capture_runtime.py": "4b9b810dacb6ac7c88ee4c6e13f9f33572bec941292f12b59dae44b9b8ee234f",
+    "trader/learning/decision_sources.py": "7398e93e5830b8e6027d1935fce46f785e2430eb65433f11316675bb96c59ee8",
+    "trader/learning/producers.py": "70c421ecc7c573c815fe6b81af98cd40bae953596ab16d7bf3c318d7a9755d16",
+    "trader/owner/queries.py": "2677b1e4252a23b4afa30fffd61dbf2386616f7d83424112d460491b1c8cab3e",
+    "trader/persistence/storage_cleanup.py": "9cee256a0533cafb121dddfa28038d9f31e4bb880998d1b98cef0da9c60ed31f",
+    "trader/portfolio/opportunity_registry.py": "b71f64670f0785e3e8ac4e935c58aed6091656d17e68a10c49f0dc0331784905",
+    "trader/portfolio/runtime.py": "1aaaa597f78be87f8d1676cb313139fe3b13f69199ff1f37d98c6c72b999379f",
+    "trader/research/factory_transfer.py": "c4efe339469061fab7c2c34eacb975315274e0945d74cdc18aa00193a9f89e44",
+    "trader/research/predictive_bridge.py": "e227c45c0e96f47fd772ab75692e240d99c6cafd53ec6819b48729f495dd6a7d",
+    "trader/research/predictive_receipt.py": "1e0a09d684875bca99fcd8fe4f7d95521301862b67ee80cc13f020fef16d90ad"
+  }
+}

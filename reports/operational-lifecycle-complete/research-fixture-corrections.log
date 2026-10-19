@@ -1,0 +1,114 @@
+FF..FF...                                                                [100%]
+=================================== FAILURES ===================================
+_ test_terminal_automatic_restart_cleanup_replay_budget_and_factory[SUPPORTED] _
+
+copy = {'root': PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_terminal_automatic_restar0/copy')...79', 'revisions': 'ec068fdf8ccb534a81962f8d763cba79cf1826c01beeb266f8babe39f37e4b99'}}}}, 'direction': None, ...}, ...}
+
+    def test_terminal_automatic_restart_cleanup_replay_budget_and_factory(copy):
+        f=copy;before=state(f)
+        with closing(B.store(f['bank'])) as db: evidence=M.snapshot(db,f['ex'])
+        raw_hash=S.file_hash(work(f)/'candles.db')
+        calls=[]
+        def forbidden(*a,**k): calls.append(a);pytest.fail('completed research must not retest')
+        # The real next cycle is the restart point; terminal history prevents new looks.
+        for _ in range(3):
+>           out=B.cycle(f['root']/'investigation.db',f['bank'],f['root']/'candles.db',CFG,
+                        now_ms=f['later'],run=forbidden,submit=False)
+
+tests/test_completed_research_lifecycle.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/research/predictive_bridge.py:301: in cycle
+    append(db,'bridge_runtime_bindings','source',binding)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0x74897c7d0130>
+table = 'bridge_runtime_bindings', key = 'source'
+body = {'schema': 'bridge-runtime-binding.v1', 'source': '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_te...e_source': '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_terminal_automatic_restar0/copy/luffy.db'}
+
+    def append(db, table, key, body):
+        text = P.canonical(body)
+        old = db.execute(f'SELECT payload FROM {table} WHERE id=?', (key,)).fetchone()
+        if old:
+            from trader.core import journal_evidence as codec
+            if codec.resolve(db,old[0]) != text:
+>               raise ValueError('checkpoint_conflict')
+E               ValueError: checkpoint_conflict
+
+trader/research/predictive_bridge.py:59: ValueError
+___ test_active_unknown_financial_wal_and_changed_evidence_refuse[SUPPORTED] ___
+
+copy = {'root': PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_active_unknown_financial_0/copy')...79', 'revisions': 'ec068fdf8ccb534a81962f8d763cba79cf1826c01beeb266f8babe39f37e4b99'}}}}, 'direction': None, ...}, ...}
+
+    def test_active_unknown_financial_wal_and_changed_evidence_refuse(copy):
+        f=copy;p=work(f)
+        (p/'unknown-investigation-evidence').write_text('keep')
+        assert cleanup(f)['reason']=='unknown_work_dependency'
+        (p/'unknown-investigation-evidence').unlink()
+        with sqlite3.connect(p/'quantitative.db') as db:
+            db.execute("INSERT INTO research_batches(tf,geo,started) VALUES ('4h','fixed','active')")
+>       assert cleanup(f)['reason']=='unfinished_research_batch'
+E       AssertionError: assert 'unresolved_WAL_or_writer' == 'unfinished_research_batch'
+E         
+E         - unfinished_research_batch
+E         + unresolved_WAL_or_writer
+
+tests/test_completed_research_lifecycle.py:83: AssertionError
+_ test_terminal_automatic_restart_cleanup_replay_budget_and_factory[UNSUPPORTED] _
+
+copy = {'root': PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_terminal_automatic_restar1/copy')...79', 'revisions': 'ec068fdf8ccb534a81962f8d763cba79cf1826c01beeb266f8babe39f37e4b99'}}}}, 'direction': None, ...}, ...}
+
+    def test_terminal_automatic_restart_cleanup_replay_budget_and_factory(copy):
+        f=copy;before=state(f)
+        with closing(B.store(f['bank'])) as db: evidence=M.snapshot(db,f['ex'])
+        raw_hash=S.file_hash(work(f)/'candles.db')
+        calls=[]
+        def forbidden(*a,**k): calls.append(a);pytest.fail('completed research must not retest')
+        # The real next cycle is the restart point; terminal history prevents new looks.
+        for _ in range(3):
+>           out=B.cycle(f['root']/'investigation.db',f['bank'],f['root']/'candles.db',CFG,
+                        now_ms=f['later'],run=forbidden,submit=False)
+
+tests/test_completed_research_lifecycle.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/research/predictive_bridge.py:301: in cycle
+    append(db,'bridge_runtime_bindings','source',binding)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0x74897c637880>
+table = 'bridge_runtime_bindings', key = 'source'
+body = {'schema': 'bridge-runtime-binding.v1', 'source': '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_te...e_source': '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_terminal_automatic_restar1/copy/luffy.db'}
+
+    def append(db, table, key, body):
+        text = P.canonical(body)
+        old = db.execute(f'SELECT payload FROM {table} WHERE id=?', (key,)).fetchone()
+        if old:
+            from trader.core import journal_evidence as codec
+            if codec.resolve(db,old[0]) != text:
+>               raise ValueError('checkpoint_conflict')
+E               ValueError: checkpoint_conflict
+
+trader/research/predictive_bridge.py:59: ValueError
+__ test_active_unknown_financial_wal_and_changed_evidence_refuse[UNSUPPORTED] __
+
+copy = {'root': PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-164/test_active_unknown_financial_1/copy')...79', 'revisions': 'ec068fdf8ccb534a81962f8d763cba79cf1826c01beeb266f8babe39f37e4b99'}}}}, 'direction': None, ...}, ...}
+
+    def test_active_unknown_financial_wal_and_changed_evidence_refuse(copy):
+        f=copy;p=work(f)
+        (p/'unknown-investigation-evidence').write_text('keep')
+        assert cleanup(f)['reason']=='unknown_work_dependency'
+        (p/'unknown-investigation-evidence').unlink()
+        with sqlite3.connect(p/'quantitative.db') as db:
+            db.execute("INSERT INTO research_batches(tf,geo,started) VALUES ('4h','fixed','active')")
+>       assert cleanup(f)['reason']=='unfinished_research_batch'
+E       AssertionError: assert 'unresolved_WAL_or_writer' == 'unfinished_research_batch'
+E         
+E         - unfinished_research_batch
+E         + unresolved_WAL_or_writer
+
+tests/test_completed_research_lifecycle.py:83: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_completed_research_lifecycle.py::test_terminal_automatic_restart_cleanup_replay_budget_and_factory[SUPPORTED]
+FAILED tests/test_completed_research_lifecycle.py::test_active_unknown_financial_wal_and_changed_evidence_refuse[SUPPORTED]
+FAILED tests/test_completed_research_lifecycle.py::test_terminal_automatic_restart_cleanup_replay_budget_and_factory[UNSUPPORTED]
+FAILED tests/test_completed_research_lifecycle.py::test_active_unknown_financial_wal_and_changed_evidence_refuse[UNSUPPORTED]
+4 failed, 5 passed in 249.94s (0:04:09)

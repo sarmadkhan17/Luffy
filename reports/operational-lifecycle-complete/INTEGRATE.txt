@@ -1,0 +1,36 @@
+OFFLINE SOL1 PACKAGE — NO DEPLOYMENT OR PRODUCTION PURGE AUTHORIZED
+
+Implementation branch: sol1/operational-data-lifecycle-complete
+Prerequisite: D6 f10f974bf8e88820428d03f1bdb9203d3748a5d4
+Prior SOL1 package: 9eeeccf + 3795fa9 (included in the bundle)
+Completion source: e58b363 + 5d152bc
+Artifact: /mnt/luffy-data/sol1-operational-data-lifecycle-complete.bundle
+
+Inside a repository containing the D6 prerequisite, review with:
+
+  git bundle verify /mnt/luffy-data/sol1-operational-data-lifecycle-complete.bundle
+  git fetch /mnt/luffy-data/sol1-operational-data-lifecycle-complete.bundle sol1/operational-data-lifecycle-complete:review/sol1-lifecycle-complete
+
+No merge, deployment, restart, provider call or production maintenance is part of this assignment.
+Read REPORT.md, verification.json, retention-rules.json and the exact approval preview before proposing first production enforcement. Keep the readers, codec, owner hooks and cleanup logic together. Approving only a purger without its retained-evidence readers would violate replay/recovery.
+
+Focused self-contained reproduction (temporary offline synthetic stores):
+
+  venv/bin/python -m pytest -q tests/test_completed_operational_lifecycle.py
+  venv/bin/python -m pytest -q tests/test_completed_research_lifecycle.py
+
+The Research module builds the existing genuine synthetic protocol through the maintained planner, Bank and referee fixture. Positive/negative labels are test fixtures, not live edges or alpha expenditure. Fresh fixture generation and archive proofs take several minutes. Capacity-dependent whole-database migrations and an unrestricted suite are not required for this package.
+
+Existing owner/accounting, D6 and Learning test commands and exact stage attribution are in verification.json and its logs. Groups overlap and are not added together.
+
+Read-only production dry-run reproduction:
+
+  venv/bin/python -B scripts/storage_cleanup.py --operational-dry-run /mnt/luffy-data/luffy/production/data --report reports/operational-lifecycle-complete/operational-dry-run.json --windows 8
+
+This command re-execs in a verified read-only filesystem namespace and isolates networking. It does not purge, checkpoint or VACUUM operational storage. Do not replace it with unprotected mode=ro; SQLite may write SHM even for read-only connections.
+
+measure_samples.py and approval_preview.py require the same read-only mount, with only their report directory writable. measure_research.py reads separately generated non-production protocol fixtures under /mnt/luffy-data/sol1-complete-rehearsal; it mutates only newly created private copies. All sample compaction is private/offline. The ordinary pytest module is the portable protocol reproduction; the measurement scripts preserve this assignment's exact fixture/input locations.
+
+D7 e6a4037 cleanly merges with the final completion source. Three existing D7 Brain intake/restart/rollback tests passed on the detached composite recorded in d7-integration.json. D7 source was not merged into this implementation branch or modified. The canonical timing dependency described by D7's supplied handoff remains separately owned; clean merging is not a claim of complete D7 numerical/trading qualification.
+
+First production enforcement requires separate owner authorization, fresh exact reference/hash proofs, a backup including live WAL, source/consumer integration, and Bank/disk capacity checks. Unfinished, unknown, oversized or recovery-dependent data remains retained. Any production physical compaction needs a separately authorized offline window; never VACUUM during Kernel operation.

@@ -1,0 +1,5 @@
+{'test': 'explicit_terminal', 'disposition': 'SUPPORTED', 'reason': 'CANCELLED', 'status': 'PASS'}
+{'test': 'explicit_terminal', 'disposition': 'SUPPORTED', 'reason': 'ABANDONED', 'status': 'PASS'}
+{'test': 'four_existing_factory_consumer_and_tamper_contracts', 'status': 'PASS'}
+{'test': 'explicit_terminal', 'disposition': 'UNSUPPORTED', 'reason': 'CANCELLED', 'status': 'PASS'}
+{'test': 'explicit_terminal', 'disposition': 'UNSUPPORTED', 'reason': 'ABANDONED', 'status': 'PASS'}

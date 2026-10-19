@@ -1,0 +1,50 @@
+{
+  "scope": "Isolated copies of genuine synthetic protocol completions; no production research deletion or population estimate",
+  "production_bytes_reclaimed": 0,
+  "samples": {
+    "supported": {
+      "experiment_id": "9d0864ecc8a338e9e654a46473cdcdc865d0fad424d285942252ebeee52aef0a",
+      "result_id": "219de3579b5723b2a1c8d36dd06eb8ce484e14ee4ec2f64b8bdbf7b0d813049c",
+      "main_bytes_before": 2154496,
+      "working_file_bytes_before": 136884224,
+      "baseline_allocated_bytes": 139042816,
+      "allocated_bytes_after_archive_and_unlink": 54161408,
+      "allocated_bytes_after_private_vacuum": 54132736,
+      "net_bytes_removed_before_compaction": 84881408,
+      "physical_bytes_reclaimed": 84910080,
+      "free_pages_after_archive": 0,
+      "exact_quantitative_replay": true,
+      "statistical_rows_unchanged": true,
+      "integrity": "ok",
+      "retirement": {
+        "status": "RETIRED",
+        "files_removed": 2,
+        "allocated_bytes_removed": 136884224,
+        "experiment_id": "9d0864ecc8a338e9e654a46473cdcdc865d0fad424d285942252ebeee52aef0a",
+        "capsule_id": "4f93716f68af8630323dfe23500f21d166783049e769322dd6be7ad577f4c68b"
+      }
+    },
+    "unsupported": {
+      "experiment_id": "7490f5b866744b8c317bae639cee3aab34b2f208e36b30924d2ed05a77f32e2f",
+      "result_id": "76d40f0eae428936513ee04d16a73a78c5c9e106e181fa7cb9bff5e645933c45",
+      "main_bytes_before": 2170880,
+      "working_file_bytes_before": 136884224,
+      "baseline_allocated_bytes": 139059200,
+      "allocated_bytes_after_archive_and_unlink": 54173696,
+      "allocated_bytes_after_private_vacuum": 54145024,
+      "net_bytes_removed_before_compaction": 84885504,
+      "physical_bytes_reclaimed": 84914176,
+      "free_pages_after_archive": 0,
+      "exact_quantitative_replay": true,
+      "statistical_rows_unchanged": true,
+      "integrity": "ok",
+      "retirement": {
+        "status": "RETIRED",
+        "files_removed": 2,
+        "allocated_bytes_removed": 136888320,
+        "experiment_id": "7490f5b866744b8c317bae639cee3aab34b2f208e36b30924d2ed05a77f32e2f",
+        "capsule_id": "fca9eb7a0370f363b1051f5c3155aac8dbb7812412bd10baaa02468575cf01c0"
+      }
+    }
+  }
+}

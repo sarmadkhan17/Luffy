@@ -1,0 +1,14 @@
+[
+  {
+    "disposition": "supported",
+    "verified_retired_capsule": true,
+    "corrupt_retired_capsule_refused": true,
+    "reason": "evidence_blob_corrupt:3661bf1fa503ed44bebc3c3b07ed43093e0892cc8dc984c7e6563dc5abb61921"
+  },
+  {
+    "disposition": "unsupported",
+    "verified_retired_capsule": true,
+    "corrupt_retired_capsule_refused": true,
+    "reason": "evidence_blob_corrupt:3661bf1fa503ed44bebc3c3b07ed43093e0892cc8dc984c7e6563dc5abb61921"
+  }
+]
