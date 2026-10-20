@@ -1,0 +1,21 @@
+{
+ "commit": "f6a27e06a6c6f3978ca9a59672b9ebe8d506d7eb",
+ "files": {
+  "tests/test_res08_governed_bridge.py": {
+   "collect_errors": 0,
+   "collected": 20,
+   "complete": true,
+   "guard": [],
+   "not_passed": {},
+   "over_disk": null,
+   "passed": 20,
+   "timed_out": false,
+   "wall": 301.5
+  }
+ },
+ "limits": {
+  "per_test": 900,
+  "scratch_mib": 4096,
+  "wall": 1500
+ }
+}
