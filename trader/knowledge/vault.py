@@ -1,9 +1,9 @@
 """Obsidian knowledge vault — Luffy's narrative memory.
 
-~/trader/knowledge/ IS an Obsidian vault (markdown + YAML frontmatter +
-wikilinks). Writers here regenerate notes from the journal so the vault
-always mirrors reality; the human reads it in Obsidian, the brain distills
-it into doctrine.json.
+knowledge/ holds authored and historical Obsidian notes (markdown + YAML
+frontmatter + wikilinks). A first bootstrap copies them to data/knowledge/;
+writers regenerate runtime journal views there. Doctrine is a separate frozen
+input, not an automatic distillation of these narrative notes.
 """
 from __future__ import annotations
 
@@ -290,10 +290,11 @@ class Vault:
                 str(r["name"]).replace(" ", "_"))
         n = 0
         for r in rows:
-            stats = json.loads(r.get("stats_json") or "{}")
-            closed = self.journal.trades_for_strategy(r["id"])
-            wins = sum(1 for t in closed if float(t.get("realized_pnl") or 0) > 0)
-            pnl = sum(float(t.get("realized_pnl") or 0) for t in closed)
+            # The shared journal reader includes open trades as well. Only
+            # closed records belong in this explicitly labelled live record.
+            closed = [t for t in self.journal.trades_for_strategy(r["id"])
+                      if t.get("status") == "closed"]
+            wins, pnl = self._pnl_summary(closed)
             author = ("Researcher"
                       if str(r["origin"] or "").lower().startswith("harvest")
                       else self.org.author_for("strategy") or "Strategist")
@@ -331,7 +332,7 @@ author: {author}
 
 ## Live record
 - closed trades: {len(closed)} · wins: {wins}
-- realized P&L: {pnl:+.2f} USDT
+- realized P&L: {pnl}
 - state: **{r['state']}**
 
 Related: {', '.join(related)}
@@ -341,6 +342,21 @@ Filed by [[{author}]]
             self._write(f"20 Strategies/{slug}.md", note)
             n += 1
         return n
+
+    def _pnl_summary(self, trades: list[dict]) -> tuple[str, str]:
+        """Use the existing classifier; unknown monetary evidence stays unknown."""
+        from ..dashboard.economics import booking_receipts, journal_pnl
+
+        values = [journal_pnl(t, booking_receipts(self.journal, t["id"]))
+                  for t in trades]
+        if any(v["status"] == "UNKNOWN" for v in values):
+            return "unavailable", "unavailable (UNKNOWN; incomplete journal evidence)"
+        status = ("DERIVED_ESTIMATE" if any(v["status"] == "DERIVED_ESTIMATE"
+                                          for v in values) else "JOURNAL_BOOKED")
+        wins = str(sum(v["value"] > 0 for v in values))
+        total = sum(v["value"] for v in values)
+        return wins, (f"{total:+.2f} USDT ({status}; "
+                      "funding and venue net accounting not established)")
 
     def daily_review(self) -> Path:
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -353,9 +369,10 @@ Filed by [[{author}]]
         holds = self.journal.query(
             "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
             (f"{day}%",))[0]["n"]
-        pnl_rows = self.journal.query(
-            "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+        closed = self.journal.query(
+            "SELECT * FROM trades WHERE status='closed' AND closed_at LIKE ?",
             (f"{day}%",))
+        _, pnl = self._pnl_summary(closed)
         eq = self.journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
         author = self.org.author_for("daily-review") or "Manager"
         body = f"""---
@@ -366,7 +383,7 @@ author: {author}
 # Daily Review {day}
 
 - decisions: {taken} taken · {skipped} skipped · {holds} holds
-- realized P&L: {pnl_rows[0]['s'] if pnl_rows else 0:+.2f} USDT
+- realized P&L: {pnl}
 - latest equity: {eq[0]['equity'] if eq else '—'}
 
 ## Notes
@@ -467,11 +484,23 @@ Filed by [[{author}]]
         related = [f"[[{s}]]" for s in
                    self._strategies_named_in(f"{title}\n{body}")]
         related += ["[[Agent Ledger]]", "[[Regime Playbook]]", "[[MOC]]"]
-        self._write(f"30 Postmortems/{ts} {title}.md",
-                    f"---\ntype: postmortem\nauthor: {author}\n---\n"
-                    f"# {title}\n\n{body}\n\n"
-                    f"Related: {', '.join(related)}\n\n"
-                    f"Filed by [[{author}]]\n")
+        text = (f"---\ntype: postmortem\nauthor: {author}\n---\n"
+                f"# {title}\n\n{body}\n\n"
+                f"Related: {', '.join(related)}\n\n"
+                f"Filed by [[{author}]]\n")
+        # Manual and scheduled postmortems can share a title and minute.
+        # Retain the historical first filename; never overwrite its evidence.
+        suffix = 0
+        while True:
+            extra = f" ({suffix})" if suffix else ""
+            path = VAULT / f"30 Postmortems/{ts} {title}{extra}.md"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                with path.open("x") as note:
+                    note.write(text)
+                break
+            except FileExistsError:
+                suffix += 1
 
     def run_full_refresh(self) -> dict:
         out = {

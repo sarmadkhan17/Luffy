@@ -11,10 +11,9 @@ The fill and accounting model is deliberately identical to backtest.py:137-208
 fee/slippage/funding arithmetic — so any difference the equivalence harness
 finds is attributable to the new exit geometry, not to an accounting change.
 
-One intentional divergence: the old engine initialises its drawdown peak to
-0.0 rather than to starting equity, so it cannot see a drawdown from the
-opening balance. This one starts the peak at `equity`. It affects max_dd_pct
-only, which is why the equivalence criterion compares trades/wins/pnl.
+Both engines start the drawdown peak at opening equity. The legacy engine
+previously started at zero, hiding initial losses; its correction changes
+max_dd_pct only. The equivalence criterion compares trades/wins/pnl.
 """
 from __future__ import annotations
 

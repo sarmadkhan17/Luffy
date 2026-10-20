@@ -2353,7 +2353,7 @@ class Kernel:
             self.notifier.send(
                 f"{'✅' if pnl > 0 else '🛑'} {symbol} "
                 f"{'closed' if held <= 0 else f'reduced to {held:g}'} "
-                f"({reason}) pnl {pnl:+.2f} USDT")
+                f"({reason}) estimated pnl {pnl:+.2f} USDT")
             n += 1
         return n
 

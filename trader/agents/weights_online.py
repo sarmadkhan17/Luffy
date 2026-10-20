@@ -1,5 +1,9 @@
 """Online expert aggregation — EWA (exponentially weighted average).
 
+Historical compatibility only: update/save refuse before changing state;
+the current orchestrator does not consume these weights. Frozen state and
+prior-blending arithmetic remain available for historical reproduction.
+
 Replaces static analyst weights with theory-backed online weights
 (Littlestone–Warmuth / Vovk exponential weights, as applied to finance in
 the Bernstein Online Aggregation literature): after every resolved

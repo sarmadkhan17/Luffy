@@ -91,18 +91,19 @@ class AnalystAgent:
         return text
 
     def _exec(self, name: str, raw_args: str):
-        fn = T.TOOLS.get(name)
-        if not fn:
+        # Advertised schemas are not an execution boundary: provider replies
+        # may still name legacy tools or supply undeclared query arguments.
+        if name != 'owner_query':
             return {"error": f"unknown tool {name}"}
         try:
             args = json.loads(raw_args) if raw_args else {}
         except Exception:
-            args = {}
+            return {"error": "invalid tool arguments"}
+        if not isinstance(args, dict) or set(args) - {'kind', 'identity', 'offset'}:
+            return {"error": "unsupported owner query arguments"}
         try:
-            if name == 'owner_query':
-                from trader.owner.queries import query
-                return query(self.journal, cfg=self.query_cfg, **args)
-            return fn(self.journal, **args)
+            from trader.owner.queries import query
+            return query(self.journal, cfg=self.query_cfg, **args)
         except Exception as e:
             log.warning(f"tool {name} failed: {e}")
             return {"error": str(e)}

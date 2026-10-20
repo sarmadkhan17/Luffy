@@ -32,13 +32,13 @@ def journal_pnl(trade, receipts=()):
         except (ValueError, TypeError, KeyError, AttributeError):
             unknown = True
             evidence.append({"integrity": "UNVERIFIED"})
-    evidence.append({k: trade[k] for k in ("pnl_status", "pnl_value_class", "exit_price_source", "pnl_price_source", "basis") if k in trade})
+    evidence.append({k: trade[k] for k in ("pnl_status", "pnl_value_class", "exit_price_source", "pnl_price_source", "basis", "booked_pnl_basis") if k in trade})
     for ev in evidence:
         status, cls = ev.get("pnl_status"), ev.get("pnl_value_class")
         source = ev.get("pnl_price_source") or ev.get("exit_price_source")
         basis = str(ev.get("basis") or "")
         unknown |= status == "UNKNOWN" or cls == "UNKNOWN" or source == "journal_entry_not_a_fill" or "unpriced" in basis
-        estimated |= status in ("ESTIMATE", "ESTIMATED") or cls == "DERIVED_ESTIMATE" or source == "ticker_last_not_a_fill" or basis in ("estimated_order_booking", "estimated", "panic_order_unconfirmed", "reconcile_ghost_mark_estimate")
+        estimated |= status in ("ESTIMATE", "ESTIMATED") or cls == "DERIVED_ESTIMATE" or ev.get("booked_pnl_basis") == "estimated" or source == "ticker_last_not_a_fill" or basis in ("estimated_order_booking", "estimated", "panic_order_unconfirmed", "reconcile_ghost_mark_estimate")
     value = trade.get("realized_pnl")
     if type(value) not in (int, float) or not math.isfinite(value):
         unknown = True

@@ -1,5 +1,9 @@
 """Learned conviction calibration — replaces hand-tuned magnitudes.
 
+Historical compatibility only: fitting refuses before reading labels or
+writing state; the current decision path does not apply this model. The
+mechanics below describe the retained legacy implementation, not activation.
+
 Each analyst's raw vote encodes guessed constants (+0.45 spring, +0.35
 BOS...). The journal already records every vote and resolves it against
 the 4h forward return (outcomes.correct_4h). We fit, per agent, a

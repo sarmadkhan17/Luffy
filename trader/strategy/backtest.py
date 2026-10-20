@@ -203,7 +203,9 @@ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
         return out
 
     pos = None                     # dict(side, entry, amount, sl, tp, entry_i)
-    peak, trough = 0.0, 0.0
+    # Opening equity is already a high-water mark: an initial losing streak
+    # must count toward the drawdown gate, before the first profitable close.
+    peak, trough = equity, equity
     equity_curve = [equity]
 
     def close_pos(exit_px: float, i: int):

@@ -21,26 +21,36 @@ def get_positions(journal: Journal) -> list[dict]:
 
 
 def get_pnl(journal: Journal, period: str = "today") -> dict:
+    from ..dashboard.economics import booking_receipts, journal_pnl
+
     if period == "today":
         rows = journal.query(
-            "SELECT realized_pnl FROM trades WHERE status='closed' "
+            "SELECT * FROM trades WHERE status='closed' "
             "AND closed_at LIKE ?", (_today_like(),))
     else:
         rows = journal.query(
-            "SELECT realized_pnl FROM trades WHERE status='closed'")
-    pnls = [float(r["realized_pnl"] or 0) for r in rows]
+            "SELECT * FROM trades WHERE status='closed'")
+    classified = [journal_pnl(r, booking_receipts(journal, r['id'])) for r in rows]
+    pnls = [r['value'] for r in classified if r['value'] is not None]
+    unknown = len(rows) - len(pnls)
     wins = sum(1 for p in pnls if p > 0)
     losses = sum(1 for p in pnls if p < 0)
     gross_win = sum(p for p in pnls if p > 0)
     gross_loss = -sum(p for p in pnls if p < 0)
-    n = len(pnls)
+    n = len(rows)
     return {
         "period": period,
-        "realized_pnl": round(sum(pnls), 2),
+        "realized_pnl": None if unknown else round(sum(pnls), 2),
         "trades": n,
+        "unknown_pnl_trades": unknown,
+        "pnl_value_class": ("UNKNOWN" if unknown else "DERIVED_ESTIMATE"
+                            if any(r['status'] == 'DERIVED_ESTIMATE' for r in classified)
+                            else "JOURNAL_BOOKED"),
+        "whole_trade_complete": False,
         "wins": wins, "losses": losses,
-        "win_rate": round(100 * wins / n, 1) if n else 0.0,
-        "profit_factor": round(gross_win / gross_loss, 2) if gross_loss else None,
+        "win_rate": None if unknown else (round(100 * wins / n, 1) if n else 0.0),
+        "profit_factor": (round(gross_win / gross_loss, 2)
+                          if gross_loss and not unknown else None),
     }
 
 

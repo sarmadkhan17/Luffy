@@ -1,6 +1,10 @@
 """Meta-labeling — the secondary model that decides whether the primary
 ensemble's signal deserves capital (López de Prado, AFML ch.3/16).
 
+Historical compatibility only: fit/save refuse before changing state and
+the current decision path does not invoke this model. LIVE rules below
+describe the old implementation, not current operating authority.
+
 Primary model = the orchestrator's vote+signal ensemble (direction).
 Secondary model = a logistic P(win | decision features) trained on the
 journal's own resolved outcomes (incl. shadow labels from near-threshold

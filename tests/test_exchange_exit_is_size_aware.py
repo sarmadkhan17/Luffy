@@ -140,3 +140,12 @@ def test_the_partial_exit_is_announced():
     k = _kernel(venue={"UNI/USDT": 1.0})
     k._detect_exchange_exits("UNI/USDT")
     assert any("UNI" in m for m in k.notifier.sent)
+
+
+@pytest.mark.parametrize("held", [0.0, 1.0])
+def test_size_detected_exit_notification_labels_pnl_as_estimated(held):
+    k = _kernel(venue={"UNI/USDT": held})
+    assert k._detect_exchange_exits("UNI/USDT") == 1
+    assert len(k.notifier.sent) == 1
+    assert "estimated pnl" in k.notifier.sent[0]
+    assert ("closed" if held == 0 else "reduced to 1") in k.notifier.sent[0]

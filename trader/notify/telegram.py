@@ -28,7 +28,9 @@ class Telegram:
                 json={"chat_id": self.chat_id, "text": text,
                       "parse_mode": "HTML", "disable_notification": silent},
                 timeout=10)
-            return r.ok
+            # HTTP success alone is not a Bot API delivery acknowledgement.
+            return r.ok and r.json().get("ok") is True
         except Exception as e:
-            log.warning(f"telegram send failed: {e}")
+            # Request exceptions can include the URL, which embeds the token.
+            log.warning("telegram send failed: %s", type(e).__name__)
             return False
