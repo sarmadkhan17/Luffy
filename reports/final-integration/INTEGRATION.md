@@ -45,3 +45,14 @@ Not a source defect: tests/test_res08_governed_bridge.py (2 tests, 59-68 s each)
 after the 3000-bar fixture change. 20/20 pass at per-test 900 s (luffy-ci rerun, rerun-res08.json) and locally.
 policy.file_limits already carries evidence-backed entries for the sibling rp03/predictive-bridge/rp05 files; adding one
 for res08 is a CI policy change that needs owner authorization and was NOT made.
+
+## Review 01/02 reconciliation (owner decision 2026-10-20)
+Applied: Review 01 ce47294 (reason_codes VERSIONED_AUTHORITY_REQUIRED before VOCABULARY, new roundtrip test, orphan fixture;
+feed-identity fixture already equivalent). Review 02 8446c48 selected hunks: macro_guard Retry-After, feed _fetch_paged
+(non-advancing page not duplicated; clock already present), repair_partial_bars --check read-only, registry_store revision header
+conflict + tests/test_universe_revision_identity.py (adopted from Review 02 evidence).
+Already implemented differently / excluded: frozen-multiplier and refit test hunks (legacy_blend.frozen_accuracy and current tests
+cover it), test_scout_upgrades date_range fix (present), cf7b230 Binance registry/supplemental removals (outside canonical
+ancestry, not reintroduced), Review 02 PROPOSED_ONLY items (not approved). Review 04 bench_attention_capture.py test-only fix
+remains absent (not in the owner decision). Targeted regression: 430 passed.
+CI policy: file_limits tests/test_res08_governed_bridge.py = 150 s/test, 600 s/file (additive; policy-check ok).
