@@ -1,1 +1,1 @@
-"""Detached portfolio proposal contracts; no runtime entry point."""
+"""Portfolio proposals and replay; current.checkpoint is called by the Kernel."""

@@ -1,4 +1,9 @@
-"""Bounded current-source reader. No venue calls or trading-journal writes."""
+"""Bounded current-source reader and proposal-only runtime checkpoint.
+
+Freeze reads existing sources without venue calls. Checkpoint writes its
+separate proposal ledger and delivers exact source evidence to Learning's
+existing capture tables in the journal.
+"""
 from contextlib import ExitStack, closing
 from dataclasses import replace
 import json

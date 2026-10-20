@@ -157,6 +157,19 @@ def test_materiality_unavailable_does_not_trigger(tmp_path,book):
     assert event['reason_codes']==['MATERIALITY_POLICY_UNAVAILABLE']
 
 
+@pytest.mark.parametrize('field,value', [
+    ('schema', 'other-schema'), ('portfolio_cut_id', 'other-cut'),
+    ('candidate_set_sha256', 'other-candidates'), ('checkpointed_event_ids', []),
+    ('execution_routed', True), ('real_order_submissions', 1), ('replay', 'FAIL'),
+])
+def test_replay_refuses_changed_checkpoint_envelope(tmp_path, book, field, value):
+    current = book(candidate(instrument='binance_usdm:futures:ETHUSDT'))
+    body = R.Consumer(tmp_path/'envelope.db').consume(current, processed_at=1500)
+    assert body['checkpointed_event_ids']
+    with pytest.raises(ValueError, match='RUNTIME_ENVELOPE_REPLAY_REFUSED'):
+        R.replay(dict(body, **{field: value}))
+
+
 def test_atomic_checkpoint_rollback_on_risk_failure(tmp_path,book,monkeypatch):
     consumer=R.Consumer(tmp_path/'atomic.db');consumer.consume(book(),processed_at=1500)
     current=book(candidate(instrument='binance_usdm:futures:ETHUSDT'))

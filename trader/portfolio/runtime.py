@@ -151,6 +151,19 @@ def replay(body):
     r = EventReceipt(event['receipt_id'],canonical(event['inputs']),canonical(event['result']))
     gate.replay(r)
     inputs = inputs_from_payload(event['inputs']['current'])
+    # The envelope binds the same cut, candidates and events as the verified
+    # nested receipt. Replaying the arithmetic alone cannot verify these
+    # owner-facing checkpoint identities or the proposal-only boundary.
+    candidate_id = digest([asdict(c) for c in sorted(inputs.candidates, key=lambda c:c.identity)])
+    if (body.get('schema') != SCHEMA
+            or body.get('portfolio_cut_id') != digest(event['inputs']['current'])
+            or body.get('candidate_set_sha256') != candidate_id
+            or body.get('checkpointed_event_ids') != [e['event_id'] for e in event['result']['events']]
+            or body.get('execution_routed') is not False
+            or type(body.get('real_order_submissions')) is not int
+            or body['real_order_submissions'] != 0
+            or body.get('replay') != 'PASS'):
+        raise ValueError('RUNTIME_ENVELOPE_REPLAY_REFUSED')
     triggered = event['result']['trigger']
     if triggered != body['triggered']:
         raise ValueError('RUNTIME_TRIGGER_REPLAY_REFUSED')
