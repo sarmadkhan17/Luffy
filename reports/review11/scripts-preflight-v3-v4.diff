@@ -1,0 +1,196 @@
+--- scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py	2026-10-20 06:18:47.973876470 +0300
++++ scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py	2026-10-20 06:18:47.974796414 +0300
+@@ -1,11 +1,20 @@
+ #!/usr/bin/env python3
+-"""RNG-free deterministic preflight/check suite (protocol section 14 item 6), bundle revision 3.
++"""RNG-free deterministic preflight/check suite (protocol section 14 item 6), bundle revision 4.
+ 
+-Revision 3 adds the fail-closed gate for the exact-equivalent optimized statistic: hash binding of the reference
++Revision 3 added the fail-closed gate for the exact-equivalent optimized statistic: hash binding of the reference
+ and optimized implementations and of the equivalence suite/results, the recorded equivalence receipt, a live
+ RNG-free bit-identity check (arithmetic-pattern fixtures against the production ``_metric``), fast-vs-reference
+ receipt identity, gate tamper tests, and the phase-90 benchmark core through a fixed-pattern stub.
+ 
++Revision 4 applies the 2026-09-20 pre-RNG correction (protocol correction section 2-3): P1 (scenario 101) and P3
++(scenario 103) are true-null perturbed-calibration scenarios, not power scenarios.  This file adds checks that
++``acceptance.POWER_RULES``/``acceptance.FDR_SCENARIOS`` exclude 101/103, that ``cell_plan()`` tags their ten C0-C4
++cells ``kind="perturbed_null"``, that the frozen (unchanged) truth tables mark every P1/P3 hypothesis true_null,
++that injection dispatch (keyed by scenario, not kind) is unaffected, and that ``evaluate_cell(kind="perturbed_null")``
++computes the Type-I false-positive gate correctly (true-null rejections count as false positives / FDP=1; zero
++rejections pass; excessive rejections fail; refused worlds are excluded and still count toward the refusal blocker;
++no power/bootstrap/marginal-calibration gate is present).
++
+ Every check is a fixed-input computation.  numpy/stdlib random generator
+ constructors are patched to raise for the whole run; the report records the
+ number of construction attempts (must be 0).  Fixtures are built from arithmetic
+@@ -178,7 +187,7 @@
+     assert c["cells"]["worlds_total"] == 75_000 == V.FULL_WORLDS
+     plan = R.cell_plan()
+     assert len(plan) == 55 and sum(p["worlds"] for p in plan) == 75_000
+-    assert Counter(p["kind"] for p in plan) == {"null": 20, "power": 35}
++    assert Counter(p["kind"] for p in plan) == {"null": 20, "power": 25, "perturbed_null": 10}
+     dgp = c["dgp"]
+     assert tuple(R.RATE_BY_CLASS) == tuple(float(Fraction(x)) for x in dgp["N2"]["coverage"]["rates"])
+     assert R.N2_MEMBERSHIP == tuple(float(Fraction(x)) for x in dgp["N2"]["membership_shift_by_realized_class"])
+@@ -192,6 +201,45 @@
+ 
+ 
+ @check
++def power_rules_and_fdr_scenarios_exclude_p1_p3():
++    """Protocol correction section 2-3: P1 (101) and P3 (103) lose the power/mixed-FDR gates."""
++    assert set(A.POWER_RULES) == {102, 104, 105, 106}
++    assert set(A.FDR_SCENARIOS) == {102, 104, 105, 106}
++    assert 101 not in A.POWER_RULES and 103 not in A.POWER_RULES
++    assert 101 not in A.FDR_SCENARIOS and 103 not in A.FDR_SCENARIOS
++    assert tuple(A.PERTURBED_NULL_SCENARIOS) == (101, 103)
++    fdr_cfg = load("config.json")["acceptance"]["fdr"]
++    assert sorted(fdr_cfg["scenarios"]) == [102, 104, 105, 106]
++    power_cfg = load("config.json")["acceptance"]["power"]
++    assert "P1_P3" not in power_cfg
++    # P2's original single-target power criterion (Wilson lower >= 0.80) is preserved, just no longer bundled
++    # under the same key as P1/P3.
++    assert power_cfg["P2"] == {"wilson_lower_min": 0.80}
++    assert A.POWER_RULES[102] == ((1, 0.80),)
++    return {"power_rules": sorted(A.POWER_RULES), "fdr_scenarios": sorted(A.FDR_SCENARIOS)}
++
++
++@check
++def p1_p3_role_and_cell_kind_and_truth():
++    """Effect-assignment role, cell_plan kind and the (frozen, unchanged) truth tables agree: P1/P3 are true-null."""
++    t = load("effect_assignment_table.json")
++    roles = {s["scenario_code"]: s["role"] for s in t["scenarios"]}
++    assert roles[101] == roles[103] == "calibration"
++    assert roles[102] == roles[104] == roles[105] == roles[106] == "acceptance"
++    assert roles[107] == "sensitivity_only"
++    plan = R.cell_plan()
++    kinds = {p["scenario"]: p["kind"] for p in plan if p["scenario"] is not None}
++    assert kinds[101] == kinds[103] == "perturbed_null"
++    for s in (102, 104, 105, 106, 107):
++        assert kinds[s] == "power"
++    for scenario in (101, 103):
++        for corr in range(5):
++            recs = R.load_truth(scenario, None, corr)
++            assert len(recs) == 384 and all(r["classification"] == "true_null" for r in recs), (scenario, corr)
++    return {"p1_p3_role": "calibration", "p1_p3_kind": "perturbed_null", "p1_p3_truth_rows_checked": 384 * 2 * 5}
++
++
++@check
+ def effect_assignment_table_matches_pinned_sets():
+     t = load("effect_assignment_table.json")
+     assert {s["scenario_code"]: tuple(s["targets"]) for s in t["scenarios"]} == \
+@@ -393,11 +441,13 @@
+ @check
+ def seed_map_and_registry_gates():
+     c = load("config.json")["seed_map"]["distinct_tuples"]
+-    assert c["null"] == 120_000 and c["power"] == 140_000 and c["checks_bootstrap"] == 30 and c["total"] == 260_030
++    assert c["null"] == 120_000 and c["power"] == 140_000 and c["checks_bootstrap"] == 20 and c["total"] == 260_020
+     plan = R.cell_plan()
+     null_tuples = sum(p["worlds"] * 3 for p in plan if p["kind"] == "null")
+-    power_tuples = sum(p["worlds"] * 4 for p in plan if p["kind"] == "power")
++    power_tuples = sum(p["worlds"] * 4 for p in plan if p["kind"] in ("power", "perturbed_null"))
+     assert (null_tuples, power_tuples) == (c["null"], c["power"])
++    bootstrap_tuples = len(A.FDR_SCENARIOS) * 5
++    assert bootstrap_tuples == c["checks_bootstrap"] == 20
+     # tuple = (master, phase, corr, dgp, world, stream): every coordinate is recoverable, so the space is injective.
+     # phase sets are disjoint (10/20/30/90) and dgp codes are disjoint between phases 10 (0-3) and 20/30 (101-107).
+     try:
+@@ -544,9 +594,11 @@
+     assert A.type_one_pass(100, 2000) is False and A.type_one_pass(90, 2000) is True and A.type_one_pass(0, 2000) is True
+     assert [A.cp_band_contains(k, 2000, F(5, 100)) for k in (40, 70, 100, 130, 140)] == [False, True, True, True, False]
+     assert [A.cp_band_contains(k, 2000, F(1, 100)) for k in (5, 10, 20, 35, 40)] == [False, True, True, True, False]
+-    assert A.power_pass(101, [1] * 1000) and not A.power_pass(101, [1] * 800 + [0] * 200)
++    assert A.power_pass(102, [1] * 1000) and not A.power_pass(102, [1] * 800 + [0] * 200)
+     assert A.power_pass(105, [32] * 1000) and not A.power_pass(105, [20] * 900 + [0] * 100)
+     assert A.power_pass(104, [8] * 1000) and not A.power_pass(104, [1] * 1000)
++    # P1/P3 excluded from POWER_RULES by the pre-RNG correction: power_pass is always False, regardless of input
++    assert A.power_pass(101, [1] * 1000) is False and A.power_pass(103, [1] * 1000) is False
+     assert A.refusal_blockers(2000, 20, 0)["blocks"] is False and A.refusal_blockers(2000, 21, 0)["blocks"] is True
+     assert A.refusal_blockers(1000, 0, 3840)["blocks"] is False      # exactly 1% does not exceed 1%
+     assert A.refusal_blockers(1000, 0, 3841)["blocks"] is True
+@@ -565,7 +617,27 @@
+     assert p7["passes"] and "power" not in p7["gates"]
+     overall = A.overall({"N0/C0": cell, "P7/C0": p7})
+     assert overall["passes"] and A.overall({"N0/C0": {**cell, "passes": False}})["failing_cells"] == ["N0/C0"]
+-    return {"wilson": "verified", "clopper_pearson": "exact", "p7": "descriptive"}
++
++    # --- perturbed_null (P1/P3): true-null rejections are false positives; FDP indicator = R > 0.
++    calm = [{"refused": False, "refused_hypotheses": 0, "R": 0, "V": 0, "true_discoveries": 0,
++             "attribution_errors": 0, "marginal_p": None} for _ in range(1000)]
++    p1_pass = A.evaluate_cell("perturbed_null", 101, calm)
++    assert p1_pass["passes"] and p1_pass["gates"] == {"refusal_blocker_absent": True, "type_one": True}
++    assert p1_pass["fdp_count"] == 0 and p1_pass["mean_fdp"] == 0.0 and p1_pass["fdp_rate"] == 0.0
++    assert "power" not in p1_pass["gates"] and "fdr" not in p1_pass["gates"] and "marginal_calibration" not in p1_pass["gates"]
++    noisy_calm = [{**c, "R": 1, "V": 1} if i < 40 else c for i, c in enumerate(calm)]      # 4.0% rejecting: point <= .05
++    p1_borderline = A.evaluate_cell("perturbed_null", 101, noisy_calm)
++    assert p1_borderline["fdp_count"] == 40 and abs(p1_borderline["mean_fdp"] - 0.04) < 1e-12
++    assert p1_borderline["passes"] == A.type_one_pass(40, 1000)
++    excessive = [{**c, "R": 1, "V": 1} if i < 120 else c for i, c in enumerate(calm)]       # 12%: clearly fails
++    p1_fail = A.evaluate_cell("perturbed_null", 103, excessive)
++    assert not p1_fail["passes"] and p1_fail["gates"]["type_one"] is False and p1_fail["mean_fdp"] == 0.12
++    refused_mix = calm[:900] + [{"refused": True, "refused_hypotheses": 0, "R": 0, "V": 0, "true_discoveries": 0,
++                                 "attribution_errors": 0, "marginal_p": None}] * 100
++    p1_refused = A.evaluate_cell("perturbed_null", 101, refused_mix)
++    assert p1_refused["non_refused"] == 900 and p1_refused["refusal"]["blocks"] is True  # 10% refused > 1% blocker
++    assert not p1_refused["passes"]                                                       # blocked regardless of type_one
++    return {"wilson": "verified", "clopper_pearson": "exact", "p7": "descriptive", "p1_p3": "type_one_only"}
+ 
+ 
+ @check
+@@ -600,7 +672,17 @@
+     none = R.apply_injection(base, 104, DeterministicStub(uniform=0.999))
+     assert np.array_equal(none.categorical, base.categorical)
+     assert np.array_equal(inj.memberships, base.memberships) and inj.block_strata == base.block_strata
+-    return {"cells_generated_with_stub": len(shapes)}
++    # P1 (scenario 101, target h=0) and P3 (scenario 103, target h=320): dispatch is keyed by scenario, not by
++    # cell "kind" -- injection still occurs for the perturbed_null cells exactly as for any power cell.
++    p1_base = fixture_world(only={0})
++    p1_inj = R.apply_injection(p1_base, 101, DeterministicStub(uniform=0.0))
++    assert np.all(p1_inj.categorical[p1_base.memberships[:, 0]] == 2)
++    p1_none = R.apply_injection(p1_base, 101, DeterministicStub(uniform=0.999))
++    assert np.array_equal(p1_none.categorical, p1_base.categorical)
++    p3_base = fixture_world(only={320})
++    p3_inj = R.apply_injection(p3_base, 103, DeterministicStub(uniform=0.0))
++    assert np.all(p3_inj.categorical[p3_base.memberships[:, 320]] == 2)
++    return {"cells_generated_with_stub": len(shapes), "p1_p3_injection_dispatch": "by scenario"}
+ 
+ 
+ @check
+@@ -623,7 +705,11 @@
+     assert c == {"R": 2, "V": 1, "true_discoveries": 1, "attribution_errors": 0}
+     c = R.classify_rejections({0}, np.array([-0.3] + [0.0] * 383), truth_v, (0,))
+     assert c["V"] == 1 and c["true_discoveries"] == 0
+-    return {"receipt_hashing": True, "refused_world": "link_crossing"}
++    # P1/P3-style all-true-null truth: every rejection is a false discovery (V == R), matching acceptance's FDP=1{R>0}
++    truth_null_only = [{"classification": "true_null", "sign": None}] * 384
++    c = R.classify_rejections({0, 5, 130}, np.array([0.3, -0.2] + [0.0] * 382), truth_null_only, (0,))
++    assert c == {"R": 3, "V": 3, "true_discoveries": 0, "attribution_errors": 0}
++    return {"receipt_hashing": True, "refused_world": "link_crossing", "p1_p3_all_rejections_false": True}
+ 
+ 
+ @check
+@@ -667,8 +753,9 @@
+                                                        "true_discoveries": 0, "attribution_errors": 0,
+                                                        "marginal_p": Fraction(1, 2)}] * 70)
+     assert cell["non_refused"] == 70 and cell["refusal"]["blocks"] is True      # counted in the world-refusal blocker
+-    power = A.power_pass(101, [0] * 30 + [1] * 970)                              # refused world = failure, stays in denominator
+-    assert power is True and A.power_pass(101, [0] * 250 + [1] * 750) is False
++    power = A.power_pass(102, [0] * 30 + [1] * 970)                              # refused world = failure, stays in denominator
++    assert power is True and A.power_pass(102, [0] * 250 + [1] * 750) is False
++    assert A.power_pass(101, [0] * 30 + [1] * 970) is False        # P1 excluded: always False, not a "failure" of a real gate
+     return {"refused_world": "no_tested_hypotheses", "excluded_from_type_one_fdr": True, "power_failure": True}
+ 
+ 
+@@ -986,7 +1073,12 @@
+     for scenario, dgp, corr in ((None, 1, 0), (None, 3, 4), (101, None, 2), (107, None, 4)):
+         recs = R.load_truth(scenario, dgp, corr)
+         assert len(recs) == 384 and all(r["classification"] in ("true_null", "analytic_non_null") for r in recs)
+-    return {"package_sha256": freeze["package_sha256"], "rows": 21_120}
++    # v4: the corrected protocol requires every P1/P3 hypothesis, every correlation, to be true_null (section 3.1)
++    for scenario in (101, 103):
++        for corr in range(5):
++            recs = R.load_truth(scenario, None, corr)
++            assert all(r["classification"] == "true_null" and r.get("sign") is None for r in recs), (scenario, corr)
++    return {"package_sha256": freeze["package_sha256"], "rows": 21_120, "p1_p3_true_null_checked": True}
+ 
+ 
+ def run() -> dict:

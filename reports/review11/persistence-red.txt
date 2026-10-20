@@ -1,0 +1,55 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_relative_root_accepts_contained_absolute_configured_replay_store _____
+
+backup = (PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-219/test_relative_root_accepts_con0/source'), <trader.core.journal.Journal object at 0x7c3fa67d3c50>, <trader.persistence.backup.BackupSets object at 0x7c3fa68d5340>)
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-219/test_relative_root_accepts_con0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c3fa4e32990>
+
+    def test_relative_root_accepts_contained_absolute_configured_replay_store(backup, tmp_path, monkeypatch):
+        root, _, old = backup
+        custom = root / 'data/custom-candles.db'
+        with sqlite3.connect(custom) as db:
+            db.execute('CREATE TABLE fixture (value INTEGER)')
+            db.execute('INSERT INTO fixture VALUES (11)')
+        (root / 'config.yaml').write_text(json.dumps({'research': {'paths': {'candles': str(custom)}}}))
+        monkeypatch.chdir(tmp_path)
+>       inventory = critical_inventory(root.name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/luffy-data/sol1-subsystem-review-11-20261020/tests/test_review11_persistence.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/luffy-data/sol1-subsystem-review-11-20261020/trader/persistence/backup.py:170: in critical_inventory
+    path = path.relative_to(root)
+           ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-219/test_relative_root_accepts_con0/source/data/custom-candles.db')
+other = PosixPath('source'), walk_up = False, _deprecated = ()
+
+    def relative_to(self, other, /, *_deprecated, walk_up=False):
+        """Return the relative path to another path identified by the passed
+        arguments.  If the operation is not possible (because this is not
+        related to the other path), raise ValueError.
+    
+        The *walk_up* parameter controls whether `..` may be used to resolve
+        the path.
+        """
+        if _deprecated:
+            msg = ("support for supplying more than one positional argument "
+                   "to pathlib.PurePath.relative_to() is deprecated and "
+                   "scheduled for removal in Python {remove}")
+            warnings._deprecated("pathlib.PurePath.relative_to(*args)", msg,
+                                 remove=(3, 14))
+        other = self.with_segments(other, *_deprecated)
+        for step, path in enumerate([other] + list(other.parents)):
+            if self.is_relative_to(path):
+                break
+            elif not walk_up:
+>               raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+E               ValueError: '/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-219/test_relative_root_accepts_con0/source/data/custom-candles.db' is not in the subpath of 'source'
+
+/usr/lib/python3.12/pathlib.py:682: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_review11_persistence.py::test_relative_root_accepts_contained_absolute_configured_replay_store
+1 failed in 1.27s

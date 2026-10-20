@@ -1,0 +1,9 @@
+scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py:41:HOST_RECEIPT = ROOT / "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json"
+scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py:43:QUAL_REPORT = ROOT / "scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json"
+scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py:4:v4-bound sibling of ``scripts/m32_scheme_d_qualification_20260922/qualify.py`` (bundle v3), which stays untouched: the
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:5:that ``scripts/m32_scheme_d_qualification_20260922/qualify.py`` runs for bundle v3 (subprocess-forked flock
+tests/test_m32_shard_layer_v4.py:143:    spec = importlib.util.spec_from_file_location("m32_v4_qualify_check", QUAL_DIR / "qualify_v4.py")
+tests/test_m32_shard_layer_v4.py:381:    proc = subprocess.run([sys.executable, str(QUAL_DIR / "qualify_v4.py"), "run", "--out", str(out)],
+tests/test_m32_host_qualification_v4.py:21:QDIR = ROOT / "scripts/m32_scheme_d_host_qualification_v4_20260923"
+tests/test_m32_host_qualification_v4.py:22:V3_QDIR = ROOT / "scripts/m32_scheme_d_qualification_20260922"
+tests/test_m32_qualification.py:19:QDIR = ROOT / "scripts/m32_scheme_d_qualification_20260922"

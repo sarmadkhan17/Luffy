@@ -1,0 +1,1987 @@
+[
+  {
+    "path": "scripts/m32_categorical_arb_batch_20260920/certify_batch.py",
+    "lines": 469,
+    "purpose": "Attempt the final 27 P4-P6/C3-C4 categorical kernels by shared validated nested Arb quadrature.",
+    "functions": [
+      {
+        "name": "A",
+        "line": 36
+      },
+      {
+        "name": "frozen",
+        "line": 43
+      },
+      {
+        "name": "density",
+        "line": 53
+      },
+      {
+        "name": "cdf",
+        "line": 57
+      },
+      {
+        "name": "qtail",
+        "line": 61
+      },
+      {
+        "name": "member",
+        "line": 65
+      },
+      {
+        "name": "factor",
+        "line": 69
+      },
+      {
+        "name": "minus",
+        "line": 73
+      },
+      {
+        "name": "integrate",
+        "line": 81
+      },
+      {
+        "name": "integrate_outer",
+        "line": 91
+      },
+      {
+        "name": "pad_nonnegative",
+        "line": 104
+      },
+      {
+        "name": "interval",
+        "line": 109
+      },
+      {
+        "name": "sha",
+        "line": 120
+      },
+      {
+        "name": "BatchIntegrator",
+        "line": 124
+      },
+      {
+        "name": "class_probs",
+        "line": 312
+      },
+      {
+        "name": "winner",
+        "line": 316
+      },
+      {
+        "name": "intersect",
+        "line": 322
+      },
+      {
+        "name": "macro",
+        "line": 330
+      },
+      {
+        "name": "classify",
+        "line": 341
+      },
+      {
+        "name": "main",
+        "line": 359
+      },
+      {
+        "name": "__init__",
+        "line": 127
+      },
+      {
+        "name": "_inner_c3",
+        "line": 134
+      },
+      {
+        "name": "c3_batch",
+        "line": 179
+      },
+      {
+        "name": "_sector",
+        "line": 234
+      },
+      {
+        "name": "c4_batch",
+        "line": 247
+      },
+      {
+        "name": "fn",
+        "line": 159
+      },
+      {
+        "name": "raw",
+        "line": 190
+      },
+      {
+        "name": "reduced",
+        "line": 258
+      },
+      {
+        "name": "outer",
+        "line": 201
+      },
+      {
+        "name": "fn",
+        "line": 267
+      },
+      {
+        "name": "fn",
+        "line": 282
+      },
+      {
+        "name": "inner",
+        "line": 286
+      }
+    ],
+    "callers": "record_refusal.py pins implementation; historical replay_batch.py records source/refusal graph.",
+    "consumers": "certificate.json FAIL_CLOSED; later box/Taylor source selection and aggregate frozen truth provenance.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed active defect. Historical failed numerical method retained as negative evidence. Repeated helpers overlap independent replay; source identity argues against extraction.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "f44a50d33ba66c4276adf7143d04d82301b14d2f95f608697d3d694abb01c9fa",
+    "baseline_sha256": "f44a50d33ba66c4276adf7143d04d82301b14d2f95f608697d3d694abb01c9fa",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_categorical_arb_batch_20260920/certificate.json"
+    ],
+    "source_contract": [
+      "Exact binary64 threshold reconstruction; Gaussian C3 cluster counts and C4 two-sector reduction; algebraic empty/singleton cluster collapse.",
+      "Memoizes inner balls, scenario population signatures and equivalent conditional primitives; pre-splits outer interval into 32 validated integrals with finite local eval/depth limits.",
+      "Adds 66Q(16)/4Q(16)/2Q(16) outward tail bounds; intersects population with weighted hit/miss; strict three-way argmax and radius <=1e-12 plus separation beyond 1e-10; exact same-classifier null.",
+      "Scope guard requires exactly 27 kernels in six expected cells. Historical attempt emitted no accepted enclosure; record_refusal.py retains FAIL_CLOSED rather than treating resource exhaustion as no edge."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Finite per-integral limits; no wall-clock bound in original batch main, so historical external engineering cap matters. Default output certificate.json would overwrite frozen record if invoked; do not run.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_categorical_arb_batch_20260920/replay_integrator.py",
+    "lines": 445,
+    "purpose": "Independently parameterized high-precision numerical integrator used by batch replay, retaining an unchanged categorical estimand.",
+    "functions": [
+      {
+        "name": "A",
+        "line": 36
+      },
+      {
+        "name": "frozen",
+        "line": 43
+      },
+      {
+        "name": "density",
+        "line": 53
+      },
+      {
+        "name": "cdf",
+        "line": 57
+      },
+      {
+        "name": "qtail",
+        "line": 61
+      },
+      {
+        "name": "member",
+        "line": 65
+      },
+      {
+        "name": "factor",
+        "line": 69
+      },
+      {
+        "name": "minus",
+        "line": 73
+      },
+      {
+        "name": "integrate",
+        "line": 81
+      },
+      {
+        "name": "pad_nonnegative",
+        "line": 91
+      },
+      {
+        "name": "interval",
+        "line": 96
+      },
+      {
+        "name": "sha",
+        "line": 107
+      },
+      {
+        "name": "BatchIntegrator",
+        "line": 111
+      },
+      {
+        "name": "class_probs",
+        "line": 288
+      },
+      {
+        "name": "winner",
+        "line": 292
+      },
+      {
+        "name": "intersect",
+        "line": 298
+      },
+      {
+        "name": "macro",
+        "line": 306
+      },
+      {
+        "name": "classify",
+        "line": 317
+      },
+      {
+        "name": "main",
+        "line": 335
+      },
+      {
+        "name": "__init__",
+        "line": 114
+      },
+      {
+        "name": "_inner_c3",
+        "line": 121
+      },
+      {
+        "name": "c3_batch",
+        "line": 157
+      },
+      {
+        "name": "_sector",
+        "line": 211
+      },
+      {
+        "name": "c4_batch",
+        "line": 224
+      },
+      {
+        "name": "fn",
+        "line": 137
+      },
+      {
+        "name": "raw",
+        "line": 168
+      },
+      {
+        "name": "reduced",
+        "line": 235
+      },
+      {
+        "name": "outer",
+        "line": 179
+      },
+      {
+        "name": "fn",
+        "line": 244
+      },
+      {
+        "name": "fn",
+        "line": 259
+      },
+      {
+        "name": "inner",
+        "line": 263
+      }
+    ],
+    "callers": "scripts/m32_categorical_arb_batch_20260920/replay_batch.py:21-22 importlib.spec_from_file_location.",
+    "consumers": "Historical batch replay result/refusal verification and source hashes.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Similar helper names do not justify merging independently retained numerical paths.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "c1daf88a9d7fffa21cfe7715dfcc47c47eeb373173ff15d7948faf8349c2b441",
+    "baseline_sha256": "c1daf88a9d7fffa21cfe7715dfcc47c47eeb373173ff15d7948faf8349c2b441",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_categorical_arb_batch_20260920/replay.json"
+    ],
+    "source_contract": [
+      "Reimplements factor/conditional PGFs and classification; uses higher degree/eval/depth and heap-disabled adaptive integration.",
+      "Maintains exact binary64 inputs, explicit tail union bounds, strict hit/miss/pop winners and small-radius/zero-separation rules.",
+      "No 32-piece outer split or singleton optimization; intentional traversal/implementation variation from primary.",
+      "main contains full batch producer but replay_batch.py dynamically loads this file for selected replay attempts."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default main could rerun 27 expensive kernels; not executed.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+    "lines": 770,
+    "purpose": "Bounded P5/C3 and P6/C4 interval-box canary experiments with Gaussian rectangle masses and adaptive subdivisions.",
+    "functions": [
+      {
+        "name": "A",
+        "line": 31
+      },
+      {
+        "name": "frozen",
+        "line": 38
+      },
+      {
+        "name": "cdf",
+        "line": 43
+      },
+      {
+        "name": "qtail",
+        "line": 47
+      },
+      {
+        "name": "hull",
+        "line": 51
+      },
+      {
+        "name": "unit_interval",
+        "line": 55
+      },
+      {
+        "name": "bounded_remainder",
+        "line": 63
+      },
+      {
+        "name": "member",
+        "line": 68
+      },
+      {
+        "name": "factor",
+        "line": 72
+      },
+      {
+        "name": "minus",
+        "line": 76
+      },
+      {
+        "name": "endpoints",
+        "line": 84
+      },
+      {
+        "name": "normal_boxes",
+        "line": 88
+      },
+      {
+        "name": "dyadic",
+        "line": 95
+      },
+      {
+        "name": "enclosure",
+        "line": 100
+      },
+      {
+        "name": "checkpoint",
+        "line": 110
+      },
+      {
+        "name": "select_spec",
+        "line": 119
+      },
+      {
+        "name": "c3_once",
+        "line": 130
+      },
+      {
+        "name": "sector",
+        "line": 184
+      },
+      {
+        "name": "c4_once",
+        "line": 198
+      },
+      {
+        "name": "width",
+        "line": 247
+      },
+      {
+        "name": "width_float",
+        "line": 251
+      },
+      {
+        "name": "mass",
+        "line": 255
+      },
+      {
+        "name": "span",
+        "line": 259
+      },
+      {
+        "name": "bisect",
+        "line": 263
+      },
+      {
+        "name": "initial_intervals",
+        "line": 268
+      },
+      {
+        "name": "majority_winner",
+        "line": 273
+      },
+      {
+        "name": "finalize",
+        "line": 283
+      },
+      {
+        "name": "adaptive_checkpoint",
+        "line": 292
+      },
+      {
+        "name": "c3_point",
+        "line": 309
+      },
+      {
+        "name": "c3_cell",
+        "line": 324
+      },
+      {
+        "name": "c3_band",
+        "line": 336
+      },
+      {
+        "name": "c3_adaptive",
+        "line": 344
+      },
+      {
+        "name": "sector_log_derivative",
+        "line": 501
+      },
+      {
+        "name": "c4_point",
+        "line": 517
+      },
+      {
+        "name": "c4_cell",
+        "line": 532
+      },
+      {
+        "name": "c4_adaptive",
+        "line": 552
+      },
+      {
+        "name": "class_probs",
+        "line": 611
+      },
+      {
+        "name": "winner",
+        "line": 615
+      },
+      {
+        "name": "intersect",
+        "line": 621
+      },
+      {
+        "name": "macro",
+        "line": 628
+      },
+      {
+        "name": "classify",
+        "line": 639
+      },
+      {
+        "name": "overlap",
+        "line": 657
+      },
+      {
+        "name": "run",
+        "line": 661
+      },
+      {
+        "name": "main",
+        "line": 751
+      },
+      {
+        "name": "fill_band",
+        "line": 359
+      },
+      {
+        "name": "leaf_count",
+        "line": 378
+      },
+      {
+        "name": "current",
+        "line": 381
+      },
+      {
+        "name": "add_leaf",
+        "line": 559
+      },
+      {
+        "name": "current",
+        "line": 576
+      }
+    ],
+    "callers": "Explicit CLI main; no runtime/trading consumer; within-file runner dispatch c3_adaptive/c4_adaptive.",
+    "consumers": "p5_c3_report.json and p6_c4_report.json plus checkpoint evidence retain unsuccessful canaries.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Five static dead/chain leads are old fixed-grid methods (c3_once/c4_once, endpoints/normal_boxes/checkpoint); retained frozen experiment source, no deletion. Adaptive runner is current script entry.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "7cd320734306f34c2b4cc02dd7f6b7ba37bb419eb05c778cd42ee921c4efb992",
+    "baseline_sha256": "7cd320734306f34c2b4cc02dd7f6b7ba37bb419eb05c778cd42ee921c4efb992",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Every rectangle contribution is enclosed under analytic Gaussian mass; omitted and unfinished domains padded by nonnegative mass bounds.",
+      "C3 uses local inner partitions per outer band and repeated-cluster powers; C4 certifies monotonicity only from interval derivative signs before tightening population bounds.",
+      "Adaptive stopping uses unresolved majority boundaries, time cap and leaf/axis limits; checkpoints flush every refinement; checkpoint resume explicitly false.",
+      "Successful primary classification requires higher precision replay agreement and overlapping primitive/lift enclosures; retained reports both refuse."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "224-bit default, runtime cap 285s and <=300 accepted; C3 max 262144 intervals per axis/C4 max leaves 262144. Historical reports 285.22s/52.82s, both refused.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py",
+    "lines": 336,
+    "purpose": "P4/C3 and P4/C4 one-dimensional Taylor/moment certificates over analytically reduced kernels.",
+    "functions": [
+      {
+        "name": "exact_binary64",
+        "line": 33
+      },
+      {
+        "name": "exact",
+        "line": 38
+      },
+      {
+        "name": "cdf",
+        "line": 43
+      },
+      {
+        "name": "density",
+        "line": 47
+      },
+      {
+        "name": "hull",
+        "line": 51
+      },
+      {
+        "name": "symmetric",
+        "line": 57
+      },
+      {
+        "name": "lower",
+        "line": 61
+      },
+      {
+        "name": "upper",
+        "line": 65
+      },
+      {
+        "name": "abs_upper",
+        "line": 69
+      },
+      {
+        "name": "radius",
+        "line": 73
+      },
+      {
+        "name": "midpoint",
+        "line": 77
+      },
+      {
+        "name": "enclosure",
+        "line": 81
+      },
+      {
+        "name": "gaussian_moments",
+        "line": 93
+      },
+      {
+        "name": "member",
+        "line": 103
+      },
+      {
+        "name": "kernels",
+        "line": 107
+      },
+      {
+        "name": "integrate_band",
+        "line": 121
+      },
+      {
+        "name": "Band",
+        "line": 147
+      },
+      {
+        "name": "clipped_probability",
+        "line": 156
+      },
+      {
+        "name": "evaluate",
+        "line": 160
+      },
+      {
+        "name": "checkpoint_payload",
+        "line": 231
+      },
+      {
+        "name": "main",
+        "line": 251
+      },
+      {
+        "name": "priority",
+        "line": 152
+      },
+      {
+        "name": "side",
+        "line": 174
+      }
+    ],
+    "callers": "CLI entry; primary/replay artifacts pinned by p4_c3_c4_freeze_manifest.json.",
+    "consumers": "Frozen p4 C3/C4 primary/replay consumed by generate_truth_package.SOURCES.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Unused math import is harmless frozen-source lint finding, no behavioral defect; preserve implementation hash.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "0c271383a7df43f7b40a360877532a1594b19871854945075b57fac7f43abc79",
+    "baseline_sha256": "0c271383a7df43f7b40a360877532a1594b19871854945075b57fac7f43abc79",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Exact binary64 thresholds; centered Gaussian moments via recurrence; Taylor coefficient/remainder ranges and independent direct-range hull guard.",
+      "Probability clipping, tail mass padding and hit+miss/population intersection; requires strict majority relative to 20/31.",
+      "Shared strict winner gives algebraic null; designated mixed sides use frozen macro-F1 formula and radius/separation gates.",
+      "Adaptive maximum contribution width refinement; stops on acceptance, max bands or elapsed budget; writes append checkpoint and requested output."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default 224 bits/degree14/96 bands, 4096 max bands, 300s elapsed gate after initial partition; stored primaries true_null ~0.2s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+    "lines": 344,
+    "purpose": "P5/C3 higher-order nested Gaussian Taylor proof for population/joint-hit/joint-miss and categorical macro-F1 lift.",
+    "functions": [
+      {
+        "name": "Deadline",
+        "line": 28
+      },
+      {
+        "name": "A",
+        "line": 32
+      },
+      {
+        "name": "frozen",
+        "line": 39
+      },
+      {
+        "name": "cdf",
+        "line": 44
+      },
+      {
+        "name": "density",
+        "line": 48
+      },
+      {
+        "name": "hull",
+        "line": 52
+      },
+      {
+        "name": "symmetric",
+        "line": 56
+      },
+      {
+        "name": "abs_upper",
+        "line": 60
+      },
+      {
+        "name": "enclosure",
+        "line": 64
+      },
+      {
+        "name": "initial_intervals",
+        "line": 75
+      },
+      {
+        "name": "bisect",
+        "line": 80
+      },
+      {
+        "name": "mass",
+        "line": 85
+      },
+      {
+        "name": "moments",
+        "line": 89
+      },
+      {
+        "name": "intersect",
+        "line": 101
+      },
+      {
+        "name": "Band",
+        "line": 109
+      },
+      {
+        "name": "Certifier",
+        "line": 116
+      },
+      {
+        "name": "checkpoint",
+        "line": 206
+      },
+      {
+        "name": "run",
+        "line": 217
+      },
+      {
+        "name": "main",
+        "line": 326
+      },
+      {
+        "name": "__init__",
+        "line": 117
+      },
+      {
+        "name": "check",
+        "line": 129
+      },
+      {
+        "name": "kernels",
+        "line": 133
+      },
+      {
+        "name": "kernel_series",
+        "line": 140
+      },
+      {
+        "name": "cluster_center",
+        "line": 144
+      },
+      {
+        "name": "cluster_bounds",
+        "line": 168
+      },
+      {
+        "name": "products",
+        "line": 185
+      },
+      {
+        "name": "band",
+        "line": 189
+      },
+      {
+        "name": "rebuild",
+        "line": 226
+      }
+    ],
+    "callers": "CLI; generate_truth_package.SOURCES p5_c3_certifier; verify_truth_package pins freeze manifest implementation.",
+    "consumers": "p5_c3_hit_miss_primary/replay.json and freeze manifest; aggregate frozen categorical truth.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Deadline during initial construction raises fail-closed instead of fabricating acceptance; does not constitute completed refusal transcript.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "5c7141ef357fe7aaf2ff80fa025d35d65d4687b979b80c4b99858e2cfba94020",
+    "baseline_sha256": "5c7141ef357fe7aaf2ff80fa025d35d65d4687b979b80c4b99858e2cfba94020",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Uses exact frozen kernels (2 state,4 linked) repeated four clusters, with focal linked target removed then multiplied by r.",
+      "Computes inner Taylor coefficients/remainder through 2D, outer products p**4/h*p**3/m*p**3; symmetric remainder and 5 one-dimensional tail masses.",
+      "Rebuilds from leaves, intersects successive valid enclosures, compares outer vs inner refinement widths; checks strict expected hit/miss/pop majority pattern before lift.",
+      "Final accepted flag requires radius<=1e-12 and nonzero separation>=1e-10; required checkpoint/output selected explicitly."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default 224 bits/order10/axis32, runtime cap 285s <=300; historical accepted primary/replay 243.07s/194.47s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+    "lines": 345,
+    "purpose": "Population-only P5/C3 canary proving the common PGF majority before full conditional certification.",
+    "functions": [
+      {
+        "name": "Deadline",
+        "line": 33
+      },
+      {
+        "name": "A",
+        "line": 37
+      },
+      {
+        "name": "frozen",
+        "line": 44
+      },
+      {
+        "name": "cdf",
+        "line": 49
+      },
+      {
+        "name": "density",
+        "line": 53
+      },
+      {
+        "name": "hull",
+        "line": 57
+      },
+      {
+        "name": "bounded",
+        "line": 61
+      },
+      {
+        "name": "symmetric",
+        "line": 66
+      },
+      {
+        "name": "dyadic",
+        "line": 70
+      },
+      {
+        "name": "enclosure",
+        "line": 74
+      },
+      {
+        "name": "mass",
+        "line": 85
+      },
+      {
+        "name": "centered_first",
+        "line": 89
+      },
+      {
+        "name": "bisect",
+        "line": 94
+      },
+      {
+        "name": "initial_intervals",
+        "line": 99
+      },
+      {
+        "name": "abs_upper",
+        "line": 104
+      },
+      {
+        "name": "intersect",
+        "line": 108
+      },
+      {
+        "name": "Band",
+        "line": 116
+      },
+      {
+        "name": "Certifier",
+        "line": 123
+      },
+      {
+        "name": "checkpoint",
+        "line": 222
+      },
+      {
+        "name": "run",
+        "line": 233
+      },
+      {
+        "name": "main",
+        "line": 330
+      },
+      {
+        "name": "__init__",
+        "line": 124
+      },
+      {
+        "name": "check",
+        "line": 144
+      },
+      {
+        "name": "derivatives",
+        "line": 148
+      },
+      {
+        "name": "point_integral",
+        "line": 163
+      },
+      {
+        "name": "derivative_integrals",
+        "line": 182
+      },
+      {
+        "name": "band",
+        "line": 197
+      },
+      {
+        "name": "rebuild",
+        "line": 246
+      }
+    ],
+    "callers": "Explicit CLI; p5_c3_population_majority_freeze_manifest.json anchors source.",
+    "consumers": "p5_c3_population_report.json and negative/progress checkpoints; later hit/miss certifier follows same research reduction.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Metadata global_sum_rebuild_period=32 is historical descriptive drift: source currently rebuilds every accepted step (safer, potentially more work); not statistical weakening.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "76814e9bd8a57beb3360ece0f61a69a98ff9d3e34405eb00a499f1ddb61dbf05",
+    "baseline_sha256": "76814e9bd8a57beb3360ece0f61a69a98ff9d3e34405eb00a499f1ddb61dbf05",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Uses monotone endpoint cluster integrals plus second derivative Taylor remainder and analytic truncated-normal first moments.",
+      "Four-cluster power uses rigorous derivative integral bounds plus omitted Gaussian tail; intersects monotone and Taylor enclosures.",
+      "Deterministic split priority based on lower-bound deficit; rebuilds from leaves then intersects best; population-only viability explicitly separate from full lift acceptance.",
+      "Prior dyadic interval is a before/after width reference, not substitute population evidence."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default 224 bits, axis16, runtime285s <=300; stored population majority resolved ~23.10s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py",
+    "lines": 337,
+    "purpose": "Six P5/C4 categorical kernels via exact empty-sector reduction and independent one-dimensional Taylor/integrator guard.",
+    "functions": [
+      {
+        "name": "A",
+        "line": 34
+      },
+      {
+        "name": "frozen",
+        "line": 41
+      },
+      {
+        "name": "cdf",
+        "line": 49
+      },
+      {
+        "name": "qtail",
+        "line": 53
+      },
+      {
+        "name": "density",
+        "line": 57
+      },
+      {
+        "name": "member",
+        "line": 61
+      },
+      {
+        "name": "hull",
+        "line": 65
+      },
+      {
+        "name": "symmetric",
+        "line": 69
+      },
+      {
+        "name": "abs_upper",
+        "line": 73
+      },
+      {
+        "name": "intersect",
+        "line": 77
+      },
+      {
+        "name": "unit_interval",
+        "line": 84
+      },
+      {
+        "name": "pad_tail",
+        "line": 91
+      },
+      {
+        "name": "dyadic",
+        "line": 95
+      },
+      {
+        "name": "enclosure",
+        "line": 100
+      },
+      {
+        "name": "centered_moments",
+        "line": 110
+      },
+      {
+        "name": "sector_parts",
+        "line": 123
+      },
+      {
+        "name": "kernel_vector",
+        "line": 132
+      },
+      {
+        "name": "initial_intervals",
+        "line": 153
+      },
+      {
+        "name": "taylor_band",
+        "line": 159
+      },
+      {
+        "name": "taylor_integrals",
+        "line": 175
+      },
+      {
+        "name": "validated_integrals",
+        "line": 189
+      },
+      {
+        "name": "class_probs",
+        "line": 208
+      },
+      {
+        "name": "winner",
+        "line": 212
+      },
+      {
+        "name": "macro",
+        "line": 219
+      },
+      {
+        "name": "classify",
+        "line": 232
+      },
+      {
+        "name": "main",
+        "line": 258
+      },
+      {
+        "name": "integrand",
+        "line": 193
+      },
+      {
+        "name": "checkpoint",
+        "line": 277
+      }
+    ],
+    "callers": "CLI primary/replay; p5_c4_freeze_manifest.json pins producer.",
+    "consumers": "p5_c4_primary/replay.json and aggregate truth source list.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Unused dataclass import is harmless frozen-source lint; no numerical defect confirmed. Do not merge independent guard paths.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "323760d98ce52b1f93fb45c512ea140d94df915b766fc43c4119d1fc8e707ee5",
+    "baseline_sha256": "323760d98ce52b1f93fb45c512ea140d94df915b766fc43c4119d1fc8e707ee5",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Freezes counts (8,16), six kernel specs and target removal; opposite empty sector integrated to membership systematic3/20,residual17/20.",
+      "Evaluates 13 shared primitive integrals with Taylor centered moments and separate acb.integral; takes outward hull of both before classification.",
+      "Requires strict hit/miss/pop unique argmax; exact common-classifier null else macro-F1 with radius/zero-separation thresholds.",
+      "Replay mode changes adaptive evaluation limits/heap behavior and caller-supplied precision; source pins thresholds as exact binary64."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default 224 bits/order14/axis80, 13 validated integrals with finite eval/depth caps; stored accepted primary/replay ~1.84s/2.39s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py",
+    "lines": 537,
+    "purpose": "Nine remaining P5/C3/P6/C4 kernels plus two already frozen canaries through a shared but scoped Taylor certifier.",
+    "functions": [
+      {
+        "name": "frozen_spec",
+        "line": 58
+      },
+      {
+        "name": "kernel_id_of",
+        "line": 72
+      },
+      {
+        "name": "Deadline",
+        "line": 76
+      },
+      {
+        "name": "A",
+        "line": 80
+      },
+      {
+        "name": "frozen",
+        "line": 87
+      },
+      {
+        "name": "cdf",
+        "line": 92
+      },
+      {
+        "name": "qtail",
+        "line": 96
+      },
+      {
+        "name": "density",
+        "line": 100
+      },
+      {
+        "name": "hull",
+        "line": 104
+      },
+      {
+        "name": "symmetric",
+        "line": 108
+      },
+      {
+        "name": "abs_upper",
+        "line": 112
+      },
+      {
+        "name": "enclosure",
+        "line": 116
+      },
+      {
+        "name": "initial_intervals",
+        "line": 127
+      },
+      {
+        "name": "bisect",
+        "line": 132
+      },
+      {
+        "name": "mass",
+        "line": 137
+      },
+      {
+        "name": "moments",
+        "line": 141
+      },
+      {
+        "name": "intersect",
+        "line": 153
+      },
+      {
+        "name": "unit_interval",
+        "line": 160
+      },
+      {
+        "name": "class_probs",
+        "line": 165
+      },
+      {
+        "name": "winner",
+        "line": 169
+      },
+      {
+        "name": "macro",
+        "line": 175
+      },
+      {
+        "name": "classify",
+        "line": 185
+      },
+      {
+        "name": "Model",
+        "line": 207
+      },
+      {
+        "name": "C3Model",
+        "line": 243
+      },
+      {
+        "name": "C4Model",
+        "line": 269
+      },
+      {
+        "name": "Band",
+        "line": 303
+      },
+      {
+        "name": "Certifier",
+        "line": 310
+      },
+      {
+        "name": "width",
+        "line": 410
+      },
+      {
+        "name": "run",
+        "line": 414
+      },
+      {
+        "name": "main",
+        "line": 513
+      },
+      {
+        "name": "__init__",
+        "line": 211
+      },
+      {
+        "name": "q",
+        "line": 220
+      },
+      {
+        "name": "_pw",
+        "line": 224
+      },
+      {
+        "name": "survive",
+        "line": 227
+      },
+      {
+        "name": "focal",
+        "line": 230
+      },
+      {
+        "name": "__init__",
+        "line": 246
+      },
+      {
+        "name": "kernels",
+        "line": 254
+      },
+      {
+        "name": "assemble",
+        "line": 263
+      },
+      {
+        "name": "__init__",
+        "line": 272
+      },
+      {
+        "name": "member",
+        "line": 280
+      },
+      {
+        "name": "sector_kernels",
+        "line": 283
+      },
+      {
+        "name": "left_kernels",
+        "line": 290
+      },
+      {
+        "name": "right_kernels",
+        "line": 293
+      },
+      {
+        "name": "right_shared",
+        "line": 297
+      },
+      {
+        "name": "__init__",
+        "line": 311
+      },
+      {
+        "name": "check",
+        "line": 320
+      },
+      {
+        "name": "order_leaves",
+        "line": 324
+      },
+      {
+        "name": "leaf_series",
+        "line": 327
+      },
+      {
+        "name": "inner_fn",
+        "line": 332
+      },
+      {
+        "name": "inner_load",
+        "line": 335
+      },
+      {
+        "name": "n_dist",
+        "line": 341
+      },
+      {
+        "name": "inner_center",
+        "line": 344
+      },
+      {
+        "name": "inner_bounds",
+        "line": 368
+      },
+      {
+        "name": "products",
+        "line": 385
+      },
+      {
+        "name": "band",
+        "line": 394
+      },
+      {
+        "name": "rebuild",
+        "line": 426
+      },
+      {
+        "name": "log",
+        "line": 440
+      }
+    ],
+    "callers": "merge_and_check.py imports certify_remaining as cr; write_freeze_manifest.py pins source; CLI runners call each frozen ID.",
+    "consumers": "primary.json/replay.json/replay_result.json/freeze_manifest.json and aggregate source contracts.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Static DEAD methods are false leads: Certifier dispatch calls model kernels/assemble/left/right and right_shared via self.m; preserve polymorphic consumers. No confirmed defect.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "1224d5679b861e73a9023269b60789bba730205d629ef0d4992319c89d0df23f",
+    "baseline_sha256": "1224d5679b861e73a9023269b60789bba730205d629ef0d4992319c89d0df23f",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Regenerates frozen spec and asserts SHA256-prefix kernel identity; C3 focal/empty cluster and C4 left/right targeting kept distinct.",
+      "Shared centered moment machinery uses signed outer loading with absolute loading for symmetric remainder; separate model products preserve geometry.",
+      "Strict three-class winners and exact null; non-null accepted only radius<=1e-12 and separation>=1e-10; positive tail padding and population=hit+miss intersection.",
+      "Reverse-inner mode permits independent traversal; deterministic max steps/deadline and retained stopped_by; no optimization/search of research hypotheses."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default runtime3300s, max7200s, 224bits/order14/axis80/maxsteps400; initial partition expensive; no rerun authorized.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py",
+    "lines": 519,
+    "purpose": "Eight P6/C3 categorical kernels with analytic singleton/empty-cluster collapse plus nested focal non-target primitives.",
+    "functions": [
+      {
+        "name": "Deadline",
+        "line": 38
+      },
+      {
+        "name": "A",
+        "line": 42
+      },
+      {
+        "name": "frozen",
+        "line": 49
+      },
+      {
+        "name": "cdf",
+        "line": 57
+      },
+      {
+        "name": "density",
+        "line": 61
+      },
+      {
+        "name": "hull",
+        "line": 65
+      },
+      {
+        "name": "symmetric",
+        "line": 69
+      },
+      {
+        "name": "abs_upper",
+        "line": 73
+      },
+      {
+        "name": "unit_interval",
+        "line": 77
+      },
+      {
+        "name": "intersect",
+        "line": 84
+      },
+      {
+        "name": "enclosure",
+        "line": 91
+      },
+      {
+        "name": "initial_intervals",
+        "line": 103
+      },
+      {
+        "name": "bisect",
+        "line": 109
+      },
+      {
+        "name": "mass",
+        "line": 114
+      },
+      {
+        "name": "moments",
+        "line": 118
+      },
+      {
+        "name": "load_specs",
+        "line": 130
+      },
+      {
+        "name": "member_outer",
+        "line": 151
+      },
+      {
+        "name": "base_outer",
+        "line": 156
+      },
+      {
+        "name": "population_kernel",
+        "line": 160
+      },
+      {
+        "name": "left_kernel",
+        "line": 164
+      },
+      {
+        "name": "analytic_hit_kernel",
+        "line": 169
+      },
+      {
+        "name": "nested_right_kernel",
+        "line": 181
+      },
+      {
+        "name": "series",
+        "line": 191
+      },
+      {
+        "name": "one_dimensional_band",
+        "line": 195
+      },
+      {
+        "name": "Band",
+        "line": 208
+      },
+      {
+        "name": "Certifier",
+        "line": 215
+      },
+      {
+        "name": "class_probs",
+        "line": 311
+      },
+      {
+        "name": "winner",
+        "line": 317
+      },
+      {
+        "name": "macro",
+        "line": 325
+      },
+      {
+        "name": "classify",
+        "line": 338
+      },
+      {
+        "name": "sha256",
+        "line": 370
+      },
+      {
+        "name": "run",
+        "line": 374
+      },
+      {
+        "name": "main",
+        "line": 497
+      },
+      {
+        "name": "__init__",
+        "line": 216
+      },
+      {
+        "name": "check",
+        "line": 236
+      },
+      {
+        "name": "inner_center",
+        "line": 240
+      },
+      {
+        "name": "inner_bounds",
+        "line": 267
+      },
+      {
+        "name": "band",
+        "line": 283
+      },
+      {
+        "name": "rebuild",
+        "line": 384
+      },
+      {
+        "name": "decisions",
+        "line": 392
+      }
+    ],
+    "callers": "CLI; p6_c3_freeze_manifest.json anchors implementation; upstream batch certificate provides specs.",
+    "consumers": "p6_c3_primary/replay/replay_result.json; aggregate frozen truth source registry.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Source reads dependency certificate instead of copying its specification; preserved schema/spec count validation is necessary.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "66d8777a6c02577d0ca9050a17f509982e1657c96d7070c39932857b99d7c428",
+    "baseline_sha256": "66d8777a6c02577d0ca9050a17f509982e1657c96d7070c39932857b99d7c428",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Loads exactly eight source kernel specs; validates 8 empty,16 linked-singleton,8 state-singleton composition and target presence.",
+      "Shared population factor powers, analytic hit kernels for empty/target focal cases; only four remaining non-target singleton joint-membership primitives nested.",
+      "Nested/1D Taylor Gaussian moments with explicit 66Q(16) tail; derives joint miss outward from population minus joint hit and intersects consistent identities.",
+      "Strict hit/miss/pop argmax; exact null else macro-F1 radius/separation; bounded refinements, time, max bands and reverse traversal."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default224bits/order14/axis80/maxbands512/maxseconds600, <=900; stored accepted primary/replay126.37s/108.18s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+    "lines": 353,
+    "purpose": "P6/C4 focal non-target linked kernel using bivariate Gaussian Taylor/centered-moment bounds.",
+    "functions": [
+      {
+        "name": "Deadline",
+        "line": 33
+      },
+      {
+        "name": "A",
+        "line": 37
+      },
+      {
+        "name": "frozen",
+        "line": 44
+      },
+      {
+        "name": "cdf",
+        "line": 49
+      },
+      {
+        "name": "density",
+        "line": 53
+      },
+      {
+        "name": "hull",
+        "line": 57
+      },
+      {
+        "name": "symmetric",
+        "line": 61
+      },
+      {
+        "name": "abs_upper",
+        "line": 65
+      },
+      {
+        "name": "enclosure",
+        "line": 69
+      },
+      {
+        "name": "initial_intervals",
+        "line": 79
+      },
+      {
+        "name": "bisect",
+        "line": 84
+      },
+      {
+        "name": "mass",
+        "line": 89
+      },
+      {
+        "name": "moments",
+        "line": 93
+      },
+      {
+        "name": "intersect",
+        "line": 104
+      },
+      {
+        "name": "Band",
+        "line": 112
+      },
+      {
+        "name": "Certifier",
+        "line": 119
+      },
+      {
+        "name": "checkpoint",
+        "line": 216
+      },
+      {
+        "name": "run",
+        "line": 227
+      },
+      {
+        "name": "main",
+        "line": 335
+      },
+      {
+        "name": "__init__",
+        "line": 120
+      },
+      {
+        "name": "check",
+        "line": 133
+      },
+      {
+        "name": "member",
+        "line": 137
+      },
+      {
+        "name": "right_kernels",
+        "line": 140
+      },
+      {
+        "name": "left_kernel",
+        "line": 145
+      },
+      {
+        "name": "series",
+        "line": 150
+      },
+      {
+        "name": "right_center",
+        "line": 153
+      },
+      {
+        "name": "right_bounds",
+        "line": 179
+      },
+      {
+        "name": "outer_products",
+        "line": 195
+      },
+      {
+        "name": "band",
+        "line": 199
+      },
+      {
+        "name": "rebuild",
+        "line": 234
+      }
+    ],
+    "callers": "CLI primary/replay; p6_c4_freeze_manifest.json anchors implementation.",
+    "consumers": "p6_c4_primary/replay.json and aggregate frozen source registry.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Dedicated canary remains frozen independent evidence even though later remaining certifier generalizes it.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "7e2a5313f62e331a4b4cf8b06d3a63c767331b02a275b8330c5f70e9185715a6",
+    "baseline_sha256": "7e2a5313f62e331a4b4cf8b06d3a63c767331b02a275b8330c5f70e9185715a6",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json"
+    ],
+    "source_contract": [
+      "Preserves sector counts(8 state,16 linked), rho=-1/2 represented by ax=-1/2,cy=sqrt(3/4); population/joint hit/miss.",
+      "Signed loading in derivative coefficients and absolute loading in symmetric remainder; nested right kernel multiplied by left PGF.",
+      "Two one-dimensional tail masses, probability clipping and population=hit+miss intersection; successive interval intersection.",
+      "Strict expected majority pattern before frozen macro-F1; final radius/zero-separation safeguards, bounded runtime and explicit outputs."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default224bits/order14/axis80/runtime285<=300; historical accepted primary/replay63.20s/71.29s.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py",
+    "lines": 233,
+    "purpose": "Historical isolated P7/C4 h24 categorical capability spike using explicit 2D interval rectangles.",
+    "functions": [
+      {
+        "name": "exact_arb",
+        "line": 32
+      },
+      {
+        "name": "float_input",
+        "line": 37
+      },
+      {
+        "name": "phi_cdf",
+        "line": 48
+      },
+      {
+        "name": "upper_tail",
+        "line": 52
+      },
+      {
+        "name": "dyadic",
+        "line": 56
+      },
+      {
+        "name": "interval_record",
+        "line": 61
+      },
+      {
+        "name": "sha256",
+        "line": 71
+      },
+      {
+        "name": "membership_probability",
+        "line": 75
+      },
+      {
+        "name": "integrands",
+        "line": 81
+      },
+      {
+        "name": "integrate_boxes",
+        "line": 98
+      },
+      {
+        "name": "certify",
+        "line": 125
+      },
+      {
+        "name": "main",
+        "line": 216
+      }
+    ],
+    "callers": "Historical standalone CLI; replay_p7c4_h24.py consumes local certificate; no current aggregate SOURCES reference.",
+    "consumers": "Historical certificate.json + replay.json; capability/provenance only, superseded as full categorical truth.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Historical primary proof omission: true_null label claimed without explicit miss proof. No incorrect current aggregate classification established. Preserve frozen source; a future reused standalone certifier must require all three strict winners. Unused sys import harmless.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "7ebed67e319a7687c6495e06a1017f44c48c87509305cc67b6e8a32267fc8296",
+    "baseline_sha256": "7ebed67e319a7687c6495e06a1017f44c48c87509305cc67b6e8a32267fc8296",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p7c4_arb_spike_20260920/certificate.json"
+    ],
+    "source_contract": [
+      "Reduces 73 threshold events to two rho=-1/2 factors with target counts A(16state,24linked),B(8state,24linked).",
+      "Reconstructs binary64 thresholds; analytic Gaussian rectangle masses and outward4Q(10) omitted mass; no RNG.",
+      "Reports strict population and hit class2 margins, then symbolic zero metric; does not explicitly bound miss branch.",
+      "Standalone primary is insufficient as complete hit/miss majority proof: exact rational derivation from primary retained intervals gives miss upper0.6480945 >20/31. Higher precision retained replay does support miss upper0.6029375 <20/31. Current aggregate uses full categorical base/remaining proofs instead."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical.",
+      "Exact Fraction interval derivation saved scripts-math-spike-miss-check.json; replay establishes omitted miss majority without quadrature."
+    ],
+    "cost": "Default128bits/128partitions=>16384 rectangles; no explicit wall cap; stored primary1.94s. Do not rerun frozen outputs.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py",
+    "lines": 120,
+    "purpose": "Independent 192-bit/256-axis reconstruction of the isolated P7/C4 interval-box spike.",
+    "functions": [
+      {
+        "name": "a",
+        "line": 24
+      },
+      {
+        "name": "threshold",
+        "line": 29
+      },
+      {
+        "name": "cdf",
+        "line": 34
+      },
+      {
+        "name": "qtail",
+        "line": 38
+      },
+      {
+        "name": "p",
+        "line": 42
+      },
+      {
+        "name": "bounds",
+        "line": 46
+      },
+      {
+        "name": "primary_contains",
+        "line": 52
+      },
+      {
+        "name": "main",
+        "line": 60
+      }
+    ],
+    "callers": "Standalone historical CLI reading certificate.json; replay result and source hashes retained.",
+    "consumers": "Historical replay.json supports spike conclusion; aggregate truth source registry uses complete categorical certificate chain instead.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "Same historical proof-transcript omission as primary; retained replay enclosure does establish missing branch offline by exact arithmetic. No current truth package correction warranted.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "3f932b562f4ffa2a5c7e8defca2aff7a210db432c30789176a1903ef39ea88a4",
+    "baseline_sha256": "3f932b562f4ffa2a5c7e8defca2aff7a210db432c30789176a1903ef39ea88a4",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p7c4_arb_spike_20260920/replay.json"
+    ],
+    "source_contract": [
+      "Reimplements density/threshold/factor formulas; 65536 Gaussian rectangles with4Q(10) nonnegative tail padding.",
+      "Requires replay population/hit margins positive and full replay intervals contained by frozen primary intervals.",
+      "Also omits explicit miss branch in its emitted majority check; separate Review11 exact rational derivation using replay intervals certifies miss upper0.6029375<20/31.",
+      "Binds source certificate SHA256 and implementation identity; no random data or live provider."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical.",
+      "Exact Fraction interval derivation saved scripts-math-spike-miss-check.json; replay establishes omitted miss majority without quadrature."
+    ],
+    "cost": "Hardcoded192bits/axis256/bound10; stored replay10.00s; no rerun.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  },
+  {
+    "path": "scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py",
+    "lines": 385,
+    "purpose": "P7/C4 persistence effect truth via rigorous Mehler-Hermite coupling, count masses, certified medians and population MAD.",
+    "functions": [
+      {
+        "name": "A",
+        "line": 46
+      },
+      {
+        "name": "binary64",
+        "line": 52
+      },
+      {
+        "name": "qtail",
+        "line": 62
+      },
+      {
+        "name": "_arb_wire",
+        "line": 66
+      },
+      {
+        "name": "_arb_unwire",
+        "line": 72
+      },
+      {
+        "name": "member_pairs",
+        "line": 77
+      },
+      {
+        "name": "_alpha_task",
+        "line": 85
+      },
+      {
+        "name": "compute_hermite_data",
+        "line": 138
+      },
+      {
+        "name": "terms",
+        "line": 171
+      },
+      {
+        "name": "count_masses",
+        "line": 192
+      },
+      {
+        "name": "base_cdf",
+        "line": 215
+      },
+      {
+        "name": "outcome_cdf",
+        "line": 223
+      },
+      {
+        "name": "bisect_root",
+        "line": 227
+      },
+      {
+        "name": "interval_from_bounds",
+        "line": 243
+      },
+      {
+        "name": "interval_record",
+        "line": 248
+      },
+      {
+        "name": "validate_masses",
+        "line": 259
+      },
+      {
+        "name": "sha256",
+        "line": 279
+      },
+      {
+        "name": "certify",
+        "line": 283
+      },
+      {
+        "name": "main",
+        "line": 362
+      },
+      {
+        "name": "p_of",
+        "line": 97
+      },
+      {
+        "name": "hermite",
+        "line": 100
+      },
+      {
+        "name": "integral",
+        "line": 108
+      },
+      {
+        "name": "norm_integrand",
+        "line": 129
+      },
+      {
+        "name": "central_mass",
+        "line": 305
+      },
+      {
+        "name": "integrand",
+        "line": 123
+      }
+    ],
+    "callers": "Explicit CLI; verify_p7c4_replay.py compares frozen primary/replay; freeze manifest pins source and checkpoints.",
+    "consumers": "primary_certificate.json/replay_certificate.json/replay_result.json; aggregate generate_truth_package.SOURCES P7_C4_PERSISTENCE_ARB_INTERVAL.",
+    "side_effects": "Import: arithmetic library/global constants only. Explicit CLI execution reads named frozen inputs, changes process Arb context, writes configured certificate/checkpoint outputs; no venue/provider/service/database/trading authority.",
+    "necessity": "Retained frozen mathematical research provenance and replay evidence. Repeated independent implementations and unsuccessful experiments cannot safely be removed merely for static deadness.",
+    "issue": "No confirmed defect. Heavy derivation and checkpoint storage preserve proof provenance, not redundant production storage. Frozen producer/checkpoint hashes must remain matched.",
+    "decision": "KEEP",
+    "fix_status": "NO_CHANGE_REQUIRED",
+    "sha256": "07d70a9be18faaf455cb681185cc295f5f8c939afb446f3b993d09eefee7c35b",
+    "baseline_sha256": "07d70a9be18faaf455cb681185cc295f5f8c939afb446f3b993d09eefee7c35b",
+    "hash_unchanged": true,
+    "stored_source_hash_references": [
+      "scripts/m32_p7c4_persistence_20260921/replay_certificate.json",
+      "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+      "scripts/m32_p7c4_persistence_20260921/primary_certificate.json"
+    ],
+    "source_contract": [
+      "Computes 54 sector exponent pairs of totals8,9,16,17 via independent worker Arb integrals; exact binary64 state/MAD inputs and Cramer Gaussian coefficient tail.",
+      "Mehler series rho=-1/2 with Parseval/Cauchy-Schwarz remainder; outward dyadic wire checkpoint persists completed pairs atomically keyed bits/order/bound.",
+      "Builds population and four target/non-target sector count distributions; clips probability intervals, requires total contains1 and mean contains24*P(member).",
+      "Outward monotone root brackets for medians and central MAD; checks frozen null MAD consistency; all four signed effects require radius<=1e-12 and exclusion of +/-1e-10.",
+      "Checkpoint reuse trusts config plus frozen enclosing manifest/implementation provenance. No database backup behavior despite persistence naming."
+    ],
+    "verified_by_test": [],
+    "verified_by_read_only_check": [
+      "Full source read; AST parses successfully; baseline/current SHA256 identical."
+    ],
+    "cost": "Default224bits/order48/bound16/workers1; process pool over54 coefficient families, each49 Hermite+norm integrals finite eval4m/depth60. Retained primary37.08s/replay205.63s; no campaign executed.",
+    "verification_boundary": "No certifier main, quadrature, stochastic world, held-out evaluation or numerical research campaign executed. Stored certificates are historical evidence, not fresh test results."
+  }
+]

@@ -1,0 +1,581 @@
+{
+  "source_root": "/mnt/luffy-data/luffy/production",
+  "scope": "Read-only exact artifact bytes; no databases or runtime data accessed",
+  "rows": [
+    {
+      "source": "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+      "key": "/artifacts/0/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+      "expected": "3a05670915b8e3431d4ea3855b9726644099a79121f690c2d2199602c28f2515",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+      "key": "/artifacts/1/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+      "expected": "d2093bc8f83ed648247afeabcf397ab385ca8c7e7c4f6ed4179a97e61c33a67c",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+      "key": "/artifacts/2/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+      "expected": "588d55d8ca3fb78528d398102c5e8448d0c3648e24a9d2fcdaec9bfdb09f5e99",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_192a266e63028fd9405f.log",
+      "target": "logs/primary_192a266e63028fd9405f.log",
+      "expected": "6c91f069d05a43911b551d1341ea07c02f32e1a4f01a187d5a90396b8204662d",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_192a266e63028fd9405f.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_1c44894573b030f89efe.log",
+      "target": "logs/primary_1c44894573b030f89efe.log",
+      "expected": "31d57b2f1338e01048597310aa68a88f245f20414065ae2ee4acc1e8d1cb18d8",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_1c44894573b030f89efe.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_362941837322c8d33797.log",
+      "target": "logs/primary_362941837322c8d33797.log",
+      "expected": "9994e0af1a6c17c1ab3a0a2aa2bc60d1fb4d04e878de0e4ab1ad1e72b0a59053",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_362941837322c8d33797.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_444db08366c304e754fc.log",
+      "target": "logs/primary_444db08366c304e754fc.log",
+      "expected": "9a0cdf1af17c0d6a59efd29f95d2a31444b2661ae98c61efafc0602f50339663",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_444db08366c304e754fc.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_5b0820e2459afe050862.log",
+      "target": "logs/primary_5b0820e2459afe050862.log",
+      "expected": "57954003ae1b399e5307139a9723d1551e4f6f6e4c0ed6c9eb9957786d531f5d",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_5b0820e2459afe050862.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_63a8f6ab39aa1458349a.log",
+      "target": "logs/primary_63a8f6ab39aa1458349a.log",
+      "expected": "80bcdffbc4b875a74c7398ccbf4fa623f017fa89265e0291de48743f91ec4950",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_63a8f6ab39aa1458349a.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_7d91c0980805e807c160.log",
+      "target": "logs/primary_7d91c0980805e807c160.log",
+      "expected": "2243eee8b04e9800253f5fe2b1f0eb8b59942b800827f149f394e61e9e0f38df",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_7d91c0980805e807c160.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_82fa6cbd43d44f3d5ad8.log",
+      "target": "logs/primary_82fa6cbd43d44f3d5ad8.log",
+      "expected": "80a067cf473e0773031947eeac9d63642fcd001df77d087796ccdf83b477581d",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_82fa6cbd43d44f3d5ad8.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/primary_f94178b70f5311220985.log",
+      "target": "logs/primary_f94178b70f5311220985.log",
+      "expected": "036a2eae4548a586983bbf8a41ec4c0524d79c0c8359236939c8af17a0ce5ed0",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/primary_f94178b70f5311220985.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_192a266e63028fd9405f.log",
+      "target": "logs/replay_192a266e63028fd9405f.log",
+      "expected": "e1033fa2e8b970ef9a1dd2b9ef02834a2dc9a5fa0a3f81494b553efa974428e1",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_192a266e63028fd9405f.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_1c44894573b030f89efe.log",
+      "target": "logs/replay_1c44894573b030f89efe.log",
+      "expected": "ad6babc232a60a0e517c6c59dfda52d6128bb1768594c3ca7dc79051041aa7b0",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_1c44894573b030f89efe.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_362941837322c8d33797.log",
+      "target": "logs/replay_362941837322c8d33797.log",
+      "expected": "8da44a53837b40d155dea717c60e7643cbb8e45af5849cdfad59732074d44564",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_362941837322c8d33797.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_444db08366c304e754fc.log",
+      "target": "logs/replay_444db08366c304e754fc.log",
+      "expected": "c6dbc3a5736d2093d7f9968b67f99825b00c11d654c6939e638aaf634b895724",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_444db08366c304e754fc.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_5b0820e2459afe050862.log",
+      "target": "logs/replay_5b0820e2459afe050862.log",
+      "expected": "d2296f4fbe0921d5d424c79089a0d947b36801c9299a9a4f8d99689e784f6486",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_5b0820e2459afe050862.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_63a8f6ab39aa1458349a.log",
+      "target": "logs/replay_63a8f6ab39aa1458349a.log",
+      "expected": "be5641aedd4eefd0d8c1918f14c9f5659cf3373933724343457cef79f0b4e032",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_63a8f6ab39aa1458349a.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_7d91c0980805e807c160.log",
+      "target": "logs/replay_7d91c0980805e807c160.log",
+      "expected": "1ad7e2cc4b44283958e48a3fa9aac2bfced52aaf93ff98ad220ca69f17537aba",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_7d91c0980805e807c160.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_82fa6cbd43d44f3d5ad8.log",
+      "target": "logs/replay_82fa6cbd43d44f3d5ad8.log",
+      "expected": "d96ebdd0d9141896594de290482908b1689cb658701e50ff03cc6509d61a7f3b",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_82fa6cbd43d44f3d5ad8.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/logs/replay_f94178b70f5311220985.log",
+      "target": "logs/replay_f94178b70f5311220985.log",
+      "expected": "6fd7d93fd9673acc16eae1032c74ca44d02e865f11adab85aa460bb9b7dd8387",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/logs/replay_f94178b70f5311220985.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/validation/canary_0493407cf230203cfe7b.log",
+      "target": "validation/canary_0493407cf230203cfe7b.log",
+      "expected": "3c94ccd3fe4a7f1e2824860ff11585004944b5eb7917839902793b3929d1e422",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_0493407cf230203cfe7b.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+      "key": "/artifact_sha256/validation/canary_3b715db927f6e887cfda.log",
+      "target": "validation/canary_3b715db927f6e887cfda.log",
+      "expected": "ffd50114f306713db62608133ea8a926550df1d7a698180b018a51162bf90967",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_3b715db927f6e887cfda.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+      "key": "/sha256/source_p6_c3_certificate.json",
+      "target": "source_p6_c3_certificate.json",
+      "expected": "00e2f10ef2fea33eac1d93f6019fe795c5ccf9c0979aefc2babfdc5af863761d",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_categorical_arb_batch_20260920/certificate.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+      "key": "/sha256/frozen_estimand_spec.json",
+      "target": "frozen_estimand_spec.json",
+      "expected": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_categorical_equivalence_20260920/estimand_spec.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/N1_C0.receipts.jsonl",
+      "target": "N1_C0.receipts.jsonl",
+      "expected": "2053e92b0c9a2c2f33cc02126b8d5137d2684bf6fb234e29c5a820c313c04f01",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/N3_C4.receipts.jsonl",
+      "target": "N3_C4.receipts.jsonl",
+      "expected": "61354c9ac357c99e93c8befb135a1dbef3ec044b3e45a5f1f016b365f7a2b435",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P1_C0.receipts.jsonl",
+      "target": "P1_C0.receipts.jsonl",
+      "expected": "c88b7f9e5355ca6db316e2c360e268ace5a7524f34e24ba83cae5d96881704a0",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P4_C3.receipts.jsonl",
+      "target": "P4_C3.receipts.jsonl",
+      "expected": "dd1c52d1817bf84ed6b45ca666d9c803371221bec2efc2c05ffd944975f90631",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P7_C1.receipts.jsonl",
+      "target": "P7_C1.receipts.jsonl",
+      "expected": "2abd865e5111785f341744cf40fe9dc977203f98f0f0c9d8740c42a25259fabd",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/run_result.json",
+      "target": "run_result.json",
+      "expected": "f930ad5912d529dca612a504c14a3eb9cee93049ed038f458e1c368d75109ccd",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_pilot_20260922/PILOT_PRESPEC.json",
+      "key": "/bundle/sha256",
+      "target": "scripts/m32_scheme_d_validation_bundle_v3_20260921",
+      "expected": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_pilot_v4_20260923/PILOT_PRESPEC.json",
+      "key": "/bundle/sha256",
+      "target": "scripts/m32_scheme_d_validation_bundle_v4_20260922",
+      "expected": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_pre_rng_truth_20260921/package/proof_certificate.json",
+      "key": "/implementation_sha256/generate_truth_package.py",
+      "target": "generate_truth_package.py",
+      "expected": "73d7ba854cc6a82aff226a24215da1c80076be5b67a44a1f48710f096f887602",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_pre_rng_truth_20260921/package/proof_certificate.json",
+      "key": "/implementation_sha256/verify_truth_package.py",
+      "target": "verify_truth_package.py",
+      "expected": "9b06105d1c5b1b7fe797a9d010b4e27c05831f4b4c5f411b1867b5950bd21dbb",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/N1_C0.receipts.jsonl",
+      "target": "N1_C0.receipts.jsonl",
+      "expected": "2053e92b0c9a2c2f33cc02126b8d5137d2684bf6fb234e29c5a820c313c04f01",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/N3_C4.receipts.jsonl",
+      "target": "N3_C4.receipts.jsonl",
+      "expected": "61354c9ac357c99e93c8befb135a1dbef3ec044b3e45a5f1f016b365f7a2b435",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P1_C0.receipts.jsonl",
+      "target": "P1_C0.receipts.jsonl",
+      "expected": "c88b7f9e5355ca6db316e2c360e268ace5a7524f34e24ba83cae5d96881704a0",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P4_C3.receipts.jsonl",
+      "target": "P4_C3.receipts.jsonl",
+      "expected": "dd1c52d1817bf84ed6b45ca666d9c803371221bec2efc2c05ffd944975f90631",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/P7_C1.receipts.jsonl",
+      "target": "P7_C1.receipts.jsonl",
+      "expected": "2abd865e5111785f341744cf40fe9dc977203f98f0f0c9d8740c42a25259fabd",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+      "key": "/checks/canary_fixture/detail/files_sha256/run_result.json",
+      "target": "run_result.json",
+      "expected": "5cceb5670a6cda13e05b7db06a66b36b483d331db51defc67dfa2841ff92589e",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "TRANSIENT_OR_NOT_LOCATED"
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/0/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/attempt_marker.json",
+      "expected": "2624db25b83863b35f3e6cca0f0af8ee940e3a536b659b6e710fc2bf4cc062df",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/attempt_marker.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/1/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/run_start_receipt.json",
+      "expected": "a881e3ec02ec5265655ab72accadf993d2a436d0bc1605ae6d92d406aceebd20",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/run_start_receipt.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/2/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/worlds.jsonl",
+      "expected": "5d2d175364834637262c406303a08833ec8111ac9b33f404c8b484bec6d57675",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/worlds.jsonl",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/3/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/progress.log",
+      "expected": "43344f3acefbc0e1ee3cf3303d4e6f1c1d521823ded693f54f6d175504cc6d92",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/progress.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/4/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/results.json",
+      "expected": "2009ffe35d5b8e5b114cf39be222468bdfbdbb22b47246aff71ad8d7a16c97f4",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/results.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/artifacts/5/sha256",
+      "target": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/SHA256SUMS",
+      "expected": "423b455dda5a7bae62344429f2b105c76f1a9d290c49d19698c99a5cd1b33c3e",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/SHA256SUMS",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/immutable_original_reference_outputs/artifacts/0/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+      "expected": "3a05670915b8e3431d4ea3855b9726644099a79121f690c2d2199602c28f2515",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/immutable_original_reference_outputs/artifacts/1/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+      "expected": "d2093bc8f83ed648247afeabcf397ab385ca8c7e7c4f6ed4179a97e61c33a67c",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+      "key": "/immutable_original_reference_outputs/artifacts/2/sha256",
+      "target": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+      "expected": "588d55d8ca3fb78528d398102c5e8448d0c3648e24a9d2fcdaec9bfdb09f5e99",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "EXTERNAL_EVIDENCE_READ_ONLY",
+      "resolved_path": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+      "matches": true
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/checks.py",
+      "target": "checks.py",
+      "expected": "c9e3f374fcadd0de07a819945c0c2a5373b270fdff58d5ea7ae490b04c2f7204",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/checks.py"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/code_manifest.sha256",
+      "target": "code_manifest.sha256",
+      "expected": "69a0a12fb69134ff83a98003585051b7f695c9d0ae2366d0e29d5cba6715742a",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/code_manifest.sha256"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/make_prespec.py",
+      "target": "make_prespec.py",
+      "expected": "1615974f8da8fe8c0ee92e91bace11c53224c50c1619fd574aaf6dcca8133109",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/make_prespec.py"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/prespec.json",
+      "target": "prespec.json",
+      "expected": "9baeddbd402b91986d10fe4c7d976d682e0e9400df03a69358f27971291c11bb",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/prespec.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/prespec_v1_discarded.sha256",
+      "target": "prespec_v1_discarded.sha256",
+      "expected": "7fdceb619762aaf7f57d8a0b6772e324c39fe5d14fafb02379cc6880e95eda6f",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/prespec_v1_discarded.sha256"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/prespec_v2_discarded.sha256",
+      "target": "prespec_v2_discarded.sha256",
+      "expected": "cab28bc91bf1197121a00b85ad7ae2f099abe3c35a2402b56347ad981681e3c9",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/prespec_v2_discarded.sha256"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/reference_outputs_manifest.json",
+      "target": "reference_outputs_manifest.json",
+      "expected": "12311ab247853d08fc51a57a87613b213a2fc2bf43a04054adbaeae6bb5653ad",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json"
+      ]
+    },
+    {
+      "source": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+      "key": "/frozen_base/harness_files/sim.py",
+      "target": "sim.py",
+      "expected": "600e85bcc0e63652ac97ec665f11b53a6b1c38f214db4ddd83f99d8b5a927aad",
+      "status": "EXTERNAL_OR_MISSING",
+      "resolution": "OWNED_DIGEST_ALIAS",
+      "matching_paths": [
+        "scripts/m32_conditioning_comparison_20260919/sim.py"
+      ]
+    }
+  ],
+  "counts": {
+    "EXTERNAL_EVIDENCE_READ_ONLY": 32,
+    "OWNED_DIGEST_ALIAS": 14,
+    "TRANSIENT_OR_NOT_LOCATED": 12
+  }
+}

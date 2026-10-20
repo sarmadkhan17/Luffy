@@ -1,0 +1,309 @@
+--- scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py	2026-10-20 06:18:47.972756071 +0300
++++ scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py	2026-10-20 06:18:47.973876470 +0300
+@@ -1,5 +1,10 @@
+ #!/usr/bin/env python3
+-"""RNG-free deterministic preflight/check suite (protocol section 14 item 6).
++"""RNG-free deterministic preflight/check suite (protocol section 14 item 6), bundle revision 3.
++
++Revision 3 adds the fail-closed gate for the exact-equivalent optimized statistic: hash binding of the reference
++and optimized implementations and of the equivalence suite/results, the recorded equivalence receipt, a live
++RNG-free bit-identity check (arithmetic-pattern fixtures against the production ``_metric``), fast-vs-reference
++receipt identity, gate tamper tests, and the phase-90 benchmark core through a fixed-pattern stub.
+ 
+ Every check is a fixed-input computation.  numpy/stdlib random generator
+ constructors are patched to raise for the whole run; the report records the
+@@ -128,6 +133,17 @@
+ 
+ # ------------------------------------------------------------------------- checks
+ @check
++def fast_metric_hash_binding():
++    cfg = load("config.json")["fast_metric"]
++    gate = R.equivalence_gate_static()                          # raises on any hash / receipt / loaded-source drift
++    assert cfg["reference"]["sha256"] == V.FROZEN_HASHES["trader/cognition/m32_search.py"]
++    R.open_statistic_gate(gate)
++    return {"module_sha256": cfg["module"]["sha256"], "reference_sha256": cfg["reference"]["sha256"],
++            "suite_sha256": cfg["suite"]["sha256"], "equivalence_report_sha256": cfg["equivalence_report"]["sha256"],
++            "benchmark_result_sha256": cfg["benchmark_result"]["sha256"], "commit": cfg["commit"]}
++
++
++@check
+ def frozen_environment_and_sources():
+     env = R.assert_environment()
+     return {"python": env["python"], "numpy": env["numpy"], "openblas_threads": env["openblas_threads"],
+@@ -513,7 +529,7 @@
+                 imports |= {a.name.split(".")[0] for a in node.names}
+             elif isinstance(node, ast.ImportFrom) and node.module:
+                 imports.add(node.module.split(".")[0])
+-    allowed = {"argparse", "hashlib", "json", "os", "sys", "time", "collections", "fractions", "pathlib", "math",
++    allowed = {"argparse", "hashlib", "inspect", "json", "os", "sys", "time", "collections", "fractions", "pathlib", "math",
+                "numpy", "trader", "acceptance", "preflight", "__future__"}
+     assert imports <= allowed, imports - allowed
+     assert "sqlite3" not in imports and "socket" not in imports and "requests" not in imports
+@@ -697,6 +713,267 @@
+     return {"denominator_after_exclusion": 1000, "refused_marginal_worlds_ignored": True}
+ 
+ 
++# ------------------------------------------------------------------------- revision 3: optimized statistic gate
++@check
++def equivalence_receipt_recorded():
++    cfg = load("config.json")["fast_metric"]
++    rec = load("equivalence_receipt.json")
++    report = json.loads((ROOT / cfg["equivalence_report"]["path"]).read_text())
++    assert rec["comparisons"] == report["comparisons"] == cfg["equivalence"]["comparisons"] == 7_592_064
++    assert rec["mismatches"] == report["mismatches"] == 0 and report["mismatch_details"] == []
++    assert (rec["statistic_vectors"], rec["fixtures"]) == (22_314, 4_529) == (report["statistic_vectors"], report["fixtures"])
++    assert rec["protocol_master_seed_used"] is False and report["protocol_master_seed_used"] is False and report["quick"] is False
++    assert report["test_seed"] == 314159265 != V.MASTER_SEED
++    assert set(report["sections"]) == {"compensated_sum_vs_builtin_sum", "reference_row_builder_vs_harness_arranged_rows",
++                                       "exhaustive_tiny_geometry_fixtures", "adversarial_hand_built_fixtures",
++                                       "fallback_domain_fixtures", "randomized_fixed_seed_fixtures", "full_geometry_fixtures"}
++    assert all(report["coverage_counters"].get(k, 0) > 0 for k in ("hit_ties", "nonhit_ties", "overall_ties", "zero_lift",
++                                                                     "persistence_even", "fallback_vectors"))
++    proj = load("compute_projection.json")
++    assert proj["benchmark_result_sha256"] == cfg["benchmark_result"]["sha256"]
++    assert proj["projection"]["fast_cpu_hours"] < proj["projection"]["reference_cpu_hours"] / 1000
++    return {"comparisons": rec["comparisons"], "mismatches": 0, "fast_cpu_hours": proj["projection"]["fast_cpu_hours"]}
++
++
++def _pattern_world(masked: bool):
++    rows = np.arange(R.ROWS)
++    cat = ((rows * 7 + rows // 80 + (rows // 5) % 2) % 3).astype(np.int64)
++    per = np.sin(rows * 0.37) * ((rows % 11) + 1) + ((rows * 13) % 17) / 10.0
++    per[::29] = np.round(per[::29])                                          # exact ties in value
++    mem = ((rows[:, None] * 13 + np.arange(384)[None, :] * 7 + (rows[:, None] // 80) * 5) % 4 == 0)
++    obs = ((rows % 7) != 3) if masked else np.ones(R.ROWS, dtype=bool)
++    strata = tuple((1 + b % 4, int((b // 3) % 2), 0) for b in range(48))
++    return V.SyntheticWorld(0, 1, 0, mem, cat, per, obs, strata, V.valid_metadata(strata))
++
++
++@check
++def fast_metric_live_equivalence_deterministic():
++    """RNG-free bit-identity of FastMetric against the production _metric on arithmetic-pattern fixtures."""
++    from trader.cognition.m32_fast_metric import FastMetric as FM, compensated_sum_columns, reference_rows, reference_statistics
++    import itertools
++    comparisons = 0
++    i = np.arange(60_000, dtype=np.float64)
++    cols = [np.mod(i * 0.6180339887498949, 1.0), np.mod(i * 0.7548776662466927, 1.0), np.mod(i * 0.5698402909980532, 1.0)]
++    cols[2][::7] = 0.0
++    for take in (3, 2, 1):
++        got = compensated_sum_columns(cols[:take])
++        want = np.asarray([sum(float(c[k]) for c in cols[:take]) for k in range(len(i))])
++        assert np.array_equal(got.view(np.uint64), want.view(np.uint64))
++        comparisons += len(i)
++    special = [np.array([1e16, 0.1, 5e-324]), np.array([1.0, 1e-17, 0.1]), np.array([-1e16, 0.2, 0.0]), np.array([1.0, 1.0, 1e-16])]
++    got = compensated_sum_columns(special)
++    want = np.asarray([sum(float(c[k]) for c in special) for k in range(3)])
++    assert np.array_equal(got.view(np.uint64), want.view(np.uint64)); comparisons += 3
++
++    def compare(fm, bm):
++        signed, ok = fm.statistics(bm)
++        ref = reference_statistics(fm.memberships, fm.categorical, fm.persistence, fm.observed, fm.labels, bm, fm.B, fm.RPB)
++        for h, r in enumerate(ref):
++            if r is None:
++                assert not ok[h], h
++            else:
++                assert ok[h] and np.float64(r).view(np.uint64) == signed[h].view(np.uint64), (h, r, signed[h])
++        return len(ref)
++
++    B, RPB = 3, 2
++    subsets = np.asarray(list(itertools.product([False, True], repeat=B * RPB)), dtype=bool)
++    mem = np.repeat(subsets, 3, axis=0).T
++    labels = ("case_kind", "persistence", "continuation") * len(subsets)
++    xs = (np.asarray([0.5, -1.0, 0.5, 2.0, -1.0, 0.5]), np.arange(1.0, 7.0))
++    os_ = (np.ones(6, bool), np.asarray([1, 0, 1, 1, 0, 1], bool))
++    perms = [np.asarray(p) for p in itertools.permutations(range(B))]
++    fixtures = 0
++    for y in list(itertools.product(range(3), repeat=6))[::40]:
++        for o in os_:
++            fm = FM(mem, np.asarray(y), xs[sum(y) % 2], o, labels, blocks=B, rows_per_block=RPB, chunk=(1, 2, 3, 64)[sum(y) % 4])
++            fixtures += 1
++            comparisons += sum(compare(fm, p) for p in perms)
++    B, RPB = 4, 3
++    n = B * RPB
++    subsets = np.asarray(list(itertools.product([False, True], repeat=n)), dtype=bool)[::53]
++    mem = np.repeat(subsets, 3, axis=0).T
++    labels = ("case_kind", "persistence", "continuation") * len(subsets)
++    ones = np.ones(n, bool)
++    cases = ((np.asarray([2, 1, 0, 0, 1, 2, 1, 0, 2, 2, 0, 1]), ones, np.arange(n, dtype=float)),
++             (np.full(n, 1), ones, np.arange(n, dtype=float)),
++             (np.asarray([0, 1, 2, 2, 1, 0, 1, 1, 2, 0, 0, 1]), np.asarray([1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0], bool), np.arange(n, dtype=float)[::-1]),
++             (np.asarray([0, 1, 2] * 4), ones, np.full(n, 3.25)),
++             (np.asarray([0, 0, 1, 1, 2, 2] * 2), ones, np.asarray([1, 1, 2, 2, 3, 3, 1, 2, 3, 1, 2, 3], dtype=float)),
++             (np.asarray([0, 1, 2] * 4), ones, np.asarray([np.nan, 1.0, np.inf, 2.0, -np.inf, 3.0, np.nan, 4.0, 5.0, 6.0, np.inf, 7.0])),
++             (np.asarray([0, 10, 2] * 4), ones, np.arange(n, dtype=float)),
++             (np.asarray([0, 1, 2] * 4), ones, np.asarray([0.0, -0.0, 1.0, 0.0, -0.0, 2.0, -0.0, 0.0, 3.0, 0.0, 1.0, -0.0])))
++    perms4 = [np.asarray(p) for p in itertools.permutations(range(B))]
++    for y, o, x in cases:
++        for chunk in (1, 5, 64):
++            fm = FM(mem, y, x, o, labels, blocks=B, rows_per_block=RPB, chunk=chunk)
++            fixtures += 1
++            comparisons += sum(compare(fm, p) for p in perms4)
++    # full geometry: builder identity with the harness, then all 384 hypotheses, identity and one permuted map
++    for masked in (False, True):
++        world = _pattern_world(masked)
++        groups = R.strata_all(world.block_strata)
++        bm = R.draw_block_map(DeterministicStub(), groups)
++        rows_h, lookup_h = V._arranged_rows(world, bm)
++        rows_r, lookup_r = reference_rows(world.categorical, world.persistence, world.observed, bm, 48, 80)
++        assert rows_h == rows_r and lookup_h == lookup_r
++        fm = FM.from_world(world)
++        fixtures += 1
++        for m in (None, bm):
++            signed, ok = fm.statistics(m)
++            ref = R.actual_statistics(world, m, range(384))
++            assert ok.all() and np.array_equal(signed.view(np.uint64), ref.view(np.uint64))
++            comparisons += 384
++    return {"comparisons": comparisons, "fixtures": fixtures, "rng_free": True, "bit_identical": True}
++
++
++@check
++def runner_fast_equals_reference_receipts():
++    only = {0, 130, 260, 330}
++    truth = [{"classification": "true_null", "sign": None}] * 384
++    for world in (fixture_world(only=only), _sparse_pattern_world(only)):
++        groups = R.strata_all(world.block_strata)
++        maps = [R.draw_block_map(DeterministicStub(), groups),                        # roll within strata
++                R.draw_block_map(DeterministicStub("identity"), groups),                # identity is a legal draw
++                np.asarray([3 - (b % 4) + (b // 4) * 4 for b in range(48)])]            # reversal within groups of four blocks
++        fast = R.world_receipt(world, None, 90, "X", {}, draws=3, truth=truth, injected=(), statistic="fast", block_maps=maps)
++        ref = R.world_receipt(world, None, 90, "X", {}, draws=3, truth=truth, injected=(), statistic="reference", block_maps=maps)
++        strip = lambda r: {k: v for k, v in r.items() if k not in ("statistic_path", "sha256")}
++        assert fast["statistic_path"] == "fast" and ref["statistic_path"] == "reference"
++        assert strip(fast) == strip(ref)
++        drawn_fast = R.world_receipt(world, DeterministicStub(), 90, "X", {}, draws=2, truth=truth, injected=(), statistic="fast")
++        drawn_ref = R.world_receipt(world, DeterministicStub(), 90, "X", {}, draws=2, truth=truth, injected=(), statistic="reference")
++        assert strip(drawn_fast) == strip(drawn_ref)
++    try:
++        R.world_receipt(fixture_world(only=only), None, 90, "X", {}, draws=3, truth=truth, injected=(), block_maps=[np.arange(48)])
++        raise AssertionError("block map count mismatch accepted")
++    except R.IntegrityError as exc:
++        assert str(exc) == "block_map_count_mismatch"
++    try:
++        R.world_receipt(fixture_world(only=only), None, 90, "X", {}, draws=1, truth=truth, injected=(), statistic="mystery",
++                        block_maps=[np.arange(48)])
++        raise AssertionError("unknown statistic path accepted")
++    except R.IntegrityError as exc:
++        assert str(exc) == "unknown_statistic_path"
++    return {"worlds": 2, "receipts_identical": True, "default_path": "fast"}
++
++
++def _sparse_pattern_world(only):
++    world = _pattern_world(True)
++    keep = np.zeros(384, dtype=bool)
++    keep[sorted(only)] = True
++    return V.SyntheticWorld(0, 1, 0, world.memberships & keep[None, :], world.categorical, world.persistence, world.observed,
++                            world.block_strata, world.metadata)
++
++
++@check
++def equivalence_gate_fails_closed():
++    import copy
++    import shutil
++    cfg_full = load("config.json")
++    cfg = cfg_full["fast_metric"]
++    with tempfile.TemporaryDirectory() as td:
++        root = Path(td)
++        for key in ("module", "suite", "benchmark_script", "equivalence_report", "benchmark_result", "artifact_hashes",
++                    "reference", "equivalence_test"):
++            dest = root / cfg[key]["path"]
++            dest.parent.mkdir(parents=True, exist_ok=True)
++            shutil.copy(ROOT / cfg[key]["path"], dest)
++        receipt = BUNDLE / "artifacts/equivalence_receipt.json"
++        assert R.equivalence_gate_static(root, cfg_full, receipt)["mismatches"] == 0        # untouched copies pass
++        outcomes = {}
++
++        def expect_fail(name, mutate_file=None, mutate_cfg=None, rehash=None, receipt_path=receipt):
++            c = copy.deepcopy(cfg_full)
++            saved = {}
++            try:
++                if mutate_file:
++                    path = root / cfg[mutate_file[0]]["path"]
++                    saved[path] = path.read_bytes()
++                    path.write_bytes(mutate_file[1](path.read_bytes()))
++                    if rehash:                       # keep every hash consistent so only the content check can reject
++                        new = hashlib.sha256(path.read_bytes()).hexdigest()
++                        c["fast_metric"][rehash]["sha256"] = new
++                        reg_path = root / cfg["artifact_hashes"]["path"]
++                        if reg_path != path:
++                            saved[reg_path] = reg_path.read_bytes()
++                            reg = json.loads(reg_path.read_text())
++                            reg["sha256"][cfg[rehash]["path"]] = new
++                            reg_path.write_text(json.dumps(reg, indent=1, sort_keys=True) + "\n")
++                            c["fast_metric"]["artifact_hashes"]["sha256"] = hashlib.sha256(reg_path.read_bytes()).hexdigest()
++                if mutate_cfg:
++                    mutate_cfg(c["fast_metric"])
++                try:
++                    R.equivalence_gate_static(root, c, receipt_path)
++                    outcomes[name] = "NOT REJECTED"
++                except R.IntegrityError as exc:
++                    outcomes[name] = str(exc)
++            finally:
++                for path, data in saved.items():
++                    path.write_bytes(data)
++
++        def edit_json(fn):
++            def go(raw):
++                d = json.loads(raw); fn(d); return (json.dumps(d, sort_keys=True, indent=1) + "\n").encode()
++            return go
++        expect_fail("module_byte_drift", ("module", lambda b: b + b" "))
++        expect_fail("suite_byte_drift", ("suite", lambda b: b + b" "))
++        expect_fail("reference_byte_drift", ("reference", lambda b: b + b" "))
++        expect_fail("benchmark_result_drift", ("benchmark_result", lambda b: b + b" "))
++        expect_fail("report_mismatch_count", ("equivalence_report", edit_json(lambda d: d.__setitem__("mismatches", 1))), rehash="equivalence_report")
++        expect_fail("report_quick_run", ("equivalence_report", edit_json(lambda d: d.__setitem__("quick", True))), rehash="equivalence_report")
++        expect_fail("report_master_seed_used", ("equivalence_report", edit_json(lambda d: d.__setitem__("protocol_master_seed_used", True))),
++                    rehash="equivalence_report")
++        expect_fail("report_fewer_comparisons", ("equivalence_report", edit_json(lambda d: d.__setitem__("comparisons", d["comparisons"] - 1))),
++                    rehash="equivalence_report")
++        expect_fail("registry_disagrees", ("artifact_hashes", edit_json(lambda d: d["sha256"].__setitem__(cfg["module"]["path"], "0" * 64))),
++                    rehash="artifact_hashes")
++        expect_fail("config_expects_fewer", mutate_cfg=lambda c: c["equivalence"].__setitem__("mismatches", 1))
++        bad_receipt = root / "receipt.json"
++        d = json.loads(receipt.read_text()); d["mismatches"] = 3; bad_receipt.write_text(json.dumps(d))
++        expect_fail("receipt_mismatches", receipt_path=bad_receipt)
++        d = json.loads(receipt.read_text()); d["fast_metric_sha256"] = "0" * 64; bad_receipt.write_text(json.dumps(d))
++        expect_fail("receipt_module_hash", receipt_path=bad_receipt)
++        assert all(v != "NOT REJECTED" for v in outcomes.values()), outcomes
++        # a closed gate refuses the optimized path; the state is restored either way
++        was = R._GATE["open"]
++        try:
++            R._GATE["open"] = False
++            try:
++                R.world_receipt(fixture_world(only={0}), None, 90, "X", {}, draws=1, truth=[{"classification": "true_null", "sign": None}] * 384,
++                                injected=(), block_maps=[np.arange(48)])
++                raise AssertionError("closed gate accepted")
++            except R.IntegrityError as exc:
++                assert str(exc) == "fast_metric_gate_closed"
++            try:
++                R.open_statistic_gate({"mismatches": 5})
++                raise AssertionError("gate opened without verified equivalence")
++            except R.IntegrityError:
++                pass
++        finally:
++            R._GATE["open"] = was
++    return {"tamper_cases_rejected": len(outcomes), "reasons": sorted(set(outcomes.values()))}
++
++
++@check
++def benchmark_core_with_stub():
++    only = {0, 130, 260, 330}
++    world = _sparse_pattern_world(only)
++    clock = iter(np.arange(1, 200, 0.5)).__next__                              # deterministic fake clock (no wall time)
++    out = R.benchmark_world(world, DeterministicStub(), reference_draws=2, fast_draws=3, clock=clock)
++    assert out["workload"]["tested_hypotheses"] == 4 and out["equivalence"]["bitwise_identical"] is True
++    assert out["equivalence"]["hypotheses_compared"] == 4 * 3
++    assert out["projection"]["cpu_hours"] > 0 and set(out["projection"]["wall_hours"]) == {"4", "64", "256"}
++    assert out["fast"]["speedup_vs_reference"] > 0
++    empty = V.SyntheticWorld(0, 1, 0, np.zeros_like(world.memberships), world.categorical, world.persistence, world.observed,
++                             world.block_strata, world.metadata)
++    try:
++        R.benchmark_world(empty, DeterministicStub(), reference_draws=1, fast_draws=1)
++        raise AssertionError("benchmark on a world with no tested hypotheses")
++    except R.IntegrityError as exc:
++        assert str(exc) == "benchmark_world_has_no_tested_hypotheses"
++    return {"identity_checked_hypotheses": out["equivalence"]["hypotheses_compared"], "projection_keys": sorted(out["projection"])}
++
++
+ @check
+ def frozen_truth_package_consumed_unchanged():
+     freeze = json.loads((ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json").read_text())

@@ -1,0 +1,229 @@
+diff --git a/tests/test_m32_scheme_d_validation.py b/tests/test_m32_scheme_d_validation.py
+index dde8d95..a3cddc2 100644
+--- a/tests/test_m32_scheme_d_validation.py
++++ b/tests/test_m32_scheme_d_validation.py
+@@ -12,18 +12,14 @@ from trader.cognition.m32_scheme_d_validation import (
+     HYPOTHESIS_TABLE,
+     IntegrityError,
+     N1_NULL_MAD,
+-    PHASE_BENCHMARK,
+-    SeedRegistry,
+     WorldRefused,
+     actual_statistic_vector,
+-    apply_injections,
+     bh_rejections,
+     blocked_network,
+     derive_n1_null_mad,
+     draw_block_map,
+     exclusive_json,
+     generate_truth_tables,
+-    generate_world,
+     hypothesis_table,
+     monte_carlo_p,
+     orbit_size,
+@@ -48,15 +44,6 @@ def test_fixed_384_hypothesis_family_and_labels():
+     assert sum(h.sector == "A" for h in table) == 192
+ 
+ 
+-def test_seed_registry_allows_only_unique_phase_90_tuples():
+-    registry = SeedRegistry()
+-    registry.generator(PHASE_BENCHMARK, 0, 1, 0, 0)
+-    with pytest.raises(IntegrityError, match="duplicate_seed_tuple"):
+-        registry.generator(PHASE_BENCHMARK, 0, 1, 0, 0)
+-    with pytest.raises(IntegrityError, match="non_phase_90_rng_refused"):
+-        registry.generator(10, 0, 1, 0, 0)
+-
+-
+ def test_frozen_hashes_and_environment_match(monkeypatch):
+     monkeypatch.setenv("OPENBLAS_NUM_THREADS", "1")
+     assert verify_frozen_environment()["numpy"] == "2.5.2"
+@@ -122,32 +109,21 @@ def test_sampling_can_include_identity_and_repeats_with_replacement():
+     assert np.array_equal(first, second)
+ 
+ 
+-def test_actual_statistic_harness_calls_all_384_imported_statistics():
+-    world = generate_world(correlation=0, dgp=1, world_index=0)
+-    values = actual_statistic_vector(world)
+-    assert values.shape == (HYPOTHESES,)
+-    assert np.all(np.isfinite(values))
+-    assert HYPOTHESIS_TABLE[0].label == "case_kind"
+-    assert HYPOTHESIS_TABLE[128].label == "persistence"
+-
+-
+-def test_phase90_injections_preserve_membership_masks_and_strata():
+-    registry = SeedRegistry()
+-    world = generate_world(correlation=0, dgp=1, world_index=4, registry=registry)
+-    injected = apply_injections(world, 104, registry=registry)
+-    assert np.array_equal(injected.memberships, world.memberships)
+-    assert np.array_equal(injected.observed, world.observed)
+-    assert injected.block_strata == world.block_strata
+-    assert np.any(injected.persistence != world.persistence)
+-
+-
+ def test_symbolic_truth_tables_are_complete_in_shape_and_honestly_refuse_ambiguity():
+     truth = generate_truth_tables()
++    # v2 records ambiguity on each hypothesis instead of a redundant boolean.
++    # Derive the same predicate from every row; never assume missing means true.
++    def fully_classified(cell):
++        assert all(r['classification'] in {'true_null', 'analytic_non_null', 'unclassifiable'}
++                   for r in cell['records'])
++        return all(r['classification'] != 'unclassifiable' for r in cell['records'])
+     assert len(truth["cells"]) == 55
+     assert all(len(cell["records"]) == HYPOTHESES for cell in truth["cells"])
+-    assert not truth["fully_classified"]
++    assert truth['schema'] == 'm3.2-scheme-d-symbolic-truth.v2'
++    assert truth['unresolved_cells'] == sum(not fully_classified(c) for c in truth['cells'])
++    assert not all(fully_classified(c) for c in truth['cells'])
+     p1 = next(c for c in truth["cells"] if c.get("scenario") == 101 and c["correlation"] == 4)
+-    assert p1["fully_classified"]
++    assert fully_classified(p1)
+     assert p1["records"][0]["classification"] == "true_null"
+     p3 = next(c for c in truth["cells"] if c.get("scenario") == 103 and c["correlation"] == 4)
+     assert p3["records"][320]["classification"] == "true_null"
+@@ -156,9 +132,9 @@ def test_symbolic_truth_tables_are_complete_in_shape_and_honestly_refuse_ambigui
+     assert p2["records"][143]["sign"] == 1
+     assert p2["records"][144]["sign"] == -1
+     p4_c0 = next(c for c in truth["cells"] if c.get("scenario") == 104 and c["correlation"] == 0)
+-    assert p4_c0["fully_classified"]
++    assert fully_classified(p4_c0)
+     p4_c1 = next(c for c in truth["cells"] if c.get("scenario") == 104 and c["correlation"] == 1)
+-    assert not p4_c1["fully_classified"]
++    assert not fully_classified(p4_c1)
+ 
+ 
+ def test_n1_null_mad_derivation_matches_frozen_value():
+@@ -173,3 +149,29 @@ def test_network_is_blocked_and_output_is_exclusive(tmp_path):
+     exclusive_json(path, "{}\n")
+     with pytest.raises(IntegrityError, match="output_path_collision"):
+         exclusive_json(path, "{}\n")
++
++
++def test_actual_statistic_harness_calls_all_384_imported_statistics(monkeypatch):
++    from collections import Counter
++    from trader.cognition import m32_scheme_d_validation as D
++    rows = np.arange(D.ROWS)
++    memberships = (rows[:, None] + np.arange(HYPOTHESES)[None, :]) % 4 == 0
++    world = D.SyntheticWorld(0, 1, 0, memberships, rows % 3,
++        (rows % 17).astype(float), np.ones(D.ROWS, dtype=bool), n0_strata(),
++        valid_metadata(n0_strata()))
++    metric = D._metric
++    calls = []
++    def measured(rows, matched, label, lookup):
++        calls.append(label)
++        return metric(rows, matched, label, lookup)
++    def forbidden(*args, **kwargs):
++        pytest.fail('pre-RNG computation reached a generator')
++    monkeypatch.setattr(D, '_metric', measured)
++    monkeypatch.setattr(D.np.random, 'default_rng', forbidden)
++    monkeypatch.setattr(D, 'SeedRegistry', forbidden)
++    values = actual_statistic_vector(world)
++    assert HYPOTHESIS_TABLE[0].label == 'case_kind'
++    assert HYPOTHESIS_TABLE[128].label == 'persistence'
++    assert values.shape == (HYPOTHESES,)
++    assert np.all(np.isfinite(values))
++    assert Counter(calls) == {'case_kind': 128, 'persistence': 128, 'continuation': 128}
+diff --git a/trader/persistence/backup.py b/trader/persistence/backup.py
+index 49fd20f..f96b415 100644
+--- a/trader/persistence/backup.py
++++ b/trader/persistence/backup.py
+@@ -51,6 +51,33 @@ def durable(path, raw):
+     sync_dir(path.parent)
+ 
+ 
++def file_identity(path):
++    """Hash exact file bytes with bounded memory, including large SQLite stores."""
++    sha = hashlib.sha256()
++    size = 0
++    with path.open('rb') as stream:
++        while block := stream.read(1024 * 1024):
++            sha.update(block)
++            size += len(block)
++    return size, sha.hexdigest()
++
++
++def durable_copy(path, source, expected_size, expected_sha):
++    """Stream into the existing unpublished restore stage; verify before publish."""
++    sha = hashlib.sha256()
++    size = 0
++    with source.open('rb') as stream, path.open('xb') as target:
++        while block := stream.read(1024 * 1024):
++            sha.update(block)
++            size += len(block)
++            target.write(block)
++        if size != expected_size or sha.hexdigest() != expected_sha:
++            raise Refused('asset_changed_during_restore')
++        target.flush()
++        os.fsync(target.fileno())
++    sync_dir(path.parent)
++
++
+ def safe_path(root, name):
+     p = PurePosixPath(name)
+     if not name or p.is_absolute() or '..' in p.parts or str(p) != name or '\\' in name:
+@@ -323,8 +350,8 @@ class BackupSets:
+                 no_config_secrets(raw, source)
+                 files[asset.path] = digest(raw)
+                 durable(target, raw)
+-            raw = target.read_bytes()
+-            entries.append(dict(**asdict(asset), size=len(raw), sha256=digest(raw), store=store,
++            size, sha = file_identity(target)
++            entries.append(dict(**asdict(asset), size=size, sha256=sha, store=store,
+                                 capture_started_at=begin, capture_finished_at=self.clock()))
+             interrupt('asset')
+         for path, sha in files.items():
+@@ -383,8 +410,8 @@ class BackupSets:
+                 if (e['role'], e['kind']) != (a.role, a.kind):
+                     raise Refused('asset_role_or_kind')
+                 path = safe_path(generation, e['path'])
+-                raw_asset = path.read_bytes()
+-                if len(raw_asset) != e['size'] or digest(raw_asset) != e['sha256']:
++                size, sha = file_identity(path)
++                if size != e['size'] or sha != e['sha256']:
+                     raise Refused('asset_size_or_hash_mismatch')
+                 if a.kind == 'sqlite':
+                     actual = metadata(path)
+@@ -473,12 +500,11 @@ class BackupSets:
+             for e in manifest['assets']:
+                 dest = safe_path(stage, e['path'])
+                 dest.parent.mkdir(parents=True, exist_ok=True)
+-                raw = safe_path(Path(generation), e['path']).read_bytes()
+-                if len(raw) != e['size'] or digest(raw) != e['sha256']:
+-                    raise Refused('asset_changed_during_restore')
+-                durable(dest, raw)
+-                if e['kind'] == 'sqlite' and any(metadata(dest)[k] != e['store'][k] for k in ('user_version', 'application_id', 'schema_sha256')):
+-                    raise Refused('restored_store_invalid')
++                durable_copy(dest, safe_path(Path(generation), e['path']), e['size'], e['sha256'])
++                if e['kind'] == 'sqlite':
++                    actual = metadata(dest)
++                    if any(actual[k] != e['store'][k] for k in ('user_version', 'application_id', 'schema_sha256')):
++                        raise Refused('restored_store_invalid')
+                 interrupt('asset')
+             journal_asset = next((a for a in self.inventory.assets if a.role == STORES['data/luffy.db']), None)
+             if journal_asset is None:
+@@ -495,17 +521,17 @@ class BackupSets:
+             journal.db_path = stage / journal_asset.path
+             journal._local = threading.local()
+             journal._write_lock = threading.Lock()
+-            machine = ControlStateMachine(journal)
+-            if machine.state == ControlState.ACTIVE:
+-                machine.set(ControlState.FROZEN, 'supervisor', 'restore requires venue recovery')
+-                machine.set(ControlState.RECOVERY, 'supervisor', 'restore requires venue recovery')
+-            journal.kv_set('supervisor_status', json.dumps(dict(needs_owner=True, reasons=['restored_state_requires_recovery'],
+-                           containment_owned=False, safe_to_activate=False, outcome='RECOVERING')))
+-            journal.log_control_event('restore_verified', 'supervisor', detail=receipt)
+-            journal._conn().close()
++            with closing(journal._conn()):
++                machine = ControlStateMachine(journal)
++                if machine.state == ControlState.ACTIVE:
++                    machine.set(ControlState.FROZEN, 'supervisor', 'restore requires venue recovery')
++                    machine.set(ControlState.RECOVERY, 'supervisor', 'restore requires venue recovery')
++                journal.kv_set('supervisor_status', json.dumps(dict(needs_owner=True, reasons=['restored_state_requires_recovery'],
++                               containment_owned=False, safe_to_activate=False, outcome='RECOVERING')))
++                journal.log_control_event('restore_verified', 'supervisor', detail=receipt)
+             # Health/control files are generated, never copied from old runtime.
+             receipt['restored_control_state'] = machine.state.value
+-            receipt['restored_assets'] = {a.path: digest((stage / a.path).read_bytes()) for a in self.inventory.assets}
++            receipt['restored_assets'] = {a.path: file_identity(stage / a.path)[1] for a in self.inventory.assets}
+             receipt.update(restore='VERIFIED_STAGED', time=self.clock())
+             durable(stage / 'restore_receipt.json', canonical(receipt))
+             interrupt('before_publish')

@@ -1,0 +1,12 @@
+{
+  "evaluator_sha256": "eaff4525ce5dbe0fe3a7960bf3575840edb25d7bfa747ee9338e419761d8ba6d",
+  "recorded_verdict_sha256": "38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4",
+  "matches_recorded_verdict": true,
+  "original_tree_unchanged": true,
+  "verdict": "GO",
+  "reason": "p6_encouraging_effect",
+  "scope": "pilot_only_non_final",
+  "worlds_generated": 0,
+  "numpy_imported": false,
+  "runner_imported": false
+}

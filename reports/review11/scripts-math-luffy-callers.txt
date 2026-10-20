@@ -1,0 +1,24 @@
+# scripts/m32_categorical_arb_batch_20260920/certify_batch.py
+# scripts/m32_categorical_arb_batch_20260920/replay_integrator.py
+# scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py
+DEAD-CHAIN       endpoints:84 prod=0 test=0 in-file-from=['normal_boxes']
+DEAD-CHAIN       normal_boxes:88 prod=0 test=0 in-file-from=['c3_once', 'c4_once']
+DEAD-CHAIN       checkpoint:110 prod=0 test=0 in-file-from=['c3_once', 'c4_once']
+DEAD             c3_once:130 prod=0 test=0
+DEAD             c4_once:198 prod=0 test=0
+# scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py
+METHOD-UNCORROBORATED Band.priority:152 prod=0 test=0 rejected-sites=trader/learning/targets.py:65(self.)
+# scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py
+# scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py
+# scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py
+# scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py
+METHOD-UNCORROBORATED C3Model.kernels:254 prod=0 test=0 rejected-sites=scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py:142(self.)
+DEAD             C3Model.assemble:263 prod=0 test=0
+DEAD             C4Model.left_kernels:290 prod=0 test=0
+METHOD-UNCORROBORATED C4Model.right_kernels:293 prod=0 test=0 rejected-sites=scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:162(self.), scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:165(self.), scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:186(self.)
+DEAD             C4Model.right_shared:297 prod=0 test=0
+# scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py
+# scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py
+# scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py
+# scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py
+# scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py

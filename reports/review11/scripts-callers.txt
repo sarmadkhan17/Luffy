@@ -1,0 +1,323 @@
+# scripts/m32_categorical_arb_batch_20260920/certify_batch.py
+# scripts/m32_categorical_arb_batch_20260920/record_refusal.py
+# scripts/m32_categorical_arb_batch_20260920/replay_batch.py
+# scripts/m32_categorical_arb_batch_20260920/replay_integrator.py
+# scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py
+DEAD-CHAIN       endpoints:84 prod=0 test=0 in-file-from=['normal_boxes']
+DEAD-CHAIN       normal_boxes:88 prod=0 test=0 in-file-from=['c3_once', 'c4_once']
+DEAD-CHAIN       checkpoint:110 prod=0 test=0 in-file-from=['c3_once', 'c4_once']
+DEAD             c3_once:130 prod=0 test=0
+DEAD             c4_once:198 prod=0 test=0
+# scripts/m32_categorical_arb_completion_20260920/certify_completion.py
+# scripts/m32_categorical_arb_completion_20260920/replay_completion.py
+# scripts/m32_categorical_equivalence_20260920/certify_categorical.py
+# scripts/m32_categorical_equivalence_20260920/replay_categorical.py
+# scripts/m32_conditioning_comparison_20260919/checks.py
+# scripts/m32_conditioning_comparison_20260919/make_prespec.py
+# scripts/m32_conditioning_comparison_20260919/sim.py
+# scripts/m32_fast_metric_20260921/benchmark_fast_metric.py
+# scripts/m32_fast_metric_20260921/equivalence_suite.py
+# scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py
+METHOD-UNCORROBORATED Band.priority:152 prod=0 test=0 rejected-sites=trader/learning/targets.py:65(self.)
+# scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py
+# scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py
+# scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py
+# scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py
+METHOD-UNCORROBORATED C3Model.kernels:254 prod=0 test=0 rejected-sites=scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py:142(self.)
+DEAD             C3Model.assemble:263 prod=0 test=0
+DEAD             C4Model.left_kernels:290 prod=0 test=0
+METHOD-UNCORROBORATED C4Model.right_kernels:293 prod=0 test=0 rejected-sites=scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:162(self.), scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:165(self.), scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py:186(self.)
+DEAD             C4Model.right_shared:297 prod=0 test=0
+# scripts/m32_p5c3_p6c4_remaining_20260921/merge_and_check.py
+# scripts/m32_p5c3_p6c4_remaining_20260921/write_freeze_manifest.py
+# scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py
+# scripts/m32_p6_c3_taylor_20260921/verify_p6_c3_replay.py
+# scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py
+# scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py
+# scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py
+# scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py
+# scripts/m32_p7c4_persistence_20260921/verify_p7c4_replay.py
+# scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py
+# scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py
+# scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py
+# scripts/m32_scheme_d_phase90_fast_benchmark_20260921/run_benchmark.py
+# scripts/m32_scheme_d_pilot_20260922/run_pilot.py
+# scripts/m32_scheme_d_pilot_v4_20260923/evaluate_pilot.py
+# scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py
+# scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py
+# scripts/m32_scheme_d_pre_rng_truth_20260920/verify_certificates.py
+# scripts/m32_scheme_d_pre_rng_truth_20260921/freeze_package.py
+# scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py
+# scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py
+# scripts/m32_scheme_d_qualification_20260922/qualify.py
+# scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py
+DEAD             QualificationError:62 prod=0 test=0
+# scripts/m32_scheme_d_replication_20260919/run_replication.py
+# scripts/m32_scheme_d_sharding_20260921/bench_sharding.py
+# scripts/m32_scheme_d_sharding_20260921/project_full_run.py
+# scripts/m32_scheme_d_sharding_20260921/shard_fixture.py
+METHOD-UNCORROBORATED ArithmeticToken.random:44 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.integers:47 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED ArithmeticToken.standard_normal:50 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.standard_t:53 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.geometric:56 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.choice:59 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.permutation:62 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD             StubRegistry:67 prod=0 test=0
+DEAD             fixture_plan:81 prod=0 test=0
+DEAD-CHAIN       _stub_exact_bh:86 prod=0 test=0 in-file-from=['installed']
+DEAD             installed:92 prod=0 test=0
+DEAD             fixture_sha256:114 prod=0 test=0
+# scripts/m32_scheme_d_sharding_20260921/shard_layer.py
+DEAD             shard_of:212 prod=0 test=0
+# scripts/m32_scheme_d_sharding_v4_20260923/rng_guard.py
+DEAD             RNGGuard:40 prod=0 test=0
+DEAD             RNGGuard.note_validation_world:65 prod=0 test=0
+# scripts/m32_scheme_d_sharding_v4_20260923/shard_fixture.py
+METHOD-UNCORROBORATED ArithmeticToken.random:52 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.integers:55 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED ArithmeticToken.standard_normal:58 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.standard_t:61 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.geometric:64 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.choice:67 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED ArithmeticToken.permutation:70 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD             StubRegistry:75 prod=0 test=0
+DEAD             fixture_plan:89 prod=0 test=0
+DEAD-CHAIN       _stub_exact_bh:94 prod=0 test=0 in-file-from=['installed']
+DEAD             installed:100 prod=0 test=0
+DEAD             fixture_sha256:122 prod=0 test=0
+# scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py
+DEAD             shard_of:272 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py
+# scripts/m32_scheme_d_validation_bundle_20260921/runner/acceptance.py
+DEAD-CHAIN       wilson:26 prod=0 test=0 in-file-from=['power_pass', 'type_one_pass']
+DEAD-CHAIN       type_one_pass:36 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       fdr_pass:43 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       bootstrap_upper:49 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       _cdf_numerator_le:61 prod=0 test=0 in-file-from=['cp_band_contains']
+DEAD-CHAIN       cp_band_contains:67 prod=0 test=0 in-file-from=['calibration_pass']
+DEAD-CHAIN       calibration_pass:81 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       power_pass:91 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       refusal_blockers:100 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD             evaluate_cell:108 prod=0 test=0
+DEAD             overall:137 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py
+DEAD-CHAIN       check:57 prod=0 test=0 in-file-from=['acceptance_evaluators', 'authorization_records_fail_closed', 'bh_exact_with_refusals_in_denominator', 'config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'exclusive_create_behaviour', 'family_design_and_membership_table', 'frozen_environment_and_sources', 'frozen_truth_package_consumed_unchanged', 'hypothesis_level_refusals', 'import_isolation_and_network_block', 'invalid_case_refusals_all_100_percent', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation', 'orbit_floor_and_strata', 'p_value_and_tie_rule', 'receipt_pipeline_with_stub', 'seed_map_and_registry_gates', 'static_scan_rng_and_imports', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub']
+DEAD-CHAIN       DeterministicStub:62 prod=0 test=0 in-file-from=['metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub']
+METHOD-UNCORROBORATED DeterministicStub.integers:75 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED DeterministicStub.random:79 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_normal:84 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_t:88 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED DeterministicStub.geometric:92 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED DeterministicStub.choice:96 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED DeterministicStub.permutation:100 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD-CHAIN       fixture_world:105 prod=0 test=0 in-file-from=['hypothesis_level_refusals', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub']
+DEAD-CHAIN       approx:119 prod=0 test=0 in-file-from=['acceptance_evaluators', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation']
+DEAD-CHAIN       load:123 prod=0 test=0 in-file-from=['config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'family_design_and_membership_table', 'loadings_and_covariance_psd', 'null_mad_derivation', 'seed_map_and_registry_gates']
+DEAD             frozen_environment_and_sources:129 prod=0 test=0
+DEAD             family_design_and_membership_table:136 prod=0 test=0
+DEAD             config_matches_runner_and_design:150 prod=0 test=0
+DEAD             effect_assignment_table_matches_pinned_sets:177 prod=0 test=0
+DEAD             null_mad_derivation:194 prod=0 test=0
+DEAD             loadings_and_covariance_psd:204 prod=0 test=0
+DEAD             metric_equivalence_fixtures:224 prod=0 test=0
+DEAD             bh_exact_with_refusals_in_denominator:247 prod=0 test=0
+DEAD             p_value_and_tie_rule:263 prod=0 test=0
+DEAD             with_replacement_sampling_includes_identity:280 prod=0 test=0
+DEAD             orbit_floor_and_strata:295 prod=0 test=0
+DEAD             invalid_case_refusals_all_100_percent:309 prod=0 test=0
+DEAD             hypothesis_level_refusals:342 prod=0 test=0
+DEAD             seed_map_and_registry_gates:376 prod=0 test=0
+DEAD             authorization_records_fail_closed:423 prod=0 test=0
+DEAD             exclusive_create_behaviour:445 prod=0 test=0
+DEAD             import_isolation_and_network_block:459 prod=0 test=0
+DEAD             static_scan_rng_and_imports:491 prod=0 test=0
+DEAD             acceptance_evaluators:522 prod=0 test=0
+DEAD             world_generation_and_injection_logic_with_stub:554 prod=0 test=0
+DEAD             receipt_pipeline_with_stub:589 prod=0 test=0
+DEAD             frozen_truth_package_consumed_unchanged:612 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py
+# scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/acceptance.py
+DEAD-CHAIN       wilson:26 prod=0 test=0 in-file-from=['power_pass', 'type_one_pass']
+DEAD-CHAIN       type_one_pass:36 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       fdr_pass:43 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       bootstrap_upper:49 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       _cdf_numerator_le:61 prod=0 test=0 in-file-from=['cp_band_contains']
+DEAD-CHAIN       cp_band_contains:67 prod=0 test=0 in-file-from=['calibration_pass']
+DEAD-CHAIN       calibration_pass:81 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       power_pass:92 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       refusal_blockers:101 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD             evaluate_cell:109 prod=0 test=0
+DEAD             overall:139 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py
+DEAD-CHAIN       check:57 prod=0 test=0 in-file-from=['acceptance_evaluators', 'authorization_records_fail_closed', 'bh_exact_with_refusals_in_denominator', 'calibration_excludes_refused_marginal_worlds', 'class_edges_half_open_integer', 'config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'exclusive_create_behaviour', 'family_design_and_membership_table', 'frozen_environment_and_sources', 'frozen_truth_package_consumed_unchanged', 'hypothesis_level_refusals', 'import_isolation_and_network_block', 'invalid_case_refusals_all_100_percent', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation', 'orbit_floor_and_strata', 'p_value_and_tie_rule', 'receipt_pipeline_with_stub', 'seed_map_and_registry_gates', 'static_scan_rng_and_imports', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       DeterministicStub:62 prod=0 test=0 in-file-from=['metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+METHOD-UNCORROBORATED DeterministicStub.integers:75 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED DeterministicStub.random:79 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_normal:84 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_t:88 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED DeterministicStub.geometric:92 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED DeterministicStub.choice:98 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED DeterministicStub.permutation:102 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD-CHAIN       fixture_world:107 prod=0 test=0 in-file-from=['hypothesis_level_refusals', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       approx:121 prod=0 test=0 in-file-from=['acceptance_evaluators', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation']
+DEAD-CHAIN       load:125 prod=0 test=0 in-file-from=['config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'family_design_and_membership_table', 'loadings_and_covariance_psd', 'null_mad_derivation', 'seed_map_and_registry_gates']
+DEAD             frozen_environment_and_sources:131 prod=0 test=0
+DEAD             family_design_and_membership_table:138 prod=0 test=0
+DEAD             config_matches_runner_and_design:152 prod=0 test=0
+DEAD             effect_assignment_table_matches_pinned_sets:179 prod=0 test=0
+DEAD             null_mad_derivation:196 prod=0 test=0
+DEAD             loadings_and_covariance_psd:206 prod=0 test=0
+DEAD             metric_equivalence_fixtures:226 prod=0 test=0
+DEAD             bh_exact_with_refusals_in_denominator:249 prod=0 test=0
+DEAD             p_value_and_tie_rule:265 prod=0 test=0
+DEAD             with_replacement_sampling_includes_identity:282 prod=0 test=0
+DEAD             orbit_floor_and_strata:297 prod=0 test=0
+DEAD             invalid_case_refusals_all_100_percent:311 prod=0 test=0
+DEAD             hypothesis_level_refusals:344 prod=0 test=0
+DEAD             seed_map_and_registry_gates:378 prod=0 test=0
+DEAD             authorization_records_fail_closed:425 prod=0 test=0
+DEAD             exclusive_create_behaviour:447 prod=0 test=0
+DEAD             import_isolation_and_network_block:461 prod=0 test=0
+DEAD             static_scan_rng_and_imports:493 prod=0 test=0
+DEAD             acceptance_evaluators:524 prod=0 test=0
+DEAD             world_generation_and_injection_logic_with_stub:556 prod=0 test=0
+DEAD             receipt_pipeline_with_stub:591 prod=0 test=0
+DEAD             class_edges_half_open_integer:614 prod=0 test=0
+DEAD             world_generation_class_edges_at_exact_boundaries:627 prod=0 test=0
+DEAD             zero_tested_world_is_refused:637 prod=0 test=0
+DEAD             zero_observed_lift_is_tested_not_refused:660 prod=0 test=0
+DEAD             calibration_excludes_refused_marginal_worlds:684 prod=0 test=0
+DEAD             frozen_truth_package_consumed_unchanged:701 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py
+# scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py
+DEAD-CHAIN       wilson:26 prod=0 test=0 in-file-from=['power_pass', 'type_one_pass']
+DEAD-CHAIN       type_one_pass:36 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       fdr_pass:43 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       bootstrap_upper:49 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       _cdf_numerator_le:61 prod=0 test=0 in-file-from=['cp_band_contains']
+DEAD-CHAIN       cp_band_contains:67 prod=0 test=0 in-file-from=['calibration_pass']
+DEAD-CHAIN       calibration_pass:81 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       power_pass:92 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       refusal_blockers:101 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD             evaluate_cell:109 prod=0 test=0
+DEAD             overall:139 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py
+DEAD-CHAIN       check:62 prod=0 test=0 in-file-from=['acceptance_evaluators', 'authorization_records_fail_closed', 'benchmark_core_with_stub', 'bh_exact_with_refusals_in_denominator', 'calibration_excludes_refused_marginal_worlds', 'class_edges_half_open_integer', 'config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'equivalence_gate_fails_closed', 'equivalence_receipt_recorded', 'exclusive_create_behaviour', 'family_design_and_membership_table', 'fast_metric_hash_binding', 'fast_metric_live_equivalence_deterministic', 'frozen_environment_and_sources', 'frozen_truth_package_consumed_unchanged', 'hypothesis_level_refusals', 'import_isolation_and_network_block', 'invalid_case_refusals_all_100_percent', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation', 'orbit_floor_and_strata', 'p_value_and_tie_rule', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'seed_map_and_registry_gates', 'static_scan_rng_and_imports', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       DeterministicStub:67 prod=0 test=0 in-file-from=['benchmark_core_with_stub', 'fast_metric_live_equivalence_deterministic', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+METHOD-UNCORROBORATED DeterministicStub.integers:80 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED DeterministicStub.random:84 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_normal:89 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_t:93 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED DeterministicStub.geometric:97 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED DeterministicStub.choice:103 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED DeterministicStub.permutation:107 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD-CHAIN       fixture_world:112 prod=0 test=0 in-file-from=['equivalence_gate_fails_closed', 'hypothesis_level_refusals', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       approx:126 prod=0 test=0 in-file-from=['acceptance_evaluators', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation']
+DEAD-CHAIN       load:130 prod=0 test=0 in-file-from=['config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'equivalence_gate_fails_closed', 'equivalence_receipt_recorded', 'family_design_and_membership_table', 'fast_metric_hash_binding', 'loadings_and_covariance_psd', 'null_mad_derivation', 'seed_map_and_registry_gates']
+DEAD             fast_metric_hash_binding:136 prod=0 test=0
+DEAD             frozen_environment_and_sources:147 prod=0 test=0
+DEAD             family_design_and_membership_table:154 prod=0 test=0
+DEAD             config_matches_runner_and_design:168 prod=0 test=0
+DEAD             effect_assignment_table_matches_pinned_sets:195 prod=0 test=0
+DEAD             null_mad_derivation:212 prod=0 test=0
+DEAD             loadings_and_covariance_psd:222 prod=0 test=0
+DEAD             metric_equivalence_fixtures:242 prod=0 test=0
+DEAD             bh_exact_with_refusals_in_denominator:265 prod=0 test=0
+DEAD             p_value_and_tie_rule:281 prod=0 test=0
+DEAD             with_replacement_sampling_includes_identity:298 prod=0 test=0
+DEAD             orbit_floor_and_strata:313 prod=0 test=0
+DEAD             invalid_case_refusals_all_100_percent:327 prod=0 test=0
+DEAD             hypothesis_level_refusals:360 prod=0 test=0
+DEAD             seed_map_and_registry_gates:394 prod=0 test=0
+DEAD             authorization_records_fail_closed:441 prod=0 test=0
+DEAD             exclusive_create_behaviour:463 prod=0 test=0
+DEAD             import_isolation_and_network_block:477 prod=0 test=0
+DEAD             static_scan_rng_and_imports:509 prod=0 test=0
+DEAD             acceptance_evaluators:540 prod=0 test=0
+DEAD             world_generation_and_injection_logic_with_stub:572 prod=0 test=0
+DEAD             receipt_pipeline_with_stub:607 prod=0 test=0
+DEAD             class_edges_half_open_integer:630 prod=0 test=0
+DEAD             world_generation_class_edges_at_exact_boundaries:643 prod=0 test=0
+DEAD             zero_tested_world_is_refused:653 prod=0 test=0
+DEAD             zero_observed_lift_is_tested_not_refused:676 prod=0 test=0
+DEAD             calibration_excludes_refused_marginal_worlds:700 prod=0 test=0
+DEAD             equivalence_receipt_recorded:718 prod=0 test=0
+DEAD-CHAIN       _pattern_world:738 prod=0 test=0 in-file-from=['_sparse_pattern_world', 'fast_metric_live_equivalence_deterministic']
+DEAD             fast_metric_live_equivalence_deterministic:750 prod=0 test=0
+DEAD             runner_fast_equals_reference_receipts:830 prod=0 test=0
+DEAD-CHAIN       _sparse_pattern_world:860 prod=0 test=0 in-file-from=['benchmark_core_with_stub', 'runner_fast_equals_reference_receipts']
+DEAD             equivalence_gate_fails_closed:869 prod=0 test=0
+DEAD             benchmark_core_with_stub:958 prod=0 test=0
+DEAD             frozen_truth_package_consumed_unchanged:978 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py
+# scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py
+# scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py
+DEAD-CHAIN       wilson:42 prod=0 test=0 in-file-from=['evaluate_cell', 'power_pass', 'type_one_pass']
+DEAD-CHAIN       type_one_pass:52 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       fdr_pass:59 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       bootstrap_upper:65 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       _cdf_numerator_le:77 prod=0 test=0 in-file-from=['cp_band_contains']
+DEAD-CHAIN       cp_band_contains:83 prod=0 test=0 in-file-from=['calibration_pass']
+DEAD-CHAIN       calibration_pass:97 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       power_pass:108 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD-CHAIN       refusal_blockers:121 prod=0 test=0 in-file-from=['evaluate_cell']
+DEAD             evaluate_cell:129 prod=0 test=0
+DEAD             overall:170 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py
+DEAD-CHAIN       check:71 prod=0 test=0 in-file-from=['acceptance_evaluators', 'authorization_records_fail_closed', 'benchmark_core_with_stub', 'bh_exact_with_refusals_in_denominator', 'calibration_excludes_refused_marginal_worlds', 'class_edges_half_open_integer', 'config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'equivalence_gate_fails_closed', 'equivalence_receipt_recorded', 'exclusive_create_behaviour', 'family_design_and_membership_table', 'fast_metric_hash_binding', 'fast_metric_live_equivalence_deterministic', 'frozen_environment_and_sources', 'frozen_truth_package_consumed_unchanged', 'hypothesis_level_refusals', 'import_isolation_and_network_block', 'invalid_case_refusals_all_100_percent', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation', 'orbit_floor_and_strata', 'p1_p3_role_and_cell_kind_and_truth', 'p_value_and_tie_rule', 'power_rules_and_fdr_scenarios_exclude_p1_p3', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'seed_map_and_registry_gates', 'static_scan_rng_and_imports', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       DeterministicStub:76 prod=0 test=0 in-file-from=['benchmark_core_with_stub', 'fast_metric_live_equivalence_deterministic', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'world_generation_class_edges_at_exact_boundaries', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+METHOD-UNCORROBORATED DeterministicStub.integers:89 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:224(data_rng.), trader/research/portfolio_null.py:162(rng.), trader/research/referee.py:187(None.)
+METHOD-UNCORROBORATED DeterministicStub.random:93 prod=0 test=0 rejected-sites=trader/cognition/m32_block_calibration.py:95(np.), trader/cognition/m32_block_calibration.py:263(np.), trader/cognition/m32_block_calibration.py:236(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_normal:98 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:171(rng.), trader/cognition/m32_scheme_d_validation.py:176(rng.), trader/cognition/m32_scheme_d_validation.py:179(rng.)
+METHOD-UNCORROBORATED DeterministicStub.standard_t:102 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:242(data_rng.), trader/cognition/m32_scheme_d_validation.py:246(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:55(rng.)
+METHOD-UNCORROBORATED DeterministicStub.geometric:106 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:228(data_rng.), scripts/m32_conditioning_comparison_20260919/sim.py:62(rng.), scripts/m32_fast_metric_20260921/equivalence_suite.py:243(rng.)
+METHOD-UNCORROBORATED DeterministicStub.choice:112 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:257(data_rng.), scripts/gate2_calibrate_stationary.py:139(rng.), scripts/gate2_calibrate_stationary.py:164(rng.)
+METHOD-UNCORROBORATED DeterministicStub.permutation:116 prod=0 test=0 rejected-sites=trader/cognition/m32_scheme_d_validation.py:360(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:41(rng.), scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:97(prng.)
+DEAD-CHAIN       fixture_world:121 prod=0 test=0 in-file-from=['equivalence_gate_fails_closed', 'hypothesis_level_refusals', 'metric_equivalence_fixtures', 'receipt_pipeline_with_stub', 'runner_fast_equals_reference_receipts', 'with_replacement_sampling_includes_identity', 'world_generation_and_injection_logic_with_stub', 'zero_observed_lift_is_tested_not_refused', 'zero_tested_world_is_refused']
+DEAD-CHAIN       approx:135 prod=0 test=0 in-file-from=['acceptance_evaluators', 'loadings_and_covariance_psd', 'metric_equivalence_fixtures', 'null_mad_derivation']
+DEAD-CHAIN       load:139 prod=0 test=0 in-file-from=['config_matches_runner_and_design', 'effect_assignment_table_matches_pinned_sets', 'equivalence_gate_fails_closed', 'equivalence_receipt_recorded', 'family_design_and_membership_table', 'fast_metric_hash_binding', 'loadings_and_covariance_psd', 'null_mad_derivation', 'p1_p3_role_and_cell_kind_and_truth', 'power_rules_and_fdr_scenarios_exclude_p1_p3', 'seed_map_and_registry_gates']
+DEAD             fast_metric_hash_binding:145 prod=0 test=0
+DEAD             frozen_environment_and_sources:156 prod=0 test=0
+DEAD             family_design_and_membership_table:163 prod=0 test=0
+DEAD             config_matches_runner_and_design:177 prod=0 test=0
+DEAD             power_rules_and_fdr_scenarios_exclude_p1_p3:204 prod=0 test=0
+DEAD             p1_p3_role_and_cell_kind_and_truth:223 prod=0 test=0
+DEAD             effect_assignment_table_matches_pinned_sets:243 prod=0 test=0
+DEAD             null_mad_derivation:260 prod=0 test=0
+DEAD             loadings_and_covariance_psd:270 prod=0 test=0
+DEAD             metric_equivalence_fixtures:290 prod=0 test=0
+DEAD             bh_exact_with_refusals_in_denominator:313 prod=0 test=0
+DEAD             p_value_and_tie_rule:329 prod=0 test=0
+DEAD             with_replacement_sampling_includes_identity:346 prod=0 test=0
+DEAD             orbit_floor_and_strata:361 prod=0 test=0
+DEAD             invalid_case_refusals_all_100_percent:375 prod=0 test=0
+DEAD             hypothesis_level_refusals:408 prod=0 test=0
+DEAD             seed_map_and_registry_gates:442 prod=0 test=0
+DEAD             authorization_records_fail_closed:491 prod=0 test=0
+DEAD             exclusive_create_behaviour:513 prod=0 test=0
+DEAD             import_isolation_and_network_block:527 prod=0 test=0
+DEAD             static_scan_rng_and_imports:559 prod=0 test=0
+DEAD             acceptance_evaluators:590 prod=0 test=0
+DEAD             world_generation_and_injection_logic_with_stub:644 prod=0 test=0
+DEAD             receipt_pipeline_with_stub:689 prod=0 test=0
+DEAD             class_edges_half_open_integer:716 prod=0 test=0
+DEAD             world_generation_class_edges_at_exact_boundaries:729 prod=0 test=0
+DEAD             zero_tested_world_is_refused:739 prod=0 test=0
+DEAD             zero_observed_lift_is_tested_not_refused:763 prod=0 test=0
+DEAD             calibration_excludes_refused_marginal_worlds:787 prod=0 test=0
+DEAD             equivalence_receipt_recorded:805 prod=0 test=0
+DEAD-CHAIN       _pattern_world:825 prod=0 test=0 in-file-from=['_sparse_pattern_world', 'fast_metric_live_equivalence_deterministic']
+DEAD             fast_metric_live_equivalence_deterministic:837 prod=0 test=0
+DEAD             runner_fast_equals_reference_receipts:917 prod=0 test=0
+DEAD-CHAIN       _sparse_pattern_world:947 prod=0 test=0 in-file-from=['benchmark_core_with_stub', 'runner_fast_equals_reference_receipts']
+DEAD             equivalence_gate_fails_closed:956 prod=0 test=0
+DEAD             benchmark_core_with_stub:1045 prod=0 test=0
+DEAD             frozen_truth_package_consumed_unchanged:1065 prod=0 test=0
+# scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py
+# scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py

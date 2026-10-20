@@ -1,0 +1,217 @@
+scripts/m32_scheme_d_sharding_20260921/shard_layer.py:56:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/audit_m32_correction.py:6:from trader.cognition.m32_correction import AUDIT_FILENAME, audit, write_immutable
+scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py:19:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py:51:                     "metric_calls": tested * vectors, "reference_metric": "trader.cognition.m32_search._metric (imported)",
+scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py:21:    "trader/cognition/m32_scheme_d_validation.py",
+scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py:22:    "trader/cognition/m32_search.py",
+scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:24:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_fast_metric_20260921/benchmark_fast_metric.py:25:from trader.cognition.m32_fast_metric import FastMetric  # noqa: E402
+scripts/m32_fast_metric_20260921/equivalence_suite.py:22:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_fast_metric_20260921/equivalence_suite.py:23:from trader.cognition.m32_fast_metric import (FastMetric, compensated_sum_columns,  # noqa: E402
+scripts/m32_scheme_d_phase90_fast_benchmark_20260921/run_benchmark.py:19:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:51:V1_DIR = "scripts/m32_scheme_d_validation_bundle_20260921"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:54:V2_DIR = "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:57:V3_DIR = "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:60:V4_DIR = "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:63:    "trader/cognition/m32_fast_metric.py": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:64:    "scripts/m32_fast_metric_20260921/equivalence_suite.py": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:65:    "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py": "7eb17fe925f8d10f67fa5d94d5aae4093568c2bd7c057adf7d7c19b513635d19",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:66:    "scripts/m32_fast_metric_20260921/equivalence_report.json": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:67:    "scripts/m32_fast_metric_20260921/benchmark_result.json": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:68:    "scripts/m32_fast_metric_20260921/artifact_hashes.json": "4bd789b3d81a965997f1ff713fb22a1fed4fb67138592bb6655bbf7da2c21e89",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:69:    "tests/test_m32_fast_metric_equivalence.py": "736bf8f381d7db3d53fb1c03932b30bf0fe441bdeb695861566a22f722c660af"}
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:74:SECTION2 = {"trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:75:            "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:76:            "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"}
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:77:HARNESS = {"trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61"}
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:165:    need(manifest["fast_metric"] == {"commit": FAST_COMMIT, "module": "trader/cognition/m32_fast_metric.py",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:166:                                     "reference": "trader/cognition/m32_search.py", "equivalence": EQ}, "manifest fast-metric record")
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:390:    need(c["statistic"]["sha256"] == SECTION2["trader/cognition/m32_search.py"] and c["statistic"]["function"] == "_metric"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:392:         and c["statistic"]["optimized_path"] == "trader.cognition.m32_fast_metric.FastMetric", "statistic binding")
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:395:         {"module": FAST_HASHES["trader/cognition/m32_fast_metric.py"], "suite": FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_suite.py"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:396:          "benchmark_script": FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_fast_metric.py"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:397:          "equivalence_report": FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_report.json"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:398:          "benchmark_result": FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_result.json"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:399:          "artifact_hashes": FAST_HASHES["scripts/m32_fast_metric_20260921/artifact_hashes.json"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:400:          "reference": SECTION2["trader/cognition/m32_search.py"],
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:401:          "equivalence_test": FAST_HASHES["tests/test_m32_fast_metric_equivalence.py"]}, "config fast-metric hashes")
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:563:    rep = json.loads((ROOT / "scripts/m32_fast_metric_20260921/equivalence_report.json").read_text())
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:569:    need(rec["equivalence_report_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_report.json"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:570:         and rec["suite_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_suite.py"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:571:         and rec["fast_metric_sha256"] == FAST_HASHES["trader/cognition/m32_fast_metric.py"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:572:         and rec["reference_sha256"] == SECTION2["trader/cognition/m32_search.py"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:573:         and rec["artifact_hashes_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/artifact_hashes.json"], "receipt hashes")
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:574:    registry = json.loads((ROOT / "scripts/m32_fast_metric_20260921/artifact_hashes.json").read_text())["sha256"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:577:    bench = json.loads((ROOT / "scripts/m32_fast_metric_20260921/benchmark_result.json").read_text())
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:584:    need(proj["benchmark_result_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_result.json"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:737:    from trader.cognition.m32_fast_metric import FastMetric
+scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py:738:    from trader.cognition.m32_search import _metric
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:41:V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:43:V2_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:45:V3_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:48:FAST_DIR = "scripts/m32_fast_metric_20260921"
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:49:FAST = {"module": "trader/cognition/m32_fast_metric.py", "suite": FAST_DIR + "/equivalence_suite.py",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:52:        "reference": "trader/cognition/m32_search.py", "equivalence_test": "tests/test_m32_fast_metric_equivalence.py"}
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:56:    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:57:    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:58:    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:59:    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:305:        "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:306:                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "fast_metric_exact_equivalent",
+scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py:307:                      "reference_path": "reference_metric_import", "optimized_path": "trader.cognition.m32_fast_metric.FastMetric",
+scripts/m32_scheme_d_qualification_20260922/qualify.py:49:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/run_m32_search.py:7:from trader.cognition.m32_search import write_immutable, run_search
+scripts/run_m32_search.py:8:from trader.cognition.m32_protocol import ARTIFACT, ProtocolError
+tests/test_m32_shard_layer_v4.py:26:V3_BUNDLE_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+tests/test_m32_shard_layer_v4.py:27:V4_BUNDLE_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+tests/test_m32_shard_layer_v4.py:390:    assert receipt["bindings"]["scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json"] == \
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py:51:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py:52:from trader.cognition.m32_search import _metric  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py:53:from trader.cognition.m32_fast_metric import FastMetric  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py:66:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py:148:    assert cfg["reference"]["sha256"] == V.FROZEN_HASHES["trader/cognition/m32_search.py"]
+scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py:839:    from trader.cognition.m32_fast_metric import FastMetric as FM, compensated_sum_columns, reference_rows, reference_statistics
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:36:SECTION2 = {"trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:37:            "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:38:            "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"}
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:39:HARNESS = {"trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61"}
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:107:    listed = {str(Path(k).relative_to("scripts/m32_scheme_d_validation_bundle_20260921")): v
+scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py:301:    need(c["statistic"]["sha256"] == SECTION2["trader/cognition/m32_search.py"] and c["statistic"]["optimized_path"] is None
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:30:    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:31:    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:32:    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:33:    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:258:        "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py:259:                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "reference_metric_import",
+tests/test_m32_block_calibration.py:13:from trader.cognition import m32_block_calibration as C
+scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py:34:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py:35:from trader.cognition.m32_search import _metric  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py:52:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_protocol_check.py:12:from trader.cognition.m32_protocol import ARTIFACT, load_locked_artifact, zero_search_manifest
+scripts/bench_m32_scheme_d_phase90.py:16:from trader.cognition.m32_scheme_d_validation import (
+tests/test_m32_validation_bundle_v4.py:32:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+tests/test_m32_validation_bundle_v4.py:34:V1_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_20260921"
+tests/test_m32_validation_bundle_v4.py:35:V2_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+tests/test_m32_validation_bundle_v4.py:36:V3_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+tests/test_m32_validation_bundle_v4.py:102:    for sib in ("m32_scheme_d_pre_rng_truth_20260921", "m32_fast_metric_20260921"):
+tests/test_m32_validation_bundle_v4.py:141:    assert sup["bundle_manifest"] == "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json"
+tests/test_m32_validation_bundle_v4.py:522:    assert out == "bundle_hash_mismatch:scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py", out
+tests/test_m32_scheme_d_validation.py:9:from trader.cognition.m32_scheme_d_validation import (
+tests/test_m32_scheme_d_validation.py:156:    from trader.cognition import m32_scheme_d_validation as D
+tests/test_m32_correction.py:12:from trader.cognition.m32_correction import _complete_actual, _coverage, audit, build_independence_groups
+tests/test_m32_correction.py:13:from trader.cognition.m32_evidence import eligible_actuals, pit_regime
+tests/test_m32_correction.py:14:from trader.cognition.m32_protocol import pattern_id
+tests/test_m32_correction.py:15:from trader.cognition.m32_search import applicable_label_families
+scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py:55:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+scripts/calibrate_m32_blocks.py:7:from trader.cognition import m32_block_calibration as C
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:40:V1_DIR = "scripts/m32_scheme_d_validation_bundle_20260921"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:43:V2_DIR = "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:46:V3_DIR = "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:49:    "trader/cognition/m32_fast_metric.py": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:50:    "scripts/m32_fast_metric_20260921/equivalence_suite.py": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:51:    "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py": "7eb17fe925f8d10f67fa5d94d5aae4093568c2bd7c057adf7d7c19b513635d19",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:52:    "scripts/m32_fast_metric_20260921/equivalence_report.json": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:53:    "scripts/m32_fast_metric_20260921/benchmark_result.json": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:54:    "scripts/m32_fast_metric_20260921/artifact_hashes.json": "4bd789b3d81a965997f1ff713fb22a1fed4fb67138592bb6655bbf7da2c21e89",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:55:    "tests/test_m32_fast_metric_equivalence.py": "736bf8f381d7db3d53fb1c03932b30bf0fe441bdeb695861566a22f722c660af"}
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:60:SECTION2 = {"trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:61:            "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:62:            "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"}
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:63:HARNESS = {"trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61"}
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:139:    need(manifest["fast_metric"] == {"commit": FAST_COMMIT, "module": "trader/cognition/m32_fast_metric.py",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:140:                                     "reference": "trader/cognition/m32_search.py", "equivalence": EQ}, "manifest fast-metric record")
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:346:    need(c["statistic"]["sha256"] == SECTION2["trader/cognition/m32_search.py"] and c["statistic"]["function"] == "_metric"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:348:         and c["statistic"]["optimized_path"] == "trader.cognition.m32_fast_metric.FastMetric", "statistic binding")
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:351:         {"module": FAST_HASHES["trader/cognition/m32_fast_metric.py"], "suite": FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_suite.py"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:352:          "benchmark_script": FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_fast_metric.py"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:353:          "equivalence_report": FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_report.json"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:354:          "benchmark_result": FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_result.json"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:355:          "artifact_hashes": FAST_HASHES["scripts/m32_fast_metric_20260921/artifact_hashes.json"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:356:          "reference": SECTION2["trader/cognition/m32_search.py"],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:357:          "equivalence_test": FAST_HASHES["tests/test_m32_fast_metric_equivalence.py"]}, "config fast-metric hashes")
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:516:    rep = json.loads((ROOT / "scripts/m32_fast_metric_20260921/equivalence_report.json").read_text())
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:522:    need(rec["equivalence_report_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_report.json"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:523:         and rec["suite_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/equivalence_suite.py"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:524:         and rec["fast_metric_sha256"] == FAST_HASHES["trader/cognition/m32_fast_metric.py"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:525:         and rec["reference_sha256"] == SECTION2["trader/cognition/m32_search.py"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:526:         and rec["artifact_hashes_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/artifact_hashes.json"], "receipt hashes")
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:527:    registry = json.loads((ROOT / "scripts/m32_fast_metric_20260921/artifact_hashes.json").read_text())["sha256"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:530:    bench = json.loads((ROOT / "scripts/m32_fast_metric_20260921/benchmark_result.json").read_text())
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:537:    need(proj["benchmark_result_sha256"] == FAST_HASHES["scripts/m32_fast_metric_20260921/benchmark_result.json"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:615:    from trader.cognition.m32_fast_metric import FastMetric
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:616:    from trader.cognition.m32_search import _metric
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:651:    recorded = json.loads((ROOT / "scripts/m32_fast_metric_20260921/equivalence_report.json").read_text())
+scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py:654:        proc = subprocess.run([sys.executable, str(ROOT / "scripts/m32_fast_metric_20260921/equivalence_suite.py"), "--out", str(out)],
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:30:V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:32:V2_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:35:FAST_DIR = "scripts/m32_fast_metric_20260921"
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:36:FAST = {"module": "trader/cognition/m32_fast_metric.py", "suite": FAST_DIR + "/equivalence_suite.py",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:39:        "reference": "trader/cognition/m32_search.py", "equivalence_test": "tests/test_m32_fast_metric_equivalence.py"}
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:43:    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:44:    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:45:    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:46:    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:281:        "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:282:                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "fast_metric_exact_equivalent",
+scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py:283:                      "reference_path": "reference_metric_import", "optimized_path": "trader.cognition.m32_fast_metric.FastMetric",
+tests/test_m32_categorical_estimand_spec.py:4:claims to describe exactly what ``trader.cognition.m32_search._metric`` computes
+tests/test_m32_categorical_estimand_spec.py:24:from trader.cognition.m32_search import _metric
+tests/test_m32_categorical_estimand_spec.py:362:    assert "trader/cognition/m32_search.py" in authority
+scripts/m32_scheme_d_pilot_v4_20260923/evaluate_pilot.py:56:# Exactly V.INJECTIONS[106] (trader/cognition/m32_scheme_d_validation.py); the prespec must match it exactly.
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py:44:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py:45:from trader.cognition.m32_search import _metric  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py:46:from trader.cognition.m32_fast_metric import FastMetric  # noqa: E402
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:14:     ``scripts/m32_scheme_d_validation_bundle_v3_20260921/`` (v3 bundle) are byte-identical to the freeze commit
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:41:V3_BUNDLE_DIR = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:53:    "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json":
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:55:    "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py":
+scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py:57:    "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py":
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py:57:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py:139:    assert cfg["reference"]["sha256"] == V.FROZEN_HASHES["trader/cognition/m32_search.py"]
+scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py:752:    from trader.cognition.m32_fast_metric import FastMetric as FM, compensated_sum_columns, reference_rows, reference_statistics
+scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py:65:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+scripts/m32_scheme_d_sharding_v4_20260923/rng_guard.py:13:``scripts/m32_scheme_d_validation_bundle_v4_20260922/artifacts/preparation_audit.json``
+tests/test_m32_pilot_v4.py:272:    from trader.cognition import m32_scheme_d_validation as V
+tests/test_m32_pilot_v4.py:514:    from trader.cognition import m32_scheme_d_validation as V
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:35:V1_DIR = "scripts/m32_scheme_d_validation_bundle_20260921"
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:38:V2_DIR = "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:42:SECTION2 = {"trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:43:            "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:44:            "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"}
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:45:HARNESS = {"trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61"}
+scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py:315:    need(c["statistic"]["sha256"] == SECTION2["trader/cognition/m32_search.py"] and c["statistic"]["optimized_path"] is None
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:30:V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:33:    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:34:    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:35:    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:36:    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:266:        "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py:267:                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "reference_metric_import",
+scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py:425:    gen = (ROOT / "trader/cognition/m32_scheme_d_validation.py").read_text()
+scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py:443:             ("trader/cognition/m32_scheme_d_validation.py",)), "validation source hash")
+scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py:37:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py:38:from trader.cognition.m32_search import _metric  # noqa: E402
+trader/cognition/m32_scheme_d_validation.py:24:from .m32_search import _metric
+trader/cognition/m32_scheme_d_validation.py:42:    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+trader/cognition/m32_scheme_d_validation.py:43:    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+trader/cognition/m32_scheme_d_validation.py:44:    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py:52:from trader.cognition import m32_scheme_d_validation as V  # noqa: E402
+trader/cognition/m32_search.py:3:The runner reads only the locked artifact through ``m32_protocol`` and writes
+trader/cognition/m32_search.py:18:from .m32_protocol import (
+trader/cognition/m32_correction.py:17:from .m32_protocol import ARTIFACT_SHA256, LOCKED, load_locked_artifact, rows_of
+trader/cognition/m32_correction.py:18:from .m32_evidence import complete_actual, eligible_actuals, independence_groups, pit_regime
+trader/cognition/m32_fast_metric.py:3:This reproduces ``m32_search._metric`` bit for bit (float64) on the synthetic-world row
+trader/cognition/m32_fast_metric.py:31:from .m32_search import _metric
+trader/cognition/m32_fast_metric.py:325:        from .m32_scheme_d_validation import HYPOTHESIS_TABLE
+tests/test_m32_host_qualification_v4.py:55:    assert Q.LAYER_DIR.name == "m32_scheme_d_sharding_v4_20260923" and Q.BUNDLE.name == "m32_scheme_d_validation_bundle_v4_20260922"
+tests/test_m32_protocol.py:8:from trader.cognition import m32_protocol as p
+tests/test_m32_validation_bundle.py:11:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_20260921"
+tests/test_m32_validation_bundle_v2.py:11:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+tests/test_m32_validation_bundle_v2.py:52:    v1 = ROOT / "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+tests/test_m32_fast_metric_equivalence.py:3:The full deterministic suite (about 10 minutes) is scripts/m32_fast_metric_20260921/equivalence_suite.py; its
+tests/test_m32_fast_metric_equivalence.py:12:sys.path.insert(0, str(ROOT / "scripts/m32_fast_metric_20260921"))
+tests/test_m32_fast_metric_equivalence.py:15:from trader.cognition.m32_fast_metric import FastMetric, compensated_sum_columns  # noqa: E402
+tests/test_m32_validation_bundle_v3.py:11:BUNDLE = ROOT / "scripts/m32_scheme_d_validation_bundle_v3_20260921"
+tests/test_m32_validation_bundle_v3.py:53:    v2 = root / "m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
+tests/test_m32_validation_bundle_v3.py:54:    v1 = root / "m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+tests/test_pre_rng_refusal_boundary.py:4:from trader.cognition import m32_scheme_d_validation as D

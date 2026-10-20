@@ -1,0 +1,2100 @@
+{
+  "source_revision": "753b45e27d45c21e890c535afcbea31f5177afd4",
+  "inventory_revision": "8d57e8f23343505660a07c1a8aa6218279121de9",
+  "inventory_source": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json",
+  "inventory_sha256": "dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb",
+  "subsystems": [
+    {
+      "id": "m32",
+      "name": "M3.2 research laboratory",
+      "purpose": "Synthetic validation, calibration, sufficiency checks and historical pattern-search experiments",
+      "execution_class": "offline",
+      "subcomponents": [
+        {
+          "id": "m32.1",
+          "name": "protocol and evidence",
+          "files": [
+            "scripts/m32_protocol_check.py",
+            "tests/test_m32_categorical_estimand_spec.py",
+            "tests/test_m32_correction.py",
+            "trader/cognition/m32_correction.py",
+            "trader/cognition/m32_evidence.py",
+            "trader/cognition/m32_protocol.py"
+          ],
+          "file_count": 6,
+          "implementation_references": [
+            {
+              "path": "trader/cognition/m32_correction.py",
+              "line": 1,
+              "sha256": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"
+            },
+            {
+              "path": "trader/cognition/m32_evidence.py",
+              "line": 1,
+              "sha256": "4cdbaa73db0a59512d68cac531e8148bded370093c9711f931e59aaa2b1e2eb0"
+            },
+            {
+              "path": "trader/cognition/m32_protocol.py",
+              "line": 1,
+              "sha256": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "m32.2",
+          "name": "block calibration",
+          "files": [
+            "trader/cognition/m32_block_calibration.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/cognition/m32_block_calibration.py",
+              "line": 1,
+              "sha256": "5c993a3d869397ebccd571822fcf82c66aac57fb5e2a3ce0b6c8a961c6d4a70e"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "m32.3",
+          "name": "search and metric",
+          "files": [
+            "scripts/m32_fast_metric_20260921/artifact_hashes.json",
+            "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py",
+            "scripts/m32_fast_metric_20260921/benchmark_result.json",
+            "scripts/m32_fast_metric_20260921/equivalence_report.json",
+            "scripts/m32_fast_metric_20260921/equivalence_suite.py",
+            "scripts/run_m32_search.py",
+            "tests/test_m32_fast_metric_equivalence.py",
+            "trader/cognition/m32_fast_metric.py",
+            "trader/cognition/m32_search.py"
+          ],
+          "file_count": 9,
+          "implementation_references": [
+            {
+              "path": "trader/cognition/m32_fast_metric.py",
+              "line": 1,
+              "sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0"
+            },
+            {
+              "path": "trader/cognition/m32_search.py",
+              "line": 1,
+              "sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "m32.4",
+          "name": "Scheme D validation",
+          "files": [
+            "scripts/bench_m32_scheme_d_phase90.py",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_0493407cf230203cfe7b.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_0493407cf230203cfe7b.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_3b715db927f6e887cfda.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_3b715db927f6e887cfda.json",
+            "scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json",
+            "scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py",
+            "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+            "scripts/m32_scheme_d_host_qualification_v4_20260923/reference_calibration.json",
+            "scripts/m32_scheme_d_phase90_benchmark_20260921/authorization.json",
+            "scripts/m32_scheme_d_phase90_benchmark_20260921/benchmark_summary.json",
+            "scripts/m32_scheme_d_phase90_benchmark_20260921/out/phase90_benchmark_receipt.json",
+            "scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/authorization.json",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/benchmark_summary.json",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/out/phase90_benchmark_receipt.json",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/run_benchmark.py",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/authorization.json",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/benchmark_summary.json",
+            "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/out/phase90_benchmark_receipt.json",
+            "scripts/m32_scheme_d_pilot_20260922/AUTHORIZATION_REQUEST.json",
+            "scripts/m32_scheme_d_pilot_20260922/OWNER_AUTHORIZATION.json",
+            "scripts/m32_scheme_d_pilot_20260922/PILOT_PRESPEC.json",
+            "scripts/m32_scheme_d_pilot_20260922/PILOT_VERDICT.json",
+            "scripts/m32_scheme_d_pilot_20260922/run_pilot.py",
+            "scripts/m32_scheme_d_pilot_v4_20260923/AUTHORIZATION_REQUEST.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/OWNER_AUTHORIZATION.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/PILOT_PRESPEC.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/evaluate_pilot.py",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/RUN_MANIFEST.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/events/merge.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/events/worker_0000.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/events/worker_0001.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/MERGE_MANIFEST.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/N0_C0.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/N3_C4.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/P1_C0.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/P6_C4.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/run_result.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/provenance/prov_35e0b8615e1ff4a3.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000000.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000000.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000001.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000001.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000002.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000002.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000003.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000003.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000004.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000004.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000005.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000005.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000006.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000006.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000007.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000007.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000008.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000008.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000009.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000009.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000010.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000010.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000011.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000011.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000012.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000012.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000013.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000013.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000014.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000014.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000015.complete.json",
+            "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000015.receipts.jsonl",
+            "scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/manifest.sha256",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/proof_certificate.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/replay_result.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py",
+            "scripts/m32_scheme_d_pre_rng_truth_20260920/verify_certificates.py",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/freeze_package.py",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/manifest.sha256",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/proof_certificate.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C0.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C1.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C2.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C3.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C4.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/package/verification_result.json",
+            "scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py",
+            "scripts/m32_scheme_d_qualification_20260922/QUALIFICATION_MANIFEST.json",
+            "scripts/m32_scheme_d_qualification_20260922/QUALIFICATION_REPORT.json",
+            "scripts/m32_scheme_d_qualification_20260922/qualify.py",
+            "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+            "scripts/m32_scheme_d_qualification_20260922/reference_calibration.json",
+            "scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json",
+            "scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py",
+            "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+            "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+            "scripts/m32_scheme_d_replication_20260919/run_replication.py",
+            "scripts/m32_scheme_d_sharding_20260921/LAYER_MANIFEST.json",
+            "scripts/m32_scheme_d_sharding_20260921/bench_sharding.py",
+            "scripts/m32_scheme_d_sharding_20260921/full_run_projection.json",
+            "scripts/m32_scheme_d_sharding_20260921/project_full_run.py",
+            "scripts/m32_scheme_d_sharding_20260921/scaling_benchmark.json",
+            "scripts/m32_scheme_d_sharding_20260921/shard_fixture.py",
+            "scripts/m32_scheme_d_sharding_20260921/shard_layer.py",
+            "scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json",
+            "scripts/m32_scheme_d_sharding_v4_20260923/rng_guard.py",
+            "scripts/m32_scheme_d_sharding_v4_20260923/shard_fixture.py",
+            "scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py",
+            "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json",
+            "scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_20260921/requirements.lock",
+            "scripts/m32_scheme_d_validation_bundle_20260921/runner/acceptance.py",
+            "scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py",
+            "scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py",
+            "scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/requirements.lock",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/acceptance.py",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py",
+            "scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/requirements.lock",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py",
+            "scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/requirements.lock",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py",
+            "scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py",
+            "tests/test_m32_scheme_d_validation.py",
+            "trader/cognition/m32_scheme_d_validation.py"
+          ],
+          "file_count": 227,
+          "implementation_references": [
+            {
+              "path": "trader/cognition/m32_scheme_d_validation.py",
+              "line": 1,
+              "sha256": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "m32.5",
+          "name": "versioned laboratory scripts",
+          "files": [
+            "scripts/audit_m32_correction.py",
+            "scripts/calibrate_m32_blocks.py",
+            "scripts/m32_categorical_arb_batch_20260920/certificate.json",
+            "scripts/m32_categorical_arb_batch_20260920/certify_batch.py",
+            "scripts/m32_categorical_arb_batch_20260920/manifest.sha256",
+            "scripts/m32_categorical_arb_batch_20260920/record_refusal.py",
+            "scripts/m32_categorical_arb_batch_20260920/replay.json",
+            "scripts/m32_categorical_arb_batch_20260920/replay_batch.py",
+            "scripts/m32_categorical_arb_batch_20260920/replay_integrator.py",
+            "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+            "scripts/m32_categorical_arb_box_canary_20260920/p5_c3_checkpoint.jsonl",
+            "scripts/m32_categorical_arb_box_canary_20260920/p5_c3_report.json",
+            "scripts/m32_categorical_arb_box_canary_20260920/p6_c4_checkpoint.jsonl",
+            "scripts/m32_categorical_arb_box_canary_20260920/p6_c4_report.json",
+            "scripts/m32_categorical_arb_completion_20260920/certificate.json",
+            "scripts/m32_categorical_arb_completion_20260920/certify_completion.py",
+            "scripts/m32_categorical_arb_completion_20260920/manifest.sha256",
+            "scripts/m32_categorical_arb_completion_20260920/replay.json",
+            "scripts/m32_categorical_arb_completion_20260920/replay_completion.py",
+            "scripts/m32_categorical_equivalence_20260920/certificate.json",
+            "scripts/m32_categorical_equivalence_20260920/certify_categorical.py",
+            "scripts/m32_categorical_equivalence_20260920/estimand_spec.json",
+            "scripts/m32_categorical_equivalence_20260920/manifest.sha256",
+            "scripts/m32_categorical_equivalence_20260920/replay.json",
+            "scripts/m32_categorical_equivalence_20260920/replay_categorical.py",
+            "scripts/m32_conditioning_comparison_20260919/checks.py",
+            "scripts/m32_conditioning_comparison_20260919/code_manifest.sha256",
+            "scripts/m32_conditioning_comparison_20260919/make_prespec.py",
+            "scripts/m32_conditioning_comparison_20260919/prespec.json",
+            "scripts/m32_conditioning_comparison_20260919/prespec_v1_discarded.sha256",
+            "scripts/m32_conditioning_comparison_20260919/prespec_v2_discarded.sha256",
+            "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+            "scripts/m32_conditioning_comparison_20260919/sim.py",
+            "scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py",
+            "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+            "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_report.md",
+            "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.json",
+            "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.jsonl",
+            "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.json",
+            "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.jsonl",
+            "scripts/m32_p4_c3_c4_taylor_20260921/replay_c3.json",
+            "scripts/m32_p4_c3_c4_taylor_20260921/replay_c3.jsonl",
+            "scripts/m32_p4_c3_c4_taylor_20260921/replay_c4.json",
+            "scripts/m32_p4_c3_c4_taylor_20260921/replay_c4.jsonl",
+            "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+            "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_report.md",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_primary.json",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_primary_checkpoint.jsonl",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_replay.json",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_replay_checkpoint.jsonl",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_checkpoint.jsonl",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_manifest.json",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_report.md",
+            "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_report.json",
+            "scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_report.md",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_primary.json",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_primary_checkpoint.jsonl",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_replay.json",
+            "scripts/m32_p5_c4_taylor_20260921/p5_c4_replay_checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_report.md",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/merge_and_check.py",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/192a266e63028fd9405f.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/192a266e63028fd9405f.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/1c44894573b030f89efe.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/1c44894573b030f89efe.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/362941837322c8d33797.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/362941837322c8d33797.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/444db08366c304e754fc.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/444db08366c304e754fc.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/5b0820e2459afe050862.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/5b0820e2459afe050862.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/63a8f6ab39aa1458349a.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/63a8f6ab39aa1458349a.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/7d91c0980805e807c160.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/7d91c0980805e807c160.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/82fa6cbd43d44f3d5ad8.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/82fa6cbd43d44f3d5ad8.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/f94178b70f5311220985.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/primary/f94178b70f5311220985.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/192a266e63028fd9405f.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/192a266e63028fd9405f.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/1c44894573b030f89efe.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/1c44894573b030f89efe.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/362941837322c8d33797.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/362941837322c8d33797.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/444db08366c304e754fc.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/444db08366c304e754fc.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/5b0820e2459afe050862.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/5b0820e2459afe050862.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/63a8f6ab39aa1458349a.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/63a8f6ab39aa1458349a.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/7d91c0980805e807c160.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/7d91c0980805e807c160.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/82fa6cbd43d44f3d5ad8.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/82fa6cbd43d44f3d5ad8.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/f94178b70f5311220985.checkpoint.jsonl",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay/f94178b70f5311220985.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/replay_result.json",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/run_all.sh",
+            "scripts/m32_p5c3_p6c4_remaining_20260921/write_freeze_manifest.py",
+            "scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_report.md",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_primary.json",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_primary_checkpoint.jsonl",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay.json",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay_checkpoint.jsonl",
+            "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay_result.json",
+            "scripts/m32_p6_c3_taylor_20260921/verify_p6_c3_replay.py",
+            "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_report.md",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary.json",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary_checkpoint.jsonl",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay.json",
+            "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay_checkpoint.jsonl",
+            "scripts/m32_p7c4_arb_spike_20260920/certificate.json",
+            "scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py",
+            "scripts/m32_p7c4_arb_spike_20260920/replay.json",
+            "scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py",
+            "scripts/m32_p7c4_arb_spike_20260920/requirements.lock",
+            "scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py",
+            "scripts/m32_p7c4_persistence_20260921/hermite_checkpoint_224.json",
+            "scripts/m32_p7c4_persistence_20260921/hermite_checkpoint_384.json",
+            "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+            "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_report.md",
+            "scripts/m32_p7c4_persistence_20260921/primary_certificate.json",
+            "scripts/m32_p7c4_persistence_20260921/replay_certificate.json",
+            "scripts/m32_p7c4_persistence_20260921/replay_result.json",
+            "scripts/m32_p7c4_persistence_20260921/verify_p7c4_replay.py",
+            "scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py"
+          ],
+          "file_count": 139,
+          "implementation_references": [
+            {
+              "path": "trader/cognition/m32_protocol.py",
+              "line": 1,
+              "sha256": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/cognition/m32_protocol.py",
+      "counts": {
+        "python_source": 7,
+        "frontend": 0,
+        "configuration": 5,
+        "script": 76,
+        "test": 4,
+        "other": 290,
+        "python_files_including_scripts_and_tests": 86,
+        "source_files": 83,
+        "test_files": 4,
+        "other_files": 295,
+        "total_files": 382,
+        "source_lines": 30659,
+        "all_text_lines": 66867,
+        "binary_files": 0
+      },
+      "files": [
+        "scripts/audit_m32_correction.py",
+        "scripts/bench_m32_scheme_d_phase90.py",
+        "scripts/calibrate_m32_blocks.py",
+        "scripts/m32_categorical_arb_batch_20260920/certificate.json",
+        "scripts/m32_categorical_arb_batch_20260920/certify_batch.py",
+        "scripts/m32_categorical_arb_batch_20260920/manifest.sha256",
+        "scripts/m32_categorical_arb_batch_20260920/record_refusal.py",
+        "scripts/m32_categorical_arb_batch_20260920/replay.json",
+        "scripts/m32_categorical_arb_batch_20260920/replay_batch.py",
+        "scripts/m32_categorical_arb_batch_20260920/replay_integrator.py",
+        "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+        "scripts/m32_categorical_arb_box_canary_20260920/p5_c3_checkpoint.jsonl",
+        "scripts/m32_categorical_arb_box_canary_20260920/p5_c3_report.json",
+        "scripts/m32_categorical_arb_box_canary_20260920/p6_c4_checkpoint.jsonl",
+        "scripts/m32_categorical_arb_box_canary_20260920/p6_c4_report.json",
+        "scripts/m32_categorical_arb_completion_20260920/certificate.json",
+        "scripts/m32_categorical_arb_completion_20260920/certify_completion.py",
+        "scripts/m32_categorical_arb_completion_20260920/manifest.sha256",
+        "scripts/m32_categorical_arb_completion_20260920/replay.json",
+        "scripts/m32_categorical_arb_completion_20260920/replay_completion.py",
+        "scripts/m32_categorical_equivalence_20260920/certificate.json",
+        "scripts/m32_categorical_equivalence_20260920/certify_categorical.py",
+        "scripts/m32_categorical_equivalence_20260920/estimand_spec.json",
+        "scripts/m32_categorical_equivalence_20260920/manifest.sha256",
+        "scripts/m32_categorical_equivalence_20260920/replay.json",
+        "scripts/m32_categorical_equivalence_20260920/replay_categorical.py",
+        "scripts/m32_conditioning_comparison_20260919/checks.py",
+        "scripts/m32_conditioning_comparison_20260919/code_manifest.sha256",
+        "scripts/m32_conditioning_comparison_20260919/make_prespec.py",
+        "scripts/m32_conditioning_comparison_20260919/prespec.json",
+        "scripts/m32_conditioning_comparison_20260919/prespec_v1_discarded.sha256",
+        "scripts/m32_conditioning_comparison_20260919/prespec_v2_discarded.sha256",
+        "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+        "scripts/m32_conditioning_comparison_20260919/sim.py",
+        "scripts/m32_fast_metric_20260921/artifact_hashes.json",
+        "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py",
+        "scripts/m32_fast_metric_20260921/benchmark_result.json",
+        "scripts/m32_fast_metric_20260921/equivalence_report.json",
+        "scripts/m32_fast_metric_20260921/equivalence_suite.py",
+        "scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py",
+        "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+        "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_report.md",
+        "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.json",
+        "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.jsonl",
+        "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.json",
+        "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.jsonl",
+        "scripts/m32_p4_c3_c4_taylor_20260921/replay_c3.json",
+        "scripts/m32_p4_c3_c4_taylor_20260921/replay_c3.jsonl",
+        "scripts/m32_p4_c3_c4_taylor_20260921/replay_c4.json",
+        "scripts/m32_p4_c3_c4_taylor_20260921/replay_c4.jsonl",
+        "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+        "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_report.md",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_primary.json",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_primary_checkpoint.jsonl",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_replay.json",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_replay_checkpoint.jsonl",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_checkpoint.jsonl",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_manifest.json",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_report.md",
+        "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_report.json",
+        "scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_report.md",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_primary.json",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_primary_checkpoint.jsonl",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_replay.json",
+        "scripts/m32_p5_c4_taylor_20260921/p5_c4_replay_checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_report.md",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/merge_and_check.py",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/192a266e63028fd9405f.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/192a266e63028fd9405f.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/1c44894573b030f89efe.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/1c44894573b030f89efe.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/362941837322c8d33797.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/362941837322c8d33797.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/444db08366c304e754fc.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/444db08366c304e754fc.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/5b0820e2459afe050862.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/5b0820e2459afe050862.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/63a8f6ab39aa1458349a.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/63a8f6ab39aa1458349a.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/7d91c0980805e807c160.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/7d91c0980805e807c160.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/82fa6cbd43d44f3d5ad8.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/82fa6cbd43d44f3d5ad8.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/f94178b70f5311220985.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/primary/f94178b70f5311220985.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/192a266e63028fd9405f.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/192a266e63028fd9405f.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/1c44894573b030f89efe.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/1c44894573b030f89efe.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/362941837322c8d33797.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/362941837322c8d33797.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/444db08366c304e754fc.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/444db08366c304e754fc.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/5b0820e2459afe050862.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/5b0820e2459afe050862.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/63a8f6ab39aa1458349a.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/63a8f6ab39aa1458349a.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/7d91c0980805e807c160.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/7d91c0980805e807c160.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/82fa6cbd43d44f3d5ad8.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/82fa6cbd43d44f3d5ad8.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/f94178b70f5311220985.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay/f94178b70f5311220985.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/replay_result.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/run_all.sh",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_0493407cf230203cfe7b.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_0493407cf230203cfe7b.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_3b715db927f6e887cfda.checkpoint.jsonl",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/validation/canary_3b715db927f6e887cfda.json",
+        "scripts/m32_p5c3_p6c4_remaining_20260921/write_freeze_manifest.py",
+        "scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_report.md",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_primary.json",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_primary_checkpoint.jsonl",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay.json",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay_checkpoint.jsonl",
+        "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay_result.json",
+        "scripts/m32_p6_c3_taylor_20260921/verify_p6_c3_replay.py",
+        "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_report.md",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary.json",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary_checkpoint.jsonl",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay.json",
+        "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay_checkpoint.jsonl",
+        "scripts/m32_p7c4_arb_spike_20260920/certificate.json",
+        "scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py",
+        "scripts/m32_p7c4_arb_spike_20260920/replay.json",
+        "scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py",
+        "scripts/m32_p7c4_arb_spike_20260920/requirements.lock",
+        "scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py",
+        "scripts/m32_p7c4_persistence_20260921/hermite_checkpoint_224.json",
+        "scripts/m32_p7c4_persistence_20260921/hermite_checkpoint_384.json",
+        "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+        "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_report.md",
+        "scripts/m32_p7c4_persistence_20260921/primary_certificate.json",
+        "scripts/m32_p7c4_persistence_20260921/replay_certificate.json",
+        "scripts/m32_p7c4_persistence_20260921/replay_result.json",
+        "scripts/m32_p7c4_persistence_20260921/verify_p7c4_replay.py",
+        "scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py",
+        "scripts/m32_protocol_check.py",
+        "scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json",
+        "scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py",
+        "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+        "scripts/m32_scheme_d_host_qualification_v4_20260923/reference_calibration.json",
+        "scripts/m32_scheme_d_phase90_benchmark_20260921/authorization.json",
+        "scripts/m32_scheme_d_phase90_benchmark_20260921/benchmark_summary.json",
+        "scripts/m32_scheme_d_phase90_benchmark_20260921/out/phase90_benchmark_receipt.json",
+        "scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/authorization.json",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/benchmark_summary.json",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/out/phase90_benchmark_receipt.json",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/run_benchmark.py",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/authorization.json",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/benchmark_summary.json",
+        "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/out/phase90_benchmark_receipt.json",
+        "scripts/m32_scheme_d_pilot_20260922/AUTHORIZATION_REQUEST.json",
+        "scripts/m32_scheme_d_pilot_20260922/OWNER_AUTHORIZATION.json",
+        "scripts/m32_scheme_d_pilot_20260922/PILOT_PRESPEC.json",
+        "scripts/m32_scheme_d_pilot_20260922/PILOT_VERDICT.json",
+        "scripts/m32_scheme_d_pilot_20260922/run_pilot.py",
+        "scripts/m32_scheme_d_pilot_v4_20260923/AUTHORIZATION_REQUEST.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/OWNER_AUTHORIZATION.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/PILOT_PRESPEC.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/evaluate_pilot.py",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/RUN_MANIFEST.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/events/merge.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/events/worker_0000.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/events/worker_0001.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/MERGE_MANIFEST.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/N0_C0.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/N3_C4.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/P1_C0.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/P6_C4.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/merged/run_result.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/provenance/prov_35e0b8615e1ff4a3.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000000.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000000.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000001.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000001.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000002.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000002.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000003.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000003.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000004.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000004.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000005.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000005.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000006.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000006.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000007.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000007.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000008.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000008.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000009.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000009.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000010.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000010.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000011.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000011.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000012.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000012.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000013.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000013.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000014.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000014.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000015.complete.json",
+        "scripts/m32_scheme_d_pilot_v4_20260923/out/shards/shard_000015.receipts.jsonl",
+        "scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/manifest.sha256",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/proof_certificate.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/replay_result.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py",
+        "scripts/m32_scheme_d_pre_rng_truth_20260920/verify_certificates.py",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/freeze_package.py",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/manifest.sha256",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/proof_certificate.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N0_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N1_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N2_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/N3_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P1_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P2_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P3_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P4_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P5_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C0.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C1.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C2.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C3.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P7_C4.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/package/verification_result.json",
+        "scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py",
+        "scripts/m32_scheme_d_qualification_20260922/QUALIFICATION_MANIFEST.json",
+        "scripts/m32_scheme_d_qualification_20260922/QUALIFICATION_REPORT.json",
+        "scripts/m32_scheme_d_qualification_20260922/qualify.py",
+        "scripts/m32_scheme_d_qualification_20260922/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+        "scripts/m32_scheme_d_qualification_20260922/reference_calibration.json",
+        "scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json",
+        "scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py",
+        "scripts/m32_scheme_d_replication_20260919/output_manifest.json",
+        "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+        "scripts/m32_scheme_d_replication_20260919/run_replication.py",
+        "scripts/m32_scheme_d_sharding_20260921/LAYER_MANIFEST.json",
+        "scripts/m32_scheme_d_sharding_20260921/bench_sharding.py",
+        "scripts/m32_scheme_d_sharding_20260921/full_run_projection.json",
+        "scripts/m32_scheme_d_sharding_20260921/project_full_run.py",
+        "scripts/m32_scheme_d_sharding_20260921/scaling_benchmark.json",
+        "scripts/m32_scheme_d_sharding_20260921/shard_fixture.py",
+        "scripts/m32_scheme_d_sharding_20260921/shard_layer.py",
+        "scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json",
+        "scripts/m32_scheme_d_sharding_v4_20260923/rng_guard.py",
+        "scripts/m32_scheme_d_sharding_v4_20260923/shard_fixture.py",
+        "scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py",
+        "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json",
+        "scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_20260921/requirements.lock",
+        "scripts/m32_scheme_d_validation_bundle_20260921/runner/acceptance.py",
+        "scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py",
+        "scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py",
+        "scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/requirements.lock",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/acceptance.py",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py",
+        "scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/requirements.lock",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py",
+        "scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/requirements.lock",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py",
+        "scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py",
+        "scripts/run_m32_search.py",
+        "tests/test_m32_categorical_estimand_spec.py",
+        "tests/test_m32_correction.py",
+        "tests/test_m32_fast_metric_equivalence.py",
+        "tests/test_m32_scheme_d_validation.py",
+        "trader/cognition/m32_block_calibration.py",
+        "trader/cognition/m32_correction.py",
+        "trader/cognition/m32_evidence.py",
+        "trader/cognition/m32_fast_metric.py",
+        "trader/cognition/m32_protocol.py",
+        "trader/cognition/m32_scheme_d_validation.py",
+        "trader/cognition/m32_search.py"
+      ],
+      "non_database_inputs": "Synthetic worlds, frozen laboratory protocols and explicitly supplied historical inputs",
+      "non_database_outputs": "Calibration/validation/sufficiency/search receipts and laboratory output artifacts",
+      "initialization_path": "Offline scripts and pure laboratory APIs; no trading startup wiring",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "cognition",
+        "execution"
+      ],
+      "used_by": [],
+      "static_application_dependencies": [
+        "cognition"
+      ],
+      "offline_utility_dependencies": [
+        "cognition"
+      ],
+      "test_dependencies": [
+        "cognition",
+        "execution"
+      ],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 1,
+          "sha256": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [
+        {
+          "path": "scripts/bench_m32_scheme_d_phase90.py",
+          "line": 38,
+          "name": "main"
+        },
+        {
+          "path": "scripts/calibrate_m32_blocks.py",
+          "line": 10,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_batch_20260920/certify_batch.py",
+          "line": 359,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_batch_20260920/record_refusal.py",
+          "line": 23,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_batch_20260920/replay_batch.py",
+          "line": 46,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_batch_20260920/replay_integrator.py",
+          "line": 335,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+          "line": 110,
+          "name": "checkpoint"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+          "line": 751,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_completion_20260920/certify_completion.py",
+          "line": 194,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_arb_completion_20260920/replay_completion.py",
+          "line": 58,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_equivalence_20260920/certify_categorical.py",
+          "line": 299,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_categorical_equivalence_20260920/replay_categorical.py",
+          "line": 233,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_conditioning_comparison_20260919/sim.py",
+          "line": 331,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py",
+          "line": 31,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py",
+          "line": 251,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+          "line": 206,
+          "name": "checkpoint"
+        },
+        {
+          "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+          "line": 326,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+          "line": 222,
+          "name": "checkpoint"
+        },
+        {
+          "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+          "line": 330,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py",
+          "line": 258,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py",
+          "line": 513,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p5c3_p6c4_remaining_20260921/merge_and_check.py",
+          "line": 85,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p6_c3_taylor_20260921/certify_p6_c3_taylor.py",
+          "line": 497,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p6_c3_taylor_20260921/verify_p6_c3_replay.py",
+          "line": 40,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+          "line": 216,
+          "name": "checkpoint"
+        },
+        {
+          "path": "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+          "line": 335,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py",
+          "line": 216,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p7c4_arb_spike_20260920/replay_p7c4_h24.py",
+          "line": 60,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p7c4_persistence_20260921/certify_p7c4_persistence.py",
+          "line": 362,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_p7c4_persistence_20260921/verify_p7c4_replay.py",
+          "line": 33,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_protocol_check.py",
+          "line": 15,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py",
+          "line": 1255,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_phase90_benchmark_20260921/run_benchmark.py",
+          "line": 27,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_phase90_fast_benchmark_20260921/run_benchmark.py",
+          "line": 27,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pilot_20260922/run_pilot.py",
+          "line": 71,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pilot_v4_20260923/evaluate_pilot.py",
+          "line": 438,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pilot_v4_20260923/run_pilot.py",
+          "line": 200,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pre_rng_truth_20260920/generate_certificates.py",
+          "line": 223,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pre_rng_truth_20260920/verify_certificates.py",
+          "line": 135,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pre_rng_truth_20260921/freeze_package.py",
+          "line": 128,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py",
+          "line": 457,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py",
+          "line": 385,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_qualification_20260922/qualify.py",
+          "line": 1171,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py",
+          "line": 200,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_replication_20260919/run_replication.py",
+          "line": 253,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_sharding_20260921/bench_sharding.py",
+          "line": 89,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_sharding_20260921/shard_layer.py",
+          "line": 918,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py",
+          "line": 989,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py",
+          "line": 642,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_20260921/runner/scheme_d_runner.py",
+          "line": 466,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py",
+          "line": 369,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py",
+          "line": 731,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py",
+          "line": 476,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py",
+          "line": 470,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py",
+          "line": 1008,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py",
+          "line": 635,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py",
+          "line": 667,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/preflight.py",
+          "line": 1100,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py",
+          "line": 663,
+          "name": "main"
+        },
+        {
+          "path": "scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py",
+          "line": 771,
+          "name": "main"
+        },
+        {
+          "path": "scripts/run_m32_search.py",
+          "line": 11,
+          "name": "main"
+        }
+      ],
+      "initialization_and_schedule": [],
+      "interfaces": [],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "execution_accounting"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trade_accounting_bookings"
+        }
+      ],
+      "runtime_data_outputs": [],
+      "failure_and_recovery_dependencies": [],
+      "public_contracts": [
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 25,
+          "name": "Scenario",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 70,
+          "name": "Batch",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 85,
+          "name": "seed_for",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 89,
+          "name": "generate",
+          "kind": "function",
+          "summary": "Build a known synthetic process; no empirical market estimates are used."
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 164,
+          "name": "dependency_components",
+          "kind": "function",
+          "summary": "Whole blocks are units; cross-boundary footprints/links can only merge."
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 182,
+          "name": "strata",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 197,
+          "name": "validate",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 230,
+          "name": "permutations",
+          "kind": "function",
+          "summary": "One mapping shared by every symbol, target copy and tested feature."
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 240,
+          "name": "transformed_targets",
+          "kind": "function",
+          "summary": "Expose the actual tensor transformation for integrity/chain tests."
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 253,
+          "name": "test_batch",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 285,
+          "name": "wilson",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 293,
+          "name": "experiment",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "line": 325,
+          "name": "run_suite",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_correction.py",
+          "line": 145,
+          "name": "build_independence_groups",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_correction.py",
+          "line": 149,
+          "name": "audit",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_correction.py",
+          "line": 193,
+          "name": "write_immutable",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "line": 7,
+          "name": "pit_regime",
+          "kind": "function",
+          "summary": "Validate a retained registration receipt, never reconstruct a past label."
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "line": 49,
+          "name": "independence_groups",
+          "kind": "function",
+          "summary": "Merge global dependencies; never split pre-existing groups."
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "line": 130,
+          "name": "complete_actual",
+          "kind": "function",
+          "summary": "Only the canonical replay contract can certify an execution outcome."
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "line": 141,
+          "name": "execution_identity",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "line": 151,
+          "name": "eligible_actuals",
+          "kind": "function",
+          "summary": "Join only PIT execution episodes, deduplicate trade identity, enforce cut."
+        },
+        {
+          "path": "trader/cognition/m32_fast_metric.py",
+          "line": 38,
+          "name": "compensated_sum_columns",
+          "kind": "function",
+          "summary": "Column-wise replica of CPython 3.12 ``sum(list_of_floats)`` (int start 0, Neumaier compensation)."
+        },
+        {
+          "path": "trader/cognition/m32_fast_metric.py",
+          "line": 49,
+          "name": "reference_rows",
+          "kind": "function",
+          "summary": "Row list and lookup exactly as the Scheme D harness (``_arranged_rows``) builds them."
+        },
+        {
+          "path": "trader/cognition/m32_fast_metric.py",
+          "line": 70,
+          "name": "reference_statistics",
+          "kind": "function",
+          "summary": "Reference: production ``_metric`` per hypothesis.  Returns a list of signed effects (None = untestable)."
+        },
+        {
+          "path": "trader/cognition/m32_fast_metric.py",
+          "line": 83,
+          "name": "FastMetric",
+          "kind": "class",
+          "summary": "Per-world encoder; ``statistics(block_map)`` returns ``(signed, ok)`` for all hypotheses."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 66,
+          "name": "ProtocolError",
+          "kind": "class",
+          "summary": "The frozen input or protocol contract was violated."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 70,
+          "name": "sha256_file",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 79,
+          "name": "load_locked_artifact",
+          "kind": "function",
+          "summary": "Load only the approved artifact, without touching any other source."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 110,
+          "name": "rows_of",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 129,
+          "name": "allowed_atom",
+          "kind": "function",
+          "summary": "Return whether an atom is exactly in the frozen allow-list."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 142,
+          "name": "canonical_pattern",
+          "kind": "function",
+          "summary": "Canonicalize and validate a state/transition/sequence pattern."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 163,
+          "name": "pattern_id",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 169,
+          "name": "numeric_bins",
+          "kind": "function",
+          "summary": "Compute frozen global p33/p67 bins; missing/non-finite values are ignored."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 180,
+          "name": "cut_labels",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 215,
+          "name": "support_accounting",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 229,
+          "name": "zero_search_manifest",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 48,
+          "name": "IntegrityError",
+          "kind": "class",
+          "summary": "A deterministic validation or benchmark-isolation check failed."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 52,
+          "name": "WorldRefused",
+          "kind": "class",
+          "summary": "Synthetic metadata failed before permutation RNG construction."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 61,
+          "name": "Hypothesis",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 71,
+          "name": "SyntheticWorld",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 83,
+          "name": "SeedRegistry",
+          "kind": "class",
+          "summary": "Fail closed: the pre-RNG module cannot construct any generator."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 101,
+          "name": "hypothesis_table",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 122,
+          "name": "validate_fixed_design",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 139,
+          "name": "verify_frozen_environment",
+          "kind": "function",
+          "summary": "Verify protocol hashes and exact runtime metadata before any RNG."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 205,
+          "name": "generate_world",
+          "kind": "function",
+          "summary": "Refuse world generation while this module remains pre-RNG."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 267,
+          "name": "valid_metadata",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 284,
+          "name": "orbit_size",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 300,
+          "name": "validate_world_metadata",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 340,
+          "name": "block_fingerprints",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 349,
+          "name": "strata_groups",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 356,
+          "name": "draw_block_map",
+          "kind": "function",
+          "summary": "Draw one synchronized whole-block map; repeated calls are with replacement."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 386,
+          "name": "actual_statistic_vector",
+          "kind": "function",
+          "summary": "Evaluate all 384 hypotheses through the imported production ``_metric``."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 401,
+          "name": "exceedance_counts",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 413,
+          "name": "monte_carlo_p",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 419,
+          "name": "bh_rejections",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 448,
+          "name": "apply_injections",
+          "kind": "function",
+          "summary": "Refuse injected-world generation while this module remains pre-RNG."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 589,
+          "name": "generate_truth_tables",
+          "kind": "function",
+          "summary": "Generate all 55 pre-RNG 384-row tables, refusing no ambiguity silently."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 614,
+          "name": "derive_n1_null_mad",
+          "kind": "function",
+          "summary": "Deterministic Gauss-Legendre derivation for t3/sqrt(3) plus common jump."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 640,
+          "name": "blocked_network",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "line": 656,
+          "name": "exclusive_json",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "line": 86,
+          "name": "build_state_atoms",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "line": 163,
+          "name": "enumerate_patterns",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "line": 213,
+          "name": "applicable_label_families",
+          "kind": "function",
+          "summary": "Return every registered label family for one canonical pattern."
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "line": 387,
+          "name": "run_search",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "line": 444,
+          "name": "write_immutable",
+          "kind": "function",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/cognition/m32_block_calibration.py",
+          "summary": "Pure synthetic laboratory for the UNFROZEN 28-day M3.2 block proposal."
+        },
+        {
+          "path": "trader/cognition/m32_correction.py",
+          "summary": "Fail-closed M3.2 corrective sufficiency audit."
+        },
+        {
+          "path": "trader/cognition/m32_evidence.py",
+          "summary": "Pure, fail-closed M3.2 evidence validation; no collection or search authority."
+        },
+        {
+          "path": "trader/cognition/m32_fast_metric.py",
+          "summary": "Exact-equivalent optimized M3.2 ``_metric`` for whole-block-permutation validation worlds."
+        },
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "summary": "Deterministic, read-only validation primitives for the M3.2 slice."
+        },
+        {
+          "path": "trader/cognition/m32_scheme_d_validation.py",
+          "summary": "Synthetic-only Scheme D actual-statistic validation primitives."
+        },
+        {
+          "path": "trader/cognition/m32_search.py",
+          "summary": "Bounded deterministic M3.2 historical pattern search."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Synthetic validation, calibration, sufficiency checks and historical pattern-search experiments; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "EXPERIMENTAL",
+      "previous_status_basis": "Explicit synthetic/offline laboratory contracts; no canonical startup path, no activation performed.",
+      "classifications": {
+        "implementation": "Experimental",
+        "integration": "Isolated",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Optional"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=m32",
+      "previous_status_evidence": [
+        {
+          "path": "trader/cognition/m32_protocol.py",
+          "line": 1,
+          "sha256": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "persistence",
+      "name": "Backup and PIT dependency inventory",
+      "purpose": "Versioned integrity-checked local generations and exact replay dependency capture",
+      "execution_class": "offline",
+      "subcomponents": [
+        {
+          "id": "persistence.1",
+          "name": "backup generations",
+          "files": [
+            "trader/persistence/__init__.py",
+            "trader/persistence/backup.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/persistence/__init__.py",
+              "line": 1,
+              "sha256": "0de619fa208f3c8d717abe69d2e713772d59efa9e1e8792558cfa0cf6c0fc99b"
+            },
+            {
+              "path": "trader/persistence/backup.py",
+              "line": 1,
+              "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "persistence.2",
+          "name": "restore verification",
+          "files": [],
+          "file_count": 0,
+          "implementation_references": [
+            {
+              "path": "trader/persistence/backup.py",
+              "line": 1,
+              "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "persistence.3",
+          "name": "PIT dependency inventory",
+          "files": [
+            "trader/persistence/pit_inventory.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/persistence/pit_inventory.py",
+              "line": 1,
+              "sha256": "ea23ca245412ab5d8bc9037a147675fb3aa33a6c920f6ec69e1e0d1233043362"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/persistence/backup.py",
+      "counts": {
+        "python_source": 3,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 0,
+        "test": 0,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 3,
+        "source_files": 3,
+        "test_files": 0,
+        "other_files": 0,
+        "total_files": 3,
+        "source_lines": 683,
+        "all_text_lines": 683,
+        "binary_files": 0
+      },
+      "files": [
+        "trader/persistence/__init__.py",
+        "trader/persistence/backup.py",
+        "trader/persistence/pit_inventory.py"
+      ],
+      "non_database_inputs": "Logical critical-store catalog, exact PIT indexes and supplied offline destination",
+      "non_database_outputs": "Versioned backup generation, integrity manifest and verified absent-root restore artifacts",
+      "initialization_path": "Library/explicit utilities only; no built-in scheduler, retention or transport",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "cognition",
+        "execution",
+        "platform"
+      ],
+      "used_by": [],
+      "static_application_dependencies": [
+        "cognition",
+        "execution",
+        "platform"
+      ],
+      "offline_utility_dependencies": [],
+      "test_dependencies": [],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 1,
+          "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [],
+      "initialization_and_schedule": [
+        {
+          "source": "persistence",
+          "interaction": "SHARED_FILE",
+          "detail": "Backup catalog gathers critical stores plus exact PIT dependencies.",
+          "evidence": [
+            {
+              "path": "trader/persistence/backup.py",
+              "line": 96,
+              "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "consumes",
+          "peer": "platform",
+          "interaction": "SHARED_FILE",
+          "detail": "Backup catalog gathers critical stores plus exact PIT dependencies."
+        }
+      ],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "state_kv"
+        }
+      ],
+      "runtime_data_outputs": [
+        {
+          "database": "luffy.db",
+          "table": "control_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "state_kv"
+        }
+      ],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "platform",
+          "basis": "No scheduler, retention transport or backup operation run.",
+          "evidence": [
+            {
+              "path": "trader/persistence/backup.py",
+              "line": 96,
+              "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 26,
+          "name": "Refused",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 30,
+          "name": "canonical",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 34,
+          "name": "digest",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 38,
+          "name": "sync_dir",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 46,
+          "name": "durable",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 54,
+          "name": "safe_path",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 72,
+          "name": "Asset",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 85,
+          "name": "Inventory",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 127,
+          "name": "critical_inventory",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 169,
+          "name": "metadata",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 180,
+          "name": "no_store_secrets",
+          "kind": "function",
+          "summary": "Refuse recognized credential storage; never redact critical state."
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 192,
+          "name": "exact_file",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 202,
+          "name": "no_config_secrets",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 220,
+          "name": "rename_absent",
+          "kind": "function",
+          "summary": "Linux renameat2(RENAME_NOREPLACE): atomically refuse every existing target."
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 238,
+          "name": "BackupManifest",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 271,
+          "name": "BackupSets",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/persistence/pit_inventory.py",
+          "line": 14,
+          "name": "dependencies",
+          "kind": "function",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/persistence/__init__.py",
+          "summary": "Critical state capture; no trading or deployment authority."
+        },
+        {
+          "path": "trader/persistence/backup.py",
+          "summary": "Versioned, integrity checked generations. No scheduler, retention or transport."
+        },
+        {
+          "path": "trader/persistence/pit_inventory.py",
+          "summary": "Exact PIT dependencies, derived from configuration and retained ledger indexes."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Versioned integrity-checked local generations and exact replay dependency capture; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "DORMANT",
+      "previous_status_basis": "Library has no scheduler or transport; no backup/restore operation run.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Partially Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Optional"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=persistence",
+      "previous_status_evidence": [
+        {
+          "path": "trader/persistence/backup.py",
+          "line": 1,
+          "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    }
+  ]
+}

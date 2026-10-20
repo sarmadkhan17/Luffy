@@ -1,0 +1,5 @@
+scripts/m32_p4_c3_c4_taylor_20260921/certify_p4_reduced_taylor.py:8:8: F401 [*] `math` imported but unused
+scripts/m32_p5_c4_taylor_20260921/certify_p5_c4_taylor.py:9:25: F401 [*] `dataclasses.dataclass` imported but unused
+scripts/m32_p7c4_arb_spike_20260920/certify_p7c4_h24.py:15:8: F401 [*] `sys` imported but unused
+Found 3 errors.
+[*] 3 fixable with `--fix`.

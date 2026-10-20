@@ -1,0 +1,422 @@
+[
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_frozen_files_hash_chain_is_consistent",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_real_authorization_verifies_statically",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_v3_authorization_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_v3_authorization_is_refused_by_the_frozen_v4_runner_itself",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_altered_prespec_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_altered_request_launcher_or_evaluator_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_benchmark_receipt_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_shard_layer_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[shard_worlds-10]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[workers-4]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[worlds-75000]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[worlds-100]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[cloud_spend-True]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[full_validation_authorized-True]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[scope-full_validation]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[mode-benchmark]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[host_receipt_sha256-0000000000000000000000000000000000000000000000000000000000000000]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_authorization_fields_are_refused[qualified_workers-8]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_wrong_runtime_shard_worlds_or_workers_are_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_bad_authorization_fails_before_layer_import_or_seed_registry",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_valid_authorization_reaches_seed_registry_only_after_every_check",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_p1_is_perturbed_null_and_p6_is_power",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_pilot_plan_refuses_p1_tagged_power",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_p1_still_receives_injection_through_the_v4_layer_evaluator",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_p1_cannot_enter_power_or_fdr_evaluation",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_prespec_effect_targets_are_the_p6_injections_with_positive_truth_sign",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw0-expected0]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw1-expected1]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw2-expected2]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw3-expected3]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw4-expected4]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw5-expected5]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw6-expected6]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw7-expected7]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw8-expected8]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw9-expected9]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw10-expected10]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw11-expected11]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_applies_frozen_precedence[kw12-expected12]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_type_one_diagnostic_threshold_and_wilson",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_go_on_clean_synthetic_run",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_cli_writes_verdict_once",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw0-expected0]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw1-expected1]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw2-expected2]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw3-expected3]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw4-expected4]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_end_to_end_stop_and_inconclusive[kw5-expected5]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_tampered_receipt",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_missing_or_tampered_shard",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_tampered_merge_manifest_or_result",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_missing_provenance",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_unexpected_cell_set",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_p1_tagged_power",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_wrong_or_v3_authorization",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_refuses_run_bound_to_wrong_prespec_or_layer",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_target_set_is_exactly_injections_106_and_refuses_otherwise",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_evaluator_signs_come_from_hash_bound_truth_table_and_require_analytic_non_null",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_world_effect_exact_decode_excludes_refused_targets_and_counts",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_world_effect_refuses_inconsistent_statistics",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_zero_testable_world_is_refused_for_effect_and_excluded_without_new_gate",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_family_means_are_reported_but_never_decide",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_prespec_documents_diagnostic_nature_and_no_historical_reproduction_claim",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_importing_launcher_and_evaluator_constructs_no_rng_and_runs_nothing",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_pilot_v4.py::test_historical_pilot_evidence_is_preserved_without_new_execution",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_v1_v2_v3_all_manifest_files_and_truth_package_unchanged",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_v3_bundle_dir_byte_identical_to_its_freeze_commit_including_unmanifested_files",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_v4_manifest_supersedes_v3_exactly",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_power_rules_and_fdr_scenarios_exclude_101_103_and_preserve_p2",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_p1_p3_role_calibration_and_cell_plan_kind_perturbed_null",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_p1_p3_truth_tables_all_true_null_frozen_and_unchanged",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_run_cell_dispatch_spy_all_ten_p1_p3_cells",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_perturbed_null_true_null_rejections_are_false_positives",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_perturbed_null_zero_rejections_passes_and_excessive_fails",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_perturbed_null_refusal_exclusion_and_blocker",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_perturbed_null_never_calls_bootstrap_callback",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_boundary_wilson_upper_fails_at_exact_point_threshold",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_empty_and_all_refused_cells_fail",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_p7_refusal_still_blocks_in_overall",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_null_cell_gates_unaffected",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_p2_p4_p5_p6_power_and_fdr_gates_intact",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_p7_remains_descriptive_only",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_seed_map_distinct_tuples_account_for_reduced_bootstrap_stream",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_required_preflight_checks_include_v4_correction_checks",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_test_guard_rejects_rng_construction",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_validation_bundle_v4.py::test_authorization_and_rng_modes_fail_closed_without_owner_authorization",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_exact_hash_bindings_match_the_freeze_tag",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_tampered_runner_file_is_refused_before_any_import",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_tampered_bundle_manifest_is_refused",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v3_tooling_byte_unchanged_against_freeze_commit",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v3_layer_file_itself_is_byte_identical_to_the_freeze_commit",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_p1_p3_receive_injection_via_apply_injection_spy_despite_perturbed_null_kind",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_perturbed_null_cell_has_no_power_or_fdr_gate",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_cell_plan_has_55_cells_with_the_correct_kind_breakdown",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_acceptance_gate_structure_for_null_and_power_cells_matches_v3",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_refusal_handling_with_real_v4_world_receipt_on_deterministic_refusal_fixture",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_evaluator_uses_the_same_calls_and_seed_positions_as_run_cell",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_layer_and_fixture_construct_no_random_generator_via_monkeypatch",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_import_collision_regression_both_orders[v4_first]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_import_collision_regression_both_orders[v3_first]",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_crash_mid_shard_resumes_from_the_last_durable_world_and_matches_uninterrupted",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_torn_partial_tail_is_dropped_but_corrupt_complete_lines_fail_closed",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_tampered_receipts_are_detected_and_block_the_merge",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_production_context_refuses_a_v3_shaped_authorization",
+    "result": "passed"
+  },
+  {
+    "nodeid": "tests/test_m32_shard_layer_v4.py::test_v4_production_cli_fails_closed_without_owner_authorization",
+    "result": "passed"
+  }
+]

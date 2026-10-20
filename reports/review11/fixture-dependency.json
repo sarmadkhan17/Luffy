@@ -1,0 +1,7 @@
+{
+  "source": "/mnt/luffy-data/luffy/production/docs/superpowers/artifacts/pit-dataset/2026-09-19-historical-discovery-artifact.json",
+  "copy": "docs/superpowers/artifacts/pit-dataset/2026-09-19-historical-discovery-artifact.json",
+  "sha256": "3a5ea9bd5a8a36ccfb0c50f0f6a3b17fdcb618d27922f92b7028edef10a0f7a8",
+  "bytes": 2679510,
+  "operation": "read-only source, copied exact historical frozen evidence into isolated ignored fixture path; no production database access"
+}

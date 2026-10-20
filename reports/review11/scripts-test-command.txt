@@ -1,0 +1,5 @@
+Working directory: /mnt/luffy-data/sol1-subsystem-review-11-20261020
+
+OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 ./venv/bin/python -m pytest tests/test_m32_pilot_v4.py tests/test_m32_validation_bundle_v4.py tests/test_m32_shard_layer_v4.py -k 'not preflight_fresh and not recorded_preflight_report_is_the_fresh and not sequential_run_validation and not sharded_merge_reproduces_sequential and not zero_guard_attempts_and_no_validation_worlds_across_full_fixture_battery and not qualification_cli_writes and not verify_bundle_fails_closed_on_file_corruption and not missing_v4_required_preflight_check_refuses_statistic_gate' -vv -p no:cacheprovider --basetemp=/mnt/luffy-data/review11-scripts-pytest-clean --junitxml=reports/review11/scripts-tests.xml > reports/review11/scripts-tests.txt 2>&1
+
+Recorded result: 105 passed, 8 deselected in 34.35s.

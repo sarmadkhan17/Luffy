@@ -1,0 +1,125 @@
+--- scripts/m32_scheme_d_validation_bundle_20260921/runner/preflight.py	2026-10-20 06:18:47.972029138 +0300
++++ scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py	2026-10-20 06:18:47.972756071 +0300
+@@ -62,8 +62,8 @@
+ class DeterministicStub:
+     """NOT a random generator: fixed arithmetic patterns that mimic the API shapes."""
+ 
+-    def __init__(self, permutation="roll", uniform=0.0):
+-        self.permutation_mode, self.uniform_value = permutation, uniform
++    def __init__(self, permutation="roll", uniform=0.0, geometric=None):
++        self.permutation_mode, self.uniform_value, self.geometric_value = permutation, uniform, geometric
+ 
+     @staticmethod
+     def _n(size):
+@@ -91,6 +91,8 @@
+ 
+     def geometric(self, p, size=None):
+         n = self._n(size)
++        if self.geometric_value is not None:
++            return self._shape(np.full(n, self.geometric_value, dtype=np.int64), size)
+         return self._shape((np.arange(n) % 3 + 1).astype(np.int64), size)
+ 
+     def choice(self, a, size=None, p=None):
+@@ -571,7 +573,7 @@
+                 expected[b, s, 5 - lags[b, s]:] = False
+     assert np.array_equal(grid, expected)
+     w2 = R.generate_world(2, 0, 0, DeterministicStub(uniform=None), DeterministicStub())
+-    classes = np.asarray([R.missing_class(1.0 - w2.observed.reshape(48, 16, 5)[b].mean()) for b in range(48)])
++    classes = np.asarray([R.missing_class(int((~w2.observed.reshape(48, 16, 5)[b]).sum()), 80) for b in range(48)])
+     assert [s[2] for s in w2.block_strata] == classes.tolist()
+     # injection: persistence shift deterministic, categorical switch uses the injection stream
+     base = fixture_world(only={0, 130, 260, 330})
+@@ -609,6 +611,93 @@
+ 
+ 
+ @check
++def class_edges_half_open_integer():
++    """Protocol section 5 edges [0,.2), [.2,.4), [.4,.6), [.6,1] with no binary-float boundary ambiguity."""
++    edges = (Fraction(1, 5), Fraction(2, 5), Fraction(3, 5))
++    for masked in range(81):
++        expected = sum(Fraction(masked, 80) >= e for e in edges)
++        assert R.missing_class(masked, 80) == expected, masked
++    assert [R.missing_class(m, 80) for m in (0, 15, 16, 31, 32, 47, 48, 80)] == [0, 0, 1, 1, 2, 2, 3, 3]
++    assert 1.0 - 64 / 80 < 0.2                                  # the superseded float rule put 16/80 in class 0
++    assert "searchsorted" not in (HERE / "scheme_d_runner.py").read_text()
++    return {"masked_counts_checked": 81, "exact_edges": {"16": 1, "32": 2, "48": 3}}
++
++
++@check
++def world_generation_class_edges_at_exact_boundaries():
++    got = {}
++    for g in (1, 2, 3, 4, 5):                                    # constant lag L = g-1 -> masked fraction (g-1)/5
++        w = R.generate_world(3, 0, 0, DeterministicStub(uniform=None, geometric=g), DeterministicStub())
++        got[g] = sorted({s[2] for s in w.block_strata})
++    assert got == {1: [0], 2: [1], 3: [2], 4: [3], 5: [3]}, got
++    return {"lag_to_class": {str(k): v[0] for k, v in got.items()}}
++
++
++@check
++def zero_tested_world_is_refused():
++    truth = [{"classification": "true_null", "sign": None}] * 384
++    base = fixture_world()
++    obs = base.observed.copy(); obs[:80 - 7] = False           # a block below 8 observed rows -> all 384 refused
++    low = V.SyntheticWorld(0, 1, 0, base.memberships, base.categorical, base.persistence, obs, base.block_strata, base.metadata)
++    r = R.world_receipt(low, DeterministicStub(), 90, "STUB", {}, draws=2, truth=truth, injected=())
++    assert r["world_refused"] == ["no_tested_hypotheses"] and len(r["refusals"]) == 384
++    s = R.world_summary(r)
++    assert s["refused"] is True and s["R"] == 0 and s["marginal_p"] is None
++    empty = V.SyntheticWorld(0, 1, 0, np.zeros_like(base.memberships), base.categorical, base.persistence,
++                             base.observed, base.block_strata, base.metadata)
++    r2 = R.world_receipt(empty, DeterministicStub(), 90, "STUB", {}, draws=2, truth=truth, injected=())
++    assert r2["world_refused"] == ["no_tested_hypotheses"]
++    cell = A.evaluate_cell("null", None, [s] * 30 + [{"refused": False, "refused_hypotheses": 0, "R": 0, "V": 0,
++                                                       "true_discoveries": 0, "attribution_errors": 0,
++                                                       "marginal_p": Fraction(1, 2)}] * 70)
++    assert cell["non_refused"] == 70 and cell["refusal"]["blocks"] is True      # counted in the world-refusal blocker
++    power = A.power_pass(101, [0] * 30 + [1] * 970)                              # refused world = failure, stays in denominator
++    assert power is True and A.power_pass(101, [0] * 250 + [1] * 750) is False
++    return {"refused_world": "no_tested_hypotheses", "excluded_from_type_one_fdr": True, "power_failure": True}
++
++
++@check
++def zero_observed_lift_is_tested_not_refused():
++    """Owner clarification I4: an observed zero lift is valid evidence and is never refused."""
++    world = fixture_world(only={0, 130, 260, 330})
++    rows = np.arange(R.ROWS)
++    cat = np.zeros(R.ROWS, dtype=np.int64)
++    cat[(rows * 7 + 3) % 23 == 0] = 1
++    cat[(rows * 11 + 5) % 29 == 0] = 2
++    zero = V.SyntheticWorld(0, 1, 0, world.memberships, cat, world.persistence, world.observed, world.block_strata,
++                            world.metadata)
++    stat = R.actual_statistics(zero, None, [0, 260])
++    assert stat[0] == 0.0 and stat[260] == 0.0                   # majorities coincide: lift is exactly zero
++    reasons = R.hypothesis_refusals(zero)
++    assert reasons[0] is None and reasons[260] is None
++    truth = [{"classification": "true_null", "sign": None}] * 384
++    r = R.world_receipt(zero, DeterministicStub(), 90, "STUB", {}, draws=2, truth=truth, injected=())
++    assert "0" not in r["refusals"] and "260" not in r["refusals"]
++    assert r["signed_hex"][0] == float(0.0).hex() and r["p"][0] is not None and r["exceedances"][0] == 2
++    const = V.SyntheticWorld(0, 1, 0, world.memberships, np.zeros(R.ROWS, dtype=np.int64), world.persistence,
++                             world.observed, world.block_strata, world.metadata)
++    assert R.hypothesis_refusals(const)[0] == "degenerate_constant_outcome"      # only a constant column is degenerate
++    return {"zero_lift_tested": True, "p": r["p"][0], "constant_outcome_refused": True}
++
++
++@check
++def calibration_excludes_refused_marginal_worlds():
++    """Owner decision I6: worlds whose h(w) is refused leave the ECDF denominator."""
++    F = Fraction
++    grid = [F(2 * w + 1, 2000) for w in range(1000)]                         # perfectly calibrated on n = 1000
++    with_refused = grid + [None] * 1000
++    assert all(A.calibration_pass(grid).values())
++    assert A.calibration_pass(with_refused) == A.calibration_pass(grid)     # None entries change nothing
++    assert not all(A.cp_band_contains(sum(1 for p in grid if p <= t), 2000, t) for t in A.MARGINAL_T)   # counting them as > t would fail
++    quiet = [{"refused": False, "refused_hypotheses": 0, "R": 0, "V": 0, "true_discoveries": 0,
++              "attribution_errors": 0, "marginal_p": p} for p in grid]
++    cell = A.evaluate_cell("null", None, quiet + [{**quiet[0], "marginal_p": None} for _ in range(20)])
++    assert cell["calibration_worlds"] == 1000 and cell["non_refused"] == 1020
++    assert A.calibration_pass([None, None]) == {str(t): False for t in A.MARGINAL_T}
++    return {"denominator_after_exclusion": 1000, "refused_marginal_worlds_ignored": True}
++
++
++@check
+ def frozen_truth_package_consumed_unchanged():
+     freeze = json.loads((ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json").read_text())
+     pkg = ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921/package"

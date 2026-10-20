@@ -1,0 +1,5 @@
+tests/test_review11_m32_core.py::test_frozen_continuation_shuffle_does_not_reach_scored_targets
+tests/test_review11_m32_core.py::test_frozen_persistence_identity_rotation_applies_direction_twice
+tests/test_review11_m32_core.py::test_frozen_v4_untouched_check_omits_deleted_v3_inventory
+
+3 tests collected in 0.14s

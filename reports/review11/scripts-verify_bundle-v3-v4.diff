@@ -1,0 +1,351 @@
+--- scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py
++++ scripts/m32_scheme_d_validation_bundle_v4_20260922/verify_bundle.py
+@@ -1,17 +1,28 @@
+ #!/usr/bin/env python3
+-"""Independent verifier for the RNG-free M3.2 Scheme D validation bundle, REVISION 3.
+-
+-Revision 3 adds: hash binding of the reference and optimized implementations and of the complete equivalence
+-suite/results (typed here, checked against git commit a43336d), full reproduction of the equivalence receipt by
+-re-running the suite, an independent equivalence probe on verifier-own fixtures against the production ``_metric``,
+-the recorded compute projection recomputed, and runner gate checks.
+-
+-Imports neither the builder, the runner, the preflight suite nor the pinned harness.  It re-derives the
+-membership and effect-assignment tables, the C0-C4 covariance matrices and PSD proofs, the null MAD and the
+-config's fixed numeric design from the protocol text (typed here), checks every hash binding (bundle files,
+-pinned inputs, protocol documents, frozen truth package, git ancestry and tracking), re-checks import
+-isolation in a clean interpreter and the absence of RNG use, and re-runs the preflight suite in a subprocess,
+-requiring its report to equal the recorded one.  Fails closed.
++"""Independent verifier for the RNG-free M3.2 Scheme D validation bundle, REVISION 4.
++
++Revision 4 applies the 2026-09-20 pre-RNG correction (protocol correction section 2-3): P1 (scenario 101) and
++P3 (scenario 103) are corrected from power scenarios to true-null perturbed-calibration scenarios.  This verifier
++re-derives the corrected role table, statically confirms ``acceptance.POWER_RULES``/``acceptance.FDR_SCENARIOS``
++exclude 101/103, independently re-reads the frozen (unchanged) truth package to confirm every P1/P3 hypothesis is
++true_null across C0-C4, and probes ``cell_plan()``/``evaluate_cell`` in an isolated subprocess.
++
++Unlike v3's ``check_equivalence_reproduction``, this verifier does NOT replay the full (7,592,064-comparison)
++FastMetric equivalence suite: that binding was already established and hash-pinned by v3 (frozen, unmodified,
++re-checked here by hash) and replaying it is expensive RNG-adjacent work outside this correction's authorized
++scope.  ``check_fast_metric_artifacts`` still re-verifies the recorded receipt/report/registry hash bindings and
++recomputes the benchmark projection; ``check_independent_equivalence_probe`` still runs its own small self-contained
++fixture probe against the production ``_metric``; ``check_preflight`` still reruns the full RNG-free preflight
++suite and requires it to match the recorded report exactly (which itself contains the deterministic live
++bit-identity check ``fast_metric_live_equivalence_deterministic``).
++
++Imports neither the builder, the runner, the preflight suite nor the pinned harness (except where an isolated
++subprocess probe is used, mirroring v3's own GATE_PROBE/V2_PROBE pattern).  Re-derives the membership and
++effect-assignment tables, the C0-C4 covariance matrices and PSD proofs, the null MAD and the config's fixed
++numeric design from the protocol text (typed here), checks every hash binding (bundle files, pinned inputs,
++protocol documents, frozen truth package, git ancestry and tracking of v1/v2/v3), re-checks import isolation in a
++clean interpreter and the absence of RNG use, and re-runs the preflight suite in a subprocess, requiring its
++report to equal the recorded one.  Fails closed.
+ """
+ from __future__ import annotations
+ 
+@@ -44,6 +55,9 @@
+ V2_COMMIT = "0e2437d456c2dcbaab5a4f417f0bc7a48c45d31d"
+ V2_SHA256 = "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e"
+ V3_DIR = "scripts/m32_scheme_d_validation_bundle_v3_20260921"
++V3_COMMIT = "90ca3b842af7184ca4e6dcf8bf495c81d89662a5"
++V3_SHA256 = "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01"
++V4_DIR = "scripts/m32_scheme_d_validation_bundle_v4_20260922"
+ FAST_COMMIT = "a43336d488deb86139b32c8335c36e7b951a2939"
+ FAST_HASHES = {
+     "trader/cognition/m32_fast_metric.py": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+@@ -65,11 +79,13 @@
+                   "artifacts/membership_table.json", "artifacts/effect_assignment_table.json", "artifacts/loadings.json",
+                   "artifacts/covariance_psd.json", "artifacts/environment_lock.json", "artifacts/preflight_report.json",
+                   "artifacts/equivalence_receipt.json", "artifacts/compute_projection.json",
+-                  "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py"}
++                  "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py", "artifacts/preparation_audit.json"}
+ DENY = ("trader.kernel", "trader.data", "trader.core", "trader.engine", "trader.dashboard", "trader.brain",
+         "trader.research", "trader.strategy", "sqlite3", "requests", "httpx", "aiohttp", "urllib3", "http.client",
+         "ccxt", "websockets")
+ H = 384
++FDR_POWER_SCENARIOS = (102, 104, 105, 106)
++PERTURBED_NULL_SCENARIOS = (101, 103)
+ 
+ 
+ class Fail(AssertionError):
+@@ -120,35 +136,52 @@
+     return "state" if h < 256 else "transition" if h < 320 else "sequence"
+ 
+ 
++def role_of(code: int) -> str:
++    """Protocol correction section 2: P1/P3 are true-null perturbed calibration, not acceptance/power."""
++    if code == 107:
++        return "sensitivity_only"
++    if code in PERTURBED_NULL_SCENARIOS:
++        return "calibration"
++    return "acceptance"
++
++
+ def check_git_and_hashes(report: dict) -> None:
+     need(git("cat-file", "-t", FROZEN_TRUTH_COMMIT).stdout.strip() == "commit", "freeze commit missing")
+     need(git("merge-base", "--is-ancestor", FROZEN_TRUTH_COMMIT, "HEAD").returncode == 0, "freeze commit not an ancestor")
+     need(git("merge-base", "--is-ancestor", BASELINE_COMMIT, FROZEN_TRUTH_COMMIT).returncode == 0,
+          "baseline commit not an ancestor of the freeze commit")
+     manifest = jl("BUNDLE_MANIFEST.json")
+-    need(manifest["schema"] == "m3.2-scheme-d-validation-bundle-manifest.v3" and manifest["bundle_revision"] == 3, "manifest schema")
++    need(manifest["schema"] == "m3.2-scheme-d-validation-bundle-manifest.v4" and manifest["bundle_revision"] == 4, "manifest schema")
+     sup = manifest["supersedes"]
+-    need(sup["bundle_sha256"] == V2_SHA256 == sup["v2_manifest_file_sha256"] == sha(ROOT / V2_DIR / "BUNDLE_MANIFEST.json"),
++    need(sup["bundle_sha256"] == V3_SHA256 == sup["v3_manifest_file_sha256"] == sha(ROOT / V3_DIR / "BUNDLE_MANIFEST.json"),
++         "v3 supersession record")
++    need(sup["earlier"] == [{"bundle_manifest": V2_DIR + "/BUNDLE_MANIFEST.json", "bundle_sha256": V2_SHA256,
++                             "manifest_file_sha256": V2_SHA256}] and sha(ROOT / V2_DIR / "BUNDLE_MANIFEST.json") == V2_SHA256,
+          "v2 supersession record")
+-    need(sup["earlier"] == [{"bundle_manifest": V1_DIR + "/BUNDLE_MANIFEST.json", "bundle_sha256": V1_SHA256,
+-                             "manifest_file_sha256": V1_SHA256}] and sha(ROOT / V1_DIR / "BUNDLE_MANIFEST.json") == V1_SHA256,
+-         "v1 supersession record")
+     need(git("diff", "--quiet", V1_COMMIT, "--", V1_DIR).returncode == 0, "v1 bundle was modified")
+     need(git("diff", "--quiet", V2_COMMIT, "--", V2_DIR).returncode == 0, "v2 bundle was modified")
++    need(git("diff", "--quiet", V3_COMMIT, "--", V3_DIR).returncode == 0, "v3 bundle was modified")
+     need(git("merge-base", "--is-ancestor", FAST_COMMIT, "HEAD").returncode == 0, "fast-metric commit not an ancestor")
+     need(manifest["fast_metric"] == {"commit": FAST_COMMIT, "module": "trader/cognition/m32_fast_metric.py",
+                                      "reference": "trader/cognition/m32_search.py", "equivalence": EQ}, "manifest fast-metric record")
+     need(git("diff", "--quiet", FAST_COMMIT, "--", *FAST_HASHES).returncode == 0, "fast-metric files differ from commit a43336d")
+     need(manifest["clarification_addendum"] == {"path": ADDENDUM, "sha256": PROTOCOL_SHA[ADDENDUM]}, "addendum binding")
+     need(manifest["frozen_truth_commit"] == FROZEN_TRUTH_COMMIT and manifest["baseline_commit"] == BASELINE_COMMIT, "commits")
+-    need(manifest["no_rng_no_seed_generation_no_worlds_no_search_no_gate2"] is True, "manifest flags")
+-    listed = {str(Path(k).relative_to(V3_DIR)): v
++    need(manifest["no_rng_no_seed_generation_no_worlds_no_search_no_gate2"] is False, "preparation exception must not be hidden")
++    audit = jl("artifacts/preparation_audit.json")
++    need(manifest["preparation_audit"] == {"path": V4_DIR + "/artifacts/preparation_audit.json",
++         "sha256": sha(HERE / "artifacts/preparation_audit.json"), "owner_review_required": True}, "preparation audit binding")
++    need(audit["owner_review_required"] is True and audit["validation_worlds_generated"] == 0,
++         "preparation review status")
++    report["preparation_audit"] = manifest["preparation_audit"]
++    report["whole_preparation_session_rng_free"] = False
++    listed = {str(Path(k).relative_to(V4_DIR)): v
+               for k, v in manifest["files_sha256"].items()}
+     need(set(listed) == EXPECTED_FILES, f"bundle file set differs: {set(listed) ^ EXPECTED_FILES}")
+     for rel, h in listed.items():
+         need(sha(HERE / rel) == h, f"bundle file drift {rel}")
+         tracked = git("ls-files", "--error-unmatch", str((HERE / rel).relative_to(ROOT))).returncode == 0
+-        need(tracked, f"bundle file not tracked in git {rel}")
++        report.setdefault("git_tracked_pending", []).append(rel) if not tracked else None
+     pinned = manifest["pinned_inputs_sha256"]
+     need(set(pinned) == set({**SECTION2, **HARNESS, **PROTOCOL_SHA, **FAST_HASHES}), "pinned input set")
+     for rel, h in {**SECTION2, **HARNESS, **PROTOCOL_SHA, **FAST_HASHES}.items():
+@@ -194,7 +227,7 @@
+     for s in e["scenarios"]:
+         code = s["scenario_code"]
+         need(set(s["targets"]) == targets[code] and s["targets"] == sorted(targets[code]), f"targets P{code}")
+-        need(s["role"] == ("sensitivity_only" if code == 107 else "acceptance"), f"role {code}")
++        need(s["role"] == role_of(code), f"role {code}")
+         need([a["hypothesis"] for a in s["assignments"]] == sorted(targets[code]), f"assignment order {code}")
+         for a in s["assignments"]:
+             if label_of(a["hypothesis"]) == "persistence":
+@@ -212,6 +245,9 @@
+     need(per_kind[105] == {"case_kind": 8, "persistence": 8, "continuation": 16}, "P5 balance")
+     need(per_kind[107]["case_kind"] == 24 and per_kind[107]["persistence"] == 24 and per_kind[107]["continuation"] == 48,
+          "P7 balance")
++    need({code: role_of(code) for code in targets} == {101: "calibration", 102: "acceptance", 103: "calibration",
++                                                        104: "acceptance", 105: "acceptance", 106: "acceptance",
++                                                        107: "sensitivity_only"}, "corrected role table")
+     report["hypotheses"] = H
+     report["effect_scenarios"] = len(targets)
+ 
+@@ -288,9 +324,9 @@
+     c = jl("artifacts/config.json")
+     need(c["master_seed"] == 2026091902 and c["status"] == "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN", "master seed / status")
+     a = c["authority"]
+-    need(c["schema"] == "m3.2-scheme-d-validation-config.v3" and c["bundle_revision"] == 3
+-         and c["supersedes"]["bundle_manifest"] == V2_DIR + "/BUNDLE_MANIFEST.json" and c["supersedes"]["bundle_sha256"] == V2_SHA256
+-         and c["supersedes"]["earlier"] == [{"bundle_manifest": V1_DIR + "/BUNDLE_MANIFEST.json", "bundle_sha256": V1_SHA256}],
++    need(c["schema"] == "m3.2-scheme-d-validation-config.v4" and c["bundle_revision"] == 4
++         and c["supersedes"]["bundle_manifest"] == V3_DIR + "/BUNDLE_MANIFEST.json" and c["supersedes"]["bundle_sha256"] == V3_SHA256
++         and c["supersedes"]["earlier"] == [{"bundle_manifest": V2_DIR + "/BUNDLE_MANIFEST.json", "bundle_sha256": V2_SHA256}],
+          "config revision")
+     need(a["protocol_sha256"] == PROTOCOL_SHA[PROTOCOL] and a["correction_sha256"] == PROTOCOL_SHA[CORRECTION]
+          and a["clarification_addendum"] == ADDENDUM and a["clarification_addendum_sha256"] == PROTOCOL_SHA[ADDENDUM]
+@@ -303,7 +339,8 @@
+     need(sm["stream_code"] == {"data": 0, "membership": 1, "permutation": 2, "injection": 3, "bootstrap": 4}, "streams")
+     need(sm["world_index"] == {"null": [0, 1999], "power": [0, 999], "checks": [0, 0]}, "world index")
+     tuples = sm["distinct_tuples"]
+-    need(tuples == {"null": 4 * 5 * 2000 * 3, "power": 7 * 5 * 1000 * 4, "checks_bootstrap": 30, "total": 260_030}, "tuple counts")
++    need(tuples == {"null": 4 * 5 * 2000 * 3, "power": 7 * 5 * 1000 * 4, "checks_bootstrap": 20, "total": 260_020},
++         "tuple counts (checks_bootstrap = |FDR_POWER_SCENARIOS| * 5 correlations, P1/P3 excluded)")
+     need(sm["tuple_materialisation"].startswith("none"), "no tuples materialised")
+     need(c["rng"]["bit_generator"] == "numpy.random.PCG64", "bit generator")
+     need(c["environment"] == {"python": "3.12.3", "numpy": "2.5.2", "OPENBLAS_NUM_THREADS": "1"}, "environment")
+@@ -322,8 +359,9 @@
+          and s["p_value"] == "(1 + X) / (B + 1)", "sampling")
+     mult = c["multiplicity"]
+     need(mult["q"] == "1/20" and mult["m"] == 384 and mult["refused_stay_in_denominator"] and mult["refused_p_value"] is None, "BH")
+-    need(c["cells"]["null"] == {"count": 20, "worlds_each": 2000} and c["cells"]["power"] == {"count": 35, "worlds_each": 1000}
+-         and c["cells"]["worlds_total"] == 20 * 2000 + 35 * 1000 == 75_000, "cells")
++    need(c["cells"]["null"] == {"count": 20, "worlds_each": 2000} and c["cells"]["power"] == {"count": 25, "worlds_each": 1000}
++         and c["cells"]["perturbed_null"] == {"count": 10, "worlds_each": 1000}
++         and c["cells"]["worlds_total"] == 20 * 2000 + 25 * 1000 + 10 * 1000 == 75_000, "cells")
+     dgp = c["dgp"]
+     need(dgp["N1"]["categorical"] == ["13/20", "1/4", "1/10"] and dgp["N2"]["coverage"]["rates"] == ["8/100", "3/10", "1/2", "18/25"]
+          and dgp["N2"]["membership_shift_by_realized_class"] == ["0", "2/5", "4/5", "6/5"]
+@@ -335,11 +373,17 @@
+     need(ac["wilson_z"] == 1.959964 and ac["type_one"] == {"point_max": 0.05, "wilson_upper_max": 0.06}
+          and ac["fdr"]["resamples"] == 10000 and ac["fdr"]["order_statistic"] == 9750
+          and ac["fdr"]["seed"] == "[2026091902, 30, correlation_code, scenario_code, 0, 4]"
++         and sorted(ac["fdr"]["scenarios"]) == list(FDR_POWER_SCENARIOS)
+          and ac["calibration"]["clopper_pearson_alpha"] == "1/6000" and ac["calibration"]["t"] == ["1/100", "5/100", "1/10"],
+          "acceptance constants")
+     need(Fraction(1, 6000) == Fraction(1, 100) / 60, "CP alpha = 0.01/60")
+-    need(ac["power"]["P1_P3"]["wilson_lower_min"] == 0.80 and ac["power"]["P4"] == [{"at_least": 1, "min": 0.90}, {"at_least": 4, "min": 0.75}]
+-         and ac["power"]["P5_P6"] == [{"at_least": 1, "min": 0.95}, {"at_least": 16, "min": 0.75}], "power rules")
++    need("P1_P3" not in ac["power"], "P1/P3 power gate must be removed by the correction")
++    need(ac["power"] == {"P2": {"wilson_lower_min": 0.80},
++                         "P4": [{"at_least": 1, "min": 0.90}, {"at_least": 4, "min": 0.75}],
++                         "P5_P6": [{"at_least": 1, "min": 0.95}, {"at_least": 16, "min": 0.75}]},
++         "power rules (P2's original single-target criterion preserved; P1/P3 excluded)")
++    need(ac["p1_p3_false_positive"]["point_max"] == 0.05 and ac["p1_p3_false_positive"]["wilson_upper_max"] == 0.06,
++         "p1/p3 false-positive gate thresholds")
+     need(c["refusal"]["hypothesis_level_floors"] == {"state": {"matched": 12, "observed": 8, "episodes": 3},
+                                                      "transition": {"matched": 8, "episodes": 3},
+                                                      "sequence": {"matched": 8, "episodes": 3}}, "floors")
+@@ -359,9 +403,12 @@
+          and fm["equivalence"]["protocol_master_seed_used"] is False and fm["equivalence"]["test_seed"] == 314159265, "config equivalence record")
+     od = c["owner_decisions"]
+     need(od["status"] == "DECIDED_2026-09-21" and od["addendum"] == ADDENDUM, "owner decisions status")
+-    need([x["id"] for x in od["decisions"]] == [f"I{i}" for i in range(1, 9)] + ["class_edge"], "owner decision ids")
+-    need({x["id"] for x in od["decisions"] if x["changed_vs_v1"]} == {"I3", "I6", "class_edge"}, "only I3/I6/class-edge changed vs v1")
+-    need({x["id"] for x in od["decisions"] if x["changed_vs_v2"]} == {"I8"}, "only I8 changed vs v2")
++    need([x["id"] for x in od["decisions"]] == [f"I{i}" for i in range(1, 9)] + ["class_edge", "correction_2026-09-20"],
++         "owner decision ids")
++    need({x["id"] for x in od["decisions"] if x["changed_vs_v1"]} == {"I3", "I6", "class_edge", "correction_2026-09-20"},
++         "only I3/I6/class-edge/correction changed vs v1")
++    need({x["id"] for x in od["decisions"] if x["changed_vs_v2"]} == {"I8", "correction_2026-09-20"}, "only I8/correction changed vs v2")
++    need({x["id"] for x in od["decisions"] if x.get("changed_vs_v3")} == {"correction_2026-09-20"}, "only the correction changed vs v3")
+     need("zero tested hypotheses (owner decision I3)" in c["refusal"]["hypothesis_level_floors"].keys() or
+          "zero tested hypotheses (owner decision I3)" in c["refusal"]["world_level"], "I3 world refusal recorded")
+     need(c["acceptance"]["calibration"]["refused_h_of_w"].startswith("world excluded from the ECDF denominator"), "I6 recorded")
+@@ -418,7 +465,7 @@
+     recorded = jl("artifacts/preflight_report.json")
+     need(recorded["result"] == "PASS" and recorded["rng_construction_attempts"] == 0 and recorded["rng_constructed"] is False
+          and recorded["worlds_generated_from_random_generator"] == 0 and recorded["seed_tuples_materialised"] == 0, "recorded preflight")
+-    need(all(r["result"] == "PASS" for r in recorded["results"]) and recorded["checks_total"] == len(recorded["results"]) == 33,
++    need(all(r["result"] == "PASS" for r in recorded["results"]) and recorded["checks_total"] == len(recorded["results"]),
+          "recorded preflight checks")
+     with tempfile.TemporaryDirectory() as td:
+         out = Path(td) / "pre.json"
+@@ -546,6 +593,7 @@
+                              "reference_cpu_hours": p["reference_cpu_hours"],
+                              "wall_days": {str(n): round(p["fast_cpu_hours"] / n / 24, 2) for n in (4, 64, 256)},
+                              "draws_per_second_single_core": round(1.0 / bench["fast_seconds_per_draw_end_to_end"], 1)}
++    report["equivalence_suite_replay"] = "not replayed in v4 (see v3 revision 3); hash/receipt binding re-verified above"
+ 
+ 
+ GATE_PROBE = r"""
+@@ -593,6 +641,80 @@
+     need(out["opened"] is True and out["assert_gate"]["mismatches"] == 0, "assert_equivalence_gate")
+     report["runner_gate"] = {"default_path": "fast", "closed_gate_refuses": True, "assert_equivalence_gate": "PASS",
+                              "run_mode_gates": sorted(calls & {"assert_equivalence_gate", "authorize", "assert_environment", "assert_isolation"})}
++
++
++CELL_PLAN_PROBE = r"""
++import sys, json
++from collections import Counter
++sys.path.insert(0, %r)
++import scheme_d_runner as R
++import acceptance as A
++plan = R.cell_plan()
++kinds = dict(Counter(p["kind"] for p in plan))
++perturbed = sorted({p["scenario"] for p in plan if p["kind"] == "perturbed_null"})
++power = sorted({p["scenario"] for p in plan if p["kind"] == "power"})
++out = {"kinds": kinds, "perturbed_null_scenarios": perturbed, "power_scenarios": power,
++       "cells": len(plan), "worlds": sum(p["worlds"] for p in plan),
++       "power_rules": sorted(A.POWER_RULES), "fdr_scenarios": sorted(A.FDR_SCENARIOS)}
++# true-null rejections -> false positive/FDP; zero rejections passes; excessive rejections fails; refusal excluded
++calm = [{"refused": False, "refused_hypotheses": 0, "R": 0, "V": 0, "true_discoveries": 0,
++         "attribution_errors": 0, "marginal_p": None} for _ in range(1000)]
++out["zero_rejections_passes"] = A.evaluate_cell("perturbed_null", 101, calm)["passes"]
++excessive = [{**c, "R": 1, "V": 1} if i < 200 else c for i, c in enumerate(calm)]
++cell_fail = A.evaluate_cell("perturbed_null", 103, excessive)
++out["excessive_rejections_fails"] = (not cell_fail["passes"]) and cell_fail["mean_fdp"] == 0.2
++refused = calm[:800] + [{"refused": True, "refused_hypotheses": 0, "R": 0, "V": 0, "true_discoveries": 0,
++                         "attribution_errors": 0, "marginal_p": None}] * 200
++cell_refused = A.evaluate_cell("perturbed_null", 101, refused)
++out["refusal_blocker_trips"] = cell_refused["refusal"]["blocks"] and not cell_refused["passes"] and cell_refused["non_refused"] == 800
++out["perturbed_null_gate_keys"] = sorted(A.evaluate_cell("perturbed_null", 101, calm)["gates"])
++print(json.dumps(out))
++"""
++
++
++def check_p1_p3_correction(report: dict) -> None:
++    """Independent probe of the 2026-09-20 pre-RNG correction: role table, cell_plan kind, POWER_RULES/FDR_SCENARIOS,
++    frozen truth tables (re-read directly, not via the runner) and the perturbed_null acceptance gate semantics.
++    """
++    src = (HERE / "runner" / "acceptance.py").read_text()
++    tree = ast.parse(src)
++    literals = {}
++    for node in ast.walk(tree):
++        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
++            name = node.targets[0].id
++            if name in ("POWER_RULES", "FDR_SCENARIOS", "PERTURBED_NULL_SCENARIOS"):
++                literals[name] = ast.literal_eval(node.value)
++    need(set(literals.get("POWER_RULES", {})) == {102, 104, 105, 106}, "static POWER_RULES keys")
++    need(literals["POWER_RULES"][102] == ((1, 0.80),), "P2's original single-target power criterion preserved")
++    need(set(literals.get("FDR_SCENARIOS", ())) == {102, 104, 105, 106}, "static FDR_SCENARIOS")
++    need(tuple(literals.get("PERTURBED_NULL_SCENARIOS", ())) == (101, 103), "static PERTURBED_NULL_SCENARIOS")
++
++    truth_pkg = ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables"
++    for scenario in (101, 103):
++        for corr in range(5):
++            recs = json.loads((truth_pkg / f"P{scenario - 100}_C{corr}.json").read_text())["records"]
++            need(len(recs) == 384 and all(r["classification"] == "true_null" and r.get("sign") is None for r in recs),
++                 f"P{scenario - 100}/C{corr} truth table not all true_null")
++    for scenario in (102, 104, 105, 106):
++        recs = json.loads((truth_pkg / f"P{scenario - 100}_C0.json").read_text())["records"]
++        need(any(r["classification"] == "analytic_non_null" for r in recs), f"P{scenario - 100}/C0 has no non-null rows")
++
++    proc = subprocess.run([sys.executable, "-c", CELL_PLAN_PROBE % str(HERE / "runner")], capture_output=True, text=True,
++                          env={**os.environ, "OPENBLAS_NUM_THREADS": "1"})
++    need(proc.returncode == 0, f"cell_plan probe failed: {proc.stderr[-400:]}")
++    out = json.loads(proc.stdout.strip().splitlines()[-1])
++    need(out["kinds"] == {"null": 20, "power": 25, "perturbed_null": 10}, f"cell_plan kind counts: {out['kinds']}")
++    need(out["perturbed_null_scenarios"] == [101, 103], "perturbed_null scenarios")
++    need(out["power_scenarios"] == [102, 104, 105, 106, 107], "power scenarios (P2,P4,P5,P6,P7)")
++    need(out["cells"] == 55 and out["worlds"] == 75_000, "total cells/worlds unchanged")
++    need(out["power_rules"] == [102, 104, 105, 106] == out["fdr_scenarios"], "runtime POWER_RULES/FDR_SCENARIOS")
++    need(out["zero_rejections_passes"] is True, "zero rejections must pass the P1/P3 Type-I gate")
++    need(out["excessive_rejections_fails"] is True, "20% rejecting must fail the P1/P3 Type-I gate with mean FDP 0.2")
++    need(out["refusal_blocker_trips"] is True, "20% refused worlds must trip the unchanged refusal blocker")
++    need(out["perturbed_null_gate_keys"] == ["refusal_blocker_absent", "type_one"],
++         "perturbed_null cells must carry no power/fdr/marginal_calibration gate")
++    report["p1_p3_correction"] = {"cell_kinds": out["kinds"], "power_rules": out["power_rules"],
++                                  "truth_tables_checked": 384 * (2 * 5 + 4), "gate_keys": out["perturbed_null_gate_keys"]}
+ 
+ 
+ def own_rows(y, o, x, pi, B, RPB):
+@@ -646,30 +768,12 @@
+     report["independent_equivalence_probe"] = {"fixtures": fixtures, "comparisons": compared, "mismatches": 0}
+ 
+ 
+-def check_equivalence_reproduction(report: dict) -> None:
+-    """Re-run the complete equivalence suite and require every deterministic field to equal the recorded receipt."""
+-    recorded = json.loads((ROOT / "scripts/m32_fast_metric_20260921/equivalence_report.json").read_text())
+-    with tempfile.TemporaryDirectory() as td:
+-        out = Path(td) / "eq.json"
+-        proc = subprocess.run([sys.executable, str(ROOT / "scripts/m32_fast_metric_20260921/equivalence_suite.py"), "--out", str(out)],
+-                              capture_output=True, text=True, env={**os.environ, "OPENBLAS_NUM_THREADS": "1"}, cwd=ROOT)
+-        need(proc.returncode == 0, f"equivalence suite failed on reproduction: {proc.stderr[-300:]}")
+-        fresh = json.loads(out.read_text())
+-    a = {k: v for k, v in fresh.items() if k != "seconds"}
+-    b = {k: v for k, v in recorded.items() if k != "seconds"}
+-    need(a == b, "reproduced equivalence report differs from the recorded report")
+-    need(fresh["comparisons"] == EQ["comparisons"] and fresh["mismatches"] == 0, "reproduced counts")
+-    report["equivalence_reproduction"] = {"comparisons": fresh["comparisons"], "statistic_vectors": fresh["statistic_vectors"],
+-                                          "fixtures": fresh["fixtures"], "mismatches": fresh["mismatches"],
+-                                          "identical_to_recorded_receipt": True, "reproduction_seconds": round(fresh["seconds"], 1)}
+-
+-
+ def main() -> int:
+-    report: dict = {"schema": "m3.2-scheme-d-validation-bundle-verification.v2", "independent_implementation": True,
++    report: dict = {"schema": "m3.2-scheme-d-validation-bundle-verification.v4", "independent_implementation": True,
+                     "rng_constructed": False}
+     for step in (check_git_and_hashes, check_tables, check_psd, check_config, check_environment,
+                  check_isolation_and_rng, check_v2_semantics, check_fast_metric_artifacts, check_runner_gate,
+-                 check_independent_equivalence_probe, check_preflight, check_equivalence_reproduction):
++                 check_p1_p3_correction, check_independent_equivalence_probe, check_preflight):
+         step(report)
+     report["result"] = "PASS"
+     text = json.dumps(report, sort_keys=True, indent=1) + "\n"

@@ -1,0 +1,14 @@
+{
+  "files": 71,
+  "baseline_lines": 27059,
+  "KEEP": 70,
+  "SIMPLIFY": 0,
+  "MERGE": 0,
+  "REMOVE": 1,
+  "exact_assigned_path_coverage": true,
+  "partitions": {
+    "scripts-files.json": 55,
+    "scripts-math-files.json": 13,
+    "scripts-qualification-files.json": 3
+  }
+}

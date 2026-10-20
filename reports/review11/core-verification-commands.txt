@@ -1,0 +1,4 @@
+./venv/bin/python -m pytest -q tests/test_m32_categorical_estimand_spec.py tests/test_m32_correction.py tests/test_m32_scheme_d_validation.py tests/test_m32_fast_metric_equivalence.py
+./venv/bin/python -m pytest -q tests/test_m32_correction.py::test_current_artifact_still_fails_power_audit
+OPENBLAS_NUM_THREADS=1 ./venv/bin/python -m pytest -q tests/test_m32_host_qualification_v4.py tests/test_m32_qualification.py -k 'bound_hashes or binding_mismatch or missing_target or filesystem_policy_classification or relaxed_write or throughput_calibration or reference_calibration or calibration_not_bound or calibrate_fails_closed or worker_ladder or single_host_is_qualified or two_compatible_hosts or hosts_with_different or multi_host_needs or failed_and_incomplete or tampered_receipts or hmac_signed or receipts_with_wrong or duplicate_labels'
+./venv/bin/python -m pytest -q tests/test_review11_m32_core.py

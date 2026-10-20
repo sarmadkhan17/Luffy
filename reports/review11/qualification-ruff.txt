@@ -1,0 +1,6 @@
+scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py:32:8: F401 [*] `contextlib` imported but unused
+scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py:355:13: F841 Local variable `c1` is assigned to but never used
+scripts/m32_scheme_d_qualification_20260922/qualify.py:27:8: F401 [*] `contextlib` imported but unused
+scripts/m32_scheme_d_qualification_20260922/qualify.py:325:13: F841 Local variable `c1` is assigned to but never used
+Found 4 errors.
+[*] 2 fixable with `--fix` (2 unsafe fixes available with `--fix --unsafe-fixes`).

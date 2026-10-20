@@ -1,0 +1,218 @@
+--- scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py
++++ scripts/m32_scheme_d_validation_bundle_v4_20260922/build_bundle.py
+@@ -4,6 +4,17 @@
+ Everything is typed from the protocol text here; it imports neither the runner
+ nor the pinned harness.  No random generator or seed sequence is constructed.
+ Order: artifacts -> preflight report (separate step) -> BUNDLE_MANIFEST.json (--manifest).
++
++Bundle revision 4 implements the 2026-09-20 pre-RNG correction (P1/P3
++classification and gates): P1 and P3 are corrected from power scenarios to
++true-null perturbed-calibration scenarios (protocol correction section 3).
++Every 384-row truth table already marks P1/P3 true_null (frozen, unchanged).
++The only behavioural change is the acceptance-side evaluation: P1/P3 lose the
++power/bootstrap-FDR/marginal-calibration gates and gain a Type-I false-positive
++gate (point <= 0.05 and Wilson-95 upper <= 0.06) computed on non-refused
++worlds, where world FDP is 1 if any BH rejection occurred, else 0.  DGP
++geometry, correlations, effects, injections, seeds, BH, refusal logic and the
++FastMetric equivalence gate are unchanged from v3.
+ """
+ from __future__ import annotations
+ 
+@@ -31,6 +42,8 @@
+ V1_SHA256 = "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+ V2_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
+ V2_SHA256 = "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e"
++V3_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json"
++V3_SHA256 = "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01"
+ FAST_COMMIT = "a43336d488deb86139b32c8335c36e7b951a2939"
+ FAST_DIR = "scripts/m32_fast_metric_20260921"
+ FAST = {"module": "trader/cognition/m32_fast_metric.py", "suite": FAST_DIR + "/equivalence_suite.py",
+@@ -58,8 +71,11 @@
+ }
+ OR = {101: "3", 103: "3", 104: "2", 105: "2", 106: "2", 107: "3/2"}
+ SHIFT = {102: "1", 104: "1/2", 105: "1/2", 106: "1/2", 107: "1/4"}
+-ROLE = {101: "acceptance", 102: "acceptance", 103: "acceptance", 104: "acceptance", 105: "acceptance",
++# v4 correction (protocol correction section 2): P1/P3 role is true-null perturbed calibration, not acceptance/power.
++ROLE = {101: "calibration", 102: "acceptance", 103: "calibration", 104: "acceptance", 105: "acceptance",
+         106: "acceptance", 107: "sensitivity_only"}
++# scenarios still subject to the mixed-null FDR/bootstrap and acceptance-power gates (P1/P3 excluded by the correction)
++FDR_POWER_SCENARIOS = (102, 104, 105, 106)
+ 
+ 
+ def sha(path: Path) -> str:
+@@ -237,14 +253,21 @@
+ # ------------------------------------------------------------------ config
+ def config() -> dict:
+     return {
+-        "schema": "m3.2-scheme-d-validation-config.v3",
+-        "bundle_revision": 3,
+-        "supersedes": {"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
+-                       "earlier": [{"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256}]},
+-        "v3_changes": ["statistic path = exact-equivalent FastMetric behind a hash/receipt gate",
+-                       "runner verifies pinned inputs (incl. the reference and optimized sources) on every RNG mode",
+-                       "phase-90 benchmark core: reference-vs-fast bit identity on the generated world, fast throughput, projection",
+-                       "validation authorization must carry a measured fast-benchmark runtime and receipt hash"],
++        "schema": "m3.2-scheme-d-validation-config.v4",
++        "bundle_revision": 4,
++        "supersedes": {"bundle_manifest": V3_MANIFEST, "bundle_sha256": V3_SHA256,
++                       "earlier": [{"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256}]},
++        "v4_changes": ["applies the 2026-09-20 pre-RNG correction: P1/P3 role corrected from power to "
++                       "true-null perturbed calibration (protocol correction section 2-3)",
++                       "acceptance.POWER_RULES and acceptance.FDR_SCENARIOS restricted to {102, 104, 105, 106}; "
++                       "P1/P3 no longer receive power, bootstrap-FDR or marginal-calibration gates",
++                       "new evaluate_cell(kind='perturbed_null') gate: world FDP = 1 if any BH rejection else 0 "
++                       "(every P1/P3 rejection is a false discovery); point estimate <= 0.05 and Wilson-95 upper "
++                       "<= 0.06 on non-refused worlds; refusal blocker unchanged",
++                       "cell_plan() tags the ten P1/P3 x C0-C4 cells kind='perturbed_null'; world generation, "
++                       "injection dispatch (by scenario), seeds and truth tables are unchanged",
++                       "checks_bootstrap seed-tuple count reduced from 30 to 20 (bootstrap stream 4 is no longer "
++                       "constructed for P1/P3, which are outside FDR_SCENARIOS)"],
+         "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN",
+         "authority": {"protocol": PROTOCOL, "protocol_sha256": sha(ROOT / PROTOCOL), "correction": CORRECTION,
+                       "correction_sha256": sha(ROOT / CORRECTION), "clarification_addendum": ADDENDUM,
+@@ -262,8 +285,9 @@
+                      "stream_code": {"data": 0, "membership": 1, "permutation": 2, "injection": 3, "bootstrap": 4},
+                      "bootstrap_stream_phase": 30,
+                      "benchmark_isolation": "phase 90 only; phases 10/20/30 refused outside an authorized validation run",
+-                     "distinct_tuples": {"null": 4 * 5 * 2000 * 3, "power": 7 * 5 * 1000 * 4, "checks_bootstrap": 6 * 5,
+-                                         "total": 4 * 5 * 2000 * 3 + 7 * 5 * 1000 * 4 + 6 * 5},
++                     "distinct_tuples": {"null": 4 * 5 * 2000 * 3, "power": 7 * 5 * 1000 * 4,
++                                         "checks_bootstrap": len(FDR_POWER_SCENARIOS) * 5,
++                                         "total": 4 * 5 * 2000 * 3 + 7 * 5 * 1000 * 4 + len(FDR_POWER_SCENARIOS) * 5},
+                      "tuple_materialisation": "none in this bundle; the runner registry rejects duplicates at run time"},
+         "environment": {"python": "3.12.3", "numpy": "2.5.2", "OPENBLAS_NUM_THREADS": "1"},
+         "design": {"blocks": 48, "block_days": 28, "symbols": 16, "keys": 5, "rows_per_block": 80, "rows_per_world": 3840,
+@@ -310,9 +334,10 @@
+         "power_worlds": {"base_dgp": "N1", "pairing": "pre-injection family from streams 0 and 1 of tuple (20,c,P,w); injection from stream 3"},
+         "injections": "artifacts/effect_assignment_table.json",
+         "consumption_order": ["data: coverage classes / masks / lags", "membership: Z", "data: common jumps",
+-                              "data: persistence noise", "data: categorical labels", "injection (power only)",
++                              "data: persistence noise", "data: categorical labels", "injection (power and perturbed-null only)",
+                               "observed statistics", "permutation"],
+-        "cells": {"null": {"count": 20, "worlds_each": 2000}, "power": {"count": 35, "worlds_each": 1000},
++        "cells": {"null": {"count": 20, "worlds_each": 2000}, "power": {"count": 25, "worlds_each": 1000},
++                  "perturbed_null": {"count": 10, "worlds_each": 1000},
+                   "acceptance_partition": {"null": 20, "p1_p3_calibration": 10, "p2_p4_p5_p6_power": 20, "p7_sensitivity": 5},
+                   "worlds_total": 75000},
+         "refusal": {"world_level": ["frozen mismatch", "invalid certificate", "between-block dependence",
+@@ -325,42 +350,64 @@
+                                                 "sequence": {"matched": 8, "episodes": 3}},
+                     "blocking_rate": "1/100 of worlds; 1/100 of (world, hypothesis) pairs over 384 x non-refused worlds"},
+         "acceptance": {"wilson_z": 1.959964, "type_one": {"point_max": 0.05, "wilson_upper_max": 0.06},
++                       "p1_p3_false_positive": {"point_max": 0.05, "wilson_upper_max": 0.06,
++                                                "definition": "world FDP = 1 if any BH rejection else 0 (every P1/P3 "
++                                                              "rejection is a false discovery); computed on non-refused "
++                                                              "worlds; no power, bootstrap-FDR or marginal-calibration gate "
++                                                              "applies (protocol correction section 3.2-3.3)"},
+                        "fdr": {"mean_max": 0.05, "bootstrap_upper_max": 0.06, "resamples": 10000, "order_statistic": 9750,
+-                               "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]"},
++                               "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]",
++                               "scenarios": list(FDR_POWER_SCENARIOS)},
+                        "calibration": {"t": ["1/100", "5/100", "1/10"], "clopper_pearson_alpha": "1/6000",
+                                        "hypothesis_for_world": "w mod 384",
+                                        "refused_h_of_w": "world excluded from the ECDF denominator (owner decision I6)"},
+-                       "power": {"P1_P3": {"wilson_lower_min": 0.80},
++                       "power": {"P2": {"wilson_lower_min": 0.80},
+                                  "P4": [{"at_least": 1, "min": 0.90}, {"at_least": 4, "min": 0.75}],
+                                  "P5_P6": [{"at_least": 1, "min": 0.95}, {"at_least": 16, "min": 0.75}]},
++                       "p1_p3": "no power gate; a P1/P3 rejection is never power and never a true discovery "
++                               "(protocol correction section 3.2); governed by p1_p3_false_positive only",
+                        "p7": "descriptive only"},
+         "owner_decisions": {
+             "status": "DECIDED_2026-09-21", "addendum": ADDENDUM,
+             "decisions": [
+                 {"id": "I1", "decision": "dependence group = block index; episode = unique row/episode identity",
+-                 "implementation": "unchanged from v1", "changed_vs_v1": False, "changed_vs_v2": False},
++                 "implementation": "unchanged from v1", "changed_vs_v1": False, "changed_vs_v2": False, "changed_vs_v3": False},
+                 {"id": "I2", "decision": "permutation-invariant support accounting; observed support sufficient for the statistic to be defined",
+                  "implementation": "unchanged from v1: matched/episodes/groups invariant; observed floor on the observed arrangement and on the worst-case "
+-                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False, "changed_vs_v2": False},
++                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False, "changed_vs_v2": False,
++                 "changed_vs_v3": False},
+                 {"id": "I3", "decision": "hypothesis-level refusal; a world with zero tested hypotheses is a refused world, excluded from "
+                                          "Type-I/FDR and failed for power",
+                  "implementation": "world_receipt returns world_refused=[no_tested_hypotheses]; counted in the world-refusal blocker",
+-                 "changed_vs_v1": True, "changed_vs_v2": False},
++                 "changed_vs_v1": True, "changed_vs_v2": False, "changed_vs_v3": False},
+                 {"id": "I4", "decision": "degenerate = the hypothesis outcome column is constant; an observed zero lift is valid evidence and is never refused",
+-                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False, "changed_vs_v2": False},
++                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False,
++                 "changed_vs_v2": False, "changed_vs_v3": False},
+                 {"id": "I5", "decision": "sampler order frozen through the hash-bound runner",
+-                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False, "changed_vs_v2": False},
++                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False, "changed_vs_v2": False,
++                 "changed_vs_v3": False},
+                 {"id": "I6", "decision": "marginal-calibration worlds where h(w) is refused are excluded from the empirical CDF denominator",
+-                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True, "changed_vs_v2": False},
+-                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False, "changed_vs_v2": False},
++                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True, "changed_vs_v2": False,
++                 "changed_vs_v3": False},
++                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False,
++                 "changed_vs_v2": False, "changed_vs_v3": False},
+                 {"id": "I8", "decision": "reference _metric path only for the phase-90 benchmark; full-run optimized implementation needs the "
+                                          "section 3 exact-equivalence proof and a separate benchmark",
+                  "implementation": "v3: FastMetric with a recorded exact-equivalence suite (7,592,064 comparisons, 0 mismatches) behind "
+                                    "a fail-closed gate; the separate optimized benchmark is still required before any full-run "
+                                    "authorization (validation mode refuses without a measured runtime and benchmark receipt hash)",
+-                 "changed_vs_v1": False, "changed_vs_v2": True},
++                 "changed_vs_v1": False, "changed_vs_v2": True, "changed_vs_v3": False},
+                 {"id": "class_edge", "decision": "implement protocol section 5 half-open coverage classes without binary-float boundary ambiguity",
+-                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True, "changed_vs_v2": False}]},
++                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True, "changed_vs_v2": False,
++                 "changed_vs_v3": False},
++                {"id": "correction_2026-09-20", "decision": "P1/P3 reclassified true-null perturbed calibration (not power); the original "
++                                                            "power table's P1/P3 entries are deleted; a Type-I false-positive gate applies instead "
++                                                            "(protocol correction section 2-3)",
++                 "implementation": "v4: acceptance.POWER_RULES and acceptance.FDR_SCENARIOS restricted to {102,104,105,106}; "
++                                   "evaluate_cell(kind='perturbed_null') computes point/Wilson-upper on non-refused worlds; "
++                                   "cell_plan() tags the ten P1/P3 cells kind='perturbed_null'; truth tables (frozen, unchanged) "
++                                   "already mark every P1/P3 row true_null",
++                 "changed_vs_v1": True, "changed_vs_v2": True, "changed_vs_v3": True}]},
+         "frozen_truth_package": {"freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+                                  "consumed_unchanged": True},
+         "pinned_sources_sha256": PINNED,
+@@ -416,7 +463,8 @@
+             "equivalence_report_sha256": sha(ROOT / FAST["equivalence_report"]), "suite_sha256": sha(ROOT / FAST["suite"]),
+             "fast_metric_sha256": sha(ROOT / FAST["module"]), "reference_sha256": sha(ROOT / FAST["reference"]),
+             "artifact_hashes_sha256": sha(ROOT / FAST["artifact_hashes"]),
+-            "reproduction": "verify_bundle.py reruns the complete suite and compares every deterministic field"}
++            "reproduction": "verify_bundle.py rechecks hash/receipt binding; the full equivalence suite is not replayed "
++                            "(see v3 revision 3 for the original suite reproduction)"}
+ 
+ 
+ def compute_projection() -> dict:
+@@ -461,7 +509,7 @@
+                 "artifacts/membership_table.json", "artifacts/effect_assignment_table.json", "artifacts/loadings.json",
+                 "artifacts/covariance_psd.json", "artifacts/environment_lock.json", "artifacts/preflight_report.json",
+                 "artifacts/equivalence_receipt.json", "artifacts/compute_projection.json",
+-                "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py")
++                "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py", "artifacts/preparation_audit.json")
+ 
+ 
+ def write_manifest() -> None:
+@@ -472,16 +520,18 @@
+     pinned = {**{p: sha(ROOT / p) for p in PINNED}, PROTOCOL: sha(ROOT / PROTOCOL), CORRECTION: sha(ROOT / CORRECTION),
+               ADDENDUM: sha(ROOT / ADDENDUM), **{p: sha(ROOT / p) for p in FAST.values() if p not in PINNED}}
+     manifest = {
+-        "schema": "m3.2-scheme-d-validation-bundle-manifest.v3", "bundle_revision": 3,
+-        "supersedes": {"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
+-                       "v2_manifest_file_sha256": sha(ROOT / V2_MANIFEST),
+-                       "earlier": [{"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256,
+-                                    "manifest_file_sha256": sha(ROOT / V1_MANIFEST)}]},
++        "schema": "m3.2-scheme-d-validation-bundle-manifest.v4", "bundle_revision": 4,
++        "supersedes": {"bundle_manifest": V3_MANIFEST, "bundle_sha256": V3_SHA256,
++                       "v3_manifest_file_sha256": sha(ROOT / V3_MANIFEST),
++                       "earlier": [{"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
++                                    "manifest_file_sha256": sha(ROOT / V2_MANIFEST)}]},
+         "fast_metric": {"commit": FAST_COMMIT, "module": FAST["module"], "reference": FAST["reference"],
+                         "equivalence": EXPECTED_EQUIVALENCE},
+         "clarification_addendum": {"path": ADDENDUM, "sha256": sha(ROOT / ADDENDUM)},
+-        "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
+-        "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": True,
++        "status": "PRE_RUN_BUNDLE_REQUIRES_PREPARATION_REVIEW_NOT_AUTHORIZED_TO_RUN",
++        "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": False,
++        "preparation_audit": {"path": rel("artifacts/preparation_audit.json"),
++                              "sha256": sha(ART / "preparation_audit.json"), "owner_review_required": True},
+         "frozen_truth_commit": FREEZE_COMMIT, "baseline_commit": BASELINE_COMMIT,
+         "frozen_truth_package": {"package_dir": "scripts/m32_scheme_d_pre_rng_truth_20260921/package",
+                                  "package_sha256": fz["package_sha256"],

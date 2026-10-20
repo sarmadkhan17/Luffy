@@ -1,0 +1,18 @@
+{
+  "method": "Full-byte strict parsing; resolvable declared path hashes; all truth rows; pilot receipt p/exceedance fractions, fixed-m exact BH/rejection/false-discovery arithmetic and shard/merge equality. Alias/external references separately disclosed; no laboratory code executed",
+  "link_counts": {
+    "MATCH": 617,
+    "SUPERSEDED_BEFORE_RNG": 2,
+    "DIGEST_PRESENT_ALIAS_NOT_PATH_PROOF": 421,
+    "EXTERNAL_OR_MISSING": 58
+  },
+  "canonical_self_hash_checks": 182,
+  "pilot": {
+    "worlds": 80,
+    "cells": 4,
+    "pvalue_checks": 30720,
+    "shard_merge_equal": true,
+    "full_protocol_pass": false,
+    "scope": "pilot_only_non_final"
+  }
+}

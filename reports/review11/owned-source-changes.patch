@@ -1,0 +1,180 @@
+diff --git a/scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py b/scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py
+deleted file mode 100644
+index 5a4c2a5..0000000
+--- a/scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py
++++ /dev/null
+@@ -1,16 +0,0 @@
+-import sys
+-
+-import flint
+-from flint import acb, arb, ctx
+-
+-print(sys.version)
+-print("python_flint", flint.__version__, "flint", flint.__FLINT_VERSION__)
+-print("acb.integral", hasattr(acb, "integral"))
+-print("arb_series", hasattr(flint, "arb_series"))
+-print("acb_series", hasattr(flint, "acb_series"))
+-
+-ctx.prec = 200
+-if hasattr(acb, "integral"):
+-    res = acb.integral(lambda z, _a: (-z * z / 2).exp(), acb(-8), acb(8))
+-    print("gauss integral", res.str(30, more=True))
+-    print("sqrt(2pi)", (arb.pi() * 2).sqrt().str(30, more=True))
+diff --git a/tests/test_review11_m32_core.py b/tests/test_review11_m32_core.py
+new file mode 100644
+index 0000000..e92ba66
+--- /dev/null
++++ b/tests/test_review11_m32_core.py
+@@ -0,0 +1,93 @@
++"""Deterministic defect witnesses for frozen descriptive search; no search run.
++
++These are passing characterizations of retained defects, NOT statistical
++qualification. Frozen source remains unchanged pending a versioned protocol.
++"""
++from copy import deepcopy
++
++from trader.cognition import m32_search as S
++
++
++def rows():
++    return [dict(row_id=str(i), symbol='BTC/USDT', dependence_group='one',
++                 features=dict(direction=-1 if i == 0 else 1,
++                               current_row_id='target-' + str(i)),
++                 labels=dict(price_change_bps=10 + i)) for i in range(3)]
++
++
++def test_frozen_continuation_shuffle_does_not_reach_scored_targets(monkeypatch):
++    source = rows()
++    lookup = {'target-' + str(i): dict(row_type='state', producer=str(i))
++              for i in range(3)}
++    targets = [S._target(r, 'continuation', lookup) for r in source]
++    captured = []
++
++    class Reverse:
++        def __init__(self, seed):
++            pass
++
++        def shuffle(self, values):
++            values.reverse()
++
++    def metric(fake, matched, label, fake_lookup):
++        captured.append([S._target(r, label, fake_lookup) for r in fake])
++        # The null wrote the reversed targets into an unused field.
++        assert [r['labels']['case_kind'] for r in fake] == targets[::-1]
++        return {'signed_effect': 0.0}
++
++    before = deepcopy(source)
++    monkeypatch.setattr(S.random, 'Random', Reverse)
++    monkeypatch.setattr(S, '_metric', metric)
++    S._null_p(source, {'0'}, 'continuation', lookup, 'full', 1.0,
++              draws=1, seed_text='review11-fixture')
++    assert captured == [targets]
++    assert captured[0] != targets[::-1]  # Required permutation never reaches metric.
++    assert source == before
++
++
++def test_frozen_persistence_identity_rotation_applies_direction_twice(monkeypatch):
++    source = rows()
++    targets = [S._target(r, 'persistence', {}) for r in source]
++    captured = []
++
++    class Identity:
++        def __init__(self, seed):
++            pass
++
++        def randrange(self, size):
++            return 0
++
++    def metric(fake, matched, label, lookup):
++        captured.append([S._target(r, label, lookup) for r in fake])
++        return {'signed_effect': 0.0}
++
++    before = deepcopy(source)
++    monkeypatch.setattr(S.random, 'Random', Identity)
++    monkeypatch.setattr(S, '_metric', metric)
++    S._null_p(source, {'0'}, 'persistence', {}, 'full', 1.0,
++              draws=1, seed_text='review11-fixture')
++    assert targets == [-10.0, 11.0, 12.0]
++    assert captured == [[10.0, 11.0, 12.0]]
++    assert captured[0] != targets  # Identity must preserve the statistic's inputs.
++    assert source == before
++
++
++def test_frozen_v4_untouched_check_omits_deleted_v3_inventory(tmp_path, monkeypatch):
++    """Current-directory enumeration cannot prove historical inventory completeness."""
++    import importlib.util
++    from pathlib import Path
++
++    root = Path(__file__).resolve().parents[1]
++    monkeypatch.syspath_prepend(str(root / 'scripts/m32_scheme_d_sharding_v4_20260923'))
++    path = root / 'scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py'
++    spec = importlib.util.spec_from_file_location('review11_qualify_v4_witness', path)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    shard, bundle = tmp_path / 'sharding', tmp_path / 'bundle'
++    shard.mkdir()
++    bundle.mkdir()
++    monkeypatch.setattr(module, 'V3_SHARDING_DIR', shard)
++    monkeypatch.setattr(module, 'V3_BUNDLE_DIR', bundle)
++    result = module.check_v3_untouched()
++    assert result['status'] == 'PASS'
++    assert result['detail']['files_checked'] == 0  # Historical files vanished.
+diff --git a/tests/test_review11_persistence.py b/tests/test_review11_persistence.py
+new file mode 100644
+index 0000000..2761ae9
+--- /dev/null
++++ b/tests/test_review11_persistence.py
+@@ -0,0 +1,40 @@
++"""Review 11: synthetic offline inventory path regression."""
++import json
++import sqlite3
++
++from trader.persistence.backup import BackupSets, critical_inventory
++from tests.test_stage1_recovery_monitoring import backup, isolated  # noqa: F401
++
++
++def test_relative_root_accepts_contained_absolute_configured_replay_store(backup, tmp_path, monkeypatch):  # noqa: F811
++    root, _, old = backup
++    custom = root / 'data/custom-candles.db'
++    with sqlite3.connect(custom) as db:
++        db.execute('CREATE TABLE fixture (value INTEGER)')
++        db.execute('INSERT INTO fixture VALUES (11)')
++    (root / 'config.yaml').write_text(json.dumps({'research': {'paths': {'candles': str(custom)}}}))
++    monkeypatch.chdir(tmp_path)
++    inventory = critical_inventory(root.name)
++    assert 'data/custom-candles.db' in {asset.path for asset in inventory.assets}
++    sets = BackupSets(root.name, old.destination, inventory, repository_version='offline-fixture')
++    generation = sets.capture()
++    assert sets.verify(generation)['completion'] == 'COMPLETE'
++    target = tmp_path / 'restored-relative-root'
++    receipt = sets.restore(generation, target)
++    assert receipt['restore'] == 'PUBLISHED'
++    with sqlite3.connect(target / 'data/custom-candles.db') as db:
++        assert db.execute('SELECT value FROM fixture').fetchall() == [(11,)]
++
++
++def test_relative_root_still_refuses_configured_store_outside_source(backup, tmp_path, monkeypatch):  # noqa: F811
++    import pytest
++    from trader.persistence.backup import Refused
++
++    root, _, _ = backup
++    # Deliberately absent outside path: containment must refuse before opening it.
++    outside = tmp_path / 'outside-candles.db'
++    (root / 'config.yaml').write_text(json.dumps({'research': {'paths': {'candles': str(outside)}}}))
++    monkeypatch.chdir(tmp_path)
++    with pytest.raises(Refused, match='configured_store_outside_inventory_root'):
++        critical_inventory(root.name)
++    assert not outside.exists()
+diff --git a/trader/persistence/backup.py b/trader/persistence/backup.py
+index f96b415..54a3b9c 100644
+--- a/trader/persistence/backup.py
++++ b/trader/persistence/backup.py
+@@ -152,7 +152,7 @@ FILES = {
+ 
+ 
+ def critical_inventory(root, *, registered=()):
+-    root = Path(root)
++    root = Path(root).resolve()
+     if not safe_path(root, 'data/ewa_state.json').is_file():
+         raise Refused('retained_decision_input_missing:data/ewa_state.json')
+     assets = [Asset(p, r, 'sqlite', metadata(safe_path(root, p))) for p, r in STORES.items()

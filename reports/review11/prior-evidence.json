@@ -1,0 +1,37 @@
+{
+  "parent": "753b45e27d45c21e890c535afcbea31f5177afd4",
+  "sources": [
+    {
+      "path": "reports/review10/REPORT.md",
+      "sha256": "60e422bccc12c1101d438b750af345a8714b1c9a378ceede39beb55cb7cc2fd6",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    },
+    {
+      "path": "reports/review10/prior-evidence.json",
+      "sha256": "8ff528305138131260f51a3d8f15f44e54aa511ba6bf94d02c6e87385b1b25e3",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-09-19-m32-evidence-corrections.md",
+      "sha256": "ade3db5d76c39f19d82462bc1cfcf3b99b72ff6b42500d812a2b42cdabf871cd",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md",
+      "sha256": "3ea9d3e68ed3c50bf772d78fa9fdfb1cf0c373555a2952667f3fa0a35454e688",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-host-qualification.md",
+      "sha256": "73c928bd7b526da6f3a38c64e57cdb46ce68785b970ac0152d59f4695c8cb6e9",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-10-11-subsystem-review-03-execution-risk-recovery.md",
+      "sha256": "a62bcc8e5710c5054094e6bbe910f14b21e8d6d33a50a9254e15a2a61db33f2f",
+      "use": "Prior decision/defect/implementation boundary and relevant file rows only; no prior implemented fix repeated"
+    }
+  ],
+  "reverified_prior_item": "m32_evidence.independence_groups and corrective audit retain conservative dependence and unknown/PIT/accounting refusal; verified by original focused core tests, not reimplemented",
+  "preexisting_differences": "owned-preexisting-changes.patch"
+}

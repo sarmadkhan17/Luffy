@@ -1,0 +1,17 @@
+# trader/cognition/m32_block_calibration.py
+TEST-ONLY        transformed_targets:240 prod=0 test=1
+# trader/cognition/m32_correction.py
+# trader/cognition/m32_evidence.py
+# trader/cognition/m32_fast_metric.py
+# trader/cognition/m32_protocol.py
+DEAD             _state_value:118 prod=0 test=0
+TEST-ONLY        numeric_bins:169 prod=0 test=2
+# trader/cognition/m32_scheme_d_validation.py
+TEST-ONLY        apply_injections:448 prod=0 test=1
+TEST-ONLY        generate_truth_tables:589 prod=0 test=1
+# trader/cognition/m32_search.py
+# scripts/audit_m32_correction.py
+# scripts/bench_m32_scheme_d_phase90.py
+# scripts/calibrate_m32_blocks.py
+# scripts/m32_protocol_check.py
+# scripts/run_m32_search.py

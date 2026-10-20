@@ -1,0 +1,37 @@
+Review11 source baseline: 753b45e27d45c21e890c535afcbea31f5177afd4
+Offline implementation: c1571fbf68a4998bd654a79d4d12011b89e4655e
+Run from the isolated review checkout with its existing dependency environment.
+
+Read-only artifact inspection (writes only review outputs):
+  ./venv/bin/python reports/review11/audit_artifacts.py
+  ./venv/bin/python reports/review11/assemble_artifacts.py
+  ./venv/bin/python reports/review11/assemble_review.py
+
+Targeted source correction and retained-defect diagnostics:
+  ./venv/bin/python -m pytest -q tests/test_review11_persistence.py tests/test_review11_m32_core.py
+
+Exact historical focused commands:
+  core-verification-commands.txt / core-verification-nodeids.json
+  persistence-tested-nodeids.json
+  scripts-test-command.txt / scripts-tested-nodeids.json
+
+The original core test needing historical artifact reads the exact JSON pinned
+in fixture-dependency.json. A normal clean worktree does not contain that ignored
+artifact; hydrate only those exact verified bytes if replaying that one test.
+Do not fabricate, regenerate or change its digest.
+
+All 306 successful case identities are in tested-nodeids.json. Collection files
+map identities; collection is not counted as execution. Repeated passes are
+counted once. Three cases explicitly characterize retained frozen defects.
+
+Do not invoke run_pilot, run_benchmark, run_replication, certification producers,
+full preflight, full equivalence, run_m32_search, full CI, integration or operation
+as part of reproducing this review. Stored evidence was inspected/replayed, not
+regenerated. Initial fixture absence/cancelled preflight failures remain separate
+from corrected focused verification in verification.json.
+
+The graph wrapper initially selected stale revision938f1dd, used as leads only.
+An exact-revision refresh may run on the clean final commit using
+  luffy-graphify refresh
+which writes the AST graph outside the checkout. Graph edges are incomplete and
+their absence never establishes a deletion.

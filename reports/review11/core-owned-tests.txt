@@ -1,0 +1,29 @@
+........................................................F............... [ 84%]
+.............                                                            [100%]
+=================================== FAILURES ===================================
+________________ test_current_artifact_still_fails_power_audit _________________
+
+    def test_current_artifact_still_fails_power_audit():
+>       report = audit()
+                 ^^^^^^^
+
+tests/test_m32_correction.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/cognition/m32_correction.py:150: in audit
+    artifact = artifact or load_locked_artifact(); rows = rows_of(artifact)
+                           ^^^^^^^^^^^^^^^^^^^^^^
+trader/cognition/m32_protocol.py:83: in load_locked_artifact
+    _require(path.is_file(), "artifact_not_found")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, message = 'artifact_not_found'
+
+    def _require(condition: bool, message: str) -> None:
+        if not condition:
+>           raise ProtocolError(message)
+E           trader.cognition.m32_protocol.ProtocolError: artifact_not_found
+
+trader/cognition/m32_protocol.py:76: ProtocolError
+=========================== short test summary info ============================
+FAILED tests/test_m32_correction.py::test_current_artifact_still_fails_power_audit
+1 failed, 84 passed in 31.26s

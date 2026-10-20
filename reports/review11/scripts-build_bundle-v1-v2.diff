@@ -1,0 +1,126 @@
+--- scripts/m32_scheme_d_validation_bundle_20260921/build_bundle.py
++++ scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py
+@@ -26,6 +26,9 @@
+ BASELINE_COMMIT = "ab9e39683f5e9f756fc7ef6690133ecb5b608f64"
+ PROTOCOL = "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md"
+ CORRECTION = "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md"
++ADDENDUM = "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md"
++V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
++V1_SHA256 = "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+ PINNED = {
+     "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+     "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+@@ -224,10 +227,13 @@
+ # ------------------------------------------------------------------ config
+ def config() -> dict:
+     return {
+-        "schema": "m3.2-scheme-d-validation-config.v1",
++        "schema": "m3.2-scheme-d-validation-config.v2",
++        "bundle_revision": 2,
++        "supersedes": {"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256},
+         "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN",
+         "authority": {"protocol": PROTOCOL, "protocol_sha256": sha(ROOT / PROTOCOL), "correction": CORRECTION,
+-                      "correction_sha256": sha(ROOT / CORRECTION), "baseline_commit": BASELINE_COMMIT,
++                      "correction_sha256": sha(ROOT / CORRECTION), "clarification_addendum": ADDENDUM,
++                      "clarification_addendum_sha256": sha(ROOT / ADDENDUM), "baseline_commit": BASELINE_COMMIT,
+                       "frozen_truth_commit": FREEZE_COMMIT},
+         "master_seed": 2026091902,
+         "rng": {"bit_generator": "numpy.random.PCG64", "seeding": "numpy.random.SeedSequence([master, phase, correlation, dgp, world, stream])",
+@@ -250,6 +256,8 @@
+                    "quarter": "1 + (b mod 4)", "regime": "(b // 3) mod 2",
+                    "strata_sizes": {"(1,0)": 8, "(1,1)": 4, "(2,0)": 4, "(2,1)": 8, "(3,0)": 8, "(3,1)": 4, "(4,0)": 4, "(4,1)": 8},
+                    "missing_fraction_class_edges": [[0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 1]],
++                   "class_rule": "integer counts: class = [5m >= T] + [5m >= 2T] + [5m >= 3T], m masked of T = 80 unique rows; "
++                                 "half-open edges, no binary-float fraction",
+                    "n0_orbit": "(8!)^4 * (4!)^4"},
+         "family": {"size": 384, "ranges": {"case_kind": [0, 127], "persistence": [128, 255], "transition": [256, 319],
+                                             "sequence": [320, 383]},
+@@ -292,7 +300,8 @@
+         "refusal": {"world_level": ["frozen mismatch", "invalid certificate", "between-block dependence",
+                                     "footprint or link crossing", "unconditioned drift", "outcome-dependent missingness",
+                                     "omitted confounder", "clock or link violation", "family size != 384",
+-                                    "movable blocks < 24 or movable strata < 3", "orbit < 1,536,000 or 2/|G| > 1/768000"],
++                                    "movable blocks < 24 or movable strata < 3", "orbit < 1,536,000 or 2/|G| > 1/768000",
++                                    "zero tested hypotheses (owner decision I3)"],
+                     "hypothesis_level_floors": {"state": {"matched": 12, "observed": 8, "episodes": 3},
+                                                 "transition": {"matched": 8, "episodes": 3},
+                                                 "sequence": {"matched": 8, "episodes": 3}},
+@@ -301,34 +310,37 @@
+                        "fdr": {"mean_max": 0.05, "bootstrap_upper_max": 0.06, "resamples": 10000, "order_statistic": 9750,
+                                "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]"},
+                        "calibration": {"t": ["1/100", "5/100", "1/10"], "clopper_pearson_alpha": "1/6000",
+-                                       "hypothesis_for_world": "w mod 384"},
++                                       "hypothesis_for_world": "w mod 384",
++                                       "refused_h_of_w": "world excluded from the ECDF denominator (owner decision I6)"},
+                        "power": {"P1_P3": {"wilson_lower_min": 0.80},
+                                  "P4": [{"at_least": 1, "min": 0.90}, {"at_least": 4, "min": 0.75}],
+                                  "P5_P6": [{"at_least": 1, "min": 0.95}, {"at_least": 16, "min": 0.75}]},
+                        "p7": "descriptive only"},
+-        "interpretations_flagged_for_owner_review": [
+-            {"id": "I1", "topic": "episode and dependence group in synthetic rows",
+-             "choice": "episode = unique row; dependence group = block index (the protocol's exchangeable unit)",
+-             "why": "support_accounting falls back to row_id for episodes and to one 'unknown' group, which would refuse every hypothesis"},
+-            {"id": "I2", "topic": "matched / observed floors and worst-case bound",
+-             "choice": "matched = matched unique rows; observed = matched rows observed; worst case = sum over matched slots of the "
+-                       "minimum slot mask across blocks of the slot's stratum; transition/sequence additionally need worst-case observed >= 1",
+-             "why": "protocol gives the bound in words; metric must be defined for every draw"},
+-            {"id": "I3", "topic": "blocks below 8 observed unique labels", "choice": "refuses all 384 hypotheses of the world (hypothesis-level)",
+-             "why": "listed under hypothesis-level refusals"},
+-            {"id": "I4", "topic": "zero or degenerate centered statistic",
+-             "choice": "refused only when the outcome column is constant over observed rows (constant across the permutation group); "
+-                       "an exactly zero observed lift is NOT refused",
+-             "why": "refusing zero lifts would refuse most categorical hypotheses under N1 and trip the 1% blocker"},
+-            {"id": "I5", "topic": "consumption order inside the data stream",
+-             "choice": "coverage, jumps, persistence noise, categorical labels", "why": "protocol orders jumps before outcomes only"},
+-            {"id": "I6", "topic": "marginal calibration when h(w) is refused",
+-             "choice": "the world stays in the ECDF denominator and its null p counts as not <= t", "why": "refusals never count as evidence"},
+-            {"id": "I7", "topic": "BH boundary arithmetic", "choice": "exact integer comparison instead of float p <= k*0.05/384",
+-             "why": "p can equal the threshold exactly (1+X = 100k)"},
+-            {"id": "I8", "topic": "statistic implementation",
+-             "choice": "reference path only (production _metric import); no vectorized rewrite, so no equivalence proof is needed or offered",
+-             "why": "section 3 forbids unproven rewrites"}],
++        "owner_decisions": {
++            "status": "DECIDED_2026-09-21", "addendum": ADDENDUM,
++            "decisions": [
++                {"id": "I1", "decision": "dependence group = block index; episode = unique row/episode identity",
++                 "implementation": "unchanged from v1", "changed_vs_v1": False},
++                {"id": "I2", "decision": "permutation-invariant support accounting; observed support sufficient for the statistic to be defined",
++                 "implementation": "unchanged from v1: matched/episodes/groups invariant; observed floor on the observed arrangement and on the worst-case "
++                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False},
++                {"id": "I3", "decision": "hypothesis-level refusal; a world with zero tested hypotheses is a refused world, excluded from "
++                                         "Type-I/FDR and failed for power",
++                 "implementation": "world_receipt returns world_refused=[no_tested_hypotheses]; counted in the world-refusal blocker",
++                 "changed_vs_v1": True},
++                {"id": "I4", "decision": "degenerate = the hypothesis outcome column is constant; an observed zero lift is valid evidence and is never refused",
++                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False},
++                {"id": "I5", "decision": "sampler order frozen through the hash-bound runner",
++                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False},
++                {"id": "I6", "decision": "marginal-calibration worlds where h(w) is refused are excluded from the empirical CDF denominator",
++                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True},
++                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False},
++                {"id": "I8", "decision": "reference _metric path only for the phase-90 benchmark; full-run optimized implementation needs the "
++                                         "section 3 exact-equivalence proof and a separate benchmark",
++                 "implementation": "statistic.path = reference_metric_import; validation mode refuses without a measured runtime estimate",
++                 "changed_vs_v1": False},
++                {"id": "class_edge", "decision": "implement protocol section 5 half-open coverage classes without binary-float boundary ambiguity",
++                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True}]},
+         "frozen_truth_package": {"freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+                                  "consumed_unchanged": True},
+         "pinned_sources_sha256": PINNED,
+@@ -379,9 +391,14 @@
+     freeze = ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921"
+     fz = json.loads((freeze / "FREEZE.json").read_text())
+     files = {rel(p): sha(HERE / p) for p in BUNDLE_FILES}
+-    pinned = {**{p: sha(ROOT / p) for p in PINNED}, PROTOCOL: sha(ROOT / PROTOCOL), CORRECTION: sha(ROOT / CORRECTION)}
++    pinned = {**{p: sha(ROOT / p) for p in PINNED}, PROTOCOL: sha(ROOT / PROTOCOL), CORRECTION: sha(ROOT / CORRECTION),
++              ADDENDUM: sha(ROOT / ADDENDUM)}
+     manifest = {
+-        "schema": "m3.2-scheme-d-validation-bundle-manifest.v1", "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
++        "schema": "m3.2-scheme-d-validation-bundle-manifest.v2", "bundle_revision": 2,
++        "supersedes": {"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256,
++                       "v1_manifest_file_sha256": sha(ROOT / V1_MANIFEST)},
++        "clarification_addendum": {"path": ADDENDUM, "sha256": sha(ROOT / ADDENDUM)},
++        "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
+         "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": True,
+         "frozen_truth_commit": FREEZE_COMMIT, "baseline_commit": BASELINE_COMMIT,
+         "frozen_truth_package": {"package_dir": "scripts/m32_scheme_d_pre_rng_truth_20260921/package",

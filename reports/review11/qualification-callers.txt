@@ -1,0 +1,4 @@
+# scripts/m32_scheme_d_host_qualification_v4_20260923/qualify.py
+# scripts/m32_scheme_d_qualification_20260922/qualify.py
+# scripts/m32_scheme_d_qualification_v4_20260923/qualify_v4.py
+DEAD             QualificationError:62 prod=0 test=0

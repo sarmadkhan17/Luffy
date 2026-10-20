@@ -1,0 +1,193 @@
+--- scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py
++++ scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py
+@@ -29,6 +29,16 @@
+ ADDENDUM = "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md"
+ V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+ V1_SHA256 = "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
++V2_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
++V2_SHA256 = "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e"
++FAST_COMMIT = "a43336d488deb86139b32c8335c36e7b951a2939"
++FAST_DIR = "scripts/m32_fast_metric_20260921"
++FAST = {"module": "trader/cognition/m32_fast_metric.py", "suite": FAST_DIR + "/equivalence_suite.py",
++        "benchmark_script": FAST_DIR + "/benchmark_fast_metric.py", "equivalence_report": FAST_DIR + "/equivalence_report.json",
++        "benchmark_result": FAST_DIR + "/benchmark_result.json", "artifact_hashes": FAST_DIR + "/artifact_hashes.json",
++        "reference": "trader/cognition/m32_search.py", "equivalence_test": "tests/test_m32_fast_metric_equivalence.py"}
++EXPECTED_EQUIVALENCE = {"comparisons": 7_592_064, "statistic_vectors": 22_314, "fixtures": 4_529, "mismatches": 0}
++VCPUS = (4, 64, 256)
+ PINNED = {
+     "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+     "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+@@ -227,9 +237,14 @@
+ # ------------------------------------------------------------------ config
+ def config() -> dict:
+     return {
+-        "schema": "m3.2-scheme-d-validation-config.v2",
+-        "bundle_revision": 2,
+-        "supersedes": {"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256},
++        "schema": "m3.2-scheme-d-validation-config.v3",
++        "bundle_revision": 3,
++        "supersedes": {"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
++                       "earlier": [{"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256}]},
++        "v3_changes": ["statistic path = exact-equivalent FastMetric behind a hash/receipt gate",
++                       "runner verifies pinned inputs (incl. the reference and optimized sources) on every RNG mode",
++                       "phase-90 benchmark core: reference-vs-fast bit identity on the generated world, fast throughput, projection",
++                       "validation authorization must carry a measured fast-benchmark runtime and receipt hash"],
+         "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN",
+         "authority": {"protocol": PROTOCOL, "protocol_sha256": sha(ROOT / PROTOCOL), "correction": CORRECTION,
+                       "correction_sha256": sha(ROOT / CORRECTION), "clarification_addendum": ADDENDUM,
+@@ -264,10 +279,13 @@
+                    "thresholds": {"state": repr(STATE_T), "linked": repr(LINKED_T)}, "clusters": 32, "sectors": 2,
+                    "table": "artifacts/membership_table.json"},
+         "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+-                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "reference_metric_import",
+-                      "optimized_path": None,
+-                      "note": "The runner imports the production _metric. No vectorized rewrite is included; the full protocol "
+-                              "is not runnable at reference speed and validation mode refuses without a measured benchmark estimate."},
++                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "fast_metric_exact_equivalent",
++                      "reference_path": "reference_metric_import", "optimized_path": "trader.cognition.m32_fast_metric.FastMetric",
++                      "gate": "equivalence_gate_static (hashes + recorded receipt) then, in RNG modes, assert_equivalence_gate "
++                              "(bundle manifest, pinned inputs, recorded preflight PASS incl. live equivalence)",
++                      "note": "The optimized statistic is bit-identical to the imported _metric on the recorded equivalence suite; "
++                              "the reference path is kept for the live bit-identity check of the phase-90 benchmark."},
++        "fast_metric": fast_metric_config(),
+         "sampling": {"permutations_per_world": 767999, "with_replacement": True, "identity_included": True,
+                      "replacement_of_failed_draws": False, "movable_strata_only": True,
+                      "tie_rule": "T* >= T - 1e-12 * max(1, |T|)", "p_value": "(1 + X) / (B + 1)"},
+@@ -320,27 +338,29 @@
+             "status": "DECIDED_2026-09-21", "addendum": ADDENDUM,
+             "decisions": [
+                 {"id": "I1", "decision": "dependence group = block index; episode = unique row/episode identity",
+-                 "implementation": "unchanged from v1", "changed_vs_v1": False},
++                 "implementation": "unchanged from v1", "changed_vs_v1": False, "changed_vs_v2": False},
+                 {"id": "I2", "decision": "permutation-invariant support accounting; observed support sufficient for the statistic to be defined",
+                  "implementation": "unchanged from v1: matched/episodes/groups invariant; observed floor on the observed arrangement and on the worst-case "
+-                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False},
++                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False, "changed_vs_v2": False},
+                 {"id": "I3", "decision": "hypothesis-level refusal; a world with zero tested hypotheses is a refused world, excluded from "
+                                          "Type-I/FDR and failed for power",
+                  "implementation": "world_receipt returns world_refused=[no_tested_hypotheses]; counted in the world-refusal blocker",
+-                 "changed_vs_v1": True},
++                 "changed_vs_v1": True, "changed_vs_v2": False},
+                 {"id": "I4", "decision": "degenerate = the hypothesis outcome column is constant; an observed zero lift is valid evidence and is never refused",
+-                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False},
++                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False, "changed_vs_v2": False},
+                 {"id": "I5", "decision": "sampler order frozen through the hash-bound runner",
+-                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False},
++                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False, "changed_vs_v2": False},
+                 {"id": "I6", "decision": "marginal-calibration worlds where h(w) is refused are excluded from the empirical CDF denominator",
+-                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True},
+-                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False},
++                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True, "changed_vs_v2": False},
++                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False, "changed_vs_v2": False},
+                 {"id": "I8", "decision": "reference _metric path only for the phase-90 benchmark; full-run optimized implementation needs the "
+                                          "section 3 exact-equivalence proof and a separate benchmark",
+-                 "implementation": "statistic.path = reference_metric_import; validation mode refuses without a measured runtime estimate",
+-                 "changed_vs_v1": False},
++                 "implementation": "v3: FastMetric with a recorded exact-equivalence suite (7,592,064 comparisons, 0 mismatches) behind "
++                                   "a fail-closed gate; the separate optimized benchmark is still required before any full-run "
++                                   "authorization (validation mode refuses without a measured runtime and benchmark receipt hash)",
++                 "changed_vs_v1": False, "changed_vs_v2": True},
+                 {"id": "class_edge", "decision": "implement protocol section 5 half-open coverage classes without binary-float boundary ambiguity",
+-                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True}]},
++                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True, "changed_vs_v2": False}]},
+         "frozen_truth_package": {"freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+                                  "consumed_unchanged": True},
+         "pinned_sources_sha256": PINNED,
+@@ -369,11 +389,68 @@
+             "note": "gates: python, numpy, OPENBLAS_NUM_THREADS. blas/platform/installed set are informational locks."}
+ 
+ 
++def fast_metric_config() -> dict:
++    """Bind the reference and optimized implementations, the equivalence suite and its results (read from disk)."""
++    cfg = {k: {"path": p, "sha256": sha(ROOT / p)} for k, p in FAST.items()}
++    report = json.loads((ROOT / FAST["equivalence_report"]).read_text())
++    for key, want in EXPECTED_EQUIVALENCE.items():
++        if report[key if key != "statistic_vectors" else "statistic_vectors"] != want:
++            raise SystemExit(f"fail closed: equivalence report {key} != {want}")
++    if report["quick"] is not False or report["protocol_master_seed_used"] is not False or report["mismatch_details"] != []:
++        raise SystemExit("fail closed: equivalence report is not a clean full run")
++    cfg["commit"] = FAST_COMMIT
++    cfg["equivalence"] = {**EXPECTED_EQUIVALENCE, "test_seed": report["test_seed"], "sections": report["sections"],
++                          "coverage_counters": report["coverage_counters"], "untestable_none_cases": report["untestable_none_cases"],
++                          "protocol_master_seed_used": False, "comparison_level": "float64 bit patterns (uint64 view); None <-> untestable"}
++    cfg["fixture_seed_note"] = "randomized fixtures use fixture-only seed 314159265, never the protocol master seed or seed map"
++    return cfg
++
++
++def equivalence_receipt() -> dict:
++    report = json.loads((ROOT / FAST["equivalence_report"]).read_text())
++    return {"schema": "m3.2-fast-metric-equivalence-receipt.v1", "result": "PASS_0_MISMATCHES",
++            "comparisons": report["comparisons"], "statistic_vectors": report["statistic_vectors"], "fixtures": report["fixtures"],
++            "mismatches": report["mismatches"], "test_seed": report["test_seed"], "protocol_master_seed_used": False,
++            "sections": report["sections"], "coverage_counters": report["coverage_counters"],
++            "untestable_none_cases": report["untestable_none_cases"], "fast_metric_commit": FAST_COMMIT,
++            "equivalence_report_sha256": sha(ROOT / FAST["equivalence_report"]), "suite_sha256": sha(ROOT / FAST["suite"]),
++            "fast_metric_sha256": sha(ROOT / FAST["module"]), "reference_sha256": sha(ROOT / FAST["reference"]),
++            "artifact_hashes_sha256": sha(ROOT / FAST["artifact_hashes"]),
++            "reproduction": "verify_bundle.py reruns the complete suite and compares every deterministic field"}
++
++
++def compute_projection() -> dict:
++    bench = json.loads((ROOT / FAST["benchmark_result"]).read_text())
++    proj = bench["projection"]
++    recomputed = proj["worlds"] * (proj["per_world_fixed_seconds"] + proj["vectors_per_world"]
++                                   * bench["fast_seconds_per_draw_end_to_end"]) / 3600
++    if abs(recomputed - proj["fast_cpu_hours"]) > 1e-9 * recomputed:
++        raise SystemExit("fail closed: benchmark projection does not recompute")
++    cpu_hours = proj["fast_cpu_hours"]
++    return {"schema": "m3.2-fast-metric-compute-projection.v1", "benchmark_result_sha256": sha(ROOT / FAST["benchmark_result"]),
++            "fixture": bench["fixture"], "hypotheses": bench["hypotheses"], "rows": bench["rows"],
++            "reference_seconds_per_vector": bench["reference_seconds_per_vector"],
++            "fast_seconds_per_vector_statistic_only": bench["fast_seconds_per_vector_statistic_only"],
++            "fast_seconds_per_draw_end_to_end": bench["fast_seconds_per_draw_end_to_end"],
++            "speedup_statistic_only": bench["speedup_statistic_only"], "speedup_end_to_end_per_draw": bench["speedup_end_to_end_per_draw"],
++            "throughput_draws_per_second_single_core": 1.0 / bench["fast_seconds_per_draw_end_to_end"],
++            "memory": bench["memory"],
++            "projection": {"worlds": proj["worlds"], "draws_per_world": proj["draws_per_world"],
++                           "per_world_fixed_seconds": proj["per_world_fixed_seconds"],
++                           "reference_cpu_hours": proj["reference_cpu_hours"], "fast_cpu_hours": cpu_hours,
++                           "fast_cpu_years": proj["fast_cpu_years"], "speedup_projected": proj["speedup_projected"]},
++            "wall_time_estimate": {str(n): {"hours": cpu_hours / n, "days": cpu_hours / n / 24} for n in VCPUS},
++            "assumptions": ["perfect linear scaling across vCPUs (embarrassingly parallel by world); add 10-20% for real overhead",
++                            "excludes world generation, refusal evaluation and receipt writing (small per world)",
++                            "measured single-core on a fixed synthetic full-geometry fixture, not a protocol world"]}
++
++
+ def build_artifacts() -> None:
+     ART.mkdir(exist_ok=True)
+     for name, obj in (("membership_table.json", membership_table()), ("effect_assignment_table.json", effect_table()),
+                       ("loadings.json", loadings()), ("covariance_psd.json", covariance_psd()),
+-                      ("config.json", config()), ("environment_lock.json", environment_lock())):
++                      ("config.json", config()), ("environment_lock.json", environment_lock()),
++                      ("equivalence_receipt.json", equivalence_receipt()), ("compute_projection.json", compute_projection())):
+         (ART / name).write_text(canon(obj), encoding="utf-8")
+     (HERE / "requirements.lock").write_text("# pinned runner environment (protocol section 14 item 7)\n"
+                                             f"python=={platform.python_version()}\nnumpy==2.5.2\n"
+@@ -383,6 +460,7 @@
+ BUNDLE_FILES = ("build_bundle.py", "verify_bundle.py", "requirements.lock", "artifacts/config.json",
+                 "artifacts/membership_table.json", "artifacts/effect_assignment_table.json", "artifacts/loadings.json",
+                 "artifacts/covariance_psd.json", "artifacts/environment_lock.json", "artifacts/preflight_report.json",
++                "artifacts/equivalence_receipt.json", "artifacts/compute_projection.json",
+                 "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py")
+ 
+ 
+@@ -392,11 +470,15 @@
+     fz = json.loads((freeze / "FREEZE.json").read_text())
+     files = {rel(p): sha(HERE / p) for p in BUNDLE_FILES}
+     pinned = {**{p: sha(ROOT / p) for p in PINNED}, PROTOCOL: sha(ROOT / PROTOCOL), CORRECTION: sha(ROOT / CORRECTION),
+-              ADDENDUM: sha(ROOT / ADDENDUM)}
++              ADDENDUM: sha(ROOT / ADDENDUM), **{p: sha(ROOT / p) for p in FAST.values() if p not in PINNED}}
+     manifest = {
+-        "schema": "m3.2-scheme-d-validation-bundle-manifest.v2", "bundle_revision": 2,
+-        "supersedes": {"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256,
+-                       "v1_manifest_file_sha256": sha(ROOT / V1_MANIFEST)},
++        "schema": "m3.2-scheme-d-validation-bundle-manifest.v3", "bundle_revision": 3,
++        "supersedes": {"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
++                       "v2_manifest_file_sha256": sha(ROOT / V2_MANIFEST),
++                       "earlier": [{"bundle_manifest": V1_MANIFEST, "bundle_sha256": V1_SHA256,
++                                    "manifest_file_sha256": sha(ROOT / V1_MANIFEST)}]},
++        "fast_metric": {"commit": FAST_COMMIT, "module": FAST["module"], "reference": FAST["reference"],
++                        "equivalence": EXPECTED_EQUIVALENCE},
+         "clarification_addendum": {"path": ADDENDUM, "sha256": sha(ROOT / ADDENDUM)},
+         "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
+         "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": True,

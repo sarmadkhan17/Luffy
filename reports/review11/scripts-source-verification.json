@@ -1,0 +1,20 @@
+{
+  "python_files_ast_parse_passed": 54,
+  "shell_files_bash_n": {
+    "result": "PASS",
+    "command": "bash -n scripts/m32_p5c3_p6c4_remaining_20260921/run_all.sh"
+  },
+  "source_bytes": 1055201,
+  "lines": 19122,
+  "source_changed_only": [
+    "scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py"
+  ],
+  "python_files_ast_parse_passed_definition": "54 baseline Python files in primary script partition, including removed scratch source recovered from HEAD; delegates retain independent full AST inventories",
+  "final_focused_tests": {
+    "passed": 105,
+    "deselected": 8,
+    "seconds": 34.35,
+    "xml": "reports/review11/scripts-tests.xml",
+    "nodeids": "reports/review11/scripts-tested-nodeids.json"
+  }
+}

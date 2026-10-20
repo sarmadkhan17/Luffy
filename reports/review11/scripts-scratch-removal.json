@@ -1,0 +1,363 @@
+{
+  "path": "scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py",
+  "sha256": "6d22c121da9577b3e33ff2c7682f43d0917d5039175e41fa305596de31a5dabf",
+  "bytes": 536,
+  "lines": 16,
+  "search": "all git-tracked text: exact filename, module stem, directory, SHA-256; dynamic import/config refs would contain one of these literals",
+  "side_effects": "imports flint, prints interpreter/flint capabilities, changes process ctx.prec, optionally integrates finite Gaussian interval; no certificate/file/database writes",
+  "safety_or_recovery_path": false,
+  "manifest_bound": false,
+  "decision": "REMOVE",
+  "generated_index_matches": [
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 124373,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"id\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 124374,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 124379,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"norm_label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 124380,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 246828,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 246835,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 274776,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/graph.json",
+      "line": 274783,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-21/manifest.json",
+      "line": 9326,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "  \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\": {"
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 122445,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"id\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 122446,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 122451,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"norm_label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 122452,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 261954,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 261961,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 291546,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/graph.json",
+      "line": 291553,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-22/manifest.json",
+      "line": 9326,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "  \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\": {"
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 143588,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"id\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 143589,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 143594,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"norm_label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 143595,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 262073,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 262080,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 291725,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/graph.json",
+      "line": 291732,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/2026-09-23/manifest.json",
+      "line": 9326,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "  \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\": {"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/ddb2d649d5a89db388b177d5cacb3375449b1f2a74a0859dbb49fe0d980e1a3f.json",
+      "line": 1,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "{\"nodes\": [{\"id\": \"$graphify-root$_scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check_py\", \"label\": \"_scratch_env_check.py\", \"file_type\": \"code\", \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\", \"source_l"
+    },
+    {
+      "path": "graphify-out/cache/stat-index.json",
+      "line": 1,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "{\".claude/CLAUDE.md\":{\"size\":226,\"mtime_ns\":1792170750951611252,\"indexed_at_ns\":1792171758668517171,\"word_count\":29,\"hashes\":{\".claude/claude.md\":\"c6f7fc2f062904d246b700d446ba3ad03e77f41809b12eccfb5e090a11f4fad2\"}},\".claude/agents/motion-reviewer.md\""
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 291430,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"id\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 291431,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 291436,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check"
+      ],
+      "text": "      \"norm_label\": \"_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 291437,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 591510,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 591517,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 680873,
+      "matched": [
+        "_scratch_env_check"
+      ],
+      "text": "      \"source\": \"scripts_m32_p7c4_persistence_truth_20260921_scratch_env_check\","
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "line": 680880,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "      \"source_file\": \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\","
+    },
+    {
+      "path": "graphify-out/manifest.json",
+      "line": 9296,
+      "matched": [
+        "_scratch_env_check.py",
+        "_scratch_env_check",
+        "scripts/m32_p7c4_persistence_truth_20260921"
+      ],
+      "text": "  \"scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py\": {"
+    }
+  ],
+  "functional_or_manifest_matches": [],
+  "rationale": "All 39 matches are generated graph source-index records, with no incoming functional call path; exact filename/module/directory/digest scan found no executable/config/watchdog/test/certificate manifest consumer. Standalone import-time environment diagnostic only, superseded by hash-bound environment locks and host qualification."
+}

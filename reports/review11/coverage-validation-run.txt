@@ -1,0 +1,25 @@
+{
+  "canonical_files": 385,
+  "subsystem_counts": {
+    "m32": 382,
+    "persistence": 3
+  },
+  "decisions": {
+    "KEEP": 384,
+    "REMOVE": 1
+  },
+  "exact_once": true,
+  "original_lines": 67578,
+  "final_owned_lines": 67562,
+  "current_files": 384,
+  "original_owned_bytes": 22271770,
+  "changed_owned_paths": [
+    "trader/persistence/backup.py"
+  ],
+  "removed_owned_paths": [
+    "scripts/m32_p7c4_persistence_truth_20260921/_scratch_env_check.py"
+  ],
+  "all_retained_research_artifacts_unchanged": true,
+  "unique_focused_tests_passed": 306,
+  "note": "Passing retained-defect characterizations are included as three diagnostic cases, not remediation/qualification."
+}

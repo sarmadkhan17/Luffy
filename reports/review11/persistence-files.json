@@ -1,0 +1,151 @@
+{
+  "scope": "persistence: exact 3 canonical owned files",
+  "files_reviewed": 3,
+  "decisions": {
+    "KEEP": 3,
+    "SIMPLIFY": 0,
+    "MERGE": 0,
+    "REMOVE": 0
+  },
+  "rows": [
+    {
+      "path": "trader/persistence/__init__.py",
+      "lines": 1,
+      "sha256": "0de619fa208f3c8d717abe69d2e713772d59efa9e1e8792558cfa0cf6c0fc99b",
+      "baseline_sha256": "0de619fa208f3c8d717abe69d2e713772d59efa9e1e8792558cfa0cf6c0fc99b",
+      "decision": "KEEP",
+      "functions": [],
+      "purpose": "Package boundary: critical state capture has no trading/deployment authority.",
+      "callers": "Python package loading for trader.persistence.backup and pit_inventory; no executable symbols.",
+      "consumers": "Offline recovery/inventory callers.",
+      "side_effects": "None.",
+      "necessity": "Retains explicit authority boundary and package import.",
+      "issue": "None.",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "source_contract": [
+        "Entire one-line module inspected; only a package docstring."
+      ],
+      "verified_by_test": [
+        "Package imported in all selected 42 focused synthetic tests."
+      ]
+    },
+    {
+      "path": "trader/persistence/backup.py",
+      "lines": 558,
+      "sha256": "49bca80a2bf1eea9e3c7956598c32d1f7871f5fe24d16a167b984009c401d3b5",
+      "baseline_sha256": "4aa720e8274c28e4faac13e74e5cb1ebaa10bcc9d4fd1279e05391f9df542d48",
+      "decision": "KEEP",
+      "functions": [
+        "Refused",
+        "canonical",
+        "digest",
+        "sync_dir",
+        "durable",
+        "file_identity",
+        "durable_copy",
+        "safe_path",
+        "Asset",
+        "Inventory",
+        "critical_inventory",
+        "metadata",
+        "no_store_secrets",
+        "exact_file",
+        "no_config_secrets",
+        "rename_absent",
+        "BackupManifest",
+        "BackupSets",
+        "__post_init__",
+        "validate",
+        "visit",
+        "__post_init__",
+        "__init__",
+        "capture",
+        "verify",
+        "_verify_pit_dependencies",
+        "_verify_references",
+        "discover",
+        "restore",
+        "_receipt",
+        "unique"
+      ],
+      "purpose": "Typed critical inventory; per-store SQLite WAL snapshots; exact-byte file capture; canonical manifest/integrity checks; atomic absent-root restore and durable recovery receipts.",
+      "callers": "critical_inventory and BackupSets: tests/test_stage1_recovery_monitoring.py, tests/test_final_audit_backup_input.py and new tests/test_review11_persistence.py. rg and luffy-callers find no trader/scripts runtime consumer. pit_inventory.dependencies imports Asset, Refused, safe_path and exact_file.",
+      "consumers": "Explicit offline recovery operator/test callers; Journal/ControlStateMachine receive restored state only in isolated targets; PIT closure guards via pit_inventory.",
+      "side_effects": "Explicit source read-only SQLite connections and file reads; capture writes only external destination staged generation; restore writes only absent isolated target plus destination restore-receipts. No scheduler/transport/retention/database cleanup.",
+      "necessity": "Critical recovery path with integrity, source-compatible schemas, accounting detached receipts, retained EWA and PIT evidence. Defense-in-depth is intentional.",
+      "issue": "Confirmed: passing a relative source root plus an absolute configured research store inside it passed resolved containment but raised ValueError in path.relative_to(unresolved_root), preventing valid backup.",
+      "fix_status": "IMPLEMENTED_OFFLINE",
+      "source_contract": [
+        "backup.py:154-171 now normalizes the source root once via Path(root).resolve(), matching BackupSets source semantics before any inventory derivation.",
+        "backup.py:298-324 requires journal/control/config/retained EWA and trusted source-compatible store metadata.",
+        "backup.py:326-381 captures per-store online transactions, double-checks all file bytes across interval, retains NOT_GLOBAL_ATOMIC and physical_offhost_NOT_VERIFIED claims, fsyncs then publishes absent target.",
+        "backup.py:383-445 validates manifest, exact bytes, schema compatibility, secrets, dependency closure and accounting artifacts.",
+        "backup.py:475-558 stages restore; copied bytes rechecked; ACTIVE goes through FROZEN to RECOVERY via existing authority; no implicit Journal migrations; receipt hashes post-control-adjustment assets."
+      ],
+      "verified_by_test": [
+        "persistence-red.txt: original source raises ValueError for valid contained absolute configured store with relative root.",
+        "persistence-green.txt / persistence-tests.xml: 42 passed covering root normalization, outside-root refusal, WAL snapshots, missing/corrupt/incomplete/duplicate/traversal/schema manifests, interruptions/races, source-loss verify, detached accounting receipts, retained EWA and PIT closure/tamper/omission refusal.",
+        "persistence-final-regression.txt: final new regression and retained EWA test rerun after test lint annotation."
+      ]
+    },
+    {
+      "path": "trader/persistence/pit_inventory.py",
+      "lines": 150,
+      "sha256": "ea23ca245412ab5d8bc9037a147675fb3aa33a6c920f6ec69e1e0d1233043362",
+      "baseline_sha256": "ea23ca245412ab5d8bc9037a147675fb3aa33a6c920f6ec69e1e0d1233043362",
+      "decision": "KEEP",
+      "functions": [
+        "dependencies",
+        "name",
+        "require",
+        "read"
+      ],
+      "purpose": "Derive exact PIT config/declaration/freeze/ledger/export dependency closure; compare retained receipt identities against authoritative indexes.",
+      "callers": "backup.critical_inventory:183; BackupSets._verify_pit_dependencies:436-440; transitive focused backup/PIT tests.",
+      "consumers": "Asset/dependency identities in trusted inventory, capture-stage verification and restored generation verification.",
+      "side_effects": "Read-only transactions on explicitly supplied or configured SQLite ledgers; exact-byte reads of referenced declarations/freezes/exported receipts; no writes.",
+      "necessity": "Acknowledged outbox payloads leave SQLite; exact detached export references are necessary to preserve historical provenance and recoverability.",
+      "issue": "No confirmed defect. Explicit archived-freeze producer limitation remains refusal, not fabricated evidence. Archives without ledger indexes have weaker identities than indexed receipts by intentional existing contract.",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "source_contract": [
+        "Entire 150-line module inspected, including nested reference/require/read helpers and each error branch.",
+        "Declaration/freezes reuse cognition.dataset validators; configured local ledgers plus known stores are inspected under read transactions.",
+        "Acknowledged ledger rows require exact SHA256(event_id) exported filename; pending exports must exactly equal retained payload; id/declaration/stream/import/source/stable/receipt hashes are checked.",
+        "Historical binding with an unresolved archived freeze refuses pit_bound_freeze_unresolved. Source-root-external dependencies require explicit migration.",
+        "Only forecast/investigation export streams are included; unrelated directory files are not copied."
+      ],
+      "verified_by_test": [
+        "Existing focused PIT closure test captures and restores exact config/declaration/freeze/acknowledged export bytes.",
+        "Focused tests refuse missing declaration/freeze/export, changed receipts, omitted dependencies despite rehashed manifest, SQLite-only reduced inventory, missing config and implicit ledger omission."
+      ]
+    }
+  ],
+  "prior_evidence": [
+    "docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-foundation-r1.md",
+    "docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-blocker-fix-r1.md",
+    "docs/superpowers/reports/2026-10-11-subsystem-review-03-execution-risk-recovery.md"
+  ],
+  "triage": {
+    "ruff": "All owned source files clean; final source + new test clean in persistence-ruff.txt.",
+    "callers": "TEST-ONLY critical_inventory (2 test module consumers) and BackupSets (2 test module consumers), before new tests; no DEAD or DEAD-CHAIN candidates. No runtime wiring inferred.",
+    "graphify": "STALE GRAPH 938f1dd vs checkout 753b45e; no matching BackupManager node; ignored as proof.",
+    "rg_command": "rg -n critical_inventory|BackupSets|pit_inventory|persistence.backup trader scripts tests config.yaml; no runtime consumer of public capture APIs."
+  },
+  "tests": {
+    "command": "./venv/bin/python -m pytest -q tests/test_review11_persistence.py tests/test_final_audit_backup_input.py tests/test_stage1_recovery_monitoring.py -k 'relative_root or backup or pit_ or restore or accounting_detached or incomplete_inventory or secret_content or sqlite_corruption or interrupted_restore or secrets_cannot or embedded_config or cross_file_change or schema_incompatibility or interruption_during_capture or atomic_restore' --junitxml=reports/review11/persistence-tests.xml",
+    "result": "42 passed, 43 deselected in 8.88s",
+    "guards": "Imported isolated fixture rejects SQLite accesses outside each tmp_path and socket connections. All source/target stores synthetic fixtures.",
+    "final_command": "./venv/bin/python -m pytest -q tests/test_review11_persistence.py tests/test_final_audit_backup_input.py",
+    "final_result": "5 passed in 1.48s; all 5 overlap initial 42; 42 unique passing nodeids total",
+    "tested_nodeids_evidence": "reports/review11/persistence-tested-nodeids.json",
+    "unique_pass_count": 42
+  },
+  "owner_decisions": [
+    "Existing destination/mount, cadence, retention, drill cadence and notification routing remain unconfigured policy choices from foundation report; no new owner decision needed for fix."
+  ],
+  "deferred": [
+    "Physical off-host verification, real production backup/restore, venue recovery and scheduled operation remain unverified and unauthorized.",
+    "Historical declaration binding needing a different archived freeze remains refused until producer contract supplies explicit historical freeze provenance."
+  ],
+  "redundancy_removed": "None: no redundant owned file or safe recovery-weakening storage reduction justified."
+}

@@ -1,0 +1,53 @@
+{
+  "unique_passed": 306,
+  "exact_nodeids": "tested-nodeids.json",
+  "core": {
+    "core_initial": "./venv/bin/python -m pytest -q tests/test_m32_categorical_estimand_spec.py tests/test_m32_correction.py tests/test_m32_scheme_d_validation.py tests/test_m32_fast_metric_equivalence.py",
+    "core_retry": "./venv/bin/python -m pytest -q tests/test_m32_correction.py::test_current_artifact_still_fails_power_audit",
+    "qualification": "OPENBLAS_NUM_THREADS=1 ./venv/bin/python -m pytest -q tests/test_m32_host_qualification_v4.py tests/test_m32_qualification.py -k 'bound_hashes or binding_mismatch or missing_target or filesystem_policy_classification or relaxed_write or throughput_calibration or reference_calibration or calibration_not_bound or calibrate_fails_closed or worker_ladder or single_host_is_qualified or two_compatible_hosts or hosts_with_different or multi_host_needs or failed_and_incomplete or tampered_receipts or hmac_signed or receipts_with_wrong or duplicate_labels'",
+    "witnesses": "./venv/bin/python -m pytest -q tests/test_review11_m32_core.py"
+  },
+  "core_result": {
+    "core": "84 passed + exact locked artifact missing; only failed case retried after SHA-verified hydration:1 passed =85 unique original cases passed",
+    "qualification": "71 passed,41 deselected",
+    "witnesses": "Latest three witnesses passed; passing characterization of retained defects, not corrected-contract assertions"
+  },
+  "persistence": {
+    "initial": "./venv/bin/python -m pytest -q tests/test_review11_persistence.py tests/test_final_audit_backup_input.py tests/test_stage1_recovery_monitoring.py -k 'relative_root or backup or pit_ or restore or accounting_detached or incomplete_inventory or secret_content or sqlite_corruption or interrupted_restore or secrets_cannot or embedded_config or cross_file_change or schema_incompatibility or interruption_during_capture or atomic_restore' --junitxml=reports/review11/persistence-tests.xml",
+    "final": "./venv/bin/python -m pytest -q tests/test_review11_persistence.py tests/test_final_audit_backup_input.py",
+    "unique": 42,
+    "red": "persistence-red.txt",
+    "green": "persistence-green.txt",
+    "xml": "persistence-tests.xml"
+  },
+  "scripts": {
+    "command_note": "Authoritative exact selected nodeids are scripts-tested-nodeids.json and scripts-tests.xml; see scripts.md for exclusions and cancelled fixture context.",
+    "result": "105 passed,8 deselected",
+    "stdout": "scripts-tests.txt",
+    "xml": "scripts-tests.xml",
+    "command_record": "scripts-test-command.txt"
+  },
+  "read_only_artifact_audit": {
+    "command": "./venv/bin/python reports/review11/audit_artifacts.py",
+    "result": "artifact-audit.json",
+    "dependency_resolution": "artifact-dependency-resolution.json"
+  },
+  "stored_pilot_replay": "scripts-pilot-replay.json",
+  "historical_proof_check": "scripts-math-spike-miss-check.json",
+  "failures_and_interruptions": [
+    {
+      "log": "core-owned-tests.txt",
+      "cause": "1 missing exact frozen historical JSON in isolated checkout; after digest-verified hydration only that test reran and passed",
+      "retry": "core-artifact-retry.txt"
+    },
+    {
+      "log": "scripts-tests-initial-cancelled-preflight.txt",
+      "cause": "Two corruption tests shared a full deterministic fresh_preflight fixture; cancelled and excluded, two fixture errors are interruption evidence, not product regressions",
+      "corrected_run": "scripts-tests.txt"
+    }
+  ],
+  "boundary": "Existing synthetic test fixtures only; no new protocol validation run, held-out market evaluation, research campaign, full CI, canonical integration, production DB/backup access/modification, provider/venue call, service restart or trading activation",
+  "graph": "Initial wrapper graph938f1dd was stale; source/rg/import-aware callers, not missing graph edges, establish decisions. Final exact-revision graph refresh handled separately outside repository.",
+  "claude_probe": "claude -p execution probe: Not logged in. Native four-way review explicitly owner-requested.",
+  "test_count_note": "3 passing tests characterize retained defects; they do not prove corrected behavior or research validity."
+}

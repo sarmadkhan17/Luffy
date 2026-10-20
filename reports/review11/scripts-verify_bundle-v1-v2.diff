@@ -1,0 +1,180 @@
+--- scripts/m32_scheme_d_validation_bundle_20260921/verify_bundle.py
++++ scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Independent verifier for the RNG-free M3.2 Scheme D validation bundle.
++"""Independent verifier for the RNG-free M3.2 Scheme D validation bundle, REVISION 2.
+ 
+ Imports neither the builder, the runner, the preflight suite nor the pinned harness.  It re-derives the
+ membership and effect-assignment tables, the C0-C4 covariance matrices and PSD proofs, the null MAD and the
+@@ -31,8 +31,14 @@
+ TRUTH_PACKAGE_SHA256 = "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb"
+ PROTOCOL = "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md"
+ CORRECTION = "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md"
++ADDENDUM = "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md"
++V1_DIR = "scripts/m32_scheme_d_validation_bundle_20260921"
++V1_COMMIT = "8f21592fd9fcbabf65c8fa21b3c1ec0ddf52e217"
++V1_SHA256 = "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
++V2_DIR = "scripts/m32_scheme_d_validation_bundle_v2_20260921"
+ PROTOCOL_SHA = {PROTOCOL: "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac",
+-                CORRECTION: "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163"}
++                CORRECTION: "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
++                ADDENDUM: "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc"}
+ SECTION2 = {"trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+             "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+             "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7"}
+@@ -101,10 +107,14 @@
+     need(git("merge-base", "--is-ancestor", BASELINE_COMMIT, FROZEN_TRUTH_COMMIT).returncode == 0,
+          "baseline commit not an ancestor of the freeze commit")
+     manifest = jl("BUNDLE_MANIFEST.json")
+-    need(manifest["schema"] == "m3.2-scheme-d-validation-bundle-manifest.v1", "manifest schema")
++    need(manifest["schema"] == "m3.2-scheme-d-validation-bundle-manifest.v2" and manifest["bundle_revision"] == 2, "manifest schema")
++    need(manifest["supersedes"]["bundle_sha256"] == V1_SHA256 and manifest["supersedes"]["v1_manifest_file_sha256"] == V1_SHA256
++         == sha(ROOT / V1_DIR / "BUNDLE_MANIFEST.json"), "v1 supersession record")
++    need(git("diff", "--quiet", V1_COMMIT, "--", V1_DIR).returncode == 0, "v1 bundle was modified")
++    need(manifest["clarification_addendum"] == {"path": ADDENDUM, "sha256": PROTOCOL_SHA[ADDENDUM]}, "addendum binding")
+     need(manifest["frozen_truth_commit"] == FROZEN_TRUTH_COMMIT and manifest["baseline_commit"] == BASELINE_COMMIT, "commits")
+     need(manifest["no_rng_no_seed_generation_no_worlds_no_search_no_gate2"] is True, "manifest flags")
+-    listed = {str(Path(k).relative_to("scripts/m32_scheme_d_validation_bundle_20260921")): v
++    listed = {str(Path(k).relative_to(V2_DIR)): v
+               for k, v in manifest["files_sha256"].items()}
+     need(set(listed) == EXPECTED_FILES, f"bundle file set differs: {set(listed) ^ EXPECTED_FILES}")
+     for rel, h in listed.items():
+@@ -249,7 +259,10 @@
+     c = jl("artifacts/config.json")
+     need(c["master_seed"] == 2026091902 and c["status"] == "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN", "master seed / status")
+     a = c["authority"]
++    need(c["schema"] == "m3.2-scheme-d-validation-config.v2" and c["bundle_revision"] == 2
++         and c["supersedes"] == {"bundle_manifest": V1_DIR + "/BUNDLE_MANIFEST.json", "bundle_sha256": V1_SHA256}, "config revision")
+     need(a["protocol_sha256"] == PROTOCOL_SHA[PROTOCOL] and a["correction_sha256"] == PROTOCOL_SHA[CORRECTION]
++         and a["clarification_addendum"] == ADDENDUM and a["clarification_addendum_sha256"] == PROTOCOL_SHA[ADDENDUM]
+          and a["baseline_commit"] == BASELINE_COMMIT and a["frozen_truth_commit"] == FROZEN_TRUTH_COMMIT, "authority")
+     sm = c["seed_map"]
+     need(sm["phase_code"] == {"null": 10, "power": 20, "checks": 30, "benchmark": 90}, "phase codes")
+@@ -269,6 +282,7 @@
+     need(d["strata_sizes"] == {"(1,0)": 8, "(1,1)": 4, "(2,0)": 4, "(2,1)": 8, "(3,0)": 8, "(3,1)": 4, "(4,0)": 4, "(4,1)": 8},
+          "strata")
+     need(d["missing_fraction_class_edges"] == [[0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 1]], "class edges")
++    need(d["class_rule"].startswith("integer counts: class = [5m >= T] + [5m >= 2T] + [5m >= 3T]"), "integer class rule")
+     f = c["family"]
+     need(f["size"] == 384 and f["clusters"] == 32 and f["thresholds"] == {"state": repr(STATE), "linked": repr(LINKED)}, "family")
+     s = c["sampling"]
+@@ -300,7 +314,14 @@
+                                                      "sequence": {"matched": 8, "episodes": 3}}, "floors")
+     need(c["statistic"]["sha256"] == SECTION2["trader/cognition/m32_search.py"] and c["statistic"]["optimized_path"] is None
+          and c["statistic"]["function"] == "_metric", "statistic binding")
+-    need({i["id"] for i in c["interpretations_flagged_for_owner_review"]} == {f"I{i}" for i in range(1, 9)}, "interpretations")
++    od = c["owner_decisions"]
++    need(od["status"] == "DECIDED_2026-09-21" and od["addendum"] == ADDENDUM, "owner decisions status")
++    need([x["id"] for x in od["decisions"]] == [f"I{i}" for i in range(1, 9)] + ["class_edge"], "owner decision ids")
++    need({x["id"] for x in od["decisions"] if x["changed_vs_v1"]} == {"I3", "I6", "class_edge"}, "only I3/I6/class-edge changed vs v1")
++    need("zero tested hypotheses (owner decision I3)" in c["refusal"]["hypothesis_level_floors"].keys() or
++         "zero tested hypotheses (owner decision I3)" in c["refusal"]["world_level"], "I3 world refusal recorded")
++    need(c["acceptance"]["calibration"]["refused_h_of_w"].startswith("world excluded from the ECDF denominator"), "I6 recorded")
++    need("interpretations_flagged_for_owner_review" not in c, "stale v1 interpretation key")
+     need(c["null_mad"]["gaussian"] == repr(STATE) and abs(float(c["null_mad"]["t3_common_jump"]) - null_mad_t3()) < 1e-12,
+          "null MAD independently re-derived")
+     need(c["frozen_truth_package"]["consumed_unchanged"] is True and c["pinned_sources_sha256"] ==
+@@ -353,7 +374,7 @@
+     recorded = jl("artifacts/preflight_report.json")
+     need(recorded["result"] == "PASS" and recorded["rng_construction_attempts"] == 0 and recorded["rng_constructed"] is False
+          and recorded["worlds_generated_from_random_generator"] == 0 and recorded["seed_tuples_materialised"] == 0, "recorded preflight")
+-    need(all(r["result"] == "PASS" for r in recorded["results"]) and recorded["checks_total"] == len(recorded["results"]) == 22,
++    need(all(r["result"] == "PASS" for r in recorded["results"]) and recorded["checks_total"] == len(recorded["results"]) == 27,
+          "recorded preflight checks")
+     with tempfile.TemporaryDirectory() as td:
+         out = Path(td) / "pre.json"
+@@ -366,11 +387,91 @@
+                            "rng_construction_attempts": 0}
+ 
+ 
++def cp_contains(k: int, n: int, t: Fraction, alpha: Fraction = Fraction(1, 6000)) -> bool:
++    a, b = t.numerator, t.denominator
++
++    def cdf(kk):
++        return sum(math.comb(n, i) * a ** i * (b - a) ** (n - i) for i in range(kk + 1)), b ** n
++    half = alpha / 2
++    if k > 0:
++        num, den = cdf(k - 1)
++        if Fraction(den - num, den) < half:
++            return False
++    if k < n:
++        num, den = cdf(k)
++        if Fraction(num, den) < half:
++            return False
++    return True
++
++
++V2_PROBE = r"""
++import sys, os, json
++sys.path.insert(0, %r)
++import numpy as np
++def trip(*a, **k):
++    raise SystemExit("random generator constructed")
++for n in ("PCG64", "SeedSequence", "default_rng", "Generator", "RandomState"):
++    setattr(np.random, n, trip)
++import scheme_d_runner as R
++import acceptance as A
++from fractions import Fraction as F
++class S:
++    def __init__(self, g=None): self.g = g
++    @staticmethod
++    def _n(size): return int(np.prod(size)) if size is not None else 1
++    def _shape(self, a, size): return a.reshape(size) if size is not None else a[0]
++    def integers(self, lo, hi, size=None): return self._shape((np.arange(self._n(size)) %% (hi - lo) + lo).astype(np.int64), size)
++    def random(self, size=None): return self._shape(np.full(self._n(size), 0.5), size)
++    def standard_normal(self, size=None): return self._shape(np.sin(np.arange(self._n(size)) * 1.7), size)
++    def standard_t(self, df, size=None): return self._shape(np.cos(np.arange(self._n(size)) * 0.9), size)
++    def geometric(self, p, size=None): return self._shape(np.full(self._n(size), self.g, dtype=np.int64), size)
++    def choice(self, a, size=None, p=None): return self._shape((np.arange(self._n(size)) %% a).astype(np.int64), size)
++    def permutation(self, x): return np.roll(np.asarray(x), 1)
++out = {"classes": [R.missing_class(m, 80) for m in range(81)]}
++out["gen"] = {str(g): sorted({t[2] for t in R.generate_world(3, 0, 0, S(g), S()).block_strata}) for g in (1, 2, 3, 4, 5)}
++rows = np.arange(R.ROWS)
++mem = ((rows[:, None] * 13 + np.arange(384)[None, :] * 7) %% 20 == 0)
++obs = np.ones(R.ROWS, bool); obs[:73] = False
++strata = tuple((1 + b %% 4, int((b // 3) %% 2), 0) for b in range(48))
++world = R.V.SyntheticWorld(0, 1, 0, mem, (rows %% 3).astype(np.int64), (rows %% 101) / 50.0, obs, strata, R.V.valid_metadata(strata))
++r = R.world_receipt(world, S(), 90, "V", {}, draws=2, truth=[{"classification": "true_null", "sign": None}] * 384, injected=())
++out["i3"] = {"world_refused": r.get("world_refused"), "summary_refused": R.world_summary(r)["refused"]}
++grid = [F(2 * w + 1, 2000) for w in range(1000)]
++out["i6_none_ignored"] = A.calibration_pass(grid + [None] * 1000)
++out["i6_plain"] = A.calibration_pass(grid)
++mixed = [F(2 * w + 1, 4000) for w in range(1900)] + [None] * 100
++out["i6_mixed"] = A.calibration_pass(mixed)
++print(json.dumps(out))
++"""
++
++
++def check_v2_semantics(report: dict) -> None:
++    proc = subprocess.run([sys.executable, "-c", V2_PROBE % str(HERE / "runner")], capture_output=True, text=True,
++                          env={**os.environ, "OPENBLAS_NUM_THREADS": "1"})
++    need(proc.returncode == 0, f"v2 probe failed: {proc.stderr[-300:]}")
++    out = json.loads(proc.stdout.strip().splitlines()[-1])
++    edges = (Fraction(1, 5), Fraction(2, 5), Fraction(3, 5))
++    need(out["classes"] == [sum(Fraction(m, 80) >= e for e in edges) for m in range(81)], "class-edge rule")
++    need(out["classes"][16] == 1 and out["classes"][15] == 0 and out["classes"][32] == 2 and out["classes"][48] == 3, "class edge values")
++    need(out["gen"] == {"1": [0], "2": [1], "3": [2], "4": [3], "5": [3]}, f"generate_world classes at exact edges: {out['gen']}")
++    need(out["i3"] == {"world_refused": ["no_tested_hypotheses"], "summary_refused": True}, "I3 zero-tested world refusal")
++    grid = [Fraction(2 * w + 1, 2000) for w in range(1000)]
++    exp = {str(t): cp_contains(sum(1 for p in grid if p <= t), 1000, t) for t in (Fraction(1, 100), Fraction(5, 100), Fraction(1, 10))}
++    need(out["i6_none_ignored"] == exp == out["i6_plain"], "I6 exclusion (None entries must not change the result)")
++    mixed = [Fraction(2 * w + 1, 4000) for w in range(1900)]
++    exp = {str(t): cp_contains(sum(1 for p in mixed if p <= t), 1900, t) for t in (Fraction(1, 100), Fraction(5, 100), Fraction(1, 10))}
++    need(out["i6_mixed"] == exp, "I6 mixed fixture")
++    src = (HERE / "runner" / "scheme_d_runner.py").read_text()
++    need("searchsorted" not in src and "1.0 - observed" not in src, "float class rule still present")
++    report["v2_semantics"] = {"class_edges": "exact half-open (16->1, 32->2, 48->3)", "i3": "zero tested hypotheses = refused world",
++                              "i6": "refused h(w) excluded from ECDF denominator"}
++
++
+ def main() -> int:
+-    report: dict = {"schema": "m3.2-scheme-d-validation-bundle-verification.v1", "independent_implementation": True,
++    report: dict = {"schema": "m3.2-scheme-d-validation-bundle-verification.v2", "independent_implementation": True,
+                     "rng_constructed": False}
+     for step in (check_git_and_hashes, check_tables, check_psd, check_config, check_environment,
+-                 check_isolation_and_rng, check_preflight):
++                 check_isolation_and_rng, check_v2_semantics, check_preflight):
+         step(report)
+     report["result"] = "PASS"
+     text = json.dumps(report, sort_keys=True, indent=1) + "\n"
