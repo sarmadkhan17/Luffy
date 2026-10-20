@@ -254,42 +254,111 @@ def test_stale_worker_null_receipt_uses_existing_failed_look_budget_rule(tmp_pat
     assert len(runner.ledger.tests())==1
 
 
+# Owner-approved Review 07 contract changes, each pinned exactly. Everything else
+# stays byte/value-identical to the SG-05 baseline.
+_BASE = 'fc6c0b2'
+# Keys removed because their only readers were deleted in the same approved
+# commits (ef53aa3 Brain remediation; c9cfe7a D1 charge-once). section -> keys.
+_REMOVED_KEYS = {
+    'research': {'referee_max_attempts'},
+    'crawler': {'passages_per_mine'},
+    'tv_harness': {'run_timeout_s'},
+    'strategies': {'tv_interval', 'tv_period', 'tv_min_oos_trades',
+                   'tv_require_positive_oos', 'tv_validation',
+                   'auto_demote_drawdown_pct', 'max_active'},
+}
+# Owner-authorized lifecycle value change (ten-trade probation).
+_CHANGED_VALUES = {('strategies', 'paper_probation_trades'): (15, 10)}
+
+
+def _root():
+    return Path(__file__).resolve().parents[1]
+
+
+def _base(path):
+    return subprocess.check_output(['git', 'show', f'{_BASE}:{path}'], text=True)
+
+
 def test_statistical_policy_and_frozen_evidence_unchanged():
     # Retrospective mode adds source-bound input handling to the backtester.
     # Keep its statistical decision threshold exactly pinned while retaining
     # byte-level guards for statistical policy, configuration and evidence.
-    paths = ['trader/research/combo.py','trader/research/fdr.py',
-             'trader/research/thresholds.py']
-    subprocess.run(['git','diff','--exit-code','fc6c0b2','--',*paths],check=True,capture_output=True)
+    # alpha-investing and the combination definition stay byte-identical;
+    # thresholds.py differs only by the approved denominator change below.
+    paths = ['trader/research/combo.py', 'trader/research/fdr.py']
+    subprocess.run(['git', 'diff', '--exit-code', _BASE, '--', *paths],
+                   check=True, capture_output=True)
     # New bundle reports are additive evidence. Every historical tracked file
     # must still retain its exact bytes and path; additions cannot mask edits.
     historical = ['docs/tracker', 'docs/superpowers/evidence', 'docs/superpowers/specs']
     changed = subprocess.check_output(
-        ['git','diff','--name-only','--no-renames','--diff-filter=DMRTUXB',
-         'fc6c0b2','--',*historical], text=True)
+        ['git', 'diff', '--name-only', '--no-renames', '--diff-filter=DMRTUXB',
+         _BASE, '--', *historical], text=True)
     assert changed == '', changed
-    # config.yaml: the research budget, the risk policy and every strategies
-    # key are pinned; only the owner-authorized lifecycle edits may differ
-    # (ten-trade probation, three unread keys removed).
+    # config.yaml: every value is pinned. The only permitted differences are the
+    # exact removals above (no remaining consumer) and the approved probation.
     import yaml
-    then = yaml.safe_load(subprocess.check_output(
-        ['git','show','fc6c0b2:config.yaml'], text=True))
-    now = yaml.safe_load(Path(__file__).resolve().parents[1]
-                         .joinpath('config.yaml').read_text())
-    for section in then:
-        if section != 'strategies':
-            assert now[section] == then[section], section
+    then = yaml.safe_load(_base('config.yaml'))
+    now = yaml.safe_load(_root().joinpath('config.yaml').read_text())
     assert set(now) == set(then)
-    lifecycle = {'paper_probation_trades', 'tv_validation',
-                 'auto_demote_drawdown_pct', 'max_active'}
-    assert {k: v for k, v in now['strategies'].items() if k not in lifecycle} \
-        == {k: v for k, v in then['strategies'].items() if k not in lifecycle}
-    assert now['strategies']['paper_probation_trades'] == 10
-    before = subprocess.check_output(
-        ['git','show','fc6c0b2:trader/strategy/vector_backtest.py'], text=True)
-    after = Path(__file__).resolve().parents[1].joinpath(
-        'trader/strategy/vector_backtest.py').read_text()
+    for section, was in then.items():
+        expected = {k: v for k, v in was.items() if k not in _REMOVED_KEYS.get(section, ())} \
+            if isinstance(was, dict) else was
+        for (sec, key), (old, new) in _CHANGED_VALUES.items():
+            if sec == section:
+                assert was[key] == old
+                expected[key] = new
+        assert now[section] == expected, section
+    # a removal is only acceptable while nothing reads the key
+    import re
+    sources = [p for d in ('trader', 'scripts') for p in _root().joinpath(d).rglob('*.py')]
+    text = '\n'.join(p.read_text(errors='ignore') for p in sources)
+    for keys in _REMOVED_KEYS.values():
+        for key in keys:
+            assert not re.search(r'[\'"]' + key + r'[\'"]', text), key
+    before = _base('trader/strategy/vector_backtest.py')
+    after = _root().joinpath('trader/strategy/vector_backtest.py').read_text()
     decision_gate = ('ok_test, f_test = test.passes(min_trades=max(3, int(train.trades * 0.2)),\n'
                      '                                  min_pf=1.0)')
     assert decision_gate in before
     assert decision_gate in after
+
+
+def test_threshold_source_differs_from_baseline_only_by_the_approved_denominator():
+    old = _base('trader/research/thresholds.py')
+    old_try = ('            try:\n                arr = _values(tree, ctx)\n'
+               '            except Exception as e:                      # noqa: BLE001\n'
+               '                log.debug(f"threshold {expr} on {ctx.symbol}: {e}")\n'
+               '                continue\n            total += int(arr.size)\n')
+    new_try = ('            total += len(ctx.index)\n' + old_try.replace(
+        '            total += int(arr.size)\n', ''))
+    assert old.count(old_try) == 1
+    assert _root().joinpath('trader/research/thresholds.py').read_text() == \
+        old.replace(old_try, new_try)
+
+
+def test_failed_threshold_evaluation_counts_as_unavailable_and_never_moves_a_cut(monkeypatch):
+    from trader.research import thresholds as T
+
+    class Ctx:
+        def __init__(self, symbol, n):
+            self.symbol, self.index = symbol, range(n)
+
+    good, bad = Ctx('A', 100), Ctx('B', 100)
+
+    def values(tree, ctx):
+        if ctx is bad:
+            raise ValueError('feature unavailable')
+        return np.arange(100, dtype=float)
+    monkeypatch.setattr(T, '_values', values)
+    monkeypatch.setattr(T.dsl, 'parse', lambda expr: expr)
+    only = T.measure(['x'], [good], min_samples=10, min_finite_frac=0.0)['x']
+    both = T.measure(['x'], [good, bad], min_samples=10, min_finite_frac=0.0)['x']
+    # the failed symbol is unavailable data in the denominator, not silently dropped
+    assert only['finite_frac'] == 1.0 and both['finite_frac'] == 0.5
+    # ... and it never changes a quantile, the count or the observed range
+    for k in ('n', 'p10', 'p25', 'p75', 'p90', 'min', 'max'):
+        assert both[k] == only[k], k
+    # a fraction floor above the available share now refuses the expression
+    assert T.measure(['x'], [good, bad], min_samples=10, min_finite_frac=0.6)['x']['usable'] is False
+    assert T.measure(['x'], [good], min_samples=10, min_finite_frac=0.6)['x']['usable'] is True
