@@ -152,7 +152,7 @@ FILES = {
 
 
 def critical_inventory(root, *, registered=()):
-    root = Path(root)
+    root = Path(root).resolve()
     if not safe_path(root, 'data/ewa_state.json').is_file():
         raise Refused('retained_decision_input_missing:data/ewa_state.json')
     assets = [Asset(p, r, 'sqlite', metadata(safe_path(root, p))) for p, r in STORES.items()
