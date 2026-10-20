@@ -1,0 +1,19 @@
+{
+  "expected": 206,
+  "reviewed": 206,
+  "unique_paths": 206,
+  "missing": [],
+  "extra": [],
+  "duplicates": [],
+  "ownership_csv_inventory_agree": true,
+  "classification_counts": {
+    "KEEP": 197,
+    "SIMPLIFY": 9
+  },
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "implementation_commit": "c8cdd800df1ad1f3211036b05ba07b9d96b55c4c",
+  "baseline_physical_lines": 51829,
+  "new_test_only_file": "frontend/tests/review09.test.tsx (13 cases), excluded from206 baseline denominator",
+  "cross_subsystem_source_edits": [],
+  "archive_files_changed": []
+}

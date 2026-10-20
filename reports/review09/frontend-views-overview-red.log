@@ -1,0 +1,35 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run --run tests/review09.test.tsx -t Overview signal
+
+
+ RUN  v5.0.2 /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend
+
+ ❯ tests/review09.test.tsx (10 tests | 1 failed | 9 skipped) 597ms
+   × links an Overview signal to its exact Operations decision 595ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review09.test.tsx > links an Overview signal to its exact Operations decision
+Error: expect(element).toHaveAttribute("href", "#operations?decision=decision%20one") // element.getAttribute("href") === "#operations?decision=decision%20one"
+
+Expected the element to have attribute:
+  href="#operations?decision=decision%20one"
+Received:
+  href="#operations?id=decision%20one"
+ ❯ tests/review09.test.tsx:60:68
+     58|   setup(<Overview />, { ownerRead });
+     59|   fireEvent.click(await screen.findByRole("button", { name: "SOL decis…
+     60|   expect(screen.getByRole("link", { name: "Open in Operations" })).toH…
+       |                                                                    ^
+     61| });
+     62| it("disables owner controls after a cached AVAILABLE health read fails…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  05:48:19
+   Duration  2.74s (environment 32%, transform 25%, tests 23%, import 16%, setup 4%)
+

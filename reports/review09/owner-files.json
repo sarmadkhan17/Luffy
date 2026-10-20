@@ -1,0 +1,232 @@
+[
+  {
+    "path": "scripts/bench_owner_interface.py",
+    "classification": "KEEP",
+    "purpose": "Manual synthetic IPC latency, idle CPU and read contention benchmark.",
+    "consumers": "Manual CLI; creates a disposable Journal/socket and exercises OwnerService.",
+    "evidence": "Not executed: correctness tests cover the IPC contract; timing assertions would add machine noise. 500 status/200 controls/replays and matrix workload are bounded. Retain manual perf probe.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Not executed: correctness tests cover the IPC contract; timing assertions would add machine noise. 500 status/200 controls/replays and matrix workload are bounded. Retain manual perf probe.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_manual_close.py",
+    "classification": "KEEP",
+    "purpose": "Single-position typed intent queue and Kernel-drain regressions.",
+    "consumers": "Focused pytest; real Journal synthetic Position/Executor.",
+    "evidence": "Checks duplicate queue, closed/unknown trades, rotated-out symbols, no blind retry, corruption and notice. Does not call venue. Complements recovery tests rather than duplicating them.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Checks duplicate queue, closed/unknown trades, rotated-out symbols, no blind retry, corruption and notice. Does not call venue. Complements recovery tests rather than duplicating them.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_own03_approval_boundary.py",
+    "classification": "KEEP",
+    "purpose": "Routine questions/decisions cannot generate blanket approval loops.",
+    "consumers": "Focused pytest; Stage8/Factory synthetic fixture imports.",
+    "evidence": "Checks ledger change counts, exact first-live missing approval, expiry and immutable rejection. SDD25.4 distinction is intentional and must stay. Added read-only synthetic supervisor projection regression for actual recovery control destination; red before /green after.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Checks ledger change counts, exact first-live missing approval, expiry and immutable rejection. SDD25.4 distinction is intentional and must stay.",
+    "fix_status": "TEST_ONLY"
+  },
+  {
+    "path": "tests/test_owner_interface.py",
+    "classification": "KEEP",
+    "purpose": "End-to-end typed owner gateway matrix including MACs, auth, replay, GraphQL and simulated recovery.",
+    "consumers": "pytest; helper imports by R3-R6 and boundary tests.",
+    "evidence": "Real local IPC and temporary stores, recording venue doubles; requests.post patched in Telegram cases. Removing helper-heavy matrix breaks later regression imports. Signed channel and no-provider proof do not establish deployed service health.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Real local IPC and temporary stores, recording venue doubles; requests.post patched in Telegram cases. Removing helper-heavy matrix breaks later regression imports. Signed channel and no-provider proof do not establish deployed service health.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_owner_interface_boundary.py",
+    "classification": "KEEP",
+    "purpose": "Cross-process authority/chat/secrets boundaries and negative controls.",
+    "consumers": "pytest; AST/import/record audits and mutated fixture invocations.",
+    "evidence": "Checks absence of executor imports, immutable owner routing and untrusted free text. Mutants test observable safety violations rather than adding production verification machinery. Keep despite test-only duplication.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Checks absence of executor imports, immutable owner routing and untrusted free text. Mutants test observable safety violations rather than adding production verification machinery. Keep despite test-only duplication.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_owner_interface_r3.py",
+    "classification": "KEEP",
+    "purpose": "Adversarial ordering, panic draining and rolled-back audit buffer regressions.",
+    "consumers": "pytest; R4/R5 import gated concurrency helpers.",
+    "evidence": "Event/Thread recording fixtures isolate stale recovery, blocked replies and lost audit writes. Retired inline-JS cases explicitly migrated to React tests, not dead production code.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Event/Thread recording fixtures isolate stale recovery, blocked replies and lost audit writes. Retired inline-JS cases explicitly migrated to React tests, not dead production code.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_owner_interface_r4.py",
+    "classification": "KEEP",
+    "purpose": "Admission watermark, replay-aware refusal and truthful overflow regressions.",
+    "consumers": "pytest; R3 helper imports and real temporary IPC.",
+    "evidence": "New owner halt supersedes admitted old unhalt; duplicate admission consults durable record, in-flight rows never counted as loss. Negative controls remain useful distinct interleavings.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "New owner halt supersedes admitted old unhalt; duplicate admission consults durable record, in-flight rows never counted as loss. Negative controls remain useful distinct interleavings.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_owner_interface_r5.py",
+    "classification": "KEEP",
+    "purpose": "Panic acceptance fence, preclaim reservation and exact audit-cap regressions.",
+    "consumers": "pytest; R6 imports _svc; Kernel fixture callbacks.",
+    "evidence": "Tests5 concrete panic races, restart RESERVED/PENDING semantics, IPC/Telegram duplicates and cap under failed concurrent flush. Apparent repetitions enforce different crash windows; merging unproven saves no owner complexity.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Tests5 concrete panic races, restart RESERVED/PENDING semantics, IPC/Telegram duplicates and cap under failed concurrent flush. Apparent repetitions enforce different crash windows; merging unproven saves no owner complexity.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "tests/test_owner_interface_r6.py",
+    "classification": "KEEP",
+    "purpose": "Failed reservation reconciliation cannot return a false terminal refusal.",
+    "consumers": "pytest; R5 _svc, original matrix and Telegram render helpers.",
+    "evidence": "Event-gated absence/reserved/claimed/completed/refused race matrix and signed IPC prove same-ID retry semantics. Unknown rendering never says nothing changed; failure/no-provider scope explicit.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Event-gated absence/reserved/claimed/completed/refused race matrix and signed IPC prove same-ID retry semantics. Unknown rendering never says nothing changed; failure/no-provider scope explicit.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/__init__.py",
+    "classification": "KEEP",
+    "purpose": "Public typed owner exports and architecture documentation.",
+    "consumers": "Kernel/adapters and package imports.",
+    "evidence": "No side effects, clients or execution authority. Removing package marker/documented exports disrupts public imports.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "No side effects, clients or execution authority. Removing package marker/documented exports disrupts public imports.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/adapters/__init__.py",
+    "classification": "KEEP",
+    "purpose": "Documents thin-adapter import boundary.",
+    "consumers": "Python package/import resolution; boundary test scans.",
+    "evidence": "Five-line package marker is inexpensive and intentionally contains no executor.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Five-line package marker is inexpensive and intentionally contains no executor.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/adapters/dashboard.py",
+    "classification": "KEEP",
+    "purpose": "Maps authenticated session clicks and original request identity/time to OwnerRequest.",
+    "consumers": "server._owner_gateway; GraphQL and owner_api control routes.",
+    "evidence": "No state setter; stable client id/time survive retry. Semantic authentication remains DashboardAuth, authorization Kernel Authorizer. No local fallback.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "No state setter; stable client id/time survive retry. Semantic authentication remains DashboardAuth, authorization Kernel Authorizer. No local fallback.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/adapters/openclaw.py",
+    "classification": "KEEP",
+    "purpose": "Provider-neutral exact commands and sender-bound expiring confirmations.",
+    "consumers": "Optional provider wrapper; unit/integration tests. Shipped identity bindings empty and live provider NOT_CONFIGURED.",
+    "evidence": "NOT_CONFIGURED is intentional. Keeps at most32 pending proposals; same id resubmits safely, code collisions refuse. Removing on absence of live calls would remove approved transport contract.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "NOT_CONFIGURED is intentional. Keeps at most32 pending proposals; same id resubmits safely, code collisions refuse. Removing on absence of live calls would remove approved transport contract.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/adapters/render.py",
+    "classification": "KEEP",
+    "purpose": "Human-readable typed outcomes shared by conversational transports and GraphQL.",
+    "consumers": "telegram.reply_text, OpenClawAdapter._send, GraphQL results.",
+    "evidence": "Distinguishes never-delivered from outcome-unknown and exact same-id retry; renders accepted queue intent separately from actual flatten. Pure formatting; no authority.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Distinguishes never-delivered from outcome-unknown and exact same-id retry; renders accepted queue intent separately from actual flatten. Pure formatting; no authority.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/adapters/telegram.py",
+    "classification": "KEEP",
+    "purpose": "Maps exact slash tokens and authenticated sender/update timestamp to typed request.",
+    "consumers": "Kernel Telegram dispatch; tests.",
+    "evidence": "Chat-id transport filter is separate from sender authorization. Derives stable id from update/message refs, no guessed time; free text never acquires control authority.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Chat-id transport filter is separate from sender authorization. Derives stable id from update/message refs, no guessed time; free text never acquires control authority.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/approvals.py",
+    "classification": "SIMPLIFY",
+    "purpose": "Exact evidence/config/context-bound Needs You proposals, decisions and first-live ledger adapter.",
+    "consumers": "OwnerService approval_decision; dashboard NeedsYou; owner query approvals.",
+    "evidence": "Keep append-only item/receipt identities and source checks. Optional improvement: items calls validity for each retained item and validity rescans all proposals for supersession (quadratic history work), then slices100; batch same-object latest contexts without changing ordering/identities only after focused compatibility proof. No change here. Serious recovery deliberately routes guarded resume; decision never activates/spends. Corrected projected serious-recovery guidance from Operations to Trades, matching existing control location. Persisted proposal IDs/receipts unchanged.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Keep append-only item/receipt identities and source checks. Optional improvement: items calls validity for each retained item and validity rescans all proposals for supersession (quadratic history work), then slices100; batch same-object latest contexts without changing ordering/identities only after focused compatibility proof. No change here. Serious recovery deliberately routes guarded resume; decision never activates/spends.",
+    "fix_status": "IMPLEMENTED_OFFLINE"
+  },
+  {
+    "path": "trader/owner/authz.py",
+    "classification": "KEEP",
+    "purpose": "Maps channel-authenticated identity to principal operation/channel grants.",
+    "consumers": "OwnerService; Kernel config; optional OpenClaw wrapper.",
+    "evidence": "Defaults are explicit local session/CLI bindings; remote senders unbound. Actor class independent from client principal. Config extends grants explicitly; transport authentication remains IPC/channel layer. Tiny pure policy module.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Defaults are explicit local session/CLI bindings; remote senders unbound. Actor class independent from client principal. Config extends grants explicitly; transport authentication remains IPC/channel layer. Tiny pure policy module.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/cli.py",
+    "classification": "KEEP",
+    "purpose": "Local status/health/panic command through authenticated IPC.",
+    "consumers": "Manual python -m trader.owner.cli; local operator.",
+    "evidence": "No local direct control fallback. CLI principal permits only reads plus existing panic; missing configuration returns UNAVAILABLE. No runtime polling process introduced.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "No local direct control fallback. CLI principal permits only reads plus existing panic; missing configuration returns UNAVAILABLE. No runtime polling process introduced.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/contract.py",
+    "classification": "KEEP",
+    "purpose": "Transport-neutral typed requests/results, status/disposition and immutable request fingerprints.",
+    "consumers": "All owner adapters, service, IPC and dashboard GraphQL/REST.",
+    "evidence": "Retains same-request replay semantics, strict operation-specific args, finite click time, bounded identifiers and metadata. Compatibility aliases PENDING/ERROR share values, not a second state machine. No authority or storage side effects.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Retains same-request replay semantics, strict operation-specific args, finite click time, bounded identifiers and metadata. Compatibility aliases PENDING/ERROR share values, not a second state machine. No authority or storage side effects.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/ipc.py",
+    "classification": "KEEP",
+    "purpose": "Bounded private Unix socket framing and per-channel signed request/response transport.",
+    "consumers": "Kernel OwnerIPCServer; Dashboard/CLI OwnerClient.",
+    "evidence": "0700 ancestry/0600 files, same UID and nonce/MAC; MAX_FRAME64KiB,32 connections with independent containment/read/recovery slots. Same-UID limitation explicit; separate OS identities is deployment boundary, not incidental redesign. Initial TMPDIR failures correctly enforce trust boundary.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "0700 ancestry/0600 files, same UID and nonce/MAC; MAX_FRAME64KiB,32 connections with independent containment/read/recovery slots. Same-UID limitation explicit; separate OS identities is deployment boundary, not incidental redesign. Initial TMPDIR failures correctly enforce trust boundary.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/knowledge.py",
+    "classification": "KEEP",
+    "purpose": "Enriches existing vault graph with exact internal evidence and declared code-path provenance.",
+    "consumers": "dashboard.owner_api Knowledge route.",
+    "evidence": "No semantic inferred edge, no Graphify runtime import, no raw file source exposure. Resolves paths within vault/repo; bounded50 returned records per source. Missing link stays unlinked. File mtime is not event time.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "No semantic inferred edge, no Graphify runtime import, no raw file source exposure. Resolves paths within vault/repo; bounded50 returned records per source. Missing link stays unlinked. File mtime is not event time.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  },
+  {
+    "path": "trader/owner/queries.py",
+    "classification": "SIMPLIFY",
+    "purpose": "Bounded typed read-only evidence queries over journal and exact retained Learning/Portfolio cuts.",
+    "consumers": "owner_api typed query, Knowledge enrichment, owner evidence frontend.",
+    "evidence": "Keep dependency verification and lossless Portfolio evaluation reader. Optional simplification: imports obsolete hashlib and captured can open a second read-only Journal connection; removing import alone trivial, broader sharing requires preserving exact-cut consistency. Catalog LIMIT50 vs approvals100 differ by contract; no invented SQL/path input. Large payload becomes hash-labelled UNAVAILABLE; retained result is not current venue book.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Keep dependency verification and lossless Portfolio evaluation reader. Optional simplification: imports obsolete hashlib and captured can open a second read-only Journal connection; removing import alone trivial, broader sharing requires preserving exact-cut consistency. Catalog LIMIT50 vs approvals100 differ by contract; no invented SQL/path input. Large payload becomes hash-labelled UNAVAILABLE; retained result is not current venue book.",
+    "fix_status": "PROPOSED_ONLY"
+  },
+  {
+    "path": "trader/owner/service.py",
+    "classification": "KEEP",
+    "purpose": "Single Kernel-owned authenticated intent executor and durable request/audit lifecycle.",
+    "consumers": "Kernel._owner; in-process Telegram and signed IPC.",
+    "evidence": "Reservation/claim/result is necessary at-most-once crash contract, not accidental complexity. Separate recovery lock/containment fence prevents stale activation; audit batches64/~2s with hard10000 cap and counted loss; controls sync. DONE/request and audit retention bounded; no approval or state projection moved into browser.",
+    "design_boundary": "SDD25/26/35.14: owner reads prove records; typed commands remain Kernel-authorized. Intentional transport/future boundaries are not defects.",
+    "costs_removal": "Reservation/claim/result is necessary at-most-once crash contract, not accidental complexity. Separate recovery lock/containment fence prevents stale activation; audit batches64/~2s with hard10000 cap and counted loss; controls sync. DONE/request and audit retention bounded; no approval or state projection moved into browser.",
+    "fix_status": "NO_CHANGE_REQUIRED"
+  }
+]

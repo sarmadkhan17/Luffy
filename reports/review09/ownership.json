@@ -1,0 +1,4763 @@
+{
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "inventory_source": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json",
+  "inventory_sha256": "dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb",
+  "ownership_csv": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-files.csv",
+  "ownership_csv_sha256": "90f73dd31d096df6400df5214f199f7b4a19fcc65605582836e574c80431d995",
+  "inventory_revision": "8d57e8f23343505660a07c1a8aa6218279121de9",
+  "scope_basis": "Explicit Dashboard / Owner-Facing Interface assignment encompasses complementary owner, dashboard, frontend primary inventory IDs. chat/notify and completed subsystems excluded.",
+  "subsystems": [
+    {
+      "id": "owner",
+      "name": "Owner Interface",
+      "purpose": "Authenticated typed requests, durable audit, approvals and one control authority over IPC",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "owner.1",
+          "name": "contracts and authorization",
+          "files": [
+            "tests/test_manual_close.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/owner/service.py",
+              "line": 1,
+              "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "owner.2",
+          "name": "request service and audit",
+          "files": [
+            "trader/owner/service.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/owner/service.py",
+              "line": 1,
+              "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "owner.3",
+          "name": "approval lifecycle",
+          "files": [
+            "tests/test_own03_approval_boundary.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/owner/service.py",
+              "line": 1,
+              "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "owner.4",
+          "name": "Unix IPC",
+          "files": [
+            "trader/owner/ipc.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/owner/ipc.py",
+              "line": 1,
+              "sha256": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "owner.5",
+          "name": "CLI and transport adapters",
+          "files": [
+            "trader/owner/adapters/__init__.py",
+            "trader/owner/adapters/dashboard.py",
+            "trader/owner/adapters/openclaw.py",
+            "trader/owner/adapters/render.py",
+            "trader/owner/adapters/telegram.py",
+            "trader/owner/cli.py"
+          ],
+          "file_count": 6,
+          "implementation_references": [
+            {
+              "path": "trader/owner/adapters/__init__.py",
+              "line": 1,
+              "sha256": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432"
+            },
+            {
+              "path": "trader/owner/adapters/dashboard.py",
+              "line": 1,
+              "sha256": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c"
+            },
+            {
+              "path": "trader/owner/adapters/openclaw.py",
+              "line": 1,
+              "sha256": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695"
+            },
+            {
+              "path": "trader/owner/adapters/render.py",
+              "line": 1,
+              "sha256": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529"
+            },
+            {
+              "path": "trader/owner/adapters/telegram.py",
+              "line": 1,
+              "sha256": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631"
+            },
+            {
+              "path": "trader/owner/cli.py",
+              "line": 1,
+              "sha256": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "owner.6",
+          "name": "owner queries",
+          "files": [
+            "scripts/bench_owner_interface.py",
+            "tests/test_owner_interface.py",
+            "tests/test_owner_interface_boundary.py",
+            "tests/test_owner_interface_r3.py",
+            "tests/test_owner_interface_r4.py",
+            "tests/test_owner_interface_r5.py",
+            "tests/test_owner_interface_r6.py",
+            "trader/owner/__init__.py",
+            "trader/owner/approvals.py",
+            "trader/owner/authz.py",
+            "trader/owner/contract.py",
+            "trader/owner/knowledge.py",
+            "trader/owner/queries.py"
+          ],
+          "file_count": 13,
+          "implementation_references": [
+            {
+              "path": "trader/owner/__init__.py",
+              "line": 1,
+              "sha256": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193"
+            },
+            {
+              "path": "trader/owner/approvals.py",
+              "line": 1,
+              "sha256": "4a9830cbab6859d193f63856db143fcfad028568b506e04155fc02b5a651e05c"
+            },
+            {
+              "path": "trader/owner/authz.py",
+              "line": 1,
+              "sha256": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753"
+            },
+            {
+              "path": "trader/owner/contract.py",
+              "line": 1,
+              "sha256": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87"
+            },
+            {
+              "path": "trader/owner/knowledge.py",
+              "line": 1,
+              "sha256": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0"
+            },
+            {
+              "path": "trader/owner/queries.py",
+              "line": 1,
+              "sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/owner/service.py",
+      "counts": {
+        "python_source": 14,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 1,
+        "test": 8,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 23,
+        "source_files": 15,
+        "test_files": 8,
+        "other_files": 0,
+        "total_files": 23,
+        "source_lines": 6191,
+        "all_text_lines": 6191,
+        "binary_files": 0
+      },
+      "files": [
+        "scripts/bench_owner_interface.py",
+        "tests/test_manual_close.py",
+        "tests/test_own03_approval_boundary.py",
+        "tests/test_owner_interface.py",
+        "tests/test_owner_interface_boundary.py",
+        "tests/test_owner_interface_r3.py",
+        "tests/test_owner_interface_r4.py",
+        "tests/test_owner_interface_r5.py",
+        "tests/test_owner_interface_r6.py",
+        "trader/owner/__init__.py",
+        "trader/owner/adapters/__init__.py",
+        "trader/owner/adapters/dashboard.py",
+        "trader/owner/adapters/openclaw.py",
+        "trader/owner/adapters/render.py",
+        "trader/owner/adapters/telegram.py",
+        "trader/owner/approvals.py",
+        "trader/owner/authz.py",
+        "trader/owner/cli.py",
+        "trader/owner/contract.py",
+        "trader/owner/ipc.py",
+        "trader/owner/knowledge.py",
+        "trader/owner/queries.py",
+        "trader/owner/service.py"
+      ],
+      "non_database_inputs": "Authenticated typed requests with IDs/issued times and existing control/approval bindings",
+      "non_database_outputs": "Durable audit/request/approval receipts and typed responses; delegates one control authority",
+      "initialization_path": "Kernel OwnerService/IPC server; transport adapters and explicit CLI clients",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "dashboard",
+        "execution",
+        "learning",
+        "platform",
+        "research",
+        "research_memory",
+        "safety",
+        "strategy"
+      ],
+      "used_by": [
+        "chat",
+        "dashboard",
+        "kernel",
+        "strategy"
+      ],
+      "static_application_dependencies": [
+        "dashboard",
+        "execution",
+        "learning",
+        "platform",
+        "research",
+        "research_memory",
+        "safety",
+        "strategy"
+      ],
+      "offline_utility_dependencies": [
+        "execution",
+        "platform"
+      ],
+      "test_dependencies": [
+        "chat",
+        "dashboard",
+        "execution",
+        "kernel",
+        "platform",
+        "research",
+        "research_memory",
+        "strategy"
+      ],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/owner/service.py",
+          "line": 1,
+          "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [
+        {
+          "path": "scripts/bench_owner_interface.py",
+          "line": 42,
+          "name": "main"
+        },
+        {
+          "path": "trader/owner/cli.py",
+          "line": 35,
+          "name": "main"
+        }
+      ],
+      "initialization_and_schedule": [
+        {
+          "source": "kernel",
+          "interaction": "LOCAL_IPC",
+          "detail": "Kernel owns Unix socket OwnerService; Telegram requests reserve then execute there.",
+          "evidence": [
+            {
+              "path": "trader/kernel.py",
+              "line": 3007,
+              "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+            }
+          ]
+        },
+        {
+          "source": "dashboard",
+          "interaction": "LOCAL_IPC",
+          "detail": "REST/GraphQL control requests pass typed authorized IPC gateway.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 55,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "exposed_to",
+          "peer": "kernel",
+          "interaction": "LOCAL_IPC",
+          "detail": "Kernel owns Unix socket OwnerService; Telegram requests reserve then execute there."
+        },
+        {
+          "direction": "exposed_to",
+          "peer": "dashboard",
+          "interaction": "LOCAL_IPC",
+          "detail": "REST/GraphQL control requests pass typed authorized IPC gateway."
+        }
+      ],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "control_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "learning_actions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "learning_outcome_captures"
+        },
+        {
+          "database": "luffy.db",
+          "table": "learning_registrations"
+        },
+        {
+          "database": "luffy.db",
+          "table": "owner_requests"
+        },
+        {
+          "database": "luffy.db",
+          "table": "state_kv"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategy_approval_decisions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategy_approval_requests"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trades"
+        }
+      ],
+      "runtime_data_outputs": [
+        {
+          "database": "luffy.db",
+          "table": "control_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "owner_audit"
+        },
+        {
+          "database": "luffy.db",
+          "table": "owner_requests"
+        },
+        {
+          "database": "luffy.db",
+          "table": "state_kv"
+        }
+      ],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "kernel",
+          "basis": "IPC explicit opt-in; absent kernel means control unavailable.",
+          "evidence": [
+            {
+              "path": "trader/kernel.py",
+              "line": 3007,
+              "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+            }
+          ]
+        },
+        {
+          "peer": "dashboard",
+          "basis": "READ_ONLY_GUI refuses controls; no local fallback when gateway unavailable.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 55,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [
+        {
+          "path": "trader/owner/adapters/dashboard.py",
+          "line": 21,
+          "name": "to_request",
+          "kind": "function",
+          "summary": "None when the session is not authenticated. Raises MalformedRequest."
+        },
+        {
+          "path": "trader/owner/adapters/openclaw.py",
+          "line": 51,
+          "name": "InboundInvalid",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/adapters/openclaw.py",
+          "line": 56,
+          "name": "Inbound",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/adapters/openclaw.py",
+          "line": 84,
+          "name": "Outbound",
+          "kind": "class",
+          "summary": "What the adapter tells the provider. `request` is set only when one was sent."
+        },
+        {
+          "path": "trader/owner/adapters/openclaw.py",
+          "line": 102,
+          "name": "OpenClawAdapter",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/adapters/render.py",
+          "line": 7,
+          "name": "render",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/adapters/telegram.py",
+          "line": 24,
+          "name": "NotOwnerCommand",
+          "kind": "class",
+          "summary": "The update cannot become an owner request (reason in args[0])."
+        },
+        {
+          "path": "trader/owner/adapters/telegram.py",
+          "line": 28,
+          "name": "command_of",
+          "kind": "function",
+          "summary": "The owner operation for an exact slash command, else None."
+        },
+        {
+          "path": "trader/owner/adapters/telegram.py",
+          "line": 36,
+          "name": "to_request",
+          "kind": "function",
+          "summary": "Raises NotOwnerCommand with a reason when the update is unusable."
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 23,
+          "name": "canonical",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 28,
+          "name": "digest",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 32,
+          "name": "ensure",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 44,
+          "name": "exists",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 48,
+          "name": "source",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 67,
+          "name": "binding",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 74,
+          "name": "receipt_from",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 81,
+          "name": "propose",
+          "kind": "function",
+          "summary": "Explicit local producer seam. No runtime-LLM or HTTP proposal writer."
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 115,
+          "name": "validity",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 142,
+          "name": "items",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "line": 241,
+          "name": "decide",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/authz.py",
+          "line": 25,
+          "name": "Principal",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/authz.py",
+          "line": 51,
+          "name": "actor_for",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/authz.py",
+          "line": 55,
+          "name": "Authorizer",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/cli.py",
+          "line": 22,
+          "name": "call",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/cli.py",
+          "line": 35,
+          "name": "main",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 36,
+          "name": "Status",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 50,
+          "name": "Disposition",
+          "kind": "class",
+          "summary": "The retry contract, derived from the status (wording is not the contract)."
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 68,
+          "name": "disposition_of",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 85,
+          "name": "MalformedRequest",
+          "kind": "class",
+          "summary": "A payload that is not a valid OwnerRequest. Never executed."
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 93,
+          "name": "derive_request_id",
+          "kind": "function",
+          "summary": "Stable request id for one external message: redelivery \u2192 same id."
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 99,
+          "name": "new_request_id",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 139,
+          "name": "OwnerRequest",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 198,
+          "name": "OwnerResult",
+          "kind": "class",
+          "summary": "The safety contract. Adapters render it; wording is not the contract."
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "line": 245,
+          "name": "refused",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 55,
+          "name": "InsecurePath",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 60,
+          "name": "check_private_dir",
+          "kind": "function",
+          "summary": "A real directory (not a symlink), owned by uid, no group/other access."
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 70,
+          "name": "check_ancestors",
+          "kind": "function",
+          "summary": "No ancestor may let another user replace the IPC directory: every"
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 86,
+          "name": "default_ipc_dir",
+          "kind": "function",
+          "summary": "The per-user runtime directory (tmpfs, 0700, owned by this uid) if present."
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 92,
+          "name": "resolve_ipc_dir",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 98,
+          "name": "ensure_private_dir",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 120,
+          "name": "load_key",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 128,
+          "name": "ensure_keys",
+          "kind": "function",
+          "summary": "Create missing channel keys (0600, O_EXCL); keep existing ones across restarts."
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 169,
+          "name": "read_frame",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 182,
+          "name": "write_frame",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 207,
+          "name": "OwnerIPCServer",
+          "kind": "class",
+          "summary": "Runs inside the kernel. Hands each authenticated request to `service.execute`."
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "line": 380,
+          "name": "OwnerClient",
+          "kind": "class",
+          "summary": "Adapter-side client for one channel. Holds only that channel's key."
+        },
+        {
+          "path": "trader/owner/knowledge.py",
+          "line": 12,
+          "name": "enrich",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "line": 20,
+          "name": "stamp",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "line": 24,
+          "name": "record",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "line": 40,
+          "name": "rows",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "line": 48,
+          "name": "captured",
+          "kind": "function",
+          "summary": "Read the immutable Stage7 decision registrations and exact snapshots."
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "line": 89,
+          "name": "query",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/owner/service.py",
+          "line": 117,
+          "name": "Reservation",
+          "kind": "class",
+          "summary": "Proof that this delivery owns the request id (see module docstring)."
+        },
+        {
+          "path": "trader/owner/service.py",
+          "line": 129,
+          "name": "OwnerService",
+          "kind": "class",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/owner/__init__.py",
+          "summary": "LUFFY Owner Interface \u2014 one typed, kernel-owned surface for owner controls."
+        },
+        {
+          "path": "trader/owner/adapters/__init__.py",
+          "summary": "Thin owner-channel adapters: authenticate, parse, map to OwnerRequest, render."
+        },
+        {
+          "path": "trader/owner/adapters/dashboard.py",
+          "summary": "Dashboard adapter: an authenticated session's control click \u2192 OwnerRequest."
+        },
+        {
+          "path": "trader/owner/adapters/openclaw.py",
+          "summary": "OpenClaw / WhatsApp owner adapter boundary. Live provider hookup: NOT_CONFIGURED."
+        },
+        {
+          "path": "trader/owner/adapters/render.py",
+          "summary": "Human-readable rendering of an OwnerResult. Wording is not the safety contract."
+        },
+        {
+          "path": "trader/owner/adapters/telegram.py",
+          "summary": "Telegram adapter: an update \u2192 OwnerRequest, an OwnerResult \u2192 reply text."
+        },
+        {
+          "path": "trader/owner/approvals.py",
+          "summary": "Exact owner decisions, through OwnerService only; never executes a proposal."
+        },
+        {
+          "path": "trader/owner/authz.py",
+          "summary": "Channel-neutral authorization: authenticated channel identity \u2192 principal \u2192 grants."
+        },
+        {
+          "path": "trader/owner/cli.py",
+          "summary": "Local owner CLI through the kernel Owner Interface (cli channel)."
+        },
+        {
+          "path": "trader/owner/contract.py",
+          "summary": "Transport-neutral Owner Interface contract: typed request, typed result."
+        },
+        {
+          "path": "trader/owner/ipc.py",
+          "summary": "Local IPC between owner adapters and the kernel's OwnerService."
+        },
+        {
+          "path": "trader/owner/knowledge.py",
+          "summary": "Evidence/chronology/code lenses over the existing vault and record readers."
+        },
+        {
+          "path": "trader/owner/queries.py",
+          "summary": "Bounded typed owner queries over existing stores. No SQL/path/tool input."
+        },
+        {
+          "path": "trader/owner/service.py",
+          "summary": "OwnerService \u2014 the single executor of owner operations. Kernel process only."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Authenticated typed requests, durable audit, approvals and one control authority over IPC; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "DORMANT",
+      "previous_status_basis": "Kernel owns service and IPC; no kernel process. Dashboard refuses unavailable control gateway.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Connected",
+        "configuration": "Enabled",
+        "runtime": "Stopped",
+        "product_necessity": "Required"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=owner",
+      "previous_status_evidence": [
+        {
+          "path": "trader/owner/service.py",
+          "line": 1,
+          "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "name": "Dashboard backend and API",
+      "purpose": "FastAPI, GraphQL, WebSocket and owner-facing read models",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "dashboard.1",
+          "name": "REST and GraphQL",
+          "files": [
+            "tests/test_attention_view.py",
+            "tests/test_candle_cache_reuse.py",
+            "tests/test_company.py",
+            "tests/test_dashboard_auth.py",
+            "tests/test_dashboard_phase.py",
+            "tests/test_dashboard_supervisor_unknown.py",
+            "tests/test_data02_decision_lineage.py",
+            "tests/test_gui01_overview.py",
+            "tests/test_overview_desk.py",
+            "tests/test_rent_wiring.py",
+            "tests/test_run01_instance_identity.py",
+            "tests/test_theorist_removed.py",
+            "trader/api/graphql_schema.py",
+            "trader/dashboard/__init__.py",
+            "trader/dashboard/auth.py",
+            "trader/dashboard/overview_desk.py",
+            "trader/dashboard/phase.py",
+            "trader/dashboard/server.py",
+            "trader/dashboard/valuation.py"
+          ],
+          "file_count": 19,
+          "implementation_references": [
+            {
+              "path": "trader/api/graphql_schema.py",
+              "line": 1,
+              "sha256": "ec5dba753c7b016391ad36c5d220cdacef6dde259ea2aa6e32ed2c88958022c4"
+            },
+            {
+              "path": "trader/dashboard/__init__.py",
+              "line": 1,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "trader/dashboard/auth.py",
+              "line": 1,
+              "sha256": "6fcb7ffeb9eabdad36359913b97cec765003c564e80c12d7a7a696b35581b7ae"
+            },
+            {
+              "path": "trader/dashboard/overview_desk.py",
+              "line": 1,
+              "sha256": "68dfc244c4acdc2418144c0fdccb5aea4182285febaff9f144981a85f29552b8"
+            },
+            {
+              "path": "trader/dashboard/phase.py",
+              "line": 1,
+              "sha256": "78da1f099f427b4bf157abcd9a45fe490a8f0ee23f0dac034f5b592165b15f9a"
+            },
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 1,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            },
+            {
+              "path": "trader/dashboard/valuation.py",
+              "line": 1,
+              "sha256": "8fac9194df2eca66ce0432c73989fc8fde18735084bb55d34f4883adc6e70d43"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "dashboard.2",
+          "name": "WebSocket status",
+          "files": [],
+          "file_count": 0,
+          "implementation_references": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 1,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "dashboard.3",
+          "name": "truth/economics/read projections",
+          "files": [
+            "docs/tracker/evidence/acc03-economics-sol/verify.py",
+            "docs/tracker/evidence/accounting-truth-followup-sol/verify.py",
+            "tests/test_acc03_economics.py",
+            "tests/test_accounting_truth_followup.py",
+            "tests/test_current_truth_completion_clock.py",
+            "tests/test_current_truth_contract.py",
+            "tests/test_current_truth_corrections.py",
+            "tests/test_current_truth_integration.py",
+            "tests/test_glacier_truth.py",
+            "tests/test_own04_state_truth.py",
+            "tests/test_owner_read_cache.py",
+            "trader/dashboard/current_truth.py",
+            "trader/dashboard/economics.py",
+            "trader/dashboard/glacier_truth.py"
+          ],
+          "file_count": 14,
+          "implementation_references": [
+            {
+              "path": "trader/dashboard/current_truth.py",
+              "line": 1,
+              "sha256": "416d870dde445bbc4c37cb2923b51953dc0569638538d9553884cf531fc39dd9"
+            },
+            {
+              "path": "trader/dashboard/economics.py",
+              "line": 1,
+              "sha256": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560"
+            },
+            {
+              "path": "trader/dashboard/glacier_truth.py",
+              "line": 1,
+              "sha256": "d3344e24ddb930f8636c2c755c03519a301a4c16e6e7f6ff2b700802d3a33875"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "dashboard.4",
+          "name": "owner gateway",
+          "files": [
+            "tests/owner_frontend_server.py",
+            "tests/test_owner_reads_m2.py",
+            "trader/dashboard/owner_api.py",
+            "trader/dashboard/owner_reads.py",
+            "trader/dashboard/owner_runtime.py"
+          ],
+          "file_count": 5,
+          "implementation_references": [
+            {
+              "path": "trader/dashboard/owner_api.py",
+              "line": 1,
+              "sha256": "dd99ffff1c8d3a97e2e2ab17f713cc5be6d14b13b3301af665f4e20e472ec749"
+            },
+            {
+              "path": "trader/dashboard/owner_reads.py",
+              "line": 1,
+              "sha256": "cb9d9237255e87b899ef7cbc68c6a63dcf4660273905f0edd9aa384fc022007f"
+            },
+            {
+              "path": "trader/dashboard/owner_runtime.py",
+              "line": 1,
+              "sha256": "5cd8a2f1681405603e735d22bc607bd625f64c6bc7709d764dbca74aa7d137bb"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "dashboard.5",
+          "name": "tracker and trade history",
+          "files": [
+            "docs/superpowers/reports/2026-09-29-trade-history-paging-r1-evidence/query_breakdown.py",
+            "docs/tracker/evidence/dec03-canonical-sol1/control_validation_test.py",
+            "docs/tracker/evidence/exe04-canonical-sol1/reconcile.py",
+            "docs/tracker/evidence/gui01-overview-sol/verify.py",
+            "docs/tracker/evidence/out03-replay-map-sol/verify.py",
+            "docs/tracker/evidence/own03-boundary-sol/verify.py",
+            "docs/tracker/evidence/own04-phase-scope-review/verify.py",
+            "docs/tracker/evidence/own04-state-sol/verify.py",
+            "docs/tracker/evidence/port01-canonical-sol1/control_validation_test.py",
+            "docs/tracker/evidence/port04-canonical-sol1/reconcile.py",
+            "docs/tracker/evidence/qnt09-canonical-intake-sol1/validate.py",
+            "docs/tracker/evidence/str01-canonical-sol1/control-validation.py",
+            "docs/tracker/evidence/str02-canonical-sol1/control-validation.py",
+            "docs/tracker/evidence/str03-canonical-sol1/control-validation.py",
+            "scripts/bench_trade_history.py",
+            "tests/test_trade_history.py",
+            "trader/dashboard/tracker.py",
+            "trader/dashboard/trade_history.py"
+          ],
+          "file_count": 18,
+          "implementation_references": [
+            {
+              "path": "trader/dashboard/tracker.py",
+              "line": 1,
+              "sha256": "9575aa8b7af8d9e34621d215f67619d99dc5103cb4decda2b5a887cfd2843cc7"
+            },
+            {
+              "path": "trader/dashboard/trade_history.py",
+              "line": 1,
+              "sha256": "36e979ec8de7717ced09a62eb311a2bb55cdc39042bab991c3c71cc2de3d4228"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/dashboard/server.py",
+      "counts": {
+        "python_source": 31,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 1,
+        "test": 24,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 56,
+        "source_files": 32,
+        "test_files": 24,
+        "other_files": 0,
+        "total_files": 56,
+        "source_lines": 13684,
+        "all_text_lines": 13684,
+        "binary_files": 0
+      },
+      "files": [
+        "docs/superpowers/reports/2026-09-29-trade-history-paging-r1-evidence/query_breakdown.py",
+        "docs/tracker/evidence/acc03-economics-sol/verify.py",
+        "docs/tracker/evidence/accounting-truth-followup-sol/verify.py",
+        "docs/tracker/evidence/dec03-canonical-sol1/control_validation_test.py",
+        "docs/tracker/evidence/exe04-canonical-sol1/reconcile.py",
+        "docs/tracker/evidence/gui01-overview-sol/verify.py",
+        "docs/tracker/evidence/out03-replay-map-sol/verify.py",
+        "docs/tracker/evidence/own03-boundary-sol/verify.py",
+        "docs/tracker/evidence/own04-phase-scope-review/verify.py",
+        "docs/tracker/evidence/own04-state-sol/verify.py",
+        "docs/tracker/evidence/port01-canonical-sol1/control_validation_test.py",
+        "docs/tracker/evidence/port04-canonical-sol1/reconcile.py",
+        "docs/tracker/evidence/qnt09-canonical-intake-sol1/validate.py",
+        "docs/tracker/evidence/str01-canonical-sol1/control-validation.py",
+        "docs/tracker/evidence/str02-canonical-sol1/control-validation.py",
+        "docs/tracker/evidence/str03-canonical-sol1/control-validation.py",
+        "scripts/bench_trade_history.py",
+        "tests/owner_frontend_server.py",
+        "tests/test_acc03_economics.py",
+        "tests/test_accounting_truth_followup.py",
+        "tests/test_attention_view.py",
+        "tests/test_candle_cache_reuse.py",
+        "tests/test_company.py",
+        "tests/test_current_truth_completion_clock.py",
+        "tests/test_current_truth_contract.py",
+        "tests/test_current_truth_corrections.py",
+        "tests/test_current_truth_integration.py",
+        "tests/test_dashboard_auth.py",
+        "tests/test_dashboard_phase.py",
+        "tests/test_dashboard_supervisor_unknown.py",
+        "tests/test_data02_decision_lineage.py",
+        "tests/test_glacier_truth.py",
+        "tests/test_gui01_overview.py",
+        "tests/test_overview_desk.py",
+        "tests/test_own04_state_truth.py",
+        "tests/test_owner_read_cache.py",
+        "tests/test_owner_reads_m2.py",
+        "tests/test_rent_wiring.py",
+        "tests/test_run01_instance_identity.py",
+        "tests/test_theorist_removed.py",
+        "tests/test_trade_history.py",
+        "trader/api/graphql_schema.py",
+        "trader/dashboard/__init__.py",
+        "trader/dashboard/auth.py",
+        "trader/dashboard/current_truth.py",
+        "trader/dashboard/economics.py",
+        "trader/dashboard/glacier_truth.py",
+        "trader/dashboard/overview_desk.py",
+        "trader/dashboard/owner_api.py",
+        "trader/dashboard/owner_reads.py",
+        "trader/dashboard/owner_runtime.py",
+        "trader/dashboard/phase.py",
+        "trader/dashboard/server.py",
+        "trader/dashboard/tracker.py",
+        "trader/dashboard/trade_history.py",
+        "trader/dashboard/valuation.py"
+      ],
+      "non_database_inputs": "Journal and optional read stores, config, health/shared files, owner IPC responses",
+      "non_database_outputs": "REST/GraphQL/WebSocket projections and typed owner gateway responses",
+      "initialization_path": "Direct module -> phase startup_check -> create_app -> uvicorn; observed separate operational process",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "analysts",
+        "attention",
+        "brain",
+        "chat",
+        "execution",
+        "investigation",
+        "kernel",
+        "knowledge",
+        "market_data",
+        "owner",
+        "platform",
+        "research",
+        "safety",
+        "strategy"
+      ],
+      "used_by": [
+        "execution",
+        "frontend",
+        "owner",
+        "portfolio",
+        "safety",
+        "strategy"
+      ],
+      "static_application_dependencies": [
+        "analysts",
+        "attention",
+        "brain",
+        "chat",
+        "execution",
+        "investigation",
+        "kernel",
+        "knowledge",
+        "market_data",
+        "owner",
+        "platform",
+        "safety",
+        "strategy"
+      ],
+      "offline_utility_dependencies": [
+        "execution",
+        "platform"
+      ],
+      "test_dependencies": [
+        "analysts",
+        "attention",
+        "brain",
+        "execution",
+        "kernel",
+        "knowledge",
+        "market_data",
+        "owner",
+        "platform",
+        "portfolio",
+        "safety",
+        "strategy"
+      ],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 1,
+          "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [
+        {
+          "path": "trader/dashboard/phase.py",
+          "line": 92,
+          "name": "main"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 74,
+          "name": "create_app"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 1115,
+          "name": "main"
+        }
+      ],
+      "initialization_and_schedule": [
+        {
+          "source": "dashboard",
+          "interaction": "LOCAL_IPC",
+          "detail": "REST/GraphQL control requests pass typed authorized IPC gateway.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 55,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "source": "dashboard",
+          "interaction": "API",
+          "detail": "Lazy ChatEngine creation on /api/chat.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 463,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "source": "frontend",
+          "interaction": "API",
+          "detail": "Live React adapter uses backend HTTP contract; separate demo fixture adapter.",
+          "evidence": [
+            {
+              "path": "frontend/src/adapters/live.ts",
+              "line": 83,
+              "sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619"
+            }
+          ]
+        },
+        {
+          "source": "dashboard",
+          "interaction": "SHARED_FILE",
+          "detail": "Read attention.db/latest scans and health JSON, expose /api/attention/latest.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 117,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "source": "dashboard",
+          "interaction": "DATABASE_MEDIATED",
+          "detail": "Read optional investigation store owner view.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 98,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "source": "safety",
+          "interaction": "STARTUP_CONTROL",
+          "detail": "Dashboard phase/readiness gate before a launch.",
+          "evidence": [
+            {
+              "path": "restart.sh",
+              "line": 25,
+              "sha256": "e9b5df056052cfc17a48d369f19925c7c37f5f9bc8c07d120bfd80c2aaf343e6"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "consumes",
+          "peer": "owner",
+          "interaction": "LOCAL_IPC",
+          "detail": "REST/GraphQL control requests pass typed authorized IPC gateway."
+        },
+        {
+          "direction": "consumes",
+          "peer": "chat",
+          "interaction": "API",
+          "detail": "Lazy ChatEngine creation on /api/chat."
+        },
+        {
+          "direction": "exposed_to",
+          "peer": "frontend",
+          "interaction": "API",
+          "detail": "Live React adapter uses backend HTTP contract; separate demo fixture adapter."
+        },
+        {
+          "direction": "consumes",
+          "peer": "attention",
+          "interaction": "SHARED_FILE",
+          "detail": "Read attention.db/latest scans and health JSON, expose /api/attention/latest."
+        },
+        {
+          "direction": "consumes",
+          "peer": "investigation",
+          "interaction": "DATABASE_MEDIATED",
+          "detail": "Read optional investigation store owner view."
+        },
+        {
+          "direction": "exposed_to",
+          "peer": "safety",
+          "interaction": "STARTUP_CONTROL",
+          "detail": "Dashboard phase/readiness gate before a launch."
+        }
+      ],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "brain_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "control_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "cycles"
+        },
+        {
+          "database": "luffy.db",
+          "table": "decisions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "equity"
+        },
+        {
+          "database": "luffy.db",
+          "table": "outcomes"
+        },
+        {
+          "database": "luffy.db",
+          "table": "owner_audit"
+        },
+        {
+          "database": "luffy.db",
+          "table": "owner_requests"
+        },
+        {
+          "database": "luffy.db",
+          "table": "protection_evidence"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_batches"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_candidates"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_combos"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_controls"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_gauges"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_slices"
+        },
+        {
+          "database": "luffy.db",
+          "table": "research_tests"
+        },
+        {
+          "database": "luffy.db",
+          "table": "state_kv"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategies"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategy_probation_receipts"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategy_versions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trade_accounting_bookings"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trades"
+        },
+        {
+          "database": "luffy.db",
+          "table": "votes"
+        }
+      ],
+      "runtime_data_outputs": [],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "owner",
+          "basis": "READ_ONLY_GUI refuses controls; no local fallback when gateway unavailable.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 55,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "peer": "chat",
+          "basis": "Provider execution disabled by brain flag; no request invocation verified.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 463,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "peer": "frontend",
+          "basis": "Browser/server serving path not verified; no browser run or requests made.",
+          "evidence": [
+            {
+              "path": "frontend/src/adapters/live.ts",
+              "line": 83,
+              "sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619"
+            }
+          ]
+        },
+        {
+          "peer": "attention",
+          "basis": "Missing/stale data rendered as unavailable; no claim collector active.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 117,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "peer": "investigation",
+          "basis": "Absent store is unavailable, not invented as sixth active store.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 98,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        },
+        {
+          "peer": "safety",
+          "basis": "Inventory reads this wiring only; observed dashboard may be at another revision.",
+          "evidence": [
+            {
+              "path": "restart.sh",
+              "line": 25,
+              "sha256": "e9b5df056052cfc17a48d369f19925c7c37f5f9bc8c07d120bfd80c2aaf343e6"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 55,
+          "name": "votes_for_cycles",
+          "kind": "function",
+          "summary": "{cycle_id: [vote rows]} in one pass per batch of cycle ids."
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 80,
+          "name": "EquityPoint",
+          "kind": "class",
+          "summary": "`ts` is the row's write time. The value's source is `row_kind`"
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 94,
+          "name": "VoteType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 120,
+          "name": "NewsGuardType",
+          "kind": "class",
+          "summary": "current_truth.read_news_guard. `active` is None when no trustworthy"
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 134,
+          "name": "RentWeekType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 141,
+          "name": "RentType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 152,
+          "name": "BrainEventType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 160,
+          "name": "TvHealthType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 168,
+          "name": "DecisionType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 198,
+          "name": "TradeType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 216,
+          "name": "StrategyType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 226,
+          "name": "AgentStatType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 233,
+          "name": "StrategyFullType",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 246,
+          "name": "StatusType",
+          "kind": "class",
+          "summary": "Missing is None, never a default: no control record is not ACTIVE, and"
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 262,
+          "name": "build_query",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 495,
+          "name": "OwnerControlResult",
+          "kind": "class",
+          "summary": "The kernel Owner Interface's typed answer (trader.owner.contract.OwnerResult)."
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 523,
+          "name": "build_mutation",
+          "kind": "function",
+          "summary": "Every owner mutation is a typed Owner Interface request executed by the"
+        },
+        {
+          "path": "trader/api/graphql_schema.py",
+          "line": 586,
+          "name": "make_graphql_router",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/auth.py",
+          "line": 27,
+          "name": "DashboardAuth",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 150,
+          "name": "has_provenance_table",
+          "kind": "function",
+          "summary": "False on a pre-migration journal (read-only owners never migrate it)."
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 156,
+          "name": "equity_rows_sql",
+          "kind": "function",
+          "summary": "Equity rows with their provenance record, or NULL provenance when the"
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 172,
+          "name": "current_account_status",
+          "kind": "function",
+          "summary": "The account's CURRENT status from the producer's status and the value's"
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 188,
+          "name": "read_account",
+          "kind": "function",
+          "summary": "Account equity with provenance. `status` is the CURRENT status"
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 261,
+          "name": "row_provenance",
+          "kind": "function",
+          "summary": "Provenance view of one equity row: the row's ts is a write time; the"
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 382,
+          "name": "read_news_guard",
+          "kind": "function",
+          "summary": "status: the record's truth when fresh | STALE (last_reported kept) |"
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 444,
+          "name": "configured_policy",
+          "kind": "function",
+          "summary": "The Risk limits the dashboard's loaded config declares, with identity."
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "line": 539,
+          "name": "read_risk",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/economics.py",
+          "line": 14,
+          "name": "booking_receipts",
+          "kind": "function",
+          "summary": "Uncapped monetary history: an early UNKNOWN leg must not disappear."
+        },
+        {
+          "path": "trader/dashboard/economics.py",
+          "line": 20,
+          "name": "journal_pnl",
+          "kind": "function",
+          "summary": "A journal scalar is not authoritative over its retained booking evidence."
+        },
+        {
+          "path": "trader/dashboard/economics.py",
+          "line": 55,
+          "name": "read",
+          "kind": "function",
+          "summary": "Keep venue fields, journal bookings and derived measurements separate."
+        },
+        {
+          "path": "trader/dashboard/glacier_truth.py",
+          "line": 10,
+          "name": "runtime_truth",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/glacier_truth.py",
+          "line": 33,
+          "name": "versioned_strategies",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/glacier_truth.py",
+          "line": 87,
+          "name": "filesystems",
+          "kind": "function",
+          "summary": "Actual mount identity for root, data and the recovery mount separately."
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 15,
+          "name": "realized_curve",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 39,
+          "name": "latest_scan",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 55,
+          "name": "research_counts",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 74,
+          "name": "desk",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 88,
+          "name": "research_board",
+          "kind": "function",
+          "summary": "Everything the Research tab shows, from the research ledger. Discovery"
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 144,
+          "name": "strategy_board",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "line": 214,
+          "name": "operations_log",
+          "kind": "function",
+          "summary": "Everything LUFFY recorded doing, newest first: scans rolled up per UTC"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 108,
+          "name": "backend_version",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 119,
+          "name": "read_control",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 131,
+          "name": "read_heartbeat",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 172,
+          "name": "read_account",
+          "kind": "function",
+          "summary": "Equity with its provenance (current_truth.read_account): the age is the"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 178,
+          "name": "read_equity_series",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 201,
+          "name": "read_realized_today",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 221,
+          "name": "read_supervisor",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 261,
+          "name": "read_protection_snapshot",
+          "kind": "function",
+          "summary": "The kernel's latest read-only protection snapshot, with its own age."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 331,
+          "name": "protection_for",
+          "kind": "function",
+          "summary": "Venue protection for one journal position, from the protection snapshot only."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 377,
+          "name": "book_protection",
+          "kind": "function",
+          "summary": "Worst of the positions, and the book itself (untracked positions, orphans)."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 394,
+          "name": "read_positions",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 416,
+          "name": "naked_exposure",
+          "kind": "function",
+          "summary": "Venue positions without a stop, from a fresh complete snapshot only."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 436,
+          "name": "overview",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 513,
+          "name": "knowledge",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 611,
+          "name": "KnowledgeReadCache",
+          "kind": "class",
+          "summary": "One bounded encoded read snapshot per app; no TTL or stale-error fallback."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 689,
+          "name": "system",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 782,
+          "name": "install",
+          "kind": "function",
+          "summary": "Mount /owner-api/v1 and the React owner frontend at / (both behind the"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 196,
+          "name": "trade_lineage",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 352,
+          "name": "market_inputs",
+          "kind": "function",
+          "summary": "Verify a decision's journaled market lineage against the retained stores."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 394,
+          "name": "decision_detail",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 458,
+          "name": "research_item",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 516,
+          "name": "assessed_ideas",
+          "kind": "function",
+          "summary": "Harvested ideas the strategy writer consumed, with the recorded outcome and"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 539,
+          "name": "research",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 627,
+          "name": "strategies",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 716,
+          "name": "strategy_detail",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 853,
+          "name": "operations",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 931,
+          "name": "knowledge_note",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1037,
+          "name": "diagnostics",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1125,
+          "name": "control_events_page",
+          "kind": "function",
+          "summary": "Keyset pages of control_events (id descending)."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1148,
+          "name": "probes",
+          "kind": "function",
+          "summary": "Measured availability of the stores this API reads, at request time."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1185,
+          "name": "ExactIndexMissing",
+          "kind": "class",
+          "summary": "The partial index an exact latest read needs does not exist (a journal"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1199,
+          "name": "latest_decisions",
+          "kind": "function",
+          "summary": "Newest decisions matching one of the indexed predicates: exact, over"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1209,
+          "name": "latest_activity",
+          "kind": "function",
+          "summary": "Exact latest records, not a newest-500 window."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1280,
+          "name": "overview_activity",
+          "kind": "function",
+          "summary": "Owner summary of recorded activity. Every item carries its recorded id."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1376,
+          "name": "observed_flows",
+          "kind": "function",
+          "summary": "Records that prove data moved between components, over stated windows."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1473,
+          "name": "recognize",
+          "kind": "function",
+          "summary": "Every stored record whose exact identifier appears in `text`, by"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1503,
+          "name": "unresolved_ids",
+          "kind": "function",
+          "summary": "Id-shaped tokens in `text` that no stored record has. `found` must be"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1512,
+          "name": "resolve_mentions",
+          "kind": "function",
+          "summary": "Exact-id mentions in `text`: existence is classified on the complete"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1526,
+          "name": "install",
+          "kind": "function",
+          "summary": "Mount the read contracts. Callers install the auth Guard."
+        },
+        {
+          "path": "trader/dashboard/owner_runtime.py",
+          "line": 8,
+          "name": "kernel_process",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/phase.py",
+          "line": 8,
+          "name": "mode",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/phase.py",
+          "line": 15,
+          "name": "startup_check",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/phase.py",
+          "line": 31,
+          "name": "ReadOnlyBoundary",
+          "kind": "class",
+          "summary": "Reject every write/provider route before handler or gateway execution."
+        },
+        {
+          "path": "trader/dashboard/phase.py",
+          "line": 92,
+          "name": "main",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 59,
+          "name": "kernel_identity_view",
+          "kind": "function",
+          "summary": "Read-only RUN-01 identity of the Kernel this Dashboard is looking at."
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 74,
+          "name": "create_app",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 797,
+          "name": "build_company",
+          "kind": "function",
+          "summary": "Roster + live per-employee status for the Company cockpit."
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 1115,
+          "name": "main",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 28,
+          "name": "TrackerError",
+          "kind": "class",
+          "summary": "Bounded public reason; never expose file contents or private paths."
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 32,
+          "name": "UniqueLoader",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 50,
+          "name": "Contract",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 54,
+          "name": "TrackerRow",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 71,
+          "name": "StatusDefinition",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 76,
+          "name": "Gate",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 85,
+          "name": "Metadata",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 93,
+          "name": "Ledger",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 126,
+          "name": "Selection",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 133,
+          "name": "NextDocument",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 172,
+          "name": "read_tracker",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 213,
+          "name": "install",
+          "kind": "function",
+          "summary": "Called inside the existing authenticated Owner API installation."
+        },
+        {
+          "path": "trader/dashboard/trade_history.py",
+          "line": 50,
+          "name": "CursorError",
+          "kind": "class",
+          "summary": "The cursor is not one this endpoint issued for this filter."
+        },
+        {
+          "path": "trader/dashboard/trade_history.py",
+          "line": 69,
+          "name": "encode_cursor",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/trade_history.py",
+          "line": 96,
+          "name": "decode_cursor",
+          "kind": "function",
+          "summary": "The cursor's fields, or CursorError. Strict: canonical unpadded base64url"
+        },
+        {
+          "path": "trader/dashboard/trade_history.py",
+          "line": 145,
+          "name": "trade_page",
+          "kind": "function",
+          "summary": "One page, newest first. Raises CursorError / ValueError on bad input."
+        },
+        {
+          "path": "trader/dashboard/valuation.py",
+          "line": 92,
+          "name": "estimate",
+          "kind": "function",
+          "summary": "{status: COMPLETE|NO_POSITIONS|UNAVAILABLE, total_upnl, coverage, positions}."
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/api/graphql_schema.py",
+          "summary": "GraphQL schema \u2014 the API contract serving dashboard AND Luffy's assistant."
+        },
+        {
+          "path": "trader/dashboard/__init__.py",
+          "summary": ""
+        },
+        {
+          "path": "trader/dashboard/auth.py",
+          "summary": "Fail-closed dashboard authentication; no credentials in URLs or logs."
+        },
+        {
+          "path": "trader/dashboard/current_truth.py",
+          "summary": "Current-truth readers for the owner surfaces (owner API, GraphQL, legacy)."
+        },
+        {
+          "path": "trader/dashboard/economics.py",
+          "summary": "Offline economics presentation; stored evidence never becomes complete accounting."
+        },
+        {
+          "path": "trader/dashboard/glacier_truth.py",
+          "summary": "Read-only owner projections. No lifecycle, provider or control operations."
+        },
+        {
+          "path": "trader/dashboard/overview_desk.py",
+          "summary": "Overview desk reads: realized-P&L curve, recent closes, latest scan, research counts."
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "summary": "Owner frontend read API (/owner-api/v1) and the isolated React preview route."
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "summary": "Owner frontend read contracts for Trades, Research, Strategies, Operations,"
+        },
+        {
+          "path": "trader/dashboard/owner_runtime.py",
+          "summary": "Read-only process evidence for owner displays; never creates a lock/record."
+        },
+        {
+          "path": "trader/dashboard/phase.py",
+          "summary": "Explicit Dashboard startup/authority contract; config.yaml is the sole mode source."
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "summary": "Luffy dashboard \u2014 FastAPI + GraphQL + WS push. Run: python -m trader.dashboard.server"
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "summary": "Read-only engineering ledger. No Journal, runtime control or provider access."
+        },
+        {
+          "path": "trader/dashboard/trade_history.py",
+          "summary": "Trade history pages for the owner frontend: keyset, read-only, bounded."
+        },
+        {
+          "path": "trader/dashboard/valuation.py",
+          "summary": "Unrealized P&L estimate for journal-open positions from ticker valuations."
+        }
+      ],
+      "http_interfaces": [
+        {
+          "path": "tests/owner_frontend_server.py",
+          "line": 58,
+          "decorator": "app.post('/__test__/state')"
+        },
+        {
+          "path": "tests/owner_frontend_server.py",
+          "line": 96,
+          "decorator": "app.get('/__test__/calls')"
+        },
+        {
+          "path": "trader/dashboard/auth.py",
+          "line": 88,
+          "decorator": "app.post('/auth/login')"
+        },
+        {
+          "path": "trader/dashboard/auth.py",
+          "line": 109,
+          "decorator": "app.post('/auth/logout')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 804,
+          "decorator": "app.get(PREFIX + '/bootstrap')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 840,
+          "decorator": "app.get(PREFIX + '/overview')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 844,
+          "decorator": "app.get(PREFIX + '/desk')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 849,
+          "decorator": "app.get(PREFIX + '/research/board')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 854,
+          "decorator": "app.get(PREFIX + '/strategies/board')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 859,
+          "decorator": "app.get(PREFIX + '/operations/log')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 864,
+          "decorator": "app.get(PREFIX + '/risk')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 872,
+          "decorator": "app.get(PREFIX + '/news-guard')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 878,
+          "decorator": "app.get(PREFIX + '/valuation')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 894,
+          "decorator": "app.get(PREFIX + '/protection')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 902,
+          "decorator": "app.get(PREFIX + '/enrichment/marks')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 966,
+          "decorator": "app.get(PREFIX + '/owner-interface')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 989,
+          "decorator": "app.post(PREFIX + '/chat')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1060,
+          "decorator": "app.get(PREFIX + '/knowledge')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1071,
+          "decorator": "app.get(PREFIX + '/system')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1075,
+          "decorator": "app.get(PREFIX + '/query/{kind}')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1083,
+          "decorator": "app.get(PREFIX + '/needs-you')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1091,
+          "decorator": "app.post(PREFIX + '/needs-you/decision')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1114,
+          "decorator": "app.get(PREFIX + '/trades')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1133,
+          "decorator": "app.get(PREFIX + '/strategies')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1142,
+          "decorator": "app.get(PREFIX + '/logs')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1174,
+          "decorator": "app.get('/')"
+        },
+        {
+          "path": "trader/dashboard/owner_api.py",
+          "line": 1178,
+          "decorator": "app.get('/assets/{path:path}')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1533,
+          "decorator": "app.get(PREFIX + '/trades/{trade_id}/lineage')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1537,
+          "decorator": "app.get(PREFIX + '/decisions/{decision_id}')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1542,
+          "decorator": "app.get(PREFIX + '/research')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1546,
+          "decorator": "app.get(PREFIX + '/research/combos/{combo_hash}')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1552,
+          "decorator": "app.get(PREFIX + '/strategies/{sid}')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1556,
+          "decorator": "app.get(PREFIX + '/operations/activity')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1560,
+          "decorator": "app.get(PREFIX + '/activity/latest')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1564,
+          "decorator": "app.get(PREFIX + '/overview/activity')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1568,
+          "decorator": "app.get(PREFIX + '/system/observed')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1573,
+          "decorator": "app.get(PREFIX + '/knowledge/note')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1581,
+          "decorator": "app.get(PREFIX + '/diagnostics')"
+        },
+        {
+          "path": "trader/dashboard/owner_reads.py",
+          "line": 1587,
+          "decorator": "app.get(PREFIX + '/diagnostics/events')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 99,
+          "decorator": "app.get('/api/investigations/latest')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 104,
+          "decorator": "app.get('/api/attention/latest')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 143,
+          "decorator": "app.get('/api/summary', dependencies=[])"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 223,
+          "decorator": "app.websocket('/ws/live')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 253,
+          "decorator": "app.get('/api/klines')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 274,
+          "decorator": "app.get('/api/vault/tree')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 285,
+          "decorator": "app.get('/api/vault/file')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 293,
+          "decorator": "app.get('/api/vault/graph')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 356,
+          "decorator": "app.get('/api/pipeline')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 440,
+          "decorator": "app.get('/api/org')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 454,
+          "decorator": "app.get('/api/doctrine')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 464,
+          "decorator": "app.post('/api/chat')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 478,
+          "decorator": "app.post('/api/brain/autopsy')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 499,
+          "decorator": "app.get('/api/brain/last_autopsy')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 512,
+          "decorator": "app.get('/api/review_status')"
+        },
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 525,
+          "decorator": "app.get('/api/logs')"
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 217,
+          "decorator": "app.get('/api/tracker')"
+        },
+        {
+          "path": "trader/dashboard/tracker.py",
+          "line": 217,
+          "decorator": "app.get('/owner-api/v1/tracker')"
+        }
+      ],
+      "input_output_context": "FastAPI, GraphQL, WebSocket and owner-facing read models; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "ACTIVE",
+      "previous_status_basis": "Observed process PID in scan provenance uses operational revision distinct from scanned production revision; request-level health not probed.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Connected",
+        "configuration": "Conditional",
+        "runtime": "Running",
+        "product_necessity": "Required"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=dashboard",
+      "previous_status_evidence": [
+        {
+          "path": "trader/dashboard/server.py",
+          "line": 1,
+          "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "frontend",
+      "name": "Owner frontend",
+      "purpose": "React live dashboard, route views, evidence components and explicitly separate demo adapter",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "frontend.1",
+          "name": "live root and adapters",
+          "files": [
+            "frontend/.gitignore",
+            "frontend/HANDOFF.md",
+            "frontend/README.md",
+            "frontend/index.html",
+            "frontend/package-lock.json",
+            "frontend/package.json",
+            "frontend/playwright.config.ts",
+            "frontend/playwright.glacier-v2.config.ts",
+            "frontend/playwright.glacier.config.ts",
+            "frontend/playwright.gui01.config.ts",
+            "frontend/playwright.m3.config.ts",
+            "frontend/playwright.stage8.config.ts",
+            "frontend/src/Shell.tsx",
+            "frontend/src/adapters/contracts.ts",
+            "frontend/src/adapters/fixture.ts",
+            "frontend/src/adapters/live.ts",
+            "frontend/src/adapters/pending.ts",
+            "frontend/src/adapters/readContracts.ts",
+            "frontend/src/adapters/tracker.ts",
+            "frontend/src/components/Avatar.tsx",
+            "frontend/src/components/EquityChart.tsx",
+            "frontend/src/components/HealthStatus.tsx",
+            "frontend/src/components/LuffyCore.tsx",
+            "frontend/src/components/OwnerControls.tsx",
+            "frontend/src/components/OwnerEvidence.tsx",
+            "frontend/src/components/PageHeader.tsx",
+            "frontend/src/components/PathTrace.tsx",
+            "frontend/src/components/RuntimeTruth.tsx",
+            "frontend/src/components/StorageTruth.tsx",
+            "frontend/src/components/StrategyAuthority.tsx",
+            "frontend/src/components/glass.tsx",
+            "frontend/src/components/motion.tsx",
+            "frontend/src/components/product.tsx",
+            "frontend/src/components/records.tsx",
+            "frontend/src/components/ui.tsx",
+            "frontend/src/components/workspace.tsx",
+            "frontend/src/context.tsx",
+            "frontend/src/diagnosticTruth.ts",
+            "frontend/src/fonts.ts",
+            "frontend/src/glacier.css",
+            "frontend/src/lazyChunk.ts",
+            "frontend/src/legacy.css",
+            "frontend/src/links.ts",
+            "frontend/src/live.css",
+            "frontend/src/liveRoot.tsx",
+            "frontend/src/m4.css",
+            "frontend/src/main.tsx",
+            "frontend/src/product.css",
+            "frontend/src/protectionExpiry.ts",
+            "frontend/src/styles.css",
+            "frontend/src/telemetryExpiry.ts",
+            "frontend/src/time.ts",
+            "frontend/src/useOwnerTelemetry.ts",
+            "frontend/src/widgets.css",
+            "frontend/tests/acc03.test.tsx",
+            "frontend/tests/browser/accounting-truth.spec.ts",
+            "frontend/tests/browser/close-trade-deferred.spec.ts",
+            "frontend/tests/browser/corrections.spec.ts",
+            "frontend/tests/browser/evidencePath.ts",
+            "frontend/tests/browser/glacier-corrections.spec.ts",
+            "frontend/tests/browser/glacier-v2.spec.ts",
+            "frontend/tests/browser/gui01-readonly.spec.ts",
+            "frontend/tests/browser/gui01.spec.ts",
+            "frontend/tests/browser/live-perf.spec.ts",
+            "frontend/tests/browser/live.spec.ts",
+            "frontend/tests/browser/liveHelpers.ts",
+            "frontend/tests/browser/m1-routes.spec.ts",
+            "frontend/tests/browser/m2-routes.spec.ts",
+            "frontend/tests/browser/m3-capture.spec.ts",
+            "frontend/tests/browser/own04.spec.ts",
+            "frontend/tests/browser/performance.spec.ts",
+            "frontend/tests/browser/preview.spec.ts",
+            "frontend/tests/browser/protection-r1.spec.ts",
+            "frontend/tests/browser/protection-r2.spec.ts",
+            "frontend/tests/browser/root-cutover.spec.ts",
+            "frontend/tests/browser/stage8.spec.ts",
+            "frontend/tests/browser/trade-history.spec.ts",
+            "frontend/tests/browser/v2.spec.ts",
+            "frontend/tests/browser/v21.spec.ts",
+            "frontend/tests/closeTradeDeferred.test.tsx",
+            "frontend/tests/components.test.tsx",
+            "frontend/tests/contracts.test.ts",
+            "frontend/tests/diagnosticCorrections.test.tsx",
+            "frontend/tests/fixtures/glacier-readonly.json",
+            "frontend/tests/glacierTruth.test.tsx",
+            "frontend/tests/glacierV2.test.tsx",
+            "frontend/tests/graphPath.test.ts",
+            "frontend/tests/harness/index.html",
+            "frontend/tests/harness/main.tsx",
+            "frontend/tests/health.test.tsx",
+            "frontend/tests/live.test.tsx",
+            "frontend/tests/m1.test.tsx",
+            "frontend/tests/m2.test.tsx",
+            "frontend/tests/own04.test.tsx",
+            "frontend/tests/protectionSnapshot.test.tsx",
+            "frontend/tests/setup.ts",
+            "frontend/tests/stage8.test.tsx",
+            "frontend/tests/tracker-phase.test.ts",
+            "frontend/tests/tradeHistory.test.tsx",
+            "frontend/tests/v21.test.tsx",
+            "frontend/tests/workspace.test.tsx",
+            "frontend/tsconfig.json",
+            "frontend/vite.config.ts"
+          ],
+          "file_count": 103,
+          "implementation_references": [
+            {
+              "path": "frontend/src/main.tsx",
+              "line": 1,
+              "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "frontend.2",
+          "name": "owner controls and evidence",
+          "files": [
+            "frontend/src/views/Evidence.tsx",
+            "frontend/tests/browser/v2-controls.spec.ts"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "frontend/src/main.tsx",
+              "line": 1,
+              "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "frontend.3",
+          "name": "route views",
+          "files": [
+            "frontend/src/views/Activity.tsx",
+            "frontend/src/views/Diagnostics.tsx",
+            "frontend/src/views/GraphView.tsx",
+            "frontend/src/views/Knowledge.tsx",
+            "frontend/src/views/LiveReads.tsx",
+            "frontend/src/views/LiveSystem.tsx",
+            "frontend/src/views/Luffy.tsx",
+            "frontend/src/views/Operations.tsx",
+            "frontend/src/views/OperationsLog.tsx",
+            "frontend/src/views/Overview.tsx",
+            "frontend/src/views/Research.tsx",
+            "frontend/src/views/Routes.tsx",
+            "frontend/src/views/Strategies.tsx",
+            "frontend/src/views/Tracker.tsx",
+            "frontend/src/views/Trades.tsx",
+            "frontend/src/views/graphGeometry.ts",
+            "frontend/src/views/graphPath.ts",
+            "frontend/src/views/graphScope.ts",
+            "frontend/src/views/tracker.css"
+          ],
+          "file_count": 19,
+          "implementation_references": [
+            {
+              "path": "frontend/src/main.tsx",
+              "line": 1,
+              "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "frontend.4",
+          "name": "visual tokens and assets",
+          "files": [
+            "frontend/src/assets/chart-room.svg",
+            "frontend/src/tokens.css"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "frontend/src/main.tsx",
+              "line": 1,
+              "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "frontend.5",
+          "name": "demo branch",
+          "files": [
+            "frontend/src/demo.tsx"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "frontend/src/main.tsx",
+              "line": 1,
+              "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "frontend/src/main.tsx",
+      "counts": {
+        "python_source": 0,
+        "frontend": 66,
+        "configuration": 10,
+        "script": 0,
+        "test": 48,
+        "other": 3,
+        "python_files_including_scripts_and_tests": 0,
+        "source_files": 66,
+        "test_files": 48,
+        "other_files": 13,
+        "total_files": 127,
+        "source_lines": 28150,
+        "all_text_lines": 32028,
+        "binary_files": 0
+      },
+      "files": [
+        "frontend/.gitignore",
+        "frontend/HANDOFF.md",
+        "frontend/README.md",
+        "frontend/index.html",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        "frontend/playwright.config.ts",
+        "frontend/playwright.glacier-v2.config.ts",
+        "frontend/playwright.glacier.config.ts",
+        "frontend/playwright.gui01.config.ts",
+        "frontend/playwright.m3.config.ts",
+        "frontend/playwright.stage8.config.ts",
+        "frontend/src/Shell.tsx",
+        "frontend/src/adapters/contracts.ts",
+        "frontend/src/adapters/fixture.ts",
+        "frontend/src/adapters/live.ts",
+        "frontend/src/adapters/pending.ts",
+        "frontend/src/adapters/readContracts.ts",
+        "frontend/src/adapters/tracker.ts",
+        "frontend/src/assets/chart-room.svg",
+        "frontend/src/components/Avatar.tsx",
+        "frontend/src/components/EquityChart.tsx",
+        "frontend/src/components/HealthStatus.tsx",
+        "frontend/src/components/LuffyCore.tsx",
+        "frontend/src/components/OwnerControls.tsx",
+        "frontend/src/components/OwnerEvidence.tsx",
+        "frontend/src/components/PageHeader.tsx",
+        "frontend/src/components/PathTrace.tsx",
+        "frontend/src/components/RuntimeTruth.tsx",
+        "frontend/src/components/StorageTruth.tsx",
+        "frontend/src/components/StrategyAuthority.tsx",
+        "frontend/src/components/glass.tsx",
+        "frontend/src/components/motion.tsx",
+        "frontend/src/components/product.tsx",
+        "frontend/src/components/records.tsx",
+        "frontend/src/components/ui.tsx",
+        "frontend/src/components/workspace.tsx",
+        "frontend/src/context.tsx",
+        "frontend/src/demo.tsx",
+        "frontend/src/diagnosticTruth.ts",
+        "frontend/src/fonts.ts",
+        "frontend/src/glacier.css",
+        "frontend/src/lazyChunk.ts",
+        "frontend/src/legacy.css",
+        "frontend/src/links.ts",
+        "frontend/src/live.css",
+        "frontend/src/liveRoot.tsx",
+        "frontend/src/m4.css",
+        "frontend/src/main.tsx",
+        "frontend/src/product.css",
+        "frontend/src/protectionExpiry.ts",
+        "frontend/src/styles.css",
+        "frontend/src/telemetryExpiry.ts",
+        "frontend/src/time.ts",
+        "frontend/src/tokens.css",
+        "frontend/src/useOwnerTelemetry.ts",
+        "frontend/src/views/Activity.tsx",
+        "frontend/src/views/Diagnostics.tsx",
+        "frontend/src/views/Evidence.tsx",
+        "frontend/src/views/GraphView.tsx",
+        "frontend/src/views/Knowledge.tsx",
+        "frontend/src/views/LiveReads.tsx",
+        "frontend/src/views/LiveSystem.tsx",
+        "frontend/src/views/Luffy.tsx",
+        "frontend/src/views/Operations.tsx",
+        "frontend/src/views/OperationsLog.tsx",
+        "frontend/src/views/Overview.tsx",
+        "frontend/src/views/Research.tsx",
+        "frontend/src/views/Routes.tsx",
+        "frontend/src/views/Strategies.tsx",
+        "frontend/src/views/Tracker.tsx",
+        "frontend/src/views/Trades.tsx",
+        "frontend/src/views/graphGeometry.ts",
+        "frontend/src/views/graphPath.ts",
+        "frontend/src/views/graphScope.ts",
+        "frontend/src/views/tracker.css",
+        "frontend/src/widgets.css",
+        "frontend/tests/acc03.test.tsx",
+        "frontend/tests/browser/accounting-truth.spec.ts",
+        "frontend/tests/browser/close-trade-deferred.spec.ts",
+        "frontend/tests/browser/corrections.spec.ts",
+        "frontend/tests/browser/evidencePath.ts",
+        "frontend/tests/browser/glacier-corrections.spec.ts",
+        "frontend/tests/browser/glacier-v2.spec.ts",
+        "frontend/tests/browser/gui01-readonly.spec.ts",
+        "frontend/tests/browser/gui01.spec.ts",
+        "frontend/tests/browser/live-perf.spec.ts",
+        "frontend/tests/browser/live.spec.ts",
+        "frontend/tests/browser/liveHelpers.ts",
+        "frontend/tests/browser/m1-routes.spec.ts",
+        "frontend/tests/browser/m2-routes.spec.ts",
+        "frontend/tests/browser/m3-capture.spec.ts",
+        "frontend/tests/browser/own04.spec.ts",
+        "frontend/tests/browser/performance.spec.ts",
+        "frontend/tests/browser/preview.spec.ts",
+        "frontend/tests/browser/protection-r1.spec.ts",
+        "frontend/tests/browser/protection-r2.spec.ts",
+        "frontend/tests/browser/root-cutover.spec.ts",
+        "frontend/tests/browser/stage8.spec.ts",
+        "frontend/tests/browser/trade-history.spec.ts",
+        "frontend/tests/browser/v2-controls.spec.ts",
+        "frontend/tests/browser/v2.spec.ts",
+        "frontend/tests/browser/v21.spec.ts",
+        "frontend/tests/closeTradeDeferred.test.tsx",
+        "frontend/tests/components.test.tsx",
+        "frontend/tests/contracts.test.ts",
+        "frontend/tests/diagnosticCorrections.test.tsx",
+        "frontend/tests/fixtures/glacier-readonly.json",
+        "frontend/tests/glacierTruth.test.tsx",
+        "frontend/tests/glacierV2.test.tsx",
+        "frontend/tests/graphPath.test.ts",
+        "frontend/tests/harness/index.html",
+        "frontend/tests/harness/main.tsx",
+        "frontend/tests/health.test.tsx",
+        "frontend/tests/live.test.tsx",
+        "frontend/tests/m1.test.tsx",
+        "frontend/tests/m2.test.tsx",
+        "frontend/tests/own04.test.tsx",
+        "frontend/tests/protectionSnapshot.test.tsx",
+        "frontend/tests/setup.ts",
+        "frontend/tests/stage8.test.tsx",
+        "frontend/tests/tracker-phase.test.ts",
+        "frontend/tests/tradeHistory.test.tsx",
+        "frontend/tests/v21.test.tsx",
+        "frontend/tests/workspace.test.tsx",
+        "frontend/tsconfig.json",
+        "frontend/vite.config.ts"
+      ],
+      "non_database_inputs": "HTTP read contracts and owner responses, UI expiry clocks, explicitly selected demo fixtures",
+      "non_database_outputs": "Rendered owner views, navigation and typed HTTP requests",
+      "initialization_path": "main.tsx mounts liveRoot except build-time demo; hosting/browser execution unverified",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "dashboard"
+      ],
+      "used_by": [],
+      "static_application_dependencies": [],
+      "offline_utility_dependencies": [],
+      "test_dependencies": [],
+      "databases": [],
+      "entry_points": [
+        {
+          "path": "frontend/src/main.tsx",
+          "line": 1,
+          "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [],
+      "initialization_and_schedule": [
+        {
+          "source": "frontend",
+          "interaction": "API",
+          "detail": "Live React adapter uses backend HTTP contract; separate demo fixture adapter.",
+          "evidence": [
+            {
+              "path": "frontend/src/adapters/live.ts",
+              "line": 83,
+              "sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "consumes",
+          "peer": "dashboard",
+          "interaction": "API",
+          "detail": "Live React adapter uses backend HTTP contract; separate demo fixture adapter."
+        }
+      ],
+      "runtime_data_inputs": [],
+      "runtime_data_outputs": [],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "dashboard",
+          "basis": "Browser/server serving path not verified; no browser run or requests made.",
+          "evidence": [
+            {
+              "path": "frontend/src/adapters/live.ts",
+              "line": 83,
+              "sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [],
+      "module_responsibilities": [],
+      "http_interfaces": [],
+      "input_output_context": "React live dashboard, route views, evidence components and explicitly separate demo adapter; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "UNKNOWN",
+      "previous_status_basis": "Source build entry is live except --mode demo; separate serving process/browser activity not verified.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Verified",
+        "product_necessity": "Optional"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=frontend",
+      "previous_status_evidence": [
+        {
+          "path": "frontend/src/main.tsx",
+          "line": 1,
+          "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/bench_owner_interface.py",
+      "subsystem": "owner",
+      "sha256": "3228b41aaaa8332b9fa65fb41aed6fd9808d7cee23ce4eae97f2a4157cd7adf1",
+      "physical_lines": 140,
+      "inventory_sha256": "3228b41aaaa8332b9fa65fb41aed6fd9808d7cee23ce4eae97f2a4157cd7adf1",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_manual_close.py",
+      "subsystem": "owner",
+      "sha256": "8e4fbfae241ba39d2cc1d0c2ee43069a89b1121b7b7653d5b6522d6d3c07875b",
+      "physical_lines": 194,
+      "inventory_sha256": "8e4fbfae241ba39d2cc1d0c2ee43069a89b1121b7b7653d5b6522d6d3c07875b",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_own03_approval_boundary.py",
+      "subsystem": "owner",
+      "sha256": "fd8681750ff0bb3190fa07f3c294103e67e22fffcbae826b7f35df13d6557cd6",
+      "physical_lines": 71,
+      "inventory_sha256": "0335f885c64f10a6f0543f542a144160af231d7da86011a94e60fa3d2c97eb96",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_owner_interface.py",
+      "subsystem": "owner",
+      "sha256": "4c9d4bbcfdeecfec40201e15c0941573386912f0d66a3319c581d6abc19c397f",
+      "physical_lines": 1048,
+      "inventory_sha256": "78a8a2ebc151ca8924934d4992b217c1fd27ccf174002f801de05049cb29ce1f",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_owner_interface_boundary.py",
+      "subsystem": "owner",
+      "sha256": "d181662387e9d2f6e7c9598e8eed06f880299ff3c5f06b717dd436b2a9d5ab77",
+      "physical_lines": 488,
+      "inventory_sha256": "d181662387e9d2f6e7c9598e8eed06f880299ff3c5f06b717dd436b2a9d5ab77",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_owner_interface_r3.py",
+      "subsystem": "owner",
+      "sha256": "f0ad58e1e0fb740437bb070bd052ab22ca596819e10866d58f0fc7ec30c26874",
+      "physical_lines": 398,
+      "inventory_sha256": "3e32043d84a96dfc98de43f7bca50228b4ad89e68df0aecc2bb9797cedfc2e65",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_owner_interface_r4.py",
+      "subsystem": "owner",
+      "sha256": "d5ae1921f517ab7e6d82868684f84dcae79fea5181d6502d7b9d3275f76ac225",
+      "physical_lines": 335,
+      "inventory_sha256": "1617f62ac5d4871245bebf7d0d6279b9959e32215e9948fe0b1bf94979cedeba",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_owner_interface_r5.py",
+      "subsystem": "owner",
+      "sha256": "b7d971a386a64b769b58b45dcc5a2fb5ef5634ca10c4cbe36263a266d4f5fcb1",
+      "physical_lines": 587,
+      "inventory_sha256": "162754745bc4275392000649d4c2fc4ca62607164ca71f02a2b780a6d859ccd4",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_owner_interface_r6.py",
+      "subsystem": "owner",
+      "sha256": "8ac7966ab183c1998516df7702d5be85c2187eb6fcf02b45db141fb05591a521",
+      "physical_lines": 227,
+      "inventory_sha256": "8ac7966ab183c1998516df7702d5be85c2187eb6fcf02b45db141fb05591a521",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/__init__.py",
+      "subsystem": "owner",
+      "sha256": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193",
+      "physical_lines": 19,
+      "inventory_sha256": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/adapters/__init__.py",
+      "subsystem": "owner",
+      "sha256": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432",
+      "physical_lines": 5,
+      "inventory_sha256": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/adapters/dashboard.py",
+      "subsystem": "owner",
+      "sha256": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c",
+      "physical_lines": 35,
+      "inventory_sha256": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/adapters/openclaw.py",
+      "subsystem": "owner",
+      "sha256": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695",
+      "physical_lines": 193,
+      "inventory_sha256": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/adapters/render.py",
+      "subsystem": "owner",
+      "sha256": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529",
+      "physical_lines": 51,
+      "inventory_sha256": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/adapters/telegram.py",
+      "subsystem": "owner",
+      "sha256": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631",
+      "physical_lines": 62,
+      "inventory_sha256": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/approvals.py",
+      "subsystem": "owner",
+      "sha256": "99a7ee035a141715d9f20992c997fb215758a9b120509baee917b9edee5cc35e",
+      "physical_lines": 292,
+      "inventory_sha256": "4a9830cbab6859d193f63856db143fcfad028568b506e04155fc02b5a651e05c",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "trader/owner/authz.py",
+      "subsystem": "owner",
+      "sha256": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753",
+      "physical_lines": 98,
+      "inventory_sha256": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/cli.py",
+      "subsystem": "owner",
+      "sha256": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c",
+      "physical_lines": 44,
+      "inventory_sha256": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/contract.py",
+      "subsystem": "owner",
+      "sha256": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87",
+      "physical_lines": 250,
+      "inventory_sha256": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/ipc.py",
+      "subsystem": "owner",
+      "sha256": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec",
+      "physical_lines": 430,
+      "inventory_sha256": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/knowledge.py",
+      "subsystem": "owner",
+      "sha256": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0",
+      "physical_lines": 80,
+      "inventory_sha256": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/owner/queries.py",
+      "subsystem": "owner",
+      "sha256": "610b471cb1bd4335a97eef2cdcf97ea347272a20d4a11494ad0515beb959f210",
+      "physical_lines": 194,
+      "inventory_sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "trader/owner/service.py",
+      "subsystem": "owner",
+      "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591",
+      "physical_lines": 787,
+      "inventory_sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/superpowers/reports/2026-09-29-trade-history-paging-r1-evidence/query_breakdown.py",
+      "subsystem": "dashboard",
+      "sha256": "26ec375c0ff733ef99a50432f35328edadd7a77909a874ddec18fd8d8e9b8f98",
+      "physical_lines": 38,
+      "inventory_sha256": "26ec375c0ff733ef99a50432f35328edadd7a77909a874ddec18fd8d8e9b8f98",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/acc03-economics-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "f848edb56e2cf8014f6d60ae2d8157f3dc2122a70eec1d14c897ae5fadbbd0b8",
+      "physical_lines": 59,
+      "inventory_sha256": "f848edb56e2cf8014f6d60ae2d8157f3dc2122a70eec1d14c897ae5fadbbd0b8",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/accounting-truth-followup-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "0dfb92515fcfab4c362bf69f6d0f1b35a3723ef97cd0e9b475159a51eb66ae66",
+      "physical_lines": 33,
+      "inventory_sha256": "0dfb92515fcfab4c362bf69f6d0f1b35a3723ef97cd0e9b475159a51eb66ae66",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/dec03-canonical-sol1/control_validation_test.py",
+      "subsystem": "dashboard",
+      "sha256": "b961eb348b2003a6cf17d0c031029db10475ff99498a41d215d43e6c93e09d48",
+      "physical_lines": 330,
+      "inventory_sha256": "b961eb348b2003a6cf17d0c031029db10475ff99498a41d215d43e6c93e09d48",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/exe04-canonical-sol1/reconcile.py",
+      "subsystem": "dashboard",
+      "sha256": "7a23040064271d03128f8fd9167eb9a0d93d778edf9a525a79aba131512d28cf",
+      "physical_lines": 259,
+      "inventory_sha256": "7a23040064271d03128f8fd9167eb9a0d93d778edf9a525a79aba131512d28cf",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/gui01-overview-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "bd0c8130c2b0b247f57bece764cef5cd4ec8e5378ae9da8d75727be06aec1d7d",
+      "physical_lines": 30,
+      "inventory_sha256": "bd0c8130c2b0b247f57bece764cef5cd4ec8e5378ae9da8d75727be06aec1d7d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/out03-replay-map-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "e0ce8261812b45dd1be37b31708faf411b2b8d978107516d9bd80fc04c1bd9c5",
+      "physical_lines": 45,
+      "inventory_sha256": "e0ce8261812b45dd1be37b31708faf411b2b8d978107516d9bd80fc04c1bd9c5",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/own03-boundary-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "93f04bfd9c6bb97189b67549c629fbd30c51bae6663fc2e5141e7c17cd157cf3",
+      "physical_lines": 37,
+      "inventory_sha256": "93f04bfd9c6bb97189b67549c629fbd30c51bae6663fc2e5141e7c17cd157cf3",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/own04-phase-scope-review/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "cfae4a5cd13a7abab49f14f3a2d3c710d6a3b51f8d841d02aac7ff7b2e17a87b",
+      "physical_lines": 37,
+      "inventory_sha256": "cfae4a5cd13a7abab49f14f3a2d3c710d6a3b51f8d841d02aac7ff7b2e17a87b",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/own04-state-sol/verify.py",
+      "subsystem": "dashboard",
+      "sha256": "4c48c31531e1eb68389bd02ad30ad94e098f9bf42ea28c68abb830b08975f29c",
+      "physical_lines": 36,
+      "inventory_sha256": "4c48c31531e1eb68389bd02ad30ad94e098f9bf42ea28c68abb830b08975f29c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/port01-canonical-sol1/control_validation_test.py",
+      "subsystem": "dashboard",
+      "sha256": "293d7797f88e5dfbeba2b4272d83bfac55ee64f5c738000acc08aa051eb3cc68",
+      "physical_lines": 316,
+      "inventory_sha256": "293d7797f88e5dfbeba2b4272d83bfac55ee64f5c738000acc08aa051eb3cc68",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/port04-canonical-sol1/reconcile.py",
+      "subsystem": "dashboard",
+      "sha256": "5eb5072f32638746112c14da6626dc6bf2acb139c3172f7154de76f218c500d8",
+      "physical_lines": 202,
+      "inventory_sha256": "5eb5072f32638746112c14da6626dc6bf2acb139c3172f7154de76f218c500d8",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/qnt09-canonical-intake-sol1/validate.py",
+      "subsystem": "dashboard",
+      "sha256": "6315a27ae5d44a2b5e6d595a88b6177d46d736182b281d7892d0728221faca71",
+      "physical_lines": 68,
+      "inventory_sha256": "6315a27ae5d44a2b5e6d595a88b6177d46d736182b281d7892d0728221faca71",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/str01-canonical-sol1/control-validation.py",
+      "subsystem": "dashboard",
+      "sha256": "7cbcb60d99793e9415fa20b9447c739f683ec3b260e2f89fa487f97612fa0294",
+      "physical_lines": 60,
+      "inventory_sha256": "7cbcb60d99793e9415fa20b9447c739f683ec3b260e2f89fa487f97612fa0294",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/str02-canonical-sol1/control-validation.py",
+      "subsystem": "dashboard",
+      "sha256": "e486222f528a3f3f5de472e6a908566314ab31565fa91aa750886aed7df8a5c4",
+      "physical_lines": 94,
+      "inventory_sha256": "e486222f528a3f3f5de472e6a908566314ab31565fa91aa750886aed7df8a5c4",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "docs/tracker/evidence/str03-canonical-sol1/control-validation.py",
+      "subsystem": "dashboard",
+      "sha256": "509fcd69dc6ee43bbfe4e7919c605459cece230fc5b2ea1d58a9358b91cfdbe3",
+      "physical_lines": 121,
+      "inventory_sha256": "509fcd69dc6ee43bbfe4e7919c605459cece230fc5b2ea1d58a9358b91cfdbe3",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "scripts/bench_trade_history.py",
+      "subsystem": "dashboard",
+      "sha256": "4c6b5768719654cef0ecb317b19a403bb67d99c2128560f4277215d3400ef303",
+      "physical_lines": 184,
+      "inventory_sha256": "4c6b5768719654cef0ecb317b19a403bb67d99c2128560f4277215d3400ef303",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/owner_frontend_server.py",
+      "subsystem": "dashboard",
+      "sha256": "fac6d8657ed2239f61da1c0bd28cded5af4e5b87360eceb5c3e6e75e703d834a",
+      "physical_lines": 106,
+      "inventory_sha256": "fac6d8657ed2239f61da1c0bd28cded5af4e5b87360eceb5c3e6e75e703d834a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_acc03_economics.py",
+      "subsystem": "dashboard",
+      "sha256": "4e9f22cb6ab0ff3ea8628e6e6505d5756149be8572ca4e9f348eaf44e77225fe",
+      "physical_lines": 102,
+      "inventory_sha256": "4e9f22cb6ab0ff3ea8628e6e6505d5756149be8572ca4e9f348eaf44e77225fe",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_accounting_truth_followup.py",
+      "subsystem": "dashboard",
+      "sha256": "01c4a7e1eb15db77fc89a761cfe8e2206a011e8095d69a5ccb126ecf47f68178",
+      "physical_lines": 52,
+      "inventory_sha256": "01c4a7e1eb15db77fc89a761cfe8e2206a011e8095d69a5ccb126ecf47f68178",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_attention_view.py",
+      "subsystem": "dashboard",
+      "sha256": "0fd34dcde2bd8fa3f2e6dcf163bde0c8a6a160293ae29dc13c663dc6997c939c",
+      "physical_lines": 80,
+      "inventory_sha256": "af65fce1ce03680bfa2c9a14f206601980d4a2344f59f50d401e80c074330587",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_candle_cache_reuse.py",
+      "subsystem": "dashboard",
+      "sha256": "297648d221de9b95db8867530de1f084b2e0c06060daf362fac98899ee7c8e00",
+      "physical_lines": 49,
+      "inventory_sha256": "5a80dd6ba0263f82d3263d79ac2d88ad358ed7f79f17c96f6ee8c79ec2d9f9d6",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_company.py",
+      "subsystem": "dashboard",
+      "sha256": "bb3191903ccf048c3015838002e8b1e5d435026494e2fede0491d0fb43bd62e5",
+      "physical_lines": 125,
+      "inventory_sha256": "bb3191903ccf048c3015838002e8b1e5d435026494e2fede0491d0fb43bd62e5",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_current_truth_completion_clock.py",
+      "subsystem": "dashboard",
+      "sha256": "f0dc06d7c76966504000917fea320a2e9349961bc3910fb8fc6a1e7855cbbbc2",
+      "physical_lines": 250,
+      "inventory_sha256": "f0dc06d7c76966504000917fea320a2e9349961bc3910fb8fc6a1e7855cbbbc2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_current_truth_contract.py",
+      "subsystem": "dashboard",
+      "sha256": "505a92a13c771dae0a126c29659c217500d888f01fad0d8989dcdc4fa0313a68",
+      "physical_lines": 1095,
+      "inventory_sha256": "7cadbc2348b10e2c26c1911ac9235ea3b8bc3ed8acbf944b9bb7cd107c5ee08f",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_current_truth_corrections.py",
+      "subsystem": "dashboard",
+      "sha256": "e08b80465474132c0f38e8c819c697b0e0fac6ea9c145387e3e20c200978c113",
+      "physical_lines": 721,
+      "inventory_sha256": "df8a5bfbceabb434c9b728f3a836bfa1664fb4afc4fdb3b61a609eb4482315c3",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_current_truth_integration.py",
+      "subsystem": "dashboard",
+      "sha256": "8a107c0089bdcb20eda65279786875eedc81caac66fbd723e3ba3fa8b5501216",
+      "physical_lines": 353,
+      "inventory_sha256": "5eb13ecd0ea1397250f05d5ef3e8d1f7b47b7482fdd748f87601820e6e3f739a",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_dashboard_auth.py",
+      "subsystem": "dashboard",
+      "sha256": "582e3d7aa458faaf6e81bb6daffddf311fca4e21a13e36739d8ad193bbe3e2c1",
+      "physical_lines": 51,
+      "inventory_sha256": "0e8455dadaa568b7a5244cfbfc42cdcea9f28235ad52ef164d30d135581b18be",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_dashboard_phase.py",
+      "subsystem": "dashboard",
+      "sha256": "9dd25202b5355d520e9723e5b51e0bf3dcd1172723d7c1314e4fcf3d7d1fefd7",
+      "physical_lines": 117,
+      "inventory_sha256": "b08f594d17c3b254946266038e7d1563c5a6feead876bdeb7d7ef7d224c79a9e",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_dashboard_supervisor_unknown.py",
+      "subsystem": "dashboard",
+      "sha256": "30e571638c501d3b567ac60952091c8ced0eb7d359fdc211da2e92b9ff9f5163",
+      "physical_lines": 33,
+      "inventory_sha256": "30e571638c501d3b567ac60952091c8ced0eb7d359fdc211da2e92b9ff9f5163",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_data02_decision_lineage.py",
+      "subsystem": "dashboard",
+      "sha256": "fc0b3b863e80723197f35550366a2714082c43f164a096eec0c4d79ad4f44935",
+      "physical_lines": 167,
+      "inventory_sha256": "fc0b3b863e80723197f35550366a2714082c43f164a096eec0c4d79ad4f44935",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_glacier_truth.py",
+      "subsystem": "dashboard",
+      "sha256": "1a40a2bdca5c449fd92a68491cb3b4c1fb2905771b340c3025b7a59b393018ae",
+      "physical_lines": 105,
+      "inventory_sha256": "442469ca2ca3d183418da8f1fdd62a4f2259c39edb60b9a99dbfb45c505fc739",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_gui01_overview.py",
+      "subsystem": "dashboard",
+      "sha256": "9aa8c0528e580b726c03818f048ce8b411e66fd6274f51c9fe4f40191f263717",
+      "physical_lines": 48,
+      "inventory_sha256": "9aa8c0528e580b726c03818f048ce8b411e66fd6274f51c9fe4f40191f263717",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_overview_desk.py",
+      "subsystem": "dashboard",
+      "sha256": "5cea539c61673d264c5614873db20f3df65269963726a92d5a222570db6b863f",
+      "physical_lines": 109,
+      "inventory_sha256": "5cea539c61673d264c5614873db20f3df65269963726a92d5a222570db6b863f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_own04_state_truth.py",
+      "subsystem": "dashboard",
+      "sha256": "c8ee9ad8a81147f30d6acd057326e3f60049483a308d9a8e8a8b48ae6570434d",
+      "physical_lines": 129,
+      "inventory_sha256": "c8ee9ad8a81147f30d6acd057326e3f60049483a308d9a8e8a8b48ae6570434d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_owner_read_cache.py",
+      "subsystem": "dashboard",
+      "sha256": "917caec64d9553e0061116472205b9fc9e1abd10da5c68107947719eaaa4c1b8",
+      "physical_lines": 101,
+      "inventory_sha256": "917caec64d9553e0061116472205b9fc9e1abd10da5c68107947719eaaa4c1b8",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_owner_reads_m2.py",
+      "subsystem": "dashboard",
+      "sha256": "b126d11b47e10c1cec96523c24976233df79f945cb9acfcfc9157426a5693b42",
+      "physical_lines": 546,
+      "inventory_sha256": "b126d11b47e10c1cec96523c24976233df79f945cb9acfcfc9157426a5693b42",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_rent_wiring.py",
+      "subsystem": "dashboard",
+      "sha256": "1cc70060c70ce8ab60d3059167f82b5a64464c405c88083348e9df6bb497ab29",
+      "physical_lines": 51,
+      "inventory_sha256": "1cc70060c70ce8ab60d3059167f82b5a64464c405c88083348e9df6bb497ab29",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_run01_instance_identity.py",
+      "subsystem": "dashboard",
+      "sha256": "4e4b7225644e115e46fca8c4c3fd2e6babc91948a88301b70b7f360c808e8aea",
+      "physical_lines": 314,
+      "inventory_sha256": "4abd6ae23446575b2852b16abf653953326c2c945b0e03595bd4a1a913f694fe",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "tests/test_theorist_removed.py",
+      "subsystem": "dashboard",
+      "sha256": "4706f4cb5ef3d6f5dd776951261018417a27849fdcaeee712e61c22ee1f798be",
+      "physical_lines": 38,
+      "inventory_sha256": "4706f4cb5ef3d6f5dd776951261018417a27849fdcaeee712e61c22ee1f798be",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "tests/test_trade_history.py",
+      "subsystem": "dashboard",
+      "sha256": "717b3432b176ef3b68a6f24cb7175d3cf5e1cc44f06642976cd072dd08c3a448",
+      "physical_lines": 492,
+      "inventory_sha256": "717b3432b176ef3b68a6f24cb7175d3cf5e1cc44f06642976cd072dd08c3a448",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/api/graphql_schema.py",
+      "subsystem": "dashboard",
+      "sha256": "ec5dba753c7b016391ad36c5d220cdacef6dde259ea2aa6e32ed2c88958022c4",
+      "physical_lines": 596,
+      "inventory_sha256": "ec5dba753c7b016391ad36c5d220cdacef6dde259ea2aa6e32ed2c88958022c4",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/__init__.py",
+      "subsystem": "dashboard",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "physical_lines": 0,
+      "inventory_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/auth.py",
+      "subsystem": "dashboard",
+      "sha256": "6fcb7ffeb9eabdad36359913b97cec765003c564e80c12d7a7a696b35581b7ae",
+      "physical_lines": 138,
+      "inventory_sha256": "6fcb7ffeb9eabdad36359913b97cec765003c564e80c12d7a7a696b35581b7ae",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/current_truth.py",
+      "subsystem": "dashboard",
+      "sha256": "416d870dde445bbc4c37cb2923b51953dc0569638538d9553884cf531fc39dd9",
+      "physical_lines": 593,
+      "inventory_sha256": "416d870dde445bbc4c37cb2923b51953dc0569638538d9553884cf531fc39dd9",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/economics.py",
+      "subsystem": "dashboard",
+      "sha256": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560",
+      "physical_lines": 144,
+      "inventory_sha256": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/glacier_truth.py",
+      "subsystem": "dashboard",
+      "sha256": "d3344e24ddb930f8636c2c755c03519a301a4c16e6e7f6ff2b700802d3a33875",
+      "physical_lines": 121,
+      "inventory_sha256": "d3344e24ddb930f8636c2c755c03519a301a4c16e6e7f6ff2b700802d3a33875",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/overview_desk.py",
+      "subsystem": "dashboard",
+      "sha256": "638c1038b84d98b46e72d789358bbbead0e37b630c4e25e58b41eff012debe66",
+      "physical_lines": 320,
+      "inventory_sha256": "68dfc244c4acdc2418144c0fdccb5aea4182285febaff9f144981a85f29552b8",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "trader/dashboard/owner_api.py",
+      "subsystem": "dashboard",
+      "sha256": "dd99ffff1c8d3a97e2e2ab17f713cc5be6d14b13b3301af665f4e20e472ec749",
+      "physical_lines": 1179,
+      "inventory_sha256": "dd99ffff1c8d3a97e2e2ab17f713cc5be6d14b13b3301af665f4e20e472ec749",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/owner_reads.py",
+      "subsystem": "dashboard",
+      "sha256": "9a2c11001348b208168af4532bf78f719c32954133d07c77bda812ca0465ca9c",
+      "physical_lines": 1582,
+      "inventory_sha256": "cb9d9237255e87b899ef7cbc68c6a63dcf4660273905f0edd9aa384fc022007f",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "trader/dashboard/owner_runtime.py",
+      "subsystem": "dashboard",
+      "sha256": "5cd8a2f1681405603e735d22bc607bd625f64c6bc7709d764dbca74aa7d137bb",
+      "physical_lines": 30,
+      "inventory_sha256": "5cd8a2f1681405603e735d22bc607bd625f64c6bc7709d764dbca74aa7d137bb",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/phase.py",
+      "subsystem": "dashboard",
+      "sha256": "78da1f099f427b4bf157abcd9a45fe490a8f0ee23f0dac034f5b592165b15f9a",
+      "physical_lines": 104,
+      "inventory_sha256": "78da1f099f427b4bf157abcd9a45fe490a8f0ee23f0dac034f5b592165b15f9a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/server.py",
+      "subsystem": "dashboard",
+      "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97",
+      "physical_lines": 1132,
+      "inventory_sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/tracker.py",
+      "subsystem": "dashboard",
+      "sha256": "9575aa8b7af8d9e34621d215f67619d99dc5103cb4decda2b5a887cfd2843cc7",
+      "physical_lines": 223,
+      "inventory_sha256": "9575aa8b7af8d9e34621d215f67619d99dc5103cb4decda2b5a887cfd2843cc7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/trade_history.py",
+      "subsystem": "dashboard",
+      "sha256": "36e979ec8de7717ced09a62eb311a2bb55cdc39042bab991c3c71cc2de3d4228",
+      "physical_lines": 215,
+      "inventory_sha256": "36e979ec8de7717ced09a62eb311a2bb55cdc39042bab991c3c71cc2de3d4228",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "trader/dashboard/valuation.py",
+      "subsystem": "dashboard",
+      "sha256": "8fac9194df2eca66ce0432c73989fc8fde18735084bb55d34f4883adc6e70d43",
+      "physical_lines": 156,
+      "inventory_sha256": "8fac9194df2eca66ce0432c73989fc8fde18735084bb55d34f4883adc6e70d43",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/.gitignore",
+      "subsystem": "frontend",
+      "sha256": "d947e50a2b6fcc8918cbcb93f6813f4f00cf60f600531989b0ddc370e9a55ff7",
+      "physical_lines": 9,
+      "inventory_sha256": "d947e50a2b6fcc8918cbcb93f6813f4f00cf60f600531989b0ddc370e9a55ff7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/HANDOFF.md",
+      "subsystem": "frontend",
+      "sha256": "df47487a83eb8249bca34747f73adb07200e9f7cced69a473f783393c9fceef5",
+      "physical_lines": 213,
+      "inventory_sha256": "df47487a83eb8249bca34747f73adb07200e9f7cced69a473f783393c9fceef5",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/README.md",
+      "subsystem": "frontend",
+      "sha256": "2015c78763280a60ca095d4336d2d838b4e37cfc023c7d0adf9965f3ec4bc497",
+      "physical_lines": 91,
+      "inventory_sha256": "2015c78763280a60ca095d4336d2d838b4e37cfc023c7d0adf9965f3ec4bc497",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/index.html",
+      "subsystem": "frontend",
+      "sha256": "e1ad3783bddc3615fda8525c58f5cc8ba4dcda450558d1be994b01eb3ccf0a8f",
+      "physical_lines": 17,
+      "inventory_sha256": "e1ad3783bddc3615fda8525c58f5cc8ba4dcda450558d1be994b01eb3ccf0a8f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "subsystem": "frontend",
+      "sha256": "06e58a94fafc69363ec9e56c5adec574315b1b767cc458ea26e6824bc3ade16d",
+      "physical_lines": 3366,
+      "inventory_sha256": "06e58a94fafc69363ec9e56c5adec574315b1b767cc458ea26e6824bc3ade16d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/package.json",
+      "subsystem": "frontend",
+      "sha256": "b8adfa67eea537db3f1027c4774ab650b8eb0ed233d6bc8577cc15ee8649b158",
+      "physical_lines": 45,
+      "inventory_sha256": "b8adfa67eea537db3f1027c4774ab650b8eb0ed233d6bc8577cc15ee8649b158",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.config.ts",
+      "subsystem": "frontend",
+      "sha256": "94b6a6dc941a316396db19adfa3d73d995be0e2c09c306f1e11c28234bf504b0",
+      "physical_lines": 56,
+      "inventory_sha256": "94b6a6dc941a316396db19adfa3d73d995be0e2c09c306f1e11c28234bf504b0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.glacier-v2.config.ts",
+      "subsystem": "frontend",
+      "sha256": "9f024d266852c77fac6042bfe28e932ea866759717b7904965a26ed08586ad0d",
+      "physical_lines": 11,
+      "inventory_sha256": "9f024d266852c77fac6042bfe28e932ea866759717b7904965a26ed08586ad0d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.glacier.config.ts",
+      "subsystem": "frontend",
+      "sha256": "d1b97e97d38b80a06873ab65567e40c6a3b06889e54cbbddfab66f51bf4513b1",
+      "physical_lines": 11,
+      "inventory_sha256": "d1b97e97d38b80a06873ab65567e40c6a3b06889e54cbbddfab66f51bf4513b1",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.gui01.config.ts",
+      "subsystem": "frontend",
+      "sha256": "cc5ed300f396942c71d8899214c530f169976ee7c4f85973cacde30a6f608c4a",
+      "physical_lines": 5,
+      "inventory_sha256": "cc5ed300f396942c71d8899214c530f169976ee7c4f85973cacde30a6f608c4a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.m3.config.ts",
+      "subsystem": "frontend",
+      "sha256": "a10a65459556f64d35d9e70e65a98cee16e8bd56b21e1d51212294a83a2ae6e2",
+      "physical_lines": 23,
+      "inventory_sha256": "a10a65459556f64d35d9e70e65a98cee16e8bd56b21e1d51212294a83a2ae6e2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/playwright.stage8.config.ts",
+      "subsystem": "frontend",
+      "sha256": "d12ee3f925f490e377c58ce9e8bd3cf99b2db83133d36085f7d3787e3e8313bb",
+      "physical_lines": 7,
+      "inventory_sha256": "d12ee3f925f490e377c58ce9e8bd3cf99b2db83133d36085f7d3787e3e8313bb",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/Shell.tsx",
+      "subsystem": "frontend",
+      "sha256": "97c789cad241b93660d4fad75fa9d75d92ef7625a6f0247d333a1b326b6fe091",
+      "physical_lines": 285,
+      "inventory_sha256": "97c789cad241b93660d4fad75fa9d75d92ef7625a6f0247d333a1b326b6fe091",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/adapters/contracts.ts",
+      "subsystem": "frontend",
+      "sha256": "4aa918fbf6c5321853eec54c886153dbe7da3fb42d1b32a57b374881e9128811",
+      "physical_lines": 285,
+      "inventory_sha256": "4aa918fbf6c5321853eec54c886153dbe7da3fb42d1b32a57b374881e9128811",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/adapters/fixture.ts",
+      "subsystem": "frontend",
+      "sha256": "8cb14b0d537923f04971835780f1d966505e6a1d81958e0fb0882fb04f6e7bee",
+      "physical_lines": 286,
+      "inventory_sha256": "8cb14b0d537923f04971835780f1d966505e6a1d81958e0fb0882fb04f6e7bee",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/adapters/live.ts",
+      "subsystem": "frontend",
+      "sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619",
+      "physical_lines": 816,
+      "inventory_sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/adapters/pending.ts",
+      "subsystem": "frontend",
+      "sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4",
+      "physical_lines": 81,
+      "inventory_sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/adapters/readContracts.ts",
+      "subsystem": "frontend",
+      "sha256": "1086541fffa650617f3fef9bc798bb445148433492999668c1b02efb55a11ec3",
+      "physical_lines": 338,
+      "inventory_sha256": "fc481d2f6431bf845ac545904e48ce0f63aacf4b47e0f1f65a315980be8088fa",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "frontend/src/adapters/tracker.ts",
+      "subsystem": "frontend",
+      "sha256": "d78d15e13870ab2a69e8aaab5ec6c5f80cf050cb437e46f833b039e37f916fac",
+      "physical_lines": 41,
+      "inventory_sha256": "d78d15e13870ab2a69e8aaab5ec6c5f80cf050cb437e46f833b039e37f916fac",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/assets/chart-room.svg",
+      "subsystem": "frontend",
+      "sha256": "f22d2d899cae2972a6708ee1e2b108156174a3b8c55b62259cc022aece5656ed",
+      "physical_lines": 1,
+      "inventory_sha256": "f22d2d899cae2972a6708ee1e2b108156174a3b8c55b62259cc022aece5656ed",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/Avatar.tsx",
+      "subsystem": "frontend",
+      "sha256": "17ee72da95c440d1f6f28dd2fadacb401164795143025bc118553acfaf14cc32",
+      "physical_lines": 164,
+      "inventory_sha256": "17ee72da95c440d1f6f28dd2fadacb401164795143025bc118553acfaf14cc32",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/EquityChart.tsx",
+      "subsystem": "frontend",
+      "sha256": "5280310f32a680fd47afdf2dfc21ce5b73502ab43d39e393d0f89e0348873aaa",
+      "physical_lines": 54,
+      "inventory_sha256": "5280310f32a680fd47afdf2dfc21ce5b73502ab43d39e393d0f89e0348873aaa",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/HealthStatus.tsx",
+      "subsystem": "frontend",
+      "sha256": "24b125cf8bba4c4f4dbd12bcedd473cbf9d8e8c7ec2428b7462ecc3eed333e16",
+      "physical_lines": 37,
+      "inventory_sha256": "24b125cf8bba4c4f4dbd12bcedd473cbf9d8e8c7ec2428b7462ecc3eed333e16",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/LuffyCore.tsx",
+      "subsystem": "frontend",
+      "sha256": "007154c35cb1148647d83327f72565d01217de8e48c101eb61079711c47969cd",
+      "physical_lines": 34,
+      "inventory_sha256": "007154c35cb1148647d83327f72565d01217de8e48c101eb61079711c47969cd",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/OwnerControls.tsx",
+      "subsystem": "frontend",
+      "sha256": "670fdcdfbc35a9c39e1206401e2449169c0578c11a48fd384df4c28cc41a1c46",
+      "physical_lines": 206,
+      "inventory_sha256": "670fdcdfbc35a9c39e1206401e2449169c0578c11a48fd384df4c28cc41a1c46",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/OwnerEvidence.tsx",
+      "subsystem": "frontend",
+      "sha256": "68ef40406949d2c314c11c6252f2839eb8d6e57c8b27bfb9d11984f9184349f0",
+      "physical_lines": 88,
+      "inventory_sha256": "68ef40406949d2c314c11c6252f2839eb8d6e57c8b27bfb9d11984f9184349f0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/PageHeader.tsx",
+      "subsystem": "frontend",
+      "sha256": "b77eafa09788a3412854ac9a8231c6c80a96976020a8e18489ccc436ff915ae7",
+      "physical_lines": 37,
+      "inventory_sha256": "b77eafa09788a3412854ac9a8231c6c80a96976020a8e18489ccc436ff915ae7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/PathTrace.tsx",
+      "subsystem": "frontend",
+      "sha256": "33ca76e6175a4a39bcdf0eeec82fe3876d91bb6f9141bb8fb976000742aef350",
+      "physical_lines": 78,
+      "inventory_sha256": "33ca76e6175a4a39bcdf0eeec82fe3876d91bb6f9141bb8fb976000742aef350",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/RuntimeTruth.tsx",
+      "subsystem": "frontend",
+      "sha256": "0d8e9e962a0e5f70a022d8d6f1fb53136b2e261330f93cf1df4a3f35861f5b10",
+      "physical_lines": 35,
+      "inventory_sha256": "0d8e9e962a0e5f70a022d8d6f1fb53136b2e261330f93cf1df4a3f35861f5b10",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/StorageTruth.tsx",
+      "subsystem": "frontend",
+      "sha256": "d12d5faebd9bd0e7fc6b9c23352e2359623900b05e40cc8f7dfe482c57843a66",
+      "physical_lines": 30,
+      "inventory_sha256": "d12d5faebd9bd0e7fc6b9c23352e2359623900b05e40cc8f7dfe482c57843a66",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/StrategyAuthority.tsx",
+      "subsystem": "frontend",
+      "sha256": "64f540236a4ab7bc9fb8837d6b9641f81672730739e8206938ad81888e59eabc",
+      "physical_lines": 74,
+      "inventory_sha256": "64f540236a4ab7bc9fb8837d6b9641f81672730739e8206938ad81888e59eabc",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/glass.tsx",
+      "subsystem": "frontend",
+      "sha256": "f6624bb1c4b06be4f35ba3686b2277ea68268a015044af7cf904d1d41c8c6425",
+      "physical_lines": 329,
+      "inventory_sha256": "f6624bb1c4b06be4f35ba3686b2277ea68268a015044af7cf904d1d41c8c6425",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/motion.tsx",
+      "subsystem": "frontend",
+      "sha256": "5f3f8fc84b0c05d8f8c4cb7248b9fd5d266088508ae4ab3bcae352b506658e7e",
+      "physical_lines": 38,
+      "inventory_sha256": "5f3f8fc84b0c05d8f8c4cb7248b9fd5d266088508ae4ab3bcae352b506658e7e",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/product.tsx",
+      "subsystem": "frontend",
+      "sha256": "7b734fe1ab0851d8eb23c4d8e6bece9b479b5e511828f785dbf8fa6193c7fdf4",
+      "physical_lines": 129,
+      "inventory_sha256": "7b734fe1ab0851d8eb23c4d8e6bece9b479b5e511828f785dbf8fa6193c7fdf4",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/records.tsx",
+      "subsystem": "frontend",
+      "sha256": "3cb8441ca59d0c6130a79dc7c7324a49087ce6447a39e874cef5a21f9c54ecfd",
+      "physical_lines": 212,
+      "inventory_sha256": "3cb8441ca59d0c6130a79dc7c7324a49087ce6447a39e874cef5a21f9c54ecfd",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/ui.tsx",
+      "subsystem": "frontend",
+      "sha256": "24a178954383ba3b081c93caeb07395784bbb3a6ff9edc5b2c3636c46ae613d0",
+      "physical_lines": 225,
+      "inventory_sha256": "24a178954383ba3b081c93caeb07395784bbb3a6ff9edc5b2c3636c46ae613d0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/components/workspace.tsx",
+      "subsystem": "frontend",
+      "sha256": "2000ee2a3727a4d1d176045277868488687f5835c7b98ebcfc865128cef462e2",
+      "physical_lines": 302,
+      "inventory_sha256": "2000ee2a3727a4d1d176045277868488687f5835c7b98ebcfc865128cef462e2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/context.tsx",
+      "subsystem": "frontend",
+      "sha256": "bb25235c563d1639b9b6297dbe489ecf83a948ec4183418f9221a587104d3492",
+      "physical_lines": 91,
+      "inventory_sha256": "bb25235c563d1639b9b6297dbe489ecf83a948ec4183418f9221a587104d3492",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/demo.tsx",
+      "subsystem": "frontend",
+      "sha256": "0e2390161c33eb06a4679d65bb51035aa4318b8352eb9e212cb482f254d40c8d",
+      "physical_lines": 32,
+      "inventory_sha256": "0e2390161c33eb06a4679d65bb51035aa4318b8352eb9e212cb482f254d40c8d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/diagnosticTruth.ts",
+      "subsystem": "frontend",
+      "sha256": "44e708074dbad354b66c0a52280f2cb1efde231d6f7462aced3ea36143b53a90",
+      "physical_lines": 34,
+      "inventory_sha256": "44e708074dbad354b66c0a52280f2cb1efde231d6f7462aced3ea36143b53a90",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/fonts.ts",
+      "subsystem": "frontend",
+      "sha256": "8fc03e849f3a267870c037238a7d9231aa1610ddfdc6778f4c6a7110e34a5812",
+      "physical_lines": 11,
+      "inventory_sha256": "8fc03e849f3a267870c037238a7d9231aa1610ddfdc6778f4c6a7110e34a5812",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/glacier.css",
+      "subsystem": "frontend",
+      "sha256": "7354e969ca67653f4ce8cfde42519efacb6accb1a96c37b2571348ce9e023b50",
+      "physical_lines": 594,
+      "inventory_sha256": "7354e969ca67653f4ce8cfde42519efacb6accb1a96c37b2571348ce9e023b50",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/lazyChunk.ts",
+      "subsystem": "frontend",
+      "sha256": "3052e25a13210e18ab1981bd4655250686e4f7f725bfb5e47b659e1bfa43f1d7",
+      "physical_lines": 69,
+      "inventory_sha256": "3052e25a13210e18ab1981bd4655250686e4f7f725bfb5e47b659e1bfa43f1d7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/legacy.css",
+      "subsystem": "frontend",
+      "sha256": "11657822fd8308726e9d7810bb10bfc00c909acdfcbb496c1304e15e58d9b91b",
+      "physical_lines": 4,
+      "inventory_sha256": "11657822fd8308726e9d7810bb10bfc00c909acdfcbb496c1304e15e58d9b91b",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/links.ts",
+      "subsystem": "frontend",
+      "sha256": "19a94e49ce7b0b6098c2f5bd01ce7053f2a6d7c057a3b5a0c278d20c4b6ddf5f",
+      "physical_lines": 54,
+      "inventory_sha256": "19a94e49ce7b0b6098c2f5bd01ce7053f2a6d7c057a3b5a0c278d20c4b6ddf5f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/live.css",
+      "subsystem": "frontend",
+      "sha256": "85464bcee6113246e07dd44c91f06e6184dbff4c9e991d74f73d5aab0b14a0f1",
+      "physical_lines": 650,
+      "inventory_sha256": "85464bcee6113246e07dd44c91f06e6184dbff4c9e991d74f73d5aab0b14a0f1",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/liveRoot.tsx",
+      "subsystem": "frontend",
+      "sha256": "f257829f4b831f3ea284f39707340acaac3c3c01a525b07209fe2d80c44b745a",
+      "physical_lines": 196,
+      "inventory_sha256": "f257829f4b831f3ea284f39707340acaac3c3c01a525b07209fe2d80c44b745a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/m4.css",
+      "subsystem": "frontend",
+      "sha256": "529dd27112cc242986349ea30a21602aec7d0eef383be058cf2948489877e81f",
+      "physical_lines": 283,
+      "inventory_sha256": "529dd27112cc242986349ea30a21602aec7d0eef383be058cf2948489877e81f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/main.tsx",
+      "subsystem": "frontend",
+      "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+      "physical_lines": 6,
+      "inventory_sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/product.css",
+      "subsystem": "frontend",
+      "sha256": "b5762eede6306811a96a742c6e588f2f584a752fb4774f54eb6851df498d94d0",
+      "physical_lines": 2242,
+      "inventory_sha256": "b5762eede6306811a96a742c6e588f2f584a752fb4774f54eb6851df498d94d0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/protectionExpiry.ts",
+      "subsystem": "frontend",
+      "sha256": "c009d6edb4d9dcf29cd3b21d0fd13a4c124ba8ecff4c45df73b7d35825b6d63f",
+      "physical_lines": 41,
+      "inventory_sha256": "c009d6edb4d9dcf29cd3b21d0fd13a4c124ba8ecff4c45df73b7d35825b6d63f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/styles.css",
+      "subsystem": "frontend",
+      "sha256": "d0c2905cae7eeaf5ecb972650543579fcee884c86316fbcdbc6153cc7c2b3ca7",
+      "physical_lines": 1521,
+      "inventory_sha256": "d0c2905cae7eeaf5ecb972650543579fcee884c86316fbcdbc6153cc7c2b3ca7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/telemetryExpiry.ts",
+      "subsystem": "frontend",
+      "sha256": "b322001c8515d0ae8fd67e9667a96989f85fe93302ef4bc21c0ca5d6b4cb2886",
+      "physical_lines": 17,
+      "inventory_sha256": "b322001c8515d0ae8fd67e9667a96989f85fe93302ef4bc21c0ca5d6b4cb2886",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/time.ts",
+      "subsystem": "frontend",
+      "sha256": "1d087f47000eb8eb53d651b64962c475c2dec4542754a632a1565837f9f3de49",
+      "physical_lines": 17,
+      "inventory_sha256": "1d087f47000eb8eb53d651b64962c475c2dec4542754a632a1565837f9f3de49",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/tokens.css",
+      "subsystem": "frontend",
+      "sha256": "f8cf9373929b79a12495c701578c458e0f60fbd41345a055dfbc7e625ca166e0",
+      "physical_lines": 13,
+      "inventory_sha256": "f8cf9373929b79a12495c701578c458e0f60fbd41345a055dfbc7e625ca166e0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/useOwnerTelemetry.ts",
+      "subsystem": "frontend",
+      "sha256": "a79c8e9c24c303e80c5b56151a3c5d1a239eba3755ca5b82887e25e56b05756a",
+      "physical_lines": 74,
+      "inventory_sha256": "a79c8e9c24c303e80c5b56151a3c5d1a239eba3755ca5b82887e25e56b05756a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Activity.tsx",
+      "subsystem": "frontend",
+      "sha256": "a9b544aa68468badb45d7d5a17e48cfb808ca52ea20a9cc1bc1d134cc510d069",
+      "physical_lines": 234,
+      "inventory_sha256": "a9b544aa68468badb45d7d5a17e48cfb808ca52ea20a9cc1bc1d134cc510d069",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Diagnostics.tsx",
+      "subsystem": "frontend",
+      "sha256": "abe2573676ebcff42ff81331e2f20bb8fdeff2bbb94397a592ceeeb464dfbd14",
+      "physical_lines": 297,
+      "inventory_sha256": "abe2573676ebcff42ff81331e2f20bb8fdeff2bbb94397a592ceeeb464dfbd14",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Evidence.tsx",
+      "subsystem": "frontend",
+      "sha256": "378a2c3661261e785afc67ffdaba95c477d0ce9828e7cc080545e3b6d21decd2",
+      "physical_lines": 1225,
+      "inventory_sha256": "378a2c3661261e785afc67ffdaba95c477d0ce9828e7cc080545e3b6d21decd2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/GraphView.tsx",
+      "subsystem": "frontend",
+      "sha256": "cd94a075a7d7401396d12f59c82ee887d696de5390df5ac4e1142f64caecd8c3",
+      "physical_lines": 906,
+      "inventory_sha256": "cd94a075a7d7401396d12f59c82ee887d696de5390df5ac4e1142f64caecd8c3",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Knowledge.tsx",
+      "subsystem": "frontend",
+      "sha256": "d84582146875f36b976e0c3c1801e76cd263c299a111e4241fbe9ace4aae717f",
+      "physical_lines": 266,
+      "inventory_sha256": "d84582146875f36b976e0c3c1801e76cd263c299a111e4241fbe9ace4aae717f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/LiveReads.tsx",
+      "subsystem": "frontend",
+      "sha256": "39e215cf29c9fe996f426e54d88eb6e6de092a7e34f7e830a37ac539408b6fc1",
+      "physical_lines": 1278,
+      "inventory_sha256": "39e215cf29c9fe996f426e54d88eb6e6de092a7e34f7e830a37ac539408b6fc1",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/LiveSystem.tsx",
+      "subsystem": "frontend",
+      "sha256": "20baa805c1fa437705ed6323f92869d92249bcf3bdfbd1095f47fba3a9464c68",
+      "physical_lines": 263,
+      "inventory_sha256": "20baa805c1fa437705ed6323f92869d92249bcf3bdfbd1095f47fba3a9464c68",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Luffy.tsx",
+      "subsystem": "frontend",
+      "sha256": "1f1549a035d9e39ea15eb63f9ac3f1f7ec2105eb9d6976160f0c9393a88829ac",
+      "physical_lines": 370,
+      "inventory_sha256": "1f1549a035d9e39ea15eb63f9ac3f1f7ec2105eb9d6976160f0c9393a88829ac",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Operations.tsx",
+      "subsystem": "frontend",
+      "sha256": "34bed1517329d943eb50c0a4ab5ffb0cb4dbbd4aa9e097077c6f6666248f0328",
+      "physical_lines": 339,
+      "inventory_sha256": "34bed1517329d943eb50c0a4ab5ffb0cb4dbbd4aa9e097077c6f6666248f0328",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/OperationsLog.tsx",
+      "subsystem": "frontend",
+      "sha256": "80cb41d8140209e8e1ad3d78e135d44e753c28d54beb9fe1bacf564b8d4c2898",
+      "physical_lines": 180,
+      "inventory_sha256": "80cb41d8140209e8e1ad3d78e135d44e753c28d54beb9fe1bacf564b8d4c2898",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Overview.tsx",
+      "subsystem": "frontend",
+      "sha256": "3d969ca07df87e8265fbac6dcf99cac4d78a7966877bee0f87747f6f24cd9c3b",
+      "physical_lines": 634,
+      "inventory_sha256": "b5dbb4541882f225b4baaee59b602d3fb9f31bd24d05714bb7fd6f7f8c46a4df",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "frontend/src/views/Research.tsx",
+      "subsystem": "frontend",
+      "sha256": "c4d969d31e8b6ca12e2ceb48333b92c02a920e3a0ffaa79e6ebc38f8779ecef1",
+      "physical_lines": 268,
+      "inventory_sha256": "c4d969d31e8b6ca12e2ceb48333b92c02a920e3a0ffaa79e6ebc38f8779ecef1",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Routes.tsx",
+      "subsystem": "frontend",
+      "sha256": "2c6c90d0b9bb80e02972eedff16735c6af5209418ba37be6a5c4606cd03cc766",
+      "physical_lines": 573,
+      "inventory_sha256": "2c6c90d0b9bb80e02972eedff16735c6af5209418ba37be6a5c4606cd03cc766",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Strategies.tsx",
+      "subsystem": "frontend",
+      "sha256": "44f427af37252c09e3f143fdf207e769ae31139bd8e6c94d21597dfcb4dfcb69",
+      "physical_lines": 152,
+      "inventory_sha256": "44f427af37252c09e3f143fdf207e769ae31139bd8e6c94d21597dfcb4dfcb69",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Tracker.tsx",
+      "subsystem": "frontend",
+      "sha256": "ec522b9b9af31905a79d601c80375ce5351896597c1269cbfbf3cb7b8c47c979",
+      "physical_lines": 101,
+      "inventory_sha256": "ec522b9b9af31905a79d601c80375ce5351896597c1269cbfbf3cb7b8c47c979",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/Trades.tsx",
+      "subsystem": "frontend",
+      "sha256": "2cf1614b0de30eda9c57fb50064158432b3b45d3d4bd5aa281c0ff10d334759d",
+      "physical_lines": 200,
+      "inventory_sha256": "2cf1614b0de30eda9c57fb50064158432b3b45d3d4bd5aa281c0ff10d334759d",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/graphGeometry.ts",
+      "subsystem": "frontend",
+      "sha256": "4ee344d331bcefa8bbadde9d610950d98090979171d61bc14d1b46ee3207eac3",
+      "physical_lines": 339,
+      "inventory_sha256": "4ee344d331bcefa8bbadde9d610950d98090979171d61bc14d1b46ee3207eac3",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/graphPath.ts",
+      "subsystem": "frontend",
+      "sha256": "e4b6d2707e673a361735515867744aa5b44aa4b909d5753d18f8f1b872a4397c",
+      "physical_lines": 36,
+      "inventory_sha256": "e4b6d2707e673a361735515867744aa5b44aa4b909d5753d18f8f1b872a4397c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/graphScope.ts",
+      "subsystem": "frontend",
+      "sha256": "b08806d14f0b2b326770a81d94708899b0b84a783c01337d01ba4a8d8895231a",
+      "physical_lines": 35,
+      "inventory_sha256": "b08806d14f0b2b326770a81d94708899b0b84a783c01337d01ba4a8d8895231a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/views/tracker.css",
+      "subsystem": "frontend",
+      "sha256": "463b61f84b52e185c2de1f46e5de1a7a6f523ff2fdea94a9a2d0580b250e7007",
+      "physical_lines": 15,
+      "inventory_sha256": "463b61f84b52e185c2de1f46e5de1a7a6f523ff2fdea94a9a2d0580b250e7007",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/src/widgets.css",
+      "subsystem": "frontend",
+      "sha256": "bede91d9d960acb6fb257bbfbc1814e9777c58299eecae0bc215b5382c1c460f",
+      "physical_lines": 34,
+      "inventory_sha256": "bede91d9d960acb6fb257bbfbc1814e9777c58299eecae0bc215b5382c1c460f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/acc03.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "54ef6fd9ee1ce27d7133b19ec13a26deab706578d74c724a192e3de7300b1fe2",
+      "physical_lines": 53,
+      "inventory_sha256": "54ef6fd9ee1ce27d7133b19ec13a26deab706578d74c724a192e3de7300b1fe2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/accounting-truth.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "06b785677af578fe384afaec94abcf438c5beeafe857a1d4a912b79abedf8e1a",
+      "physical_lines": 34,
+      "inventory_sha256": "06b785677af578fe384afaec94abcf438c5beeafe857a1d4a912b79abedf8e1a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/close-trade-deferred.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "8d5f7b4ad21bf72eafbd4df8601456e899a5b2f466fa3f4a85e61442411f71c0",
+      "physical_lines": 47,
+      "inventory_sha256": "8d5f7b4ad21bf72eafbd4df8601456e899a5b2f466fa3f4a85e61442411f71c0",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/corrections.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "55e6fa2c6a4be2b09ebb95cba9498841ca674ad8cc45c67edfc22822c95a7f3f",
+      "physical_lines": 536,
+      "inventory_sha256": "55e6fa2c6a4be2b09ebb95cba9498841ca674ad8cc45c67edfc22822c95a7f3f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/evidencePath.ts",
+      "subsystem": "frontend",
+      "sha256": "1b600f65d76af7abf8b136db7175d7636487a41202ac3947a0b86417a1073d0a",
+      "physical_lines": 12,
+      "inventory_sha256": "1b600f65d76af7abf8b136db7175d7636487a41202ac3947a0b86417a1073d0a",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/glacier-corrections.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "407a053ae4582ef621a4faddfd54a8298aa48c4e1a3cfb3e49a687a17353ce1c",
+      "physical_lines": 128,
+      "inventory_sha256": "407a053ae4582ef621a4faddfd54a8298aa48c4e1a3cfb3e49a687a17353ce1c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/glacier-v2.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "580a3fd839c4edfe6c66031a12307e0f9c7316c0e2794fe8566cc6a1dc598859",
+      "physical_lines": 135,
+      "inventory_sha256": "580a3fd839c4edfe6c66031a12307e0f9c7316c0e2794fe8566cc6a1dc598859",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/gui01-readonly.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "c242c3e7a44c73bd4f82467fd7a0312dd3af4862e30472512ec93e31b9f5ec47",
+      "physical_lines": 14,
+      "inventory_sha256": "c242c3e7a44c73bd4f82467fd7a0312dd3af4862e30472512ec93e31b9f5ec47",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/gui01.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "5ee7e01d1d4ffd2c260be823b461b263379b68d1aa5dc99850fcdec704319e0f",
+      "physical_lines": 53,
+      "inventory_sha256": "5ee7e01d1d4ffd2c260be823b461b263379b68d1aa5dc99850fcdec704319e0f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/live-perf.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "b680bcf9b5939434a7c9e88267f24b008fd700980fcc5acb8e39368c5dd96900",
+      "physical_lines": 250,
+      "inventory_sha256": "b680bcf9b5939434a7c9e88267f24b008fd700980fcc5acb8e39368c5dd96900",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/live.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "cdb117a2850d77e978d74f53f4c16e0d7b3beeb6f549e4cc288a319a4a4b6e86",
+      "physical_lines": 432,
+      "inventory_sha256": "cdb117a2850d77e978d74f53f4c16e0d7b3beeb6f549e4cc288a319a4a4b6e86",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/liveHelpers.ts",
+      "subsystem": "frontend",
+      "sha256": "65eff69b4229db827106b8917a04d2e27e8a80721335fdcb4064051b52b580c6",
+      "physical_lines": 19,
+      "inventory_sha256": "65eff69b4229db827106b8917a04d2e27e8a80721335fdcb4064051b52b580c6",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/m1-routes.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "9d4904a3274fefbe32ae3f5f9b4da26bccfe515e79c4bd8b9a1c5a3560f73076",
+      "physical_lines": 294,
+      "inventory_sha256": "9d4904a3274fefbe32ae3f5f9b4da26bccfe515e79c4bd8b9a1c5a3560f73076",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/m2-routes.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "055a765f78b93158976c08c821342901bbf5d8aed885dc10530e802c7ab3d871",
+      "physical_lines": 416,
+      "inventory_sha256": "055a765f78b93158976c08c821342901bbf5d8aed885dc10530e802c7ab3d871",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/m3-capture.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "70c697002442a2e81f047e5ec8aa2e5ab64a3d7cddb3f8a6ccf554544dc47668",
+      "physical_lines": 335,
+      "inventory_sha256": "70c697002442a2e81f047e5ec8aa2e5ab64a3d7cddb3f8a6ccf554544dc47668",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/own04.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "d7bfe91fd7079cf765ee4a762ae7dc34ff850eb818672a1dbb6797b3f815b73f",
+      "physical_lines": 36,
+      "inventory_sha256": "d7bfe91fd7079cf765ee4a762ae7dc34ff850eb818672a1dbb6797b3f815b73f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/performance.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "948adfb153f206c0a5e26acebdd32dfa902fa4d5b37a46fd49cc1fa31a089325",
+      "physical_lines": 205,
+      "inventory_sha256": "948adfb153f206c0a5e26acebdd32dfa902fa4d5b37a46fd49cc1fa31a089325",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/preview.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "1137ad7c25f1ce3b750af5ba0304e075f3a868cfe494ca896c034831e8b9bbe5",
+      "physical_lines": 417,
+      "inventory_sha256": "1137ad7c25f1ce3b750af5ba0304e075f3a868cfe494ca896c034831e8b9bbe5",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/protection-r1.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "cae7b5588e8bcd4104a013bf8e91e438429113d1af75d60d741b50ab67e30438",
+      "physical_lines": 58,
+      "inventory_sha256": "cae7b5588e8bcd4104a013bf8e91e438429113d1af75d60d741b50ab67e30438",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/protection-r2.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "a8c76d581a5705a9650f9caa839c355d51a4b8800a1810b7c61b74030a241ea6",
+      "physical_lines": 68,
+      "inventory_sha256": "a8c76d581a5705a9650f9caa839c355d51a4b8800a1810b7c61b74030a241ea6",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/root-cutover.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "898074f8e85a59f93df241bd3d5fdada4bd51ed96c8b75ee53f8cd22a5481acf",
+      "physical_lines": 82,
+      "inventory_sha256": "898074f8e85a59f93df241bd3d5fdada4bd51ed96c8b75ee53f8cd22a5481acf",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/stage8.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "c40faaf564e6c27b20afaf0e52f873b9e4ab4869077f67fae720ab97d6d81064",
+      "physical_lines": 54,
+      "inventory_sha256": "c40faaf564e6c27b20afaf0e52f873b9e4ab4869077f67fae720ab97d6d81064",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/trade-history.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "ee04d4217e813d89d7008ae3955b4e1d25d017449aa5d38d86b7e9d37a5669e8",
+      "physical_lines": 325,
+      "inventory_sha256": "ee04d4217e813d89d7008ae3955b4e1d25d017449aa5d38d86b7e9d37a5669e8",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/v2-controls.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "b2ba9c6231188987ad5d2edc51274740eb5d768b6a9e02bd77a69833b5cf528f",
+      "physical_lines": 78,
+      "inventory_sha256": "b2ba9c6231188987ad5d2edc51274740eb5d768b6a9e02bd77a69833b5cf528f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/v2.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "4415aede1e6fb3f8a0376004c352227fd1fb695d589f421c2d0432a66493aa04",
+      "physical_lines": 179,
+      "inventory_sha256": "4415aede1e6fb3f8a0376004c352227fd1fb695d589f421c2d0432a66493aa04",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/browser/v21.spec.ts",
+      "subsystem": "frontend",
+      "sha256": "72ea7d094c0327d7c80e14f0c2fb2d4d45641da565edddf05e85d8523435e03f",
+      "physical_lines": 333,
+      "inventory_sha256": "72ea7d094c0327d7c80e14f0c2fb2d4d45641da565edddf05e85d8523435e03f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/closeTradeDeferred.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "649dd269f7c5f770b5c228cc6f69feb96edb5c52283bb353d26d806d05d30959",
+      "physical_lines": 90,
+      "inventory_sha256": "649dd269f7c5f770b5c228cc6f69feb96edb5c52283bb353d26d806d05d30959",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/components.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "b4b67cdc16b862973aa4f379b90046747e15dbce0343db8c714ccad0b8c7053f",
+      "physical_lines": 62,
+      "inventory_sha256": "b4b67cdc16b862973aa4f379b90046747e15dbce0343db8c714ccad0b8c7053f",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/contracts.test.ts",
+      "subsystem": "frontend",
+      "sha256": "d78fe9a7f67222471fb18292f8f8ffa1e763957b5ecb650b564940e2e44be3f2",
+      "physical_lines": 74,
+      "inventory_sha256": "d78fe9a7f67222471fb18292f8f8ffa1e763957b5ecb650b564940e2e44be3f2",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/diagnosticCorrections.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "5f9909cbf9cf0215386d50ed1eaf93660ca7a94dff71e815552e600a95959924",
+      "physical_lines": 43,
+      "inventory_sha256": "5f9909cbf9cf0215386d50ed1eaf93660ca7a94dff71e815552e600a95959924",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/fixtures/glacier-readonly.json",
+      "subsystem": "frontend",
+      "sha256": "f602aacfe1a7c4c8544a13b944cd0e8807188ad46fa47bef1d71f0991414a6c5",
+      "physical_lines": 2436,
+      "inventory_sha256": "f602aacfe1a7c4c8544a13b944cd0e8807188ad46fa47bef1d71f0991414a6c5",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/glacierTruth.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "bebe1295240083dcd262ba971cc6e4fa3d2b571dab6f9e3b7341653aa6b87e9c",
+      "physical_lines": 133,
+      "inventory_sha256": "bebe1295240083dcd262ba971cc6e4fa3d2b571dab6f9e3b7341653aa6b87e9c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/glacierV2.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "75576715d1e6febc24a5609a05d92791d21dd9992df9493ad016dac4a18cec95",
+      "physical_lines": 36,
+      "inventory_sha256": "75576715d1e6febc24a5609a05d92791d21dd9992df9493ad016dac4a18cec95",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/graphPath.test.ts",
+      "subsystem": "frontend",
+      "sha256": "75cfb575a06560cceac0bc2bb34d4a6cffe2aa0915700dd9aaf2be78f47a33ea",
+      "physical_lines": 31,
+      "inventory_sha256": "75cfb575a06560cceac0bc2bb34d4a6cffe2aa0915700dd9aaf2be78f47a33ea",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/harness/index.html",
+      "subsystem": "frontend",
+      "sha256": "f65c5c09e0aa330d7e8ba98d27fa8a2a7f45c05fc6160ca0db61978fdb3b97ab",
+      "physical_lines": 12,
+      "inventory_sha256": "f65c5c09e0aa330d7e8ba98d27fa8a2a7f45c05fc6160ca0db61978fdb3b97ab",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/harness/main.tsx",
+      "subsystem": "frontend",
+      "sha256": "e8997fe36ed09ec456405d9c5fbb153562246c817f998bfa82f65eb60065399e",
+      "physical_lines": 140,
+      "inventory_sha256": "e8997fe36ed09ec456405d9c5fbb153562246c817f998bfa82f65eb60065399e",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/health.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "8dfd08d7e92d905437a5ceec9687344170ca56d3ea20679b3a295a502bee878c",
+      "physical_lines": 35,
+      "inventory_sha256": "8dfd08d7e92d905437a5ceec9687344170ca56d3ea20679b3a295a502bee878c",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/live.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "eb8db3a3aa797e5552744d92db830cc7e7a995a11b99590c70e465da7144c42f",
+      "physical_lines": 320,
+      "inventory_sha256": "7f953890320fedc416a764955254758887283b10eacd826da6bcff71f6bf5722",
+      "changed_since_inventory": true
+    },
+    {
+      "path": "frontend/tests/m1.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "05a757697818e9a8d63f0be3bafdbacecdcb43f7eb5f9baad1307ac7e75ec746",
+      "physical_lines": 238,
+      "inventory_sha256": "05a757697818e9a8d63f0be3bafdbacecdcb43f7eb5f9baad1307ac7e75ec746",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/m2.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "cb47af67f4337e1ef89533813aa8783b0f0d46a3a34c5634eae0434220fcf5ba",
+      "physical_lines": 858,
+      "inventory_sha256": "cb47af67f4337e1ef89533813aa8783b0f0d46a3a34c5634eae0434220fcf5ba",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/own04.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "8e5376c5c630ec3b7b919d3e3684d894ac52265ba32dea072548661a2cdb18c4",
+      "physical_lines": 97,
+      "inventory_sha256": "8e5376c5c630ec3b7b919d3e3684d894ac52265ba32dea072548661a2cdb18c4",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/protectionSnapshot.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "4518c655f7ce860e11ce5accf6afe5d5475bf2f0c9ffffdb7fe8e9926765975b",
+      "physical_lines": 257,
+      "inventory_sha256": "4518c655f7ce860e11ce5accf6afe5d5475bf2f0c9ffffdb7fe8e9926765975b",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/setup.ts",
+      "subsystem": "frontend",
+      "sha256": "a0da3078a93c5dece41ae61d24accf6e9a9936cfeaecac20f9f9768cd0cd00d6",
+      "physical_lines": 14,
+      "inventory_sha256": "a0da3078a93c5dece41ae61d24accf6e9a9936cfeaecac20f9f9768cd0cd00d6",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/stage8.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "e8a7e5c9abfcfe16a09857135ebc98c8df5a486756b03f0d63d7a110df5e2337",
+      "physical_lines": 87,
+      "inventory_sha256": "e8a7e5c9abfcfe16a09857135ebc98c8df5a486756b03f0d63d7a110df5e2337",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/tracker-phase.test.ts",
+      "subsystem": "frontend",
+      "sha256": "85ad1d1739bc08281515990ca3d5b4758b5e7ee125df56bab4f2f7b5689e73c7",
+      "physical_lines": 29,
+      "inventory_sha256": "85ad1d1739bc08281515990ca3d5b4758b5e7ee125df56bab4f2f7b5689e73c7",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/tradeHistory.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "440414e48cfa6e1c2c5e280ed98389d617561aa9408ef83b537aa364c8b89091",
+      "physical_lines": 519,
+      "inventory_sha256": "440414e48cfa6e1c2c5e280ed98389d617561aa9408ef83b537aa364c8b89091",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/v21.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "d409986b7838bfa8c065155fd9d2d852cae6a5c90f1fb378b2051071e5e807ba",
+      "physical_lines": 116,
+      "inventory_sha256": "d409986b7838bfa8c065155fd9d2d852cae6a5c90f1fb378b2051071e5e807ba",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tests/workspace.test.tsx",
+      "subsystem": "frontend",
+      "sha256": "0233d48d8368c41f9f87dac20750047c41d18fe870dbf341b45e3c2df3ca0396",
+      "physical_lines": 71,
+      "inventory_sha256": "0233d48d8368c41f9f87dac20750047c41d18fe870dbf341b45e3c2df3ca0396",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "subsystem": "frontend",
+      "sha256": "1c9cd3bd14e83b63deef3e437b7f0da270f98b8a7d95a7ba5bb7a6f963038f97",
+      "physical_lines": 21,
+      "inventory_sha256": "1c9cd3bd14e83b63deef3e437b7f0da270f98b8a7d95a7ba5bb7a6f963038f97",
+      "changed_since_inventory": false
+    },
+    {
+      "path": "frontend/vite.config.ts",
+      "subsystem": "frontend",
+      "sha256": "6e0acab705d450b7fd60270f8e1935da6a1d5d2e6041ffc9c7d1e8691fd3aec1",
+      "physical_lines": 20,
+      "inventory_sha256": "6e0acab705d450b7fd60270f8e1935da6a1d5d2e6041ffc9c7d1e8691fd3aec1",
+      "changed_since_inventory": false
+    }
+  ]
+}

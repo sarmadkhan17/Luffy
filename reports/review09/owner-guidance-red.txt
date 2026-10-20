@@ -1,0 +1,28 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_serious_recovery_guidance_names_existing_control_page __________
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-205/test_serious_recovery_guidance0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78b801540d40>
+
+    def test_serious_recovery_guidance_names_existing_control_page(tmp_path, monkeypatch):
+        from trader.core.journal import Journal
+        j = Journal(tmp_path / 'j.db')
+        j.kv_set('supervisor_status', json.dumps({'fixture': 'exact recovery context'}))
+        monkeypatch.setattr('trader.dashboard.owner_api.read_supervisor', lambda *a: ({
+            'needs_owner': True, 'reasons': ['fixture_recovery'],
+            'observed_at': '2026-10-20T00:00:00+00:00', 'freshness': 'fresh'}, None))
+        before = j._conn().total_changes
+        item = A.items(j, {}, now_ms=1792454400000)['items'][0]
+        assert item['decision_operation'] == 'resume'
+>       assert item['required_owner_action'] == 'Inspect evidence and submit guarded resume in Trades'
+E       AssertionError: assert 'Inspect evid...in Operations' == 'Inspect evid...ume in Trades'
+E         
+E         Skipping 36 identical leading characters in diff, use -v to show
+E         - resume in Trades
+E         + resume in Operations
+
+tests/test_own03_approval_boundary.py:84: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_own03_approval_boundary.py::test_serious_recovery_guidance_names_existing_control_page
+1 failed in 4.07s

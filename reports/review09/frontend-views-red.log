@@ -1,0 +1,1174 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run --run tests/review09.test.tsx
+
+
+ RUN  v5.0.2 /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend
+
+ ❯ tests/review09.test.tsx (5 tests | 5 failed) 5523ms
+   × opens recorded evidence at #trades?trade=trade%20one 1186ms
+   × opens recorded evidence at #strategies?id=strategy%20one 1064ms
+   × opens recorded evidence at #research?combo=combo%20one 1057ms
+   × updates an evidence destination within the same route 1033ms
+   × disables owner controls after a cached AVAILABLE health read fails to refresh 1181ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review09.test.tsx > opens recorded evidence at #trades?trade=trade%20one
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'trades/trade%20one/lineage', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "trades/trade%20one/lineage",
+-   Any<AbortSignal>,
++   "bootstrap",
++   AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"gl-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mTrades[0m
+        [36m</h1>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-state"[39m
+          [33mstyle[39m=[32m"color: rgb(141, 159, 178);"[39m
+        [36m>[39m
+          [36m<i />[39m
+          [36m<span[39m
+            [33mdata-testid[39m=[32m"runtime-labels"[39m
+            [33mtitle[39m=[32m"Source UNAVAILABLE · snapshot UNAVAILABLE · observed at UNAVAILABLE · freshness UNAVAILABLE"[39m
+          [36m>[39m
+            [0mdashboard mode UNKNOWN[0m
+            [0m · [0m
+            [0maccount environment unavailable[0m
+            [0m · Kernel [0m
+            [0mUNKNOWN[0m
+            [0m · Control [0m
+            [0mOBSERVATION PREVIEW[0m
+          [36m</span>[39m
+        [36m</span>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Owner controls"[39m
+          [33mclass[39m=[32m"gl-ownr"[39m
+          [33mrole[39m=[32m"group"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"state"[39m
+          [36m>[39m
+            [36m<i[39m
+              [33mclass[39m=[32m"gl-blinkdot"[39m
+              [33mstyle[39m=[32m"background: rgb(141, 159, 178); box-shadow: 0 0 8px #8d9fb2;"[39m
+            [36m/>[39m
+            [36m<span>[39m
+              [36m<small>[39m
+                [0mOwner controls[0m
+              [36m</small>[39m
+              [36m<b[39m
+                [33mclass[39m=[32m"m"[39m
+                [33mdata-testid[39m=[32m"control-state"[39m
+                [33mstyle[39m=[32m"color: rgb(141, 159, 178);"[39m
+              [36m>[39m
+                [0mOBSERVATION PREVIEW[0m
+              [36m</b>[39m
+            [36m</span>[39m
+          [36m</span>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Resume"[39m
+            [33mclass[39m=[32m"gl-oc resume"[39m
+            [33mdata-op[39m=[32m"resume"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Controls are unavailable: this GUI is read-only."[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-play"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"15"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"15"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mResume[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Freeze"[39m
+            [33mclass[39m=[32m"gl-oc freeze"[39m
+            [33mdata-op[39m=[32m"freeze"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Controls are unavailable: this GUI is read-only."[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-snowflake"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"15"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"15"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m10 20-1.25-2.5L6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M10 4 8.75 6.5 6 6"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m14 20 1.25-2.5L18 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m14 4 1.25 2.5L18 6"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m17 21-3-6h-4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m17 3-3 6 1.5 3"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 12h6.5L10 9"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m20 10-1.5 2 1.5 2"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 12h-6.5L14 15"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m4 10 1.5 2L4 14"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m7 21 3-6-1.5-3"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m7 3 3 6h4"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mFreeze[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Halt"[39m
+            [33mclass[39m=[32m"gl-oc halt"[39m
+            [33mdata-op[39m=[32m"halt"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Controls are unavailable: this GUI is read-only."[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-pause"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"15"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"15"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<rect[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mrx[39m=[32m"1"[39m
+                [33mwidth[39m=[32m"5"[39m
+                [33mx[39m=[32m"14"[39m
+                [33my[39m=[32m"3"[39m
+              [36m/>[39m
+              [36m<rect[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mrx[39m=[32m"1"[39m
+                [33mwidth[39m=[32m"5"[39m
+                [33mx[39m=[32m"5"[39m
+                [33my[39m=[32m"3"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mHalt[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"PANIC"[39m
+            [33mclass[39m=[32m"gl-oc panic"[39m
+            [33mdata-op[39m=[32m"panic"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Controls are unavailable: this GUI is read-only."[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-octagon-alert lucide-alert-octagon"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"15"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"15"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 16h.01"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 8v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mPANIC[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mstyle[39m=[32m"flex: 1 1 0%;"[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"m"[39m
+          [33mstyle[39m=[32m"font-size: 13px; color: var(--txt2);"[39m
+        [36m>[39m
+          [0mTue 20 Oct · 02:44 UTC[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-chip"[39m
+          [33mtitle[39m=[32m"Signed in as unknown"[39m
+        [36m>[39m
+          [0mLIVE DATA · luffy.db[0m
+        [36m</span>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Trade log"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-arrow-left-right"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M8 3 4 7l4 4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M4 7h16"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m16 21 4-4-4-4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 17H4"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mTrade log[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+          [36m<span[39m
+            [33mstyle[39m=[32m"font-size: 12px; color: rgb(141, 159, 178);"[39m
+          [36m>[39m
+            [0mClick a trade to open its story[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"gl-empty"[39m
+        [36m>[39m
+          [0mTrade history is unavailable in this mode.[0m
+        [36m</p>[39m
+      [36m</section>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ tests/review09.test.tsx:29:41
+     27|   const ownerRead = vi.fn(async () => ({}));
+     28|   setup(<View />, { ownerRead });
+     29|   await waitFor(() => expect(ownerRead).toHaveBeenCalledWith(path, exp…
+       |                                         ^
+     30|   expect(screen.getByTestId(testid)).toBeVisible();
+     31|   expect(screen.getByTestId(testid).querySelector('a[href="' + hash.sp…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../frontend-build/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/review09.test.tsx > opens recorded evidence at #strategies?id=strategy%20one
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'strategies/strategy%20one', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "strategies/strategy%20one",
+-   Any<AbortSignal>,
++   "strategies/board",
++   AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"gl-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mStrategies[0m
+        [36m</h1>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-state"[39m
+          [33mstyle[39m=[32m"color: rgb(141, 159, 178);"[39m
+        [36m>[39m
+          [0mVersioned authority · control [0m
+          [0mOBSERVATION PREVIEW[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mstyle[39m=[32m"flex: 1 1 0%;"[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"m"[39m
+          [33mstyle[39m=[32m"font-size: 13px; color: var(--txt2);"[39m
+        [36m>[39m
+          [0mTue 20 Oct · 02:44 UTC[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-chip"[39m
+          [33mtitle[39m=[32m"Signed in as unknown"[39m
+        [36m>[39m
+          [0mLIVE DATA · luffy.db[0m
+        [36m</span>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Versioned strategy authority"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-layers lucide-layers-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mVersioned strategy authority[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0mStrategy → StrategyVersion → validation → install → probation → owner approval → Strategy Governor[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"gl-empty"[39m
+        [36m>[39m
+          [0mVersioned authority UNAVAILABLE.[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"gl-note"[39m
+        [36m>[39m
+          [0mExact-version authority is separate from journal performance. Registry labels and ACTIVE lifecycle alone never authorize an order. Risk has final entry authority; execution permission fails closed.[0m
+        [36m</p>[39m
+      [36m</section>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Journal performance and legacy registry"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-layers lucide-layers-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mPERFORMANCE · registry records[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0m0 strategies · journal-booked trades per strategy id · P&L over the last 30 days[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+          [36m<span[39m
+            [33mstyle[39m=[32m"font-size: 12px; color: rgb(141, 159, 178);"[39m
+          [36m>[39m
+            [0mClick a strategy for its details[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"gl-tablewrap"[39m
+          [36m>[39m
+            [36m<table[39m
+              [33maria-label[39m=[32m"Strategy registry"[39m
+              [33mclass[39m=[32m"gl-table"[39m
+            [36m>[39m
+              [36m<thead>[39m
+                [36m<tr>[39m
+                  [36m<th[39m
+                    [33maria-sort[39m=[32m"none"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mscope[39m=[32m"col"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"gl-th "[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"gl-th-top"[39m
+                      [36m>[39m
+                        [36m<button[39m
+                          [33maria-label[39m=[32m"Sort by Strategy"[39m
+         ...
+ ❯ tests/review09.test.tsx:29:41
+     27|   const ownerRead = vi.fn(async () => ({}));
+     28|   setup(<View />, { ownerRead });
+     29|   await waitFor(() => expect(ownerRead).toHaveBeenCalledWith(path, exp…
+       |                                         ^
+     30|   expect(screen.getByTestId(testid)).toBeVisible();
+     31|   expect(screen.getByTestId(testid).querySelector('a[href="' + hash.sp…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../frontend-build/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/review09.test.tsx > opens recorded evidence at #research?combo=combo%20one
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'research/combos/combo%20one', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "research/combos/combo%20one",
+-   Any<AbortSignal>,
++   "research/board",
++   AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"gl-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mResearch[0m
+        [36m</h1>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-state blink"[39m
+          [33mstyle[39m=[32m"color: rgb(141, 159, 178);"[39m
+        [36m>[39m
+          [36m<i />[39m
+          [0mIdle[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mstyle[39m=[32m"flex: 1 1 0%;"[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"m"[39m
+          [33mstyle[39m=[32m"font-size: 13px; color: var(--txt2);"[39m
+        [36m>[39m
+          [0mTue 20 Oct · 02:44 UTC[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-chip"[39m
+          [33mtitle[39m=[32m"Signed in as unknown"[39m
+        [36m>[39m
+          [0mLIVE DATA · luffy.db[0m
+        [36m</span>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Discovery funnel"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-funnel lucide-filter"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mDiscovery funnel[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0mevery rule LUFFY has looked at · discovery evidence only[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+          [36m<span[39m
+            [33mstyle[39m=[32m"font-size: 12px; color: var(--txt2);"[39m
+          [36m>[39m
+            [0mreferee [0m
+            [0mUNAVAILABLE[0m
+            [0m · handoff [0m
+            [0mUNAVAILABLE[0m
+            [0m · held-out looks spent[0m
+            [0m [0m
+            [36m<b[39m
+              [33mclass[39m=[32m"m"[39m
+            [36m>[39m
+              [0munavailable[0m
+            [36m</b>[39m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"gl-funnel"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 100.94228131265169px; --to: 18%; animation-duration: 2.6s; animation-delay: 1.4s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 117.72712883823995px; --to: 38%; animation-duration: 4.2s; animation-delay: 4.04s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 72.08715838345468px; --to: 58%; animation-duration: 5.800000000000001s; animation-delay: 3.8s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 47.59312018571277px; --to: 78%; animation-duration: 7.4s; animation-delay: 3.62s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 54.88129154795821px; --to: 98%; animation-duration: 9s; animation-delay: 2.25s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 86.35433153951672px; --to: 18%; animation-duration: 2.6s; animation-delay: 4.87s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 129.85649467130952px; --to: 38%; animation-duration: 4.2s; animation-delay: 1.79s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 141.32320354542577px; --to: 58%; animation-duration: 5.800000000000001s; animation-delay: 5.06s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 99.48190355597762px; --to: 78%; animation-duration: 7.4s; animation-delay: 5.23s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 142.6041996412367px; --to: 98%; animation-duration: 9s; animation-delay: 3.9s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 48.84773662551441px; --to: 18%; animation-duration: 2.6s; animation-delay: 2.49s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [33mstyle[39m=[32m"top: 152.49551545847842px; --to: 38%; animation-duration: 4.2s; animation-delay: 0.86s;"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"gl-fdot"[39m
+              [...
+ ❯ tests/review09.test.tsx:29:41
+     27|   const ownerRead = vi.fn(async () => ({}));
+     28|   setup(<View />, { ownerRead });
+     29|   await waitFor(() => expect(ownerRead).toHaveBeenCalledWith(path, exp…
+       |                                         ^
+     30|   expect(screen.getByTestId(testid)).toBeVisible();
+     31|   expect(screen.getByTestId(testid).querySelector('a[href="' + hash.sp…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../frontend-build/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/review09.test.tsx > updates an evidence destination within the same route
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "strategies/first",
+-   Any<AbortSignal>,
++   "strategies/board",
++   AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"gl-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mStrategies[0m
+        [36m</h1>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-state"[39m
+          [33mstyle[39m=[32m"color: rgb(141, 159, 178);"[39m
+        [36m>[39m
+          [0mVersioned authority · control [0m
+          [0mOBSERVATION PREVIEW[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mstyle[39m=[32m"flex: 1 1 0%;"[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"m"[39m
+          [33mstyle[39m=[32m"font-size: 13px; color: var(--txt2);"[39m
+        [36m>[39m
+          [0mTue 20 Oct · 02:44 UTC[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"gl-chip"[39m
+          [33mtitle[39m=[32m"Signed in as unknown"[39m
+        [36m>[39m
+          [0mLIVE DATA · luffy.db[0m
+        [36m</span>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Versioned strategy authority"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-layers lucide-layers-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mVersioned strategy authority[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0mStrategy → StrategyVersion → validation → install → probation → owner approval → Strategy Governor[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"gl-empty"[39m
+        [36m>[39m
+          [0mVersioned authority UNAVAILABLE.[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"gl-note"[39m
+        [36m>[39m
+          [0mExact-version authority is separate from journal performance. Registry labels and ACTIVE lifecycle alone never authorize an order. Risk has final entry authority; execution permission fails closed.[0m
+        [36m</p>[39m
+      [36m</section>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Journal performance and legacy registry"[39m
+        [33mclass[39m=[32m"gl-card  pad"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gl-hd"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"gl-ic "[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-layers lucide-layers-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<h2>[39m
+            [0mPERFORMANCE · registry records[0m
+          [36m</h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0m0 strategies · journal-booked trades per strategy id · P&L over the last 30 days[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"fill"[39m
+          [36m/>[39m
+          [36m<span[39m
+            [33mstyle[39m=[32m"font-size: 12px; color: rgb(141, 159, 178);"[39m
+          [36m>[39m
+            [0mClick a strategy for its details[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"gl-tablewrap"[39m
+          [36m>[39m
+            [36m<table[39m
+              [33maria-label[39m=[32m"Strategy registry"[39m
+              [33mclass[39m=[32m"gl-table"[39m
+            [36m>[39m
+              [36m<thead>[39m
+                [36m<tr>[39m
+                  [36m<th[39m
+                    [33maria-sort[39m=[32m"none"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mscope[39m=[32m"col"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"gl-th "[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"gl-th-top"[39m
+                      [36m>[39m
+                        [36m<button[39m
+                          [33maria-label[39m=[32m"Sort by Strategy"[39m
+         ...
+ ❯ tests/review09.test.tsx:37:41
+     35|   const ownerRead = vi.fn(async () => ({}));
+     36|   setup(<Strategies />, { ownerRead });
+     37|   await waitFor(() => expect(ownerRead).toHaveBeenCalledWith("strategi…
+       |                                         ^
+     38|   history.replaceState(null, "", "#strategies?id=second");
+     39|   fireEvent(window, new HashChangeEvent("hashchange"));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../frontend-build/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/review09.test.tsx > disables owner controls after a cached AVAILABLE health read fails to refresh
+Error: expect(element).toBeDisabled()
+
+Received element is not disabled:
+  <button
+  aria-label="Freeze"
+  class="gl-oc freeze"
+  data-op="freeze"
+  title="Stop new entries, keep managing positions"
+  type="button"
+/>
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Owner controls"[39m
+        [33mclass[39m=[32m"gl-ownr"[39m
+        [33mrole[39m=[32m"group"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"state"[39m
+        [36m>[39m
+          [36m<i[39m
+            [33mclass[39m=[32m"gl-ping"[39m
+            [33mstyle[39m=[32m"background: rgb(61, 220, 151); box-shadow: 0 0 8px #3ddc97;"[39m
+          [36m/>[39m
+          [36m<span>[39m
+            [36m<small>[39m
+              [0mOwner controls[0m
+            [36m</small>[39m
+            [36m<b[39m
+              [33mclass[39m=[32m"m"[39m
+              [33mdata-testid[39m=[32m"control-state"[39m
+              [33mstyle[39m=[32m"color: rgb(61, 220, 151);"[39m
+            [36m>[39m
+              [0mACTIVE[0m
+            [36m</b>[39m
+          [36m</span>[39m
+        [36m</span>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Resume"[39m
+          [33mclass[39m=[32m"gl-oc resume"[39m
+          [33mdata-op[39m=[32m"resume"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtitle[39m=[32m"Owner Interface health read failed: health unavailable"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-play"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"15"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"15"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mResume[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Freeze"[39m
+          [33mclass[39m=[32m"gl-oc freeze"[39m
+          [33mdata-op[39m=[32m"freeze"[39m
+          [33mtitle[39m=[32m"Stop new entries, keep managing positions"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-snowflake"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"15"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"15"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m10 20-1.25-2.5L6 18"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M10 4 8.75 6.5 6 6"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m14 20 1.25-2.5L18 18"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m14 4 1.25 2.5L18 6"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m17 21-3-6h-4"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m17 3-3 6 1.5 3"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M2 12h6.5L10 9"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m20 10-1.5 2 1.5 2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M22 12h-6.5L14 15"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m4 10 1.5 2L4 14"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m7 21 3-6-1.5-3"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m7 3 3 6h4"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mFreeze[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Halt"[39m
+          [33mclass[39m=[32m"gl-oc halt"[39m
+          [33mdata-op[39m=[32m"halt"[39m
+          [33mtitle[39m=[32m"Stop entries and exit management"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-pause"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"15"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"15"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"5"[39m
+              [33mx[39m=[32m"14"[39m
+              [33my[39m=[32m"3"[39m
+            [36m/>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"5"[39m
+              [33mx[39m=[32m"5"[39m
+              [33my[39m=[32m"3"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mHalt[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"PANIC"[39m
+          [33mclass[39m=[32m"gl-oc panic"[39m
+          [33mdata-op[39m=[32m"panic"[39m
+          [33mtitle[39m=[32m"Emergency: close all positions and freeze"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-octagon-alert lucide-alert-octagon"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"15"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"15"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M12 16h.01"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M12 8v4"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mPANIC[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ tests/review09.test.tsx:49:78
+     47|   await waitFor(() => expect(screen.getByRole("button", { name: "Freez…
+     48|   await client.refetchQueries({ queryKey: ["owner-interface"] });
+     49|   await waitFor(() => expect(screen.getByRole("button", { name: "Freez…
+       |                                                                              ^
+     50|   for (const name of ["Resume", "Freeze", "Halt", "PANIC"]) {
+     51|     const button = screen.getByRole("button", { name });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../frontend-build/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../frontend-build/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  05:44:23
+   Duration  11.60s (tests 49%, environment 27%, import 12%, transform 6%, setup 5%)
+

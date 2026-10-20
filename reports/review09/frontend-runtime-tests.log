@@ -1,0 +1,13 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run tests/review09.test.tsx -t cached AVAILABLE
+
+
+ RUN  v5.0.2 /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 4 skipped (5)
+   Start at  05:44:59
+   Duration  2.98s (environment 37%, transform 26%, import 19%, tests 11%, setup 6%)
+

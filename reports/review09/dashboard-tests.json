@@ -1,0 +1,33 @@
+{
+  "runner": "/mnt/luffy-data/luffy/release-ef9fca8/venv/bin/python",
+  "final_command": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp python -m pytest tests/test_dashboard_auth.py tests/test_accounting_truth_followup.py tests/test_overview_desk.py tests/test_dashboard_phase.py -q --basetemp=reports/review09/tmp-dashboard-final --junitxml=reports/review09/dashboard-tests.xml",
+  "final": {
+    "tests": 44,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final_passed": 44,
+  "baseline_probe": {
+    "tests": 5,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0
+  },
+  "baseline_explanation": "In-process module bodies loaded from git show ef9fca8, against new exact regression tests using temporary journals/routes only; no working source rewrite. Vault route and combined-filter failures reproduce incorrect behavior. UNKNOWN booking case reproduces Flat vs UNKNOWN; two known/estimated controls fail only on absent new classification metadata, not claimed as distinct defects.",
+  "baseline_artifacts": [
+    "dashboard_baseline_plugin.py",
+    "dashboard-baseline.log",
+    "dashboard-baseline.xml"
+  ],
+  "initial_focused_run": "28 passed before adding count regression and phase coverage; final run supersedes count, do not sum.",
+  "not_run": [
+    "Archived closure/control scripts (frozen output writers)",
+    "Full CI/full pytest",
+    "Production benchmark and production/provider/service probes",
+    "RUN01 child process/launcher tests (unneeded for bounded display fixes)"
+  ],
+  "production_changes": false,
+  "providers_called": false,
+  "services_started_or_restarted": false
+}

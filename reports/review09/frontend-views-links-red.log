@@ -1,0 +1,36 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run --run tests/review09.test.tsx
+
+
+ RUN  v5.0.2 /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend
+
+ ❯ tests/review09.test.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review09.test.tsx [ tests/review09.test.tsx ]
+Error: Failed to resolve import "@fontsource/cinzel/400.css" from "src/fonts.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend/src/fonts.ts:2:7
+  1  |  /** Self-hosted faces for the Glacier design (the CSP allows font-src 'self' only). */
+  2  |  import "@fontsource/cinzel/400.css";
+     |          ^
+  3  |  import "@fontsource/cinzel/600.css";
+  4  |  import "@fontsource/cormorant-garamond/500.css";
+ ❯ TransformPluginContext._formatLog ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:8736:39
+ ❯ TransformPluginContext.error ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:8733:14
+ ❯ normalizeUrl ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:26423:18
+ ❯ ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:26493:30
+ ❯ TransformPluginContext.transform ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:26459:4
+ ❯ EnvironmentPluginContainer.transform ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:8515:14
+ ❯ loadAndTransform ../../frontend-build/node_modules/vite/dist/node/chunks/node.js:19998:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  05:45:41
+   Duration  3.69s (environment 81%, setup 14%, transform 4%, worker 1%)
+

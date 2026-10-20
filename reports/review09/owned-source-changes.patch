@@ -1,0 +1,1063 @@
+diff --git a/frontend/src/adapters/readContracts.ts b/frontend/src/adapters/readContracts.ts
+index 24e1c93..8e83b9c 100644
+--- a/frontend/src/adapters/readContracts.ts
++++ b/frontend/src/adapters/readContracts.ts
+@@ -263,7 +263,7 @@ const versionAuthority = shape({
+   approval: nullable(record), governor: nullable(record), lifecycle: nullable(str), economics: nullable(record), errors: record,
+ });
+ const strategyBoard = shape({ strategies: list(record), versions: nullable(list(versionAuthority)), authority_errors: record });
+-const researchBoard = shape({ combos: nullable(list(record)), total: nullable(num), verdicts: nullable(list(record)), candidates_by_state: nullable(record), stores: record, referee_enabled: optional(nullable(bool)) });
++const researchBoard = shape({ combos: nullable(list(record)), total: nullable(num), verdicts: nullable(list(record)), candidates_by_state: nullable(record), referee_enabled: optional(nullable(bool)) });
+ const operationLog = shape({ events: list(record), window_days: num, window_start: str, window_end: str, truncated: bool, rolled_up_records: num, scan_decision_records_aggregated: num, signal_cooldowns_not_listed: num });
+ const diagnostics = shape({
+   storage: shape({ files: list(shape({ file: str })), filesystems: optional(list(shape({ label: str, path: str, total: nullable(num), used: nullable(num), free: nullable(num), percent_free: nullable(num), mount: nullable(str), source: nullable(str), status: str }))) }),
+diff --git a/frontend/src/views/Overview.tsx b/frontend/src/views/Overview.tsx
+index f9cc2fe..52230c8 100644
+--- a/frontend/src/views/Overview.tsx
++++ b/frontend/src/views/Overview.tsx
+@@ -598,7 +598,7 @@ function ResearchCard({ desk, sys, loading }: { desk?: Desk; sys?: Record<string
+           </span>
+         </span>
+       </div>
+-      {r && [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests), line("Questions", r.counts.questions)].map((x) => (
++      {r && [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests)].map((x) => (
+         <div className="gl-list" key={x.n}><span><i style={{ background: x.c }} />{x.n}</span><span style={{ color: x.c }}>{x.v}</span></div>
+       ))}
+       <a className="gl-link" href="#research">Open Research →</a>
+diff --git a/frontend/tests/live.test.tsx b/frontend/tests/live.test.tsx
+index dc21d6e..ecc2af3 100644
+--- a/frontend/tests/live.test.tsx
++++ b/frontend/tests/live.test.tsx
+@@ -135,8 +135,11 @@ describe("live adapter", () => {
+ });
+ 
+ describe("pending owner requests", () => {
+-  beforeEach(() => localStorage.clear());
+-  it("one key per id; oldest reused; completion removes only its own key", () => {
++  beforeEach(() => {
++    pending.entries().forEach((entry) => pending.done(entry.id));
++    localStorage.clear();
++  });
++  it("late completion removes only its id and preserves newer unresolved requests", () => {
+     const put = (id: string, t: number) =>
+       localStorage.setItem(pending.PREFIX + id, JSON.stringify({ action: "halt", id, t }));
+     put("zz-older-request-0001", 1);
+@@ -149,6 +152,23 @@ describe("pending owner requests", () => {
+     expect(pending.find("halt")!.id).toBe(b.id);
+     expect(localStorage.getItem(pending.PREFIX + b.id)).not.toBeNull();
+   });
++  it("keeps another action across completion and reloads the same persisted id", async () => {
++    const panic = pending.create("panic").entry;
++    expect(localStorage.getItem(pending.PREFIX + panic.id)).not.toBeNull();
++
++    // A second tab has a separate module instance but shares origin storage.
++    vi.resetModules();
++    const tabBPending = await import("../src/adapters/pending");
++    const halt = tabBPending.create("halt").entry;
++    tabBPending.done(halt.id);
++    expect(tabBPending.find("panic")?.id).toBe(panic.id);
++    expect(tabBPending.find("halt")).toBeNull();
++
++    // A fresh module after reload has no memory and recovers A's same id.
++    vi.resetModules();
++    const reloadedPending = await import("../src/adapters/pending");
++    expect(reloadedPending.find("panic")?.id).toBe(panic.id);
++  });
+ });
+ 
+ function withProvider(adapter: OwnerAdapter, ui: React.ReactNode) {
+@@ -246,6 +266,43 @@ describe("owner controls", () => {
+     expect(req.id).toMatch(/^[A-Za-z0-9-]{16,64}$/);
+     expect(pending.find("resume")).toBeNull(); // definitive → released
+   });
++  it("warns and keeps an unresolved request in memory when browser storage fails", async () => {
++    const storageWrite = vi
++      .spyOn(Storage.prototype, "setItem")
++      .mockImplementation(() => {
++        throw new DOMException("quota exceeded", "QuotaExceededError");
++      });
++    const user = userEvent.setup();
++    withProvider(
++      {
++        ...base,
++        control: vi.fn(async () => null),
++        ownerInterface: vi.fn(async () => ({
++          availability: "AVAILABLE" as const,
++          status: "ACCEPTED",
++          reasons: [],
++          observedAt: now,
++          controlState: "FROZEN",
++          recoveryInProgress: false,
++        })),
++      },
++      <Operations />,
++    );
++    const halt = await screen.findByRole("button", { name: "Halt" });
++    await waitFor(() => expect(halt).toBeEnabled());
++    await user.click(halt);
++    await user.click(screen.getByRole("button", { name: /Send Halt/ }));
++    expect(
++      await screen.findByText(/Browser storage unavailable/),
++    ).toBeVisible();
++    const unresolved = pending.find("halt");
++    expect(unresolved).not.toBeNull();
++    expect(await screen.findByTestId("control-outcome")).toHaveTextContent(
++      "outcome unknown",
++    );
++    storageWrite.mockRestore();
++    if (unresolved) pending.done(unresolved.id);
++  });
+ });
+ 
+ describe("LUFFY chat in LIVE mode", () => {
+diff --git a/tests/test_attention_view.py b/tests/test_attention_view.py
+index adeea8d..3c18db3 100644
+--- a/tests/test_attention_view.py
++++ b/tests/test_attention_view.py
+@@ -17,25 +17,25 @@ def server(tmp_path, monkeypatch):
+ 
+ 
+ def test_api_disabled_auth_and_missing_store(server, tmp_path):
+-    client=TestClient(server.create_app({'attention':{'enabled':False}}))
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':False}}))
+     assert client.get('/api/attention/latest').status_code==401
+     r=client.get('/api/attention/latest?token=fixture-token')
+     assert r.json()['status']=='disabled' and r.headers['cache-control'].startswith('no-store')
+     assert not (tmp_path/'data/attention.db').exists()
+-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
+     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='waiting'
+ 
+ 
+ def test_api_bad_config_and_error_health(server, tmp_path):
+-    client=TestClient(server.create_app({'attention':{'enabled':True,'max_symbols':-1}}))
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True,'max_symbols':-1}}))
+     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='configuration_error'
+-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
+     (tmp_path/'data/attention_health.json').write_text(json.dumps({'errors':1,'last_error':'worker_timeout'}))
+     assert client.get('/api/attention/latest?token=fixture-token').json()['status']=='error'
+ 
+ 
+ def test_learning_health_is_read_only_and_visible_when_enabled(server, tmp_path):
+-    client=TestClient(server.create_app({'attention':{'enabled':True},
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True},
+                                       'attention_learning':{'enabled':True}}))
+     data=client.get('/api/attention/latest?token=fixture-token').json()
+     assert data['learning']['status']=='unavailable'
+@@ -45,7 +45,7 @@ def test_learning_health_is_read_only_and_visible_when_enabled(server, tmp_path)
+ def test_recovery_visibility_is_authenticated_and_read_only(server, tmp_path):
+     from trader.core.journal import Journal
+     from trader.engine.recovery import KEY
+-    client = TestClient(server.create_app({'attention': {'enabled': True}}))
++    client = TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention': {'enabled': True}}))
+     journal = Journal(tmp_path/'data/luffy.db')
+     raw = json.dumps({'id': 'intent', 'symbol': 'BTC/USDT', 'phase': 'entry',
+                       'reason': 'entry_fill_unconfirmed', 'position': {'internal': 'omitted'}})
+@@ -68,7 +68,7 @@ def test_admission_counts_independent_of_investigation_worker(server,tmp_path,mo
+     receipt=A.persist(j,observation(),A.AdmissionPolicy(12,2,2,0))
+     before=j.query('SELECT key,value FROM state_kv ORDER BY key')
+     monkeypatch.setattr(server.time,'time',lambda:CUT/1000)
+-    client=TestClient(server.create_app({'attention':{'enabled':True}}))
++    client=TestClient(server.create_app({'dashboard':{'startup_mode':'READ_ONLY_GUI'},'attention':{'enabled':True}}))
+     got=client.get('/api/attention/latest?token=fixture-token').json()
+     assert got['status']=='waiting'
+     assert got['admission']['status']=='current'
+diff --git a/tests/test_candle_cache_reuse.py b/tests/test_candle_cache_reuse.py
+index 43f1f21..4028ead 100644
+--- a/tests/test_candle_cache_reuse.py
++++ b/tests/test_candle_cache_reuse.py
+@@ -25,7 +25,10 @@ def test_force_refreshes_the_tail_not_the_history(tmp_path):
+     assert len(ex.calls) == 1, "force must re-read the tail, not re-page"
+ 
+ 
+-def test_a_young_symbol_is_not_repaged_every_call(tmp_path):
++def test_a_young_symbol_is_not_repaged_every_call(tmp_path, monkeypatch):
++    # A fresh qualified closed window survives process restart without even
++    # a tail request. Freeze the boundary so this does not race a bar close.
++    monkeypatch.setattr('tests.test_feed_pagination.time.time', lambda: 1_800_000_060)
+     p = tmp_path / "c.db"
+     first = FakeEx(total=1500)                 # listed 1,500 bars ago
+     DataFeed(exchange=first, db_path=p).fetch_ohlcv(
+@@ -35,7 +38,7 @@ def test_a_young_symbol_is_not_repaged_every_call(tmp_path):
+     df = DataFeed(exchange=again, db_path=p).fetch_ohlcv(
+         "NEW/USDT", "15m", limit=4000)
+     assert len(df) == 1500
+-    assert len(again.calls) == 1, "the start of history is remembered"
++    assert len(again.calls) == 0, "fresh qualified history is reused at its known floor"
+ 
+ 
+ def test_the_dashboard_charts_read_production_not_the_demo_venue():
+diff --git a/tests/test_current_truth_contract.py b/tests/test_current_truth_contract.py
+index 4c798e2..f28f400 100644
+--- a/tests/test_current_truth_contract.py
++++ b/tests/test_current_truth_contract.py
+@@ -381,14 +381,21 @@ def test_valuation_quote_uses_ticker_time_and_age():
+     assert q["time_basis"] == "ticker_timestamp" and q["age_s"] == pytest.approx(30, abs=1)
+ 
+ 
+-def test_ticker_quote_identity_and_failure():
++def test_ticker_quote_identity_and_failure(monkeypatch, tmp_path):
++    monkeypatch.setattr("trader.data.feed.time.time", lambda: 1_790_000_001.0)
+     from trader.data.feed import DataFeed
+-    f = object.__new__(DataFeed)
+-    f.data_ex = NS(fetch_ticker=lambda s: {"last": None, "close": 5.0,
+-                                           "timestamp": 1_790_000_000_000})
++    venue = dict(id="binanceusdm", urls={"api": {"public": "https://offline.example"}},
++                 market=lambda s: {"id": "XUSDT", "contract": True})
++    f = DataFeed(exchange=NS(**venue, fetch_ticker=lambda s: {"last": None, "close": 5.0,
++                                           "timestamp": 1_790_000_000_000}), db_path=tmp_path / "candles.db")
+     q = f.ticker_quote("X/USDT")
+     assert q["price"] == 5.0 and q["field"] == "close" and q["source_ms"] == 1_790_000_000_000
+     assert f.price("X/USDT") == 5.0                           # unchanged valuation
++    assert q['instrument_id'] == 'binance_usdm:futures:XUSDT'
++    assert q['quality'] == 'VALID' and q['source']
++    f.data_ex = NS(fetch_ticker=lambda s: {'last': 5.0})
++    unknown = f.ticker_quote('X/USDT')
++    assert unknown['price'] is None and unknown['error'] == 'ticker_identity_unknown'
+     f.data_ex = NS(fetch_ticker=lambda s: (_ for _ in ()).throw(TimeoutError("t")))
+     q = f.ticker_quote("X/USDT")
+     assert q["price"] is None and q["error"].startswith("ticker_fetch_failed")
+diff --git a/tests/test_current_truth_corrections.py b/tests/test_current_truth_corrections.py
+index 6ab0704..c3f1a3e 100644
+--- a/tests/test_current_truth_corrections.py
++++ b/tests/test_current_truth_corrections.py
+@@ -366,7 +366,8 @@ def test_marks_without_quote_times_publish_nothing(tmp_path, monkeypatch):
+     from trader.dashboard import server
+     make_app(tmp_path, monkeypatch)
+     monkeypatch.setattr(server, "_position_quotes", None)
+-    app = server.create_app({"attention": {"enabled": False},
++    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
++                             "attention": {"enabled": False},
+                              "owner_interface": {"enabled": True}})
+     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
+                             headers={"x-luffy-token": TOKEN}).json()
+@@ -459,9 +460,12 @@ def test_running_manager_identity_equals_config_identity(journal):
+ def _feed_with(ticker):
+     """A DataFeed whose market-data exchange and time.time are scripted."""
+     from trader.data.feed import DataFeed
+-    f = object.__new__(DataFeed)
+-    f.data_ex = NS(fetch_ticker=ticker)
+-    return f
++    # Exercise timing with a fully initialized, identity-bearing fake venue.
++    # DA-01 requires identity as well as price; no transport is constructed.
++    venue = NS(id='binanceusdm', urls={'api': 'https://offline.invalid'},
++               market=lambda symbol: {'id': symbol.replace('/', ''), 'contract': True},
++               fetch_ticker=ticker)
++    return DataFeed(exchange=venue)
+ 
+ 
+ def test_ticker_attempt_precedes_fetch_and_receipt_follows_it(monkeypatch):
+@@ -684,7 +688,8 @@ def test_marks_duplicate_symbol_never_overwrites_a_position(tmp_path, monkeypatc
+     monkeypatch.setattr(server, "_position_quotes", lambda j: (
+         trades, {"BTC/USDT": dict(_q(110.0), attempt_started_at=time.time() - 2),
+                  "ETH/USDT": _q(12.0)}))
+-    app = server.create_app({"attention": {"enabled": False},
++    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
++                             "attention": {"enabled": False},
+                              "owner_interface": {"enabled": True}})
+     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
+                             headers={"x-luffy-token": TOKEN}).json()
+@@ -706,7 +711,8 @@ def test_marks_duplicate_symbol_with_one_bad_trade_is_unvalued(tmp_path, monkeyp
+               _trade("b", "BTC/USDT", "sideways", 2.0, 120.0)]
+     monkeypatch.setattr(server, "_position_quotes",
+                         lambda j: (trades, {"BTC/USDT": _q(110.0)}))
+-    app = server.create_app({"attention": {"enabled": False},
++    app = server.create_app({"dashboard": {"startup_mode": "LIVE"},
++                             "attention": {"enabled": False},
+                              "owner_interface": {"enabled": True}})
+     m = TestClient(app).get("/owner-api/v1/enrichment/marks",
+                             headers={"x-luffy-token": TOKEN}).json()
+diff --git a/tests/test_current_truth_integration.py b/tests/test_current_truth_integration.py
+index 866918d..bfcd2e7 100644
+--- a/tests/test_current_truth_integration.py
++++ b/tests/test_current_truth_integration.py
+@@ -169,13 +169,18 @@ def test_company_equity_comes_from_the_account_observation(tmp_path):
+     (lambda: time.time() - 42, "42s")])
+ def test_graphql_heartbeat_future_or_malformed_is_invalid(tmp_path, monkeypatch, stamp, expect):
+     from trader.api import graphql_schema
++    cut = 1_790_000_000.0
++    monkeypatch.setattr(time, 'time', lambda: cut)
++    class Clock(datetime):
++        @classmethod
++        def now(cls, tz=None):
++            return datetime.fromtimestamp(cut, tz)
++    monkeypatch.setattr(graphql_schema, 'datetime', Clock)
+     hb = tmp_path / "hb.json"
+     hb.write_text(json.dumps({"timestamp": stamp()}))
+     monkeypatch.setattr(graphql_schema, "HEARTBEAT_PATH", str(hb))
+     d = _gql(Journal(tmp_path / "j.db"), "{ status { heartbeat_age_s } }")
+-    assert d["data"]["status"]["heartbeat_age_s"] in (expect, "41s", "43s")
+-    if expect == "invalid":
+-        assert d["data"]["status"]["heartbeat_age_s"] == "invalid"
++    assert d["data"]["status"]["heartbeat_age_s"] == expect
+ 
+ 
+ # ── B. exact fallback row, bound observation ───────────────────────────────
+diff --git a/tests/test_dashboard_auth.py b/tests/test_dashboard_auth.py
+index a6af457..3227b29 100644
+--- a/tests/test_dashboard_auth.py
++++ b/tests/test_dashboard_auth.py
+@@ -9,13 +9,13 @@ from trader.dashboard.auth import DashboardAuth
+ def test_missing_default_tokens_fail_closed(server, monkeypatch, token):
+     if token is None: monkeypatch.delenv('DASH_TOKEN', raising=False)
+     else: monkeypatch.setenv('DASH_TOKEN', token)
+-    client = TestClient(server.create_app({'attention': {'enabled': True}}))
++    client = TestClient(server.create_app({'dashboard': {'startup_mode': 'LIVE'}, 'attention': {'enabled': True}}))
+     for path in ('/', '/graphql', '/api/investigations/latest', '/docs'):
+         assert client.get(path, headers={'x-luffy-token': 'luffy'}).status_code == 401
+ 
+ 
+ def test_browser_session_all_routes_csrf_logout(server):
+-    c = TestClient(server.create_app({'attention': {'enabled': True}}))
++    c = TestClient(server.create_app({'dashboard': {'startup_mode': 'LIVE'}, 'attention': {'enabled': True}}))
+     assert c.get('/').status_code == 401
+     origin = {'origin': 'http://testserver'}
+     assert c.post('/graphql', json={}, headers=origin).status_code == 401
+diff --git a/tests/test_dashboard_phase.py b/tests/test_dashboard_phase.py
+index b6114d0..b62c52d 100644
+--- a/tests/test_dashboard_phase.py
++++ b/tests/test_dashboard_phase.py
+@@ -1,7 +1,7 @@
+ """Phase startup and authority boundaries; fixture stores only, no venue/provider calls."""
+ from pathlib import Path
+ from unittest.mock import Mock
+-import shutil
++import yaml
+ import pytest
+ from fastapi.testclient import TestClient
+ from trader.dashboard import phase, server
+@@ -37,8 +37,23 @@ def client(tmp_path, monkeypatch):
+     monkeypatch.setattr(server, 'ROOT', tmp_path)
+     monkeypatch.setenv('DASH_TOKEN', 'phase-test-token')
+     target = tmp_path / 'docs/tracker'; target.mkdir(parents=True)
+-    shutil.copy(ROOT / 'docs/tracker/LUFFY_Product_Tracker_v1.yaml', target)
+-    shutil.copy(ROOT / 'NEXT.yaml', tmp_path)
++    # Synthetic terminal selection: this API boundary must not depend on the
++    # project's changing work queue. No tracked tracker/NEXT file is edited.
++    statuses = ['EVIDENCE_TO_MAP', 'OPEN', 'IN_PROGRESS', 'AWAITING_EVIDENCE',
++                'AWAITING_OWNER', 'CLOSED', 'DEFERRED', 'BLOCKED']
++    row = {name: 'TEST_ONLY' for name in ('area', 'stage', 'release_scope',
++           'required_behavior', 'why_needed', 'closure_condition', 'latest_evidence',
++           'next_proof', 'owner_role')}
++    row.update(id='OBS-05', status='CLOSED', dependencies=[], parent_ids=[], related_items=[])
++    ledger = dict(metadata=dict(version='synthetic-phase-fixture', row_count=1,
++        current_active_item='OBS-05', status_counts={'CLOSED': 1}, baseline_commit='a' * 40),
++        status_definitions=[dict(status=s, meaning='TEST_ONLY') for s in statuses],
++        readiness_gates=[dict(id=f'M{i}', title='TEST_ONLY', items=['OBS-05'],
++                             closure='TEST_ONLY', current='TEST_ONLY', limit='TEST_ONLY')
++                         for i in range(7)], items=[row])
++    (target / 'LUFFY_Product_Tracker_v1.yaml').write_text(yaml.safe_dump(ledger))
++    (tmp_path / 'NEXT.yaml').write_text(yaml.safe_dump(dict(work_package=dict(
++        id='OBS-05', status='CLOSED', mode='ENGINEERING_ONLY', objective='TEST_ONLY'))))
+     # If the boundary fails, these spies catch control/provider/LLM execution.
+     gateway = Mock(side_effect=AssertionError('gateway used'))
+     marks = Mock(side_effect=AssertionError('provider used'))
+diff --git a/tests/test_glacier_truth.py b/tests/test_glacier_truth.py
+index 8cb0ff7..9d9750d 100644
+--- a/tests/test_glacier_truth.py
++++ b/tests/test_glacier_truth.py
+@@ -100,4 +100,6 @@ def test_browser_fixture_artifact_and_readonly_contract(tmp_path, monkeypatch):
+     assert all(call['operation'] == 'health' for call in gateway.calls)
+     log = fixtures['/owner-api/v1/operations/log']
+     assert log['window_start'] and log['window_end'] and log['truncated'] is False
+-    Path('/mnt/luffy-data/test-tmp/glacier-browser-fixtures.json').write_text(json.dumps(fixtures))
++    artifact = tmp_path / 'glacier-browser-fixtures.json'
++    artifact.write_text(json.dumps(fixtures, allow_nan=False))
++    assert json.loads(artifact.read_text()) == fixtures
+diff --git a/tests/test_own03_approval_boundary.py b/tests/test_own03_approval_boundary.py
+index efe628c..3753397 100644
+--- a/tests/test_own03_approval_boundary.py
++++ b/tests/test_own03_approval_boundary.py
+@@ -5,27 +5,24 @@ import pytest
+ 
+ from trader.core.types import Action, Decision
+ from trader.owner import approvals as A, queries as Q
+-from trader.research.external_research import research_pass
+ from trader.strategy import factory_handoff as F
+-from tests.test_external_research_router import registered, FakeChild
+ from tests.test_stage8_owner_os import proposal, service, request
+ from tests.test_strategy_factory_handoff import cfg, _journal, _to_approval, T0, DAY
+ 
+ 
+ def test_routine_hold_decision_and_research_never_create_blanket_approval(tmp_path):
+-    j = registered(tmp_path)
++    from trader.core.journal import Journal
++    j = Journal(tmp_path / 'j.db')
+     with j._tx() as c:
+         c.execute("INSERT INTO cycles(id,ts,symbol) VALUES(?,?,?)",
+                   ('fixture-cycle', '2026-10-06T00:00:00+00:00', 'BTC/USDT'))
+-    # Real bounded research producer, with retrieval replaced by an offline child.
+-    bank = research_pass(j, child=FakeChild([]))['results'][0]['bank']
+     for action in (Action.HOLD, Action.BUY):
+         d = Decision('own03-' + action.value, 'fixture-cycle', 'BTC/USDT',
+                      action, .8, .2, .9, [], [])
+         j.log_decision(d)
+     for _ in range(3):
+         before = j._conn().total_changes
+-        assert Q.query(j, 'research', bank['bank_object_id'])['status'] == 'AVAILABLE'
++        assert Q.query(j, 'research')['records'] == []
+         for action in (Action.HOLD, Action.BUY):
+             assert Q.query(j, 'decision', 'own03-' + action.value)['status'] == 'AVAILABLE'
+         assert A.items(j, {})['items'] == []
+diff --git a/tests/test_owner_interface.py b/tests/test_owner_interface.py
+index edf2f3a..28f11ea 100644
+--- a/tests/test_owner_interface.py
++++ b/tests/test_owner_interface.py
+@@ -775,7 +775,8 @@ def _dashboard_app(journal_path, ipc_dir, authenticated=True):
+     from trader.api.graphql_schema import make_graphql_router
+     from trader.dashboard.server import _owner_gateway
+     auth = SimpleNamespace(authenticated=lambda scope: authenticated)
+-    cfg = {"owner_interface": {"ipc_dir": str(ipc_dir)}}
++    cfg = {"owner_interface": {"ipc_dir": str(ipc_dir)},
++           "dashboard": {"startup_mode": "LIVE"}}
+     app = FastAPI()
+     app.include_router(make_graphql_router(Journal(journal_path), _owner_gateway(cfg, auth)))
+     return TestClient(app)
+diff --git a/tests/test_owner_interface_r3.py b/tests/test_owner_interface_r3.py
+index 690ea33..eac5420 100644
+--- a/tests/test_owner_interface_r3.py
++++ b/tests/test_owner_interface_r3.py
+@@ -59,56 +59,62 @@ def check_queued_recovery_cannot_outlive_newer_halt(world, monkeypatch):
+     """Astra W1: RESUME blocked in its venue check → UNHALT → HALT → release."""
+     journal, venue = world
+     k = _active(journal, venue, monkeypatch)
+-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+-    s = svc(k)
+-    s.execute(req("freeze"))
+-    k.notifier.chat_id = "1"
+-    replies = []
+-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+-    in_check, release = threading.Event(), threading.Event()
+-
+-    def venue_check():
+-        in_check.set()
+-        release.wait(5)
+-    venue.on_positions = venue_check
+-    k._tg_dispatch("/resume", "https://x", tg_update())
+-    assert in_check.wait(3)
+-    k._tg_dispatch("/unhalt", "https://x", tg_update())
+-    k._tg_dispatch("/halt", "https://x", tg_update())
+-    assert _wait(lambda: _state(journal) == "HALTED")
+-    release.set()
+-    assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
+-    time.sleep(0.2)
+-    _drain_workers(k)
+-    assert _state(journal) == "HALTED"                      # the newer HALT holds
+-    assert len(_count(journal, "owner_recovery_requested")) == 1   # UNHALT never ran
+-    assert any("recovery_in_progress" in r for r in replies)
+-    refused = [r for r in _audit(journal) if r["operation"] == "unhalt"]
+-    assert refused and json.loads(refused[0]["reasons"]) == ["recovery_in_progress"]
+-    return k
++    try:
++        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
++        s = svc(k)
++        s.execute(req("freeze"))
++        k.notifier.chat_id = "1"
++        replies = []
++        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
++        in_check, release = threading.Event(), threading.Event()
++
++        def venue_check():
++            in_check.set()
++            release.wait(5)
++        venue.on_positions = venue_check
++        k._tg_dispatch("/resume", "https://x", tg_update())
++        assert in_check.wait(3)
++        k._tg_dispatch("/unhalt", "https://x", tg_update())
++        k._tg_dispatch("/halt", "https://x", tg_update())
++        assert _wait(lambda: _state(journal) == "HALTED")
++        release.set()
++        assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
++        time.sleep(0.2)
++        _drain_workers(k)
++        assert _state(journal) == "HALTED"                      # the newer HALT holds
++        assert len(_count(journal, "owner_recovery_requested")) == 1   # UNHALT never ran
++        assert any("recovery_in_progress" in r for r in replies)
++        refused = [r for r in _audit(journal) if r["operation"] == "unhalt"]
++        assert refused and json.loads(refused[0]["reasons"]) == ["recovery_in_progress"]
++        return k
++    finally:
++        _drain_workers(k)
+ 
+ 
+ def check_blocked_reply_never_delays_halt(world, monkeypatch):
+     """Astra W1: a /status whose reply hangs must not hold a later /halt."""
+     journal, venue = world
+     k = _active(journal, venue, monkeypatch)
+-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+-    k.notifier.chat_id = "1"
+-    stuck = threading.Event()
+-
+-    def post(*a, **kw):
+-        if kw["json"]["text"].startswith("state="):
+-            stuck.wait(5)                                   # Telegram API hanging
+-    monkeypatch.setattr("requests.post", post)
+-    t0 = time.monotonic()
+-    k._tg_dispatch("/status", "https://x", tg_update())
+-    time.sleep(0.1)
+-    k._tg_dispatch("/halt", "https://x", tg_update())
+     try:
+-        assert _wait(lambda: _state(journal) == "HALTED", 1.0)
+-        assert time.monotonic() - t0 < 1.0
++        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
++        k.notifier.chat_id = "1"
++        stuck = threading.Event()
++
++        def post(*a, **kw):
++            if kw["json"]["text"].startswith("state="):
++                stuck.wait(5)                                   # Telegram API hanging
++        monkeypatch.setattr("requests.post", post)
++        t0 = time.monotonic()
++        k._tg_dispatch("/status", "https://x", tg_update())
++        time.sleep(0.1)
++        k._tg_dispatch("/halt", "https://x", tg_update())
++        try:
++            assert _wait(lambda: _state(journal) == "HALTED", 1.0)
++            assert time.monotonic() - t0 < 1.0
++        finally:
++            stuck.set()
++            _drain_workers(k)
+     finally:
+-        stuck.set()
+         _drain_workers(k)
+ 
+ 
+@@ -385,88 +391,8 @@ def test_negative_control_w5_w11_are_caught(tmp_path, monkeypatch, check, mutant
+         getattr(matrix, check)((Journal(tmp_path / "j.db"), HookVenue()), monkeypatch)
+ 
+ 
+-# ═══ W2 — browser retry identity (real JS under Node) ═══════════════════════
+-NODE = shutil.which("node") or shutil.which("nodejs")
+-HTML = (ROOT / "trader" / "dashboard" / "web" / "index.html").read_text()
+-OWNER_BLOCK = HTML[HTML.index("/* Owner controls: typed requests executed by the kernel"):
+-                   HTML.index("/* ── refresh ── */")]
+-
+-W2_HARNESS = r"""
+-const vm = require('vm');
+-const store = {}; let storageBroken = STORAGE_BROKEN;
+-globalThis.localStorage = {getItem: k => (k in store ? store[k] : null),
+-                           setItem: (k, v) => { if (storageBroken) throw new Error('quota');store[k] = String(v); },
+-                           removeItem: k => { delete store[k]; },
+-                           key: i => Object.keys(store)[i] ?? null,
+-                           get length() { return Object.keys(store).length; }};
+-if (!globalThis.crypto) globalThis.crypto = require('crypto').webcrypto;
+-globalThis.confirm = () => true;
+-const toasts = []; globalThis.toast = (m) => toasts.push(m);
+-globalThis.refresh = () => {};
+-globalThis.document = {querySelectorAll: () => []};
+-const calls = []; const pending = {};
+-let failIds = new Set();
+-globalThis.gql = (q, v) => { calls.push(v.r);
+-  if (failIds.has(v.r)) return Promise.reject(new Error('network'));
+-  return new Promise(res => { (pending[v.r] = pending[v.r] || []).push(res); }); };
+-const ok = {res: {status: 'ACCEPTED', message: 'ok', replayed: false, reasons: []}};
+-vm.runInThisContext(OWNER_BLOCK);
+-const tick = () => new Promise(r => setTimeout(r, 5));
+-(async () => {
+-  const c1 = ownerControl('halt'); await tick();          // attempt 1 of A
+-  const c2 = ownerControl('halt'); await tick();          // double-click: same A
+-  const A = calls[0];
+-  pending[A].shift()(ok); await c1;                        // first A completes
+-  failIds = new Set();
+-  const origGql = globalThis.gql;
+-  globalThis.gql = (q, v) => { calls.push(v.r); return Promise.reject(new Error('network')); };
+-  await ownerControl('halt');                              // new action B: no answer
+-  const B = calls[calls.length - 1];
+-  globalThis.gql = origGql;
+-  pending[A].shift()(ok); await c2;                        // late second A completes
+-  globalThis.gql = (q, v) => { calls.push(v.r); return Promise.resolve(ok); };
+-  await ownerControl('halt');                              // retry must be B
+-  console.log(JSON.stringify({A, B, retry: calls[calls.length - 1], toasts}));
+-})();
+-"""
+-
+-
+-def _run_w2(block, storage_broken=False):
+-    script = (W2_HARNESS.replace("OWNER_BLOCK", json.dumps(block))
+-              .replace("STORAGE_BROKEN", "true" if storage_broken else "false"))
+-    out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=60)
+-    assert out.returncode == 0, out.stderr
+-    return json.loads(out.stdout)
+-
+-
+-def check_late_answer_keeps_newer_id(block, storage_broken=False):
+-    out = _run_w2(block, storage_broken)
+-    assert out["A"] != out["B"]
+-    assert out["retry"] == out["B"], out
+-    return out
+-
+-
+-@pytest.mark.skipif(NODE is None, reason="node not installed")
+-def test_w2_late_answer_never_deletes_a_newer_unresolved_id():
+-    check_late_answer_keeps_newer_id(OWNER_BLOCK)
+-
+-
+-@pytest.mark.skipif(NODE is None, reason="node not installed")
+-def test_w2_storage_failure_keeps_the_id_in_page_and_warns():
+-    out = check_late_answer_keeps_newer_id(OWNER_BLOCK, storage_broken=True)
+-    assert any("storage unavailable" in t for t in out["toasts"])
+-
+-
+-@pytest.mark.skipif(NODE is None, reason="node not installed")
+-@pytest.mark.parametrize("old, new, broken", [
+-    # revision 2: unconditional delete on any definitive answer
+-    ("if(r&&OWNER_DEFINITIVE.includes(r.status))ownerDone(p.id);",
+-     "if(r&&OWNER_DEFINITIVE.includes(r.status))ownerEntries().filter(e=>e.action===action)"
+-     ".forEach(e=>ownerDone(e.id));", False),
+-    # revision 2: storage failure silently loses the id
+-    ("for(const id in OWNER_MEM)if(!out.some(e=>e.id===id))out.push(OWNER_MEM[id]);", "", True),
+-])
+-def test_negative_control_w2_is_caught(old, new, broken):
+-    assert old in OWNER_BLOCK
+-    with pytest.raises(AssertionError):
+-        check_late_answer_keeps_newer_id(OWNER_BLOCK.replace(old, new, 1), broken)
++# The retired-dashboard W2 JavaScript tests were migrated to
++# frontend/tests/live.test.tsx. They asserted that completion removes only its
++# request id and that storage failure warns while retaining an in-memory id.
++# Their old inline-JS mutant controls targeted markup removed by the dashboard
++# cutover and are no longer applicable to the React implementation.
+diff --git a/tests/test_owner_interface_r4.py b/tests/test_owner_interface_r4.py
+index 8514849..76865ad 100644
+--- a/tests/test_owner_interface_r4.py
++++ b/tests/test_owner_interface_r4.py
+@@ -48,32 +48,35 @@ def check_admitted_unhalt_superseded_by_newer_halt(world, monkeypatch):
+     """Astra W1: admit UNHALT → pause before OwnerService → newer HALT → release."""
+     journal, venue = world
+     k = _active(journal, venue, monkeypatch)
+-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+-    svc(k).execute(req("halt"))
+-    k.notifier.chat_id = "1"
+-    replies = []
+-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+-    s = svc(k)
+-    real_execute, paused, go = s.execute, threading.Event(), threading.Event()
+-
+-    def execute(r, **kw):
+-        if r.operation == "unhalt":
+-            paused.set()
+-            go.wait(5)                 # admitted + reserved, not yet executing
+-        return real_execute(r, **kw)
+-    monkeypatch.setattr(s, "execute", execute)
+-    k._tg_dispatch("/unhalt", "https://x", tg_update())
+-    assert paused.wait(3)
+-    k._tg_dispatch("/halt", "https://x", tg_update())     # newer hold (same-state owner hold)
+-    assert _wait(lambda: any(r == "😴 HALTED." for r in replies))
+-    go.set()
+-    assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
+-    _drain_workers(k)
+-    assert _state(journal) == "HALTED"                      # the newer hold is kept
+-    assert any("superseded_by_newer_intent" in r for r in replies)
+-    res = _count(journal, "owner_recovery_result")[-1]
+-    assert res["status"] == "REFUSED" and res["reasons"] == ["superseded_by_newer_intent"]
+-    assert venue.mutations == []
++    try:
++        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
++        svc(k).execute(req("halt"))
++        k.notifier.chat_id = "1"
++        replies = []
++        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
++        s = svc(k)
++        real_execute, paused, go = s.execute, threading.Event(), threading.Event()
++
++        def execute(r, **kw):
++            if r.operation == "unhalt":
++                paused.set()
++                go.wait(5)                 # admitted + reserved, not yet executing
++            return real_execute(r, **kw)
++        monkeypatch.setattr(s, "execute", execute)
++        k._tg_dispatch("/unhalt", "https://x", tg_update())
++        assert paused.wait(3)
++        k._tg_dispatch("/halt", "https://x", tg_update())     # newer hold (same-state owner hold)
++        assert _wait(lambda: any(r == "😴 HALTED." for r in replies))
++        go.set()
++        assert _wait(lambda: len(_count(journal, "owner_recovery_result")) >= 1)
++        _drain_workers(k)
++        assert _state(journal) == "HALTED"                      # the newer hold is kept
++        assert any("superseded_by_newer_intent" in r for r in replies)
++        res = _count(journal, "owner_recovery_result")[-1]
++        assert res["status"] == "REFUSED" and res["reasons"] == ["superseded_by_newer_intent"]
++        assert venue.mutations == []
++    finally:
++        _drain_workers(k)
+ 
+ 
+ def test_w1_admitted_unhalt_superseded_by_newer_halt(world, monkeypatch):
+@@ -324,84 +327,9 @@ def test_negative_control_w5_inflight_eviction_is_caught(tmp_path, monkeypatch):
+         check_overflow_counts_only_discarded_rows(tmp_path, monkeypatch)
+ 
+ 
+-# ═══ W3 — cross-tab pending ids (real JS, two isolated tab contexts) ════════
+-NODE = shutil.which("node") or shutil.which("nodejs")
+-HTML = (ROOT / "trader" / "dashboard" / "web" / "index.html").read_text()
+-OWNER_BLOCK = HTML[HTML.index("/* Owner controls: typed requests executed by the kernel"):
+-                   HTML.index("/* ── refresh ── */")]
+-
+-CROSS_TAB = r"""
+-const vm = require('vm');
+-const shared = {};
+-const localStorage = {getItem: k => (k in shared ? shared[k] : null),
+-                           setItem: (k, v) => { shared[k] = String(v); },
+-                           removeItem: k => { delete shared[k]; },
+-                           key: i => Object.keys(shared)[i] ?? null,
+-                           get length() { return Object.keys(shared).length; }};
+-function pendingMap() { const m = {};
+-  for (const k of Object.keys(shared)) if (k.startsWith('luffy.owner.req.')) {
+-    const e = JSON.parse(shared[k]); m[e.action] = e; }
+-  return m; }
+-const cryptoObj = globalThis.crypto || require('crypto').webcrypto;
+-function tab(name) {                      // one browser tab: its own globals, shared storage
+-  const t = {name, calls: [], toasts: [], answer: null, allow: true};
+-  const ctx = {localStorage, crypto: cryptoObj, console, setTimeout,
+-               confirm: () => t.allow, toast: m => t.toasts.push(m), refresh: () => {},
+-               document: {querySelectorAll: () => []},
+-               gql: (q, v) => { t.calls.push({r: v.r, op: v.o || 'panic'}); return t.answer(); }};
+-  vm.createContext(ctx);
+-  vm.runInContext(OWNER_BLOCK, ctx);
+-  t.ctx = ctx;
+-  return t;
+-}
+-const ok = s => Promise.resolve({res: {status: s, message: s, replayed: false, reasons: []}});
+-(async () => {
+-  const B = tab('B');
+-  B.allow = false; await B.ctx.ownerControl('halt');       // click + cancel: initializes B
+-  const A = tab('A');
+-  A.answer = () => Promise.reject(new Error('network'));
+-  await A.ctx.ownerControl('panic');                       // outcome unknown: id A stored
+-  const idA = A.calls[0].r;
+-  const afterA = pendingMap();
+-  B.allow = true; B.answer = () => ok('ACCEPTED');
+-  await B.ctx.ownerControl('halt');                        // B completes HALT
+-  const afterB = pendingMap();
+-  const A2 = tab('A-reloaded'); A2.allow = false;          // reload; must not need consent
+-  A2.answer = () => ok('ACCEPTED');
+-  await A2.ctx.ownerControl('panic');
+-  // IN_PROGRESS is non-definitive: the id must survive it
+-  const C = tab('C'); C.answer = () => ok('IN_PROGRESS');
+-  await C.ctx.ownerControl('freeze');
+-  const afterPending = pendingMap();
+-  console.log(JSON.stringify({idA, afterA, afterB, retry: A2.calls.map(c => c.r),
+-                              afterPending, freezeId: C.calls[0].r}));
+-})();
+-"""
+-
+-
+-def _run_cross_tab(block):
+-    script = CROSS_TAB.replace("OWNER_BLOCK", json.dumps(block))
+-    out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=60)
+-    assert out.returncode == 0, out.stderr
+-    return json.loads(out.stdout)
+-
+-
+-def check_other_tab_never_erases_unresolved_id(block):
+-    out = _run_cross_tab(block)
+-    assert out["afterA"]["panic"]["id"] == out["idA"]
+-    assert out["afterB"].get("panic", {}).get("id") == out["idA"], out   # B kept A's entry
+-    assert out["retry"] == [out["idA"]], out                           # reload reuses id A
+-    assert out["afterPending"]["freeze"]["id"] == out["freezeId"]      # PENDING keeps the id
+-    return out
+-
+-
+-@pytest.mark.skipif(NODE is None, reason="node not installed")
+-def test_w3_other_tab_never_erases_unresolved_id():
+-    check_other_tab_never_erases_unresolved_id(OWNER_BLOCK)
+-
+-
+-# The revision-4 "stale per-tab cached read" mutant no longer applies: with one
+-# storage key per request no tab ever writes another tab's entries. The
+-# concurrent-interleaving negative controls (revision-4 whole-map block, stale
+-# tab, sibling erasure, simultaneous creation) are real-browser tests in
+-# tests/test_owner_dashboard_browser.py.
++# The retired-dashboard W3 cross-tab test is migrated to the current pending
++# request store tests in frontend/tests/live.test.tsx and
++# frontend/tests/browser/v2-controls.spec.ts. Current storage uses one key per
++# request id, so one tab's definitive completion cannot erase another tab's
++# unresolved request. Old whole-map JavaScript mutant controls targeted code
++# removed at the React dashboard cutover.
+diff --git a/tests/test_owner_interface_r5.py b/tests/test_owner_interface_r5.py
+index d8ae953..ba79777 100644
+--- a/tests/test_owner_interface_r5.py
++++ b/tests/test_owner_interface_r5.py
+@@ -280,34 +280,37 @@ def check_telegram_duplicate_before_execution(world, monkeypatch):
+     """A redelivered update while the original is reserved but not yet executing."""
+     journal, venue = world
+     k = _active(journal, venue, monkeypatch)
+-    monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
+-    s = svc(k)
+-    s.execute(req("halt"))
+-    k.notifier.chat_id = "1"
+-    replies = []
+-    monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
+-    real_execute, gate, paused = s.execute, threading.Event(), threading.Event()
+-
+-    def execute(r, **kw):
+-        if r.operation == "unhalt":
+-            paused.set()
+-            gate.wait(5)
+-        return real_execute(r, **kw)
+-    monkeypatch.setattr(s, "execute", execute)
+-    upd = tg_update()
+-    k._tg_dispatch("/unhalt", "https://x", upd)
+-    assert paused.wait(3)
+-    k._tg_dispatch("/unhalt", "https://x", upd)          # redelivery of the same update
+-    assert _wait(lambda: any("still running" in r for r in replies))
+-    assert not any("refused" in r for r in replies)
+-    gate.set()
+-    assert _wait(lambda: _state(journal) == "ACTIVE")
+-    _drain_workers(k)
+-    k._tg_workers = {}
+-    assert len(_count(journal, "owner_recovery_requested")) == 1
+-    k._tg_dispatch("/unhalt", "https://x", upd)          # after the final result
+-    _drain_workers(k)
+-    assert replies[-1] == "🙂 ACTIVE — fresh recovery check proved safe."
++    try:
++        monkeypatch.setattr("trader.kernel.threading.Thread", RealThread)
++        s = svc(k)
++        s.execute(req("halt"))
++        k.notifier.chat_id = "1"
++        replies = []
++        monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
++        real_execute, gate, paused = s.execute, threading.Event(), threading.Event()
++
++        def execute(r, **kw):
++            if r.operation == "unhalt":
++                paused.set()
++                gate.wait(5)
++            return real_execute(r, **kw)
++        monkeypatch.setattr(s, "execute", execute)
++        upd = tg_update()
++        k._tg_dispatch("/unhalt", "https://x", upd)
++        assert paused.wait(3)
++        k._tg_dispatch("/unhalt", "https://x", upd)          # redelivery of the same update
++        assert _wait(lambda: any("still running" in r for r in replies))
++        assert not any("refused" in r for r in replies)
++        gate.set()
++        assert _wait(lambda: _state(journal) == "ACTIVE")
++        _drain_workers(k)
++        k._tg_workers = {}
++        assert len(_count(journal, "owner_recovery_requested")) == 1
++        k._tg_dispatch("/unhalt", "https://x", upd)          # after the final result
++        _drain_workers(k)
++        assert replies[-1] == "🙂 ACTIVE — fresh recovery check proved safe."
++    finally:
++        _drain_workers(k)
+ 
+ 
+ def test_w3_ipc_duplicate_before_claim(tmp_path, monkeypatch):
+diff --git a/tests/test_run01_instance_identity.py b/tests/test_run01_instance_identity.py
+index ec9706d..1069e63 100644
+--- a/tests/test_run01_instance_identity.py
++++ b/tests/test_run01_instance_identity.py
+@@ -289,9 +289,14 @@ def test_rendered_dashboard_identity_payload(root, procs, tmp_path):
+ def test_summary_endpoint_renders_kernel_identity(monkeypatch, tmp_path):
+     from fastapi.testclient import TestClient
+     from trader.dashboard import server
++    monkeypatch.setattr(server, 'ROOT', tmp_path)
++    monkeypatch.setattr(server, '_account_snapshot', lambda: {})
++    monkeypatch.setattr(server, '_universe_prices', lambda: {})
++    monkeypatch.setattr(server, '_position_quotes', lambda journal: ([], {}))
+     monkeypatch.setenv("DASH_TOKEN", "fixture-token")
+     monkeypatch.setattr(server, "kernel_identity_view", lambda root: {"state": "RUNNING", "marker": 1})
+-    app = server.create_app({"attention": {"enabled": True}})
++    app = server.create_app({"attention": {"enabled": True},
++                             "dashboard": {"startup_mode": "LIVE"}})
+     r = TestClient(app).get("/api/summary", headers={"x-luffy-token": "fixture-token"})
+     assert r.status_code == 200, r.text
+     assert r.json()["kernel_identity"] == {"state": "RUNNING", "marker": 1}
+diff --git a/trader/dashboard/overview_desk.py b/trader/dashboard/overview_desk.py
+index a66b6a2..7d29440 100644
+--- a/trader/dashboard/overview_desk.py
++++ b/trader/dashboard/overview_desk.py
+@@ -9,7 +9,7 @@ from .economics import booking_receipts, journal_pnl
+ 
+ RECENT_CLOSES = 10
+ SCAN_LIMIT = 60
+-RESEARCH_TABLES = ("research_combos", "research_candidates", "research_tests", "research_questions")
++RESEARCH_TABLES = ("research_combos", "research_candidates", "research_tests")
+ 
+ 
+ def realized_curve(journal) -> dict:
+@@ -106,11 +106,7 @@ def research_board(journal, cfg: dict | None) -> dict:
+     cand = q("SELECT state, COUNT(*) n FROM research_candidates GROUP BY state")
+     tests = q("SELECT COUNT(*) n, SUM(rejected) rejected FROM research_tests")
+     research = (cfg or {}).get("research") or {}
+-    stores = {}
+-    for name in ("research_questions", "research_runs", "research_results", "research_bank_objects", "research_registrations", "research_evidence"):
+-        n = q(f"SELECT COUNT(*) n FROM {name}")
+-        stores[name.removeprefix("research_")] = n[0]["n"] if n else None
+-    return {"stores": stores, "combos": combos, "total": total[0]["n"] if total else None,
++    return {"combos": combos, "total": total[0]["n"] if total else None,
+             "truncated": bool(combos and total and len(combos) < total[0]["n"]),
+             "verdicts": verdicts, "batches": batches[0] if batches else None,
+             "last_batch": last[0] if last else None,
+diff --git a/trader/dashboard/owner_reads.py b/trader/dashboard/owner_reads.py
+index 58c1df3..7bf2afe 100644
+--- a/trader/dashboard/owner_reads.py
++++ b/trader/dashboard/owner_reads.py
+@@ -541,19 +541,11 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
+     offset = max(0, min(int(offset), 100000))
+     out: dict = {"generated_at": _iso(_now()),
+                  "source": "journal research ledger (trader/research/ledger.py)"}
+-    from trader.owner.queries import rows as question_rows, record as question_record
+-    questions = question_rows(journal, 'research_questions', 'question_id', limit=limit+1, offset=offset)
+-    out['questions'] = [question_record('question', r['question_id'], json.loads(r['canonical_json']),
+-                        source='research_questions', at=r['recorded_at_ms'], available=r['recorded_at_ms'])
+-                        for r in questions[:limit]]
+-    out['questions_page'] = dict(offset=offset, limit=limit, has_more=len(questions)>limit,
+-                                order='journal insertion order, newest first')
+-    question_gaps = [] if _table_exists(journal, 'research_questions') else [
+-        _unavailable('questions', 'research-question store is unavailable')]
+     if not _table_exists(journal, "research_combos"):
+-        out.update(available=bool(out['questions']), partial=True,
++        out.update(available=False, partial=True,
+                    reason="quantitative research ledger tables are absent",
+-                   unavailable=question_gaps+[_unavailable('results', 'quantitative result store is unavailable')])
++                   unavailable=[_unavailable('questions', 'research-question chains were retired (RP-04); no question store is read'),
++                                _unavailable('results', 'quantitative result store is unavailable')])
+         return out
+     out["available"] = True
+     out["counts"] = {
+@@ -597,7 +589,8 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
+                                           "rejected, braked, at FROM research_tests "
+                                           "ORDER BY seq DESC LIMIT ?", (limit,))
+     out["ideas"] = assessed_ideas(journal, limit=min(limit, 50))
+-    out["unavailable"] = question_gaps + [
++    out["unavailable"] = [
++        _unavailable("questions", "research-question chains were retired (RP-04); no question store is read"),
+         _unavailable("plans", "frozen protocols are not persisted as records the API can read"),
+         _unavailable("costs", "no attributed research cost records; missing is not zero"),
+         _unavailable("shadow_reports", "no shadow-report store"),
+diff --git a/trader/owner/approvals.py b/trader/owner/approvals.py
+index dd627d0..01b7454 100644
+--- a/trader/owner/approvals.py
++++ b/trader/owner/approvals.py
+@@ -15,11 +15,21 @@ SOURCES = {
+     'strategy_version': ('strategy_versions', 'version_id', 'canonical_json'),
+     'validation': ('strategy_validation_receipts', 'receipt_id', 'canonical_json'),
+     'probation': ('strategy_probation_receipts', 'receipt_id', 'canonical_json'),
+-    'research_bank': ('research_bank_objects', 'bank_object_id', 'canonical_json'),
+     'context': ('state_kv', 'key', 'value'),
+ }
+ 
+ 
++#: Source kinds that existed historically and were retired with their stores.
++#: An approval that binds one keeps its identity and evidence untouched; the
++#: binding can no longer be read, so the item reports a retired (not valid,
++#: not approvable) source instead of failing with an unhandled KeyError.
++RETIRED_SOURCES = {'research_bank': 'research_bank_chains_retired_rp04'}
++
++
++class RetiredSource(ValueError):
++    """The binding names a source kind that was retired."""
++
++
+ def canonical(value):
+     return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False,
+                       allow_nan=False)
+@@ -55,6 +65,10 @@ def source(journal, kind, identity):
+         if not path.is_file():
+             return None
+         return dict(path=identity, content_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
++    if kind in RETIRED_SOURCES:
++        raise RetiredSource('retired_source:' + kind)
++    if kind not in SOURCES:
++        raise ValueError('unregistered_source_kind')
+     table, key, col = SOURCES[kind]
+     if kind == 'context' and not identity.startswith('owner_proposal_context:'):
+         raise ValueError('unregistered_context')
+@@ -127,6 +141,8 @@ def validity(journal, cfg, item, now_ms):
+             value = source(journal, b['kind'], b['identity'])
+             if value is None or digest(value) != b['sha256']:
+                 reasons.append('source_missing_or_changed:' + b['identity'])
++        except RetiredSource:
++            reasons.append('source_retired:%s:%s' % (b.get('kind'), b.get('identity')))
+         except (ValueError, KeyError, TypeError):
+             reasons.append('source_unreadable:' + str(b.get('identity')))
+     newer = journal.query('SELECT payload FROM owner_approval_items WHERE item_id!=?', (item['item_id'],))
+diff --git a/trader/owner/queries.py b/trader/owner/queries.py
+index 3231936..ce5c49b 100644
+--- a/trader/owner/queries.py
++++ b/trader/owner/queries.py
+@@ -89,9 +89,8 @@ def captured(journal, decision_id=None):
+ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
+     if kind not in KINDS or (identity is not None and (not isinstance(identity, str) or not 1 <= len(identity) <= 128)):
+         raise ValueError('unsupported_owner_query')
+-    if type(offset) is not int or offset < 0 or (offset and (identity or kind not in ('research', 'capability', 'cost', 'approvals'))):
++    if type(offset) is not int or offset < 0 or (offset and (identity or kind != 'approvals')):
+         raise ValueError('unsupported_catalog_offset')
+-    question_page = None
+     root = Path(root) if root is not None else Path(journal.db_path).parent.parent
+     cfg = cfg if cfg is not None else {}
+     records, missing = [], []
+@@ -132,47 +131,12 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
+         if not records:
+             missing.append('exact_world_or_learning_capture_NOT_RECORDED')
+     elif kind in ('research', 'capability', 'cost'):
+-        for row in rows(journal, 'research_bank_objects', 'bank_object_id', identity):
+-            if row['schema'] == 'external-evidence-bank-object.v1':
+-                from trader.research.external_research import verify_bank
+-                value = verify_bank(journal, row)
+-                # verifier returns the verified bank object
+-                if value is None:
+-                    value = json.loads(row['canonical_json'])
+-            else:
+-                from trader.cognition.research_bank_view import build
+-                value = build(journal, bank_object_id=row['bank_object_id'], max_prior_objects=5)
+-            records.append(record('research', row['bank_object_id'], value, source='Research Bank verified chain',
+-                                  at=row['recorded_at_ms'], available=row['recorded_at_ms'], verified=True))
+-            if row['schema'] != 'external-evidence-bank-object.v1':
+-                # The existing verified Bank view deliberately exposes evidence
+-                # identity rather than copying values. Follow that exact link
+-                # for the owner, without a semantic/time-proximity join.
+-                for evidence in rows(journal, 'research_evidence', 'evidence_id', row['evidence_id']):
+-                    records.append(record('research_evidence', evidence['evidence_id'], json.loads(evidence['canonical_json']),
+-                                          source='research_evidence linked by verified Bank evidence_id',
+-                                          available=evidence['recorded_at_ms'], verified=True))
+-        # Questions with no result remain visible, including failed/empty runs.
+-        questions = rows(journal, 'research_questions', 'question_id', identity, limit=LIMIT+1, offset=offset)
+-        question_page = dict(offset=offset, limit=LIMIT, has_more=len(questions)>LIMIT,
+-                             next_offset=offset+LIMIT if len(questions)>LIMIT else None,
+-                             order='journal insertion order, newest first', scope='research_questions')
+-        for row in questions[:LIMIT]:
+-            value = json.loads(row['canonical_json'])
+-            records.append(record('question', row['question_id'], value, source='research_questions',
+-                                  at=row['recorded_at_ms'], available=row['recorded_at_ms']))
+         if kind == 'research':
+             for row in rows(journal, 'research_combos', 'hash', identity):
+                 value = R.research_item(journal, row['hash'])
+                 records.append(record('experiment', row['hash'], value,
+                                       source='quantitative research ledger; registered referee status only', at=row['created_at']))
+         if kind == 'cost':
+-            for row in rows(journal, 'research_runs', 'run_id', identity):
+-                value = json.loads(row['telemetry_json'])
+-                if hashlib.sha256(row['telemetry_json'].encode()).hexdigest() != row['telemetry_sha256']:
+-                    raise ValueError('cost_telemetry_hash_differs')
+-                records.append(record('cost', row['run_id'], value, source='research_runs telemetry',
+-                                      available=row['recorded_at_ms'], verified=True))
+             usage = root / 'data/brain_usage.json'
+             if identity in (None, 'brain_usage') and usage.is_file():
+                 raw = usage.read_bytes()
+@@ -202,9 +166,11 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
+                 sql = 'SELECT cut_id,payload FROM evaluations '
+                 for cut, raw in db.execute(sql + ('WHERE cut_id=? ' if identity else '') + 'ORDER BY rowid DESC LIMIT 50',
+                                            (identity,) if identity else ()).fetchall():
+-                    value = json.loads(raw)
+-                    if value['portfolio_cut_id'] != cut:
+-                        raise ValueError('portfolio_cut_identity_differs')
++                    # DA-10 stores a lossless authenticated detail marker.
++                    # Resolve through the same exact-cut reader as replay;
++                    # parsing the physical marker as JSON loses owner access.
++                    from trader.portfolio.runtime import _evaluation
++                    value = _evaluation(db, cut, raw)
+                     records.append(record('portfolio', cut, value, source='runtime-portfolio evaluations',
+                                           at=value['event_receipt']['inputs']['current']['as_of_ms']))
+         if identity is None:
+@@ -220,7 +186,7 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
+         missing.extend(x['reason'] for x in feed['unavailable'])
+     if not records:
+         missing.append('exact_records_UNAVAILABLE')
+-    return dict(schema='owner-query.v1', query=dict(kind=kind, identity=identity, offset=offset), questions_page=question_page, generated_at=stamp(),
++    return dict(schema='owner-query.v1', query=dict(kind=kind, identity=identity, offset=offset), generated_at=stamp(),
+                 status='AVAILABLE' if records else 'UNAVAILABLE', records=records,
+                 unavailable=[dict(field=kind, reason=m) for m in dict.fromkeys(missing)],
+                 source='typed internal record readers; read-only', truncated=len(records)>=LIMIT,

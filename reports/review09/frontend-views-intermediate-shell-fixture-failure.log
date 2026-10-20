@@ -1,0 +1,39 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run --run tests/review09.test.tsx
+
+
+ RUN  v5.0.2 /mnt/luffy-data/sol1-subsystem-review-09-20261020/frontend
+
+ ❯ tests/review09.test.tsx (9 tests | 1 failed) 990ms
+   × does not infer a demo venue account from a LIVE dashboard 25ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review09.test.tsx > does not infer a demo venue account from a LIVE dashboard
+TypeError: Cannot read properties of undefined (reading 'commit')
+ ❯ Shell src/Shell.tsx:250:68
+    248|         <span>
+    249|           {live
+    250|             ? `LUFFY · OWNER WORKSPACE · backend commit ${session?.bac…
+       |                                                                    ^
+    251|             : "LUFFY · FRONTEND PREVIEW"}
+    252|         </span>
+ ❯ Object.react_stack_bottom_frame ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+ ❯ workLoopSync ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:19004:41
+ ❯ renderRootSync ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:18985:11
+ ❯ performWorkOnRoot ../../frontend-build/node_modules/react-dom/cjs/react-dom-client.development.js:18094:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  05:46:46
+   Duration  5.01s (transform 31%, environment 28%, tests 21%, import 15%, setup 4%)
+

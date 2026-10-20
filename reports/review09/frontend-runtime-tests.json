@@ -1,0 +1,52 @@
+{
+  "scope": "frontend runtime shared components/adapters; offline focused checks only",
+  "runs": [
+    {
+      "command": "npm test -- tests/live.test.tsx tests/own04.test.tsx tests/workspace.test.tsx tests/contracts.test.ts",
+      "cwd": "frontend",
+      "exit_code": 0,
+      "passed": 35,
+      "files": 4,
+      "duration_s": 6.38,
+      "log": "frontend-runtime-existing-tests.log"
+    },
+    {
+      "command": "npm test -- tests/review09.test.tsx -t 'cached AVAILABLE'",
+      "cwd": "frontend",
+      "exit_code": 0,
+      "passed": 1,
+      "skipped": 4,
+      "duration_s": 2.98,
+      "log": "frontend-runtime-tests.log",
+      "overlap": "Part of frontend views agent consolidated review09 suite; do not double-count."
+    },
+    {
+      "command": "npm run typecheck",
+      "cwd": "frontend",
+      "exit_code": 0,
+      "log": "frontend-runtime-typecheck.log",
+      "last_run": "After all runtime source edits including recovery link/greeting."
+    },
+    {
+      "command": "git diff --check -- frontend",
+      "cwd": ".",
+      "exit_code": 0
+    },
+    {
+      "command": "Offline JSON manifest/lock root dependencies equality and CSS import/url/rule structure checks",
+      "exit_code": 0,
+      "locked_packages": 215,
+      "css_external_urls": 0
+    }
+  ],
+  "red_evidence": "frontend-views-red.log owned by views agent contains baseline cached-health test failure",
+  "not_run": [
+    "full CI",
+    "production browser/dashboard/kernel runtime",
+    "dependency installation",
+    "provider calls",
+    "production DB reads/writes",
+    "canonical integration"
+  ],
+  "graph_update": "Root coordinates final AST-only update once source edits finish"
+}

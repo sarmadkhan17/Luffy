@@ -1,0 +1,13 @@
+Use /mnt/luffy-data/sol1-subsystem-review-09-20261020 on branch sol1/subsystem-review-09-20261020.
+Existing venv dependency symlink points at release-ef9fca8/venv; source imports resolve this worktree.
+Existing frontend/node_modules symlink points at /mnt/luffy-data/frontend-build/node_modules; no install was performed. Neither symlink is committed.
+
+Focused commands/limits and logs: verification.json (Owner, Dashboard and frontend sections).
+Owner IPC tests require TMPDIR=/tmp TEMP=/tmp TMP=/tmp because inherited mounted test-tmp has a group-writable ancestor; do not weaken IPC directory checks.
+
+Coverage: ownership.json pins the existing inventory and CSV. files.json/files.csv/FILE_REPORT.md cover206 exact source paths once. frontend/tests/review09.test.tsx is a new TEST_ONLY supporting regression file, not an added subsystem/file in the existing inventory.
+No archived closure program should be run as a current validator; its historical source and output contracts are preserved.
+
+Source remains isolated. Do not merge, launch Kernel/Dashboard, call providers, mutate production stores or activate trading as an incidental verification. FullCI and canonical integration stay deferred until after Review12.
+
+Raw failure logs/XML retain tool formatting and trailing whitespace; source diff whitespace check excludes report artifacts. CSV uses LF line endings.

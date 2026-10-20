@@ -1,0 +1,1239 @@
+[
+  {
+    "path": "frontend/.gitignore",
+    "classification": "KEEP",
+    "purpose": "Exclude dependency trees, generated builds/browser results, and preserved owner materials from commits.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/.gitignore:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "122 bytes; 9 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "d947e50a2b6fcc8918cbcb93f6813f4f00cf60f600531989b0ddc370e9a55ff7",
+    "reviewed_sha256": "d947e50a2b6fcc8918cbcb93f6813f4f00cf60f600531989b0ddc370e9a55ff7",
+    "lines": 9
+  },
+  {
+    "path": "frontend/HANDOFF.md",
+    "classification": "SIMPLIFY",
+    "purpose": "Retain original V1 routing review, fixture performance measurements, preservation manifest and historical integration boundary.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/HANDOFF.md:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Dated status note distinguishes historical V1 preview claims from current explicit live/demo entry; original milestone evidence retained."
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "14746 bytes; 218 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "df47487a83eb8249bca34747f73adb07200e9f7cced69a473f783393c9fceef5",
+    "reviewed_sha256": "6401e334f8f4e94d42e58ad0d05bd033094507ba3401b2b581d40b50ce1078ef",
+    "lines": 218
+  },
+  {
+    "path": "frontend/README.md",
+    "classification": "SIMPLIFY",
+    "purpose": "Explain frontend entry/build modes and preserve original preview milestone notes.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/README.md:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Dated status note distinguishes historical V1 preview claims from current explicit live/demo entry; original milestone evidence retained."
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "6379 bytes; 100 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "2015c78763280a60ca095d4336d2d838b4e37cfc023c7d0adf9965f3ec4bc497",
+    "reviewed_sha256": "bf152b05aa6d5a3b42176a423f7644e04cca7f700dbc0ff46cfffe547a1508fe",
+    "lines": 100
+  },
+  {
+    "path": "frontend/index.html",
+    "classification": "KEEP",
+    "purpose": "Browser HTML root with restrictive self-only CSP and Vite module entry.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/index.html:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "624 bytes; 17 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "e1ad3783bddc3615fda8525c58f5cc8ba4dcda450558d1be994b01eb3ccf0a8f",
+    "reviewed_sha256": "e1ad3783bddc3615fda8525c58f5cc8ba4dcda450558d1be994b01eb3ccf0a8f",
+    "lines": 17
+  },
+  {
+    "path": "frontend/package-lock.json",
+    "classification": "KEEP",
+    "purpose": "Pin the complete npm dependency graph for reproducible frontend builds.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/package-lock.json:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "115070 bytes; 3366 lines. 215 locked packages; manifest root dependency maps verified equal. Removal sacrifices reproducibility; no install/update performed.",
+    "baseline_sha256": "06e58a94fafc69363ec9e56c5adec574315b1b767cc458ea26e6824bc3ade16d",
+    "reviewed_sha256": "06e58a94fafc69363ec9e56c5adec574315b1b767cc458ea26e6824bc3ade16d",
+    "lines": 3366
+  },
+  {
+    "path": "frontend/package.json",
+    "classification": "KEEP",
+    "purpose": "Declare reviewed React/TypeScript/Vite/query/chart/motion dependencies and explicit live/demo/test commands.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/package.json:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1481 bytes; 45 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "b8adfa67eea537db3f1027c4774ab650b8eb0ed233d6bc8577cc15ee8649b158",
+    "reviewed_sha256": "b8adfa67eea537db3f1027c4774ab650b8eb0ed233d6bc8577cc15ee8649b158",
+    "lines": 45
+  },
+  {
+    "path": "frontend/playwright.config.ts",
+    "classification": "KEEP",
+    "purpose": "Configure demo, fixture harness and temporary FastAPI fixture-server regression targets.",
+    "consumers": [
+      "frontend/playwright.m3.config.ts"
+    ],
+    "evidence": [
+      "frontend/playwright.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1877 bytes; 56 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "94b6a6dc941a316396db19adfa3d73d995be0e2c09c306f1e11c28234bf504b0",
+    "reviewed_sha256": "94b6a6dc941a316396db19adfa3d73d995be0e2c09c306f1e11c28234bf504b0",
+    "lines": 56
+  },
+  {
+    "path": "frontend/playwright.glacier-v2.config.ts",
+    "classification": "KEEP",
+    "purpose": "Configure intercepted-fixture static production-assets Glacier v2 browser regression.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/playwright.glacier-v2.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "896 bytes; 11 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "9f024d266852c77fac6042bfe28e932ea866759717b7904965a26ed08586ad0d",
+    "reviewed_sha256": "9f024d266852c77fac6042bfe28e932ea866759717b7904965a26ed08586ad0d",
+    "lines": 11
+  },
+  {
+    "path": "frontend/playwright.glacier.config.ts",
+    "classification": "KEEP",
+    "purpose": "Configure intercepted-fixture static Glacier correction browser regression.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/playwright.glacier.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "862 bytes; 11 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "d1b97e97d38b80a06873ab65567e40c6a3b06889e54cbbddfab66f51bf4513b1",
+    "reviewed_sha256": "d1b97e97d38b80a06873ab65567e40c6a3b06889e54cbbddfab66f51bf4513b1",
+    "lines": 11
+  },
+  {
+    "path": "frontend/playwright.gui01.config.ts",
+    "classification": "KEEP",
+    "purpose": "Configure read-only GUI fixture-server browser regression.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/playwright.gui01.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "679 bytes; 5 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "cc5ed300f396942c71d8899214c530f169976ee7c4f85973cacde30a6f608c4a",
+    "reviewed_sha256": "cc5ed300f396942c71d8899214c530f169976ee7c4f85973cacde30a6f608c4a",
+    "lines": 5
+  },
+  {
+    "path": "frontend/playwright.m3.config.ts",
+    "classification": "KEEP",
+    "purpose": "Select M3 capture tests and only the temporary fixture backend from shared browser configuration.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/playwright.m3.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "662 bytes; 23 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "a10a65459556f64d35d9e70e65a98cee16e8bd56b21e1d51212294a83a2ae6e2",
+    "reviewed_sha256": "a10a65459556f64d35d9e70e65a98cee16e8bd56b21e1d51212294a83a2ae6e2",
+    "lines": 23
+  },
+  {
+    "path": "frontend/playwright.stage8.config.ts",
+    "classification": "KEEP",
+    "purpose": "Configure stage8/live fixture backend regressions with explicit isolated port/output.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/playwright.stage8.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "790 bytes; 7 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "d12ee3f925f490e377c58ce9e8bd3cf99b2db83133d36085f7d3787e3e8313bb",
+    "reviewed_sha256": "d12ee3f925f490e377c58ce9e8bd3cf99b2db83133d36085f7d3787e3e8313bb",
+    "lines": 7
+  },
+  {
+    "path": "frontend/src/Shell.tsx",
+    "classification": "SIMPLIFY",
+    "purpose": "Dispatch ten owner routes, keyboard rail navigation, lazy-load failure recovery, mode banner and shell chrome.",
+    "consumers": [
+      "frontend/src/demo.tsx",
+      "frontend/src/liveRoot.tsx",
+      "frontend/src/main.tsx",
+      "frontend/tests/review09.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/Shell.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Removed unsupported demo-environment literal; runtime_truth/accountLabel remains source of environment evidence. Removed shadowed Routes diagnostics branch and unreachable live-SystemObserved child."
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "12652 bytes; 275 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "97c789cad241b93660d4fad75fa9d75d92ef7625a6f0247d333a1b326b6fe091",
+    "reviewed_sha256": "4bdd07cee0e3e8819fd2c364a02f4790c65840ce1ee3aa0e4b17b765f2a1818b",
+    "lines": 275
+  },
+  {
+    "path": "frontend/src/adapters/contracts.ts",
+    "classification": "KEEP",
+    "purpose": "Define explicit live/demo, provenance, protection, graph, control, history and owner-read TypeScript contracts.",
+    "consumers": [
+      "frontend/src/adapters/fixture.ts",
+      "frontend/src/adapters/live.ts",
+      "frontend/src/adapters/pending.ts",
+      "frontend/src/components/HealthStatus.tsx",
+      "frontend/src/components/OwnerControls.tsx",
+      "frontend/src/components/PathTrace.tsx",
+      "frontend/src/components/records.tsx",
+      "frontend/src/components/ui.tsx",
+      "frontend/src/context.tsx",
+      "frontend/src/protectionExpiry.ts",
+      "frontend/src/telemetryExpiry.ts",
+      "frontend/src/useOwnerTelemetry.ts",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/src/views/graphGeometry.ts",
+      "frontend/src/views/graphPath.ts",
+      "frontend/src/views/graphScope.ts",
+      "frontend/tests/closeTradeDeferred.test.tsx",
+      "frontend/tests/components.test.tsx",
+      "frontend/tests/graphPath.test.ts",
+      "frontend/tests/harness/main.tsx",
+      "frontend/tests/live.test.tsx",
+      "frontend/tests/m1.test.tsx",
+      "frontend/tests/m2.test.tsx",
+      "frontend/tests/own04.test.tsx",
+      "frontend/tests/protectionSnapshot.test.tsx",
+      "frontend/tests/review09.test.tsx",
+      "frontend/tests/stage8.test.tsx",
+      "frontend/tests/tradeHistory.test.tsx",
+      "frontend/tests/v21.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/adapters/contracts.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "9050 bytes; 285 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "4aa918fbf6c5321853eec54c886153dbe7da3fb42d1b32a57b374881e9128811",
+    "reviewed_sha256": "4aa918fbf6c5321853eec54c886153dbe7da3fb42d1b32a57b374881e9128811",
+    "lines": 285
+  },
+  {
+    "path": "frontend/src/adapters/fixture.ts",
+    "classification": "KEEP",
+    "purpose": "Provide cancellable synthetic account/graph/chat scenarios for explicit demo/tests only.",
+    "consumers": [
+      "frontend/src/demo.tsx",
+      "frontend/tests/components.test.tsx",
+      "frontend/tests/contracts.test.ts",
+      "frontend/tests/glacierTruth.test.tsx",
+      "frontend/tests/harness/main.tsx",
+      "frontend/tests/health.test.tsx",
+      "frontend/tests/review09.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/adapters/fixture.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional isolated synthetic demo/test boundary. Production main selects live; live adapter has no fixture import or fallback.",
+    "costs_removal": "7991 bytes; 286 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "8cb14b0d537923f04971835780f1d966505e6a1d81958e0fb0882fb04f6e7bee",
+    "reviewed_sha256": "8cb14b0d537923f04971835780f1d966505e6a1d81958e0fb0882fb04f6e7bee",
+    "lines": 286
+  },
+  {
+    "path": "frontend/src/adapters/live.ts",
+    "classification": "SIMPLIFY",
+    "purpose": "Bind authenticated no-store transport and validated backend reads; map account/protection/graph/mention/history evidence; retain typed owner control idempotency.",
+    "consumers": [
+      "frontend/src/context.tsx",
+      "frontend/src/liveRoot.tsx",
+      "frontend/tests/closeTradeDeferred.test.tsx",
+      "frontend/tests/glacierTruth.test.tsx",
+      "frontend/tests/live.test.tsx",
+      "frontend/tests/m1.test.tsx",
+      "frontend/tests/m2.test.tsx",
+      "frontend/tests/own04.test.tsx",
+      "frontend/tests/protectionSnapshot.test.tsx",
+      "frontend/tests/review09.test.tsx",
+      "frontend/tests/stage8.test.tsx",
+      "frontend/tests/tracker-phase.test.ts",
+      "frontend/tests/tradeHistory.test.tsx",
+      "frontend/tests/v21.test.tsx",
+      "frontend/tests/workspace.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/adapters/live.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "ReadOnlyBoundary rejects POST; adapter now omits approvalDecision alongside control so NeedsYou cannot offer guaranteed-refused writes."
+    ],
+    "design_boundary": "Typed Owner Interface is sole mutation authority; retries preserve request identity; read-only backend blocks writes. Frontend optional write methods are omitted in read-only adapter.",
+    "costs_removal": "30772 bytes; 817 lines. Bounded HTTP read polling/cache or mappings; no UI database writer. Polling/validation are intentional correctness boundaries, not redundant services.",
+    "baseline_sha256": "c3bbc49fac974fb3595cb6b43b4447610af6dcce73c45551df9eb38ec09b3619",
+    "reviewed_sha256": "4681d4ea03a8830c7eb76340521bc03ff1698c7acb6eb5c8f0faa845ce7fd002",
+    "lines": 817
+  },
+  {
+    "path": "frontend/src/adapters/pending.ts",
+    "classification": "KEEP",
+    "purpose": "Persist each unresolved typed owner request separately and retry the oldest same action with the same id.",
+    "consumers": [
+      "frontend/src/components/OwnerControls.tsx",
+      "frontend/src/components/OwnerEvidence.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/tests/live.test.tsx",
+      "frontend/tests/stage8.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/adapters/pending.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Typed Owner Interface is sole mutation authority; retries preserve request identity; read-only backend blocks writes. Frontend optional write methods are omitted in read-only adapter.",
+    "costs_removal": "2457 bytes; 81 lines. Per-request localStorage/in-memory state only; no production database access. Removal loses retry/session conversation contract.",
+    "baseline_sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4",
+    "reviewed_sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4",
+    "lines": 81
+  },
+  {
+    "path": "frontend/src/adapters/readContracts.ts",
+    "classification": "KEEP",
+    "purpose": "Validate read response shapes and completeness invariants; reject malformed evidence and incomplete graph proofs.",
+    "consumers": [
+      "frontend/src/adapters/live.ts",
+      "frontend/src/views/Evidence.tsx",
+      "frontend/tests/acc03.test.tsx",
+      "frontend/tests/glacierTruth.test.tsx",
+      "frontend/tests/stage8.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/adapters/readContracts.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "11767 bytes; 338 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "1086541fffa650617f3fef9bc798bb445148433492999668c1b02efb55a11ec3",
+    "reviewed_sha256": "1086541fffa650617f3fef9bc798bb445148433492999668c1b02efb55a11ec3",
+    "lines": 338
+  },
+  {
+    "path": "frontend/src/adapters/tracker.ts",
+    "classification": "KEEP",
+    "purpose": "Validate canonical read-only tracker rows, selected package, references, status counts and seven gate identities.",
+    "consumers": [
+      "frontend/src/views/Tracker.tsx",
+      "frontend/tests/tracker-phase.test.ts"
+    ],
+    "evidence": [
+      "frontend/src/adapters/tracker.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "4333 bytes; 41 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "d78d15e13870ab2a69e8aaab5ec6c5f80cf050cb437e46f833b039e37f916fac",
+    "reviewed_sha256": "d78d15e13870ab2a69e8aaab5ec6c5f80cf050cb437e46f833b039e37f916fac",
+    "lines": 41
+  },
+  {
+    "path": "frontend/src/assets/chart-room.svg",
+    "classification": "KEEP",
+    "purpose": "Supply a small static decorative geometric chart-room asset to retained CSS themes.",
+    "consumers": [
+      "frontend/src/m4.css",
+      "frontend/src/product.css",
+      "frontend/src/styles.css"
+    ],
+    "evidence": [
+      "frontend/src/assets/chart-room.svg:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "514 bytes; 1 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "f22d2d899cae2972a6708ee1e2b108156174a3b8c55b62259cc022aece5656ed",
+    "reviewed_sha256": "f22d2d899cae2972a6708ee1e2b108156174a3b8c55b62259cc022aece5656ed",
+    "lines": 1
+  },
+  {
+    "path": "frontend/src/components/Avatar.tsx",
+    "classification": "KEEP",
+    "purpose": "Render cancellable fixture-era mechanical SVG avatar; animate only active visible requests and respect reduced motion.",
+    "consumers": [
+      "frontend/src/views/Luffy.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/Avatar.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "5049 bytes; 164 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "17ee72da95c440d1f6f28dd2fadacb401164795143025bc118553acfaf14cc32",
+    "reviewed_sha256": "17ee72da95c440d1f6f28dd2fadacb401164795143025bc118553acfaf14cc32",
+    "lines": 164
+  },
+  {
+    "path": "frontend/src/components/EquityChart.tsx",
+    "classification": "KEEP",
+    "purpose": "Render supplied equity points with Lightweight Charts and dispose chart on update/unmount.",
+    "consumers": [
+      "Retained explicit module contract; direct frontend import scan recorded no current importer"
+    ],
+    "evidence": [
+      "frontend/src/components/EquityChart.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1405 bytes; 54 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "5280310f32a680fd47afdf2dfc21ce5b73502ab43d39e393d0f89e0348873aaa",
+    "reviewed_sha256": "5280310f32a680fd47afdf2dfc21ce5b73502ab43d39e393d0f89e0348873aaa",
+    "lines": 54
+  },
+  {
+    "path": "frontend/src/components/HealthStatus.tsx",
+    "classification": "KEEP",
+    "purpose": "Present no-telemetry, unknown, stale, stopped and current observed component labels without topology-as-health inference.",
+    "consumers": [
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/tests/health.test.tsx",
+      "frontend/tests/own04.test.tsx",
+      "frontend/tests/v21.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/HealthStatus.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1572 bytes; 37 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "24b125cf8bba4c4f4dbd12bcedd473cbf9d8e8c7ec2428b7462ecc3eed333e16",
+    "reviewed_sha256": "24b125cf8bba4c4f4dbd12bcedd473cbf9d8e8c7ec2428b7462ecc3eed333e16",
+    "lines": 37
+  },
+  {
+    "path": "frontend/src/components/LuffyCore.tsx",
+    "classification": "KEEP",
+    "purpose": "Render modern deterministic conversation/evidence/provider state icon without generating trading activity.",
+    "consumers": [
+      "frontend/src/views/Luffy.tsx",
+      "frontend/tests/glacierV2.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/LuffyCore.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "3176 bytes; 34 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "007154c35cb1148647d83327f72565d01217de8e48c101eb61079711c47969cd",
+    "reviewed_sha256": "007154c35cb1148647d83327f72565d01217de8e48c101eb61079711c47969cd",
+    "lines": 34
+  },
+  {
+    "path": "frontend/src/components/OwnerControls.tsx",
+    "classification": "SIMPLIFY",
+    "purpose": "Present typed freeze/halt/resume/panic requests with bounded confirmation, live health gating and stable request-id replay.",
+    "consumers": [
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/glacierTruth.test.tsx",
+      "frontend/tests/review09.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/OwnerControls.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Baseline available checks cached health.data and isFetching but not health.error; red cached-AVAILABLE refresh-failure regression reproduced. Added !health.error."
+    ],
+    "design_boundary": "Typed Owner Interface is sole mutation authority; retries preserve request identity; read-only backend blocks writes. Frontend optional write methods are omitted in read-only adapter.",
+    "costs_removal": "10836 bytes; 206 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "670fdcdfbc35a9c39e1206401e2449169c0578c11a48fd384df4c28cc41a1c46",
+    "reviewed_sha256": "b580b1d41561e0261df811340d4f0554485408ee778cadd7bd4a7445fc1dd976",
+    "lines": 206
+  },
+  {
+    "path": "frontend/src/components/OwnerEvidence.tsx",
+    "classification": "SIMPLIFY",
+    "purpose": "Render compact/full exact Needs You decisions and bounded typed evidence lookup with research paging.",
+    "consumers": [
+      "frontend/src/views/Luffy.tsx",
+      "frontend/tests/stage8.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/OwnerEvidence.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Recovery href/live greeting now target Trades, where Shell renders actual OwnerControls; OperationsLog is read-only."
+    ],
+    "design_boundary": "Typed Owner Interface is sole mutation authority; retries preserve request identity; read-only backend blocks writes. Frontend optional write methods are omitted in read-only adapter.",
+    "costs_removal": "6727 bytes; 88 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "68ef40406949d2c314c11c6252f2839eb8d6e57c8b27bfb9d11984f9184349f0",
+    "reviewed_sha256": "ceeac33a2652f78e899dc350c8293164870f2abeb01d06a79269940ef83b20f0",
+    "lines": 88
+  },
+  {
+    "path": "frontend/src/components/PageHeader.tsx",
+    "classification": "KEEP",
+    "purpose": "Render page title, UTC clock, live/fixture/read-only chip and authenticated sign-out action.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/LiveSystem.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Trades.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/PageHeader.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1762 bytes; 37 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "b77eafa09788a3412854ac9a8231c6c80a96976020a8e18489ccc436ff915ae7",
+    "reviewed_sha256": "b77eafa09788a3412854ac9a8231c6c80a96976020a8e18489ccc436ff915ae7",
+    "lines": 37
+  },
+  {
+    "path": "frontend/src/components/PathTrace.tsx",
+    "classification": "KEEP",
+    "purpose": "Trace directed paths only over returned graph edges, with explicit noncausal and incomplete-store caveats.",
+    "consumers": [
+      "frontend/src/views/GraphView.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/PathTrace.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2324 bytes; 78 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "33ca76e6175a4a39bcdf0eeec82fe3876d91bb6f9141bb8fb976000742aef350",
+    "reviewed_sha256": "33ca76e6175a4a39bcdf0eeec82fe3876d91bb6f9141bb8fb976000742aef350",
+    "lines": 78
+  },
+  {
+    "path": "frontend/src/components/RuntimeTruth.tsx",
+    "classification": "KEEP",
+    "purpose": "Poll bootstrap truth, invalidate failed polls and expire account environment observations after existing 60-second display contract.",
+    "consumers": [
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/glacierTruth.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/RuntimeTruth.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2654 bytes; 35 lines. Bounded HTTP read polling/cache or mappings; no UI database writer. Polling/validation are intentional correctness boundaries, not redundant services.",
+    "baseline_sha256": "0d8e9e962a0e5f70a022d8d6f1fb53136b2e261330f93cf1df4a3f35861f5b10",
+    "reviewed_sha256": "0d8e9e962a0e5f70a022d8d6f1fb53136b2e261330f93cf1df4a3f35861f5b10",
+    "lines": 35
+  },
+  {
+    "path": "frontend/src/components/StorageTruth.tsx",
+    "classification": "KEEP",
+    "purpose": "Render recorded filesystem capacity/database sizes and distinguish missing growth baselines from measured growth.",
+    "consumers": [
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/tests/diagnosticCorrections.test.tsx",
+      "frontend/tests/glacierTruth.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/StorageTruth.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "3937 bytes; 30 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "d12d5faebd9bd0e7fc6b9c23352e2359623900b05e40cc8f7dfe482c57843a66",
+    "reviewed_sha256": "d12d5faebd9bd0e7fc6b9c23352e2359623900b05e40cc8f7dfe482c57843a66",
+    "lines": 30
+  },
+  {
+    "path": "frontend/src/components/StrategyAuthority.tsx",
+    "classification": "KEEP",
+    "purpose": "Show exact StrategyVersion validation/install/probation/approval/Governor records separately from economics and execution eligibility.",
+    "consumers": [
+      "frontend/src/views/Strategies.tsx",
+      "frontend/tests/glacierTruth.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/StrategyAuthority.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "6848 bytes; 74 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "64f540236a4ab7bc9fb8837d6b9641f81672730739e8206938ad81888e59eabc",
+    "reviewed_sha256": "64f540236a4ab7bc9fb8837d6b9641f81672730739e8206938ad81888e59eabc",
+    "lines": 74
+  },
+  {
+    "path": "frontend/src/components/glass.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply modern cards, accessible Radix detail dialogs and bounded local sort/filter/paging tables.",
+    "consumers": [
+      "frontend/src/components/OwnerControls.tsx",
+      "frontend/src/components/StorageTruth.tsx",
+      "frontend/src/components/StrategyAuthority.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/LiveSystem.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/glacierV2.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/glass.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "13971 bytes; 329 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "f6624bb1c4b06be4f35ba3686b2277ea68268a015044af7cf904d1d41c8c6425",
+    "reviewed_sha256": "f6624bb1c4b06be4f35ba3686b2277ea68268a015044af7cf904d1d41c8c6425",
+    "lines": 329
+  },
+  {
+    "path": "frontend/src/components/motion.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply shared reduced-motion-aware animations; changed primitives update immediately without synthetic interpolated financial values.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/LuffyCore.tsx",
+      "frontend/src/components/StorageTruth.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/glacierV2.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/motion.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2249 bytes; 38 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "5f3f8fc84b0c05d8f8c4cb7248b9fd5d266088508ae4ab3bcae352b506658e7e",
+    "reviewed_sha256": "5f3f8fc84b0c05d8f8c4cb7248b9fd5d266088508ae4ab3bcae352b506658e7e",
+    "lines": 38
+  },
+  {
+    "path": "frontend/src/components/product.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply evidence figures, exact truth labels, lineage strips and recorded proportional distributions.",
+    "consumers": [
+      "frontend/src/views/Evidence.tsx",
+      "frontend/src/views/LiveReads.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/product.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "3710 bytes; 129 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "7b734fe1ab0851d8eb23c4d8e6bece9b479b5e511828f785dbf8fa6193c7fdf4",
+    "reviewed_sha256": "7b734fe1ab0851d8eb23c4d8e6bece9b479b5e511828f785dbf8fa6193c7fdf4",
+    "lines": 129
+  },
+  {
+    "path": "frontend/src/components/records.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply shared path-keyed cancellable reads, fail-closed Loaded presentation, unavailable-field lists and stored-id links.",
+    "consumers": [
+      "frontend/src/components/OwnerEvidence.tsx",
+      "frontend/src/components/RuntimeTruth.tsx",
+      "frontend/src/components/StorageTruth.tsx",
+      "frontend/src/components/StrategyAuthority.tsx",
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/Evidence.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/LiveReads.tsx",
+      "frontend/src/views/LiveSystem.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Trades.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/records.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "5706 bytes; 212 lines. Bounded HTTP read polling/cache or mappings; no UI database writer. Polling/validation are intentional correctness boundaries, not redundant services.",
+    "baseline_sha256": "3cb8441ca59d0c6130a79dc7c7324a49087ce6447a39e874cef5a21f9c54ecfd",
+    "reviewed_sha256": "3cb8441ca59d0c6130a79dc7c7324a49087ce6447a39e874cef5a21f9c54ecfd",
+    "lines": 212
+  },
+  {
+    "path": "frontend/src/components/ui.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply common provenance/evidence dialogs, query failures, visual boundaries, reduced-motion and visibility hooks.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/Avatar.tsx",
+      "frontend/src/components/LuffyCore.tsx",
+      "frontend/src/components/motion.tsx",
+      "frontend/src/components/product.tsx",
+      "frontend/src/components/records.tsx",
+      "frontend/src/components/workspace.tsx",
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/Evidence.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/src/views/LiveReads.tsx",
+      "frontend/src/views/LiveSystem.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/src/views/Tracker.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/components.test.tsx",
+      "frontend/tests/m1.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/ui.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "6679 bytes; 225 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "24a178954383ba3b081c93caeb07395784bbb3a6ff9edc5b2c3636c46ae613d0",
+    "reviewed_sha256": "24a178954383ba3b081c93caeb07395784bbb3a6ff9edc5b2c3636c46ae613d0",
+    "lines": 225
+  },
+  {
+    "path": "frontend/src/components/workspace.tsx",
+    "classification": "KEEP",
+    "purpose": "Supply historical/shared evidence drawers, recorded-field tables, UTC presentation and explicit bounded paging caveats.",
+    "consumers": [
+      "frontend/src/components/OwnerEvidence.tsx",
+      "frontend/src/components/records.tsx",
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/Evidence.tsx",
+      "frontend/src/views/LiveReads.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/tests/workspace.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/components/workspace.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "8720 bytes; 302 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "2000ee2a3727a4d1d176045277868488687f5835c7b98ebcfc865128cef462e2",
+    "reviewed_sha256": "2000ee2a3727a4d1d176045277868488687f5835c7b98ebcfc865128cef462e2",
+    "lines": 302
+  },
+  {
+    "path": "frontend/src/context.tsx",
+    "classification": "SIMPLIFY",
+    "purpose": "Require explicit adapter, scope session and in-memory conversation state, and label fixture vs live greetings.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/OwnerControls.tsx",
+      "frontend/src/components/OwnerEvidence.tsx",
+      "frontend/src/components/PageHeader.tsx",
+      "frontend/src/components/RuntimeTruth.tsx",
+      "frontend/src/components/records.tsx",
+      "frontend/src/components/ui.tsx",
+      "frontend/src/demo.tsx",
+      "frontend/src/liveRoot.tsx",
+      "frontend/src/useOwnerTelemetry.ts",
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/Evidence.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/LiveReads.tsx",
+      "frontend/src/views/LiveSystem.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Tracker.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/closeTradeDeferred.test.tsx",
+      "frontend/tests/components.test.tsx",
+      "frontend/tests/glacierTruth.test.tsx",
+      "frontend/tests/harness/main.tsx",
+      "frontend/tests/live.test.tsx",
+      "frontend/tests/m1.test.tsx",
+      "frontend/tests/m2.test.tsx",
+      "frontend/tests/own04.test.tsx",
+      "frontend/tests/protectionSnapshot.test.tsx",
+      "frontend/tests/review09.test.tsx",
+      "frontend/tests/stage8.test.tsx",
+      "frontend/tests/tradeHistory.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/context.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)",
+      "Recovery href/live greeting now target Trades, where Shell renders actual OwnerControls; OperationsLog is read-only."
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2550 bytes; 91 lines. Per-request localStorage/in-memory state only; no production database access. Removal loses retry/session conversation contract.",
+    "baseline_sha256": "bb25235c563d1639b9b6297dbe489ecf83a948ec4183418f9221a587104d3492",
+    "reviewed_sha256": "429fcb5fe188265ad04ee2ad42ff51bafb85e31cf52a03e2b72e02a7921e52ce",
+    "lines": 91
+  },
+  {
+    "path": "frontend/src/demo.tsx",
+    "classification": "KEEP",
+    "purpose": "Mount isolated fixture provider only for explicit demo build; never a fallback from live root.",
+    "consumers": [
+      "frontend/src/main.tsx"
+    ],
+    "evidence": [
+      "frontend/src/demo.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional isolated synthetic demo/test boundary. Production main selects live; live adapter has no fixture import or fallback.",
+    "costs_removal": "1039 bytes; 32 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "0e2390161c33eb06a4679d65bb51035aa4318b8352eb9e212cb482f254d40c8d",
+    "reviewed_sha256": "0e2390161c33eb06a4679d65bb51035aa4318b8352eb9e212cb482f254d40c8d",
+    "lines": 32
+  },
+  {
+    "path": "frontend/src/diagnosticTruth.ts",
+    "classification": "KEEP",
+    "purpose": "Classify recorded Supervisor recovery/reconciliation and collector evidence with freshness and current-proof requirements.",
+    "consumers": [
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/tests/diagnosticCorrections.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/diagnosticTruth.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2237 bytes; 34 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "44e708074dbad354b66c0a52280f2cb1efde231d6f7462aced3ea36143b53a90",
+    "reviewed_sha256": "44e708074dbad354b66c0a52280f2cb1efde231d6f7462aced3ea36143b53a90",
+    "lines": 34
+  },
+  {
+    "path": "frontend/src/fonts.ts",
+    "classification": "KEEP",
+    "purpose": "Import self-hosted local font weights compatible with self-only CSP.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/liveRoot.tsx"
+    ],
+    "evidence": [
+      "frontend/src/fonts.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "508 bytes; 11 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "8fc03e849f3a267870c037238a7d9231aa1610ddfdc6778f4c6a7110e34a5812",
+    "reviewed_sha256": "8fc03e849f3a267870c037238a7d9231aa1610ddfdc6778f4c6a7110e34a5812",
+    "lines": 11
+  },
+  {
+    "path": "frontend/src/glacier.css",
+    "classification": "KEEP",
+    "purpose": "Define approved modern visual tokens, route/card/table layouts, responsive controls, focus states and reduced-motion overrides.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/demo.tsx",
+      "frontend/src/liveRoot.tsx"
+    ],
+    "evidence": [
+      "frontend/src/glacier.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "49584 bytes; 594 lines. 507 declaration/rule blocks; 13 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "7354e969ca67653f4ce8cfde42519efacb6accb1a96c37b2571348ce9e023b50",
+    "reviewed_sha256": "7354e969ca67653f4ce8cfde42519efacb6accb1a96c37b2571348ce9e023b50",
+    "lines": 594
+  },
+  {
+    "path": "frontend/src/lazyChunk.ts",
+    "classification": "KEEP",
+    "purpose": "Bound dynamic import at 20 seconds, announce session check, isolate visual failure and recover poisoned imports by reload.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/ui.tsx",
+      "frontend/src/liveRoot.tsx",
+      "frontend/tests/m1.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/lazyChunk.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2432 bytes; 69 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "3052e25a13210e18ab1981bd4655250686e4f7f725bfb5e47b659e1bfa43f1d7",
+    "reviewed_sha256": "3052e25a13210e18ab1981bd4655250686e4f7f725bfb5e47b659e1bfa43f1d7",
+    "lines": 69
+  },
+  {
+    "path": "frontend/src/legacy.css",
+    "classification": "KEEP",
+    "purpose": "Aggregate previous styles as inline route-local Tracker theme; retains required legacy primitives.",
+    "consumers": [
+      "frontend/src/views/Tracker.tsx"
+    ],
+    "evidence": [
+      "frontend/src/legacy.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "91 bytes; 4 lines. 0 declaration/rule blocks; 0 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "11657822fd8308726e9d7810bb10bfc00c909acdfcbb496c1304e15e58d9b91b",
+    "reviewed_sha256": "11657822fd8308726e9d7810bb10bfc00c909acdfcbb496c1304e15e58d9b91b",
+    "lines": 4
+  },
+  {
+    "path": "frontend/src/links.ts",
+    "classification": "KEEP",
+    "purpose": "Generate encoded stored-id hash links and react to hash-query destination changes.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/records.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/Luffy.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Routes.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/m2.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/links.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1835 bytes; 54 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "19a94e49ce7b0b6098c2f5bd01ce7053f2a6d7c057a3b5a0c278d20c4b6ddf5f",
+    "reviewed_sha256": "19a94e49ce7b0b6098c2f5bd01ce7053f2a6d7c057a3b5a0c278d20c4b6ddf5f",
+    "lines": 54
+  },
+  {
+    "path": "frontend/src/live.css",
+    "classification": "KEEP",
+    "purpose": "Style retained live evidence/records/forensic primitives inside Tracker legacy theme and test harness.",
+    "consumers": [
+      "frontend/src/legacy.css"
+    ],
+    "evidence": [
+      "frontend/src/live.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "12874 bytes; 650 lines. 128 declaration/rule blocks; 8 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "85464bcee6113246e07dd44c91f06e6184dbff4c9e991d74f73d5aab0b14a0f1",
+    "reviewed_sha256": "85464bcee6113246e07dd44c91f06e6184dbff4c9e991d74f73d5aab0b14a0f1",
+    "lines": 650
+  },
+  {
+    "path": "frontend/src/liveRoot.tsx",
+    "classification": "KEEP",
+    "purpose": "Bootstrap authenticated live state, retry unavailable backend, expire and clear sessions/query cache, and forbid fixture fallback.",
+    "consumers": [
+      "frontend/src/main.tsx"
+    ],
+    "evidence": [
+      "frontend/src/liveRoot.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "5928 bytes; 196 lines. Bounded HTTP read polling/cache or mappings; no UI database writer. Polling/validation are intentional correctness boundaries, not redundant services.",
+    "baseline_sha256": "f257829f4b831f3ea284f39707340acaac3c3c01a525b07209fe2d80c44b745a",
+    "reviewed_sha256": "f257829f4b831f3ea284f39707340acaac3c3c01a525b07209fe2d80c44b745a",
+    "lines": 196
+  },
+  {
+    "path": "frontend/src/m4.css",
+    "classification": "KEEP",
+    "purpose": "Provide retained prior workstation layouts and responsive/reduced-motion overrides for Tracker legacy theme.",
+    "consumers": [
+      "frontend/src/legacy.css"
+    ],
+    "evidence": [
+      "frontend/src/m4.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "20615 bytes; 283 lines. 196 declaration/rule blocks; 5 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "529dd27112cc242986349ea30a21602aec7d0eef383be058cf2948489877e81f",
+    "reviewed_sha256": "529dd27112cc242986349ea30a21602aec7d0eef383be058cf2948489877e81f",
+    "lines": 283
+  },
+  {
+    "path": "frontend/src/main.tsx",
+    "classification": "KEEP",
+    "purpose": "Select live production entry or explicit build-time demo import; export route contract.",
+    "consumers": [
+      "Retained explicit module contract; direct frontend import scan recorded no current importer"
+    ],
+    "evidence": [
+      "frontend/src/main.tsx:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "339 bytes; 6 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+    "reviewed_sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+    "lines": 6
+  },
+  {
+    "path": "frontend/src/product.css",
+    "classification": "KEEP",
+    "purpose": "Provide retained M3 workstation tokens/layouts and local asset styling required by legacy Tracker/harness.",
+    "consumers": [
+      "frontend/src/legacy.css",
+      "frontend/tests/harness/main.tsx"
+    ],
+    "evidence": [
+      "frontend/src/product.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "46955 bytes; 2242 lines. 442 declaration/rule blocks; 17 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "b5762eede6306811a96a742c6e588f2f584a752fb4774f54eb6851df498d94d0",
+    "reviewed_sha256": "b5762eede6306811a96a742c6e588f2f584a752fb4774f54eb6851df498d94d0",
+    "lines": 2242
+  },
+  {
+    "path": "frontend/src/protectionExpiry.ts",
+    "classification": "KEEP",
+    "purpose": "Reclassify expired kernel protection snapshot and dependent position claims as STALE independent of failed polling.",
+    "consumers": [
+      "frontend/src/views/Overview.tsx",
+      "frontend/tests/protectionSnapshot.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/protectionExpiry.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "1345 bytes; 41 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "c009d6edb4d9dcf29cd3b21d0fd13a4c124ba8ecff4c45df73b7d35825b6d63f",
+    "reviewed_sha256": "c009d6edb4d9dcf29cd3b21d0fd13a4c124ba8ecff4c45df73b7d35825b6d63f",
+    "lines": 41
+  },
+  {
+    "path": "frontend/src/styles.css",
+    "classification": "KEEP",
+    "purpose": "Provide base theme, shared recorded evidence/graph/table/dialog layout, responsive and reduced-motion styles in retained legacy bundle.",
+    "consumers": [
+      "frontend/src/legacy.css",
+      "frontend/tests/harness/main.tsx"
+    ],
+    "evidence": [
+      "frontend/src/styles.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "26673 bytes; 1521 lines. 324 declaration/rule blocks; 9 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "d0c2905cae7eeaf5ecb972650543579fcee884c86316fbcdbc6153cc7c2b3ca7",
+    "reviewed_sha256": "d0c2905cae7eeaf5ecb972650543579fcee884c86316fbcdbc6153cc7c2b3ca7",
+    "lines": 1521
+  },
+  {
+    "path": "frontend/src/telemetryExpiry.ts",
+    "classification": "KEEP",
+    "purpose": "Expire account/heartbeat/Supervisor evidence locally and mark disconnected telemetry unavailable without fabricating health.",
+    "consumers": [
+      "frontend/src/views/Overview.tsx",
+      "frontend/tests/own04.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/telemetryExpiry.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "949 bytes; 17 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "b322001c8515d0ae8fd67e9667a96989f85fe93302ef4bc21c0ca5d6b4cb2886",
+    "reviewed_sha256": "b322001c8515d0ae8fd67e9667a96989f85fe93302ef4bc21c0ca5d6b4cb2886",
+    "lines": 17
+  },
+  {
+    "path": "frontend/src/time.ts",
+    "classification": "KEEP",
+    "purpose": "Format valid source timestamps consistently in UTC; invalid input never becomes current time.",
+    "consumers": [
+      "frontend/src/Shell.tsx",
+      "frontend/src/components/StorageTruth.tsx",
+      "frontend/src/components/ui.tsx",
+      "frontend/src/components/workspace.tsx",
+      "frontend/src/views/Diagnostics.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/src/views/Knowledge.tsx",
+      "frontend/src/views/Operations.tsx",
+      "frontend/src/views/OperationsLog.tsx",
+      "frontend/src/views/Overview.tsx",
+      "frontend/src/views/Research.tsx",
+      "frontend/src/views/Strategies.tsx",
+      "frontend/src/views/Trades.tsx",
+      "frontend/tests/v21.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/time.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "772 bytes; 17 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "1d087f47000eb8eb53d651b64962c475c2dec4542754a632a1565837f9f3de49",
+    "reviewed_sha256": "1d087f47000eb8eb53d651b64962c475c2dec4542754a632a1565837f9f3de49",
+    "lines": 17
+  },
+  {
+    "path": "frontend/src/tokens.css",
+    "classification": "KEEP",
+    "purpose": "Define base legacy colors for styles.css/Tracker without runtime dependencies.",
+    "consumers": [
+      "frontend/src/styles.css"
+    ],
+    "evidence": [
+      "frontend/src/tokens.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Intentional prior-theme retention: Tracker imports legacy.css?inline and inserts/removes it on mount/unmount; harness imports prior theme. Not dead merely because modern routes use Glacier.",
+    "costs_removal": "235 bytes; 13 lines. 1 declaration/rule blocks; 0 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "f8cf9373929b79a12495c701578c458e0f60fbd41345a055dfbc7e625ca166e0",
+    "reviewed_sha256": "f8cf9373929b79a12495c701578c458e0f60fbd41345a055dfbc7e625ca166e0",
+    "lines": 13
+  },
+  {
+    "path": "frontend/src/useOwnerTelemetry.ts",
+    "classification": "KEEP",
+    "purpose": "Share owner-interface health query and locally age graph telemetry; topology never establishes IPC availability.",
+    "consumers": [
+      "frontend/src/views/Activity.tsx",
+      "frontend/src/views/GraphView.tsx",
+      "frontend/tests/own04.test.tsx"
+    ],
+    "evidence": [
+      "frontend/src/useOwnerTelemetry.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "2949 bytes; 74 lines. Bounded HTTP read polling/cache or mappings; no UI database writer. Polling/validation are intentional correctness boundaries, not redundant services.",
+    "baseline_sha256": "a79c8e9c24c303e80c5b56151a3c5d1a239eba3755ca5b82887e25e56b05756a",
+    "reviewed_sha256": "a79c8e9c24c303e80c5b56151a3c5d1a239eba3755ca5b82887e25e56b05756a",
+    "lines": 74
+  },
+  {
+    "path": "frontend/src/widgets.css",
+    "classification": "KEEP",
+    "purpose": "Bridge retained evidence/query/drawer widgets into modern Glacier presentation.",
+    "consumers": [
+      "frontend/src/demo.tsx",
+      "frontend/src/liveRoot.tsx"
+    ],
+    "evidence": [
+      "frontend/src/widgets.css:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "4350 bytes; 34 lines. 33 declaration/rule blocks; 0 media guards; only local URL assets. Consolidating theme layers requires visual evidence and is optional; removing breaks documented consumers.",
+    "baseline_sha256": "bede91d9d960acb6fb257bbfbc1814e9777c58299eecae0bc215b5382c1c460f",
+    "reviewed_sha256": "bede91d9d960acb6fb257bbfbc1814e9777c58299eecae0bc215b5382c1c460f",
+    "lines": 34
+  },
+  {
+    "path": "frontend/tsconfig.json",
+    "classification": "KEEP",
+    "purpose": "Enable strict no-emit TypeScript checking over source/tests/config with browser and test types.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/tsconfig.json:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "463 bytes; 21 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "1c9cd3bd14e83b63deef3e437b7f0da270f98b8a7d95a7ba5bb7a6f963038f97",
+    "reviewed_sha256": "1c9cd3bd14e83b63deef3e437b7f0da270f98b8a7d95a7ba5bb7a6f963038f97",
+    "lines": 21
+  },
+  {
+    "path": "frontend/vite.config.ts",
+    "classification": "KEEP",
+    "purpose": "Select live/demo/harness build inputs, local React transform, jsdom focused tests and production sourcemap policy.",
+    "consumers": [
+      "npm/Vite/browser build command or developer/operator documentation"
+    ],
+    "evidence": [
+      "frontend/vite.config.ts:1",
+      "SDD.md:1768 (operator evidence), SDD.md:1795 (technology), SDD.md:1822 (routes), SDD.md:2367 (typed owner interface)"
+    ],
+    "design_boundary": "Presentation/read contract only; no direct venue order, provider credential or production-store write authority. Missing implementation connectivity alone is not a defect.",
+    "costs_removal": "676 bytes; 20 lines. No new dependency or storage model. Removal would break consumers or intentionally retained historical/test contract; no file merge/removal justified.",
+    "baseline_sha256": "6e0acab705d450b7fd60270f8e1935da6a1d5d2e6041ffc9c7d1e8691fd3aec1",
+    "reviewed_sha256": "6e0acab705d450b7fd60270f8e1935da6a1d5d2e6041ffc9c7d1e8691fd3aec1",
+    "lines": 20
+  }
+]
