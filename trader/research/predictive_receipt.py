@@ -11,6 +11,7 @@ from pathlib import Path
 
 from trader.cognition import predictive as P
 from . import predictive_experiment as E
+from .ledger import _slim
 
 SCHEMA = 'predictive-research-bank-result.v2'
 STEP_SCHEMA = 'predictive-quantitative-step.v2'
@@ -103,8 +104,11 @@ def check_measured(ex, measured, receipts):
             or c.tf!='4h' or c.geo!='fixed'):
         raise ValueError('quantitative_measurement_expression')
     raw = {k:v for k,v in measured.items() if k not in ('predictive_combo','source_hypothesis_id','experiment_id')}
+    # Compare against the exact ledger projection. Full worker receipts remain
+    # content-bound (including order); only the stored result omits that field.
     if not any(r['job']=='evaluate_job' and r['ok'] and r.get('acceptance')!='REFUSED' and
-               raw in (r.get('value') or {}).get('results', []) for r in receipts):
+               any(raw == _slim(result) for result in (r.get('value') or {}).get('results', []))
+               for r in receipts):
         raise ValueError('quantitative_measurement_missing')
 
 
