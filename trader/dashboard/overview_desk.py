@@ -261,13 +261,15 @@ def operations_log(journal, now_ts: float, days: int = LOG_DAYS) -> dict:
                            "what": f"Opened {str(t['side']).upper()} {base}-USDT · {t['amount']} @ {t['entry_price']}",
                            "who": who, "result": "Entered", "tone": "ok", "facts": facts})
         if t["closed_at"] and t["closed_at"] >= cutoff:
-            pnl = t["realized_pnl"]
+            classified = journal_pnl(dict(t), booking_receipts(journal, t["id"]))
+            pnl = classified["value"]
             events.append({"id": f"close:{t['id']}", "at": t["closed_at"], "type": "Order", "n": 1,
                            "what": f"Closed {str(t['side']).upper()} {base}-USDT @ {t['exit_price']} · {t['close_reason'] or 'reason not recorded'}",
                            "who": who, "result": "UNKNOWN" if pnl is None else "Won" if pnl > 0 else "Lost" if pnl < 0 else "Flat",
                            "tone": "ok" if (pnl or 0) > 0 else "bad" if (pnl or 0) < 0 else "grey",
                            "facts": {**facts, "exit_price": t["exit_price"], "close_reason": t["close_reason"],
-                                     "realized_pnl_journal": pnl}})
+                                     "realized_pnl_journal": pnl,
+                                     "pnl_value_class": classified["status"]}})
 
     # safety / control events, merged per (hour, event)
     merged: dict[tuple, dict] = {}

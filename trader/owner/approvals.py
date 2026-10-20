@@ -232,7 +232,7 @@ def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
             ms = int(datetime.fromisoformat(at).timestamp()*1000) if at else None
             out.append(dict(item_id=item_id, action_type='serious_recovery', affected_object='supervisor',
                             reason='; '.join(supervisor['reasons']) or 'safe autonomous recovery not proven',
-                            required_owner_action='Inspect evidence and submit guarded resume in Operations',
+                            required_owner_action='Inspect evidence and submit guarded resume in Trades',
                             created_at_ms=ms, available_at_ms=ms, config_sha256=digest(cfg),
                             binding_hash=digest(dict(supervisor=raw, config_sha256=digest(cfg))),
                             bindings=raw, validity='VALID' if supervisor['freshness']=='fresh' else 'STALE',

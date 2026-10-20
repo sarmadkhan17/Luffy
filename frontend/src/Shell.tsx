@@ -21,10 +21,6 @@ const LiveSystem = lazyChunk(() => import("./views/LiveSystem"));
 const Knowledge = lazyChunk(() => import("./views/Knowledge"));
 const Diagnostics = lazyChunk(() => import("./views/Diagnostics"));
 const Tracker = lazyChunk(() => import("./views/Tracker"));
-const Routes = lazyChunk(() => import("./views/Routes"));
-const SystemObserved = lazyChunk(() =>
-  import("./views/Evidence").then((m) => ({ default: m.SystemObserved })),
-);
 export const routes = [
   "Overview",
   "Trades",
@@ -72,9 +68,6 @@ const slug = (s: string) => s.toLowerCase().replaceAll(" ", "-");
 
 /** Tabs rebuilt to the approved design: they draw their own header. */
 const REDESIGNED = new Set(["overview", "trades", "research", "strategies", "luffy", "operations", "live-system", "knowledge", "diagnostics"]);
-const LIVE_ROUTES = new Set([
-  "diagnostics",
-]);
 export default function Shell() {
   const [route, setRoute] = useState(() => parseHash(location.hash).route);
   const { adapter, scenario, setScenario, session } = usePreview();
@@ -106,7 +99,7 @@ export default function Shell() {
     <GlacierMotion><div className={`gl-app route-${route}`}>
       {live ? (
         <div className="live-banner" data-testid="mode-banner">
-          {session?.dashboard_mode === "READ_ONLY_GUI" ? `READ-ONLY GUI — canonical evidence · control and provider actions disabled · kernel ${String(session.kernel_process?.state ?? "UNAVAILABLE").toLowerCase()} · runtime telemetry may be unknown or stale` : "LIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner Interface"}
+          {session?.dashboard_mode === "READ_ONLY_GUI" ? `READ-ONLY GUI — canonical evidence · control and provider actions disabled · kernel ${String(session.kernel_process?.state ?? "UNAVAILABLE").toLowerCase()} · runtime telemetry may be unknown or stale` : "LIVE — Luffy backend · owner controls only through the Owner Interface"}
         </div>
       ) : (
         <div className="demo-banner" data-testid="mode-banner">
@@ -233,12 +226,9 @@ export default function Shell() {
                   key={route}
                   surface={route === "knowledge" ? "knowledge" : "system"}
                 />
-                {live && route === "live-system" && <SystemObserved />}
               </>
             ) : live && route === "operations" ? (
               <OperationsLog />
-            ) : live && LIVE_ROUTES.has(route) ? (
-              <Routes route={route} />
             ) : (
               <section className="panel empty">
                 <h2>Not implemented in this preview.</h2>

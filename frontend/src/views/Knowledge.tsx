@@ -9,6 +9,9 @@ import { useRead, rows as asRows, rec } from "../components/records";
 import { Card, DataTable, DetailPanel, KV, type Col } from "../components/glass";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
+import { useRouteParam } from "../links";
+import { LinkedPanel } from "./Evidence";
+import { NoteDetail } from "./LiveReads";
 
 type Node = { id: string; label: string; kind: string; folder: string; status: string | null; deg: number; observed_at: string | null };
 const TC: Record<string, string> = {
@@ -42,6 +45,7 @@ export function claimOf(body: unknown): string | null {
 
 export default function Knowledge() {
   const { adapter } = usePreview();
+  const linkedNote = useRouteParam("note");
   const q = useRead(adapter.mode === "LIVE" ? "knowledge" : null, 300000);
   const [view, setView] = useState<"map" | "list">("map");
   const [text, setText] = useState("");
@@ -131,6 +135,9 @@ export default function Knowledge() {
       <PageHeader title="Knowledge">
         <span style={{ fontSize: 13, color: "var(--txt2)" }}>LUFFY's long-term memory · what it has learned and how it connects</span>
       </PageHeader>
+      {linkedNote && <div className="gl-legacy"><LinkedPanel title={`Linked note · ${linkedNote}`} back="#knowledge" testid="linked-note">
+        <NoteDetail key={linkedNote} id={linkedNote} />
+      </LinkedPanel></div>}
       {q.isError && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted.</div>}
       {adapter.mode !== "LIVE" && <p className="gl-empty">The knowledge vault is unavailable in fixture mode.</p>}
       {q.isPending && adapter.mode === "LIVE" && <p className="gl-empty">Reading the vault…</p>}

@@ -259,9 +259,9 @@ export default function Luffy() {
           <Card className="pad" label="Owner controls">
             <CardHead icon={<FileText size={16} />} title="Owner controls" />
             <p style={{ margin: 0, fontSize: 13, color: "var(--txt2)", lineHeight: 1.5 }}>
-              {live ? "Conversation uses typed internal queries. Needs You records exact owner decisions through the existing control gateway; recovery uses Operations. Voice is not connected." : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
+              {live ? "Conversation uses typed internal queries. Needs You records exact owner decisions through the existing control gateway; recovery uses Trades. Voice is not connected." : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
             </p>
-            {live && <a className="gl-btn" href="#operations">Open Operations ↗</a>}
+            {live && <a className="gl-btn" href="#trades">Open owner controls in Trades ↗</a>}
           </Card>
         </aside>
       </div>

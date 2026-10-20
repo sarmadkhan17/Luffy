@@ -38,7 +38,7 @@ const greeting = (live: boolean): Message => ({
   id: 0,
   role: "luffy",
   text: live
-    ? "Connected to Luffy's conversation backend. Ask about positions, P&L, decisions or strategies. Conversation cannot change control state; owner controls are on Operations."
+    ? "Connected to Luffy's conversation backend. Ask about positions, P&L, decisions or strategies. Conversation cannot change control state; owner controls are on Trades."
     : "This is the isolated LUFFY preview. Ask about the sample research receipt to explore a conversation and its evidence. All replies and records here are synthetic.",
   evidence: [],
 });

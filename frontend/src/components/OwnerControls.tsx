@@ -76,7 +76,7 @@ export function OwnerControls({ control, positions, supervisorNote }: { control:
   const [, rerender] = useState(0);
 
   const op = (k: Key): ControlOperation => (k === "resume" && control === "HALTED" ? "unhalt" : k);
-  const available = (adapter.mode === "DEMO" || session?.dashboard_mode === "LIVE") && !!adapter.control && health.data?.availability === "AVAILABLE" && !health.isFetching;
+  const available = (adapter.mode === "DEMO" || session?.dashboard_mode === "LIVE") && !!adapter.control && health.data?.availability === "AVAILABLE" && !health.error && !health.isFetching;
   const why = adapter.mode === "LIVE" && session?.dashboard_mode !== "LIVE"
     ? "Controls are disabled: dashboard authority is read-only or unknown."
     : !adapter.control

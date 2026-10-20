@@ -49,3 +49,23 @@ def test_expired_forged_rotated_session(monkeypatch):
     scope['headers'] = [(b'cookie', ('luffy_session='+cookie).encode())]
     monkeypatch.setattr('trader.dashboard.auth.time.time', lambda: 200000)
     assert not a.authenticated(scope)
+
+
+def test_vault_file_containment_rejects_siblings_and_symlinks(server, tmp_path, monkeypatch):
+    from trader.knowledge import vault
+    base = tmp_path / "knowledge"
+    (base / "nested").mkdir(parents=True)
+    (base / "nested/visible.md").write_text("# Allowed")
+    sibling = tmp_path / "knowledge-private"
+    sibling.mkdir()
+    (sibling / "secret.md").write_text("PRIVATE")
+    (base / "linked.md").symlink_to(sibling / "secret.md")
+    (base / "directory.md").mkdir()
+    monkeypatch.setattr(vault, "VAULT", base)
+    client = TestClient(server.create_app({'dashboard': {'startup_mode': 'LIVE'}}))
+    headers = {'x-luffy-token': 'fixture-token'}
+    response = client.get('/api/vault/file', params={'path': 'nested/visible.md'}, headers=headers)
+    assert response.status_code == 200 and response.json()['content'] == '# Allowed'
+    for path in ('../knowledge-private/secret.md', 'linked.md', 'directory.md'):
+        response = client.get('/api/vault/file', params={'path': path}, headers=headers)
+        assert response.status_code == 404 and 'PRIVATE' not in response.text

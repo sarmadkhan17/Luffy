@@ -41,7 +41,7 @@ export function NeedsYou({compact = false}: {compact?: boolean}) {
         <details data-testid={`owner-item-${String(i.item_id)}`}><summary>Open exact evidence/action · {value(i.item_id)}</summary><pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{JSON.stringify(i,null,2)}</pre></details>
         {!compact && <>
           <details><summary>Exact object, evidence and validity · {value(i.affected_object)}</summary><pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{JSON.stringify(i,null,2)}</pre></details>
-          {i.decision_operation === "resume" ? <a href="#operations">Guarded recovery in Operations ↗</a> : <>
+          {i.decision_operation === "resume" ? <a href="#trades">Guarded recovery request in Trades ↗</a> : <>
             <button disabled={busy || expired || i.validity !== "VALID" || !!i.receipt || !adapter.approvalDecision || q.isError} onClick={() => decide(i,"APPROVED")}>Approve exact request</button>{" "}
             <button disabled={busy || expired || i.validity !== "VALID" || !!i.receipt || !adapter.approvalDecision || q.isError} onClick={() => decide(i,"REJECTED")}>Reject exact request</button>
           </>}

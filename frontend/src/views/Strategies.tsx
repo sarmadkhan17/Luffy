@@ -9,6 +9,9 @@ import { StrategyAuthority } from "../components/StrategyAuthority";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import { useQuery } from "@tanstack/react-query";
+import { useRouteParam } from "../links";
+import { LinkedPanel } from "./Evidence";
+import { StrategyDetail } from "./LiveReads";
 
 type S = Record<string, any>;
 const OK = "#3ddc97", BAD = "#ff7b72", WARN = "#f2b44a", GREY = "#8d9fb2", BLUE = "#56ccf2";
@@ -52,10 +55,12 @@ function Spark({ curve, w = 300, h = 70, stroke = 3 }: { curve: number[]; w?: nu
 
 export default function Strategies() {
   const { adapter } = usePreview();
+  const strategyId = useRouteParam("id");
+  const family = useRouteParam("family");
   const q = useRead(adapter.mode === "LIVE" ? "strategies/board" : null, 60000);
   const ov = useQuery({ queryKey: ["overview", "normal"], queryFn: ({ signal }) => adapter.overview("normal", signal), staleTime: 10000, refetchInterval: 30000, refetchIntervalInBackground: false, enabled: adapter.mode === "LIVE" });
   const control = ov.data?.control ?? "UNAVAILABLE";
-  const list = asRows(q.data?.strategies) as S[];
+  const list = (asRows(q.data?.strategies) as S[]).filter(s => !family || s.kind === family);
   const [open, setOpen] = useState<S | null>(null);
   const [shownN, setShownN] = useState<number | null>(null);
   const versionedIds = new Set(asRows(q.data?.versions).map(v => v.strategy_id));
@@ -77,9 +82,13 @@ export default function Strategies() {
       <PageHeader title="Strategies">
         <span className="gl-state" style={{ color: GREY }}>Versioned authority · control {control}</span>
       </PageHeader>
+      {strategyId && <div className="gl-legacy"><LinkedPanel title={`Strategy workspace · ${strategyId}`} back={family ? `#strategies?family=${encodeURIComponent(family)}` : "#strategies"} testid="strategy-workspace">
+        <StrategyDetail key={strategyId} id={strategyId} />
+      </LinkedPanel></div>}
       {q.isError && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted.</div>}
       <StrategyAuthority versions={q.isError ? null : q.data?.versions} errors={q.data?.authority_errors} />
       <Card className="pad" label="Journal performance and legacy registry">
+        {family && <p className="gl-note">Registry family: {family} · <a href="#strategies">Show all families</a></p>}
         <CardHead icon={<Layers size={16} />} title="PERFORMANCE · registry records" sub={shownN !== null ? `${shownN} strategies · journal-booked trades per strategy id · P&L over the last 30 days` : undefined}><span style={{ fontSize: 12, color: GREY }}>Click a strategy for its details</span></CardHead>
         {q.isPending && adapter.mode === "LIVE" && <p className="gl-empty">Loading the registry…</p>}
         {adapter.mode !== "LIVE" && <p className="gl-empty">The strategy registry is unavailable in fixture mode.</p>}

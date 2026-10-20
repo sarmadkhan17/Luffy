@@ -1,3 +1,8 @@
+> Historical milestone handoff. For the current production/demo entry distinction,
+> see the dated status note in [README.md](README.md). This original V1 handoff
+> records its own base revision and measurements; it is not current deployment
+> status or an assertion that backend bindings remain unimplemented.
+
 # OWNER-FRONTEND-V1 — F1 routing correction
 
 **Astra implementation: ready for Opus independent re-review.**

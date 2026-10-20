@@ -285,7 +285,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     async def vault_file(path: str):
         from ..knowledge.vault import VAULT
         target = (VAULT / path).resolve()
-        if not str(target).startswith(str(VAULT.resolve())) or                 target.suffix != ".md" or not target.exists():
+        if (not target.is_relative_to(VAULT.resolve())
+                or target.suffix != ".md" or not target.is_file()):
             return JSONResponse({"error": "not found"}, status_code=404)
         return {"path": path, "content": target.read_text(errors="replace")}
 

@@ -15,6 +15,9 @@ import { RuntimeLabels } from "../components/RuntimeTruth";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import type { Position } from "../adapters/contracts";
+import { useRouteParam } from "../links";
+import { LinkedPanel } from "./Evidence";
+import { TradeLineage } from "./LiveReads";
 
 type Trade = Record<string, any>;
 const OK = "#3ddc97", BAD = "#ff7b72", WARN = "#f2b44a", OPEN = "#56ccf2", GREY = "#8d9fb2";
@@ -55,6 +58,7 @@ async function loadAll(adapter: ReturnType<typeof usePreview>["adapter"], signal
 
 export default function Trades() {
   const { adapter } = usePreview();
+  const tradeId = useRouteParam("trade");
   const live = adapter.mode === "LIVE";
   const q = useQuery({
     queryKey: ["trades-all"],
@@ -97,6 +101,10 @@ export default function Trades() {
         <span className="gl-state" style={{ color: GREY }}><i /><RuntimeLabels kernel={String(ov.data?.live?.kernelState ?? "UNKNOWN")} control={control} /></span>
         {live && <OwnerControls control={control} positions={positions} supervisorNote={supNote} />}
       </PageHeader>
+
+      {tradeId && <div className="gl-legacy"><LinkedPanel title={`Trade story · ${tradeId}`} back="#trades" testid="trade-story">
+        <TradeLineage key={tradeId} id={tradeId} story />
+      </LinkedPanel></div>}
 
       <Card className="pad" label="Trade log">
         <CardHead icon={<ArrowLeftRight size={16} />} title="Trade log" sub={shownRows && q.data ? (() => { const booked = shownRows.filter(t => t.status === "closed" && num(t.realized_pnl) !== null); const net = booked.length ? booked.reduce((a, t) => a + num(t.realized_pnl)!, 0) : null; const unknown = shownRows.filter((t) => t.status === "closed" && num(t.realized_pnl) === null).length; return `${shownRows.length} of ${q.data.total} trades · net ${net === null ? "UNAVAILABLE" : money(net)} journal-booked${unknown ? ` · ${unknown} unknown P&L not counted` : ""}`; })() : undefined}>

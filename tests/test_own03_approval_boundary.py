@@ -69,3 +69,17 @@ def test_routine_question_cannot_satisfy_missing_first_live_approval(tmp_path, c
         assert A.items(j, cfg, now_ms=at)['items'][0]['action_type'] == 'first_live'
     assert j._conn().total_changes == before
     assert not j.query('SELECT * FROM strategy_approval_decisions')
+
+
+def test_serious_recovery_guidance_names_existing_control_page(tmp_path, monkeypatch):
+    from trader.core.journal import Journal
+    j = Journal(tmp_path / 'j.db')
+    j.kv_set('supervisor_status', json.dumps({'fixture': 'exact recovery context'}))
+    monkeypatch.setattr('trader.dashboard.owner_api.read_supervisor', lambda *a: ({
+        'needs_owner': True, 'reasons': ['fixture_recovery'],
+        'observed_at': '2026-10-20T00:00:00+00:00', 'freshness': 'fresh'}, None))
+    before = j._conn().total_changes
+    item = A.items(j, {}, now_ms=1792454400000)['items'][0]
+    assert item['decision_operation'] == 'resume'
+    assert item['required_owner_action'] == 'Inspect evidence and submit guarded resume in Trades'
+    assert j._conn().total_changes == before

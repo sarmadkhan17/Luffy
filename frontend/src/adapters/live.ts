@@ -792,6 +792,7 @@ export function createLiveAdapter(onUnauthorized: () => void, readOnly = false):
   };
   if (readOnly) {
     delete adapter.control;
+    delete adapter.approvalDecision;
   }
   return adapter;
 }

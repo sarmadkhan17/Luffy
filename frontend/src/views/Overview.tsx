@@ -506,7 +506,7 @@ function DecisionPanel({ coin, scanAt, onClose }: { coin: DeskCoin | null; scanA
               ] as Col<Record<string, unknown>>[]}
             />
           )}
-          <p className="gl-note">Journal-recorded decision; read-only. <a className="gl-link" href={`#operations?id=${encodeURIComponent(coin.decision_id)}`}>Open in Operations</a></p>
+          <p className="gl-note">Journal-recorded decision; read-only. <a className="gl-link" href={`#operations?decision=${encodeURIComponent(coin.decision_id)}`}>Open in Operations</a></p>
         </>
       )}
     </DetailPanel>

@@ -1,3 +1,12 @@
+> Current source status (Review 09, 2026-10-20): the production build mounts
+> [liveRoot.tsx](src/liveRoot.tsx) through [main.tsx](src/main.tsx), uses authenticated
+> backend reads and never substitutes fixtures for failed reads. `npm run build`
+> creates LIVE assets; `npm run build:demo`, `npm run dev` and `npm run preview`
+> explicitly select synthetic demo mode. The ten current routes are defined in
+> [Shell.tsx](src/Shell.tsx). This source review makes no deployment claim.
+> The original preview milestone notes below are historical; their unfinished
+> binding and route statements do not describe the current implementation.
+
 # LUFFY owner frontend — isolated preview
 
 Four implemented surfaces: Overview, LUFFY, Knowledge and Live System.

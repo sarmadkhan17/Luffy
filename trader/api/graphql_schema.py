@@ -328,15 +328,15 @@ def build_query(journal: Journal):
         @_offloop
         def decisions_total(self, symbol: Optional[str] = None,
                             directional_only: bool = False) -> int:
+            conds, params = [], []
             if symbol:
-                return journal.query(
-                    "SELECT COUNT(*) n FROM decisions WHERE symbol=?",
-                    (symbol,))[0]["n"]
+                conds.append("symbol=?")
+                params.append(symbol)
             if directional_only:
-                return journal.query(
-                    "SELECT COUNT(*) n FROM decisions WHERE action!='HOLD'"
-                    )[0]["n"]
-            return journal.query("SELECT COUNT(*) n FROM decisions")[0]["n"]
+                conds.append("action!='HOLD'")
+            where = " WHERE " + " AND ".join(conds) if conds else ""
+            return journal.query("SELECT COUNT(*) n FROM decisions" + where,
+                                 tuple(params))[0]["n"]
 
         @strawberry.field
         @_offloop

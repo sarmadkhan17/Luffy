@@ -107,3 +107,20 @@ def test_http_operations_log_route(tmp_path, monkeypatch):
     app, _, _ = make_app(tmp_path, monkeypatch)
     r = TestClient(app).get("/owner-api/v1/operations/log", headers=H)
     assert r.status_code == 200 and "events" in r.json()
+
+
+def test_graphql_decision_count_composes_symbol_and_direction_filters(tmp_path):
+    from tests.test_current_truth_contract import _gql
+    j = Journal(tmp_path / 'counts.db')
+    decision(j, 'hold', 's', T0.isoformat(), 'BTC/USDT', 0)
+    decision(j, 'buy', 's', T0.isoformat(), 'BTC/USDT', .5)
+    decision(j, 'other', 's', T0.isoformat(), 'ETH/USDT', .5)
+    with j._tx() as c:
+        c.execute("UPDATE decisions SET action='BUY' WHERE id IN ('buy','other')")
+    d = _gql(j, '{ all: decisions_total btc: decisions_total(symbol:"BTC/USDT") '
+                'directional: decisions_total(directional_only:true) '
+                'both: decisions_total(symbol:"BTC/USDT",directional_only:true) '
+                'decisions(symbol:"BTC/USDT",directional_only:true) { id } }')
+    assert 'errors' not in d
+    assert d['data'] == {'all': 3, 'btc': 2, 'directional': 2, 'both': 1,
+                         'decisions': [{'id': 'buy'}]}

@@ -50,3 +50,21 @@ def test_tampered_early_receipt_cannot_disappear_after_fifty_later_legs(tmp_path
     with j._tx() as c:c.execute("UPDATE trade_accounting_bookings SET payload='{}' WHERE id=(SELECT MIN(id) FROM trade_accounting_bookings WHERE trade_id='t-btc')")
     t=dict(j.query("SELECT * FROM trades WHERE id='t-btc'")[0])
     assert journal_pnl(t,booking_receipts(j,'t-btc'))['value'] is None
+
+
+@pytest.mark.parametrize('evidence,pnl,classification,result', [
+    ({'basis': 'reconcile_ghost_unpriced', 'pnl_status': 'UNKNOWN'}, 0, 'UNKNOWN', 'UNKNOWN'),
+    ({'basis': 'panic_order_unconfirmed', 'pnl_status': 'ESTIMATE'}, 10, 'DERIVED_ESTIMATE', 'Won'),
+    ({}, -2, 'JOURNAL_BOOKED', 'Lost'),
+])
+def test_operations_close_uses_retained_booking_quality(tmp_path, monkeypatch, evidence, pnl, classification, result):
+    from trader.dashboard.overview_desk import operations_log
+    _, journal, _ = make_app(tmp_path, monkeypatch)
+    journal.close_trade('t-btc', 61000, pnl, 'review09', accounting=evidence)
+    before = journal.query("SELECT * FROM trade_accounting_bookings WHERE trade_id='t-btc'")
+    event = next(e for e in operations_log(journal, datetime.now(timezone.utc).timestamp())['events']
+                 if e['id'] == 'close:t-btc')
+    assert event['result'] == result
+    assert event['facts']['pnl_value_class'] == classification
+    assert event['facts']['realized_pnl_journal'] == (None if classification == 'UNKNOWN' else pnl)
+    assert journal.query("SELECT * FROM trade_accounting_bookings WHERE trade_id='t-btc'") == before
