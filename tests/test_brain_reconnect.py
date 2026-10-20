@@ -5,7 +5,7 @@ Covers the four critical repairs:
    decision's outcome)
 2. shadow outcomes for near-threshold HOLDs (calibration data supply)
 3. weight normalization (Σ=1.0 after merging measured weights)
-4. evidence-scaled accuracy multipliers (small n can't pin the floor)
+4. descriptive accuracy cannot refresh frozen multipliers without authority
 """
 from __future__ import annotations
 

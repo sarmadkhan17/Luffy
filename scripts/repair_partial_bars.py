@@ -77,11 +77,14 @@ def main() -> int:
         tf_ms = DataFeed._TF_MS.get(tf)
         if not tf_ms:
             continue
+        if args.check:
+            continue
         cur = db.execute(
             "DELETE FROM candles WHERE symbol=? AND tf=? AND ts > ?",
             (symbol, tf, now_ms - tf_ms))
         purged += cur.rowcount
-    db.commit()
+    if not args.check:
+        db.commit()
     if purged:
         print(f"purged {purged} unclosed bar(s) from the store\n")
 

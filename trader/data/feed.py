@@ -660,10 +660,10 @@ class DataFeed:
             batch = self._klines(symbol, tf, since=cursor, limit=1000)
             if not batch:
                 break
-            rows.extend(batch)
             next_cursor = batch[-1][0] + tf_ms
             if next_cursor <= cursor:
                 break
+            rows.extend(batch)
             cursor = next_cursor
             if len(batch) < 1000:
                 break

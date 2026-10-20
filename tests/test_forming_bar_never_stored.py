@@ -194,3 +194,22 @@ def test_a_tail_several_bars_deep_heals_itself(tmp_path):
     assert highs == want, (
         f"stale tail not repaired: {highs} != {want} — a single fetch must "
         "re-read enough of the tail to correct an accumulated freeze")
+
+
+def test_repair_check_preserves_an_unclosed_projection(tmp_path, monkeypatch):
+    import sqlite3
+    from scripts import repair_partial_bars as repair
+    path = tmp_path / "candles.db"
+    now = 1_700_000_000_000
+    feed = DataFeed(exchange=object(), db_path=path)
+    _seed(feed, "BTC/USDT", "4h", _rows(now, 1))
+    before = path.read_bytes()
+    monkeypatch.setattr(repair, "DB", path)
+    monkeypatch.setattr(repair.sys, "argv", ["repair_partial_bars.py", "--check"])
+    monkeypatch.setattr(repair.time, "time", lambda: now / 1000)
+    monkeypatch.setattr(repair, "make_exchange", lambda *a, **k: object())
+    monkeypatch.setattr(repair, "_venue_bars", lambda *a, **k: {})
+    assert repair.main() == 0
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT COUNT(*) FROM candles").fetchone()[0] == 1
+    assert path.read_bytes() == before

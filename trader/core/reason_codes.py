@@ -63,6 +63,7 @@ FENCE_STATE_UNREADABLE = "fence_state_unreadable"
 FENCE_STATE_NOT_ACTIVE = "fence_state_not_active"
 VERSION_NOT_LIVE_AUTHORIZED = "version_not_live_authorized"   # factory version: paper/live fence
 EXEC_MODE_NOT_REAL = "exec_mode_not_real"            # executor has only the real order path
+VERSIONED_AUTHORITY_REQUIRED = "VERSIONED_AUTHORITY_REQUIRED"
 
 VOCABULARY = frozenset(v for k, v in dict(globals()).items()
                        if k.isupper() and k != "VERSION" and isinstance(v, str))
@@ -84,5 +85,3 @@ def decode(raw) -> list | None:
     except (TypeError, ValueError):
         return None
     return list(codes) if isinstance(codes, list) else None
-
-VERSIONED_AUTHORITY_REQUIRED = "VERSIONED_AUTHORITY_REQUIRED"

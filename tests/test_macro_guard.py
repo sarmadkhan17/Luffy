@@ -346,3 +346,23 @@ def test_an_all_past_cache_is_not_mistaken_for_a_quiet_week(monkeypatch,
     why = mg.MacroGuard({"scouts": {"macro_guard": {"enabled": True}}}).check()["why"]
 
     assert "no calendar source reachable" in why, why
+
+
+@pytest.mark.parametrize("retry_seconds", [60, 900, 3600])
+def test_provider_retry_after_is_not_shortened(monkeypatch, retry_seconds):
+    now = [1_790_000_000.0]
+    mg = MacroGuard(_cfg(token=""))
+    mg._token = ""
+    monkeypatch.setattr(mg, "_now", lambda: datetime.fromtimestamp(now[0], timezone.utc))
+    monkeypatch.setattr("trader.agents.macro_guard.time.time", lambda: now[0])
+    response = MagicMock(status_code=429, headers={"Retry-After": str(retry_seconds)})
+    with patch("requests.get", return_value=response) as get:
+        assert not mg.check()["active"]
+        retry_at = now[0] + max(retry_seconds, 900)
+        assert mg._retry_after == retry_at
+        now[0] = retry_at - 1
+        assert not mg.check()["active"]
+        assert get.call_count == 1
+        now[0] = retry_at + mg._refresh_s
+        mg.check()
+        assert get.call_count == 2

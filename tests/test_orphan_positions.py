@@ -20,9 +20,11 @@ class _Journal:
 
 
 class _Exits:
-    def __init__(self): self.managed = []
+    def __init__(self):
+        self.managed = []
+        self.spec_exits = {}
     def atr_timeframe(self, t): return None      # no spec owns these trades
-    def manage(self, t, price, atr, score):
+    def manage(self, t, price, atr, score, *, snapshot=None):
         self.managed.append(t["symbol"])
         return None
 

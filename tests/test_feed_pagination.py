@@ -135,3 +135,31 @@ def test_store_persists_across_deep_fetches(tmp_path):
     assert len(df2) == 2900
     step = pd.Timedelta(minutes=15)
     assert (df2["ts"].diff().dropna() == step).all()
+
+
+def test_pagination_uses_the_feed_clock(tmp_path):
+    cut = 1_700_000_000_000
+    step = 900_000
+    ex = FakeEx()
+    ex.first_ts = cut - 4000 * step
+    feed = DataFeed(exchange=ex, db_path=tmp_path / "c.db", clock_ms=lambda: cut)
+    raw = feed._fetch_paged("BTC/USDT", "15m", 2000)
+    assert ex.calls[0][2] == cut - 2000 * step
+    assert len(raw) == 2000 and raw[-1][0] == cut - step
+
+
+def test_pagination_stops_on_a_repeated_full_page(tmp_path):
+    cut = 1_700_000_000_000
+    step = 900_000
+    ex = FakeEx()
+    calls = []
+    page = [[cut - 3000 * step + i * step, 1, 2, .5, 1.5, 10]
+            for i in range(1000)]
+    def repeat(symbol, tf, since=None, limit=None):
+        calls.append(since)
+        assert len(calls) <= 2, "provider page must advance the cursor"
+        return page
+    ex.fetch_ohlcv = repeat
+    feed = DataFeed(exchange=ex, db_path=tmp_path / "c.db", clock_ms=lambda: cut)
+    raw = feed._fetch_paged("BTC/USDT", "15m", 3000)
+    assert len(calls) == 2 and raw == page

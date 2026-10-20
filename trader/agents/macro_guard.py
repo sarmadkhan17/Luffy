@@ -132,7 +132,8 @@ class MacroGuard:
             # Both sources are down. Back off rather than hammering them on
             # every cycle — self-inflicted 429s are how this guard ends up
             # fail-open for hours.
-            self._retry_after = now + _RETRY_BACKOFF
+            # Preserve a provider cooldown longer than our fallback backoff.
+            self._retry_after = max(self._retry_after, now + _RETRY_BACKOFF)
         return self._calendar
 
     def _save_cached(self, events: list[dict], fetched: float) -> None:

@@ -185,10 +185,12 @@ def record_universe_revision(journal, receipt: dict, environment: str, *, record
                      "majors_unobserved": receipt.get("majors_unobserved", [])})
     with journal._tx() as c:
         ensure(c)
-        old = c.execute("SELECT members_json,exclusions_json,config_json FROM universe_revisions "
+        old = c.execute("SELECT selection_version,source,observed_at_ms,members_json,exclusions_json,config_json "
+                        "FROM universe_revisions "
                         "WHERE environment=? AND revision_id=?", (env, receipt["revision_id"])).fetchone()
         if old is not None:
-            if tuple(old) != (members, exclusions, config):
+            if tuple(old) != (receipt["selection_version"], receipt["source"],
+                              receipt["observed_at_ms"], members, exclusions, config):
                 raise RegistryStoreError("revision_id_content_conflict")
             return False
         c.execute("INSERT INTO universe_revisions VALUES (?,?,?,?,?,?,?,?,?)",
