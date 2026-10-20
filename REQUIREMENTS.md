@@ -1,3 +1,5 @@
+> **Historical (v1.0, Aug 2026).** Not architecture authority; SDD.md governs and [owner end goal](docs/superpowers/specs/2026-09-16-luffy-end-goal.md) holds current requirements (STATE.yaml `known_stale_documents`).
+
 # LUFFY — Requirements Specification v1.0 (FROZEN)
 
 > Personal autonomous crypto-trading OS. Named Luffy. Lives on the owner's

@@ -1,0 +1,96 @@
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+.............F...................................................F...... [ 59%]
+........................................................................ [ 79%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-222/test_quick_host_run_end_to_end0')
+
+    def test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification(tmp_path):
+        rc = Q.main(["host", "--dir", str(tmp_path), "--label", "quick", "--receipts-dir", str(tmp_path / "r"), "--quick"])
+        path = tmp_path / "r/receipt_quick.json"
+        receipt = json.loads(path.read_text())
+>       assert rc == 0 and receipt["verdict"] == "PASS" and receipt["quick"] is True
+E       assert (2 == 0)
+
+tests/test_m32_host_qualification_v4.py:460: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{
+ "receipt": "/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-222/test_quick_host_run_end_to_end0/r/receipt_quick.json",
+ "verdict": "FAIL",
+ "receipt_sha256": "96e1f1bf4f1af93fcceaf36aac4d887f2e4af877d3bc2895ac1c30cbaeb35092",
+ "statuses": {
+  "bindings": "PASS",
+  "environment_gate": "FAIL",
+  "environment_lock_hash": "PASS",
+  "cpu_features": "PASS",
+  "numpy_openblas_identity": "PASS",
+  "filesystem_policy": "PASS",
+  "hardlink_eexist": "PASS",
+  "flock_exclusivity": "PASS",
+  "flock_cross_host": "NOT_EXERCISED",
+  "renameat2_noreplace": "PASS",
+  "fsync_file_and_dir": "PASS",
+  "atomic_publish": "PASS",
+  "canary_fixture": "PASS",
+  "canary_numeric": "PASS",
+  "fastmetric_bit_identity": "PASS",
+  "fastmetric_throughput": "PASS",
+  "worker_scaling": "PASS"
+ },
+ "qualified_workers": 0
+}
+_ test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-222/test_quick_host_run_end_to_end1')
+
+    def test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification(tmp_path):
+        rc = Q.main(["host", "--dir", str(tmp_path), "--label", "quick", "--receipts-dir", str(tmp_path / "r"), "--quick"])
+        path = tmp_path / "r/receipt_quick.json"
+        receipt = json.loads(path.read_text())
+>       assert rc == 0 and receipt["verdict"] == "PASS" and receipt["quick"] is True
+E       assert (2 == 0)
+
+tests/test_m32_qualification.py:396: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{
+ "receipt": "/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-222/test_quick_host_run_end_to_end1/r/receipt_quick.json",
+ "verdict": "FAIL",
+ "receipt_sha256": "a0401ed865408d11798552857a0a137d430f3c405d85d9fb23280c2c8d53ecba",
+ "statuses": {
+  "bindings": "PASS",
+  "environment_gate": "FAIL",
+  "environment_lock_hash": "PASS",
+  "cpu_features": "PASS",
+  "numpy_openblas_identity": "PASS",
+  "filesystem_policy": "PASS",
+  "hardlink_eexist": "PASS",
+  "flock_exclusivity": "PASS",
+  "flock_cross_host": "NOT_EXERCISED",
+  "renameat2_noreplace": "PASS",
+  "fsync_file_and_dir": "PASS",
+  "atomic_publish": "PASS",
+  "canary_fixture": "PASS",
+  "canary_numeric": "PASS",
+  "fastmetric_bit_identity": "PASS",
+  "fastmetric_throughput": "PASS",
+  "worker_scaling": "PASS"
+ },
+ "qualified_workers": 0
+}
+============================= slowest 8 durations ==============================
+144.04s setup    tests/test_m32_validation_bundle_v4.py::test_preflight_fresh_is_rng_free_and_passes
+65.44s call     tests/test_m32_shard_layer_v4.py::test_v4_sharded_merge_reproduces_sequential_runner_exactly_on_all_55_cells
+30.95s call     tests/test_m32_qualification.py::test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification
+30.25s setup    tests/test_m32_shard_layer_v4.py::test_v4_sequential_run_validation_covers_all_55_cells
+29.60s call     tests/test_m32_host_qualification_v4.py::test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification
+26.40s call     tests/test_m32_qualification.py::test_fixture_canary_matches_the_sequential_runner_and_is_repeatable
+22.77s call     tests/test_m32_host_qualification_v4.py::test_fixture_canary_matches_the_sequential_runner_and_is_repeatable
+17.83s call     tests/test_m32_qualification.py::test_a_volatile_mount_is_rejected_by_the_full_host_command
+=========================== short test summary info ============================
+FAILED tests/test_m32_host_qualification_v4.py::test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification
+FAILED tests/test_m32_qualification.py::test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification
+2 failed, 359 passed in 510.55s (0:08:30)

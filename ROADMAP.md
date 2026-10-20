@@ -1,3 +1,5 @@
+> **Historical (Aug 2026 build plan).** Not current authority; the active roadmap is [docs/ROADMAP.md](docs/ROADMAP.md) and SDD.md owns architecture (STATE.yaml `known_stale_documents`).
+
 # LUFFY — Build Roadmap
 
 Working doc of phases, deliverables, and exit criteria. Spec: REQUIREMENTS.md.

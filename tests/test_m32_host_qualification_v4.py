@@ -454,7 +454,9 @@ def test_duplicate_labels_block_readiness(tmp_path):
 
 # ------------------------------------------------------------------------------------------------ end to end and RNG-free
 def test_quick_host_run_end_to_end_seals_a_receipt_and_combine_refuses_it_as_a_qualification(tmp_path):
-    rc = Q.main(["host", "--dir", str(tmp_path), "--label", "quick", "--receipts-dir", str(tmp_path / "r"), "--quick"])
+    # The environment gate requires OPENBLAS_NUM_THREADS=1 before numpy loads, so run the host command in a child with ENV.
+    rc = subprocess.run(TOOL + ["host", "--dir", str(tmp_path), "--label", "quick", "--receipts-dir", str(tmp_path / "r"), "--quick"],
+                        env=ENV, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).returncode
     path = tmp_path / "r/receipt_quick.json"
     receipt = json.loads(path.read_text())
     assert rc == 0 and receipt["verdict"] == "PASS" and receipt["quick"] is True

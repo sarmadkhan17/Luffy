@@ -1,3 +1,5 @@
+> **Superseded snapshot.** The status line below is historical: this is an older duplicate, not architecture authority. SDD.md governs (STATE.yaml `known_stale_documents`).
+
 # LUFFY Official Solution Design (SD) v3.0
 
 **Status:** Official Target Architecture - Freeze Candidate  
