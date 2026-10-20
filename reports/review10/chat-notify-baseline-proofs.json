@@ -1,0 +1,9 @@
+{
+  "baseline": "4deca5c275c30c2c59c227b5170bab651cf777fe",
+  "legacy_tool_dispatch_returned_rows": true,
+  "undeclared_root_reached_query": true,
+  "unknown_null_pnl_fabricated_zero": true,
+  "bot_api_rejection_reported_success": true,
+  "request_exception_disclosed_token": true,
+  "isolation": "git show modules executed under temporary names; fixture-only Journal and mocked transport; no source swap"
+}

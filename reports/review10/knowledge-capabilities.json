@@ -1,0 +1,38 @@
+{
+  "source": "tracked authored vault; no journal/provider access",
+  "projection": {
+    "nodes": 168,
+    "returned": 168,
+    "edges": 683,
+    "unresolved_edges": 327,
+    "statuses": {
+      "null": 43,
+      "candidate": 109,
+      "active": 11,
+      "core-belief": 5
+    }
+  },
+  "single_read_measurement": {
+    "wall_seconds": 1.340403,
+    "python_tracemalloc_peak_bytes": 1440202,
+    "includes": "markdown YAML parse and graph construction; imports excluded; no runtime throughput claim"
+  },
+  "structured_lookups": [
+    {
+      "args": [
+        "Absorption"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"concept\": \"Absorption\", \"claim\": \"Heavy traded volume with little price progress can indicate passive liquidity absorbing aggressive orders.\", \"relations\": {\"supports\": [\"Relative Volume\", \"Low Price Displacement\", \"Repeated Execution Near Same Price Area\"], \"contradicts\": [\"Strong Price Follow Through\"], \"works_in\": [\"Ranging Regime\"], \"fails_in\": [\"Strong Trend Expansion\"], \"causes\": [\"Passive Liquidity Absorbs Aggressive Orders\"], \"precedes\": [\"Potential Reversal\"], \"derived_from\": [\"Market Microstructure\"]}}\n"
+    },
+    {
+      "args": [
+        "--reverse",
+        "works_in",
+        "Ranging Regime"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"relation\": \"works_in\", \"target\": \"Ranging Regime\", \"concepts\": [\"Absorption\", \"VWAP Extreme Mean Reversion\"]}\n"
+    }
+  ]
+}

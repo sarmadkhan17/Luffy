@@ -1,0 +1,297 @@
+Initial environment-dependent attempts used inherited TMPDIR under group-writable /mnt/luffy-data/test-tmp. Owner IPC correctly rejected that ancestor. Two attempts shared this log; NUL padding removed. Final verification is in chat-notify-tests.txt using TMPDIR=/tmp.
+........................................................................ [ 43%]
+........................................................................ [ 86%]
+..........FF.F.FF......                                                  [100%]
+=================================== FAILURES ===================================
+_ test_negative_control_review_counterexamples_are_caught[test_w1_code_collision_can_never_swap_the_confirmed_operation-_old_code_only_confirmations] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-209/test_negative_control_review_c0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7869b0e29970>
+check = 'test_w1_code_collision_can_never_swap_the_confirmed_operation'
+mutant = <function _old_code_only_confirmations at 0x7869b2983380>
+
+    @pytest.mark.parametrize("check, mutant", [
+        ("test_w1_code_collision_can_never_swap_the_confirmed_operation",
+         _old_code_only_confirmations),
+        ("test_w3_channel_is_authenticated_not_asserted", _accept_any_channel_mac),
+        ("test_w4_telegram_foreign_sender_in_owner_chat_is_refused", _chat_is_the_identity),
+        ("test_w8_failure_after_delivery_is_outcome_unknown", _post_send_failure_is_unavailable),
+        ("test_w7_telegram_halt_is_not_serialized_behind_resume", _telegram_inline),
+        ("test_w9_stop_never_unlinks_a_replacement_socket", _unlink_whatever_is_there),
+        ("test_w7_ipc_class_slots_reserve_containment", _one_shared_recovery_pool),
+    ])
+    def test_negative_control_review_counterexamples_are_caught(tmp_path, monkeypatch, check,
+                                                                mutant):
+        mutant(monkeypatch)
+        with pytest.raises((AssertionError, StopIteration)):
+>           _run_check(check, tmp_path, monkeypatch)
+
+tests/test_owner_interface_boundary.py:438: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_owner_interface_boundary.py:343: in _run_check
+    return fn(**kwargs)
+           ^^^^^^^^^^^^
+tests/test_owner_interface.py:1010: in test_w1_code_collision_can_never_swap_the_confirmed_operation
+    server = OwnerIPCServer(s, ipc_dir).start()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:235: in start
+    self._keys = ensure_keys(self.dir, self.channels)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:131: in ensure_keys
+    check_ancestors(ipc_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/oi-_8l3civ1/ipc'), uid = 1000
+
+    def check_ancestors(path: Path, uid: int | None = None) -> None:
+        """No ancestor may let another user replace the IPC directory: every
+        ancestor is a real directory owned by root or uid, and is not group/other
+        writable unless sticky (e.g. /tmp, where others cannot rename our entry)."""
+        uid = os.getuid() if uid is None else uid
+        path = Path(os.path.abspath(path))
+        for parent in path.parents:
+            st = os.lstat(parent)
+            if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+                raise InsecurePath(f"{parent} is not a real directory")
+            if st.st_uid not in (0, uid):
+                raise InsecurePath(f"{parent} is owned by uid {st.st_uid}")
+            if st.st_mode & 0o022 and not st.st_mode & stat.S_ISVTX:
+>               raise InsecurePath(f"{parent} is group/other writable (mode {oct(st.st_mode & 0o777)})")
+E               trader.owner.ipc.InsecurePath: /mnt/luffy-data/test-tmp is group/other writable (mode 0o775)
+
+trader/owner/ipc.py:83: InsecurePath
+_ test_negative_control_review_counterexamples_are_caught[test_w3_channel_is_authenticated_not_asserted-_accept_any_channel_mac] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-209/test_negative_control_review_c1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7869b0e35c40>
+check = 'test_w3_channel_is_authenticated_not_asserted'
+mutant = <function _accept_any_channel_mac at 0x7869b2983420>
+
+    @pytest.mark.parametrize("check, mutant", [
+        ("test_w1_code_collision_can_never_swap_the_confirmed_operation",
+         _old_code_only_confirmations),
+        ("test_w3_channel_is_authenticated_not_asserted", _accept_any_channel_mac),
+        ("test_w4_telegram_foreign_sender_in_owner_chat_is_refused", _chat_is_the_identity),
+        ("test_w8_failure_after_delivery_is_outcome_unknown", _post_send_failure_is_unavailable),
+        ("test_w7_telegram_halt_is_not_serialized_behind_resume", _telegram_inline),
+        ("test_w9_stop_never_unlinks_a_replacement_socket", _unlink_whatever_is_there),
+        ("test_w7_ipc_class_slots_reserve_containment", _one_shared_recovery_pool),
+    ])
+    def test_negative_control_review_counterexamples_are_caught(tmp_path, monkeypatch, check,
+                                                                mutant):
+        mutant(monkeypatch)
+        with pytest.raises((AssertionError, StopIteration)):
+>           _run_check(check, tmp_path, monkeypatch)
+
+tests/test_owner_interface_boundary.py:438: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_owner_interface_boundary.py:343: in _run_check
+    return fn(**kwargs)
+           ^^^^^^^^^^^^
+tests/test_owner_interface.py:581: in test_w3_channel_is_authenticated_not_asserted
+    server = OwnerIPCServer(s, ipc_dir).start()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:235: in start
+    self._keys = ensure_keys(self.dir, self.channels)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:131: in ensure_keys
+    check_ancestors(ipc_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/oi-zx4lfw70/ipc'), uid = 1000
+
+    def check_ancestors(path: Path, uid: int | None = None) -> None:
+        """No ancestor may let another user replace the IPC directory: every
+        ancestor is a real directory owned by root or uid, and is not group/other
+        writable unless sticky (e.g. /tmp, where others cannot rename our entry)."""
+        uid = os.getuid() if uid is None else uid
+        path = Path(os.path.abspath(path))
+        for parent in path.parents:
+            st = os.lstat(parent)
+            if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+                raise InsecurePath(f"{parent} is not a real directory")
+            if st.st_uid not in (0, uid):
+                raise InsecurePath(f"{parent} is owned by uid {st.st_uid}")
+            if st.st_mode & 0o022 and not st.st_mode & stat.S_ISVTX:
+>               raise InsecurePath(f"{parent} is group/other writable (mode {oct(st.st_mode & 0o777)})")
+E               trader.owner.ipc.InsecurePath: /mnt/luffy-data/test-tmp is group/other writable (mode 0o775)
+
+trader/owner/ipc.py:83: InsecurePath
+_ test_negative_control_review_counterexamples_are_caught[test_w8_failure_after_delivery_is_outcome_unknown-_post_send_failure_is_unavailable] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-209/test_negative_control_review_c3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7869b0e37a70>
+check = 'test_w8_failure_after_delivery_is_outcome_unknown'
+mutant = <function _post_send_failure_is_unavailable at 0x7869b2983560>
+
+    @pytest.mark.parametrize("check, mutant", [
+        ("test_w1_code_collision_can_never_swap_the_confirmed_operation",
+         _old_code_only_confirmations),
+        ("test_w3_channel_is_authenticated_not_asserted", _accept_any_channel_mac),
+        ("test_w4_telegram_foreign_sender_in_owner_chat_is_refused", _chat_is_the_identity),
+        ("test_w8_failure_after_delivery_is_outcome_unknown", _post_send_failure_is_unavailable),
+        ("test_w7_telegram_halt_is_not_serialized_behind_resume", _telegram_inline),
+        ("test_w9_stop_never_unlinks_a_replacement_socket", _unlink_whatever_is_there),
+        ("test_w7_ipc_class_slots_reserve_containment", _one_shared_recovery_pool),
+    ])
+    def test_negative_control_review_counterexamples_are_caught(tmp_path, monkeypatch, check,
+                                                                mutant):
+        mutant(monkeypatch)
+        with pytest.raises((AssertionError, StopIteration)):
+>           _run_check(check, tmp_path, monkeypatch)
+
+tests/test_owner_interface_boundary.py:438: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_owner_interface_boundary.py:343: in _run_check
+    return fn(**kwargs)
+           ^^^^^^^^^^^^
+tests/test_owner_interface.py:720: in test_w8_failure_after_delivery_is_outcome_unknown
+    OwnerIPCServer(s, ipc_dir).start().stop()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:235: in start
+    self._keys = ensure_keys(self.dir, self.channels)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:131: in ensure_keys
+    check_ancestors(ipc_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/oi-zom6r_36/ipc'), uid = 1000
+
+    def check_ancestors(path: Path, uid: int | None = None) -> None:
+        """No ancestor may let another user replace the IPC directory: every
+        ancestor is a real directory owned by root or uid, and is not group/other
+        writable unless sticky (e.g. /tmp, where others cannot rename our entry)."""
+        uid = os.getuid() if uid is None else uid
+        path = Path(os.path.abspath(path))
+        for parent in path.parents:
+            st = os.lstat(parent)
+            if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+                raise InsecurePath(f"{parent} is not a real directory")
+            if st.st_uid not in (0, uid):
+                raise InsecurePath(f"{parent} is owned by uid {st.st_uid}")
+            if st.st_mode & 0o022 and not st.st_mode & stat.S_ISVTX:
+>               raise InsecurePath(f"{parent} is group/other writable (mode {oct(st.st_mode & 0o777)})")
+E               trader.owner.ipc.InsecurePath: /mnt/luffy-data/test-tmp is group/other writable (mode 0o775)
+
+trader/owner/ipc.py:83: InsecurePath
+_ test_negative_control_review_counterexamples_are_caught[test_w9_stop_never_unlinks_a_replacement_socket-_unlink_whatever_is_there] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-209/test_negative_control_review_c5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7869b0365a00>
+check = 'test_w9_stop_never_unlinks_a_replacement_socket'
+mutant = <function _unlink_whatever_is_there at 0x7869b29836a0>
+
+    @pytest.mark.parametrize("check, mutant", [
+        ("test_w1_code_collision_can_never_swap_the_confirmed_operation",
+         _old_code_only_confirmations),
+        ("test_w3_channel_is_authenticated_not_asserted", _accept_any_channel_mac),
+        ("test_w4_telegram_foreign_sender_in_owner_chat_is_refused", _chat_is_the_identity),
+        ("test_w8_failure_after_delivery_is_outcome_unknown", _post_send_failure_is_unavailable),
+        ("test_w7_telegram_halt_is_not_serialized_behind_resume", _telegram_inline),
+        ("test_w9_stop_never_unlinks_a_replacement_socket", _unlink_whatever_is_there),
+        ("test_w7_ipc_class_slots_reserve_containment", _one_shared_recovery_pool),
+    ])
+    def test_negative_control_review_counterexamples_are_caught(tmp_path, monkeypatch, check,
+                                                                mutant):
+        mutant(monkeypatch)
+        with pytest.raises((AssertionError, StopIteration)):
+>           _run_check(check, tmp_path, monkeypatch)
+
+tests/test_owner_interface_boundary.py:438: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_owner_interface_boundary.py:343: in _run_check
+    return fn(**kwargs)
+           ^^^^^^^^^^^^
+tests/test_owner_interface.py:649: in test_w9_stop_never_unlinks_a_replacement_socket
+    server = OwnerIPCServer(s, ipc_dir).start()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:235: in start
+    self._keys = ensure_keys(self.dir, self.channels)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:131: in ensure_keys
+    check_ancestors(ipc_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/oi-ouzzak68/ipc'), uid = 1000
+
+    def check_ancestors(path: Path, uid: int | None = None) -> None:
+        """No ancestor may let another user replace the IPC directory: every
+        ancestor is a real directory owned by root or uid, and is not group/other
+        writable unless sticky (e.g. /tmp, where others cannot rename our entry)."""
+        uid = os.getuid() if uid is None else uid
+        path = Path(os.path.abspath(path))
+        for parent in path.parents:
+            st = os.lstat(parent)
+            if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+                raise InsecurePath(f"{parent} is not a real directory")
+            if st.st_uid not in (0, uid):
+                raise InsecurePath(f"{parent} is owned by uid {st.st_uid}")
+            if st.st_mode & 0o022 and not st.st_mode & stat.S_ISVTX:
+>               raise InsecurePath(f"{parent} is group/other writable (mode {oct(st.st_mode & 0o777)})")
+E               trader.owner.ipc.InsecurePath: /mnt/luffy-data/test-tmp is group/other writable (mode 0o775)
+
+trader/owner/ipc.py:83: InsecurePath
+_ test_negative_control_review_counterexamples_are_caught[test_w7_ipc_class_slots_reserve_containment-_one_shared_recovery_pool] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-209/test_negative_control_review_c6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7869b0497e00>
+check = 'test_w7_ipc_class_slots_reserve_containment'
+mutant = <function _one_shared_recovery_pool at 0x7869b29837e0>
+
+    @pytest.mark.parametrize("check, mutant", [
+        ("test_w1_code_collision_can_never_swap_the_confirmed_operation",
+         _old_code_only_confirmations),
+        ("test_w3_channel_is_authenticated_not_asserted", _accept_any_channel_mac),
+        ("test_w4_telegram_foreign_sender_in_owner_chat_is_refused", _chat_is_the_identity),
+        ("test_w8_failure_after_delivery_is_outcome_unknown", _post_send_failure_is_unavailable),
+        ("test_w7_telegram_halt_is_not_serialized_behind_resume", _telegram_inline),
+        ("test_w9_stop_never_unlinks_a_replacement_socket", _unlink_whatever_is_there),
+        ("test_w7_ipc_class_slots_reserve_containment", _one_shared_recovery_pool),
+    ])
+    def test_negative_control_review_counterexamples_are_caught(tmp_path, monkeypatch, check,
+                                                                mutant):
+        mutant(monkeypatch)
+        with pytest.raises((AssertionError, StopIteration)):
+>           _run_check(check, tmp_path, monkeypatch)
+
+tests/test_owner_interface_boundary.py:438: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_owner_interface_boundary.py:343: in _run_check
+    return fn(**kwargs)
+           ^^^^^^^^^^^^
+tests/test_owner_interface.py:544: in test_w7_ipc_class_slots_reserve_containment
+    server = OwnerIPCServer(fake, ipc_dir).start()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:235: in start
+    self._keys = ensure_keys(self.dir, self.channels)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/owner/ipc.py:131: in ensure_keys
+    check_ancestors(ipc_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/oi-7ve6ag_2/ipc'), uid = 1000
+
+    def check_ancestors(path: Path, uid: int | None = None) -> None:
+        """No ancestor may let another user replace the IPC directory: every
+        ancestor is a real directory owned by root or uid, and is not group/other
+        writable unless sticky (e.g. /tmp, where others cannot rename our entry)."""
+        uid = os.getuid() if uid is None else uid
+        path = Path(os.path.abspath(path))
+        for parent in path.parents:
+            st = os.lstat(parent)
+            if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+                raise InsecurePath(f"{parent} is not a real directory")
+            if st.st_uid not in (0, uid):
+                raise InsecurePath(f"{parent} is owned by uid {st.st_uid}")
+            if st.st_mode & 0o022 and not st.st_mode & stat.S_ISVTX:
+>               raise InsecurePath(f"{parent} is group/other writable (mode {oct(st.st_mode & 0o777)})")
+E               trader.owner.ipc.InsecurePath: /mnt/luffy-data/test-tmp is group/other writable (mode 0o775)
+
+trader/owner/ipc.py:83: InsecurePath
+=========================== short test summary info ============================
+FAILED tests/test_owner_interface_boundary.py::test_negative_control_review_counterexamples_are_caught[test_w1_code_collision_can_never_swap_the_confirmed_operation-_old_code_only_confirmations]
+FAILED tests/test_owner_interface_boundary.py::test_negative_control_review_counterexamples_are_caught[test_w3_channel_is_authenticated_not_asserted-_accept_any_channel_mac]
+FAILED tests/test_owner_interface_boundary.py::test_negative_control_review_counterexamples_are_caught[test_w8_failure_after_delivery_is_outcome_unknown-_post_send_failure_is_unavailable]
+FAILED tests/test_owner_interface_boundary.py::test_negative_control_review_counterexamples_are_caught[test_w9_stop_never_unlinks_a_replacement_socket-_unlink_whatever_is_there]
+FAILED tests/test_owner_interface_boundary.py::test_negative_control_review_counterexamples_are_caught[test_w7_ipc_class_slots_reserve_containment-_one_shared_recovery_pool]
+5 failed, 162 passed in 30.21s

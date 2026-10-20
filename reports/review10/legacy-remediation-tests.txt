@@ -1,0 +1,61 @@
+F.engine equivalence on SYNTHETIC/USDT (1200 bars)
+
+{"family": "ema_trend", "signals": 188, "old": {"trades": 15, "wins": 6, "pnl": -132.1818}, "new": {"trades": 15, "wins": 6, "pnl": -132.1818}, "match": true}
+{"family": "vwap_fade", "signals": 58, "old": {"trades": 14, "wins": 5, "pnl": -39.815}, "new": {"trades": 14, "wins": 5, "pnl": -39.815}, "match": true}
+{"family": "breakout_retest", "signals": 33, "old": {"trades": 15, "wins": 5, "pnl": -191.3136}, "new": {"trades": 15, "wins": 5, "pnl": -191.3136}, "match": true}
+{"family": "sweep_reversal", "signals": 101, "old": {"trades": 25, "wins": 16, "pnl": 188.3509}, "new": {"trades": 25, "wins": 16, "pnl": 188.3509}, "match": true}
+{"family": "rotation_momo", "signals": 0, "old": {"trades": 0, "wins": 0, "pnl": 0.0}, "new": {"trades": 0, "wins": 0, "pnl": 0.0}, "match": true}
+
+ENGINE EQUIVALENCE: PASS
+
+.symbols=['SYNTHETIC/USDT']
+bars={'SYNTHETIC/USDT': 1200}
+
+{
+  "runs": 5,
+  "old_total_s": 17.65,
+  "old_per_run_s": 3.53,
+  "new_total_s": 0.132,
+  "new_per_run_s": 0.0263,
+  "speedup": 134.0
+}
+
+BENCH: PASS
+
+.
+=================================== FAILURES ===================================
+_____ test_tv_duplicates_are_advisory_and_respect_full_trading_definition ______
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-208/test_tv_duplicates_are_advisor0')
+
+    def test_tv_duplicates_are_advisory_and_respect_full_trading_definition(tmp_path):
+        journal = Journal(tmp_path / 'legacy.db')
+        for sid, regimes, markets, params in (
+            ('first', '["RANGING","VOLATILE"]', '["futures"]', '{"adx_min":22}'),
+            ('duplicate', '["VOLATILE","RANGING"]', '["futures"]', '{ "adx_min": 22 }'),
+            ('other_regime', '["TRENDING_UP"]', '["futures"]', '{"adx_min":22}'),
+            ('other_market', '["RANGING","VOLATILE"]', '["spot"]', '{"adx_min":22}'),
+        ):
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,params,state,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',?,\'paper\',?,?)',
+                             (sid, sid, params, regimes, markets))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+        result = validate_population(journal, tv)
+        assert result['duplicates'] == ['duplicate']
+        assert len(calls) == 3
+        assert journal.list_strategies() == before
+>       assert Journal(journal.db_path).list_strategies() == before
+E       assert [{'id': 'firs...n":22}', ...}] == [{'id': 'firs...n":22}', ...}]
+E         
+E         At index 0 diff: {'id': 'first', 'name': 'first', 'kind': 'ema_trend', 'params': '{"adx_min":22}', 'state': 'paper', 'description': None, 'origin': None, 'hypothesis': None, 'invalidation': None, 'regime_filter': '["RANGING","VOLATILE"]', 'markets': '["futures"]', 'generation': 0, 'parent_id': '', 'created_at': None, 'stats_json': '{}', 'retire_reason': '', 'state_changed_at': None, 'spec_json': None} != {'id': 'first', 'name': 'first', 'kind': 'ema_trend', 'params': '{"adx_min":22}', 'state': 'paper', 'description': None, 'origin': None, 'hypothesis': None, 'invalidati...
+E         
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/test_review10_legacy_boundaries.py:35: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review10_legacy_boundaries.py::test_tv_duplicates_are_advisory_and_respect_full_trading_definition
+1 failed, 3 passed in 63.54s (0:01:03)

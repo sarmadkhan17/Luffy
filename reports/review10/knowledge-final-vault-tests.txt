@@ -1,0 +1,9 @@
+Faithful transcript reconstructed from actual exec tool output; no test rerun for logging.
+Command:
+./venv/bin/python -m pytest -q tests/test_org_vault.py
+
+Tool output arrived in two chunks. Concatenated progress/result:
+............                                                             [100%]
+12 passed in 1.28s
+
+The terminal process completed with exit code 0. The initial progress chunk was '....'; the second progress chunk was '........                                                             [100%]'. The final result line is exact.

@@ -1,0 +1,22 @@
+{
+  "source_revision": "4deca5c275c30c2c59c227b5170bab651cf777fe",
+  "assigned_files": 201,
+  "current_files": 200,
+  "historical_removed_files": 1,
+  "exact_inventory_csv_match": true,
+  "duplicate_assessments": 0,
+  "classifications": {
+    "KEEP": 192,
+    "SIMPLIFY": 9
+  },
+  "subsystems": {
+    "knowledge": 175,
+    "legacy": 19,
+    "chat": 5,
+    "notify": 2
+  },
+  "baseline_physical_lines": 8941,
+  "historical_source_lines": 154,
+  "final_physical_lines": 9112,
+  "hashes_and_required_evidence_fields_verified": true
+}

@@ -1,0 +1,18 @@
+Worktree: /mnt/luffy-data/sol1-subsystem-review-10-20261020
+Branch: sol1/subsystem-review-10-20261020
+Parent: 4deca5c275c30c2c59c227b5170bab651cf777fe
+
+python3 reports/review10/assemble_evidence.py
+  Verifies exact inventory/CSV, 201 unique assessments, required evidence and source hashes.
+  Rewrites only reports/review10 aggregate evidence. Needs pinned original inventory paths.
+
+PYTHONPATH=. ./venv/bin/python reports/review10/chat-notify-baseline-repro.py
+  Loads pinned original modules under temporary names; uses fake transport and fixture Journal.
+  Reproduces historical defects intentionally, never swaps source or contacts providers.
+
+Final focused test commands and retained raw output: verification.json and partition .md files.
+Set TMPDIR=/tmp TEMP=/tmp TMP=/tmp for IPC tests; group-writable inherited TMPDIR is correctly refused.
+Synthetic engine gate commands run through tests/test_stage1_pit_engine_gates.py, which substitutes
+DataFeed/evidence frames. Do not run standalone real-data scripts as an incidental check.
+
+No full CI, canonical integration, production database changes, restart, provider calls or activation.

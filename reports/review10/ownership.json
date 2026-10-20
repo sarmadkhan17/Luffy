@@ -1,0 +1,1699 @@
+{
+  "source_revision": "4deca5c275c30c2c59c227b5170bab651cf777fe",
+  "inventory_revision": "8d57e8f23343505660a07c1a8aa6218279121de9",
+  "inventory_source": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json",
+  "inventory_sha256": "dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb",
+  "ownership_csv": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-files.csv",
+  "ownership_csv_sha256": "90f73dd31d096df6400df5214f199f7b4a19fcc65605582836e574c80431d995",
+  "subsystems": [
+    {
+      "id": "chat",
+      "name": "Conversational read interface",
+      "purpose": "Bounded read-only analyst tools and chat reasoning through shared owner queries",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "chat.1",
+          "name": "chat engine",
+          "files": [
+            "trader/chat/__init__.py",
+            "trader/chat/engine.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/chat/__init__.py",
+              "line": 1,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "trader/chat/engine.py",
+              "line": 1,
+              "sha256": "48602c2fc3578570bbcbf8a215b10e423fae70949f2dac5d5252dbed669e57fc"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "chat.2",
+          "name": "bounded tool agent",
+          "files": [
+            "tests/test_chat_agent.py",
+            "trader/chat/agent.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/chat/agent.py",
+              "line": 1,
+              "sha256": "2f28a0721f0f1543c4ca01b903fed7d11a0037719b394881fb8dc99c7bdb2ccf"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "chat.3",
+          "name": "read-only tools",
+          "files": [
+            "trader/chat/tools.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/chat/tools.py",
+              "line": 1,
+              "sha256": "33dbe299ba9af4333f7342eef2cca3dd03476be877d8389e2d42cf84eb9e04c3"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/chat/engine.py",
+      "counts": {
+        "python_source": 4,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 0,
+        "test": 1,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 5,
+        "source_files": 4,
+        "test_files": 1,
+        "other_files": 0,
+        "total_files": 5,
+        "source_lines": 518,
+        "all_text_lines": 518,
+        "binary_files": 0
+      },
+      "files": [
+        "tests/test_chat_agent.py",
+        "trader/chat/__init__.py",
+        "trader/chat/agent.py",
+        "trader/chat/engine.py",
+        "trader/chat/tools.py"
+      ],
+      "non_database_inputs": "Owner message, read-only journal/owner queries, permitted tool results and provider switch",
+      "non_database_outputs": "Bounded read-only tool analysis and chat reply/refusal",
+      "initialization_path": "Dashboard /api/chat creates ChatEngine lazily; brain.enabled=false blocks provider",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "brain",
+        "execution",
+        "kernel",
+        "owner",
+        "platform",
+        "strategy"
+      ],
+      "used_by": [
+        "dashboard"
+      ],
+      "static_application_dependencies": [
+        "brain",
+        "owner",
+        "platform"
+      ],
+      "offline_utility_dependencies": [],
+      "test_dependencies": [
+        "brain",
+        "platform"
+      ],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/chat/engine.py",
+          "line": 1,
+          "sha256": "48602c2fc3578570bbcbf8a215b10e423fae70949f2dac5d5252dbed669e57fc"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [],
+      "initialization_and_schedule": [
+        {
+          "source": "dashboard",
+          "interaction": "API",
+          "detail": "Lazy ChatEngine creation on /api/chat.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 463,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "exposed_to",
+          "peer": "dashboard",
+          "interaction": "API",
+          "detail": "Lazy ChatEngine creation on /api/chat."
+        }
+      ],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "decisions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "equity"
+        },
+        {
+          "database": "luffy.db",
+          "table": "outcomes"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategies"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trades"
+        },
+        {
+          "database": "luffy.db",
+          "table": "votes"
+        }
+      ],
+      "runtime_data_outputs": [],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "dashboard",
+          "basis": "Provider execution disabled by brain flag; no request invocation verified.",
+          "evidence": [
+            {
+              "path": "trader/dashboard/server.py",
+              "line": 463,
+              "sha256": "b9891a7a5d1e1a769f901c30d83ecb9cdf8c5eb4dd3c8d304ddfa26dc8a07e97"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [
+        {
+          "path": "trader/chat/agent.py",
+          "line": 30,
+          "name": "AnalystAgent",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/engine.py",
+          "line": 24,
+          "name": "ChatEngine",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/engine.py",
+          "line": 56,
+          "name": "datetime_today",
+          "kind": "function",
+          "summary": "'2026-08-25%' \u2014 ready for SQL LIKE."
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 14,
+          "name": "get_positions",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 23,
+          "name": "get_pnl",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 47,
+          "name": "get_trades",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 65,
+          "name": "get_decisions",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 80,
+          "name": "get_strategy_performance",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 91,
+          "name": "get_agent_stats",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 97,
+          "name": "get_equity_curve",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "line": 150,
+          "name": "owner_query",
+          "kind": "function",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/chat/__init__.py",
+          "summary": ""
+        },
+        {
+          "path": "trader/chat/agent.py",
+          "summary": "Bounded tool-calling analyst loop. Read-only; never triggers ops."
+        },
+        {
+          "path": "trader/chat/engine.py",
+          "summary": "Chat brain \u2014 conversational access to everything Luffy knows."
+        },
+        {
+          "path": "trader/chat/tools.py",
+          "summary": "Read-only analyst tools. Each takes a Journal + typed kwargs and returns"
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Bounded read-only analyst tools and chat reasoning through shared owner queries; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "DORMANT",
+      "previous_status_basis": "Dashboard /api/chat wires engine lazily; brain.enabled=false disables provider execution. No request invocation established.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Optional"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=chat",
+      "previous_status_evidence": [
+        {
+          "path": "trader/chat/engine.py",
+          "line": 1,
+          "sha256": "48602c2fc3578570bbcbf8a215b10e423fae70949f2dac5d5252dbed669e57fc"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "notify",
+      "name": "Telegram notification transport",
+      "purpose": "Alerts and remote polling transport; owner controls routed through Owner Interface",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "notify.1",
+          "name": "alert sending",
+          "files": [
+            "trader/notify/__init__.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/notify/__init__.py",
+              "line": 1,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "notify.2",
+          "name": "Telegram polling transport",
+          "files": [
+            "trader/notify/telegram.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/notify/telegram.py",
+              "line": 1,
+              "sha256": "1947ec3448a69dc7609d5b31c6832c2cc318408409bc46747581b313ad493976"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/notify/telegram.py",
+      "counts": {
+        "python_source": 2,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 0,
+        "test": 0,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 2,
+        "source_files": 2,
+        "test_files": 0,
+        "other_files": 0,
+        "total_files": 2,
+        "source_lines": 34,
+        "all_text_lines": 34,
+        "binary_files": 0
+      },
+      "files": [
+        "trader/notify/__init__.py",
+        "trader/notify/telegram.py"
+      ],
+      "non_database_inputs": "Kernel alert text and configured Telegram transport; polled inbound messages",
+      "non_database_outputs": "Notification delivery result and owner-adapter input messages",
+      "initialization_path": "Kernel Telegram instance and polling listener; missing credentials yields no-op",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "platform"
+      ],
+      "used_by": [
+        "kernel"
+      ],
+      "static_application_dependencies": [
+        "platform"
+      ],
+      "offline_utility_dependencies": [],
+      "test_dependencies": [],
+      "databases": [],
+      "entry_points": [
+        {
+          "path": "trader/notify/telegram.py",
+          "line": 1,
+          "sha256": "1947ec3448a69dc7609d5b31c6832c2cc318408409bc46747581b313ad493976"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [],
+      "initialization_and_schedule": [
+        {
+          "source": "kernel",
+          "interaction": "STARTUP_BACKGROUND",
+          "detail": "Telegram polling listener and alerts.",
+          "evidence": [
+            {
+              "path": "trader/kernel.py",
+              "line": 396,
+              "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+            }
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "direction": "exposed_to",
+          "peer": "kernel",
+          "interaction": "STARTUP_BACKGROUND",
+          "detail": "Telegram polling listener and alerts."
+        }
+      ],
+      "runtime_data_inputs": [],
+      "runtime_data_outputs": [],
+      "failure_and_recovery_dependencies": [
+        {
+          "peer": "kernel",
+          "basis": "Credential-dependent transport; credentials deliberately uninspected.",
+          "evidence": [
+            {
+              "path": "trader/kernel.py",
+              "line": 396,
+              "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+            }
+          ]
+        }
+      ],
+      "public_contracts": [
+        {
+          "path": "trader/notify/telegram.py",
+          "line": 13,
+          "name": "Telegram",
+          "kind": "class",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/notify/__init__.py",
+          "summary": ""
+        },
+        {
+          "path": "trader/notify/telegram.py",
+          "summary": "Telegram notifier \u2014 alerts + remote control transport (Phase 4 expands)."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Alerts and remote polling transport; owner controls routed through Owner Interface; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "DORMANT",
+      "previous_status_basis": "Kernel listener absent; credential availability intentionally uninspected.",
+      "classifications": {
+        "implementation": "Complete",
+        "integration": "Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Optional"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=notify",
+      "previous_status_evidence": [
+        {
+          "path": "trader/notify/telegram.py",
+          "line": 1,
+          "sha256": "1947ec3448a69dc7609d5b31c6832c2cc318408409bc46747581b313ad493976"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "name": "Knowledge vault and organization",
+      "purpose": "First-party knowledge notes, vault read/write helpers, company roster and offline memory tooling",
+      "execution_class": "runtime",
+      "subcomponents": [
+        {
+          "id": "knowledge.1",
+          "name": "vault contracts and notes",
+          "files": [
+            "knowledge/00 Company/Company.md",
+            "knowledge/00 Company/Depth Analyst.md",
+            "knowledge/00 Company/Flow Analyst.md",
+            "knowledge/00 Company/Harvester.md",
+            "knowledge/00 Company/Librarian.md",
+            "knowledge/00 Company/Manager.md",
+            "knowledge/00 Company/Momentum Analyst.md",
+            "knowledge/00 Company/Positioning Analyst.md",
+            "knowledge/00 Company/Researcher.md",
+            "knowledge/00 Company/Risk Officer.md",
+            "knowledge/00 Company/Rotation Analyst.md",
+            "knowledge/00 Company/Scraper.md",
+            "knowledge/00 Company/Strategist.md",
+            "knowledge/00 Company/Strategy Analyst.md",
+            "knowledge/00 Company/Structure Analyst.md",
+            "knowledge/00 Company/Stub Analyst.md",
+            "knowledge/00 Company/Theorist.md",
+            "knowledge/00 Company/Trader.md",
+            "knowledge/00 Company/Value Analyst.md",
+            "knowledge/10 Theories/Auction Market Theory.md",
+            "knowledge/10 Theories/Behavioral Momentum.md",
+            "knowledge/10 Theories/Cross-Asset Rotation.md",
+            "knowledge/10 Theories/Market Microstructure.md",
+            "knowledge/10 Theories/Mechanisms/Absorption.md",
+            "knowledge/10 Theories/Mechanisms/Aggressor Flow.md",
+            "knowledge/10 Theories/Mechanisms/BOS CHoCH.md",
+            "knowledge/10 Theories/Mechanisms/Capital Rotation Cascade.md",
+            "knowledge/10 Theories/Mechanisms/Effort vs Result.md",
+            "knowledge/10 Theories/Mechanisms/Funding Crowding.md",
+            "knowledge/10 Theories/Mechanisms/Liquidity Sweep.md",
+            "knowledge/10 Theories/Mechanisms/Order Book Imbalance.md",
+            "knowledge/10 Theories/Mechanisms/Trend Exhaustion.md",
+            "knowledge/10 Theories/Mechanisms/Trend Persistence.md",
+            "knowledge/10 Theories/Mechanisms/VWAP Extreme Mean Reversion.md",
+            "knowledge/10 Theories/Statistical Mean Reversion.md",
+            "knowledge/20 Strategies/Aggressor_Divergence_At_Highs.md",
+            "knowledge/20 Strategies/Aggressor_Thrust_Breakout.md",
+            "knowledge/20 Strategies/BB_2.5\u03c3_Band_Fade.md",
+            "knowledge/20 Strategies/BB_3\u03c3_Exhaustion_Fade.md",
+            "knowledge/20 Strategies/BTC_Rotation_Momentum.md",
+            "knowledge/20 Strategies/Breakout-Retest.md",
+            "knowledge/20 Strategies/Donchian_Breakout_Trail.md",
+            "knowledge/20 Strategies/EMA_Stack_Pullback.md",
+            "knowledge/20 Strategies/Funding_Filtered_Trend_Pullback.md",
+            "knowledge/20 Strategies/Funding_Price_Divergence.md",
+            "knowledge/20 Strategies/Liquidity_Sweep_Reversal.md",
+            "knowledge/20 Strategies/Momentum_Divergence_Trail.md",
+            "knowledge/20 Strategies/RSI_Exhaustion_Reclaim.md",
+            "knowledge/20 Strategies/VWAP_Extreme_Fade.md",
+            "knowledge/20 Strategies/ema_trend_harvested.md",
+            "knowledge/20 Strategies/ema_trend_variant_(20.0).md",
+            "knowledge/20 Strategies/ema_trend_variant_(22.0).md",
+            "knowledge/20 Strategies/ema_trend_variant_(22.0)_\u00b7adx_min=26.8812.md",
+            "knowledge/20 Strategies/ema_trend_variant_(28.0).md",
+            "knowledge/20 Strategies/sweep_reversal_variant_(v2).md",
+            "knowledge/20 Strategies/vwap_fade_variant_(1.5957).md",
+            "knowledge/20 Strategies/vwap_fade_variant_(1.9493).md",
+            "knowledge/20 Strategies/vwap_fade_variant_(2.5).md",
+            "knowledge/60 Atomic/_review-duplicates/Crypto Capital Rotation Lag.md",
+            "knowledge/60 Atomic/_review-duplicates/EMA stack alignment signals institutional flow direction.md",
+            "knowledge/60 Atomic/_review-duplicates/VWAP extension mean reversion.md",
+            "knowledge/60 Atomic/lesson/Default parameters reduce overfitting in low-robustness trending regimes.md",
+            "knowledge/60 Atomic/lesson/Demoted strategies accumulate negative PnL.md",
+            "knowledge/60 Atomic/lesson/Demotion of Sole Traded Strategy Signals Weak Validation.md",
+            "knowledge/60 Atomic/lesson/Divergence absorption edge invalidation.md",
+            "knowledge/60 Atomic/lesson/EMA Stack Pullback Demotion.md",
+            "knowledge/60 Atomic/lesson/Early-stage portfolio negative trend lacks statistical significance.md",
+            "knowledge/60 Atomic/lesson/Failed proving window demotes strategy family.md",
+            "knowledge/60 Atomic/lesson/Ghost-adjusted PnL must be audited before demotion is final.md",
+            "knowledge/60 Atomic/lesson/High returns with low robustness indicate unstable trend.md",
+            "knowledge/60 Atomic/lesson/Insufficient trade count invalidates strategy conclusions.md",
+            "knowledge/60 Atomic/lesson/Liquidity Sweep Reversal Retired.md",
+            "knowledge/60 Atomic/lesson/Liquidity Sweep Reversal live underperformance.md",
+            "knowledge/60 Atomic/lesson/Low paper trade volume requires parameter adjustment.md",
+            "knowledge/60 Atomic/lesson/Mixed results across active strategies indicate no consistent edge.md",
+            "knowledge/60 Atomic/lesson/Moderate win rate does not guarantee profitability.md",
+            "knowledge/60 Atomic/lesson/No multi-trade strategy family is profitable in the 30-trade window.md",
+            "knowledge/60 Atomic/lesson/Panic closes of untracked positions realize uncontrolled losses.md",
+            "knowledge/60 Atomic/lesson/Paper trading before risking capital.md",
+            "knowledge/60 Atomic/lesson/Paper trading data requirement before promotion.md",
+            "knowledge/60 Atomic/lesson/Positive sl_fill entries are not automatically anomalies.md",
+            "knowledge/60 Atomic/lesson/RSI Exhaustion Reclaim Retired.md",
+            "knowledge/60 Atomic/lesson/RSI Exhaustion Reclaim live underperformance.md",
+            "knowledge/60 Atomic/lesson/Reactive RSS NewsGuard misses scheduled macro events.md",
+            "knowledge/60 Atomic/lesson/Regime edge must be conditioned on direction accuracy.md",
+            "knowledge/60 Atomic/lesson/Seeding multiple hypothesis-based strategies without proven edge yields negative portfolio PnL.md",
+            "knowledge/60 Atomic/lesson/Single live strategy with negative PnL indicates unproven strategy mix.md",
+            "knowledge/60 Atomic/lesson/Small-sample strategy conclusions are provisional.md",
+            "knowledge/60 Atomic/lesson/Stale cached attribution misleads doctrine.md",
+            "knowledge/60 Atomic/lesson/Stop-loss-dominated PnL is not evidence of skill.md",
+            "knowledge/60 Atomic/lesson/Trailing stop harvests breakout tail.md",
+            "knowledge/60 Atomic/lesson/Under-deployed system lacks right to scale.md",
+            "knowledge/60 Atomic/lesson/Untested skip reason 'already exposed here'.md",
+            "knowledge/60 Atomic/lesson/Untested strategies dominate portfolio.md",
+            "knowledge/60 Atomic/lesson/Untracked exposure causes panic closes.md",
+            "knowledge/60 Atomic/lesson/VWAP fade overfitting risk.md",
+            "knowledge/60 Atomic/lesson/Win rate must be compared to a validated baseline.md",
+            "knowledge/60 Atomic/lesson/Zero-trade paper specs stall progress.md",
+            "knowledge/60 Atomic/lesson/Zero-trade strategies provide no viability evidence.md",
+            "knowledge/60 Atomic/lesson/ema_trend variant 22.0 retired after 9 trades.md",
+            "knowledge/60 Atomic/market-mechanism/Breakout tail is fatter than body.md",
+            "knowledge/60 Atomic/market-mechanism/Cooling Funding Healthy Rally.md",
+            "knowledge/60 Atomic/market-mechanism/Funding extremes filter crowded late entries.md",
+            "knowledge/60 Atomic/market-mechanism/OI expansion precedes trend continuation.md",
+            "knowledge/60 Atomic/market-mechanism/Reflexive positioning drives perp trend persistence.md",
+            "knowledge/60 Atomic/research-finding/Ghost-adjusted sweep_reversal remains unprofitable.md",
+            "knowledge/60 Atomic/research-finding/Minimum trade sample for strategy evaluation.md",
+            "knowledge/60 Atomic/research-finding/Momentum divergence fails in RANGING.md",
+            "knowledge/60 Atomic/research-finding/SELL signals underperform BUY signals.md",
+            "knowledge/60 Atomic/research-finding/Seed strategies underperforming live.md",
+            "knowledge/60 Atomic/research-finding/Short gate is weakly supported by 4h outcome data.md",
+            "knowledge/60 Atomic/research-finding/TRENDING_DOWN SELL is the largest low-accuracy bucket.md",
+            "knowledge/60 Atomic/risk-rule/Aggressor Thrust Breakout Invalidation.md",
+            "knowledge/60 Atomic/risk-rule/Aggressor divergence invalidation rule.md",
+            "knowledge/60 Atomic/risk-rule/BB fade invalidation rule.md",
+            "knowledge/60 Atomic/risk-rule/Both-direction Donchian legs must be judged as a pair.md",
+            "knowledge/60 Atomic/risk-rule/Breakout-Retest Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Demote losing strategies to prevent further losses.md",
+            "knowledge/60 Atomic/risk-rule/Donchian Breakout Trail invalidation criteria.md",
+            "knowledge/60 Atomic/risk-rule/EMA Stack Pullback Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Forward paper test gate before live.md",
+            "knowledge/60 Atomic/risk-rule/Funding Divergence Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Journal-before-risk write ordering.md",
+            "knowledge/60 Atomic/risk-rule/Liquidity Sweep Reversal Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Macro proximity as soft monitoring flag.md",
+            "knowledge/60 Atomic/risk-rule/MacroGuard freezes entries around high-impact US events.md",
+            "knowledge/60 Atomic/risk-rule/Minimum 10-20 paper trades before strategy promotion.md",
+            "knowledge/60 Atomic/risk-rule/Portfolio concentration in mean-reversion underperformance.md",
+            "knowledge/60 Atomic/risk-rule/Positive sl_fill is a bookkeeping anomaly.md",
+            "knowledge/60 Atomic/risk-rule/Promote strategies only after live validation.md",
+            "knowledge/60 Atomic/risk-rule/Promotion Requires 30 Live Trades.md",
+            "knowledge/60 Atomic/risk-rule/RSI Exhaustion Reclaim Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Reconciled ghost fills distort strategy PnL.md",
+            "knowledge/60 Atomic/risk-rule/Rotation Momentum Invalidation Rule.md",
+            "knowledge/60 Atomic/risk-rule/Short-side 4h accuracy gate.md",
+            "knowledge/60 Atomic/risk-rule/Small-sample family promotion block.md",
+            "knowledge/60 Atomic/risk-rule/Structural derivatives changes invalidate funding-OI edge.md",
+            "knowledge/60 Atomic/risk-rule/Unjournaled order requires reconcile sweep.md",
+            "knowledge/60 Atomic/risk-rule/Unproven strategies should not be scaled.md",
+            "knowledge/60 Atomic/risk-rule/Untracked positions are a risk-limit violation.md",
+            "knowledge/60 Atomic/risk-rule/VWAP fade invalidation rule.md",
+            "knowledge/60 Atomic/risk-rule/ema_trend invalidation rule.md",
+            "knowledge/60 Atomic/strategy/Aggressor Divergence At Highs.md",
+            "knowledge/60 Atomic/strategy/Aggressor Thrust Breakout.md",
+            "knowledge/60 Atomic/strategy/BB 2.5\u03c3 Band Fade.md",
+            "knowledge/60 Atomic/strategy/BB 3\u03c3 Exhaustion Fade.md",
+            "knowledge/60 Atomic/strategy/BTC Rotation Momentum Strategy.md",
+            "knowledge/60 Atomic/strategy/Backtest rigor before live promotion.md",
+            "knowledge/60 Atomic/strategy/Breakout-Retest Strategy.md",
+            "knowledge/60 Atomic/strategy/Conservative parameters mitigate overfitting in ema_trend.md",
+            "knowledge/60 Atomic/strategy/Donchian Breakout Trail.md",
+            "knowledge/60 Atomic/strategy/EMA Stack Pullback Strategy.md",
+            "knowledge/60 Atomic/strategy/Funding Filtered Trend Pullback.md",
+            "knowledge/60 Atomic/strategy/Funding Price Divergence.md",
+            "knowledge/60 Atomic/strategy/High-signal-frequency setups escape the INSUFFICIENT regime.md",
+            "knowledge/60 Atomic/strategy/Liquidity Sweep Reversal Strategy.md",
+            "knowledge/60 Atomic/strategy/Liquidity Sweep Reversal.md",
+            "knowledge/60 Atomic/strategy/Momentum Divergence Trail.md",
+            "knowledge/60 Atomic/strategy/Paper trading as evidence generation for idle strategies.md",
+            "knowledge/60 Atomic/strategy/Paper trading validates strategies before live.md",
+            "knowledge/60 Atomic/strategy/RSI Exhaustion Reclaim.md",
+            "knowledge/60 Atomic/strategy/VWAP Extreme Fade.md",
+            "knowledge/60 Atomic/strategy/VWAP fade variant 2.5.md",
+            "knowledge/60 Atomic/strategy/VWAP fade variant parameters.md",
+            "knowledge/60 Atomic/strategy/ema_trend strategy.md",
+            "knowledge/60 Atomic/strategy/ema_trend variant 28.0 strategy.md",
+            "knowledge/60 Atomic/strategy/ema_trend variant adx_min 26.8812.md",
+            "knowledge/MOC.md",
+            "tests/test_org.py",
+            "tests/test_org_vault.py",
+            "trader/knowledge/__init__.py",
+            "trader/knowledge/vault.py"
+          ],
+          "file_count": 172,
+          "implementation_references": [
+            {
+              "path": "trader/knowledge/__init__.py",
+              "line": 1,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "trader/knowledge/vault.py",
+              "line": 1,
+              "sha256": "8312435d30c47f435fa912f7a70510c79be7fd9bb9cb2408c20420ca630ea7f0"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "knowledge.2",
+          "name": "organization roster",
+          "files": [
+            "org.yaml",
+            "trader/org.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/org.py",
+              "line": 1,
+              "sha256": "cc1acfa8c4a240e5ce2a11e7dedbc2b8f81499f356defceb118c517dbc32dd2a"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "knowledge.3",
+          "name": "atomic memory tooling",
+          "files": [
+            "scripts/seed_vault.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/knowledge/vault.py",
+              "line": 1,
+              "sha256": "8312435d30c47f435fa912f7a70510c79be7fd9bb9cb2408c20420ca630ea7f0",
+              "basis": "Functional contract shares a module; file still counted only under its primary subsystem."
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/knowledge/vault.py",
+      "counts": {
+        "python_source": 3,
+        "frontend": 0,
+        "configuration": 1,
+        "script": 1,
+        "test": 2,
+        "other": 168,
+        "python_files_including_scripts_and_tests": 6,
+        "source_files": 4,
+        "test_files": 2,
+        "other_files": 169,
+        "total_files": 175,
+        "source_lines": 835,
+        "all_text_lines": 5480,
+        "binary_files": 0
+      },
+      "files": [
+        "knowledge/00 Company/Company.md",
+        "knowledge/00 Company/Depth Analyst.md",
+        "knowledge/00 Company/Flow Analyst.md",
+        "knowledge/00 Company/Harvester.md",
+        "knowledge/00 Company/Librarian.md",
+        "knowledge/00 Company/Manager.md",
+        "knowledge/00 Company/Momentum Analyst.md",
+        "knowledge/00 Company/Positioning Analyst.md",
+        "knowledge/00 Company/Researcher.md",
+        "knowledge/00 Company/Risk Officer.md",
+        "knowledge/00 Company/Rotation Analyst.md",
+        "knowledge/00 Company/Scraper.md",
+        "knowledge/00 Company/Strategist.md",
+        "knowledge/00 Company/Strategy Analyst.md",
+        "knowledge/00 Company/Structure Analyst.md",
+        "knowledge/00 Company/Stub Analyst.md",
+        "knowledge/00 Company/Theorist.md",
+        "knowledge/00 Company/Trader.md",
+        "knowledge/00 Company/Value Analyst.md",
+        "knowledge/10 Theories/Auction Market Theory.md",
+        "knowledge/10 Theories/Behavioral Momentum.md",
+        "knowledge/10 Theories/Cross-Asset Rotation.md",
+        "knowledge/10 Theories/Market Microstructure.md",
+        "knowledge/10 Theories/Mechanisms/Absorption.md",
+        "knowledge/10 Theories/Mechanisms/Aggressor Flow.md",
+        "knowledge/10 Theories/Mechanisms/BOS CHoCH.md",
+        "knowledge/10 Theories/Mechanisms/Capital Rotation Cascade.md",
+        "knowledge/10 Theories/Mechanisms/Effort vs Result.md",
+        "knowledge/10 Theories/Mechanisms/Funding Crowding.md",
+        "knowledge/10 Theories/Mechanisms/Liquidity Sweep.md",
+        "knowledge/10 Theories/Mechanisms/Order Book Imbalance.md",
+        "knowledge/10 Theories/Mechanisms/Trend Exhaustion.md",
+        "knowledge/10 Theories/Mechanisms/Trend Persistence.md",
+        "knowledge/10 Theories/Mechanisms/VWAP Extreme Mean Reversion.md",
+        "knowledge/10 Theories/Statistical Mean Reversion.md",
+        "knowledge/20 Strategies/Aggressor_Divergence_At_Highs.md",
+        "knowledge/20 Strategies/Aggressor_Thrust_Breakout.md",
+        "knowledge/20 Strategies/BB_2.5\u03c3_Band_Fade.md",
+        "knowledge/20 Strategies/BB_3\u03c3_Exhaustion_Fade.md",
+        "knowledge/20 Strategies/BTC_Rotation_Momentum.md",
+        "knowledge/20 Strategies/Breakout-Retest.md",
+        "knowledge/20 Strategies/Donchian_Breakout_Trail.md",
+        "knowledge/20 Strategies/EMA_Stack_Pullback.md",
+        "knowledge/20 Strategies/Funding_Filtered_Trend_Pullback.md",
+        "knowledge/20 Strategies/Funding_Price_Divergence.md",
+        "knowledge/20 Strategies/Liquidity_Sweep_Reversal.md",
+        "knowledge/20 Strategies/Momentum_Divergence_Trail.md",
+        "knowledge/20 Strategies/RSI_Exhaustion_Reclaim.md",
+        "knowledge/20 Strategies/VWAP_Extreme_Fade.md",
+        "knowledge/20 Strategies/ema_trend_harvested.md",
+        "knowledge/20 Strategies/ema_trend_variant_(20.0).md",
+        "knowledge/20 Strategies/ema_trend_variant_(22.0).md",
+        "knowledge/20 Strategies/ema_trend_variant_(22.0)_\u00b7adx_min=26.8812.md",
+        "knowledge/20 Strategies/ema_trend_variant_(28.0).md",
+        "knowledge/20 Strategies/sweep_reversal_variant_(v2).md",
+        "knowledge/20 Strategies/vwap_fade_variant_(1.5957).md",
+        "knowledge/20 Strategies/vwap_fade_variant_(1.9493).md",
+        "knowledge/20 Strategies/vwap_fade_variant_(2.5).md",
+        "knowledge/60 Atomic/_review-duplicates/Crypto Capital Rotation Lag.md",
+        "knowledge/60 Atomic/_review-duplicates/EMA stack alignment signals institutional flow direction.md",
+        "knowledge/60 Atomic/_review-duplicates/VWAP extension mean reversion.md",
+        "knowledge/60 Atomic/lesson/Default parameters reduce overfitting in low-robustness trending regimes.md",
+        "knowledge/60 Atomic/lesson/Demoted strategies accumulate negative PnL.md",
+        "knowledge/60 Atomic/lesson/Demotion of Sole Traded Strategy Signals Weak Validation.md",
+        "knowledge/60 Atomic/lesson/Divergence absorption edge invalidation.md",
+        "knowledge/60 Atomic/lesson/EMA Stack Pullback Demotion.md",
+        "knowledge/60 Atomic/lesson/Early-stage portfolio negative trend lacks statistical significance.md",
+        "knowledge/60 Atomic/lesson/Failed proving window demotes strategy family.md",
+        "knowledge/60 Atomic/lesson/Ghost-adjusted PnL must be audited before demotion is final.md",
+        "knowledge/60 Atomic/lesson/High returns with low robustness indicate unstable trend.md",
+        "knowledge/60 Atomic/lesson/Insufficient trade count invalidates strategy conclusions.md",
+        "knowledge/60 Atomic/lesson/Liquidity Sweep Reversal Retired.md",
+        "knowledge/60 Atomic/lesson/Liquidity Sweep Reversal live underperformance.md",
+        "knowledge/60 Atomic/lesson/Low paper trade volume requires parameter adjustment.md",
+        "knowledge/60 Atomic/lesson/Mixed results across active strategies indicate no consistent edge.md",
+        "knowledge/60 Atomic/lesson/Moderate win rate does not guarantee profitability.md",
+        "knowledge/60 Atomic/lesson/No multi-trade strategy family is profitable in the 30-trade window.md",
+        "knowledge/60 Atomic/lesson/Panic closes of untracked positions realize uncontrolled losses.md",
+        "knowledge/60 Atomic/lesson/Paper trading before risking capital.md",
+        "knowledge/60 Atomic/lesson/Paper trading data requirement before promotion.md",
+        "knowledge/60 Atomic/lesson/Positive sl_fill entries are not automatically anomalies.md",
+        "knowledge/60 Atomic/lesson/RSI Exhaustion Reclaim Retired.md",
+        "knowledge/60 Atomic/lesson/RSI Exhaustion Reclaim live underperformance.md",
+        "knowledge/60 Atomic/lesson/Reactive RSS NewsGuard misses scheduled macro events.md",
+        "knowledge/60 Atomic/lesson/Regime edge must be conditioned on direction accuracy.md",
+        "knowledge/60 Atomic/lesson/Seeding multiple hypothesis-based strategies without proven edge yields negative portfolio PnL.md",
+        "knowledge/60 Atomic/lesson/Single live strategy with negative PnL indicates unproven strategy mix.md",
+        "knowledge/60 Atomic/lesson/Small-sample strategy conclusions are provisional.md",
+        "knowledge/60 Atomic/lesson/Stale cached attribution misleads doctrine.md",
+        "knowledge/60 Atomic/lesson/Stop-loss-dominated PnL is not evidence of skill.md",
+        "knowledge/60 Atomic/lesson/Trailing stop harvests breakout tail.md",
+        "knowledge/60 Atomic/lesson/Under-deployed system lacks right to scale.md",
+        "knowledge/60 Atomic/lesson/Untested skip reason 'already exposed here'.md",
+        "knowledge/60 Atomic/lesson/Untested strategies dominate portfolio.md",
+        "knowledge/60 Atomic/lesson/Untracked exposure causes panic closes.md",
+        "knowledge/60 Atomic/lesson/VWAP fade overfitting risk.md",
+        "knowledge/60 Atomic/lesson/Win rate must be compared to a validated baseline.md",
+        "knowledge/60 Atomic/lesson/Zero-trade paper specs stall progress.md",
+        "knowledge/60 Atomic/lesson/Zero-trade strategies provide no viability evidence.md",
+        "knowledge/60 Atomic/lesson/ema_trend variant 22.0 retired after 9 trades.md",
+        "knowledge/60 Atomic/market-mechanism/Breakout tail is fatter than body.md",
+        "knowledge/60 Atomic/market-mechanism/Cooling Funding Healthy Rally.md",
+        "knowledge/60 Atomic/market-mechanism/Funding extremes filter crowded late entries.md",
+        "knowledge/60 Atomic/market-mechanism/OI expansion precedes trend continuation.md",
+        "knowledge/60 Atomic/market-mechanism/Reflexive positioning drives perp trend persistence.md",
+        "knowledge/60 Atomic/research-finding/Ghost-adjusted sweep_reversal remains unprofitable.md",
+        "knowledge/60 Atomic/research-finding/Minimum trade sample for strategy evaluation.md",
+        "knowledge/60 Atomic/research-finding/Momentum divergence fails in RANGING.md",
+        "knowledge/60 Atomic/research-finding/SELL signals underperform BUY signals.md",
+        "knowledge/60 Atomic/research-finding/Seed strategies underperforming live.md",
+        "knowledge/60 Atomic/research-finding/Short gate is weakly supported by 4h outcome data.md",
+        "knowledge/60 Atomic/research-finding/TRENDING_DOWN SELL is the largest low-accuracy bucket.md",
+        "knowledge/60 Atomic/risk-rule/Aggressor Thrust Breakout Invalidation.md",
+        "knowledge/60 Atomic/risk-rule/Aggressor divergence invalidation rule.md",
+        "knowledge/60 Atomic/risk-rule/BB fade invalidation rule.md",
+        "knowledge/60 Atomic/risk-rule/Both-direction Donchian legs must be judged as a pair.md",
+        "knowledge/60 Atomic/risk-rule/Breakout-Retest Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Demote losing strategies to prevent further losses.md",
+        "knowledge/60 Atomic/risk-rule/Donchian Breakout Trail invalidation criteria.md",
+        "knowledge/60 Atomic/risk-rule/EMA Stack Pullback Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Forward paper test gate before live.md",
+        "knowledge/60 Atomic/risk-rule/Funding Divergence Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Journal-before-risk write ordering.md",
+        "knowledge/60 Atomic/risk-rule/Liquidity Sweep Reversal Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Macro proximity as soft monitoring flag.md",
+        "knowledge/60 Atomic/risk-rule/MacroGuard freezes entries around high-impact US events.md",
+        "knowledge/60 Atomic/risk-rule/Minimum 10-20 paper trades before strategy promotion.md",
+        "knowledge/60 Atomic/risk-rule/Portfolio concentration in mean-reversion underperformance.md",
+        "knowledge/60 Atomic/risk-rule/Positive sl_fill is a bookkeeping anomaly.md",
+        "knowledge/60 Atomic/risk-rule/Promote strategies only after live validation.md",
+        "knowledge/60 Atomic/risk-rule/Promotion Requires 30 Live Trades.md",
+        "knowledge/60 Atomic/risk-rule/RSI Exhaustion Reclaim Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Reconciled ghost fills distort strategy PnL.md",
+        "knowledge/60 Atomic/risk-rule/Rotation Momentum Invalidation Rule.md",
+        "knowledge/60 Atomic/risk-rule/Short-side 4h accuracy gate.md",
+        "knowledge/60 Atomic/risk-rule/Small-sample family promotion block.md",
+        "knowledge/60 Atomic/risk-rule/Structural derivatives changes invalidate funding-OI edge.md",
+        "knowledge/60 Atomic/risk-rule/Unjournaled order requires reconcile sweep.md",
+        "knowledge/60 Atomic/risk-rule/Unproven strategies should not be scaled.md",
+        "knowledge/60 Atomic/risk-rule/Untracked positions are a risk-limit violation.md",
+        "knowledge/60 Atomic/risk-rule/VWAP fade invalidation rule.md",
+        "knowledge/60 Atomic/risk-rule/ema_trend invalidation rule.md",
+        "knowledge/60 Atomic/strategy/Aggressor Divergence At Highs.md",
+        "knowledge/60 Atomic/strategy/Aggressor Thrust Breakout.md",
+        "knowledge/60 Atomic/strategy/BB 2.5\u03c3 Band Fade.md",
+        "knowledge/60 Atomic/strategy/BB 3\u03c3 Exhaustion Fade.md",
+        "knowledge/60 Atomic/strategy/BTC Rotation Momentum Strategy.md",
+        "knowledge/60 Atomic/strategy/Backtest rigor before live promotion.md",
+        "knowledge/60 Atomic/strategy/Breakout-Retest Strategy.md",
+        "knowledge/60 Atomic/strategy/Conservative parameters mitigate overfitting in ema_trend.md",
+        "knowledge/60 Atomic/strategy/Donchian Breakout Trail.md",
+        "knowledge/60 Atomic/strategy/EMA Stack Pullback Strategy.md",
+        "knowledge/60 Atomic/strategy/Funding Filtered Trend Pullback.md",
+        "knowledge/60 Atomic/strategy/Funding Price Divergence.md",
+        "knowledge/60 Atomic/strategy/High-signal-frequency setups escape the INSUFFICIENT regime.md",
+        "knowledge/60 Atomic/strategy/Liquidity Sweep Reversal Strategy.md",
+        "knowledge/60 Atomic/strategy/Liquidity Sweep Reversal.md",
+        "knowledge/60 Atomic/strategy/Momentum Divergence Trail.md",
+        "knowledge/60 Atomic/strategy/Paper trading as evidence generation for idle strategies.md",
+        "knowledge/60 Atomic/strategy/Paper trading validates strategies before live.md",
+        "knowledge/60 Atomic/strategy/RSI Exhaustion Reclaim.md",
+        "knowledge/60 Atomic/strategy/VWAP Extreme Fade.md",
+        "knowledge/60 Atomic/strategy/VWAP fade variant 2.5.md",
+        "knowledge/60 Atomic/strategy/VWAP fade variant parameters.md",
+        "knowledge/60 Atomic/strategy/ema_trend strategy.md",
+        "knowledge/60 Atomic/strategy/ema_trend variant 28.0 strategy.md",
+        "knowledge/60 Atomic/strategy/ema_trend variant adx_min 26.8812.md",
+        "knowledge/MOC.md",
+        "org.yaml",
+        "scripts/seed_vault.py",
+        "tests/test_org.py",
+        "tests/test_org_vault.py",
+        "trader/knowledge/__init__.py",
+        "trader/knowledge/vault.py",
+        "trader/org.py"
+      ],
+      "non_database_inputs": "First-party vault notes, organization YAML and explicit offline memory input",
+      "non_database_outputs": "Read/search/company projections and opt-in offline vault/atomic-note artifacts",
+      "initialization_path": "Vault/Org libraries imported by consumers; explicit offline seed/convert/lookup utilities",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "analysts",
+        "execution",
+        "kernel",
+        "platform",
+        "strategy"
+      ],
+      "used_by": [
+        "dashboard",
+        "kernel",
+        "legacy"
+      ],
+      "static_application_dependencies": [
+        "analysts",
+        "platform",
+        "strategy"
+      ],
+      "offline_utility_dependencies": [
+        "platform"
+      ],
+      "test_dependencies": [],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/knowledge/vault.py",
+          "line": 1,
+          "sha256": "8312435d30c47f435fa912f7a70510c79be7fd9bb9cb2408c20420ca630ea7f0"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [],
+      "initialization_and_schedule": [],
+      "interfaces": [],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "decisions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "equity"
+        },
+        {
+          "database": "luffy.db",
+          "table": "outcomes"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategies"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trades"
+        },
+        {
+          "database": "luffy.db",
+          "table": "votes"
+        }
+      ],
+      "runtime_data_outputs": [
+        {
+          "database": "luffy.db",
+          "table": "brain_events"
+        }
+      ],
+      "failure_and_recovery_dependencies": [],
+      "public_contracts": [
+        {
+          "path": "trader/knowledge/vault.py",
+          "line": 145,
+          "name": "Vault",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/org.py",
+          "line": 27,
+          "name": "Employee",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/org.py",
+          "line": 47,
+          "name": "Org",
+          "kind": "class",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/knowledge/__init__.py",
+          "summary": ""
+        },
+        {
+          "path": "trader/knowledge/vault.py",
+          "summary": "Obsidian knowledge vault \u2014 Luffy's narrative memory."
+        },
+        {
+          "path": "trader/org.py",
+          "summary": "Company directory \u2014 Luffy's org chart as data."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "First-party knowledge notes, vault read/write helpers, company roster and offline memory tooling; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "DORMANT",
+      "previous_status_basis": "Dashboard lazily reads knowledge; no request execution verified. Offline seed/update paths inventoried without invocation.",
+      "classifications": {
+        "implementation": "Unknown",
+        "integration": "Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Required"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=knowledge",
+      "previous_status_evidence": [
+        {
+          "path": "trader/knowledge/vault.py",
+          "line": 1,
+          "sha256": "8312435d30c47f435fa912f7a70510c79be7fd9bb9cb2408c20420ca630ea7f0"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    },
+    {
+      "id": "legacy",
+      "name": "Legacy strategy and adaptive paths",
+      "purpose": "Retained genome-era promotion/authoring and refused legacy adaptive setters",
+      "execution_class": "retained",
+      "subcomponents": [
+        {
+          "id": "legacy.1",
+          "name": "legacy genome authoring",
+          "files": [
+            "scripts/analyst_grid.py",
+            "tests/test_lifecycle_kind_routing.py",
+            "tests/test_new_families.py",
+            "tests/test_phase1_brain.py",
+            "tests/test_phase2.py",
+            "tests/test_pine_forge.py",
+            "tests/test_spec_observation_only.py",
+            "tests/test_transition_provenance.py",
+            "trader/agents/weights_online.py",
+            "trader/brain/pine.py",
+            "trader/brain/strategist.py",
+            "trader/brain/tv.py",
+            "trader/strategy/genome.py",
+            "trader/strategy/legacy_authority.py"
+          ],
+          "file_count": 14,
+          "implementation_references": [
+            {
+              "path": "trader/agents/weights_online.py",
+              "line": 1,
+              "sha256": "24e9bbacf701893b6863fe10f74c5d592b8e8abb6c7d4fd436015f8f0f41f2ef"
+            },
+            {
+              "path": "trader/brain/pine.py",
+              "line": 1,
+              "sha256": "c4e84684c607693eac4c963d50355882fdb4da6e5f884ff4daa61ff0e1fc74a0"
+            },
+            {
+              "path": "trader/brain/strategist.py",
+              "line": 1,
+              "sha256": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df"
+            },
+            {
+              "path": "trader/brain/tv.py",
+              "line": 1,
+              "sha256": "dbaf82abec7c05004a4cdf1dc01e91e4df4aefae02926a21ed8fc7d35e8e0ff1"
+            },
+            {
+              "path": "trader/strategy/genome.py",
+              "line": 1,
+              "sha256": "5087ac989b0a532606b0ffb71723daf13abb9cf28f6d4ef864d1b9d8b9d4f0b4"
+            },
+            {
+              "path": "trader/strategy/legacy_authority.py",
+              "line": 1,
+              "sha256": "c340d99645cf2cea7c3673184e123961e488a6362670a7208018bc17e9e0a748"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "legacy.2",
+          "name": "legacy promotion contracts",
+          "files": [
+            "tests/test_promotion_rules.py",
+            "trader/strategy/promotion.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/strategy/promotion.py",
+              "line": 1,
+              "sha256": "b39912c5c60e3daad020dc95ae1465a55777e7f278cfca76cfd8e29a1420edb1"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "legacy.3",
+          "name": "legacy backtest",
+          "files": [
+            "trader/strategy/backtest.py"
+          ],
+          "file_count": 1,
+          "implementation_references": [
+            {
+              "path": "trader/strategy/backtest.py",
+              "line": 1,
+              "sha256": "db905c4244d7d434f20abc0cffc57a2dacf75c8c5f5c93b4f06c885fe0b6083e"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        },
+        {
+          "id": "legacy.4",
+          "name": "refused adaptive calibration and meta-label",
+          "files": [
+            "trader/agents/calibration.py",
+            "trader/brain/meta_label.py"
+          ],
+          "file_count": 2,
+          "implementation_references": [
+            {
+              "path": "trader/agents/calibration.py",
+              "line": 1,
+              "sha256": "20895a57835acb76bb2604e55b116a74d3e67c8d7a23055bba53379873d906a4"
+            },
+            {
+              "path": "trader/brain/meta_label.py",
+              "line": 1,
+              "sha256": "b3048606a1fe504f49ee18b65112faad650b45846203f434da5efd3f5312226a"
+            }
+          ],
+          "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+          "execution_status": "NOT_SEPARATELY_VERIFIED",
+          "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+          "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+        }
+      ],
+      "anchor": "trader/brain/strategist.py",
+      "counts": {
+        "python_source": 10,
+        "frontend": 0,
+        "configuration": 0,
+        "script": 1,
+        "test": 8,
+        "other": 0,
+        "python_files_including_scripts_and_tests": 19,
+        "source_files": 11,
+        "test_files": 8,
+        "other_files": 0,
+        "total_files": 19,
+        "source_lines": 3388,
+        "all_text_lines": 3388,
+        "binary_files": 0
+      },
+      "files": [
+        "scripts/analyst_grid.py",
+        "tests/test_lifecycle_kind_routing.py",
+        "tests/test_new_families.py",
+        "tests/test_phase1_brain.py",
+        "tests/test_phase2.py",
+        "tests/test_pine_forge.py",
+        "tests/test_promotion_rules.py",
+        "tests/test_spec_observation_only.py",
+        "tests/test_transition_provenance.py",
+        "trader/agents/calibration.py",
+        "trader/agents/weights_online.py",
+        "trader/brain/meta_label.py",
+        "trader/brain/pine.py",
+        "trader/brain/strategist.py",
+        "trader/brain/tv.py",
+        "trader/strategy/backtest.py",
+        "trader/strategy/genome.py",
+        "trader/strategy/legacy_authority.py",
+        "trader/strategy/promotion.py"
+      ],
+      "non_database_inputs": "Retained legacy genome book and older adaptive evidence/callers",
+      "non_database_outputs": "Compatibility strategy evaluations/records or explicit refuse_legacy_learning",
+      "initialization_path": "Imported compatibility paths and offline legacy tools; modern setters are gated/refused",
+      "configuration_evidence": {
+        "artifact": "inputs/configuration-switches.json",
+        "runtime_activation_not_implied": true
+      },
+      "depends_on": [
+        "analysts",
+        "brain",
+        "execution",
+        "kernel",
+        "knowledge",
+        "learning",
+        "market_data",
+        "platform",
+        "strategy"
+      ],
+      "used_by": [
+        "analysts",
+        "brain",
+        "execution",
+        "kernel",
+        "platform",
+        "strategy"
+      ],
+      "static_application_dependencies": [
+        "analysts",
+        "brain",
+        "execution",
+        "knowledge",
+        "learning",
+        "market_data",
+        "platform",
+        "strategy"
+      ],
+      "offline_utility_dependencies": [
+        "market_data",
+        "platform",
+        "strategy"
+      ],
+      "test_dependencies": [
+        "analysts",
+        "brain",
+        "execution",
+        "platform",
+        "strategy"
+      ],
+      "databases": [
+        "luffy.db"
+      ],
+      "entry_points": [
+        {
+          "path": "trader/brain/strategist.py",
+          "line": 1,
+          "sha256": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df"
+        }
+      ],
+      "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+      "source_entry_functions": [
+        {
+          "path": "scripts/analyst_grid.py",
+          "line": 63,
+          "name": "main"
+        }
+      ],
+      "initialization_and_schedule": [],
+      "interfaces": [],
+      "runtime_data_inputs": [
+        {
+          "database": "luffy.db",
+          "table": "brain_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "cycles"
+        },
+        {
+          "database": "luffy.db",
+          "table": "decisions"
+        },
+        {
+          "database": "luffy.db",
+          "table": "outcomes"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategies"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategy_legacy_authorities"
+        },
+        {
+          "database": "luffy.db",
+          "table": "trades"
+        },
+        {
+          "database": "luffy.db",
+          "table": "votes"
+        }
+      ],
+      "runtime_data_outputs": [
+        {
+          "database": "luffy.db",
+          "table": "brain_events"
+        },
+        {
+          "database": "luffy.db",
+          "table": "strategies"
+        }
+      ],
+      "failure_and_recovery_dependencies": [],
+      "public_contracts": [
+        {
+          "path": "trader/agents/calibration.py",
+          "line": 50,
+          "name": "collect_training_data",
+          "kind": "function",
+          "summary": "agent -> ([z...], [correct...]) from resolved 4h outcomes."
+        },
+        {
+          "path": "trader/agents/calibration.py",
+          "line": 78,
+          "name": "refit",
+          "kind": "function",
+          "summary": "Fit calibrations for every agent with enough evidence."
+        },
+        {
+          "path": "trader/agents/calibration.py",
+          "line": 112,
+          "name": "maybe_refit",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/agents/calibration.py",
+          "line": 123,
+          "name": "load",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/agents/calibration.py",
+          "line": 132,
+          "name": "apply",
+          "kind": "function",
+          "summary": "Return (calibrated_conviction, was_calibrated)."
+        },
+        {
+          "path": "trader/agents/weights_online.py",
+          "line": 53,
+          "name": "update",
+          "kind": "function",
+          "summary": "Fold every newly-resolved outcome into the expert weights."
+        },
+        {
+          "path": "trader/agents/weights_online.py",
+          "line": 108,
+          "name": "blended_weights",
+          "kind": "function",
+          "summary": "EWA weights shrunk toward the static prior, normalized to \u03a3=1."
+        },
+        {
+          "path": "trader/agents/weights_online.py",
+          "line": 151,
+          "name": "maybe_update",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 58,
+          "name": "features",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 94,
+          "name": "load",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 144,
+          "name": "refit",
+          "kind": "function",
+          "summary": "Train on all resolved outcomes (directional + shadow leans),"
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 236,
+          "name": "maybe_refit",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 258,
+          "name": "judge",
+          "kind": "function",
+          "summary": "P(win) for a directional decision, or None when the model is not"
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "line": 271,
+          "name": "size_mult",
+          "kind": "function",
+          "summary": "Shrink-only position sizing from P(win): [0.25, 1.0]\u00d7 base."
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 270,
+          "name": "lint",
+          "kind": "function",
+          "summary": "Cheap compile-risk screen. Empty = acceptable."
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 317,
+          "name": "forge",
+          "kind": "function",
+          "summary": "Genome \u2192 Pine v5 source. Deterministic; never raises on params \u2014"
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 353,
+          "name": "fold_windows",
+          "kind": "function",
+          "summary": "Chronological train/test windows ending yesterday (UTC)."
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 366,
+          "name": "save",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 374,
+          "name": "refine_with_llm",
+          "kind": "function",
+          "summary": "Optional brain pass: tighten the entry block per the hypothesis."
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 406,
+          "name": "sha",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "line": 410,
+          "name": "forge_and_store",
+          "kind": "function",
+          "summary": "Full pipeline for one genome \u2192 files + journal event. Returns"
+        },
+        {
+          "path": "trader/brain/strategist.py",
+          "line": 38,
+          "name": "Strategist",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/tv.py",
+          "line": 40,
+          "name": "tv_symbol",
+          "kind": "function",
+          "summary": "'BTC/USDT' \u2192 'BTC-USD' (Yahoo crypto format)."
+        },
+        {
+          "path": "trader/brain/tv.py",
+          "line": 46,
+          "name": "TVClient",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/brain/tv.py",
+          "line": 139,
+          "name": "validate_population",
+          "kind": "function",
+          "summary": "Run every live population strategy past the Yahoo family proxy."
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 25,
+          "name": "BacktestResult",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 65,
+          "name": "resample",
+          "kind": "function",
+          "summary": "Aggregate OPEN-labelled candles, retaining exact constituent ancestry."
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 141,
+          "name": "backtest",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 278,
+          "name": "context_frames",
+          "kind": "function",
+          "summary": "Standard context bundle for a 15m frame: its own 1h/4h resamples plus"
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 288,
+          "name": "walk_forward",
+          "kind": "function",
+          "summary": "Train/test discipline: fit nothing (genes fixed), but require BOTH"
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 304,
+          "name": "score_results",
+          "kind": "function",
+          "summary": "Rank key for a candidate genome from its OWN walk-forward evidence."
+        },
+        {
+          "path": "trader/strategy/genome.py",
+          "line": 63,
+          "name": "Genome",
+          "kind": "class",
+          "summary": ""
+        },
+        {
+          "path": "trader/strategy/genome.py",
+          "line": 110,
+          "name": "spawn_seed",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/strategy/genome.py",
+          "line": 134,
+          "name": "register_family",
+          "kind": "function",
+          "summary": "Register a runtime-invented family into all genome structures."
+        },
+        {
+          "path": "trader/strategy/genome.py",
+          "line": 160,
+          "name": "assert_defaults_consistent",
+          "kind": "function",
+          "summary": "Every PARAM_DEFAULTS key must be a real gene of its family, and every"
+        },
+        {
+          "path": "trader/strategy/legacy_authority.py",
+          "line": 27,
+          "name": "definition_hash",
+          "kind": "function",
+          "summary": "Identity excludes mutable stats/lifecycle, includes all trading inputs."
+        },
+        {
+          "path": "trader/strategy/legacy_authority.py",
+          "line": 38,
+          "name": "grandfathered",
+          "kind": "function",
+          "summary": ""
+        },
+        {
+          "path": "trader/strategy/promotion.py",
+          "line": 34,
+          "name": "stats_of",
+          "kind": "function",
+          "summary": "Probation arithmetic over closed trade rows, in journal order."
+        },
+        {
+          "path": "trader/strategy/promotion.py",
+          "line": 54,
+          "name": "evaluate_population",
+          "kind": "function",
+          "summary": "Run deterministic lifecycle rules; persist state changes + events."
+        },
+        {
+          "path": "trader/strategy/promotion.py",
+          "line": 171,
+          "name": "population_snapshot",
+          "kind": "function",
+          "summary": ""
+        }
+      ],
+      "module_responsibilities": [
+        {
+          "path": "trader/agents/calibration.py",
+          "summary": "Learned conviction calibration \u2014 replaces hand-tuned magnitudes."
+        },
+        {
+          "path": "trader/agents/weights_online.py",
+          "summary": "Online expert aggregation \u2014 EWA (exponentially weighted average)."
+        },
+        {
+          "path": "trader/brain/meta_label.py",
+          "summary": "Meta-labeling \u2014 the secondary model that decides whether the primary"
+        },
+        {
+          "path": "trader/brain/pine.py",
+          "summary": "Pine Forge \u2014 compiles strategy genomes into Pine Script v5."
+        },
+        {
+          "path": "trader/brain/strategist.py",
+          "summary": "Strategist (legacy) \u2014 LLM verdicts over the legacy genome book."
+        },
+        {
+          "path": "trader/brain/tv.py",
+          "summary": "TradingView validation client \u2014 the independent second judge."
+        },
+        {
+          "path": "trader/strategy/backtest.py",
+          "summary": "Vectorized-enough backtester \u2014 replays a genome bar-by-bar through its own"
+        },
+        {
+          "path": "trader/strategy/genome.py",
+          "summary": "StrategyGenome \u2014 a falsifiable trading hypothesis with constrained genes."
+        },
+        {
+          "path": "trader/strategy/legacy_authority.py",
+          "summary": "Read-only grandfather authority. No migration or runtime grant issuer."
+        },
+        {
+          "path": "trader/strategy/promotion.py",
+          "summary": "Strategy lifecycle genetics \u2014 statistical promotion/demotion."
+        }
+      ],
+      "http_interfaces": [],
+      "input_output_context": "Retained genome-era promotion/authoring and refused legacy adaptive setters; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+      "previous_status": "LEGACY",
+      "previous_status_basis": "Explicit legacy docstrings and refuse_legacy_learning gates; some compatibility imports remain, so LEGACY does not mean unreachable.",
+      "classifications": {
+        "implementation": "Legacy",
+        "integration": "Partially Connected",
+        "configuration": "Conditional",
+        "runtime": "Not Applicable",
+        "product_necessity": "Redundant Candidate"
+      },
+      "status_evidence_reference": "subsystem-status-evidence.json#subsystem=legacy",
+      "previous_status_evidence": [
+        {
+          "path": "trader/brain/strategist.py",
+          "line": 1,
+          "sha256": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df"
+        },
+        {
+          "artifact": "inputs/scan-provenance.json"
+        }
+      ]
+    }
+  ],
+  "branch": "sol1/subsystem-review-10-20261020",
+  "scope_basis": "Explicit Review10 knowledge175 legacy19 chat5 notify2 primary-owned inventory; original inventory includes strategist preexisting removed. Review09 final HEAD is offline parent; pending external packages remain unintegrated."
+}

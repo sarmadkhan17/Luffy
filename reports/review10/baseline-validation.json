@@ -1,0 +1,109 @@
+{
+  "inventory_csv_exact_match": true,
+  "counts": {
+    "chat": {
+      "assigned": 5,
+      "present": 5,
+      "bytes": 20809,
+      "physical_lines": 518,
+      "missing": []
+    },
+    "notify": {
+      "assigned": 2,
+      "present": 2,
+      "bytes": 1007,
+      "physical_lines": 34,
+      "missing": []
+    },
+    "knowledge": {
+      "assigned": 175,
+      "present": 175,
+      "bytes": 177068,
+      "physical_lines": 5481,
+      "missing": []
+    },
+    "legacy": {
+      "assigned": 19,
+      "present": 18,
+      "bytes": 121556,
+      "physical_lines": 2908,
+      "missing": [
+        "trader/brain/strategist.py"
+      ]
+    }
+  },
+  "changes_since_inventory": [
+    {
+      "path": "trader/chat/tools.py",
+      "inventory_sha256": "33dbe299ba9af4333f7342eef2cca3dd03476be877d8389e2d42cf84eb9e04c3",
+      "review_baseline_sha256": "6d296c5cbfe42d0e06aa16ba72669fb4cd74a1cb947dfc36f10fc48a76454c56",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "org.yaml",
+      "inventory_sha256": "736219894a8aa57e8d1e640f5a8df133a41f9aa935c7df29acb501f9a85774ea",
+      "review_baseline_sha256": "d4ed1dd3df8faaa34ded0ff1eeb6208bb434a7de36c8b47ed0caa7a65518e677",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_org.py",
+      "inventory_sha256": "ed9a128d535adcd7c37e48ccb5c9932b204918ae1828716b80d92afe65412ffb",
+      "review_baseline_sha256": "4524d3ca7290de968d6ce86f9c98eb8f2c314a67daaedd85f57c9aab62f7a591",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "scripts/analyst_grid.py",
+      "inventory_sha256": "b6f4afeb0cbccf0a2b10c3a04fc710c349523b76bea99337c3bad6753fa8ae38",
+      "review_baseline_sha256": "1c78ecdc05aa65dff2e237c2e3928be6b26152569e61ca9fe9218d702ed46752",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_lifecycle_kind_routing.py",
+      "inventory_sha256": "cbe59207af99873dfd54ac2a8ce25fda20bd4249070089f1779fa436b06cd9dd",
+      "review_baseline_sha256": "af6340735bc3d8edfb5ec674978c4597151ce93c9b14bfdc13b2c0a981ef332e",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_phase1_brain.py",
+      "inventory_sha256": "15784176b34a24a6aca3e31528c4b5e5789d583f32732888bfd0a52335026bc1",
+      "review_baseline_sha256": "6b5f34690b2e72502b5f903116d6456de73034079bf0acfef27335e7063e70d7",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_phase2.py",
+      "inventory_sha256": "22a6fc764e61bb7b918e19377e944ac23300ee0af4565e51de9f8b8f863adc63",
+      "review_baseline_sha256": "205e84514e40b645d7c562c6c74f1cb01750a3dab607e6e53919f4a915ab9196",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_spec_observation_only.py",
+      "inventory_sha256": "c958b29390375ba721f380448956c0c2c45b6fd1fc6c979c025a58587ee3bd7c",
+      "review_baseline_sha256": "f7b73d7e9802ae0641bfb2b3d1b41549aaa8ec65e9281ce6985206271ecde463",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "tests/test_transition_provenance.py",
+      "inventory_sha256": "0f1df6b32c999e209a20fd5c6b702c830b7fb28a8a5fd6dd96f9f5ecf66003b2",
+      "review_baseline_sha256": "0903c6e5188e72d67a09857ae997f61e118d0fcaede938a5334a738c5ec03222",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "trader/brain/strategist.py",
+      "inventory_sha256": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df",
+      "review_baseline_sha256": null,
+      "status": "preexisting_deleted"
+    },
+    {
+      "path": "trader/strategy/backtest.py",
+      "inventory_sha256": "db905c4244d7d434f20abc0cffc57a2dacf75c8c5f5c93b4f06c885fe0b6083e",
+      "review_baseline_sha256": "a8d73c38e45990ca7e03b68c303db47891575518b906f3a880d89fe35c698c44",
+      "status": "preexisting_modified"
+    },
+    {
+      "path": "trader/strategy/promotion.py",
+      "inventory_sha256": "b39912c5c60e3daad020dc95ae1465a55777e7f278cfca76cfd8e29a1420edb1",
+      "review_baseline_sha256": "cffb8d1ecb053ada1f8bce36fcb0f6230b7658d917ba3f0e7f549e757fbcde3f",
+      "status": "preexisting_modified"
+    }
+  ]
+}

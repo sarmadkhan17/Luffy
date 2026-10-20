@@ -1,0 +1,104 @@
+{
+  "environment": {
+    "worktree": "/mnt/luffy-data/sol1-subsystem-review-10-20261020",
+    "python": "./venv/bin/python (shared existing Review09 virtualenv)",
+    "ipc_tests": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp; no security validation weakened",
+    "claude_execution_probe": "Not logged in; native agents explicitly authorized by user",
+    "graphify": "Not forced; source/consumer/tests are evidence per explicit user instruction"
+  },
+  "unique_passing_test_nodes": 491,
+  "node_ids": "tested-nodeids.json",
+  "coverage_method": "Union of collected node IDs for final tested files; repeated cases counted once. Collection itself is not a test pass. Logs below establish successful executions.",
+  "runs": [
+    {
+      "tests": "tests/test_review10_chat_notify.py tests/test_chat_agent.py tests/test_stage8_owner_os.py tests/test_owner_interface_boundary.py tests/test_accounting_truth_followup.py",
+      "passed": 180,
+      "log": "chat-notify-tests.txt",
+      "note": "before2 receipt and1 estimated-marker additions; final new regression17 pass within37 below"
+    },
+    {
+      "tests": "tests/test_owner_telegram_binding.py tests/test_llm_disabled_boundary.py",
+      "passed": 54,
+      "log": "chat-notify-consumer-tests.txt"
+    },
+    {
+      "tests": "tests/test_review10_chat_notify.py tests/test_acc03_economics.py tests/test_accounting_truth_followup.py",
+      "passed": 37,
+      "log": "chat-notify-economics-marker-after.txt"
+    },
+    {
+      "tests": "tests/test_org.py tests/test_org_vault.py tests/test_company.py tests/test_postmortem.py tests/test_theorist_removed.py tests/test_acc03_economics.py tests/test_owner_reads.py tests/test_owner_reads_m2.py",
+      "passed": 118,
+      "evidence": "knowledge.md",
+      "note": "Explicitly labelled faithful transcript of actual tool output; one later rendered case increases knowledge union to119.",
+      "log": "knowledge-tests.txt"
+    },
+    {
+      "tests": "tests/test_org_vault.py",
+      "passed": 12,
+      "evidence": "knowledge.md",
+      "note": "Explicitly labelled faithful transcript; final owned module after estimated-basis correction.",
+      "log": "knowledge-final-vault-tests.txt"
+    },
+    {
+      "tests": "tests/test_lifecycle_kind_routing.py tests/test_new_families.py tests/test_phase1_brain.py tests/test_phase2.py tests/test_pine_forge.py tests/test_promotion_rules.py tests/test_spec_observation_only.py tests/test_transition_provenance.py tests/test_legacy_learning_replay_gate.py tests/test_universal_strategy_authority.py tests/test_vector_backtest.py tests/test_single_creation_path.py",
+      "passed": 101,
+      "log": "legacy-consumer-tests.txt"
+    },
+    {
+      "tests": "tests/test_review10_legacy_boundaries.py",
+      "passed": 11,
+      "log": "legacy-remediation-final.txt"
+    },
+    {
+      "tests": "tests/test_stage1_pit_engine_gates.py",
+      "passed": 2,
+      "log": "legacy-engine-gates.txt",
+      "note": "Actual equivalence/benchmark entrypoints under synthetic monkeypatched DataFeed; both PASS,145.3x"
+    },
+    {
+      "tests": "tests/test_stage8_owner_os.py tests/test_single_creation_path.py",
+      "passed": 44,
+      "log": "consumer-tests.txt",
+      "xml": "consumer-tests.xml",
+      "note": "Overlaps prior runs"
+    },
+    {
+      "tests": "tests/test_exchange_exit_is_size_aware.py tests/test_reconcile_alignment_commits.py",
+      "passed": 21,
+      "log": "notification-caller-tests.txt",
+      "xml": "notification-caller-tests.xml"
+    }
+  ],
+  "baseline_counterexamples": [
+    "chat-notify-baseline-proofs.json",
+    "knowledge.md",
+    "legacy-failing-before.txt",
+    "legacy-null-identity-failing-before.txt",
+    "notification-caller-red.txt",
+    "chat-notify-economics-marker-before.txt"
+  ],
+  "non_product_failures": {
+    "chat-notify-tests-initial-environment-failures.txt": "Inherited group-writable TMPDIR correctly rejected by IPC validation; trusted /tmp rerun passed",
+    "legacy-remediation-tests.txt": "Initial new fixture omitted timestamps; restart initialization changed fixture; explicit historical timestamps corrected and final11 pass"
+  },
+  "other_checks": {
+    "exact_inventory_assessment_hashes": "coverage-validation.json",
+    "read_only_memory_and_graph_probe": "knowledge-capabilities.json",
+    "source_diff_whitespace": "git diff --check passed",
+    "independent_patch_clearance": [
+      "independent-vault-review.md",
+      "independent-boundary-review.md"
+    ]
+  },
+  "excluded": [
+    "full CI",
+    "canonical integration",
+    "production database changes/access",
+    "service restart",
+    "provider or venue requests",
+    "trading activation",
+    "semantic graph extraction"
+  ],
+  "implementation_commit": "1cfbddd8d71c36bee3091db0e43b8940b49d5f9c"
+}

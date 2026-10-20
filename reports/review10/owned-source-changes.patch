@@ -1,0 +1,1127 @@
+diff --git a/org.yaml b/org.yaml
+index 0379f42..8b4179b 100644
+--- a/org.yaml
++++ b/org.yaml
+@@ -48,12 +48,12 @@ employees:
+   - name: Strategist
+     title: Strategist
+     reports_to: Manager
+-    wraps: [trader.brain.strategist, trader.brain.spec_writer]
++    wraps: [trader.brain.spec_writer]
+     authors: [strategy]
+     status_source: events
+-    events: [review_complete, proposal_accepted, retire, mutate, keep_verdict]
++    events: [spec_write_failed, spec_admitted, spec_rejected]
+     category: RESEARCH
+-    desc: Reviews the strategy book; promotes and demotes.
++    desc: Writes strategy specifications from queued ideas and measured coverage.
+ 
+   - name: Strategy Analyst
+     title: Strategy Analyst
+diff --git a/scripts/analyst_grid.py b/scripts/analyst_grid.py
+index 4aaff00..bd22f21 100644
+--- a/scripts/analyst_grid.py
++++ b/scripts/analyst_grid.py
+@@ -11,6 +11,8 @@ it. Treat these as candidates, not as validated edges.
+ 
+ import json
+ import sys
++import hashlib
++from pathlib import Path
+ 
+ from trader.strategy.genome import Genome
+ from trader.strategy import evidence
+@@ -62,7 +64,8 @@ GRID = {
+ 
+ def main() -> None:
+     cfg = load_config()
+-    feed = DataFeed()
++    from trader.strategy import spec_evidence
++    feed = spec_evidence.offline_feed(cfg, sys.argv)
+     # full cached history across the configured symbol set, with HTF/BTC
+     # context attached — was 2 symbols x 2900 bars (~30d) and no context,
+     # which left rotation_momo unable to emit a single signal.
+@@ -117,12 +120,29 @@ def main() -> None:
+     # analyst_gauntlet.py reads data/analyst_candidates.json — the old
+     # /tmp/opencode/ path meant this file was never actually consumed.
+     out_path = ROOT / "data" / "analyst_candidates.json"
++    if feed.retrospective is not None:
++        from pathlib import Path
++        output = feed.retrospective.get('output_path')
++        if not output:
++            raise ValueError('retrospective grid output requires explicit isolated output_path; production candidate writes forbidden')
++        out_path = Path(output).resolve()
++        if out_path == (ROOT / 'data' / 'analyst_candidates.json').resolve():
++            raise ValueError('retrospective grid cannot replace production candidates')
+     out_path.parent.mkdir(parents=True, exist_ok=True)
+-    with open(out_path, "w") as fh:
++    with open(out_path, "x" if feed.retrospective is not None else "w") as fh:
+         json.dump([{"family": f, "params": p,
+                     "min_test_pf": round(score, 3), "trades": trades,
+                     "selected_from_trials": total_trials,
+-                    "symbols": list(dfs)}
++                    "symbols": list(dfs),
++                    **({'evidence_scope':'retrospective_observation', 'factory_validated':False,
++                        'program_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
++                        'config_sha256':hashlib.sha256(json.dumps(cfg,sort_keys=True,default=str).encode()).hexdigest(),
++                        'evaluation_identity':spec_evidence.quant_contract.run_identity(
++                            Genome(strategy_id=f'grid_{f}_result', family=f, hypothesis=HYP[f],
++                                   invalidation='Retire below profit factor 1.0 over 30 trades.',
++                                   regime_filter=frozenset({'TRENDING_UP','TRENDING_DOWN','RANGING','VOLATILE'}),
++                                   markets=frozenset({'futures'}), params=p),
++                            dfs,cfg['risk'])} if feed.retrospective is not None else {})}
+                    for score, f, p, _, trades in results[:6]], fh, indent=1)
+     print(f"\nwrote {out_path} "
+           f"(winners selected from {total_trials} uncorrected trials)")
+diff --git a/tests/test_lifecycle_kind_routing.py b/tests/test_lifecycle_kind_routing.py
+index d16c1ef..4d08176 100644
+--- a/tests/test_lifecycle_kind_routing.py
++++ b/tests/test_lifecycle_kind_routing.py
+@@ -1,18 +1,12 @@
+-"""Legacy genome lifecycle must never govern `kind='spec'` rows.
++"""Descriptive statistics must never govern spec or genome lifecycle.
+ 
+-`promotion.evaluate_population` implements the LEGACY GENOME rules
+-(kernel.py says so at the call site). `journal.list_strategies()` applies no
+-kind filter, so it also handed that function every spec row — and on
+-2026-09-20 the 6-consecutive-loss counter retired the Donchian spec on a
+-closed-trade-only sample while six winners sat open, writing no retire_reason.
+-
+-Specs retire through analyst.review_deployed -> rolling.has_decayed, which
+-scores pooled backtested evidence on the spec's own universe and treats too
+-few recent trades as idle rather than decay.
+-
+-See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
++The historical six-loss genome rule once retired spec rows as well. Current
++promotion.evaluate_population only refreshes closed-trade statistics. Both row
++kinds retain their state, clocks and reasons; retired records remain untouched.
++Registered learning and the Governor own lifecycle changes.
+ """
+ import sys
++import json
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+@@ -34,7 +28,7 @@ def _mk(j, sid, state, kind="ema_trend", retire_reason="", stats="{}"):
+ 
+ 
+ def _losses(j, sid, n):
+-    """n closed losers — enough to trip DEMOTE_CONSEC_LOSSES."""
++    """Six-loss fixtures retain arithmetic without granting authority."""
+     for i in range(n):
+         p = Position(id=f"{sid}_t{i}", symbol="X/USDT", side=Side.LONG,
+                      amount=1, entry_price=100, notional_usdt=100,
+@@ -47,54 +41,20 @@ def _row(j, sid):
+     return j.query("SELECT * FROM strategies WHERE id=?", (sid,))[0]
+ 
+ 
+-def test_genome_rows_still_evaluate_normally(tmp_path):
+-    """The legacy path must keep working for the rows it owns."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_paper", "paper")
+-    _losses(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES)
+-
+-    actions = promotion.evaluate_population(j)
+-
+-    assert any(a["id"] == "g_paper" and a["to"] == "retired"
+-               for a in actions), actions
+-    assert _row(j, "g_paper")["state"] == "retired"
+-
+-
+-def test_spec_rows_are_ignored_by_legacy_lifecycle(tmp_path):
+-    """Identical losing record on a spec row must produce NO transition.
+-
+-    Same trade history that retires the genome above. The spec is left for
+-    rolling.has_decayed, which asks a different question of different
+-    evidence.
+-    """
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "s_paper", "paper", kind="spec")
+-    _losses(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES)
+-
+-    actions = promotion.evaluate_population(j)
+-
+-    assert not [a for a in actions if a["id"] == "s_paper"], actions
+-    row = _row(j, "s_paper")
+-    assert row["state"] == "paper"
+-    assert row["retire_reason"] == ""
+-    # no statistical_transition event may be attributed to a spec
+-    events = j.query("SELECT * FROM brain_events WHERE subject=?", ("s_paper",))
+-    assert not [e for e in events if e["kind"] == "statistical_transition"], events
+-
+-
+-def test_spec_and_genome_coexist_in_one_sweep(tmp_path):
+-    """The filter must be per-row, not abort the sweep."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "s_paper", "paper", kind="spec")
+-    _mk(j, "g_paper", "paper")
+-    _losses(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES)
+-    _losses(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES)
+-
+-    actions = promotion.evaluate_population(j)
+-
+-    assert {a["id"] for a in actions} == {"g_paper"}, actions
+-    assert _row(j, "s_paper")["state"] == "paper"
+-    assert _row(j, "g_paper")["state"] == "retired"
++def test_mixed_spec_and_genome_statistics_never_authorize_state_changes(tmp_path):
++    j = Journal(tmp_path / 'j.db')
++    for sid, kind in [('spec', 'spec'), ('genome', 'ema_trend')]:
++        _mk(j, sid, 'paper', kind=kind)
++        _losses(j, sid, 6)
++    before = {sid: {k: v for k, v in _row(j, sid).items() if k != 'stats_json'}
++              for sid in ('spec', 'genome')}
++    assert promotion.evaluate_population(j) == []
++    for sid in before:
++        row = _row(j, sid)
++        assert {k: v for k, v in row.items() if k != 'stats_json'} == before[sid]
++        assert json.loads(row['stats_json']) == {
++            'trades': 6, 'wins': 0, 'pnl_usdt': -30.0, 'pf': 0.0}
++    assert not j.query("SELECT * FROM brain_events WHERE kind='statistical_transition'")
+ 
+ 
+ def test_existing_retired_spec_rows_are_not_mutated(tmp_path):
+@@ -107,7 +67,7 @@ def test_existing_retired_spec_rows_are_not_mutated(tmp_path):
+     j = Journal(tmp_path / "j.db")
+     stats = '{"trades": 6, "wins": 0, "pnl_usdt": -69.3361, "pf": 0.0}'
+     _mk(j, "auth_donchian_breakout_trail", "retired", kind="spec", stats=stats)
+-    _losses(j, "auth_donchian_breakout_trail", promotion.DEMOTE_CONSEC_LOSSES)
++    _losses(j, "auth_donchian_breakout_trail", 6)
+     before = _row(j, "auth_donchian_breakout_trail")
+ 
+     promotion.evaluate_population(j)
+@@ -119,7 +79,7 @@ def test_retired_genome_rows_are_also_left_alone(tmp_path):
+     """Unchanged pre-existing behaviour: retired is terminal for genomes too."""
+     j = Journal(tmp_path / "j.db")
+     _mk(j, "g_dead", "retired", retire_reason="measured: PF 0.41")
+-    _losses(j, "g_dead", promotion.DEMOTE_CONSEC_LOSSES)
++    _losses(j, "g_dead", 6)
+     before = _row(j, "g_dead")
+ 
+     promotion.evaluate_population(j)
+diff --git a/tests/test_org.py b/tests/test_org.py
+index a14db3f..e4dd0f8 100644
+--- a/tests/test_org.py
++++ b/tests/test_org.py
+@@ -53,7 +53,8 @@ def test_author_for_reverse_lookup():
+ def test_owner_for_reverse_lookup():
+     org = Org.load()
+     assert org.owner_for("trader.engine.risk") == "Risk Officer"
+-    assert org.owner_for("trader.brain.strategist") == "Strategist"
++    assert org.owner_for("trader.brain.spec_writer") == "Strategist"
++    assert org.owner_for("trader.brain.strategist") is None
+     assert org.owner_for("trader.knowledge.vault") == "Librarian"
+     assert org.owner_for("trader.engine.orchestrator") == "Manager"
+     assert org.owner_for("trader.nonexistent") is None
+diff --git a/tests/test_phase1_brain.py b/tests/test_phase1_brain.py
+index da7c1e2..b82569e 100644
+--- a/tests/test_phase1_brain.py
++++ b/tests/test_phase1_brain.py
+@@ -1,9 +1,9 @@
+ """Phase-1 quantitative core regression tests.
+ 
+-EWA: fold math, recovery mixing, prior shrinkage, normalization.
+-Meta-labeling: feature shape, size bounds, validation gate (bad brier →
+-passthrough; separable data → live judgment).
+-Adaptive threshold: fallback, tightening under low hit rates.
++EWA: retired fold/recovery authority refuses; historical prior math remains.
++Meta-labeling: retired fitting authority refuses noisy and separable labels;
++historical feature shape, size bounds and passthrough remain covered.
++Adaptive threshold: explicit historical frozen-state reads.
+ 
+ All state files are monkeypatched to tmp paths — production
+ data/*.json is never touched from tests.
+@@ -48,8 +48,28 @@ def _seed(j, *, cid, did, symbol, action, ok, votes, regime="RANGING"):
+     j._conn().commit()
+ 
+ 
++def _assert_writer_refuses(journal, writer, path, monkeypatch, consumer, **kwargs):
++    """Retired authority cannot read labels, create state or mutate history."""
++    before = "\n".join(journal._conn().iterdump())
++    existed = path.exists()
++    original = path.read_bytes() if existed else None
++    with monkeypatch.context() as guard:
++        guard.setattr(journal, "query", lambda *a, **k:
++                      pytest.fail("legacy labels read before authority refusal"))
++        for _ in range(2):
++            with pytest.raises(ValueError) as refused:
++                writer(journal, **kwargs)
++            assert str(refused.value) == (
++                "replay_complete_learning_authority_required:" + consumer)
++            assert "\n".join(journal._conn().iterdump()) == before
++            assert path.exists() == existed
++            if existed:
++                assert path.read_bytes() == original
++
++
+ # ── EWA ──────────────────────────────────────────────────────────────────
+ def test_ewa_fold_and_recovery(tmp_path, monkeypatch):
++    """Neither wrong-call history nor recovery authorizes a legacy writer."""
+     from trader.agents import weights_online as ewa
+     monkeypatch.setattr(ewa, "PATH", tmp_path / "ewa.json")
+     j = _journal(tmp_path)
+@@ -59,18 +79,19 @@ def test_ewa_fold_and_recovery(tmp_path, monkeypatch):
+         _seed(j, cid=f"cw{i}", did=f"dw{i}", symbol=f"W{i}/USDT",
+               action="BUY", ok=0,            # BUY lost → long voters wrong
+               votes=[("alpha", +0.5), ("beta", -0.5)])
+-    st = ewa.update(j, eta=0.5, mix=0.05)
+-    a, b = st["agents"]["alpha"]["w"], st["agents"]["beta"]["w"]
+-    assert b > a            # beta (dissenting=right) holds up
+-    assert a > 0.01         # mixing keeps alpha alive (no zero-pinning)
++    _assert_writer_refuses(j, ewa.update, ewa.PATH, monkeypatch,
++                          "weights_online", eta=0.5, mix=0.05)
+ 
+     # recovery: alpha goes on a 40-call correct streak → converges toward 1
+     for i in range(10, 50):
+         _seed(j, cid=f"cw{i}", did=f"dw{i}", symbol=f"W{i}/USDT",
+               action="SELL", ok=1,           # SELL won → short voters right
+               votes=[("alpha", -0.5), ("beta", +0.5)])
+-    st = ewa.update(j, eta=0.5, mix=0.05)
+-    assert st["agents"]["alpha"]["w"] > 0.8   # recovered
++    # Frozen historical state is preserved even after a strong recovery streak.
++    ewa.PATH.write_bytes(b'{"agents":{"alpha":{"w":0.2,"n":10}},'
++                        b'"cursor":"historical","updated":0}')
++    _assert_writer_refuses(j, ewa.update, ewa.PATH, monkeypatch,
++                          "weights_online", eta=0.5, mix=0.05)
+ 
+ 
+ def test_ewa_blended_normalized(tmp_path, monkeypatch):
+@@ -150,6 +171,7 @@ def test_meta_features_shape_and_size_bounds():
+ 
+ 
+ def test_meta_validation_gate(tmp_path, monkeypatch):
++    """Label quality cannot replace registered replay authority for fitting."""
+     from trader.brain import meta_label as ml
+     monkeypatch.setattr(ml, "PATH", tmp_path / "meta.json")
+     monkeypatch.setattr(ml, "_cache", {"m": None, "ts": 0.0})
+@@ -163,10 +185,8 @@ def test_meta_validation_gate(tmp_path, monkeypatch):
+         _seed(j, cid=f"cm{i}", did=f"dm{i}", symbol=f"M{i}/USDT",
+               action="BUY" if i % 2 else "SELL", ok=ok,
+               votes=[("alpha", 0.5 if i % 3 else -0.5)])
+-    st = ml.refit(j)
+-    # n_test < 30 → not ready regardless
+-    assert st["n"] == 60 and st["n_test"] < ml.META_MIN_TEST
+-    assert st["ready"] is False
++    _assert_writer_refuses(j, ml.refit, ml.PATH, monkeypatch, "meta_label")
++    assert ml._cache == {"m": None, "ts": 0.0}
+     assert ml.judge([0.5] * len(ml.FEATS)) is None   # passthrough
+ 
+     # a clean-separable pattern: BUY+high score wins, SELL loses
+@@ -177,33 +197,21 @@ def test_meta_validation_gate(tmp_path, monkeypatch):
+         _seed(j2, cid=f"cg{i}", did=f"dg{i}", symbol=f"G{i}/USDT",
+               action="BUY" if win else "SELL", ok=1 if win else 0,
+               votes=[("alpha", 0.5 if win else -0.5)])
+-    st2 = ml.refit(j2)
+-    assert st2["n_test"] >= ml.META_MIN_TEST
+-    # deterministic pattern → both halves fit → ready, judge responds
+-    assert st2["ready"] is True
++    # Even enough separable labels must not overwrite retained model state.
++    ml.PATH.write_bytes(b'{"w":null,"n":7,"n_test":0,"ready":false,'
++                       b'"disabled":false,"updated":0}')
++    _assert_writer_refuses(j2, ml.refit, ml.PATH, monkeypatch, "meta_label")
++    assert ml._cache == {"m": None, "ts": 0.0}
+     p = ml.judge(ml.features(0.9, 0.24, 1.0, "RANGING", 0.0, 25.0,
+                              "2026-08-31T14:00:00+00:00", 0, 0.5, False))
+-    assert p is not None and 0.0 <= p <= 1.0
++    assert p is None  # refused fitting did not create live judgment authority
+ 
+ 
+ # ── adaptive threshold ───────────────────────────────────────────────────
+-def test_adaptive_threshold_fallback_and_tighten(tmp_path):
+-    from trader.engine.orchestrator import Orchestrator
++def test_historical_threshold_is_explicitly_frozen(tmp_path):
++    import json
++    from trader.strategy.legacy_blend import frozen_base
+     j = _journal(tmp_path)
+-    o = Orchestrator([], j, base_threshold=0.24, cfg={})
+-    # no outcome data → static base
+-    assert abs(o._adaptive_base("RANGING") - 0.24) < 1e-6
+-
+-    # a losing regime (hit rate 0.19, n=40) → base tightens toward cap
+-    for i in range(40):
+-        _seed(j, cid=f"cl{i}", did=f"dl{i}", symbol=f"L{i}/USDT",
+-              action="SELL", ok=0, votes=[("alpha", -0.5)],
+-              regime="TRENDING_DOWN")
+-    o2 = Orchestrator([], j, base_threshold=0.24, cfg={})
+-    base = o2._adaptive_base("TRENDING_DOWN")
+-    assert base > 0.30          # punished regime → higher bar
+-    # untouched regime still falls back
+-    assert abs(o2._adaptive_base("TRENDING_UP") - 0.24) < 1e-6
+-    # vol expansion scales modestly
+-    assert o2._adaptive_base("RANGING", vol_ratio=2.0) > \
+-        o2._adaptive_base("RANGING", vol_ratio=1.0)
++    assert frozen_base(j, 'RANGING') == .24
++    j.kv_set('legacy_frozen_adaptive_base', json.dumps({'RANGING': .31}))
++    assert frozen_base(j, 'RANGING') == .31
+diff --git a/tests/test_phase2.py b/tests/test_phase2.py
+index 3be4673..60641ff 100644
+--- a/tests/test_phase2.py
++++ b/tests/test_phase2.py
+@@ -67,59 +67,3 @@ def test_walk_forward_flags_robustness():
+                        _df(n=900), RISK)
+     assert "train" in out and "test" in out
+     assert isinstance(out["robust"], bool)
+-
+-
+-def test_promotion_paper_to_active(tmp_path):
+-    from trader.core.journal import Journal
+-    j = Journal(tmp_path / "j.db")
+-    j.query("INSERT INTO strategies (id,name,kind,params,state,description,"
+-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
+-            "parent_id,created_at,stats_json) VALUES ('s1','T','ema_trend',"
+-            "'{}','paper','d','seed','hyp','inv','[]','[\"futures\"]',0,'',"
+-            "'2026-08-01T00:00:00+00:00','{}')")
+-    # 15 winners → must promote
+-    for i in range(15):
+-        p = Position(id=f"p{i}", symbol="X/USDT", side=Side.LONG,
+-                     amount=1, entry_price=100, notional_usdt=100,
+-                     strategy_id="s1", market_type="futures")
+-        j.add_trade(p)
+-        j.close_trade(f"p{i}", 105, 5.0, "tp_fill")
+-    actions = promotion.evaluate_population(j)
+-    assert any(a["to"] == "active" for a in actions)
+-
+-
+-def test_demote_on_consecutive_losses(tmp_path):
+-    from trader.core.journal import Journal
+-    j = Journal(tmp_path / "j.db")
+-    j.query("INSERT INTO strategies (id,name,kind,params,state,description,"
+-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
+-            "parent_id,created_at,stats_json) VALUES ('s2','T','ema_trend',"
+-            "'{}','active','d','seed','hyp','inv','[]','[\"futures\"]',0,'',"
+-            "'2026-08-01T00:00:00+00:00','{}')")
+-    for i in range(6):
+-        p = Position(id=f"q{i}", symbol="Y/USDT", side=Side.LONG,
+-                     amount=1, entry_price=100, notional_usdt=100,
+-                     strategy_id="s2", market_type="futures")
+-        j.add_trade(p)
+-        j.close_trade(f"q{i}", 95, -5.0, "sl_fill")
+-    actions = promotion.evaluate_population(j)
+-    assert any(a["to"] == "demoted" for a in actions)
+-
+-
+-def test_strategist_review_trigger(tmp_path):
+-    from trader.core.config import load_config
+-    from trader.core.journal import Journal
+-    from trader.brain.strategist import Strategist
+-    j = Journal(tmp_path / "j.db")
+-    cfg = load_config()
+-    # This is a trigger/bookkeeping test, not a gauntlet test. Disable the
+-    # walk-forward sweep so it does not spend its wall-clock budget
+-    # backtesting 24 candidates across 5 symbols.
+-    cfg["strategies"]["gauntlet_time_budget_s"] = 0
+-    s = Strategist(j, cfg)
+-    should, why = s.should_review()
+-    assert should is True          # fresh journal — never reviewed
+-    r = s.review()                 # runs fallback (no LLM key in test env)
+-    assert r["reviewed"] is True
+-    should2, _ = s.should_review()
+-    assert should2 is False        # just reviewed — quiet until triggers
+diff --git a/tests/test_spec_observation_only.py b/tests/test_spec_observation_only.py
+index 5508844..a510bf9 100644
+--- a/tests/test_spec_observation_only.py
++++ b/tests/test_spec_observation_only.py
+@@ -84,11 +84,11 @@ def test_spec_state_is_never_changed_by_legacy_lifecycle(tmp_path):
+     """
+     j = Journal(tmp_path / "j.db")
+     _mk(j, "s_lose", "paper", kind="spec")
+-    _close(j, "s_lose", promotion.DEMOTE_CONSEC_LOSSES, -5)
++    _close(j, "s_lose", 6, -5)
+     _mk(j, "s_win", "paper", kind="spec")
+-    _close(j, "s_win", promotion.PROMOTE_MIN_TRADES, +5)
++    _close(j, "s_win", 15, +5)
+     _mk(j, "s_active", "active", kind="spec")
+-    _close(j, "s_active", promotion.DEMOTE_CONSEC_LOSSES, -5)
++    _close(j, "s_active", 6, -5)
+ 
+     before = {s: _row(j, s) for s in ("s_lose", "s_win", "s_active")}
+     actions = promotion.evaluate_population(j)
+@@ -107,43 +107,8 @@ def test_spec_state_is_never_changed_by_legacy_lifecycle(tmp_path):
+             if e["kind"] == "statistical_transition"]
+ 
+ 
+-def test_genome_rows_behave_exactly_as_before(tmp_path):
+-    """Every legacy branch still fires, with provenance, for genomes."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_retire", "paper")
+-    _close(j, "g_retire", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-    _mk(j, "g_promote", "paper")
+-    _close(j, "g_promote", promotion.PROMOTE_MIN_TRADES, +5)
+-    _mk(j, "g_demote", "active")
+-    _close(j, "g_demote", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    promotion.evaluate_population(j)
+-
+-    assert _row(j, "g_retire")["state"] == "retired"
+-    assert _row(j, "g_promote")["state"] == "active"
+-    assert _row(j, "g_demote")["state"] == "demoted"
+-    for sid in ("g_retire", "g_promote", "g_demote"):
+-        assert _row(j, sid)["retire_reason"], sid
+-        assert _stats(j, sid)["trades"] > 0, sid
+-
+ 
+-def test_mixed_sweep(tmp_path):
+-    """Spec and genome with identical records, in one pass."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "s_paper", "paper", kind="spec")
+-    _mk(j, "g_paper", "paper")
+-    _close(j, "s_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-    _close(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    actions = promotion.evaluate_population(j)
+ 
+-    assert {a["id"] for a in actions} == {"g_paper"}, actions
+-    # identical evidence, opposite governance
+-    assert _row(j, "s_paper")["state"] == "paper"
+-    assert _row(j, "g_paper")["state"] == "retired"
+-    # ...but both observed
+-    assert _stats(j, "s_paper") == _stats(j, "g_paper")
+-    assert _stats(j, "s_paper")["trades"] == promotion.DEMOTE_CONSEC_LOSSES
+ 
+ 
+ def test_retired_rows_still_frozen(tmp_path):
+diff --git a/tests/test_transition_provenance.py b/tests/test_transition_provenance.py
+index e268b9b..271056c 100644
+--- a/tests/test_transition_provenance.py
++++ b/tests/test_transition_provenance.py
+@@ -1,179 +1,45 @@
+-"""Every state transition must persist the reason it already announces.
++"""Retained transition guarantees on the current versioned Governor path.
+ 
+-`transition()` wrote `state` and `state_changed_at` but not the reason, so a
+-row could carry a changed state with no recorded justification. That is how
+-`auth_donchian_breakout_trail` came to be retired on 2026-09-20 with an empty
+-`retire_reason` — the only spec retirement in the journal with no evidence on
+-the row — and had to be traced by elimination against the other writers.
+-
+-See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
++The former tests called the retired automatic genome promoter. Reasons,
++atomicity and exact restart history remain mandatory on the sole writer.
+ """
+-import json
+-import sys
+-from datetime import datetime, timedelta, timezone
+-from pathlib import Path
+ 
+-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++import pytest
+ 
+ from trader.core.journal import Journal
+-from trader.core.types import Position, Side
+-from trader.strategy import promotion
+-
+-
+-def _mk(j, sid, state, kind="ema_trend", created=None, changed=None,
+-        retire_reason=""):
+-    created = created or datetime.now(timezone.utc).isoformat()
+-    j.query("INSERT INTO strategies (id,name,kind,params,state,description,"
+-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
+-            "parent_id,created_at,stats_json,retire_reason,state_changed_at) "
+-            "VALUES (?,?,?,'{}',?,'d','seed','hyp','inv','[]',"
+-            "'[\"futures\"]',0,'',?,'{}',?,?)",
+-            (sid, sid, kind, state, created, retire_reason, changed or created))
+-
+-
+-def _close(j, sid, n, pnl, tag="t"):
+-    for i in range(n):
+-        tid = f"{sid}_{tag}{i}"
+-        p = Position(id=tid, symbol="X/USDT", side=Side.LONG, amount=1,
+-                     entry_price=100, notional_usdt=100, strategy_id=sid,
+-                     market_type="futures")
+-        j.add_trade(p)
+-        j.close_trade(tid, 100 + pnl, float(pnl), "sl_fill")
+-
+-
+-def _row(j, sid):
+-    return j.query("SELECT * FROM strategies WHERE id=?", (sid,))[0]
+-
+-
+-def _events(j, sid):
+-    return [e for e in j.query("SELECT * FROM brain_events WHERE subject=?",
+-                               (sid,))
+-            if e["kind"] == "statistical_transition"]
+-
+-
+-def test_state_changes_exactly_as_before(tmp_path):
+-    """Thresholds and destination states are untouched by the fix."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_retire", "paper")                 # 6 consecutive losses -> retired
+-    _close(j, "g_retire", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-    _mk(j, "g_promote", "paper")                # 15 wins -> active
+-    _close(j, "g_promote", promotion.PROMOTE_MIN_TRADES, +5)
+-    _mk(j, "g_demote", "active")                # 6 consecutive losses -> demoted
+-    _close(j, "g_demote", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    promotion.evaluate_population(j)
+-
+-    assert _row(j, "g_retire")["state"] == "retired"
+-    assert _row(j, "g_promote")["state"] == "active"
+-    assert _row(j, "g_demote")["state"] == "demoted"
+-
+-
+-def test_reason_is_stored_on_the_row(tmp_path):
+-    """The defect itself: a changed state with no recorded justification."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_paper", "paper")
+-    _close(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    promotion.evaluate_population(j)
+-
+-    row = _row(j, "g_paper")
+-    assert row["state"] == "retired"
+-    assert row["retire_reason"], "state changed with empty provenance"
+-    assert "failed probation" in row["retire_reason"]
+-
+-
+-def test_every_transition_kind_stores_provenance(tmp_path):
+-    """Promotion and demotion record a reason too, not just retirement."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_promote", "paper")
+-    _close(j, "g_promote", promotion.PROMOTE_MIN_TRADES, +5)
+-    _mk(j, "g_demote", "active")
+-    _close(j, "g_demote", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    promotion.evaluate_population(j)
+-
+-    assert "probation passed" in _row(j, "g_promote")["retire_reason"]
+-    assert "consecutive losses" in _row(j, "g_demote")["retire_reason"]
+-
+-
+-def test_brain_event_and_stored_reason_agree(tmp_path):
+-    """One reason string, two destinations — they must not drift."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_paper", "paper")
+-    _close(j, "g_paper", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    actions = promotion.evaluate_population(j)
+-
+-    events = _events(j, "g_paper")
+-    assert len(events) == 1
+-    detail = json.loads(events[0]["detail"])
+-    stored = _row(j, "g_paper")["retire_reason"]
+-    assert detail["reason"] == stored
+-    assert [a for a in actions if a["id"] == "g_paper"][0]["reason"] == stored
+-
+-
+-def test_noop_transition_does_not_overwrite_provenance(tmp_path):
+-    """demoted -> demoted is suppressed; the original reason must survive.
+-
+-    Guards the self-transition suppression at the top of transition(): a row
+-    that stays put keeps the provenance of the change that put it there.
+-    """
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_dem", "active")
+-    _close(j, "g_dem", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    promotion.evaluate_population(j)             # active -> demoted
+-    first = _row(j, "g_dem")
+-    assert first["state"] == "demoted" and first["retire_reason"]
+-
+-    promotion.evaluate_population(j)             # demoted -> demoted: no-op
+-    promotion.evaluate_population(j)
+-    after = _row(j, "g_dem")
+-
+-    assert after["retire_reason"] == first["retire_reason"]
+-    assert after["state_changed_at"] == first["state_changed_at"]
+-    assert len(_events(j, "g_dem")) == 1
+-
+-
+-def test_skipped_transition_writes_nothing(tmp_path):
+-    """A stale expected-state must not clobber the row or emit an event.
+-
+-    Simulates a concurrent writer: the row is moved out from under the sweep
+-    after its state was read. The guarded UPDATE matches zero rows, so no
+-    provenance is overwritten and no event is announced.
+-    """
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_race", "paper")
+-    _close(j, "g_race", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-
+-    real_list = j.list_strategies
+-
+-    def racing_list(*a, **kw):
+-        rows = real_list(*a, **kw)
+-        # another writer retires it, with its own provenance, after the read
+-        with j._tx() as c:
+-            c.execute("UPDATE strategies SET state='retired', "
+-                      "retire_reason='retired by another writer' WHERE id=?",
+-                      ("g_race",))
+-        return rows
+-
+-    j.list_strategies = racing_list
+-    actions = promotion.evaluate_population(j)
+-    j.list_strategies = real_list
+-
+-    row = _row(j, "g_race")
+-    assert row["retire_reason"] == "retired by another writer"
+-    assert not [a for a in actions if a["id"] == "g_race"], actions
+-    assert not _events(j, "g_race")
+-
+-
+-def test_retired_rows_are_never_revisited(tmp_path):
+-    """No historical rewrite: a retired row keeps its row byte-for-byte."""
+-    j = Journal(tmp_path / "j.db")
+-    _mk(j, "g_dead", "retired", retire_reason="measured 2026-09-02: PF 0.41")
+-    _close(j, "g_dead", promotion.DEMOTE_CONSEC_LOSSES, -5)
+-    before = _row(j, "g_dead")
+-
+-    promotion.evaluate_population(j)
+-
+-    assert _row(j, "g_dead") == before
++from trader.strategy import factory_handoff as F
++from tests.test_str04_governor_lifecycle import world, cfg, NOW  # noqa: F401
++
++
++def test_retirement_reason_matches_exact_version_event_and_restart(world):
++    world.act()
++    reason = 'TEST-ONLY exact version retirement with retained provenance'
++    result = world.gov('RETIRED', reason=reason, at=NOW + 1)
++    row = world.j.query('SELECT * FROM strategies WHERE id=?', (world.sid,))[0]
++    assert row['state'] == 'retired' and row['retire_reason'] == reason
++    assert result['event']['reason_code'] == reason
++    assert result['event']['version_id'] == world.vid
++    history = F.governor_events(world.j, world.vid)
++    assert F.governor_events(Journal(world.j.db_path), world.vid) == history
++    assert F.state_of(Journal(world.j.db_path), world.vid) == F.RETIRED
++
++
++def test_duplicate_transition_preserves_reason_clock_and_event(world):
++    world.act()
++    first = world.gov('PAUSED', reason='TEST-ONLY pause', at=NOW + 1)
++    before = world.j.query('SELECT * FROM strategies WHERE id=?', (world.sid,))
++    history = F.governor_events(world.j, world.vid)
++    again = world.gov('PAUSED', reason='TEST-ONLY pause', at=NOW + 1)
++    assert again['status'] == 'duplicate' and again['event'] == first['event']
++    assert world.j.query('SELECT * FROM strategies WHERE id=?', (world.sid,)) == before
++    assert F.governor_events(world.j, world.vid) == history
++
++
++def test_refused_reason_never_changes_row_or_history(world):
++    world.act()
++    before = world.j.query('SELECT * FROM strategies WHERE id=?', (world.sid,))
++    history = F.governor_events(world.j, world.vid)
++    with pytest.raises(F.HandoffRefused):
++        world.gov('RETIRED', reason='', at=NOW + 1)
++    assert world.j.query('SELECT * FROM strategies WHERE id=?', (world.sid,)) == before
++    assert F.governor_events(world.j, world.vid) == history
+diff --git a/trader/brain/strategist.py b/trader/brain/strategist.py
+deleted file mode 100644
+index 63a4e80..0000000
+--- a/trader/brain/strategist.py
++++ /dev/null
+@@ -1,154 +0,0 @@
+-"""Strategist (legacy) — LLM verdicts over the legacy genome book.
+-
+-Event-driven reviews (REQUIREMENTS §6): fires when ≥8 closed trades since
+-last review OR 7 days elapsed. For each LIVE legacy genome it asks DeepSeek
+-for a verdict (keep / retire + rationale). Falls back to the deterministic
+-promotion engine when the LLM is unavailable or out of budget.
+-
+-It CREATES NOTHING. It used to answer a "mutate" verdict by inserting a
+-perturbed child straight into `paper`, and to run the legacy Proposer and its
+-invention pass — three population-writing paths beside the one the firm
+-allows (Scraper queues → spec_writer writes a spec → Analyst admits). On
+-2026-09-11 a mutate verdict on a RETIRED genome (strat_606048ec95, live PF
+-0.168) produced a trade-eligible child with no backtest and stats={}, and the
+-next cycle opened 7 correlated shorts on it. The kernel no longer runs this
+-review; the restrictions below hold if anything wires it back in.
+-
+-It never sees or touches a spec (`kind='spec'`) — the Analyst's rolling gate
+-owns those — nor a retired row.
+-"""
+-from __future__ import annotations
+-
+-import json
+-import logging
+-from datetime import datetime, timezone
+-
+-from ..core.journal import Journal
+-from ..knowledge.vault import Vault
+-from .llm import BrainLLM
+-
+-log = logging.getLogger(__name__)
+-
+-REVIEW_TRADES_TRIGGER = 8
+-REVIEW_DAYS_TRIGGER = 7
+-#: the only rows a legacy verdict may read or write
+-LIVE_STATES = ["paper", "active", "demoted"]
+-
+-
+-class Strategist:
+-    def __init__(self, journal: Journal, cfg: dict, notifier=None):
+-        self.journal = journal
+-        self.cfg = cfg
+-        self.notifier = notifier
+-        self.llm = BrainLLM(cfg)
+-
+-    # ── trigger ─────────────────────────────────────────────────────────
+-    def should_review(self) -> tuple[bool, str]:
+-        closed = self.journal.query(
+-            "SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]["n"]
+-        last = self.journal.query(
+-            "SELECT ts FROM brain_events WHERE kind IN ('review_complete','skipped_review') "
+-            "ORDER BY id DESC LIMIT 1")
+-        if not last:
+-            return True, "no review ever run"
+-        since = self.journal.query(
+-            "SELECT COUNT(*) n FROM trades WHERE status='closed' AND closed_at > ?",
+-            (last[0]["ts"],))[0]["n"]
+-        from datetime import datetime as dt
+-        days = (dt.now(timezone.utc)
+-                - dt.fromisoformat(last[0]["ts"])).days
+-        if since >= REVIEW_TRADES_TRIGGER:
+-            return True, f"{since} closed trades since last review"
+-        if days >= REVIEW_DAYS_TRIGGER:
+-            return True, f"{days} days since last review"
+-        return False, (f"{since}/{REVIEW_TRADES_TRIGGER} trades, "
+-                       f"{days}/{REVIEW_DAYS_TRIGGER} days")
+-
+-    # ── review ──────────────────────────────────────────────────────────
+-    def review(self) -> dict:
+-        should, why = self.should_review()
+-        if not should:
+-            return {"reviewed": False, "reason": why}
+-
+-        snap = self._population_report()
+-        verdicts = None
+-        if self.llm.available and snap:
+-            raw = self.llm.chat_json(self._build_prompt(snap), deep=True,
+-                                     purpose="legacy_review")
+-            if raw and isinstance(raw.get("verdicts"), list):
+-                verdicts = {v["id"]: v for v in raw["verdicts"]
+-                            if isinstance(v, dict) and "id" in v}
+-        applied = self._apply(verdicts) if verdicts else self._fallback()
+-
+-        self.journal.log_brain_event("review_complete", "strategist", {
+-            "why": why,
+-            "llm": bool(verdicts),
+-            "actions": applied,
+-            "budget_left": self.llm.budget_left("legacy_review"),
+-        })
+-        try:
+-            Vault(self.journal).run_full_refresh()
+-        except Exception as e:
+-            log.debug(f"vault refresh after review failed: {e}")
+-        if applied and self.notifier:
+-            lines = "\n".join(f"• {a['strategy']}: {a['action']} — {a['rationale'][:80]}"
+-                              for a in applied)
+-            self.notifier.send(f"🧠 Strategist review ({why}):\n{lines}")
+-        return {"reviewed": True, "why": why,
+-                "used_llm": bool(verdicts), "actions": applied}
+-
+-    def _live_legacy(self) -> list[dict]:
+-        return [r for r in self.journal.list_strategies(LIVE_STATES)
+-                if r["kind"] != "spec"]
+-
+-    def _population_report(self) -> list[dict]:
+-        from ..strategy.promotion import population_snapshot
+-        live = {r["id"] for r in self._live_legacy()}
+-        return [p for p in population_snapshot(self.journal) if p["id"] in live]
+-
+-    def _build_prompt(self, pop: list[dict]) -> str:
+-        return (
+-            "You are the strategy brain of an autonomous crypto trading "
+-            "system. Below is each live trading strategy with its measured "
+-            "record. For EACH strategy output a verdict.\n\n"
+-            "Rules:\n"
+-            "- retire clear losers (PF<0.85 with ≥20 trades or ≥6 straight losses)\n"
+-            "- keep everything else untouched\n\n"
+-            'Output JSON: {"verdicts":[{"id","action":"keep|retire",'
+-            '"rationale":"one sentence"}]}\n\n'
+-            f"STRATEGIES:\n{json.dumps(pop, indent=1)}")
+-
+-    # ── actions ─────────────────────────────────────────────────────────
+-    def _apply(self, verdicts: dict[str, dict]) -> list[dict]:
+-        rows = {r["id"]: r for r in self._live_legacy()}
+-        applied = []
+-        for sid, v in verdicts.items():
+-            row = rows.get(sid)
+-            if not row:
+-                continue        # a spec, a retired row, or an id the LLM made up
+-            action = v.get("action")
+-            rationale = (v.get("rationale") or "")[:300]
+-            if action == "retire":
+-                with self.journal._tx() as c:
+-                    c.execute("UPDATE strategies SET state='retired', "
+-                              "retire_reason=?, state_changed_at=? WHERE id=?",
+-                              (rationale,
+-                               datetime.now(timezone.utc).isoformat(), sid))
+-                self.journal.log_brain_event("retire", sid, rationale)
+-                applied.append({"strategy": row["name"], "action": "retire",
+-                                "rationale": rationale})
+-            elif action == "keep":
+-                self.journal.log_brain_event("keep_verdict", sid, rationale)
+-                applied.append({"strategy": row["name"], "action": "keep",
+-                                "rationale": rationale})
+-            elif action:
+-                log.info(f"strategist: refused '{action}' verdict on {sid} — "
+-                         f"only keep/retire are applied")
+-        return applied
+-
+-    def _fallback(self) -> list[dict]:
+-        """Deterministic verdicts when no LLM: mirror statistical engine."""
+-        from ..strategy.promotion import evaluate_population
+-        actions = evaluate_population(self.journal, self.notifier)
+-        return [{"strategy": a["strategy"], "action": a["to"], "rationale":
+-                 a["reason"]} for a in actions]
+diff --git a/trader/chat/tools.py b/trader/chat/tools.py
+index ffeff6a..317bbcb 100644
+--- a/trader/chat/tools.py
++++ b/trader/chat/tools.py
+@@ -155,11 +155,11 @@ TOOLS['owner_query'] = owner_query
+ from trader.owner.queries import KINDS
+ GROUNDED_SCHEMAS = [_schema('owner_query',
+     'Read exact stored owner evidence. Use decision/trade ids for why enter/skip/size; '
+-    'research for questions, routing, evidence, experiment, referee, gaps and costs; '
++    'research for experiment, referee, gaps and costs; '
+     'portfolio for candidate sets, allocation/rejection, factors, intents and Risk; '
+     'world for captured changes and contradictions; strategies for versions/decay; '
+     'approvals for Needs You. Without identity, returns a bounded catalog. '
+-    'Use questions_page.next_offset to traverse all stored questions; offset also pages approvals. '
++    'offset pages approvals. '
+     'RECORDED is not verified/current; missing values are UNKNOWN, never zero.',
+     {'kind': {'type': 'string', 'enum': list(KINDS)}, 'identity': {'type': 'string'}, 'offset': {'type': 'integer', 'minimum': 0}}, ['kind'])]
+ TOOL_SCHEMAS += GROUNDED_SCHEMAS
+diff --git a/trader/strategy/backtest.py b/trader/strategy/backtest.py
+index 2c3a454..a27bcad 100644
+--- a/trader/strategy/backtest.py
++++ b/trader/strategy/backtest.py
+@@ -75,7 +75,7 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+     duration = TF_MS[rule]
+     opens = mp.ms(df['ts'])
+     own = df.attrs.get('timeframe')
+-    qualified = all(k in df for k in mp.META)
++    qualified = all(k in df for k in mp.META) and not (df.attrs.get('read_mode') == 'retrospective' and df['observed_at_ms'].isna().any())
+     if qualified and own not in TF_MS:
+         raise ValueError('qualified aggregation requires source timeframe')
+     step = TF_MS.get(own) or (int(np.median(np.diff(opens))) if len(opens) > 1 else duration)
+@@ -85,10 +85,15 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+     for bucket, group in df.assign(_bucket=opens//duration*duration).groupby('_bucket'):
+         stamps = mp.ms(group['ts'])
+         complete = np.array_equal(stamps, np.arange(bucket, bucket+duration, step))
++        if df.attrs.get('read_mode') == 'retrospective' and not complete:
++            continue
+         value = dict(ts=pd.to_datetime(bucket, unit='ms', utc=True),
+                      open=group['open'].iloc[0], high=group['high'].max(skipna=False),
+                      low=group['low'].min(skipna=False), close=group['close'].iloc[-1],
+                      volume=group['volume'].sum(min_count=len(group)))
++        if df.attrs.get('read_mode') == 'retrospective' and 'taker_buy' in group:
++            # Sum only source-confirmed constituent aggressor observations.
++            value['taker_buy'] = group['taker_buy'].sum(min_count=len(group))
+         if qualified:
+             complete = complete and group['bar_state'].eq('FINAL').all()
+             receipts = group['observed_at_ms'].astype('int64')
+@@ -116,6 +121,10 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+             value.update(body)
+         records.append(value)
+     out = pd.DataFrame(records)
++    if df.attrs.get('read_mode') == 'retrospective':
++        out['observation_quality'] = 'VALID'
++        if not qualified:
++            out['quality'] = 'UNKNOWN'
+     out.attrs.update(df.attrs)
+     out.attrs.update(timeframe=rule, timestamp_semantics='interval_open',
+                      transform_version='ohlcv.aggregate.v1')
+@@ -141,9 +150,9 @@ def _snap(df: pd.DataFrame, price: float,
+ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
+              equity: float = 2000.0,
+              ctx: dict[str, pd.DataFrame] | None = None) -> BacktestResult:
+-    if df.attrs.get('schema_version') == 'market.receipt.v1' and df.attrs.get('read_mode') != 'replay':
++    if df.attrs.get('schema_version') == 'market.receipt.v1' and df.attrs.get('read_mode') not in ('replay', 'retrospective'):
+         raise ValueError('historical backtest requires replay revisions, not latest/as-of snapshot')
+-    if 'quality' in df and not df['quality'].eq('VALID').all():
++    if 'quality' in df and not df['observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'].eq('VALID').all():
+         raise ValueError('historical backtest requires valid market evidence')
+     res = BacktestResult(genome_id=genome.strategy_id, symbol="BT",
+                          bars=len(df))
+@@ -175,7 +184,7 @@ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
+                 from ..core.types import TF_MS
+                 frame_tf = k.removeprefix('BTC_')
+                 known = ms(cdf['ts']) + TF_MS.get(frame_tf, 0)
+-                if 'available_at_ms' in cdf:
++                if 'available_at_ms' in cdf and cdf.attrs.get('read_mode') != 'retrospective':
+                     known = np.maximum(known, cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
+                 ctx_idx[k] = (cdf, np.maximum.accumulate(known))
+ 
+diff --git a/trader/strategy/promotion.py b/trader/strategy/promotion.py
+index 94e1bd3..1d7e9fe 100644
+--- a/trader/strategy/promotion.py
++++ b/trader/strategy/promotion.py
+@@ -1,30 +1,30 @@
+-"""Strategy lifecycle genetics — statistical promotion/demotion.
+-
+-Deterministic, instant, no LLM required (REQUIREMENTS §6):
+-  PAPER → ACTIVE   when ≥15 trades, winrate ≥40%, PF ≥1.15
+-  ACTIVE/DEMOTED → DEMOTED  on 6 consecutive losses or PF<0.85 over ≥20
+-  DEMOTED → RETIRED after 14 days without recovery
+-The Strategist (LLM) may overrule upward with written rationale only.
++"""Closed-trade statistics for strategies: arithmetic and observation only.
++
++This module does not promote, demote or retire anything. Promotion is the
++Factory lifecycle: Backtest PASS -> the configured paper
++probation (`strategies.paper_probation_trades` / `paper_min_winrate` /
++`paper_min_profit_factor`, counted per exact installed version) -> exact owner
++approval -> Governor. Retirement of a deployed spec is `analyst.review_deployed`
++and the Governor. The legacy genome rules that used to live here (15 trades,
++6 consecutive losses, PF 0.85 over 20, 14 days demoted) could not mutate any
++state — every transition was refused for lack of replay-verified learning
++authority (`refuse_legacy_learning`) — and a second, different probation
++threshold beside the configured one is a conflict rather than a safeguard, so
++they are removed.
++
++What remains is consumed: `stats_of` is the probation arithmetic;
++`evaluate_population` keeps the persisted `stats_json` blob that the dashboard
++and the vault read fresh.
+ """
+ from __future__ import annotations
+ 
+ import json
+ import logging
+-from datetime import datetime, timezone
+ 
+ from ..core.journal import Journal
+-from ..core.types import StrategyState
+ 
+ log = logging.getLogger(__name__)
+ 
+-PROMOTE_MIN_TRADES = 15
+-PROMOTE_MIN_WINRATE = 0.40
+-PROMOTE_MIN_PF = 1.15
+-DEMOTE_CONSEC_LOSSES = 6
+-DEMOTE_MAX_PF = 0.85
+-DEMOTE_MIN_TRADES = 20
+-RETIRE_DEMOTED_DAYS = 14
+-
+ 
+ def _stats_for(journal: Journal, strategy_id: str) -> dict:
+     trades = journal.trades_for_strategy(strategy_id)
+@@ -52,120 +52,22 @@ def stats_of(closed: list) -> dict:
+ 
+ 
+ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
+-    """Run deterministic lifecycle rules; persist state changes + events."""
+-    actions = []
++    """Refresh each live strategy's persisted statistics. Never changes state.
++
++    Returns no actions; the signature is kept for the brain tick and the
++    Strategist's deterministic fallback, which report whatever it returns."""
+     for row in journal.list_strategies():
+-        sid, state = row["id"], row["state"]
+-        if state == "retired":
++        if row["state"] == "retired":
+             continue
+-        # The branches below are the LEGACY GENOME lifecycle rules.
+-        # `list_strategies()` applies no kind filter, so without this they also
+-        # swept `kind='spec'` rows — and on 2026-09-20 retired the Donchian
+-        # spec on 6 closed trades while 6 winners sat open, with no
+-        # retire_reason written. Specs retire through
+-        # analyst.review_deployed -> rolling.has_decayed, which scores pooled
+-        # backtested evidence on the spec's own universe and treats too few
+-        # recent trades as idle, not decay.
+-        # OBSERVED, NOT GOVERNED: a spec still has its stats blob refreshed at
+-        # the foot of this loop — the dashboard and the vault read it — it is
+-        # only excluded from every branch that can change state.
+-        # See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
+-        observe_only = row["kind"] == "spec"
+-        st = _stats_for(journal, sid)
+-
+-        def transition(new_state: str, reason: str):
+-            if new_state == state:
+-                return          # no-op: don't spam events/alerts each cycle
+-            # State, its timestamp and its REASON land in ONE statement inside
+-            # ONE transaction, so a row can never carry a changed state without
+-            # the provenance that explains it. Donchian was retired here on
+-            # 2026-09-20 with an empty retire_reason and had to be traced by
+-            # elimination against the other writers; this is that gap closed.
+-            # `retire_reason` is the existing state-change reason column —
+-            # tv.py already wrote demotion verdicts into it, and
+-            # scripts/repair_proxy_demotions.py reads it on demoted rows.
+-            # `AND state=?` makes the write deterministic on the shared WAL:
+-            # if another writer moved the row first, this transition does not
+-            # fire at all rather than clobbering it, and no event is emitted.
+-            # Raw legacy trade statistics cannot authorize lifecycle mutation.
+-            from ..learning.foundation import refuse_legacy_learning
+-            try:
+-                refuse_legacy_learning("legacy_population_transition")
+-            except ValueError as exc:
+-                log.warning(str(exc))
+-                return
+-            with journal._tx() as c:
+-                changed = c.execute(
+-                    "UPDATE strategies SET state=?, state_changed_at=?, "
+-                    "retire_reason=? WHERE id=? AND state=?",
+-                    (new_state, datetime.now(timezone.utc).isoformat(),
+-                     reason, sid, state)).rowcount
+-            if not changed:
+-                log.warning(f"STRATEGY {row['name']}: {state} → {new_state} "
+-                            f"skipped — row is no longer in state '{state}'")
+-                return
+-            journal.log_brain_event(
+-                "statistical_transition", sid,
+-                {"from": state, "to": new_state, "reason": reason,
+-                 "trades": st["trades"], "pf": round(st["pf"], 2),
+-                 "winrate": round(st["winrate"], 3)})
+-            log.warning(f"STRATEGY {row['name']}: {state} → {new_state} ({reason})")
+-            actions.append({"strategy": row["name"], "id": sid,
+-                            "from": state, "to": new_state, "reason": reason})
+-
+-        if observe_only:
+-            pass                # no legacy lifecycle branch may run on a spec
+-        elif state == "paper":
+-            if st["trades"] >= PROMOTE_MIN_TRADES and \
+-                    st["winrate"] >= PROMOTE_MIN_WINRATE and \
+-                    st["pf"] >= PROMOTE_MIN_PF:
+-                from .legacy_authority import grandfathered
+-                if grandfathered(journal, sid):
+-                    transition("active", f"probation passed: WR {st['winrate']:.0%}, "
+-                                         f"PF {st['pf']:.2f}")
+-                # Otherwise retain paper state; statistics cannot mint authority.
+-            # demotion must be reachable at ANY trade count — previously this
+-            # was nested under `trades >= PROMOTE_MIN_TRADES`, so a paper
+-            # strategy bleeding 14 straight losses could never be retired.
+-            elif st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES or (
+-                    st["trades"] >= DEMOTE_MIN_TRADES and st["pf"] < DEMOTE_MAX_PF):
+-                transition("retired", f"failed probation: PF {st['pf']:.2f}, "
+-                                      f"WR {st['winrate']:.0%}, "
+-                                      f"{st['trades']} trades")
+-        elif state in ("active", "demoted"):
+-            if st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES:
+-                transition("demoted", f"{st['consecutive_losses']} consecutive losses")
+-            elif st["trades"] >= DEMOTE_MIN_TRADES and st["pf"] < DEMOTE_MAX_PF \
+-                    and state != "demoted":
+-                transition("demoted", f"PF decayed to {st['pf']:.2f} "
+-                                      f"over {st['trades']} trades")
+-            elif state == "demoted":
+-                # measure from WHEN IT WAS DEMOTED, not from birth — using
+-                # created_at made a strategy demoted late in its life
+-                # instantly retire-eligible.
+-                since = row.get("state_changed_at") or row["created_at"]
+-                demoted_at = datetime.fromisoformat(since)
+-                if demoted_at.tzinfo is None:
+-                    demoted_at = demoted_at.replace(tzinfo=timezone.utc)
+-                age_days = (datetime.now(timezone.utc) - demoted_at).days
+-                if age_days > RETIRE_DEMOTED_DAYS and st["pf"] < PROMOTE_MIN_PF:
+-                    transition("retired", f"no recovery in {age_days}d "
+-                                          f"since demotion")
+-        # Refresh the persisted stats blob either way — for governed genomes
+-        # and for observed specs alike. `query()` does not commit, so this
+-        # write used to ride on whatever _tx() happened to follow it; a sweep
+-        # that produced no transition could leave it uncommitted.
++        st = _stats_for(journal, row["id"])
++        # `query()` does not commit, so the refresh goes through `_tx()`.
+         with journal._tx() as c:
+             c.execute("UPDATE strategies SET stats_json=? WHERE id=?",
+                       (json.dumps({"trades": st["trades"], "wins": st["wins"],
+                                    "pnl_usdt": round(st["pnl"], 4),
+-                                   "pf": round(min(st["pf"], 99), 3)}), sid))
+-
+-    if actions and notifier:
+-        msg = "\n".join(f"{a['strategy']}: {a['from']}→{a['to']} — {a['reason']}"
+-                        for a in actions)
+-        notifier.send(f"🧬 Strategy lifecycle:\n{msg}")
+-    return actions
++                                   "pf": round(min(st["pf"], 99), 3)}),
++                       row["id"]))
++    return []
+ 
+ 
+ def population_snapshot(journal: Journal) -> list[dict]:

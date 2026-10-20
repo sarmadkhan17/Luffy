@@ -1,0 +1,32 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_size_detected_exit_notification_labels_pnl_as_estimated[0.0] _______
+
+held = 0.0
+
+    @pytest.mark.parametrize("held", [0.0, 1.0])
+    def test_size_detected_exit_notification_labels_pnl_as_estimated(held):
+        k = _kernel(venue={"UNI/USDT": held})
+        assert k._detect_exchange_exits("UNI/USDT") == 1
+        assert len(k.notifier.sent) == 1
+>       assert "estimated pnl" in k.notifier.sent[0]
+E       AssertionError: assert 'estimated pnl' in '✅ UNI/USDT closed (sl_fill) pnl +87.41 USDT'
+
+tests/test_exchange_exit_is_size_aware.py:150: AssertionError
+______ test_size_detected_exit_notification_labels_pnl_as_estimated[1.0] _______
+
+held = 1.0
+
+    @pytest.mark.parametrize("held", [0.0, 1.0])
+    def test_size_detected_exit_notification_labels_pnl_as_estimated(held):
+        k = _kernel(venue={"UNI/USDT": held})
+        assert k._detect_exchange_exits("UNI/USDT") == 1
+        assert len(k.notifier.sent) == 1
+>       assert "estimated pnl" in k.notifier.sent[0]
+E       AssertionError: assert 'estimated pnl' in '✅ UNI/USDT reduced to 1 (sl_fill) pnl +87.12 USDT'
+
+tests/test_exchange_exit_is_size_aware.py:150: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_exchange_exit_is_size_aware.py::test_size_detected_exit_notification_labels_pnl_as_estimated[0.0]
+FAILED tests/test_exchange_exit_is_size_aware.py::test_size_detected_exit_notification_labels_pnl_as_estimated[1.0]
+2 failed, 9 deselected in 1.45s

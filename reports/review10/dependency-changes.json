@@ -1,0 +1,32 @@
+[
+  {
+    "path": "scripts/validate_population.py",
+    "baseline_sha256": "70ca09d80ba9478a48c85f5351a78764c78959cb3da235390d9280883d184319",
+    "reviewed_sha256": "ca227dff397afb9347ab6252ddb28368c21e68acb3febe134526edf223540878",
+    "scope": "consumer docstring: advisory duplicate reporting"
+  },
+  {
+    "path": "tests/test_exchange_exit_is_size_aware.py",
+    "baseline_sha256": "c9cffb5bdc6bb214a9315cc176c0e291a07ec45337d2ff1f608f78123b8fbdd5",
+    "reviewed_sha256": "73462decba5991c48c29f525a720fba4a33ad713b6332cd580bc13564fb5c27c",
+    "scope": "two notification caller regressions"
+  },
+  {
+    "path": "trader/dashboard/economics.py",
+    "baseline_sha256": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560",
+    "reviewed_sha256": "85ad5efaf11f17a2ccf34d4ace242796409e1cd0590aea0f7d179440f8f67ef9",
+    "scope": "shared reader recognizes existing estimated booked basis"
+  },
+  {
+    "path": "trader/kernel.py",
+    "baseline_sha256": "d09fcfa595b29e1fad4254c67328ca2509afde5c787398e94c3c410ae80deb78",
+    "reviewed_sha256": "3f3713b215646b6862dbc2c0ebeb55afee02ef40d0441ab53f474698c1c32d97",
+    "scope": "notification caller wording only: recorded estimated PNL"
+  },
+  {
+    "path": "trader/strategy/vector_backtest.py",
+    "baseline_sha256": "79976f983cba8653f9af663a8f0b924b8911261b1d2f7205fcc11bd96e06f43e",
+    "reviewed_sha256": "df0adb703e57cf4034b732a2006a7f5a606a9a6612c11229f2dd5adfc9677549",
+    "scope": "consumer docstring: historical peak correction"
+  }
+]

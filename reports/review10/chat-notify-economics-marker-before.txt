@@ -1,0 +1,29 @@
+..F                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_legacy_pnl_reuses_retained_booking_classification[evidence2-7-DERIVED_ESTIMATE] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-32/test_legacy_pnl_reuses_retaine2')
+evidence = {'basis': 'exchange_exit_detected_by_size', 'booked_pnl_basis': 'estimated'}
+pnl = 7, classification = 'DERIVED_ESTIMATE'
+
+    @pytest.mark.parametrize('evidence,pnl,classification', [
+        ({'basis': 'reconcile_ghost_unpriced', 'pnl_status': 'UNKNOWN'}, 0, 'UNKNOWN'),
+        ({'basis': 'panic_order_unconfirmed', 'pnl_status': 'ESTIMATE'}, 10, 'DERIVED_ESTIMATE'),
+        ({'basis': 'exchange_exit_detected_by_size', 'booked_pnl_basis': 'estimated'}, 7, 'DERIVED_ESTIMATE'),
+    ])
+    def test_legacy_pnl_reuses_retained_booking_classification(tmp_path, evidence, pnl, classification):
+        j = Journal(tmp_path / 'journal.db')
+        with j._tx() as db:
+            db.execute("INSERT INTO trades(id,symbol,side,amount,entry_price,opened_at,status) VALUES('t', 'SOL/USDT','long',1,100,'2026-10-20','open')")
+        j.close_trade('t', 110, pnl, 'review10', accounting=evidence)
+        out = get_pnl(j, 'all')
+>       assert out['pnl_value_class'] == classification
+E       AssertionError: assert 'JOURNAL_BOOKED' == 'DERIVED_ESTIMATE'
+E         
+E         - DERIVED_ESTIMATE
+E         + JOURNAL_BOOKED
+
+tests/test_review10_chat_notify.py:66: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review10_chat_notify.py::test_legacy_pnl_reuses_retained_booking_classification[evidence2-7-DERIVED_ESTIMATE]
+1 failed, 2 passed, 14 deselected in 0.62s

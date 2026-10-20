@@ -1,0 +1,351 @@
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_ test_incomplete_historical_definitions_still_receive_advisory[regime_filter-None] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def0')
+field = 'regime_filter', value = None
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+>       result = validate_population(journal, tv)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review10_legacy_boundaries.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+journal = <trader.core.journal.Journal object at 0x7636bc407620>
+tv = namespace(walk_forward=<function test_incomplete_historical_definitions_still_receive_advisory.<locals>.<lambda> at 0x7636bb6cb920>)
+notifier = None, symbol = 'BTC/USDT'
+
+>   ???
+E   TypeError: 'NoneType' object is not iterable
+
+pre-null-guard:/mnt/luffy-data/sol1-subsystem-review-10-20261020/trader/brain/tv.py:168: TypeError
+_ test_incomplete_historical_definitions_still_receive_advisory[markets-None] __
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def1')
+field = 'markets', value = None
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+>       result = validate_population(journal, tv)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review10_legacy_boundaries.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+journal = <trader.core.journal.Journal object at 0x7636bb3c7440>
+tv = namespace(walk_forward=<function test_incomplete_historical_definitions_still_receive_advisory.<locals>.<lambda> at 0x7636bb3fa0c0>)
+notifier = None, symbol = 'BTC/USDT'
+
+>   ???
+E   TypeError: 'NoneType' object is not iterable
+
+pre-null-guard:/mnt/luffy-data/sol1-subsystem-review-10-20261020/trader/brain/tv.py:168: TypeError
+_ test_incomplete_historical_definitions_still_receive_advisory[regime_filter-null] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def2')
+field = 'regime_filter', value = 'null'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+>       result = validate_population(journal, tv)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review10_legacy_boundaries.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+journal = <trader.core.journal.Journal object at 0x7636bb3c5e80>
+tv = namespace(walk_forward=<function test_incomplete_historical_definitions_still_receive_advisory.<locals>.<lambda> at 0x7636bb3fa700>)
+notifier = None, symbol = 'BTC/USDT'
+
+>   ???
+E   TypeError: 'NoneType' object is not iterable
+
+pre-null-guard:/mnt/luffy-data/sol1-subsystem-review-10-20261020/trader/brain/tv.py:168: TypeError
+_ test_incomplete_historical_definitions_still_receive_advisory[markets-null] __
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def3')
+field = 'markets', value = 'null'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+>       result = validate_population(journal, tv)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review10_legacy_boundaries.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+journal = <trader.core.journal.Journal object at 0x7636bb3c79b0>
+tv = namespace(walk_forward=<function test_incomplete_historical_definitions_still_receive_advisory.<locals>.<lambda> at 0x7636bb3faf20>)
+notifier = None, symbol = 'BTC/USDT'
+
+>   ???
+E   TypeError: 'NoneType' object is not iterable
+
+pre-null-guard:/mnt/luffy-data/sol1-subsystem-review-10-20261020/trader/brain/tv.py:168: TypeError
+_ test_incomplete_historical_definitions_still_receive_advisory[regime_filter-"RANGING"] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def4')
+field = 'regime_filter', value = '"RANGING"'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+        result = validate_population(journal, tv)
+>       assert result['duplicates'] == []
+E       AssertionError: assert ['second'] == []
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_review10_legacy_boundaries.py:80: AssertionError
+__ test_incomplete_historical_definitions_still_receive_advisory[markets-[1]] __
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def5')
+field = 'markets', value = '[1]'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+        result = validate_population(journal, tv)
+>       assert result['duplicates'] == []
+E       AssertionError: assert ['second'] == []
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_review10_legacy_boundaries.py:80: AssertionError
+_ test_incomplete_historical_definitions_still_receive_advisory[params-not-json] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def6')
+field = 'params', value = 'not-json'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+>       result = validate_population(journal, tv)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_review10_legacy_boundaries.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pre-null-guard:/mnt/luffy-data/sol1-subsystem-review-10-20261020/trader/brain/tv.py:167: in validate_population
+    ???
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7636cad96d20>, s = 'not-json'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/usr/lib/python3.12/json/decoder.py:355: JSONDecodeError
+__ test_incomplete_historical_definitions_still_receive_advisory[params-null] __
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def7')
+field = 'params', value = 'null'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+        result = validate_population(journal, tv)
+>       assert result['duplicates'] == []
+E       AssertionError: assert ['second'] == []
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_review10_legacy_boundaries.py:80: AssertionError
+__ test_incomplete_historical_definitions_still_receive_advisory[markets-[]] ___
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-of-sarmad/pytest-216/test_incomplete_historical_def8')
+field = 'markets', value = '[]'
+
+    @pytest.mark.parametrize('field,value', [
+        ('regime_filter', None), ('markets', None),
+        ('regime_filter', 'null'), ('markets', 'null'),
+        ('regime_filter', '"RANGING"'), ('markets', '[1]'),
+        ('params', 'not-json'), ('params', 'null'), ('markets', '[]'),
+    ])
+    def test_incomplete_historical_definitions_still_receive_advisory(tmp_path, field, value):
+        journal = Journal(tmp_path / 'historical.db')
+        for sid in ('first', 'second'):
+            row = dict(params='{}', regime_filter='[]', markets='["futures"]')
+            row[field] = value
+            with journal._tx() as conn:
+                conn.execute('INSERT INTO strategies(id,name,kind,state,params,regime_filter,markets) '
+                             'VALUES(?,?,\'ema_trend\',\'paper\',?,?,?)',
+                             (sid, sid, row['params'], row['regime_filter'], row['markets']))
+        before = journal.list_strategies()
+        calls = []
+        tv = SimpleNamespace(walk_forward=lambda symbol, family:
+                             calls.append((symbol, family)) or {'valid': False})
+        result = validate_population(journal, tv)
+>       assert result['duplicates'] == []
+E       AssertionError: assert ['second'] == []
+E         
+E         Left contains one more item: 'second'
+E         Use -v to get more diff
+
+tests/test_review10_legacy_boundaries.py:80: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[regime_filter-None]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[markets-None]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[regime_filter-null]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[markets-null]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[regime_filter-"RANGING"]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[markets-[1]]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[params-not-json]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[params-null]
+FAILED tests/test_review10_legacy_boundaries.py::test_incomplete_historical_definitions_still_receive_advisory[markets-[]]
+9 failed, 2 deselected in 1.28s

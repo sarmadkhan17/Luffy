@@ -1,0 +1,7 @@
+{
+  "branch": "sol1/subsystem-review-10-20261020",
+  "source_parent": "4deca5c275c30c2c59c227b5170bab651cf777fe",
+  "implementation_commit": "1cfbddd8d71c36bee3091db0e43b8940b49d5f9c",
+  "evidence_commit": "subsequent commit containing this record; resolve branch HEAD",
+  "integration_status": "OFFLINE_UNINTEGRATED"
+}

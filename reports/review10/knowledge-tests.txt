@@ -1,0 +1,12 @@
+Faithful transcript reconstructed from actual exec tool output; no test rerun for logging.
+Command:
+./venv/bin/python -m pytest -q tests/test_org.py tests/test_org_vault.py tests/test_company.py tests/test_postmortem.py tests/test_theorist_removed.py tests/test_acc03_economics.py tests/test_owner_reads.py tests/test_owner_reads_m2.py
+
+Tool output arrived in chunks. Progress text concatenated in original order:
+....................................................
+.................... [ 61%]
+.......................
+.......................                           [100%]
+118 passed in 40.08s
+
+The terminal process completed with exit code 0. Progress text line wrapping reflects tool chunk boundaries, not reconstructed pytest terminal geometry. The final result line is exact.

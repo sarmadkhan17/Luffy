@@ -1,0 +1,13 @@
+{
+  "path": "trader/dashboard/economics.py",
+  "owner_subsystem": "dashboard",
+  "authorization": "Root explicitly authorized related shared-classifier fix after independent vault review",
+  "scope": "Recognize already-recorded booked_pnl_basis=estimated marker using existing classification; no accounting/schema/write/authority change",
+  "baseline": "4deca5c275c30c2c59c227b5170bab651cf777fe",
+  "baseline_sha256": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560",
+  "reviewed_sha256": "85ad5efaf11f17a2ccf34d4ace242796409e1cd0590aea0f7d179440f8f67ef9",
+  "baseline_lines": 144,
+  "reviewed_lines": 144,
+  "fix_status": "IMPLEMENTED_OFFLINE",
+  "tests": "chat-notify-economics-marker-before.txt:1 failed2 passed; chat-notify-economics-marker-after.txt:37 passed"
+}
