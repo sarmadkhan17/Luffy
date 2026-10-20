@@ -15,7 +15,7 @@ def bar_ms(ts):
     return int(ts.timestamp()*1000) if hasattr(ts, 'timestamp') else int(ts)
 
 
-def observations(spec, snap, state):
+def observations(spec, snap, state, *, signal_pending=False):
     from datetime import datetime
     at = int(datetime.fromisoformat(snap.ts).timestamp()*1000)
     frame = closed_bars(snap.df(spec.timeframe), spec.timeframe, at)
@@ -24,7 +24,7 @@ def observations(spec, snap, state):
     if frame.attrs.get('read_mode') == 'retrospective':
         raise ValueError('retrospective_observations_have_no_execution_authority')
     signal, signal_valid = None, None
-    if spec.exit.signal_exit.strip():
+    if spec.exit.signal_exit.strip() and not signal_pending:
         from ..strategy.compile import compile_spec, _CTX_TF
         from ..data.market_provenance import eligible_frame
         frames = {}

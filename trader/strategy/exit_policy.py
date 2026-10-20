@@ -207,6 +207,27 @@ def advance(policy, state, observation, remaining):
     return Transition(state, bool(reason), reason, remaining if reason else 0, active_stop, policy.target)
 
 
+def execute_open(policy, state, bar_ms, price, remaining):
+    """Execute a proven signal open after checking protection at that open.
+
+    Adapters prove availability. This shared price transition never inspects
+    an unfinished candle's range or advances its completed-bar counters. A
+    time fallback at this very boundary may yield to the executable signal.
+    """
+    if (bar_ms != state.last_bar_ms + policy.step_ms
+            or state.reason not in (None, 'time')):
+        raise ValueError('signal_fill_missing_causal_history')
+    if not math.isfinite(price) or price <= 0 or not math.isfinite(remaining) or remaining <= 0:
+        raise ValueError('signal_fill_invalid_price_or_quantity')
+    stop = state.active_stop if state.active_stop is not None else policy.stop
+    long = policy.side == 'long'
+    hit_stop = price <= stop if long else price >= stop
+    hit_target = bool(policy.target) and (price >= policy.target if long else price <= policy.target)
+    reason = 'stop' if hit_stop else 'target' if hit_target else 'signal'
+    final = replace(state, reason=reason, reference_exit=price, gap=bool(hit_stop or hit_target))
+    return Transition(final, True, reason, remaining, stop, policy.target)
+
+
 def encode(policy, state):
     return json.dumps({'policy': asdict(policy), 'state': asdict(state)}, sort_keys=True)
 

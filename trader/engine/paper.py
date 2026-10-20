@@ -356,37 +356,79 @@ class PaperExecutor:
                 evidence = json.loads(evidence_row['canonical_json'])
                 if evidence['final'] != p['exit_state_json']:
                     raise ValueError('paper_exit_evidence_state_differs')
-                if state.reason == 'signal':
-                    # Retain position/protection while D6's executable fill
-                    # handoff is unavailable; a close decision is not a fill.
-                    continue
-                for observation in observations(spec, snap, state):
-                    # Missing causal history cannot be silently replaced.
-                    if observation.bar_ms != state.last_bar_ms + policy.step_ms:
-                        break
-                    result = E.advance(policy, state, observation, p['amount'])
-                    state = result.state
-                    X.observe(evidence, policy, result, observation)
-                    X.record(c, evidence)
-                    c.execute(f'UPDATE {TABLE} SET exit_state_json=?,last_bar_ms=?,bars_held=? WHERE id=?',
-                              (E.encode(policy,state),state.last_bar_ms,state.bars_held,p['id']))
-                    if result.due:
-                        if result.reason == 'signal':
+                if policy.signal_exit:
+                    # Existing D7 pending rows contain a terminal decision, not
+                    # an executed close. Replay their retained observations into
+                    # continuing protection; never backdate missing receipts.
+                    if state.reason == 'signal' and not evidence.get('paper_signal_execution'):
+                        evidence['legacy_signal_evidence_sha256'] = evidence_row['canonical_sha256']
+                        _, state = E.decode(evidence['initial'])
+                        for raw in evidence['observations']:
+                            obs = E.Observation(**raw)
+                            result, decided = X.advance(policy, state, obs, p['amount'],
+                                pending=bool(evidence.get('signal_decision')))
+                            if decided:
+                                evidence['signal_decision'] = X.decision(evidence, spec, snap, obs, legacy=True)
+                            state = result.state
+                    evidence['paper_signal_execution'] = 'D6-receipt-open.v1'
+                result = None
+                if state.reason:
+                    result = E.Transition(state, True, state.reason, p['amount'],
+                        state.active_stop, policy.target)
+                else:
+                    for observation in observations(spec, snap, state,
+                            signal_pending=bool(evidence.get('signal_decision'))):
+                        # Missing causal history cannot be silently replaced.
+                        if observation.bar_ms != state.last_bar_ms + policy.step_ms:
                             break
-                        px = state.reference_exit
-                        sign = 1 if p['side']=='long' else -1
-                        c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",
-                                  (px,(px-p['entry_price'])*sign*result.quantity,
-                                   iso(state.last_bar_ms+policy.step_ms),result.reason,
-                                   'recorded_canonical_observation',px,p['id']))
-                        completed = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (p['id'],)).fetchone())
-                        if completed['market_type'] != 'futures':
-                            C.finalize_estimated(c, completed, v, inst, cost_context)
-                        # A futures trade is finalized by complete_costs once its
-                        # funding interval is proven; until then it has no receipt
-                        # and cannot count toward probation.
-                        closed.append(p['id'])
-                        break
+                        fill = X.executable_fill(evidence, spec, snap)
+                        if fill and fill['bar_ms'] == state.last_bar_ms + policy.step_ms:
+                            result = X.fill_transition(policy, state, fill, p['amount'])
+                            evidence['signal_fill'] = fill
+                            state = result.state
+                            break
+                        result, decided = X.advance(policy, state, observation, p['amount'],
+                            pending=bool(evidence.get('signal_decision')))
+                        if decided:
+                            evidence['signal_decision'] = X.decision(evidence, spec, snap, observation)
+                        state = result.state
+                        X.observe(evidence, policy, result, observation)
+                        if result.reason == 'time':
+                            # At this exact boundary an already evidenced open
+                            # can execute the signal before the time fallback.
+                            # A later/unavailable open never suspends max_bars.
+                            fill = X.executable_fill(evidence, spec, snap)
+                            if fill and fill['bar_ms'] == state.last_bar_ms + policy.step_ms:
+                                result = X.fill_transition(policy, state, fill, p['amount'])
+                                evidence['signal_fill'] = fill
+                                state = result.state
+                        if result.due:
+                            break
+                    if not state.reason:
+                        fill = X.executable_fill(evidence, spec, snap)
+                        if fill and fill['bar_ms'] == state.last_bar_ms + policy.step_ms:
+                            result = X.fill_transition(policy, state, fill, p['amount'])
+                            evidence['signal_fill'] = fill
+                            state = result.state
+                evidence['final'] = E.encode(policy, state)
+                X.record(c, evidence)
+                c.execute(f'UPDATE {TABLE} SET exit_state_json=?,last_bar_ms=?,bars_held=? WHERE id=?',
+                          (E.encode(policy,state),state.last_bar_ms,state.bars_held,p['id']))
+                if result and result.due:
+                    px = state.reference_exit
+                    sign = 1 if p['side']=='long' else -1
+                    fill = evidence.get('signal_fill')
+                    closed_ms = fill['bar_ms'] if fill else state.last_bar_ms+policy.step_ms
+                    basis = 'recorded_D6_executable_open' if fill else 'recorded_canonical_observation'
+                    c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",
+                              (px,(px-p['entry_price'])*sign*result.quantity,
+                               iso(closed_ms),result.reason,basis,px,p['id']))
+                    completed = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (p['id'],)).fetchone())
+                    if completed['market_type'] != 'futures':
+                        C.finalize_estimated(c, completed, v, inst, cost_context)
+                    # Futures cost completion retains its existing independent
+                    # funding proof and idempotent immutable receipt path.
+                    closed.append(p['id'])
         if self.capture:
             from .paper_cost_evidence import ms
             for original in funding_work:

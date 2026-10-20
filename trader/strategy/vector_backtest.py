@@ -124,7 +124,10 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     for j in range(f, n if canonical else end + 1):
         if j == due:
             if canonical:
-                state = pending_signal
+                clock = df['ts'].iloc[j]
+                ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
+                executed = E.execute_open(policy, state, ms, float(df['open'].iloc[j]), intended_quantity)
+                state = pending_signal if executed.reason == 'signal' else executed.state
             exit_i, exit_px, at_open = j, float(df["open"].iloc[j]), 1
             break
         if canonical:
@@ -141,7 +144,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
                                        else 'quality', 'VALID') == 'VALID'
                                and row.get('bar_state', 'FINAL') == 'FINAL'),
                 atr=float(atr[j]), signal_exit=False if due >= 0 or (signal and not j < g < n) else signal)
-            active_policy = replace(policy, signal_exit=False, max_bars=n + max_bars) if due >= 0 else policy
+            active_policy = replace(policy, signal_exit=False) if due >= 0 else policy
             transition = E.advance(active_policy, state, observation, intended_quantity)
             if transition.reason == 'signal':
                 pending_signal, due = transition.state, g
@@ -149,11 +152,16 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
                     transitions_out.append(transition)
                 # The signal is an intent, not a terminal protective state. Advance
                 # the surviving bar so its trail is effective while awaiting fill.
-                transition = E.advance(replace(policy, signal_exit=False, max_bars=n + max_bars),
+                transition = E.advance(replace(policy, signal_exit=False),
                                        state, replace(observation, signal_exit=False), intended_quantity)
             if transitions_out is not None:
                 transitions_out.append(transition)
             state = transition.state
+            if transition.reason == 'time' and due == j + 1:
+                # A proven open at this exact boundary precedes the fallback.
+                # A later/unavailable signal fill never suspends max_bars.
+                state = replace(state, reason=None, reference_exit=None)
+                continue
             if transition.due:
                 exit_i, exit_px = j, state.reference_exit
                 break

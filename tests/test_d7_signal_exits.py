@@ -70,7 +70,7 @@ def test_factory_paper_and_live_adapter_persist_intent_until_D6_fill_contract(tm
     spec=version_spec(direction=side,entry_long='close > 0' if side=='long' else '',
         entry_short='close > 0' if side=='short' else '',
         exit=ExitSpec(stop={'kind':'pct','v':.04},target={'kind':'rr','v':2.},
-            trail={'kind':'atr','mult':4.,'arm_at_r':1.},time={'max_bars':1},
+            trail={'kind':'atr','mult':4.,'arm_at_r':1.},time={'max_bars':3},
             signal_exit='close < 109'))
     cfg=load_config()
     j,out,_=installed(tmp_path,cfg,spec)
@@ -88,7 +88,11 @@ def test_factory_paper_and_live_adapter_persist_intent_until_D6_fill_contract(tm
     assert paper.manage(final_snap)==[]
     pending=j.query('SELECT * FROM versioned_paper_trades WHERE id=?',(tid,))[0]
     p,s=E.decode(pending['exit_state_json'])
-    assert s.reason=='signal' and s.reference_exit is None
+    from trader.engine import paper_exit_evidence as X
+    evidence=json.loads(j.query(f'SELECT canonical_json FROM {X.TABLE} WHERE trade_id=?',(tid,))[0]['canonical_json'])
+    assert s.reason is None and s.reference_exit is None
+    assert evidence['signal_decision']['bar_ms']==s.last_bar_ms
+    assert 'signal_fill' not in evidence
     assert pending['status']=='open' and pending['exit_price'] is None
     assert pending['stop_loss']==initial['stop_loss']==p.stop
     restarted=PaperExecutor(j,cfg)

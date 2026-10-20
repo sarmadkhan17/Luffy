@@ -1,0 +1,145 @@
+{
+  "base": "b024d37b5b9bd8d6a0e614da2f964226ac2ac670",
+  "branch": "sol1/d7-paper-pending-signal-fix",
+  "objective": "Repair pending PAPER signal execution without suspending protection or changing original Donchian parameters.",
+  "reproduction_evidence": "/mnt/luffy-data/sol1-d7-signal-verification-20261020",
+  "evidence_directory": "/mnt/luffy-data/sol1-d7-paper-fix-evidence-20261020",
+  "implementation": [
+    "Keep signal_decision in the existing canonical paper exit evidence, separate from the continuing protective exit_state_json. No new table or exit engine.",
+    "Advance existing stop, target, max_bars and next-bar trailing while pending. Suppress only repeated signal evaluation. Preserve original policy/spec/install identity.",
+    "Freeze the actual D6 per-spec lookback receipts at decision time. Use fill_timing.fills on frozen inputs and retained opens. Verify content/revision hashes with market_provenance.seal without rewriting clocks or hashes. Unknown, future, modified or retrospective evidence cannot authorize a fill.",
+    "Use the shared pure exit_policy.execute_open transition for Paper/vector gap-stop-target precedence without reading a future candle range or advancing incomplete-bar counters.",
+    "Remove vector-only max_bars suppression while signal execution waits. A proven executable open at the exact time boundary precedes the fallback; a later/unavailable open does not postpone time exits. D6 timing, fees, spread and funding arithmetic remain unchanged.",
+    "Persist decision_id and fill_id separately, bind both to trade/version/spec/install, retain signal input and execution receipt evidence, and replay both in paper_exit_evidence.verify.",
+    "Close, record evidence/state and gross PnL under the existing BEGIN IMMEDIATE/status guard; use existing independent futures funding/cost completion and immutable cost receipts.",
+    "Recover old D7 terminal pending rows by replaying their retained observations into protective state. Preserve the old evidence digest. Missing original decision receipts stay UNAVAILABLE_LEGACY_DECISION_RECEIPTS: recovery cannot invent a historical signal fill. Stops/targets/trails/time remain serviced."
+  ],
+  "verification": {
+    "main": {
+      "passed": 282,
+      "skipped": 2,
+      "failed": 0,
+      "seconds": 280.03,
+      "groups": {
+        "tests.test_d7_paper_signal_execution": {
+          "passed": 57,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_d7_signal_exits": {
+          "passed": 8,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_d7_trailing_exits": {
+          "passed": 37,
+          "skipped": 2,
+          "failed": 0
+        },
+        "tests.test_d7_strategy_parity": {
+          "passed": 46,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_d6_d7_vector_handoff": {
+          "passed": 33,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_d6_replay_timing": {
+          "passed": 29,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_sg03_install_resolution": {
+          "passed": 22,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_sol1_paper_cost": {
+          "passed": 20,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_sol1_paper_funding": {
+          "passed": 15,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_vector_backtest": {
+          "passed": 12,
+          "skipped": 0,
+          "failed": 0
+        },
+        "tests.test_null_cost_symmetry": {
+          "passed": 3,
+          "skipped": 0,
+          "failed": 0
+        }
+      }
+    },
+    "legacy_followup": {
+      "passed": 3,
+      "deselected": 55,
+      "failed": 0,
+      "seconds": 9.89,
+      "reason": "Final guard prevents reconstructing historical decision receipts from a later revision; two legacy stop recovery cases and one receipt-unavailable/time case rechecked."
+    },
+    "expected_skips": "Existing no-target/target-outcome cases only; no new skip or xfail.",
+    "equivalence": "PASS: five existing synthetic strategy families",
+    "benchmark": {
+      "status": "PASS",
+      "runs": 5,
+      "bars": 1200,
+      "old_seconds": 14.86,
+      "new_seconds": 0.132,
+      "speedup": 112.8,
+      "minimum_speedup": 20
+    },
+    "coverage": [
+      "long and short stop/target/time exits while pending",
+      "trail arming, tightening and next-bar protection while pending",
+      "zero/delayed availability and genuine partial-bar open fills",
+      "gap-stop and gap-target precedence; no future range lookahead",
+      "same-boundary legitimate fill versus time fallback; delayed fill does not suspend max_bars",
+      "restart, duplicate observations, concurrent closers and immutable cost booking",
+      "transaction interruption rolls back state/evidence and retries once",
+      "replacement install retains original StrategyVersion binding",
+      "unknown/future/modified receipt and redigested exit-evidence tampering refused",
+      "exact original Donchian long/short entries, initial stops, trail ratchets, profitable closures, accounting and FROZEN entry blocking/exit servicing",
+      "D6/D7 shared-vector, replay timing, actual/null cost and PaperExecutor cost/funding regressions"
+    ],
+    "commands": {
+      "regressions": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/mnt/luffy-data/sol1-d7-paper-fix-evidence-20261020:/mnt/luffy-data/sol1-d7-paper-pending-signal-fix /mnt/luffy-data/luffy/production/venv/bin/python -m pytest -p offline_guard -p no:cacheprovider tests/test_d7_paper_signal_execution.py tests/test_d7_signal_exits.py tests/test_d7_trailing_exits.py tests/test_d7_strategy_parity.py tests/test_d6_d7_vector_handoff.py tests/test_d6_replay_timing.py tests/test_sg03_install_resolution.py tests/test_sol1_paper_cost.py tests/test_sol1_paper_funding.py tests/test_vector_backtest.py tests/test_null_cost_symmetry.py --basetemp=/mnt/luffy-data/sol1-d7-paper-fix-evidence-20261020/final-tmp --junitxml=/mnt/luffy-data/sol1-d7-paper-fix-evidence-20261020/final.xml -q",
+      "legacy_followup": "Same offline runner: tests/test_d7_paper_signal_execution.py -k \"existing_D7 or old_pending_decision\"; use a fresh basetemp.",
+      "synthetic_harness": "Run reports/review07-d7/synthetic_legacy_checks.py with equivalence or benchmark, after importing the retained offline_guard socket tripwire. The harness replaces feed/store access with its committed synthetic frame.",
+      "graph": "graphify update . (AST only; no label/semantic extraction)",
+      "diff": "git diff --check"
+    },
+    "existing_test_adjustment": "The existing pending-intent/no-invented-fill fixture uses max_bars=3 rather than 1. Dedicated new tests require time at cap=1 when no fill exists, and legitimate execution before the time fallback when an open at that exact boundary is proven. Pure signal-intent and Live refusal tests remain intact."
+  },
+  "boundaries": {
+    "isolated_worktree": "/mnt/luffy-data/sol1-d7-paper-pending-signal-fix",
+    "production_database_access": false,
+    "provider_or_venue_calls": false,
+    "kernel_or_dashboard_changes": false,
+    "trading_activation": false,
+    "CI_submission": false,
+    "FROZEN_Risk_Execution_authority_changes": false,
+    "live_signal_submission": "Unchanged explicit signal_exit_execution_timing_requires_D6 refusal; tested.",
+    "original_donchian_spec": "Unmodified; exact serialized exit and universe verified in TEST-ONLY fixtures.",
+    "closed_historical_evidence": "Never relabelled or rewritten.",
+    "graphify": "AST-only update; generated graph/cache files excluded from commit.",
+    "claude_provider_probe": "Not called: owner explicitly prohibited provider calls. Implementation and tests ran locally."
+  },
+  "source_sha256": {
+    "trader/engine/paper.py": "b44d855a1ac01e43fdda4fd1cd9328a2326cdd95a0c3109b231bdfb4e0b93f50",
+    "trader/engine/paper_exit_evidence.py": "237ad9c79e0bc5792f187a72009e4c38fc6170c5f5ad6f0afb7bcf8a069f031d",
+    "trader/engine/versioned_exits.py": "1ff287e7901a23ce27b148bb331d8f0e0d40ebdd621a89bf5df809f0def7d9d4",
+    "trader/strategy/exit_policy.py": "6f7967148da60efa32cb6dcb304800cc90839de80540ed1f9a8c76ac8318fc08",
+    "trader/strategy/vector_backtest.py": "149a85d9f1e20f18acc1ffd78a5bbb79e11d7386adc13a8eb3b2379c3dc867c4",
+    "tests/test_d7_signal_exits.py": "e12c013434188741fb8ad1af3363f92650c41732d427a62c235bac0f3cd1f549",
+    "tests/test_d7_paper_signal_execution.py": "c5cc6108c30f4dfe1d5a47e6a91f379b73c32e7d3e640be378b26d2d2476677e"
+  },
+  "READY_FOR_INTEGRATION": true
+}
