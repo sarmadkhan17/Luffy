@@ -120,6 +120,13 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     due = -1                        # bar whose open fills a signalled exit
     at_open = 0
     pending_signal = None
+    if canonical:
+        # Scalar column reads: `df.iloc[j]` builds (and deep-copies attrs for)
+        # a whole row per bar, which dominated every research backtest.
+        ts_col, open_col = df['ts'].array, df['open'].to_numpy(float)
+        quality_name = 'observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'
+        quality_col = df[quality_name].to_numpy() if quality_name in df.columns else None
+        state_col = df['bar_state'].to_numpy() if 'bar_state' in df.columns else None
     for j in range(f, n if canonical else end + 1):
         if j == due:
             if canonical:
@@ -130,18 +137,16 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
             exit_i, exit_px, at_open = j, float(df["open"].iloc[j]), 1
             break
         if canonical:
-            row = df.iloc[j]
-            clock = row['ts']
+            clock = ts_col[j]
             ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
             signal = (bool(exit_sig[j]) if exit_sig is not None and exit_sig_available is not None
                       and exit_sig_available[j] else None)
             g = j + 1 if fill is None else int(fill[j])
             # A known but unexecutable signal cannot become a simulated fill.
             # Pending execution still leaves the active protection and trail in force.
-            observation = E.Observation(ms, float(row['open']), highs[j], lows[j], closes[j],
-                completed=bool(row.get('observation_quality' if df.attrs.get('read_mode') == 'retrospective'
-                                       else 'quality', 'VALID') == 'VALID'
-                               and row.get('bar_state', 'FINAL') == 'FINAL'),
+            observation = E.Observation(ms, float(open_col[j]), highs[j], lows[j], closes[j],
+                completed=bool((quality_col is None or quality_col[j] == 'VALID')
+                               and (state_col is None or state_col[j] == 'FINAL')),
                 atr=float(atr[j]), signal_exit=False if due >= 0 or (signal and not j < g < n) else signal)
             active_policy = replace(policy, signal_exit=False) if due >= 0 else policy
             transition = E.advance(active_policy, state, observation, intended_quantity)
