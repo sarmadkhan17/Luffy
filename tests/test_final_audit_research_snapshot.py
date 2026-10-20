@@ -24,7 +24,7 @@ def test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate(po
         db.execute('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
             (r['revision_id'],DataFeed._series_key(DISCOVERY[0],'4h'),r['event_time_ms'],later+1,later+1,MP.encode(r)))
     original=DataFeed(exchange=NoExchange(),db_path=source).cached_ohlcv(DISCOVERY[0],'4h')
-    assert original is not None and len(original)==2100
+    assert original is not None and len(original)==3000
     target=tmp_path/'frozen.db'
     E.freeze_candles(source,target,experiment)
     initial=hashlib.sha256(target.read_bytes()).hexdigest()

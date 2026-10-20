@@ -75,7 +75,7 @@ def test_eligible_chunk_exact_roundtrip_and_restart(tmp_path):
         captured = R.frame_chunks(db, snap, cut)
     with sqlite3.connect(path) as db:
         sha = captured['chunks']['dfs']['15m']
-        raw = json.loads(db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?', (sha,)).fetchone()[0])
+        raw = C.payload(db, db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?', (sha,)).fetchone()[0])
     restored = R.validate_frame_cut(R.restore_frame(raw), cut)
     pd.testing.assert_frame_equal(restored, data, check_exact=True, check_flags=False)
     sources = {'data': captured, 'outcome': {'observation': {}}}

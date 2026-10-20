@@ -36,6 +36,31 @@ def kernel(target, bank, later, monkeypatch):
     return k, analyst
 
 
+def _working_ledger(bank, final):
+    """The experiment's working ledger, recreated from the Bank archive.
+
+    Completed work is archived in the Bank and its working file retired; the
+    file exists only mid-run or in the crash window before the unlink. Faults
+    of that working file are exercised by materializing it exactly."""
+    from trader.persistence.storage_cleanup import completed_reader
+    path = T.experiment_ledger_path(bank, final['experiment_id'])
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with closing(completed_reader(bank, final['experiment_id'])) as src, \
+                closing(sqlite3.connect(path)) as dst:
+            src.backup(dst)
+    return path
+
+
+def _dump_experiment(bank, final):
+    from trader.persistence.storage_cleanup import completed_reader
+    with closing(completed_reader(bank, final['experiment_id'])) as db:
+        return {t: db.execute(f"SELECT * FROM {t} ORDER BY 1").fetchall()
+                for (t,) in db.execute("SELECT name FROM sqlite_master "
+                                       "WHERE type='table' AND name NOT LIKE "
+                                       "'sqlite_%'").fetchall()}
+
+
 def count(j, table):
     if not j.query("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)):
         return 0
@@ -66,8 +91,7 @@ def test_kernel_authenticates_transfers_and_stops_at_validated(population, targe
     target.kv_set('execution_recovery', '{"phase":"unresolved","symbol":"HELD/USDT"}')
     kv = target.query('SELECT * FROM state_kv ORDER BY key')
     source_before = _dump(bank)
-    experiment = T.experiment_ledger_path(bank, final['experiment_id'])
-    experiment_before = _dump(experiment)
+    experiment_before = _dump_experiment(bank, final)
     k, analyst = kernel(target, bank, later, monkeypatch)
     book = []
     result = k._research_handoff(analyst, book)
@@ -83,7 +107,7 @@ def test_kernel_authenticates_transfers_and_stops_at_validated(population, targe
     assert [dict(r) for r in target.query('SELECT * FROM research_budget')] == [packet['budget']]
     assert Ledger(target).candidate(packet['hash'])['state'] == 'referee_passed'
     assert Ledger(target).next_alpha(*Ledger(target)._registered_or_default())[0] == packet['look_seq'] + 1
-    assert _dump(bank) == source_before and _dump(experiment) == experiment_before
+    assert _dump(bank) == source_before and _dump_experiment(bank, final) == experiment_before
     assert book == []
     no_authority(k, analyst)
     # Full restart: no new candidate, budget, lifecycle or diagnostic rows.
@@ -95,11 +119,18 @@ def test_kernel_authenticates_transfers_and_stops_at_validated(population, targe
     no_authority(k2, a2)
 
 
-@pytest.mark.parametrize('missing', ['bank', 'experiment'])
-def test_temporary_missing_lineage_recovers_without_candidate_poisoning(population, target, monkeypatch, missing):
+def test_retired_working_ledger_is_read_from_the_bank_archive(population, target, monkeypatch):
+    bank, _prod, final, later = _supported(population)
+    assert not T.experiment_ledger_path(bank, final['experiment_id']).exists()
+    k, analyst = kernel(target, bank, later, monkeypatch)
+    assert k._research_handoff(analyst, [])['status'] == 'VALIDATED'
+    no_authority(k, analyst)
+
+
+def test_temporary_missing_lineage_recovers_without_candidate_poisoning(population, target, monkeypatch):
     bank, _prod, final, later = _supported(population)
     packet = T.authenticate(bank, final['result_id'])
-    absent = bank if missing == 'bank' else T.experiment_ledger_path(bank, final['experiment_id'])
+    absent = bank
     kept = absent.with_suffix('.kept')
     absent.rename(kept)
     k, analyst = kernel(target, bank, later, monkeypatch)
@@ -247,7 +278,7 @@ def test_handoff_disabled_has_no_effect(population, target, monkeypatch):
 @pytest.mark.parametrize('locked', ['bank', 'experiment'])
 def test_locked_lineage_is_retryable_and_recovers(population, target, monkeypatch, locked):
     bank, _prod, final, later = _supported(population)
-    source = bank if locked == 'bank' else T.experiment_ledger_path(bank, final['experiment_id'])
+    source = bank if locked == 'bank' else _working_ledger(bank, final)
     k, analyst = kernel(target, bank, later, monkeypatch)
     with closing(sqlite3.connect(source)) as db:
         # WAL intentionally permits readers during EXCLUSIVE; use a real read lock.
@@ -282,7 +313,7 @@ def test_mechanism_reports_validation_without_book_addition_or_reload(population
     ('corrupt', 'experiment_ledger_unreadable'), ('symlink', 'experiment_ledger_alias')])
 def test_invalid_lineage_is_distinct_from_temporary_unavailability(population, target, monkeypatch, invalid, code):
     bank, _prod, final, later = _supported(population)
-    path = T.experiment_ledger_path(bank, final['experiment_id'])
+    path = _working_ledger(bank, final)
     if invalid == 'binding':
         with closing(sqlite3.connect(path)) as db:
             db.execute("UPDATE predictive_experiment_binding SET id='foreign'")

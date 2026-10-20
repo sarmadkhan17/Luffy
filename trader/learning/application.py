@@ -212,6 +212,14 @@ def prepare_captured(journal, cfg, outcome_id):
     from . import capture as C
     # capture API accepts a DB-like execute reader.
     class Reader:
+        def create_function(self, name, narg, fn):
+            # Lets the evidence reader register its verifying SQL function on
+            # the underlying connection (read-only connections accept this).
+            db = getattr(journal, 'db', None)
+            if db is None:
+                raise AttributeError('journal has no connection for journal_detail_v1')
+            db.create_function(name, narg, fn)
+
         def execute(self, sql, params=()):
             rows = journal.query(sql, params)
             class Cursor:
