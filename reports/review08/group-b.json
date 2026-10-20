@@ -1,0 +1,276 @@
+{
+  "group": "B",
+  "scope": "portfolio",
+  "source_revision": "ef9fca8",
+  "files_reviewed": 11,
+  "files": [
+    {
+      "path": "trader/portfolio/allocator.py",
+      "lines": 709,
+      "sha256": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Frozen whole-book contracts and R2/R3 deterministic one-position capital-priority proposals. R3 selects cash on distinct-expression exact economic ties; R2 remains explicit historical replay.",
+      "necessity": "Required contract for auditable allocation, exact economic comparison, one account position per instrument, authoritative minimum size bounds and explicit cash.",
+      "production_consumers": [
+        "portfolio.reoptimization.reoptimize",
+        "portfolio.runtime.replay",
+        "portfolio.comparison",
+        "portfolio.current/source_adapter/candidate_bridge/opportunity_live",
+        "engine.risk_intent",
+        "learning.capture and capture_runtime",
+        "persistence.storage_cleanup uses canonical",
+        "manual shadow/replay scripts"
+      ],
+      "dynamic_registration_and_persistence": "inputs_from_payload reconstructs persisted exact contracts; verify recomputes proposal against supplied current Inputs. Source.freeze/digest cache verify integrity only; trusted current readers remain authenticity boundary. attach_learning consumes existing registered Target.ALLOCATION observations; only max_share=0 blocks future resource, no arbitrary positive multiplier.",
+      "duplication": "Economic receipt reconstruction/verification appears in _economic_reasons and _holding_economics_current; reused by opportunity_cost rather than dead. Serialization helpers are intentionally reused by many sibling owners. Candidate sorting/asdict/JSON rebuilding repeated during replay; simplify only with equivalent R2/R3 outputs.",
+      "operational_storage_memory_cpu_maintenance_cost": "Source digest LRU retains up to 64 payload texts and 256 MiB UTF-8 payload budget (not a measured process RSS ceiling). Inputs/results embed immutable sources; replay repeats validation. Sorting O(C log C), opposition/book mapping O(C+P), opportunity cost O(C*P) plus receipt replay. No production DB writes or venue calls. Optional persist creates hard-linked content-addressed JSON files with fsync; no retention here.",
+      "sdd_alignment": "SDD 15.1/15.3/15.4 and 16.7: positive net after costs/reserve, one instrument position, no stacking or continuously resizing, cash baseline and independent Risk. Full whole-book optimizer remains partial: at most one new position, no coordinated multi-leg or calibrated cluster penalty.",
+      "issues": [
+        "Production economics unavailable because all three economics registries empty; no functioning economic selection in normal evidence absent calibrated adapters.",
+        "Historical PORT04 closure describes R4 current, but this pinned source supports only R2/R3; treat closure as historical branch evidence.",
+        "Top economic candidate with zero authoritative size remains comparable and prevents fallback to a lower-ranked feasible candidate; policy clarification needed before changing candidate ranking/eligibility."
+      ],
+      "removal_or_simplification_impact": "Removal breaks allocation replay, Risk intent reconstruction and Learning provenance. Simplification must preserve immutable source hashes, exact Decimal ordering and byte-identical R2/R3 replay.",
+      "classification": "SIMPLIFY",
+      "fix_status": "PROPOSED_ONLY",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "trader/portfolio/common_factor.py",
+      "lines": 332,
+      "sha256": "9f216f21296ae492726d32a88cc27684616c54afa91ff9b0d7a31ce9aadc9aac",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Venue-book projection, exact same-instrument/shared-lineage detection, retained World/attention measurement context and owner-policy concentration checks.",
+      "necessity": "Required to prevent counted sibling strategies from masquerading as independent evidence and to bind allocator book to existing venue/protection authority.",
+      "production_consumers": [
+        "portfolio.current.freeze via build/attach",
+        "allocator.from_allocator verification and dedup",
+        "runtime_metrics.project via snapshot",
+        "engine.entry_authority current-book snapshot",
+        "manual common_factor_shadow"
+      ],
+      "dynamic_registration_and_persistence": "from_allocator rebuilds from current frozen source set and rejects source replacement/replayed result mismatch; relationship adapters preserve current/stale/unknown and exact raw windows. Tests cover prior incorrect basket-as-pair attribution and reject incompatible historical receipt without rewriting it.",
+      "duplication": "Venue observations deliberately replay existing observe_positions and verify_snapshot; metrics reuse runtime_metrics rather than second risk formulas. Pair records overlap allocator conflict checks intentionally as descriptive evidence.",
+      "operational_storage_memory_cpu_maintenance_cost": "O((C+P)^2) exposure pairs, each scans relationship rows; source and result embed full lineage/relationship evidence. Decimal entry notional uses precision 100, explicitly not marked exposure. No database mutation, provider calls or numerical allocation penalty.",
+      "sdd_alignment": "SDD 16.2 common exposure and 17 independent Risk: exact redundant exposure/lineage supported; measured correlation is context only and independence is never inferred from distinct roots. Calibrated latent-factor risk clustering is missing, not secretly approximated.",
+      "issues": [
+        "factor_model=NOT_JUSTIFIED is explicit, so no implemented numeric factor allocator.",
+        "Missing authoritative mark/stop/account metrics return unavailable; entry-price notional is labelled separately.",
+        "Binance USDT one-way linear projection is explicit implementation scope, not general multi-asset coverage."
+      ],
+      "removal_or_simplification_impact": "Removal loses exact exposure projection, duplicate confidence control and concentration evidence. Cannot remove historical receipt code merely because lifecycle refinements are deferred.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "trader/portfolio/economics.py",
+      "lines": 358,
+      "sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Exact-bound forward gross minus verified cost receipts minus calibrated reserve; immutable economic receipt publication and allocator conversion.",
+      "necessity": "Required honest economic authority boundary; historical PF/win-rate/confidence cannot become forward expected value.",
+      "production_consumers": [
+        "portfolio.source_adapter",
+        "candidate_bridge",
+        "opportunity_live",
+        "allocator and opportunity_cost",
+        "learning.capture/decision_sources"
+      ],
+      "dynamic_registration_and_persistence": "Code-owned registries keyed by (method,version); no production registrations found in trader/scripts. Test-only registration exists in tests/economics_fixtures.py. Revoked validator blocks re-verification while stored bytes remain unchanged. Existing paper funding/calibrated-cost receipts alone are not a forward scope bridge.",
+      "duplication": "_FrozenCostReader deliberately reuses paper_cost.verify for cost calculation/replay. It does not duplicate slippage/funding formulas. Binding and Source reuse existing contracts.",
+      "operational_storage_memory_cpu_maintenance_cost": "Rebuild validates all model and cost evidence and serializes embedded sources. Exact Decimal net precision depends on value exponents; production unregistered adapters avoid arithmetic. Persist optional append-only JSON with temporary hard-link publication. No live DB or order write.",
+      "sdd_alignment": "SDD 15.1 exact EV after fees/slippage/funding-or-borrow/reserve and 15.2 visible confidence. Correct refusal boundary implemented; calibrated production forward economic intelligence MISSING.",
+      "issues": [
+        "GROSS_MODELS, RESERVE_MODELS and COST_SCOPE_MODELS are empty in production; no amount of synthetic fixture coverage establishes forward economics.",
+        "PORT02 historical closure explicitly records no current row fully owns initial gross/reserve/forward-cost calibration; requires owner assignment."
+      ],
+      "removal_or_simplification_impact": "Removing it permits scalar/legacy stats to substitute economics or leaves allocator unable to establish comparable value. Registering models is economic policy work, not bounded maintenance.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "PARTIALLY IMPLEMENTED"
+    },
+    {
+      "path": "trader/portfolio/trade_intent.py",
+      "lines": 155,
+      "sha256": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Turns verified allocation proposal rows into typed OPEN/KEEP/NO_ACTION intents with exact book, economics and capability lineage.",
+      "necessity": "Required auditable boundary between proposal and final Risk; COMPLETE explicitly grants no execution permission.",
+      "production_consumers": [
+        "portfolio.reoptimization",
+        "runtime replay",
+        "engine.risk_intent evaluate",
+        "engine.entry_authority validate",
+        "learning.capture/decision_sources/capture_runtime",
+        "stage6_shadow"
+      ],
+      "dynamic_registration_and_persistence": "TradeIntent constructor checks digest/schema/fields; build verifies current proposal then binds exactly one entry-capability.v1 source when present. bind_capability verifies exact instrument/hash and forbids rebinding; final Risk rereads trusted authority.",
+      "duplication": "Recomputes allocator verification before constructing typed output; repeated decode properties are small maintenance/CPU cost and preserve immutable JSON contract.",
+      "operational_storage_memory_cpu_maintenance_cost": "O(C*S) capability scan and repeated JSON loads; embeds candidate economics and proposal provenance. No storage mutation/network/Risk invocation from this module.",
+      "sdd_alignment": "SDD 15.6/16.7 proposal -> Risk/Execution separation; same book hash, no unsupported resize/close action, capability only provenance.",
+      "issues": [
+        "No automatic economic/order capability follows from COMPLETE; current source integrations and offline private Consumer source connectivity must not be described as proof of deployed autonomous trading.",
+        "Reduction/replacement/hedging typed actions remain missing intentionally until dedicated authority is established."
+      ],
+      "removal_or_simplification_impact": "Removal breaks Risk and Learning replay contracts. Merge into allocator would blur the useful authority boundary without removing required validation.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "tests/economics_fixtures.py",
+      "lines": 101,
+      "sha256": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Explicit test-only economic/cost adapters and synthetic frozen bindings/cost receipts.",
+      "necessity": "Required focused contract/regression fixture; tests are not deployable economic intelligence.",
+      "production_consumers": [
+        "Imported by allocator/economics/common-factor and other contract tests; production trader/scripts do not import it."
+      ],
+      "dynamic_registration_and_persistence": "Explicit pytest/import consumers and temporary fixtures inspected in full, including subprocess replay; no unused inference from production imports.",
+      "duplication": "Shared single fixture avoids duplicated economics fake authority.",
+      "operational_storage_memory_cpu_maintenance_cost": "Temporary in-memory SQLite cost protocol; no production model registration; monkeypatch restores registries.",
+      "sdd_alignment": "Proves contract arithmetic only; cannot satisfy SDD real calibration.",
+      "issues": [],
+      "removal_or_simplification_impact": "Removing breaks meaningful replay fixtures and risks ad hoc duplicated synthetic authority.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "tests/test_portfolio_allocator.py",
+      "lines": 300,
+      "sha256": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Single selection/cash/conflicts/size minimum/source tamper/restart/precision and unsupported import boundaries.",
+      "necessity": "Required focused contract/regression fixture; tests are not deployable economic intelligence.",
+      "production_consumers": [
+        "pytest; shared helpers imported by sibling portfolio tests."
+      ],
+      "dynamic_registration_and_persistence": "Explicit pytest/import consumers and temporary fixtures inspected in full, including subprocess replay; no unused inference from production imports.",
+      "duplication": "Shared fixture helper imports are explicit test dependencies.",
+      "operational_storage_memory_cpu_maintenance_cost": "Synthetic frames/receipts, subprocess restart and temporary JSON artifacts; no provider requests.",
+      "sdd_alignment": "SDD 15/16 one-position, cash, exact economics and independent authority.",
+      "issues": [],
+      "removal_or_simplification_impact": "Removal loses deterministic R2/R3 current allocator regression coverage.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "tests/test_portfolio_common_factor.py",
+      "lines": 331,
+      "sha256": "3d540c7836b4259daf107ba96043f2ab741b6cb1638cf909d2f83ef250dea880",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Exact exposure and lineage dedup, raw measured relationship provenance, stale/corrupt source refusal, no invented policy/penalty and fresh-process replay.",
+      "necessity": "Required focused contract/regression fixture; tests are not deployable economic intelligence.",
+      "production_consumers": [
+        "pytest; setup/measured_source fixtures reused by portfolio tests."
+      ],
+      "dynamic_registration_and_persistence": "Explicit pytest/import consumers and temporary fixtures inspected in full, including subprocess replay; no unused inference from production imports.",
+      "duplication": "Exercises existing World/Factory helpers; no alternate production algorithms.",
+      "operational_storage_memory_cpu_maintenance_cost": "Synthetic temporary journals and attention stores; no actual relationship calibration.",
+      "sdd_alignment": "SDD 16.2 exact common exposure, honest missing factor intelligence.",
+      "issues": [],
+      "removal_or_simplification_impact": "Removal loses basket/pair distinction, sibling pseudo-replication and current-source replay checks.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "tests/test_expected_net_economics.py",
+      "lines": 229,
+      "sha256": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Cost protocol replay and gross/cost/reserve completeness, dimensions, exact arithmetic, publication/restart and allocator refusal.",
+      "necessity": "Required focused contract/regression fixture; tests are not deployable economic intelligence.",
+      "production_consumers": [
+        "pytest; explicit monkeypatched test-only adapters."
+      ],
+      "dynamic_registration_and_persistence": "Explicit pytest/import consumers and temporary fixtures inspected in full, including subprocess replay; no unused inference from production imports.",
+      "duplication": "Cost replay helper adapts existing paper protocol rather than mirrors formula.",
+      "operational_storage_memory_cpu_maintenance_cost": "Temporary SQLite/JSON files and a fresh interpreter; no live authority.",
+      "sdd_alignment": "SDD 15.1/15.2 no missing->zero and no historical metric->EV conversion.",
+      "issues": [],
+      "removal_or_simplification_impact": "Removal loses protection against scalar/uncalibrated or corrupt economics.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "tests/test_port02_economics_authority.py",
+      "lines": 158,
+      "sha256": "2b86cc198d6c17f4ec9f81f35a6788654d2a16181e7cd5058094a824c9321358",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Fresh production registry emptiness; incompatible model revisions/context/freshness; calibration identity and unavailable-vs-zero semantics.",
+      "necessity": "Required focused contract/regression fixture; tests are not deployable economic intelligence.",
+      "production_consumers": [
+        "pytest."
+      ],
+      "dynamic_registration_and_persistence": "Explicit pytest/import consumers and temporary fixtures inspected in full, including subprocess replay; no unused inference from production imports.",
+      "duplication": "Complements expected-net tests with authority/revocation boundary negatives.",
+      "operational_storage_memory_cpu_maintenance_cost": "Fresh interpreter inspection, synthetic temporary cost records; no production dataset.",
+      "sdd_alignment": "SDD economic authority; closure semantics explicitly allow missing calibration as unavailable.",
+      "issues": [],
+      "removal_or_simplification_impact": "Removal weakens genuine authority refusals; tests are not proof that forward models exist.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "IMPLEMENTED AND CONNECTED"
+    },
+    {
+      "path": "docs/tracker/evidence/port02-canonical-sol1/control-validation.py",
+      "lines": 87,
+      "sha256": "6ff8ca2a28dd3cf562dfd90786829dd5d983cebd355e879bc7de9a8699a6b9cb",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Frozen historical closure/tracker/source-byte/manifest and registry-absence validation script; writes its historical control-checks artifact when manually run.",
+      "necessity": "Required audit provenance, not a runtime service. Preserve frozen evidence.",
+      "production_consumers": [
+        "Historical PORT02 closure/evidence reviewers; manually invoked script, no production importer"
+      ],
+      "dynamic_registration_and_persistence": "Reviewed alongside closure.json: engineering_closure_commit 040b271c23ef2e2c74ddedf62e166b345d8df52a; real_calibration_present=false and calibration_ownership_gap retained. OBSOLETE describes current operational execution, not artifact necessity.",
+      "duplication": "Uses existing tracker models/reader; multiple assertions are historical snapshot-specific, not redundant runtime implementation.",
+      "operational_storage_memory_cpu_maintenance_cost": "Historical script reads pinned git objects and external adjudication paths; writes only evidence control-checks.json if invoked. Not run because current tracker/source differs and frozen evidence must remain intact.",
+      "sdd_alignment": "Demonstrates bounded historical PORT02 authority-contract closure while explicitly asserting absent real calibration and disabled research gates.",
+      "issues": [
+        "Hard-coded 178-row tracker and exact historical hashes/absolute adjudication directory make it a frozen historical check, not current acceptance command."
+      ],
+      "removal_or_simplification_impact": "Removal discards evidence supporting economic authority decisions. Do not repair history to match current code.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "OBSOLETE"
+    },
+    {
+      "path": "docs/tracker/evidence/port04-canonical-sol1/independent_test.py",
+      "lines": 57,
+      "sha256": "d98434cdb97927811e1edd682f207cf1753305aac329e0c04bb2b7991a40b9e9",
+      "read_method": "Entire file read as source, including bodies; source consumers and persisted replay traced separately",
+      "purpose": "Historical independent probes: retained checkpoint relationship wiring, old basket-as-pair counterexample and rejection of invalid old attribution.",
+      "necessity": "Required historical negative-control evidence, not dormant production code.",
+      "production_consumers": [
+        "Manual historical pytest invocation / PORT04 closure reviewers"
+      ],
+      "dynamic_registration_and_persistence": "Pinned parent source fetched by git show 2ea4a95:trader/portfolio/common_factor.py; test verifies incompatible old receipt refused instead of rewritten. OBSOLETE means current runtime role absent; preserve audit artifact.",
+      "duplication": "Reuses tests/test_port04_relationship_sources; intentionally loads pinned old common_factor source as counterexample.",
+      "operational_storage_memory_cpu_maintenance_cost": "Temporary synthetic journal/ledger, imports parent git 2ea4a95 source into a temporary module; no live venue calls. Do not run against changing historical source graph incidentally.",
+      "sdd_alignment": "SDD 16.2 measured relationship evidence must preserve actual scope; basket correlation is never relabelled a pairwise correlation.",
+      "issues": [
+        "Historical closure.json calls R4 current while ef9fca8 allocator exposes R2/R3 only; provenance differs. Exact historical reproduction requires cited engineering revision and fixtures."
+      ],
+      "removal_or_simplification_impact": "Removal loses independent evidence of a previously invalid factor attribution and preserved refusal/replay boundary.",
+      "classification": "KEEP",
+      "fix_status": "NO_CHANGE_REQUIRED",
+      "capability_status": "OBSOLETE"
+    }
+  ],
+  "code_changes": [],
+  "files_removed_or_merged": [],
+  "verification": {
+    "command": "./venv/bin/python -m pytest -q tests/test_portfolio_allocator.py tests/test_portfolio_common_factor.py tests/test_expected_net_economics.py tests/test_port02_economics_authority.py",
+    "result": "136 passed in 10.09s",
+    "scope": "Offline synthetic contracts; no deployment/calibration/profitability claim",
+    "historical_scripts_run": false
+  },
+  "prior_lifecycle_evidence": "/mnt/luffy-data/sol1-operational-data-lifecycle/reports/operational-lifecycle-complete/REPORT.md",
+  "lifecycle_boundary": "Reuse completed offline cleanup/replay package; Consumer is present in pinned source and uses a private separate proposal ledger; lifecycle refinements remain offline. No re-review or storage-policy edit."
+}

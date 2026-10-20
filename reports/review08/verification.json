@@ -1,0 +1,46 @@
+{
+  "scope": "13 maintained portfolio-owned test modules; economics_fixtures inspected support only;7 frozen proof programs inspected not executed;5 scripts inspected, provider-capable profiler not executed",
+  "final_groups": [
+    {
+      "group": "A",
+      "command": "./venv/bin/python -m pytest -q tests/test_runtime_portfolio_integration.py tests/test_stage6_normal_sources.py tests/test_stage6_closure.py",
+      "passed": 80,
+      "seconds": 48.45,
+      "evidence": "group-a-tests.json; group-a-pytest.log"
+    },
+    {
+      "group": "B",
+      "command": "./venv/bin/python -m pytest -q tests/test_portfolio_allocator.py tests/test_portfolio_common_factor.py tests/test_expected_net_economics.py tests/test_port02_economics_authority.py",
+      "passed": 136,
+      "seconds": 10.09,
+      "evidence": "group-b-tests.txt"
+    },
+    {
+      "group": "C",
+      "command": "luffy-pytest -q tests/test_candidate_bridge.py tests/test_opportunity_live_integration.py tests/test_dec02_comparison.py --junitxml=reports/review08/group-c-pytest.xml",
+      "passed": 75,
+      "seconds": 20.51,
+      "evidence": "group-c-pytest.log; group-c-pytest.xml"
+    },
+    {
+      "group": "root",
+      "command": "./venv/bin/python -m pytest -q tests/test_dec01_opportunity_context.py tests/test_portfolio_common_factor_shadow.py tests/test_wrld07_relationship_state.py --junitxml=reports/review08/root-tests.xml",
+      "passed": 118,
+      "seconds": 32.9,
+      "evidence": "root-tests.log; root-tests.xml"
+    }
+  ],
+  "nonoverlapping_final_tests_passed": 409,
+  "new_regressions": 7,
+  "before_fix": "7 failed: DID NOT RAISE ValueError",
+  "targeted_after_fix": "10 passed incl7 new+duplicate/new process/context replay; overlaps final80, not added",
+  "graphify_update": {
+    "command": "graphify update .",
+    "exit_code": 0,
+    "mode": "AST only; no provider-backed labels",
+    "evidence": "graph-update.log",
+    "artifacts": "refreshed locally, excluded from implementation/report commits"
+  },
+  "diff_check": "PASS",
+  "claim_limits": "Synthetic correctness/integration/replay/refusal checks; no calibrated economic value, trading edge, deployed health or runtime savings claimed; no full CI"
+}

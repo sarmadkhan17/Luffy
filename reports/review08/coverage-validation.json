@@ -1,0 +1,34 @@
+{
+  "scope": "portfolio",
+  "inventory_json_and_csv_exact_parity": true,
+  "expected_owned_files": 42,
+  "reviewed_owned_files": 42,
+  "unique_reviewed_paths": 42,
+  "reviewed_physical_lines": 8981,
+  "baseline_inventory_revision": "8d57e8f23343505660a07c1a8aa6218279121de9",
+  "review_source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "file_classifications": {
+    "KEEP": 34,
+    "SIMPLIFY": 8
+  },
+  "owned_files_changed_since_inventory": 4,
+  "implementation_commit": "4f8cfaec3e8dcb00cc6e54660ea30a14c297fc07",
+  "research_files_in_review": 0,
+  "accounting_observer_files_in_review": 0,
+  "new_file_or_service": false,
+  "files_removed_or_merged": [],
+  "full_ci_run": false,
+  "canonical_integrated": false,
+  "runtime_deployment_verified_this_review": false,
+  "production_db_access": false,
+  "provider_or_venue_calls": false,
+  "restarts": false,
+  "implementation_changed_paths": [
+    "tests/test_runtime_portfolio_integration.py",
+    "trader/portfolio/__init__.py",
+    "trader/portfolio/current.py",
+    "trader/portfolio/runtime.py"
+  ],
+  "validation": "PASS",
+  "source_policy_changes": "None; same v1 serialized identities, arithmetic, allocation/risk/economic policy and authority"
+}

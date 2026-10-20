@@ -1,0 +1,25 @@
+{
+  "interpreter": "./venv/bin/python",
+  "baseline": {
+    "command": "./venv/bin/python -m pytest -q tests/test_runtime_portfolio_integration.py tests/test_stage6_normal_sources.py tests/test_stage6_closure.py --basetemp=/mnt/luffy-data/sol1-subsystem-review-08-20261020/reports/review08/tmp-group-a",
+    "result": "73 passed in 51.96s",
+    "collection_before_new_regressions": true
+  },
+  "red_regressions": {
+    "command": "./venv/bin/python -m pytest -q tests/test_runtime_portfolio_integration.py::test_replay_refuses_changed_checkpoint_envelope",
+    "result": "7 failed in 5.16s",
+    "reason": "Failed: DID NOT RAISE ValueError; each altered envelope accepted before fix"
+  },
+  "focused_corrected": {
+    "command": "./venv/bin/python -m pytest -q tests/test_runtime_portfolio_integration.py::test_replay_refuses_changed_checkpoint_envelope tests/test_runtime_portfolio_integration.py::test_exact_event_once_restart_checkpoint_and_replay tests/test_runtime_portfolio_integration.py::test_restart_in_new_process_replays_exact_cut tests/test_runtime_portfolio_integration.py::test_materiality_unavailable_does_not_trigger",
+    "result": "10 passed in 5.87s"
+  },
+  "final": {
+    "command": "./venv/bin/python -m pytest -q tests/test_runtime_portfolio_integration.py tests/test_stage6_normal_sources.py tests/test_stage6_closure.py",
+    "result": "80 passed in 48.45s",
+    "exit_code": 0
+  },
+  "diff_check": "PASS",
+  "scope": "Temporary deterministic test stores; no service/production DB/provider/CI calls",
+  "counts_overlap": true
+}

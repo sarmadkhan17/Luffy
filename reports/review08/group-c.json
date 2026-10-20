@@ -1,0 +1,320 @@
+{
+  "group": "C",
+  "scope": "Portfolio exact ownership, owner-corrected Review08 scope; excludes abandoned research assignment",
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "files": [
+    {
+      "path": "trader/portfolio/candidate_bridge.py",
+      "classification": "SIMPLIFY",
+      "sha256": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+      "bytes": 18742,
+      "physical_lines": 314,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Read-only adapter joining exact Factory version/validation/probation/capacity and current source availability to immutable allocator Candidate; records query answers for detached verification; binds common-lineage context.",
+      "necessity": "Necessary to separate comparison eligibility from first-live authority, and make current reread versus historical replay explicit. Lifecycle-valid versions can be compared without granting activation or size.",
+      "production_consumers": [
+        "trader/portfolio/current.py:freeze calls bridge.build and freeze_lineage; candidate verification routes from opportunity_live.verify_candidate to bridge.verify_candidate",
+        "trader/portfolio/common_factor.py replays exact lineage",
+        "scripts/opportunity_context_shadow.py:run optional candidate_bridge path"
+      ],
+      "dynamic_persistence_replay": "ReadEvidence records SELECT/PRAGMA answers with bounds; _verified recomputes eligibility from frozen answers. verify_current rereads trusted reader; detached answers alone are not authentication. Parent chains limited to 64 and reject cycles/future evidence. ALLOCATION_AUTHORITY_ADAPTERS is intentionally empty; registry lookup is a real dynamic extension boundary, not proof of a calibrated provider.",
+      "duplication": "Not a second Factory, Risk or sizer. Reuses load_version/verify_validation/_verify_probation/capacity.check_current. _allocation_projection is future adapter contract and currently supplies no established allocation dimensions. Repeated query-answer/result/context serialization is complexity worth simplifying only while preserving source hashes and replay identity.",
+      "costs": "1000 rows / 2 MiB per ReadEvidence read; 8 MiB per bridge body; up to 64 lineage loads; repeated Factory/capacity reads and canonical JSON copies cost CPU/space per candidate. No production frequency, latency, allocated storage or saving measured.",
+      "sdd": [
+        "SDD 14.5/14.6 immutable version and separate lifecycle authority",
+        "SDD 15/15.1 required evidence and positive costed economics",
+        "SDD 16.2 common lineage; SDD 19 final Risk remains separate"
+      ],
+      "issues": [
+        "No unmistakable current source defect confirmed. Empty allocation registry and unknown account/risk maturity are honest capability gaps, not bypasses to fix.",
+        "SIMPLIFY recommendation: share existing read/frozen representation where byte-compatible; do not merge current authentication with detached replay or add a new authority."
+      ],
+      "removal_impact": "Removal breaks current.freeze candidate delivery, common-factor lineage replay and existing economics-to-candidate verification. Removing recorded answers breaks historical replay; weakening checks changes authority.",
+      "capability_status": "IMPLEMENTED AND CONNECTED; calibrated allocation maturity MISSING",
+      "remediation": "DEFERRED_SIMPLIFICATION; no source edit"
+    },
+    {
+      "path": "trader/portfolio/opportunity_live.py",
+      "classification": "KEEP",
+      "sha256": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+      "bytes": 30202,
+      "physical_lines": 541,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Pure immutable envelope around opportunity-context.v1; validates source identities, chronology, optional/required freshness, exact version/signal/compiler identity, whole-book projection and analyst cut. Separately binds economics into decision-context.v1.",
+      "necessity": "Necessary coherent-cut/provenance boundary for decision and rejection; keeps unknown economics separate until downstream exact-cut costs exist.",
+      "production_consumers": [
+        "trader/portfolio/current.py:freeze produce/finalize_decision",
+        "trader/portfolio/source_adapter.py loads/replays publications",
+        "trader/portfolio/economics.py validates live context binding",
+        "trader/portfolio/allocator.py checks context/candidate",
+        "comparison._analyst_evidence derives exact analyst view"
+      ],
+      "dynamic_persistence_replay": "LiveReceipt and DecisionReceipt carry distinct canonical IDs. persist writes content-addressed immutable JSON via temporary fsync + link; load enforces filename, canonical bytes and source replay. Replay dispatches base/bridge candidate verification by frozen context. Old receipts omit decision_grade and preserve their bytes.",
+      "duplication": "Core opportunity context, outer source envelope, economics receipt and final decision envelope are related but have different identity/availability roles. Combining them would introduce economics self-dependency or rewrite replay contracts; not genuine redundant schemas.",
+      "costs": "Multiple canonical JSON loads/replays and source copies per candidate; filesystem persistence only when called by publisher/shadow, not pure produce. No top-level DB/provider/order access; no measured production CPU/storage claim.",
+      "sdd": [
+        "SDD 15 coherent frozen Opportunity Context",
+        "SDD 15.1 actual costs and reserve, unknown is not zero",
+        "SDD 15.6 typed deterministic auditable decision",
+        "SDD 15.7 stable opportunity identity"
+      ],
+      "issues": [
+        "No confirmed defect in assigned code. Only futures directional expression currently supported; multi-asset purpose exceeds current implementation scope. Decision-grade coherent evidence and costs can legitimately block.",
+        "No normal application caller of opportunity_live.persist found: current.freeze builds in-memory receipt sources; manual shadow publishes JSON. source_adapter can consume prepublished immutable files, but reader presence alone is not an operating publisher."
+      ],
+      "removal_impact": "Removal breaks normal context publication, source_adapter loading, exact economics validation, candidate bridge and current decision envelope. Schema simplification must retain old publication/replay identities.",
+      "capability_status": "IMPLEMENTED AND CONNECTED; synthetic tests verify boundary mechanics, not profitable decisions",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "trader/portfolio/comparison.py",
+      "classification": "KEEP",
+      "sha256": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96",
+      "bytes": 6400,
+      "physical_lines": 117,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Pure inspectable view over existing allocator Proposal: candidate PROPOSED/REJECTED reasons, explicit CASH, economic ranking, exact-tie rule and component confidence states; exposes frozen analyst opposition/support without votes deciding.",
+      "necessity": "Small useful explanation adapter and historical R2/R3 compatibility surface. Necessary for retained DEC02 proof/manual readers even though it is not currently published by runtime.",
+      "production_consumers": [
+        "No tracked normal runtime/dashboard call found in scoped trader/portfolio, trader/dashboard and relevant shadow scripts; current consumer invokes allocator directly. Tests and DEC02 frozen replay-proof call compare/decide."
+      ],
+      "dynamic_persistence_replay": "Accepts frozen Proposal, supports historical R2 tie explanation and R3 tie-CASH. _analyst_evidence verifies live-context source before reading analysts. No DB writes, provider calls or selection policy registration. Absence of static normal caller does not exclude external/manual use; retain compatibility.",
+      "duplication": "Not a duplicate comparator: decide delegates allocate; compare only derives explanation. Ranking/top lookup and result expansion duplicate presentation of existing evidence, not decision authority.",
+      "costs": "Linear row construction plus repeated order.index and per-candidate source scanning/context replay (potentially quadratic for larger sets). Source bounds elsewhere limit normal sets. No measured latency and no need for optimization absent evidence.",
+      "sdd": [
+        "SDD 15.2 decomposed confidence without invented score",
+        "SDD 15.6 deterministic comparison/reasons/cash",
+        "SDD 28 evidence-backed owner explanations"
+      ],
+      "issues": [
+        "IMPLEMENTED BUT DISCONNECTED presentation capability: no normal publication/UI call found. This does not mean allocator decision logic is disconnected.",
+        "compare trusts its Proposal caller; it is not an authentication API. Existing allocator.verify is the producer/consumer validation mechanism. No new duplicate verifier introduced."
+      ],
+      "removal_impact": "Deletion loses DEC02 explanatory API and historical proof tests; selecting candidates still works through allocator but owner-friendly confidence/analyst view disappears.",
+      "capability_status": "IMPLEMENTED BUT DISCONNECTED from normal explanation delivery",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "tests/test_candidate_bridge.py",
+      "classification": "KEEP",
+      "sha256": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b",
+      "bytes": 15023,
+      "physical_lines": 295,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Synthetic exact Factory-to-candidate integration and refusal regressions: first-live separation, mismatch, missing inputs, retirement/current reread, immutable replay, capacity unknown, source write denial, restart and geometry identity.",
+      "necessity": "Meaningful cross-subsystem contract suite using existing Factory fixture rather than implementation-only shape assertions.",
+      "production_consumers": [
+        "Pytest collection; shared fixtures/imports from other portfolio suites; no production caller required"
+      ],
+      "dynamic_persistence_replay": "Temporary Journal/source databases only; offline fixture versions generated through existing Factory API. Fresh-process replay verifies stable candidate/proposal identity. SQL authorizers test shadow reads do not mutate fixtures.",
+      "duplication": "Distinct from live integration: tests authoritative Factory lifecycle/probation/capacity bridge and read-only reread. AST import test is only supplementary; behavioral assertions dominate.",
+      "costs": "295 baseline lines; fixture SQLite writes, subprocess replay; no live providers. Current focused test results retained separately.",
+      "sdd": [
+        "SDD 14.5/14.6 exact version and authority separation",
+        "SDD 15 required inputs/unknown maturity",
+        "SDD 31 replay/regression"
+      ],
+      "issues": [],
+      "removal_impact": "Removing loses important actual-caller bridge boundary/refusal coverage; merging would couple different fixture authority assumptions without demonstrated simplification.",
+      "capability_status": "IMPLEMENTED AND CONNECTED test coverage; not edge proof",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "tests/test_opportunity_live_integration.py",
+      "classification": "KEEP",
+      "sha256": "ad053f484a1833fdbc8538e18d6612a17423a73a77b3c5fd17b753ae74a148ed",
+      "bytes": 17726,
+      "physical_lines": 355,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Synthetic coherent source/context, whole-book interaction, version/signal identity, freshness, persistence/restart, missing economics and allocator CASH integration tests.",
+      "necessity": "Necessary regression evidence for canonical source chronology and immutable publication compatibility.",
+      "production_consumers": [
+        "Pytest; snapshot/IID/SYMBOL/economics fixtures imported by other portfolio suites"
+      ],
+      "dynamic_persistence_replay": "Creates only tmp_path stores; subprocess replay; read-only shadow SQL authorizer; test-only economics registrations. Source alias output refusal and persisted filename/projection integrity asserted.",
+      "duplication": "Different contract from bridge tests: verifies base producer/persistence and unknown dimensions before Factory authority promotion.",
+      "costs": "355 baseline lines; local SQLite/JSON/subprocess cost in focused tests, not runtime. No real venue/model calibration.",
+      "sdd": [
+        "SDD 15 coherent context",
+        "SDD 15.7 registry identity",
+        "SDD 31 tests and replay"
+      ],
+      "issues": [],
+      "removal_impact": "Removal also breaks fixture imports in bridge/DEC suites and loses context/portfolio tamper coverage.",
+      "capability_status": "IMPLEMENTED AND CONNECTED tests; fixture evidence only",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "tests/test_dec02_comparison.py",
+      "classification": "KEEP",
+      "sha256": "9add7b0ea2e1438fc2cc042b70a8181af0efe2ff007515aec690bf20d6e13687",
+      "bytes": 14091,
+      "physical_lines": 265,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Allocator comparison/CASH/confidence/tie/R2 history contract tests including unavailable economics, net <=0, opposing directions, exact R3 top ties, permutation independence, fresh-process replay and analyst nonauthority.",
+      "necessity": "Necessary protection for established economic and historical replay semantics; does not establish calibrated economics.",
+      "production_consumers": [
+        "Pytest; historical DEC02 closure documents cite this maintained suite"
+      ],
+      "dynamic_persistence_replay": "Uses TEST-ONLY registered economics fixture adapters; preserves R2 explicit dispatch and R3 distinct identities; no live market data. Exact analyst-context fixtures are reused.",
+      "duplication": "Not redundant with allocator tests: asserts explanatory candidate/CASH reasons and decomposed confidence/analyst evidence plus dispatch compatibility.",
+      "costs": "265 baseline lines; deterministic permutations/subprocess; test-only runtime cost.",
+      "sdd": [
+        "SDD 15.1 positive net after cost",
+        "SDD 15.2 decomposed confidence",
+        "SDD 15.6 compare/no majority votes",
+        "SDD 31 replay"
+      ],
+      "issues": [],
+      "removal_impact": "Removal loses explanatory view and R2/R3 compatibility regression proof; no measured benefit from test merge.",
+      "capability_status": "IMPLEMENTED AND CONNECTED test coverage; not calibrated benefit",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "scripts/opportunity_context_shadow.py",
+      "classification": "SIMPLIFY",
+      "sha256": "26a72efab35d042ae510325de49ef03f10d1bf4aea09853c5b186780c11489d4",
+      "bytes": 21850,
+      "physical_lines": 345,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Bounded read-only current source capture plus manual artifact-producing shadow CLI; reconstructs authenticated context requests or loads current immutable publications, then previews context/registry/economics/allocator.",
+      "necessity": "Capture is a real production dependency imported by portfolio.current; whole file cannot be retired merely because CLI is manual.",
+      "production_consumers": [
+        "trader/portfolio/current.py imports capture/_read/DIMENSIONS",
+        "scripts/common_factor_shadow.py calls run",
+        "tests integration suites call run/capture",
+        "manual main CLI"
+      ],
+      "dynamic_persistence_replay": "Reads SQLite with mode=ro/query_only, read transactions and progress deadline; no Journal construction. Source bounds:64 versions and64 authority rows/version,32 decisions/cases,512 votes,16 selections. Artifact registry/proposals written only outside source directories. Runtime uses max_contexts=None; preview cap is separate. source_adapter can replace reconstructed requests with exact persisted context publications.",
+      "duplication": "Mixed CLI/runtime reader surface: current imports helper from scripts while source_adapter separately owns immutable delivery. Simplify later by moving capture/read helpers into existing portfolio owner and keep CLI wrapper; preserve caller contracts and exact frozen receipts. No new service/framework.",
+      "costs": "Five-second SQL deadline; repeated per-version table scans; full source inventory freeze duplicates some already included context evidence. Preview max16 contexts; runtime consumes bounded source population. No new production database writes, and no measured runtime cost/storage savings.",
+      "sdd": [
+        "SDD 15 coherent context/required evidence",
+        "SDD 15.7 registry",
+        "SDD 5 research/diagnostics must not starve live core"
+      ],
+      "issues": [
+        "Final detail expected_economics is hardcoded UNAVAILABLE while individual context records carry actual status. Accurate for current empty production models, but not a future aggregate authority or calibration signal. No trading behavior affected; retain as reporting limitation.",
+        "Manual main deliberately passes only attention freshness config; actual runtime passes full config. Do not equate CLI preview with normal economics-delivery capability."
+      ],
+      "removal_impact": "Removing breaks current whole-book/source capture; moving helper ownership requires exact compatibility and downstream focused tests. Removing shadow artifact persistence loses manual diagnostics only.",
+      "capability_status": "IMPLEMENTED AND CONNECTED capture; manual shadow utility; operational bounds are explicit",
+      "remediation": "DEFERRED_SIMPLIFICATION; no source edit"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/control-validation.py",
+      "classification": "KEEP",
+      "sha256": "0d027834ca0d98eae58614b66759403f62e98097d7e3159b7a58ae7473464226",
+      "bytes": 7000,
+      "physical_lines": 86,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Historical DEC02 control-plane validation proof against pinned source/tracker snapshots.",
+      "necessity": "Immutable source of retained architecture/offline evidence, not active intelligence or current operational authority.",
+      "production_consumers": [
+        "docs/tracker/bundle-manifest.json explicitly retains this file; closure.json/REPORT.md link historical evidence; no runtime execution caller found"
+      ],
+      "dynamic_persistence_replay": "Asserts only DEC02 row changed and historical statuses/195-test evidence/7-case replay hashes. Reads tracker and writes control-checks.json; assumes old architecture and source hashes, so not current maintained regression runner.",
+      "duplication": "Historical executable duplicates some current assertions for a different pinned evidence generation; this is necessary provenance, not runtime duplication.",
+      "costs": "Tracked artifact only during normal operation. No automatic execution/storage growth. Historical process/test counts are not fresh runtime observations.",
+      "sdd": [
+        "SDD audit/provenance and deterministic historical replay; no current subsystem activation"
+      ],
+      "issues": [
+        "OBSOLETE as a current operational task; KEEP as frozen historical evidence. No execution performed."
+      ],
+      "removal_impact": "Deletion breaks bundle-manifest hash/provenance and loss of historical control scope proof.",
+      "capability_status": "OBSOLETE EXECUTABLE / RETAINED PROVENANCE",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/reconcile.py",
+      "classification": "KEEP",
+      "sha256": "019bd6156cfd4b6b02c972bf4895b985e7be72799dff05a4f7c53c3026d01ec8",
+      "bytes": 17512,
+      "physical_lines": 122,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "One-time historical DEC02 authorized closure reconciler.",
+      "necessity": "Immutable source of retained architecture/offline evidence, not active intelligence or current operational authority.",
+      "production_consumers": [
+        "docs/tracker/bundle-manifest.json explicitly retains this file; closure.json/REPORT.md link historical evidence; no runtime execution caller found"
+      ],
+      "dynamic_persistence_replay": "Explicit HEAD f1bbd7a assertion before work; writes control-before/closure/process observation and tracker YAML/Markdown/STATE/NEXT/bundle manifests. Historical procedure, not safe current diagnostic. Never execute during review.",
+      "duplication": "Historical executable duplicates some current assertions for a different pinned evidence generation; this is necessary provenance, not runtime duplication.",
+      "costs": "Tracked artifact only during normal operation. No automatic execution/storage growth. Historical process/test counts are not fresh runtime observations.",
+      "sdd": [
+        "SDD audit/provenance and deterministic historical replay; no current subsystem activation"
+      ],
+      "issues": [
+        "OBSOLETE as a current operational task; KEEP as frozen historical evidence. No execution performed."
+      ],
+      "removal_impact": "Deletion erases exact authorized closure mutation provenance and manifest binding; rerunning on later branch is inappropriate.",
+      "capability_status": "OBSOLETE EXECUTABLE / RETAINED PROVENANCE",
+      "remediation": "NO_CHANGE_REQUIRED"
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.py",
+      "classification": "KEEP",
+      "sha256": "63480011c7d042ef6ecc0b3f86e3ae58cd23d2fcab8a486ec7f3f4664b80e73a",
+      "bytes": 2932,
+      "physical_lines": 38,
+      "inspection": "Full source read including all function bodies/assertions; focused real consumer bodies read. Not an AST-only assessment.",
+      "purpose": "Historical executable proof comparing actual pre-R3 allocator bytes at 47761ee to preserved R2 dispatch and R3 tie-CASH.",
+      "necessity": "Immutable source of retained architecture/offline evidence, not active intelligence or current operational authority.",
+      "production_consumers": [
+        "docs/tracker/bundle-manifest.json explicitly retains this file; closure.json/REPORT.md link historical evidence; no runtime execution caller found"
+      ],
+      "dynamic_persistence_replay": "git show loads actual historical module, test-only models installed in disposable interpreter; writes replay-proof.json. Seven cases compare bytes, versions and permutations. Keep original output/source intact; current maintained test suite covers corresponding behavior.",
+      "duplication": "Historical executable duplicates some current assertions for a different pinned evidence generation; this is necessary provenance, not runtime duplication.",
+      "costs": "Tracked artifact only during normal operation. No automatic execution/storage growth. Historical process/test counts are not fresh runtime observations.",
+      "sdd": [
+        "SDD audit/provenance and deterministic historical replay; no current subsystem activation"
+      ],
+      "issues": [
+        "OBSOLETE as a current operational task; KEEP as frozen historical evidence. No execution performed."
+      ],
+      "removal_impact": "Deletion breaks explicit actual-historical-byte proof provenance and bundle identity; do not merge frozen proof into current tests by rewriting it.",
+      "capability_status": "OBSOLETE EXECUTABLE / RETAINED PROVENANCE",
+      "remediation": "NO_CHANGE_REQUIRED"
+    }
+  ],
+  "counts": {
+    "KEEP": 8,
+    "SIMPLIFY": 2,
+    "MERGE": 0,
+    "REMOVE": 0
+  },
+  "files_reviewed": 10,
+  "source_changes": [],
+  "confirmed_defects": [],
+  "capability_gaps": [
+    "comparison explanatory adapter has no tracked normal publication/UI consumer",
+    "calibrated allocation authority adapters absent; independent economics/capacity/Risk maturity remains required",
+    "normal portfolio checkpoint explicitly proposal-only; no direct execution routing"
+  ],
+  "prior_lifecycle": {
+    "path": "/mnt/luffy-data/sol1-operational-data-lifecycle/reports/operational-lifecycle-complete/REPORT.md",
+    "application": "Read and reuse supplied private Consumer lifecycle conclusions; no repeated table census or lifecycle implementation review. Offline retention/codec branch must integrate atomically with readers; source ef9fca8 lacks that isolated package.",
+    "private_branch_owner": "Owner supplied offshore branch 147fae0; not reviewed or modified"
+  },
+  "tests": {
+    "command": "luffy-pytest -q tests/test_candidate_bridge.py tests/test_opportunity_live_integration.py tests/test_dec02_comparison.py --junitxml=reports/review08/group-c-pytest.xml",
+    "log": "reports/review08/group-c-pytest.log",
+    "result": "75 passed in 20.51s",
+    "exit_code": 0,
+    "managed_receipt_directory": "/mnt/luffy-recovery/recovery/managed-pytest-sarmad/pytest-run-y9yh8t0v"
+  },
+  "dependencies": [
+    "trader/portfolio/current.py",
+    "trader/portfolio/source_adapter.py",
+    "trader/portfolio/allocator.py",
+    "trader/portfolio/economics.py",
+    "trader/portfolio/common_factor.py",
+    "trader/strategy/factory_handoff.py",
+    "trader/strategy/capacity.py",
+    "trader/cognition/opportunity_context.py",
+    "trader/cognition/decision_analysts.py",
+    "trader/engine/evidence_capture.py",
+    "trader/kernel.py"
+  ],
+  "review_limits": "Source call connectivity is not observed operational success. No production DB/provider/service touched. No historical proof executed, no policy changes, no source removals/merges. No new test infrastructure."
+}

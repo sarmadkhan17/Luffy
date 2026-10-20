@@ -1,0 +1,8 @@
+Final assigned-module pytest output (captured from tool session 88331):
+........................................................................ [ 90%]
+........                                                                 [100%]
+80 passed in 48.45s
+
+Regression before correction: 7 failed in 5.16s (DID NOT RAISE ValueError for each of seven independent envelope alterations).
+Focused corrected: 10 passed in 5.87s.
+Baseline before regression insertion: 73 passed in 51.96s.

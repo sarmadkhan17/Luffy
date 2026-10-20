@@ -1,0 +1,7 @@
+OFFLINE REVIEW08 ONLY — consolidate after Review12
+
+Branch: sol1/subsystem-review-08-20261020
+Base: ef9fca839c23d48198c5f2361bbf3623d94266fa
+Implementation: 4f8cfaec3e8dcb00cc6e54660ea30a14c297fc07
+
+Read REPORT.md, FILE_REPORT.md, ownership.json and verification.json. Preserve v1 checkpoint bytes/identities; strict replay checks only reject inconsistent outer metadata. Reconcile runtime.py overlap with the completed offline operational lifecycle package; keep all reader/codec/cleanup owners together. Do not merge to canonical, submit full CI, rebuild a combined release, restart services or modify production data as part of this review.

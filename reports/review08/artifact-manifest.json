@@ -1,0 +1,133 @@
+{
+  "schema": "luffy.subsystem-review08-artifacts.v1",
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "implementation_commit": "4f8cfaec3e8dcb00cc6e54660ea30a14c297fc07",
+  "excluded": "tmp-group-a synthetic stores; generated graph/cache; venv symlink",
+  "files": [
+    {
+      "path": "reports/review08/FILE_REPORT.md",
+      "bytes": 73236,
+      "sha256": "b449ed5027546fe80b0cc71b1cd32cde794bb31377c2cb4e3d7afc686c5c2b5c"
+    },
+    {
+      "path": "reports/review08/INTEGRATE.txt",
+      "bytes": 646,
+      "sha256": "87076e275f1c5c28f96d74bd1b56d9bf73b3ab4cf619f1531a9389fda89bc213"
+    },
+    {
+      "path": "reports/review08/REPORT.md",
+      "bytes": 13168,
+      "sha256": "52975e1c27d7441182348e643c5da702e87fedece06fcdd1022408196e872320"
+    },
+    {
+      "path": "reports/review08/coverage-validation.json",
+      "bytes": 1218,
+      "sha256": "c2eac42495e383f42a48f8d9ba0dcfa91ceb168147dedda69475f0e4f6a92a48"
+    },
+    {
+      "path": "reports/review08/files.csv",
+      "bytes": 7768,
+      "sha256": "e21ef8c2c51c8ef1ddf883fa6a05dfb25372747046157f5851a9705a78e4db89"
+    },
+    {
+      "path": "reports/review08/files.json",
+      "bytes": 89626,
+      "sha256": "6b12bf09955c7e895a852fb89bd9b5ebff8e1f1e01ed0559838b9d4f93a37bf6"
+    },
+    {
+      "path": "reports/review08/graph-update.log",
+      "bytes": 2503,
+      "sha256": "a9c1b25b4f4c0315bf564a8d81ca133354460d93ec901b3f7e243160e7f17849"
+    },
+    {
+      "path": "reports/review08/group-a-pytest.log",
+      "bytes": 478,
+      "sha256": "c63f3861721bba61eb1f500df2ef0015d3ea3d77829446b61ba2ff9a8431fb91"
+    },
+    {
+      "path": "reports/review08/group-a-tests.json",
+      "bytes": 1552,
+      "sha256": "6ec3769f341e1046cf638fe3fa40d94b09ca63a54fe91538f81f100f7d19a1bb"
+    },
+    {
+      "path": "reports/review08/group-a.json",
+      "bytes": 18351,
+      "sha256": "4a2529cd2065f618ae1f34a8d88a9efc9442003fa9b93ff10eaf29e7d0eb74d0"
+    },
+    {
+      "path": "reports/review08/group-a.md",
+      "bytes": 5065,
+      "sha256": "88933326b711ebfc5d016180c1ba6e4673d460a45d84ed2d2d8869f72bd5bfdf"
+    },
+    {
+      "path": "reports/review08/group-b-tests.txt",
+      "bytes": 628,
+      "sha256": "19ae2b0a67d9fd92ea69bedb4cff1161fbe3ac8e9f4baea71a0e6a807765f691"
+    },
+    {
+      "path": "reports/review08/group-b.json",
+      "bytes": 24079,
+      "sha256": "c370193b82a4e7fae169ebbf28521171c8afd5802f95edf981d00dc5f6ab6701"
+    },
+    {
+      "path": "reports/review08/group-b.md",
+      "bytes": 4258,
+      "sha256": "8a7c638f0870182fbabacbed873f57cb38c168cb0334d9d3158647075b7cd840"
+    },
+    {
+      "path": "reports/review08/group-c-pytest.log",
+      "bytes": 274,
+      "sha256": "e7d7405c1ce7fe429367c37603abe64242a3fd02dd18291cc5719568ec440141"
+    },
+    {
+      "path": "reports/review08/group-c-pytest.xml",
+      "bytes": 9755,
+      "sha256": "f62647ee65107ca74d137b195680610bb88acbb251b96b09a67db37aa64451ac"
+    },
+    {
+      "path": "reports/review08/group-c.json",
+      "bytes": 26705,
+      "sha256": "7bf17da57b45d90931957c7176ed874a762dcaef8510b64425609d65ade2a51d"
+    },
+    {
+      "path": "reports/review08/group-c.md",
+      "bytes": 7255,
+      "sha256": "16599d9986b2d19a4b978a4a83418b07ebd8fbfdd97e56fe15754f48920ec180"
+    },
+    {
+      "path": "reports/review08/group-root.json",
+      "bytes": 13022,
+      "sha256": "9d0c65c5c49ce1aef4ce3e9d09267a0549aeb9f3b90487de19285e3f3397d538"
+    },
+    {
+      "path": "reports/review08/owned-source-changes.patch",
+      "bytes": 12977,
+      "sha256": "8903775722cd7054543de7c9d750e3877d4cbdd59ab9eb4bdd5a0c58077e1808"
+    },
+    {
+      "path": "reports/review08/ownership.json",
+      "bytes": 58894,
+      "sha256": "bcb8c7f7589d67f5274225c34cf49e9050557231a096f578e789890d187af8b7"
+    },
+    {
+      "path": "reports/review08/root-tests.log",
+      "bytes": 181,
+      "sha256": "f07dfaa8e76326df161417f3cf830791ba1b76089e06697db2add35ad974fc60"
+    },
+    {
+      "path": "reports/review08/root-tests.xml",
+      "bytes": 17492,
+      "sha256": "7001aca9a1d493e0337f871e81c352c0114dbe51b407991d30c47b4cab17addd"
+    },
+    {
+      "path": "reports/review08/source-and-prior-evidence.json",
+      "bytes": 5232,
+      "sha256": "bdeeb1bce0fb4205a5ea09eb569c6e30794ec861bebcd1068f7bc3cdd85359c9"
+    },
+    {
+      "path": "reports/review08/verification.json",
+      "bytes": 2210,
+      "sha256": "3cb6cf5bd052d0b039fc832f200f355226fde5a5272a748bb3fd557fe807f06a"
+    }
+  ]
+}

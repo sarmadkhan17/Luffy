@@ -1,0 +1,1679 @@
+{
+  "source_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+  "inventory_source": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-inventory.json",
+  "inventory_sha256": "dfdbf03ddf2add4f355dc147e8f7b99211a85f6cd3c3d36545e9737efc50bbeb",
+  "ownership_csv": "/mnt/luffy-data/luffy/workspaces/sol1-subsystem-review-01-20261011/docs/reference/system-architecture/subsystem-files.csv",
+  "ownership_csv_sha256": "90f73dd31d096df6400df5214f199f7b4a19fcc65605582836e574c80431d995",
+  "inventory_revision": "8d57e8f23343505660a07c1a8aa6218279121de9",
+  "scope_basis": "Owner new explicit Review08 assignment: Portfolio / Portfolio Runtime, superseding inference from Review07. Exactly one inventory ID qualifies: portfolio (42). Accounting Observer excluded.",
+  "subsystem": {
+    "id": "portfolio",
+    "name": "Portfolio proposals and checkpoints",
+    "purpose": "Whole-book comparisons, expected economics, allocation, trade intents and durable cuts",
+    "execution_class": "runtime",
+    "subcomponents": [
+      {
+        "id": "portfolio.1",
+        "name": "candidate sources and opportunity registry",
+        "files": [
+          "docs/tracker/evidence/dec01-canonical-sol1/control-validation.py",
+          "docs/tracker/evidence/dec01-canonical-sol1/test_normal_receipt_proof.py",
+          "docs/tracker/evidence/dec02-canonical-sol1/control-validation.py",
+          "docs/tracker/evidence/dec02-canonical-sol1/reconcile.py",
+          "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.py",
+          "docs/tracker/evidence/port02-canonical-sol1/control-validation.py",
+          "docs/tracker/evidence/port04-canonical-sol1/independent_test.py",
+          "scripts/opportunity_context_shadow.py",
+          "scripts/stage6_shadow.py",
+          "tests/test_candidate_bridge.py",
+          "tests/test_dec01_opportunity_context.py",
+          "tests/test_dec02_comparison.py",
+          "tests/test_opportunity_live_integration.py",
+          "tests/test_stage6_closure.py",
+          "tests/test_stage6_normal_sources.py",
+          "tests/test_wrld07_relationship_state.py",
+          "trader/observability/portfolio_observation.py",
+          "trader/portfolio/__init__.py",
+          "trader/portfolio/candidate_bridge.py",
+          "trader/portfolio/comparison.py",
+          "trader/portfolio/opportunity_cost.py",
+          "trader/portfolio/opportunity_live.py",
+          "trader/portfolio/opportunity_registry.py",
+          "trader/portfolio/source_adapter.py"
+        ],
+        "file_count": 24,
+        "implementation_references": [
+          {
+            "path": "trader/observability/portfolio_observation.py",
+            "line": 1,
+            "sha256": "f42613fe0790770694c0164082e32621a62bce15c1707456083d69078ea73ee1"
+          },
+          {
+            "path": "trader/portfolio/__init__.py",
+            "line": 1,
+            "sha256": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661"
+          },
+          {
+            "path": "trader/portfolio/candidate_bridge.py",
+            "line": 1,
+            "sha256": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6"
+          },
+          {
+            "path": "trader/portfolio/comparison.py",
+            "line": 1,
+            "sha256": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96"
+          },
+          {
+            "path": "trader/portfolio/opportunity_cost.py",
+            "line": 1,
+            "sha256": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687"
+          },
+          {
+            "path": "trader/portfolio/opportunity_live.py",
+            "line": 1,
+            "sha256": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0"
+          },
+          {
+            "path": "trader/portfolio/opportunity_registry.py",
+            "line": 1,
+            "sha256": "f6b9e8152fb337682e9884862f87326fa7833d9588871824b38e512d72f595c5"
+          },
+          {
+            "path": "trader/portfolio/source_adapter.py",
+            "line": 1,
+            "sha256": "bc4b31cbc64ac7c48bf3e7971dd3c3015b9d41f24ae4dba979c65c44cf9f8d7b"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "portfolio.2",
+        "name": "allocator and comparisons",
+        "files": [
+          "tests/test_portfolio_allocator.py",
+          "trader/portfolio/allocator.py"
+        ],
+        "file_count": 2,
+        "implementation_references": [
+          {
+            "path": "trader/portfolio/allocator.py",
+            "line": 1,
+            "sha256": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "portfolio.3",
+        "name": "economics and common factors",
+        "files": [
+          "scripts/common_factor_shadow.py",
+          "tests/economics_fixtures.py",
+          "tests/test_expected_net_economics.py",
+          "tests/test_port02_economics_authority.py",
+          "tests/test_portfolio_common_factor.py",
+          "tests/test_portfolio_common_factor_shadow.py",
+          "trader/portfolio/common_factor.py",
+          "trader/portfolio/economics.py"
+        ],
+        "file_count": 8,
+        "implementation_references": [
+          {
+            "path": "trader/portfolio/common_factor.py",
+            "line": 1,
+            "sha256": "9f216f21296ae492726d32a88cc27684616c54afa91ff9b0d7a31ce9aadc9aac"
+          },
+          {
+            "path": "trader/portfolio/economics.py",
+            "line": 1,
+            "sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "portfolio.4",
+        "name": "trade intents and reoptimization",
+        "files": [
+          "trader/portfolio/reoptimization.py",
+          "trader/portfolio/trade_intent.py"
+        ],
+        "file_count": 2,
+        "implementation_references": [
+          {
+            "path": "trader/portfolio/reoptimization.py",
+            "line": 1,
+            "sha256": "9538bfdd909b45fb957b0981c0fb82dde1a39e8090984637d1b1029d1f2fc324"
+          },
+          {
+            "path": "trader/portfolio/trade_intent.py",
+            "line": 1,
+            "sha256": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      },
+      {
+        "id": "portfolio.5",
+        "name": "runtime cuts and measurements",
+        "files": [
+          "scripts/runtime_portfolio_shadow.py",
+          "scripts/runtime_stage_profile.py",
+          "tests/test_runtime_portfolio_integration.py",
+          "trader/portfolio/current.py",
+          "trader/portfolio/runtime.py",
+          "trader/portfolio/runtime_metrics.py"
+        ],
+        "file_count": 6,
+        "implementation_references": [
+          {
+            "path": "trader/portfolio/current.py",
+            "line": 1,
+            "sha256": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7"
+          },
+          {
+            "path": "trader/portfolio/runtime.py",
+            "line": 1,
+            "sha256": "b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e"
+          },
+          {
+            "path": "trader/portfolio/runtime_metrics.py",
+            "line": 1,
+            "sha256": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004"
+          }
+        ],
+        "membership_basis": "Explicit support/contract boundaries and module-name affinity; shared-module contracts cite the primary module without additive file counting.",
+        "execution_status": "NOT_SEPARATELY_VERIFIED",
+        "membership_policy_note": "Exact public module contracts are enumerated independently in public_contracts and module_responsibilities; file partitions organize the inventory, not individual-file audit findings.",
+        "scope": "Functional contract group, not a separate process; primary file partitions sum once to subsystem total and implementation references may share modules."
+      }
+    ],
+    "anchor": "trader/portfolio/current.py",
+    "counts": {
+      "python_source": 23,
+      "frontend": 0,
+      "configuration": 0,
+      "script": 5,
+      "test": 14,
+      "other": 0,
+      "python_files_including_scripts_and_tests": 42,
+      "source_files": 28,
+      "test_files": 14,
+      "other_files": 0,
+      "total_files": 42,
+      "source_lines": 8912,
+      "all_text_lines": 8912,
+      "binary_files": 0
+    },
+    "files": [
+      "docs/tracker/evidence/dec01-canonical-sol1/control-validation.py",
+      "docs/tracker/evidence/dec01-canonical-sol1/test_normal_receipt_proof.py",
+      "docs/tracker/evidence/dec02-canonical-sol1/control-validation.py",
+      "docs/tracker/evidence/dec02-canonical-sol1/reconcile.py",
+      "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.py",
+      "docs/tracker/evidence/port02-canonical-sol1/control-validation.py",
+      "docs/tracker/evidence/port04-canonical-sol1/independent_test.py",
+      "scripts/common_factor_shadow.py",
+      "scripts/opportunity_context_shadow.py",
+      "scripts/runtime_portfolio_shadow.py",
+      "scripts/runtime_stage_profile.py",
+      "scripts/stage6_shadow.py",
+      "tests/economics_fixtures.py",
+      "tests/test_candidate_bridge.py",
+      "tests/test_dec01_opportunity_context.py",
+      "tests/test_dec02_comparison.py",
+      "tests/test_expected_net_economics.py",
+      "tests/test_opportunity_live_integration.py",
+      "tests/test_port02_economics_authority.py",
+      "tests/test_portfolio_allocator.py",
+      "tests/test_portfolio_common_factor.py",
+      "tests/test_portfolio_common_factor_shadow.py",
+      "tests/test_runtime_portfolio_integration.py",
+      "tests/test_stage6_closure.py",
+      "tests/test_stage6_normal_sources.py",
+      "tests/test_wrld07_relationship_state.py",
+      "trader/observability/portfolio_observation.py",
+      "trader/portfolio/__init__.py",
+      "trader/portfolio/allocator.py",
+      "trader/portfolio/candidate_bridge.py",
+      "trader/portfolio/common_factor.py",
+      "trader/portfolio/comparison.py",
+      "trader/portfolio/current.py",
+      "trader/portfolio/economics.py",
+      "trader/portfolio/opportunity_cost.py",
+      "trader/portfolio/opportunity_live.py",
+      "trader/portfolio/opportunity_registry.py",
+      "trader/portfolio/reoptimization.py",
+      "trader/portfolio/runtime.py",
+      "trader/portfolio/runtime_metrics.py",
+      "trader/portfolio/source_adapter.py",
+      "trader/portfolio/trade_intent.py"
+    ],
+    "non_database_inputs": "Frozen journal/data/attention/version cuts, candidate/opportunity sources, risk/economics contracts",
+    "non_database_outputs": "Allocation comparisons/proposals/trade intents and runtime checkpoints; no execution authority",
+    "initialization_path": "Kernel cycle -> portfolio.current.checkpoint -> bounded proposal-only runtime consumer",
+    "configuration_evidence": {
+      "artifact": "inputs/configuration-switches.json",
+      "runtime_activation_not_implied": true
+    },
+    "depends_on": [
+      "attention",
+      "cognition",
+      "dashboard",
+      "execution",
+      "investigation",
+      "learning",
+      "platform",
+      "registry",
+      "strategy",
+      "world"
+    ],
+    "used_by": [
+      "execution",
+      "kernel",
+      "learning",
+      "market_data"
+    ],
+    "static_application_dependencies": [
+      "attention",
+      "cognition",
+      "dashboard",
+      "execution",
+      "investigation",
+      "learning",
+      "platform",
+      "registry",
+      "strategy",
+      "world"
+    ],
+    "offline_utility_dependencies": [
+      "attention",
+      "brain",
+      "cognition",
+      "dashboard",
+      "execution",
+      "investigation",
+      "kernel",
+      "learning",
+      "market_data",
+      "platform",
+      "strategy",
+      "world"
+    ],
+    "test_dependencies": [
+      "analysts",
+      "attention",
+      "cognition",
+      "execution",
+      "execution_observation",
+      "investigation",
+      "kernel",
+      "platform",
+      "research",
+      "strategy",
+      "world"
+    ],
+    "databases": [
+      "luffy.db",
+      "runtime-portfolio.db"
+    ],
+    "entry_points": [
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 1,
+        "sha256": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7"
+      }
+    ],
+    "entry_point_note": "Anchor is the primary module contract; concrete invocable functions are in source_entry_functions. Library modules have no independent scheduler.",
+    "source_entry_functions": [
+      {
+        "path": "scripts/common_factor_shadow.py",
+        "line": 85,
+        "name": "main"
+      },
+      {
+        "path": "scripts/opportunity_context_shadow.py",
+        "line": 317,
+        "name": "main"
+      },
+      {
+        "path": "scripts/runtime_portfolio_shadow.py",
+        "line": 69,
+        "name": "main"
+      },
+      {
+        "path": "scripts/runtime_stage_profile.py",
+        "line": 8,
+        "name": "main"
+      },
+      {
+        "path": "scripts/stage6_shadow.py",
+        "line": 61,
+        "name": "main"
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 200,
+        "name": "checkpoint"
+      }
+    ],
+    "initialization_and_schedule": [
+      {
+        "source": "kernel",
+        "interaction": "CALL",
+        "detail": "Freeze journal/market inputs into proposal-only runtime portfolio checkpoint.",
+        "evidence": [
+          {
+            "path": "trader/kernel.py",
+            "line": 1394,
+            "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+          }
+        ]
+      }
+    ],
+    "interfaces": [
+      {
+        "direction": "exposed_to",
+        "peer": "kernel",
+        "interaction": "CALL",
+        "detail": "Freeze journal/market inputs into proposal-only runtime portfolio checkpoint."
+      }
+    ],
+    "runtime_data_inputs": [
+      {
+        "database": "luffy.db",
+        "table": "learning_registrations"
+      },
+      {
+        "database": "luffy.db",
+        "table": "state_kv"
+      },
+      {
+        "database": "luffy.db",
+        "table": "strategy_approval_decisions"
+      },
+      {
+        "database": "luffy.db",
+        "table": "strategy_probation_receipts"
+      },
+      {
+        "database": "luffy.db",
+        "table": "strategy_versions"
+      },
+      {
+        "database": "luffy.db",
+        "table": "trades"
+      },
+      {
+        "database": "runtime-portfolio.db",
+        "table": "checkpoints"
+      },
+      {
+        "database": "runtime-portfolio.db",
+        "table": "evaluations"
+      },
+      {
+        "database": "runtime-portfolio.db",
+        "table": "state"
+      }
+    ],
+    "runtime_data_outputs": [
+      {
+        "database": "runtime-portfolio.db",
+        "table": "checkpoints"
+      },
+      {
+        "database": "runtime-portfolio.db",
+        "table": "evaluations"
+      },
+      {
+        "database": "runtime-portfolio.db",
+        "table": "state"
+      }
+    ],
+    "failure_and_recovery_dependencies": [
+      {
+        "peer": "kernel",
+        "basis": "Failure logged; heartbeat records execution_routed=false.",
+        "evidence": [
+          {
+            "path": "trader/kernel.py",
+            "line": 1394,
+            "sha256": "38b0972164132b4c713f235e9c352f0651042108e86f67f630a532d34fbcba3f"
+          }
+        ]
+      }
+    ],
+    "public_contracts": [
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "line": 28,
+        "name": "trading_source",
+        "kind": "function",
+        "summary": "Read the private USD-M REST venue already resolved by make_exchange()."
+      },
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "line": 40,
+        "name": "PositionRecord",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "line": 48,
+        "name": "PortfolioObservation",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "line": 67,
+        "name": "observe_positions",
+        "kind": "function",
+        "summary": "Validate every row before publishing any state."
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 49,
+        "name": "canonical",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 53,
+        "name": "digest",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 88,
+        "name": "Status",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 96,
+        "name": "Feasibility",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 104,
+        "name": "Source",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 126,
+        "name": "Evidence",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 141,
+        "name": "Economics",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 174,
+        "name": "Bound",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 185,
+        "name": "Candidate",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 248,
+        "name": "Position",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 263,
+        "name": "Portfolio",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 277,
+        "name": "Inputs",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 294,
+        "name": "Proposal",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 305,
+        "name": "number",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 464,
+        "name": "allocate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 642,
+        "name": "attach_learning",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 651,
+        "name": "verify",
+        "kind": "function",
+        "summary": "Trusted caller must reread all current authorities; never verify against"
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 660,
+        "name": "persist",
+        "kind": "function",
+        "summary": "Append-only content-addressed artifact, outside the production journal."
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "line": 686,
+        "name": "inputs_from_payload",
+        "kind": "function",
+        "summary": "Strict reconstruction of persisted contracts for offline replay."
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 22,
+        "name": "allocation_binding",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 68,
+        "name": "ReadEvidence",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 94,
+        "name": "eligible_for_portfolio_comparison",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 154,
+        "name": "freeze_authority",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 177,
+        "name": "candidate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 210,
+        "name": "build",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 223,
+        "name": "verify_candidate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 232,
+        "name": "verify_current",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 260,
+        "name": "freeze_lineage",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "line": 286,
+        "name": "replay_lineage",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 22,
+        "name": "Relationship",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 30,
+        "name": "Receipt",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 45,
+        "name": "snapshot",
+        "kind": "function",
+        "summary": "Project the existing verified venue contract, checking its projection too."
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 103,
+        "name": "world_measurements",
+        "kind": "function",
+        "summary": "Replay the existing WorldModel, preserving exact raw measurement context."
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 145,
+        "name": "attention_measurements",
+        "kind": "function",
+        "summary": "Retain the existing leave-one-out basket observation, never a pairwise rho."
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 187,
+        "name": "evidence_groups",
+        "kind": "function",
+        "summary": "One representative per proven root; unknown provenance never votes."
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 205,
+        "name": "build",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 297,
+        "name": "verify",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 304,
+        "name": "attach",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "line": 316,
+        "name": "from_allocator",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/comparison.py",
+        "line": 64,
+        "name": "compare",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/comparison.py",
+        "line": 115,
+        "name": "decide",
+        "kind": "function",
+        "summary": "Allocator is the only authority; this is its inspectable explanation."
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 15,
+        "name": "receipt_sources",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 19,
+        "name": "admitted_requests",
+        "kind": "function",
+        "summary": "Candidate omission cannot touch the independent venue holdings source."
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 35,
+        "name": "freeze",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 200,
+        "name": "checkpoint",
+        "kind": "function",
+        "summary": "The normal Kernel checkpoint, after the current cycle's observations."
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 25,
+        "name": "Binding",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 65,
+        "name": "Inputs",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 84,
+        "name": "Receipt",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 95,
+        "name": "from_inputs",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 101,
+        "name": "from_payload",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 224,
+        "name": "build",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 290,
+        "name": "verify",
+        "kind": "function",
+        "summary": "Current inputs must be reread authorities, not merely embedded replay."
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 306,
+        "name": "comparison_key",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 310,
+        "name": "compare",
+        "kind": "function",
+        "summary": "Completeness/freshness/integrity precede exact comparison."
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 323,
+        "name": "to_allocator",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "line": 336,
+        "name": "persist",
+        "kind": "function",
+        "summary": "Append-only content-addressed publication, no production storage."
+      },
+      {
+        "path": "trader/portfolio/opportunity_cost.py",
+        "line": 20,
+        "name": "binding",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_cost.py",
+        "line": 28,
+        "name": "compare",
+        "kind": "function",
+        "summary": "Positive net benefit can recommend only; it cannot release capital/size."
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 30,
+        "name": "source",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 37,
+        "name": "LiveReceipt",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 58,
+        "name": "produce",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 316,
+        "name": "replay",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 336,
+        "name": "receipt_from_source",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 345,
+        "name": "economic_binding",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 361,
+        "name": "candidate",
+        "kind": "function",
+        "summary": "Only frozen producer evidence is read; never resample mutable sources."
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 387,
+        "name": "verify_candidate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 397,
+        "name": "persist",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 421,
+        "name": "load",
+        "kind": "function",
+        "summary": "Archive replay checks the publication ID, not a freshly invented hash."
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 435,
+        "name": "decision_cost_binding",
+        "kind": "function",
+        "summary": "The exact costs a decision may use: an economics receipt whose binding"
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 470,
+        "name": "decision_book_binding",
+        "kind": "function",
+        "summary": "The book the decision used is the one frozen in the context; a different"
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 487,
+        "name": "DecisionReceipt",
+        "kind": "class",
+        "summary": "The DEC-01 decision-grade identity: an outer envelope over the already"
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 507,
+        "name": "finalize_decision",
+        "kind": "function",
+        "summary": "Bind the economics receipt the normal path actually produced to this"
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "line": 534,
+        "name": "verify_decision",
+        "kind": "function",
+        "summary": "Replay: the envelope is exactly what these frozen receipts bind at `now_ms`."
+      },
+      {
+        "path": "trader/portfolio/opportunity_registry.py",
+        "line": 9,
+        "name": "identity",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/opportunity_registry.py",
+        "line": 22,
+        "name": "Registry",
+        "kind": "class",
+        "summary": "Caller-owned registry; optional journal adapter captures exact resolutions."
+      },
+      {
+        "path": "trader/portfolio/opportunity_registry.py",
+        "line": 81,
+        "name": "resolve_row",
+        "kind": "function",
+        "summary": "Terminal exact resolution on the caller's connection and transaction."
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "line": 21,
+        "name": "EventReceipt",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "line": 86,
+        "name": "evaluate",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "line": 174,
+        "name": "reoptimize",
+        "kind": "function",
+        "summary": "The sole event consumer. No event -> no allocator invocation."
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "line": 183,
+        "name": "replay",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/runtime.py",
+        "line": 28,
+        "name": "Consumer",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/runtime.py",
+        "line": 114,
+        "name": "replay",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/runtime.py",
+        "line": 136,
+        "name": "verify_recorded_risk",
+        "kind": "function",
+        "summary": "Replay a retained normal Risk answer in its existing isolated adapter."
+      },
+      {
+        "path": "trader/portfolio/runtime_metrics.py",
+        "line": 21,
+        "name": "positions",
+        "kind": "function",
+        "summary": "Reconcile the complete held book; retain Risk's recorded entry-price basis."
+      },
+      {
+        "path": "trader/portfolio/runtime_metrics.py",
+        "line": 48,
+        "name": "capture",
+        "kind": "function",
+        "summary": "Caller freezes these in one journal read transaction, not from chat/artifacts."
+      },
+      {
+        "path": "trader/portfolio/runtime_metrics.py",
+        "line": 65,
+        "name": "project",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "line": 14,
+        "name": "directory",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "line": 18,
+        "name": "records",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "line": 30,
+        "name": "contexts",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "line": 56,
+        "name": "economic_inputs",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "line": 85,
+        "name": "availability",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 19,
+        "name": "Action",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 25,
+        "name": "IntentStatus",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 32,
+        "name": "TradeIntent",
+        "kind": "class",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 83,
+        "name": "build",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 134,
+        "name": "verify_intents",
+        "kind": "function",
+        "summary": ""
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "line": 141,
+        "name": "bind_capability",
+        "kind": "function",
+        "summary": "Freeze the exact existing registry receipt for the final Risk consumer."
+      }
+    ],
+    "module_responsibilities": [
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "summary": "Detached truth from one completed Binance USD-M position response."
+      },
+      {
+        "path": "trader/portfolio/__init__.py",
+        "summary": "Detached portfolio proposal contracts; no runtime entry point."
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "summary": "R1: deterministic, proposal-only whole-book capital priority."
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "summary": "Read/verify/transform/bind only. Factory and allocator retain authority."
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "summary": "Deterministic exposure context; no statistical classification or trade authority."
+      },
+      {
+        "path": "trader/portfolio/comparison.py",
+        "summary": "DEC-02: inspectable comparison view over the single allocator authority."
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "summary": "Bounded current-source reader. No venue calls or trading-journal writes."
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "summary": "Versioned expected economics, detached from execution and decision authority."
+      },
+      {
+        "path": "trader/portfolio/opportunity_cost.py",
+        "summary": "Proposal-only replacement comparison. No production switching model exists."
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "summary": "Pure Stage-6 producer around unchanged opportunity-context.v1."
+      },
+      {
+        "path": "trader/portfolio/opportunity_registry.py",
+        "summary": "Reference-only SDD 15.7 registry. Exact occurrences, never inferred episodes."
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "summary": "Pure event gate over caller-delivered frozen cuts; no polling or scheduler."
+      },
+      {
+        "path": "trader/portfolio/runtime.py",
+        "summary": "Normal proposal-only runtime consumer with atomic durable checkpoints."
+      },
+      {
+        "path": "trader/portfolio/runtime_metrics.py",
+        "summary": "Independent current book measurements from trusted, frozen source readers."
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "summary": "Bounded read-only delivery of existing immutable Stage6 publications."
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "summary": "Detached AllocationProposal -> typed exposure/action for a future Risk consumer."
+      }
+    ],
+    "http_interfaces": [],
+    "input_output_context": "Whole-book comparisons, expected economics, allocation, trade intents and durable cuts; SQL input/output lists below are source evidence only. File/queue/API inputs and outputs are recorded in interfaces and initialization_and_schedule.",
+    "previous_status": "DORMANT",
+    "previous_status_basis": "Kernel._portfolio_checkpoint wired; no kernel process. Last heartbeat says execution_routed=false.",
+    "classifications": {
+      "implementation": "Partial",
+      "integration": "Partially Connected",
+      "configuration": "Conditional",
+      "runtime": "Not Applicable",
+      "product_necessity": "Required"
+    },
+    "status_evidence_reference": "subsystem-status-evidence.json#subsystem=portfolio",
+    "previous_status_evidence": [
+      {
+        "path": "trader/portfolio/current.py",
+        "line": 1,
+        "sha256": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7"
+      },
+      {
+        "artifact": "inputs/scan-provenance.json"
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/tracker/evidence/dec01-canonical-sol1/control-validation.py",
+      "sha256": "e1c2a0e81e7807ff34d3aa98273d6cab727886e92aa85624e1d3d078274e02cf",
+      "bytes": 5548,
+      "lines": 71,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "e1c2a0e81e7807ff34d3aa98273d6cab727886e92aa85624e1d3d078274e02cf",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/dec01-canonical-sol1/test_normal_receipt_proof.py",
+      "sha256": "aca82a0cfb46e98ae2c81a4cf3da1a702a3538680e16ed40f246f6be1f39b2af",
+      "bytes": 3544,
+      "lines": 53,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "aca82a0cfb46e98ae2c81a4cf3da1a702a3538680e16ed40f246f6be1f39b2af",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/control-validation.py",
+      "sha256": "0d027834ca0d98eae58614b66759403f62e98097d7e3159b7a58ae7473464226",
+      "bytes": 7000,
+      "lines": 86,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "0d027834ca0d98eae58614b66759403f62e98097d7e3159b7a58ae7473464226",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/reconcile.py",
+      "sha256": "019bd6156cfd4b6b02c972bf4895b985e7be72799dff05a4f7c53c3026d01ec8",
+      "bytes": 17512,
+      "lines": 122,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "019bd6156cfd4b6b02c972bf4895b985e7be72799dff05a4f7c53c3026d01ec8",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/dec02-canonical-sol1/replay-proof.py",
+      "sha256": "63480011c7d042ef6ecc0b3f86e3ae58cd23d2fcab8a486ec7f3f4664b80e73a",
+      "bytes": 2932,
+      "lines": 38,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "63480011c7d042ef6ecc0b3f86e3ae58cd23d2fcab8a486ec7f3f4664b80e73a",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/port02-canonical-sol1/control-validation.py",
+      "sha256": "6ff8ca2a28dd3cf562dfd90786829dd5d983cebd355e879bc7de9a8699a6b9cb",
+      "bytes": 6804,
+      "lines": 87,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "6ff8ca2a28dd3cf562dfd90786829dd5d983cebd355e879bc7de9a8699a6b9cb",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "docs/tracker/evidence/port04-canonical-sol1/independent_test.py",
+      "sha256": "d98434cdb97927811e1edd682f207cf1753305aac329e0c04bb2b7991a40b9e9",
+      "bytes": 3062,
+      "lines": 57,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "d98434cdb97927811e1edd682f207cf1753305aac329e0c04bb2b7991a40b9e9",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "scripts/common_factor_shadow.py",
+      "sha256": "0cf961139b7bdd0d9941c40b5b166d03883921912869405e24b69334b15f8842",
+      "bytes": 5846,
+      "lines": 104,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "0cf961139b7bdd0d9941c40b5b166d03883921912869405e24b69334b15f8842",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "scripts/opportunity_context_shadow.py",
+      "sha256": "26a72efab35d042ae510325de49ef03f10d1bf4aea09853c5b186780c11489d4",
+      "bytes": 21850,
+      "lines": 345,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "3789dc2ae44f95345c773c504cf20491091afb3e2e078e158fd5de0cbc24011c",
+      "differs_from_inventory_source": true
+    },
+    {
+      "path": "scripts/runtime_portfolio_shadow.py",
+      "sha256": "7d6d54602ca05fc9f12908c2eab2c83ed167baef95f12a6681ad53abb4319eaa",
+      "bytes": 4406,
+      "lines": 81,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "7d6d54602ca05fc9f12908c2eab2c83ed167baef95f12a6681ad53abb4319eaa",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "scripts/runtime_stage_profile.py",
+      "sha256": "165a1e6001d52652ea77de187d4a36cc86adc19867b8a46019a78b798673ebbd",
+      "bytes": 9370,
+      "lines": 160,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "165a1e6001d52652ea77de187d4a36cc86adc19867b8a46019a78b798673ebbd",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "scripts/stage6_shadow.py",
+      "sha256": "f11207678f256eff6035cbbf186b10186cd77c4dc006708dfe6c154c4ae6cc8f",
+      "bytes": 4010,
+      "lines": 80,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "f11207678f256eff6035cbbf186b10186cd77c4dc006708dfe6c154c4ae6cc8f",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/economics_fixtures.py",
+      "sha256": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030",
+      "bytes": 5470,
+      "lines": 101,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_candidate_bridge.py",
+      "sha256": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b",
+      "bytes": 15023,
+      "lines": 295,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_dec01_opportunity_context.py",
+      "sha256": "08a0b0f25366094a778e35189203cba79a364920356fd1d29ef76c52298914b2",
+      "bytes": 38565,
+      "lines": 704,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "08a0b0f25366094a778e35189203cba79a364920356fd1d29ef76c52298914b2",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_dec02_comparison.py",
+      "sha256": "9add7b0ea2e1438fc2cc042b70a8181af0efe2ff007515aec690bf20d6e13687",
+      "bytes": 14091,
+      "lines": 265,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "9add7b0ea2e1438fc2cc042b70a8181af0efe2ff007515aec690bf20d6e13687",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_expected_net_economics.py",
+      "sha256": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97",
+      "bytes": 10101,
+      "lines": 229,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_opportunity_live_integration.py",
+      "sha256": "ad053f484a1833fdbc8538e18d6612a17423a73a77b3c5fd17b753ae74a148ed",
+      "bytes": 17726,
+      "lines": 355,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "ad053f484a1833fdbc8538e18d6612a17423a73a77b3c5fd17b753ae74a148ed",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_port02_economics_authority.py",
+      "sha256": "2b86cc198d6c17f4ec9f81f35a6788654d2a16181e7cd5058094a824c9321358",
+      "bytes": 7001,
+      "lines": 158,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "dc7e6926552dd6f5bad65edb162a896585f056c21a5f735d1a3bc710750b9127",
+      "differs_from_inventory_source": true
+    },
+    {
+      "path": "tests/test_portfolio_allocator.py",
+      "sha256": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+      "bytes": 12933,
+      "lines": 300,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_portfolio_common_factor.py",
+      "sha256": "3d540c7836b4259daf107ba96043f2ab741b6cb1638cf909d2f83ef250dea880",
+      "bytes": 17604,
+      "lines": 331,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "3d540c7836b4259daf107ba96043f2ab741b6cb1638cf909d2f83ef250dea880",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_portfolio_common_factor_shadow.py",
+      "sha256": "f77cb5a00cbb6a4ef65102f3628596a07fbf7737f1960d863706a4fdf19c3599",
+      "bytes": 2340,
+      "lines": 51,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "f77cb5a00cbb6a4ef65102f3628596a07fbf7737f1960d863706a4fdf19c3599",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_runtime_portfolio_integration.py",
+      "sha256": "e1807ccc532dd516bf6f8ce8aa7f455b06348f2a4f8aa56af42bff95bfb82d73",
+      "bytes": 18285,
+      "lines": 332,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "e1807ccc532dd516bf6f8ce8aa7f455b06348f2a4f8aa56af42bff95bfb82d73",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_stage6_closure.py",
+      "sha256": "2c7916cf12d66ab7656300a8f9682f0c7ce3515fa5bffa61d86b41b7409b31f2",
+      "bytes": 20771,
+      "lines": 383,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "2c7916cf12d66ab7656300a8f9682f0c7ce3515fa5bffa61d86b41b7409b31f2",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_stage6_normal_sources.py",
+      "sha256": "ea140f1411a14672e808875550ab4d94e11c3b29d9e605be362c5100ca3a6ae0",
+      "bytes": 15512,
+      "lines": 260,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "ea140f1411a14672e808875550ab4d94e11c3b29d9e605be362c5100ca3a6ae0",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "tests/test_wrld07_relationship_state.py",
+      "sha256": "2bd2f6007e6284b191b0211001d8c81664e6adf943e33335a1e73bfef5f3e7b1",
+      "bytes": 9969,
+      "lines": 195,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "2bd2f6007e6284b191b0211001d8c81664e6adf943e33335a1e73bfef5f3e7b1",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/observability/portfolio_observation.py",
+      "sha256": "f42613fe0790770694c0164082e32621a62bce15c1707456083d69078ea73ee1",
+      "bytes": 5988,
+      "lines": 143,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "f42613fe0790770694c0164082e32621a62bce15c1707456083d69078ea73ee1",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/__init__.py",
+      "sha256": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+      "bytes": 69,
+      "lines": 1,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/allocator.py",
+      "sha256": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403",
+      "bytes": 32522,
+      "lines": 709,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "c6ac1f871fae5e562f64877c4ed6b4301bc56711f7f9951b5a997ed4e13ca403",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/candidate_bridge.py",
+      "sha256": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+      "bytes": 18742,
+      "lines": 314,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/common_factor.py",
+      "sha256": "9f216f21296ae492726d32a88cc27684616c54afa91ff9b0d7a31ce9aadc9aac",
+      "bytes": 20132,
+      "lines": 332,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "9f216f21296ae492726d32a88cc27684616c54afa91ff9b0d7a31ce9aadc9aac",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/comparison.py",
+      "sha256": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96",
+      "bytes": 6400,
+      "lines": 117,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "e95fd518438e8b36d867ea6dfb2d2fc520b970c4e1ae6eb9ffcb9e30075f0e96",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/current.py",
+      "sha256": "c4c21981af60a2cd2542b315bb35c20029503ce2d1e015502cc18207ec5af2ef",
+      "bytes": 17104,
+      "lines": 256,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "c90332a4c373cf5599271f2c2bc4cb2b07a614817f2b912ac4bc6a0c8f9761c7",
+      "differs_from_inventory_source": true
+    },
+    {
+      "path": "trader/portfolio/economics.py",
+      "sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+      "bytes": 18462,
+      "lines": 358,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/opportunity_cost.py",
+      "sha256": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687",
+      "bytes": 5117,
+      "lines": 93,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/opportunity_live.py",
+      "sha256": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+      "bytes": 30202,
+      "lines": 541,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "516b3b44415bb0bc51f95e96af5fe52893ee90f53962623493e1644bf548bfd0",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/opportunity_registry.py",
+      "sha256": "f6b9e8152fb337682e9884862f87326fa7833d9588871824b38e512d72f595c5",
+      "bytes": 5402,
+      "lines": 96,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "f6b9e8152fb337682e9884862f87326fa7833d9588871824b38e512d72f595c5",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/reoptimization.py",
+      "sha256": "9538bfdd909b45fb957b0981c0fb82dde1a39e8090984637d1b1029d1f2fc324",
+      "bytes": 11058,
+      "lines": 192,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "9538bfdd909b45fb957b0981c0fb82dde1a39e8090984637d1b1029d1f2fc324",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/runtime.py",
+      "sha256": "d2f9ac1e1ae7cebd85846d91dfbf37ebb1c387f676bade2217a1fa94adc84a06",
+      "bytes": 10178,
+      "lines": 178,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e",
+      "differs_from_inventory_source": true
+    },
+    {
+      "path": "trader/portfolio/runtime_metrics.py",
+      "sha256": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004",
+      "bytes": 9873,
+      "lines": 159,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/source_adapter.py",
+      "sha256": "bc4b31cbc64ac7c48bf3e7971dd3c3015b9d41f24ae4dba979c65c44cf9f8d7b",
+      "bytes": 4442,
+      "lines": 94,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "bc4b31cbc64ac7c48bf3e7971dd3c3015b9d41f24ae4dba979c65c44cf9f8d7b",
+      "differs_from_inventory_source": false
+    },
+    {
+      "path": "trader/portfolio/trade_intent.py",
+      "sha256": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5",
+      "bytes": 7852,
+      "lines": 155,
+      "present": true,
+      "reviewed_revision": "ef9fca839c23d48198c5f2361bbf3623d94266fa",
+      "baseline_sha256": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5",
+      "differs_from_inventory_source": false
+    }
+  ]
+}

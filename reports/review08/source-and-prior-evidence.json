@@ -1,0 +1,134 @@
+[
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol1-subsystem-review-04-20261011/worktree/docs/reference/subsystem-reviews/01/README.md",
+    "sha256": "25c9c8c93e09364f9ebcb1f12a8a79f5a9d9c279c012f1ec986aab4308d7855f",
+    "bytes": 7532,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol2-subsystems-review02-20261011/worktree/docs/superpowers/reports/2026-10-11-sol2-subsystems-review02.md",
+    "sha256": "0ef9719e68a670c32a226fed63c1edf0502ad197c6cca4d5d422b25a256ac5e1",
+    "bytes": 8702,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-07-20261019/docs/superpowers/reports/2026-10-11-subsystem-review-03-execution-risk-recovery.md",
+    "sha256": "a62bcc8e5710c5054094e6bbe910f14b21e8d6d33a50a9254e15a2a61db33f2f",
+    "bytes": 50986,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol1-subsystem-review-04-20261011/worktree/docs/reference/subsystem-reviews/04/README.md",
+    "sha256": "ecbcec3f421d67f55ca6e34722694771f15544cb869f132112f880fee97344a9",
+    "bytes": 10358,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol1-subsystem-review-04-20261011/worktree/docs/reference/subsystem-reviews/05/README.md",
+    "sha256": "a8d064b401421e6528b025c6c85116b71a59c756da4c7e2a771ed74b466eef19",
+    "bytes": 6769,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol1-review06-evidence-20261012/README.md",
+    "sha256": "8456e2bea84b8085911129724ac7f996ac20b092416ff021d6487314145ed267",
+    "bytes": 42381,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-recovery/recovery/sol1-review06-evidence-20261012/file-assessment.md",
+    "sha256": "f6ee1e894c0cbe897450be03e943727144067a1e90dbd79f9031cbf25aab4d5f",
+    "bytes": 47943,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-07-20261019/reports/review07/REPORT.md",
+    "sha256": "5dedfa3dac3a5ac64f3a7b4435c8c1b96b3ca953fb227e2ac76aa6fa432f197c",
+    "bytes": 33182,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-operational-data-lifecycle/reports/operational-lifecycle-complete/REPORT.md",
+    "sha256": "fc8e5cae70fccc19f1c83edaebd5561cf554d9c4ae8af0e10cc74d6c4344feea",
+    "bytes": 16890,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-operational-data-lifecycle/reports/operational-lifecycle-complete/verification.json",
+    "sha256": "0ddc9ee88b771aca84f8b442fa47a6039ef7ea028dc267e6329ce9e0e38bfe47",
+    "bytes": 5145,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-operational-data-lifecycle/reports/operational-lifecycle-complete/INTEGRATE.txt",
+    "sha256": "698ff2553b1fba3142a313a4aeb2788235ccc79033b8d6837c6a51791fb6a042",
+    "bytes": 3614,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/SDD.md",
+    "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "bytes": 92018,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/kernel.py",
+    "sha256": "d09fcfa595b29e1fad4254c67328ca2509afde5c787398e94c3c410ae80deb78",
+    "bytes": 179416,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/learning/capture_runtime.py",
+    "sha256": "a1678fa208c604c82b40fcebe8d39380400f0b0380c977295b8cf963d69d1004",
+    "bytes": 45335,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/learning/capture.py",
+    "sha256": "10e61316cb9201ef696c0b9c96248da5140cfc0cf1bc2bb11e5e70afd28e09f2",
+    "bytes": 46775,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/core/journal_evidence.py",
+    "sha256": "9ec9ce2ee650a1bdbc233772927e3b4e24489a1cc90ce257bdf19932576ea9c8",
+    "bytes": 13021,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/persistence/storage_cleanup.py",
+    "sha256": "6f7f37e513b18196bf37df16ac6906bfd0754bbf877ddb2fcb49d43737b3c913",
+    "bytes": 20167,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/engine/risk_intent.py",
+    "sha256": "9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca",
+    "bytes": 8627,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/engine/entry_authority.py",
+    "sha256": "ac1f0050167fcfc65e9db9ddfdf4aed7db67a220094988d35c32bdf34ebe7198",
+    "bytes": 33306,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/owner/queries.py",
+    "sha256": "610b471cb1bd4335a97eef2cdcf97ea347272a20d4a11494ad0515beb959f210",
+    "bytes": 12544,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/trader/data/feed.py",
+    "sha256": "c101bda44a75eee4d14d06b8416609f1399180b39720a314de87a8577177290b",
+    "bytes": 73833,
+    "read_only": true
+  },
+  {
+    "path": "/mnt/luffy-data/sol1-subsystem-review-08-20261020/config.yaml",
+    "sha256": "ac4199396adc652afb6888d117d82a5d7b821524a60e31532cf422b13708ad26",
+    "bytes": 26479,
+    "read_only": true
+  }
+]

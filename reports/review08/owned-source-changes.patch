@@ -1,0 +1,221 @@
+diff --git a/scripts/opportunity_context_shadow.py b/scripts/opportunity_context_shadow.py
+index 03dc690..204c6d4 100644
+--- a/scripts/opportunity_context_shadow.py
++++ b/scripts/opportunity_context_shadow.py
+@@ -44,8 +44,12 @@ def _json(text):
+ 
+ 
+ def capture(journal, attention, investigation, config, max_contexts=4):
+-    """Fixed row/payload bounds and five-second SQL deadline. No history scan."""
+-    if not 1 <= max_contexts <= 16:
++    """Fixed source row/payload bounds and five-second SQL deadline.
++
++    max_contexts is a preview limit only. Runtime passes None to consume all
++    authenticated current publications within the existing source bounds.
++    """
++    if max_contexts is not None and not 1 <= max_contexts <= 16:
+         raise ValueError('CONTEXT_BOUND_INVALID')
+     deadline = time.monotonic() + 5
+     missing = []
+@@ -191,7 +195,7 @@ def capture(journal, attention, investigation, config, max_contexts=4):
+                         exact.append((d, sig, v))
+             if exact:
+                 from trader.cognition import decision_analysts as DA
+-                for d, sig, v in exact[:max_contexts - len(requests)]:
++                for d, sig, v in exact[:None if max_contexts is None else max_contexts - len(requests)]:
+                     # Decision-grade: the analyst roster/packets for THIS decision cycle are
+                     # frozen with it. A cycle with no recorded cut supplies no analysts source,
+                     # so the required role blocks instead of fabricating one.
+@@ -217,7 +221,7 @@ def capture(journal, attention, investigation, config, max_contexts=4):
+                 requests.append(dict(as_of_ms=cut, symbol=symbol, instrument_id=iid,
+                     cycle_id=scan['scan_id'], candidate_id=scan['scan_id'] + ':' + key,
+                     sources=tuple(bound), required_roles=('attention_scan',)))
+-            if len(requests) >= max_contexts:
++            if max_contexts is not None and len(requests) >= max_contexts:
+                 break
+     else:
+         missing.append('CURRENT_ATTENTION_EVIDENCE_UNAVAILABLE')
+diff --git a/tests/test_port02_economics_authority.py b/tests/test_port02_economics_authority.py
+index ff5bec9..4f80e39 100644
+--- a/tests/test_port02_economics_authority.py
++++ b/tests/test_port02_economics_authority.py
+@@ -34,7 +34,11 @@ def test_production_registries_are_empty_and_only_funding_adapter_is_registered(
+         'from trader.portfolio import economics as e; from trader.engine import paper_cost_evidence as p;'
+         'print(len(e.GROSS_MODELS),len(e.RESERVE_MODELS),len(e.COST_SCOPE_MODELS),sorted(p.SOURCE_VALIDATORS))'],
+         text=True).strip()
+-    assert out == f"0 0 0 ['{METHOD}']"
++    # The funding adapters (no-crossing proof; published-rate-and-mark pricing of
++    # crossed events) plus the owner-approved, labelled cost-model estimate: paper
++    # evidence only, the portfolio economics registries stay empty.
++    assert out == (f"0 0 0 ['BINANCE_PUBLIC_FUNDING_EVENTS_PUBLISHED_MARK_BASIS_V1', "
++                   f"'{METHOD}', 'LUFFY_BACKTEST_COST_MODEL_ESTIMATE_V1']")
+ 
+ 
+ @pytest.mark.parametrize('field,value', [
+diff --git a/trader/portfolio/current.py b/trader/portfolio/current.py
+index bac4c70..649fa79 100644
+--- a/trader/portfolio/current.py
++++ b/trader/portfolio/current.py
+@@ -1,5 +1,5 @@
+ """Bounded current-source reader. No venue calls or trading-journal writes."""
+-from contextlib import ExitStack
++from contextlib import ExitStack, closing
+ from dataclasses import replace
+ import json
+ from pathlib import Path
+@@ -32,8 +32,37 @@ def admitted_requests(requests, market_snapshots, receipt):
+     return out
+ 
+ 
++def admission_observations(market_snapshots, receipt, requests):
++    """Retain every admitted observation, including explicit evidence gaps.
++
++    This is a projection of the existing receipt, never candidate selection or
++    decision authority. Unavailable contexts cannot become allocator candidates.
++    """
++    if receipt is None:
++        return None
++    from trader.attention_admission import verify_receipt
++    verify_receipt(receipt)
++    observations = {}
++    coverage = {s:dict(decision_ids=[], request_ids=[], status='SNAPSHOT_UNAVAILABLE')
++                for s in receipt['admitted_symbols']}
++    for decision_id, market in market_snapshots.items():
++        context = getattr(market, 'admission_context', None)
++        if (market.symbol not in coverage or not context
++                or context.get('receipt_id') != receipt['receipt_id']):
++            raise ValueError('PORTFOLIO_ADMISSION_SNAPSHOT_MISMATCH')
++        ids = [r['candidate_id'] for r in requests if r['candidate_id'] == decision_id
++               or r['candidate_id'].startswith(decision_id + ':')]
++        observations[decision_id] = dict(symbol=market.symbol, ts=market.ts,
++            price=market.price, admission_context=context)
++        row = coverage[market.symbol]
++        row['decision_ids'].append(decision_id)
++        row['request_ids'].extend(ids)
++        row['status'] = 'REQUEST_BOUND' if row['request_ids'] else 'CONTEXT_REQUEST_UNAVAILABLE'
++    return dict(receipt_id=receipt['receipt_id'], observations=observations, coverage=coverage)
++
++
+ def freeze(journal, attention, investigation, config, available_inputs=None, market_snapshots=None, holdings_market_snapshots=None, admission_receipt=None):
+-    requests, snap, control, inventory, detail = capture(Path(journal),Path(attention),Path(investigation),config)
++    requests, snap, control, inventory, detail = capture(Path(journal),Path(attention),Path(investigation),config,max_contexts=None)
+     # A persisted cut must still be current under the venue's own contract.
+     common_factor.snapshot(Source.freeze('venue_position_snapshot',snap),
+                            detail.get('read_at_ms',detail['as_of_ms']))
+@@ -189,7 +218,11 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
+     if holding_observations:
+         holding_source=Source.freeze('held-market-observations',holding_observations)
+         inputs=replace(inputs,sources=inputs.sources+(holding_source,))
+-    detail.update(holdings_market_observations=holding_observations,
++    admitted_observations = admission_observations(market_snapshots, admission_receipt, requests)
++    if admitted_observations is not None:
++        inputs=replace(inputs,sources=inputs.sources+(Source.freeze('admitted-market-observations',admitted_observations),))
++    detail.update(admitted_market_observations=admitted_observations,
++        holdings_market_observations=holding_observations,
+         admission_receipt_id=admission_receipt.get('receipt_id') if admission_receipt else None,
+         context_count=len(contexts),candidate_count=len(candidates),
+         holdings_count=len(snap['positions']),portfolio_snapshot_id=snap['snapshot_id'],
+@@ -213,7 +246,7 @@ def checkpoint(journal, config, ledger=None, available_inputs=None, market_snaps
+     # Deliver the exact proposal's inputs at the consuming boundary.
+     import sqlite3
+     from trader.learning import capture as C, capture_runtime as R
+-    with sqlite3.connect(source,timeout=2) as db:
++    with closing(sqlite3.connect(source,timeout=2)) as db, db:
+         db.row_factory=sqlite3.Row
+         C.ensure(db)
+         detail['learning_source_delivery'] = C.safely(db,'portfolio:'+result['portfolio_cut_id'],
+diff --git a/trader/portfolio/runtime.py b/trader/portfolio/runtime.py
+index 6259547..cf2e688 100644
+--- a/trader/portfolio/runtime.py
++++ b/trader/portfolio/runtime.py
+@@ -5,6 +5,7 @@ and Risk. The ledger is separate from the trading journal. It has no Execution,
+ exchange, protective-order, activation or control-plane write capability.
+ """
+ from dataclasses import asdict
++from contextlib import closing
+ import json
+ from pathlib import Path
+ import sqlite3
+@@ -29,7 +30,7 @@ class Consumer:
+     def __init__(self, path):
+         self.path = Path(path)
+         self.path.parent.mkdir(parents=True, exist_ok=True)
+-        with self._db() as db:
++        with closing(self._db()) as db, db:
+             db.executescript(E.BLOB_SCHEMA)
+             db.executescript('''
+             CREATE TABLE IF NOT EXISTS state(id INTEGER PRIMARY KEY CHECK(id=1), inputs_json TEXT,
+@@ -55,17 +56,23 @@ class Consumer:
+ 
+     def evaluation(self, cut_id):
+         """Exact owner/replay read of one cut; never expand other evaluations."""
+-        with self._db() as db:
++        with closing(self._db()) as db, db:
+             row = db.execute('SELECT payload FROM evaluations WHERE cut_id=?',(cut_id,)).fetchone()
+             return _evaluation(db,cut_id,row[0]) if row else None
+ 
+     def consume(self, current, *, processed_at=None):
++        return self._consume(current, processed_at=processed_at, serialized=False)
++
++    def _consume(self, current, *, processed_at, serialized):
+         raw = gate._cut(current)
+         cut = digest(raw)
+-        with self._db() as db:
+-            db.execute('BEGIN IMMEDIATE')
++        with closing(self._db()) as db, db:
++            if serialized:
++                db.execute('BEGIN IMMEDIATE')
+             saved = db.execute('SELECT payload FROM evaluations WHERE cut_id=?', (cut,)).fetchone()
+             if saved:
++                if serialized:
++                    db.rollback()
+                 checked = replay(_evaluation(db,cut,saved[0]))
+                 return dict(checked, duplicate=True)
+             row = db.execute('SELECT inputs_json,previous_proposal_id FROM state WHERE id=1').fetchone()
+@@ -87,6 +94,7 @@ class Consumer:
+             stamp = int(time.time()*1000) if processed_at is None else processed_at
+             if type(stamp) is not int or stamp < current.as_of_ms:
+                 raise ValueError('CHECKPOINT_CLOCK_INVALID')
++            checkpoints = []
+             for e in events:
+                 payload = dict(schema=SCHEMA, event_id=e['event_id'], portfolio_cut_id=cut,
+                     portfolio_snapshot_id=current.portfolio.snapshot_id,
+@@ -94,7 +102,7 @@ class Consumer:
+                     trigger_reason=e['kind'] if e['trigger'] else e['reason'], reason_codes=e['reason_codes'],
+                     previous_proposal_id=previous_id, resulting_proposal_id=proposal.proposal_id if proposal else None,
+                     processed_at=stamp, event=e, triggered=e['trigger'])
+-                db.execute('INSERT OR IGNORE INTO checkpoints VALUES (?,?)', (e['event_id'],canonical(payload)))
++                checkpoints.append((e['event_id'],canonical(payload)))
+             body = dict(schema=SCHEMA, portfolio_cut_id=cut, candidate_set_sha256=candidate_id,
+                 proposal=proposal.payload() if proposal else None,
+                 trade_intents=[asdict(i) for i in intents], risk_decisions=[asdict(d) for d in decisions],
+@@ -102,8 +110,28 @@ class Consumer:
+                 triggered=proposal is not None, execution_routed=False, real_order_submissions=0,
+                 replay='PASS', duplicate=False)
+             body_text = canonical(body)
+-            body_detail = E.store(db,body_text) if len(body_text.encode()) > 65536 else body_text
+             raw_text = canonical(raw)
++            # Reuse admission's prepare/compare boundary: pure allocation,
++            # replay and JSON work do not need SQLite writer ownership. Bind
++            # the prepared result to the exact state and checkpoint presence
++            # again before atomically appending it. On a real concurrent change,
++            # discard this preparation and use the original serialized path:
++            # no new refusal or retry policy, and no stale result is committed.
++            if not serialized:
++                db.execute('BEGIN IMMEDIATE')
++                saved = db.execute('SELECT payload FROM evaluations WHERE cut_id=?', (cut,)).fetchone()
++                if saved:
++                    db.rollback()
++                    return dict(replay(_evaluation(db,cut,saved[0])), duplicate=True)
++                changed = db.execute('SELECT inputs_json,previous_proposal_id FROM state WHERE id=1').fetchone() != row
++                if not changed:
++                    changed = tuple(e['event_id'] for e in expected_events if db.execute(
++                        'SELECT 1 FROM checkpoints WHERE event_id=?',(e['event_id'],)).fetchone()) != processed
++                if changed:
++                    db.rollback()
++                    return self._consume(current, processed_at=processed_at, serialized=True)
++            db.executemany('INSERT OR IGNORE INTO checkpoints VALUES (?,?)', checkpoints)
++            body_detail = E.store(db,body_text) if len(body_text.encode()) > 65536 else body_text
+             raw_detail = E.store(db,raw_text) if len(raw_text.encode()) > 65536 else raw_text
+             db.execute('INSERT INTO evaluations VALUES (?,?)', (cut,body_detail))
+             db.execute('INSERT OR REPLACE INTO state VALUES (1,?,?)',
