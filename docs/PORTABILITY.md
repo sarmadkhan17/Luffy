@@ -54,9 +54,19 @@ Commands from any current working directory:
 /path/to/LUFFY/luffy verify --sqlite  # adds full SQLite quick_check; can be slow
 /path/to/LUFFY/luffy start-kernel     # existing contained startup, exact Git revision
 /path/to/LUFFY/luffy status
+/path/to/LUFFY/luffy refresh-protection # fresh venue evidence while stopped/contained
 /path/to/LUFFY/luffy start-dashboard  # only after Kernel readiness passes
 /path/to/LUFFY/luffy stop             # authenticated freeze, then graceful stop
 ```
+
+After a long shutdown or transfer, use `refresh-protection` before
+`start-kernel` to replace expired venue evidence. It requires an exclusive
+stopped-Kernel lock, no other Kernel process, and persisted FROZEN operator
+containment. It uses the existing bounded read-only venue monitor, records its
+actual result, and leaves control state, recovery latches and startup gates
+unchanged. Unreadable or partial protection evidence refuses. Never change
+state merely to satisfy this command; complete supported owner containment
+before copying the installation.
 
 Stop requires a working LIVE Dashboard owner-control route while the Kernel is
 running; an unconfirmed freeze refuses shutdown instead of silently leaving

@@ -1,5 +1,6 @@
 """Installation-local commands; retain the existing startup and recovery gates."""
 import argparse
+import fcntl
 import importlib
 import json
 import os
@@ -13,6 +14,40 @@ import urllib.request
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def refresh_protection(root=None):
+    """Refresh expired venue evidence under the stopped Kernel's exclusive lock."""
+    from trader.core.config import load_config
+    from trader.runtime_identity import legacy_kernel_pids
+    root = ROOT if root is None else Path(root)
+    cfg = load_config(str(root / 'config.yaml'))
+    path = root / 'data/luffy.db'
+    # No state transition, recovery clear or runtime identity publication here.
+    with (root / 'data/kernel.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if legacy_kernel_pids():
+            raise ValueError('kernel_process_present')
+        db = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=5)
+        try:
+            db.execute('PRAGMA query_only=ON')
+            state = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
+                                    "('control_state','macro_guard_operator_hold','market_type')"))
+        finally:
+            db.close()
+        if state.get('control_state') != 'FROZEN' or state.get('macro_guard_operator_hold') != '1':
+            raise ValueError('stopped_operator_containment_required')
+        from trader.data.feed import make_exchange
+        from trader.core.types import MarketType
+        from trader.engine.protection_snapshot import make_monitor
+        market = MarketType(state.get('market_type', cfg['mode']['market'])).value
+        exchange = make_exchange(market)
+        snapshot = make_monitor(exchange, path, supervisor_busy=lambda: False).run_once()
+        return {'allow': bool(snapshot and snapshot.get('status') == 'VERIFIED'
+                              and snapshot.get('control_state_observed') == 'FROZEN'
+                              and snapshot.get('mutations') == 0),
+                'snapshot': snapshot, 'trading_authority': False,
+                'scope': 'existing read-only venue observation; startup gates still required'}
 
 
 def verify(root=ROOT, *, sqlite=False):
@@ -143,10 +178,22 @@ def stop(timeout):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['verify', 'status', 'start-kernel', 'start-dashboard', 'stop'])
+    parser.add_argument('command', choices=['verify', 'status', 'refresh-protection', 'start-kernel', 'start-dashboard', 'stop'])
     parser.add_argument('--sqlite', action='store_true', help='full SQLite quick_check (may be slow)')
     parser.add_argument('--timeout', type=float, default=1200)
     args = parser.parse_args()
+    if args.command == 'refresh-protection':
+        try:
+            report = refresh_protection()
+        except Exception as exc:
+            report = {'allow': False, 'error_class': type(exc).__name__,
+                      'trading_authority': False}
+            if isinstance(exc, BlockingIOError):
+                report['reason'] = 'kernel_lock_unavailable'
+            elif isinstance(exc, ValueError) and str(exc) in (
+                    'kernel_process_present', 'stopped_operator_containment_required'):
+                report['reason'] = str(exc)
+        print(json.dumps(report, indent=2)); return 0 if report['allow'] else 1
     if args.command == 'verify':
         report = verify(sqlite=args.sqlite)
         print(json.dumps(report, indent=2)); return 0 if report['allow'] else 1
