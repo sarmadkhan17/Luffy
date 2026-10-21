@@ -86,6 +86,9 @@ def versioned_strategies(journal, cfg, now_ts) -> dict:
 
 def filesystems(data: Path) -> list[dict]:
     """Actual mount identity for root, data and the recovery mount separately."""
+    from trader.core.config import load_config
+    recovery = Path(load_config().get('deployment', {}).get(
+        'recovery_root', '/mnt/luffy-recovery'))
     mounts = []
     try:
         for line in Path('/proc/self/mountinfo').read_text().splitlines():
@@ -96,7 +99,7 @@ def filesystems(data: Path) -> list[dict]:
     except (OSError, ValueError, IndexError):
         pass
     out = []
-    for label, path in (('Root /', Path('/')), ('LUFFY data', data), ('Recovery', Path('/mnt/luffy-recovery'))):
+    for label, path in (('Root /', Path('/')), ('LUFFY data', data), ('Recovery', recovery)):
         rec = dict(label=label, path=str(path), total=None, used=None, free=None,
                    percent_free=None, mount=None, source=None, status='NOT_REPORTED')
         try:

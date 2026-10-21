@@ -9,7 +9,8 @@ Entry / exit / null are the repo's own code paths:
 Nothing here is tuned; the geometry is read off auth_donchian_breakout_trail.
 """
 import sys
-sys.path.insert(0, "/home/sarmad/trader")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 import pandas as pd

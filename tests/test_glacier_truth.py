@@ -82,6 +82,25 @@ def test_multifilesystem_and_missing_growth_are_explicit(tmp_path, monkeypatch):
     assert d['storage']['files'][0]['bytes'] is None
 
 
+def test_relocated_recovery_capacity_uses_configured_mount(tmp_path, monkeypatch):
+    from trader.dashboard import glacier_truth as G
+    from trader.core import config
+    import shutil
+    recovery = tmp_path / 'recovery-volume'
+    recovery.mkdir()
+    monkeypatch.setattr(config, 'load_config', lambda: {
+        'deployment': {'recovery_root': str(recovery)}})
+    real_read = Path.read_text
+    monkeypatch.setattr(Path, 'read_text', lambda p, *a, **kw:
+        f'1 0 0:1 / / rw - ext4 root rw\n2 1 0:2 / {recovery} rw - ext4 recovery rw\n'
+        if str(p) == '/proc/self/mountinfo' else real_read(p, *a, **kw))
+    monkeypatch.setattr(G.shutil, 'disk_usage', lambda p: shutil._ntuple_diskusage(100, 90, 10))
+    result = filesystems(tmp_path)[2]
+    assert result['path'] == str(recovery)
+    assert result['source'] == 'recovery'
+    assert result['free'] == 10
+
+
 def test_browser_fixture_artifact_and_readonly_contract(tmp_path, monkeypatch):
     """Serialize isolated API fixtures in process; browser starts no Dashboard."""
     app,j,gateway = make_app(tmp_path, monkeypatch, startup_mode='READ_ONLY_GUI')
