@@ -59,17 +59,42 @@ def _guards(table, fields):
         table+'_update':f"CREATE TRIGGER {table}_update BEFORE UPDATE ON {table} WHEN NOT ({same}) OR journal_detail_v1(OLD.payload) IS NOT journal_detail_v1(NEW.payload) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END",
         table+'_delete':f"CREATE TRIGGER {table}_delete BEFORE DELETE ON {table} BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END"}
 
-def ensure(db):
-    E.install(db)
-    db.execute(E.BLOB_SCHEMA)
-    db.execute(E.REPRESENTATION_SCHEMA)
-    definitions = {'learning_produced_chains': 'outcome_id TEXT PRIMARY KEY,payload TEXT NOT NULL',
+_DEFINITIONS = {'learning_produced_chains': 'outcome_id TEXT PRIMARY KEY,payload TEXT NOT NULL',
         'learning_decision_source_manifests': 'manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_source_blobs': 'sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL',
         'learning_registrations': 'event_key TEXT PRIMARY KEY,registration_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_outcome_captures': 'outcome_key TEXT PRIMARY KEY,outcome_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_actions': 'action_id TEXT PRIMARY KEY,event_key TEXT NOT NULL,payload TEXT NOT NULL'}
-    for table, columns in definitions.items():
+
+
+def _schema_contract():
+    objects = {'journal_evidence_blobs_v1': E.BLOB_SCHEMA,
+               'journal_representation_v1': E.REPRESENTATION_SCHEMA,
+               'learning_capture_failures': 'CREATE TABLE learning_capture_failures(event_key TEXT,reason TEXT)'}
+    for table, columns in _DEFINITIONS.items():
+        objects[table] = f'CREATE TABLE {table}({columns})'
+        fields = [c.split()[0] for c in columns.split(',')]
+        objects.update(_guards(table, fields))
+        projection = ','.join('journal_detail_v1(payload) AS payload' if c == 'payload' else c for c in fields)
+        objects[table+'_logical_v1'] = f'CREATE VIEW {table}_logical_v1 AS SELECT rowid AS rowid,{projection} FROM {table}'
+    return {name: sql.strip().rstrip(';').replace(' IF NOT EXISTS', '') for name, sql in objects.items()}
+
+
+_SCHEMA_CONTRACT = _schema_contract()
+_SCHEMA_QUERY = 'SELECT json_group_object(name,sql) FROM main.sqlite_master WHERE name IN (' + ','.join('?' for _ in _SCHEMA_CONTRACT) + ')'
+
+
+def ensure(db):
+    E.install(db)
+    # Even no-op CREATE statements reserve SQLite's writer. Check every owned
+    # object in one current schema snapshot instead; no connection/version cache
+    # can conceal a rollback, missing guard or pending legacy migration.
+    existing = json.loads(db.execute(_SCHEMA_QUERY, tuple(_SCHEMA_CONTRACT)).fetchone()[0])
+    if existing == _SCHEMA_CONTRACT:
+        return
+    db.execute(E.BLOB_SCHEMA)
+    db.execute(E.REPRESENTATION_SCHEMA)
+    for table, columns in _DEFINITIONS.items():
         db.execute(f'CREATE TABLE IF NOT EXISTS {table}({columns})')
         key = columns.split()[0]
         db.execute(f"CREATE TRIGGER IF NOT EXISTS {table}_duplicate BEFORE INSERT ON {table} WHEN EXISTS(SELECT 1 FROM {table} WHERE {key}=NEW.{key}) BEGIN SELECT RAISE(ABORT,'learning capture immutable'); END")
