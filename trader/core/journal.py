@@ -9,8 +9,10 @@ SQLite + WAL; one writer (the OS process), many readers (dashboard, brain).
 from __future__ import annotations
 
 import json
-import faulthandler
 import os
+import time
+import traceback
+import logging
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -662,8 +664,7 @@ class Journal:
         with self._write_lock:
             conn = None
             trace_slow = os.environ.get('LUFFY_TRACE_SLOW_TRANSACTIONS') == '1'
-            if trace_slow:
-                faulthandler.dump_traceback_later(4, repeat=False)
+            trace_started = time.monotonic() if trace_slow else None
             try:
                 conn = self._conn()
                 yield conn
@@ -680,8 +681,15 @@ class Journal:
                     journal_failure(self, 'write', exc)
                 raise
             finally:
-                if trace_slow:
-                    faulthandler.cancel_dump_traceback_later()
+                if trace_started is not None and time.monotonic() - trace_started >= 1:
+                    try:
+                        logging.getLogger(__name__).warning(
+                            'slow journal transaction %.3fs; caller frames: %s',
+                            time.monotonic() - trace_started,
+                            [(frame.filename, frame.lineno, frame.name)
+                             for frame in traceback.extract_stack(limit=16)])
+                    except Exception:
+                        pass  # Diagnostic failure cannot alter commit/rollback.
 
     # -- writes ----------------------------------------------------------
     def log_cycle(self, snap: Snapshot, cycle_id: str, mode: str) -> None:
