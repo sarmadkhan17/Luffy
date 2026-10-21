@@ -99,3 +99,11 @@ in a private `logs/kernel-cycle-*.prof` file. It does not capture arguments or
 change gates, deadlines or authority. Profiling adds overhead; measured times
 are diagnostic, not normal-runtime performance acceptance. Later cycles use
 the normal path. Diagnostic write failures preserve the cycle result/exception.
+
+For main-thread-only sampling, use `LUFFY_SAMPLE_FIRST_CYCLE=1` instead.
+Private `logs/kernel-cycle-*.samples.json` records stack locations only, with
+periodic snapshots and a final completion flag. It captures no locals or arguments.
+Sampling can be biased by scheduling/GIL contention; it is diagnostic evidence,
+not performance acceptance. On this host Python 3.12.3 function profiling was
+observed to mix background-thread timings; those timings must not be used for
+attribution. Sampling takes precedence if both diagnostic flags are set.

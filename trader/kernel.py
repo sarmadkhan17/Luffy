@@ -3210,11 +3210,17 @@ class Kernel:
         interval = float(self.cfg["timeframes"]["scan_interval_seconds"])
         n = 0
         profile_next = os.environ.get('LUFFY_PROFILE_FIRST_CYCLE') == '1'
+        sample_next = os.environ.get('LUFFY_SAMPLE_FIRST_CYCLE') == '1'
         while not self._stop:
             n += 1
             t0 = time.time()
             try:
-                if profile_next:
+                if sample_next:
+                    sample_next = False
+                    profile_next = False
+                    from .observability.cycle_sampling import sample_cycle
+                    info = sample_cycle(self.cycle, ROOT / 'logs')
+                elif profile_next:
                     profile_next = False
                     from .observability.cycle_profile import profile_cycle
                     info = profile_cycle(self.cycle, ROOT / 'logs')
