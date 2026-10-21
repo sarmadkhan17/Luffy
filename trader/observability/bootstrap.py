@@ -155,6 +155,7 @@ class Host:
             subprocess.run(['systemd-run', '--user', '--unit=' + unit, '--on-active=1s',
                 '--on-unit-inactive=' + str(seconds) + 's', '--timer-property=AccuracySec=1s',
                 '--property=WorkingDirectory=' + str(self.root), '--property=Restart=no',
+                '--setenv=TMPDIR=' + str(self.root / 'tmp'),
                 '--property=SuccessExitStatus=1', '--property=TimeoutStartSec=20s',
                 self.python, '-B', '-m', 'scripts.monitor', '--' + mode], check=True, timeout=30)
 

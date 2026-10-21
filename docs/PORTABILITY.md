@@ -58,7 +58,9 @@ The next supported startup creates new timers for the new absolute location.
 Do not reuse old unit definitions on another machine.
 
 Launcher output resides in `logs/kernel-launch.log` and
-`logs/dashboard-launch.log`. Historical provenance strings and immutable research
+`logs/dashboard-launch.log`; application temporary files use `tmp/` inside the
+installation, including when the caller has a machine-specific `TMPDIR`.
+Historical provenance strings and immutable research
 records keep their original identities. They are not rewritten to disguise old
 paths. The portability verification report must separately establish whether
 those historical paths have any active consumer.

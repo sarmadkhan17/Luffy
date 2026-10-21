@@ -1,5 +1,10 @@
 from scripts import portable
 from trader import runtime_identity
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
 
 
 def test_failed_verified_stop_does_not_touch_dashboard(tmp_path, monkeypatch):
@@ -30,3 +35,19 @@ def test_start_uses_supported_launcher_with_exact_revision(monkeypatch):
     args, kwargs = calls[0]
     assert args == [str(portable.ROOT / 'restart.sh'), 'kernel']
     assert kwargs['env']['LUFFY_EXPECT_REVISION'] == 'a' * 40
+
+
+def test_copied_launcher_owns_temporary_directory_from_any_cwd(tmp_path):
+    root = tmp_path / 'copied LUFFY'; root.mkdir()
+    launcher = root / 'luffy'
+    launcher.write_bytes((Path(__file__).resolve().parents[1] / 'luffy').read_bytes())
+    launcher.chmod(0o755)
+    binary = root / 'venv/bin/python'; binary.parent.mkdir(parents=True)
+    binary.write_text('#!' + sys.executable + '\nimport os,json\n'
+                      'print(json.dumps({"cwd":os.getcwd(),"tmp":os.environ["TMPDIR"]}))\n')
+    binary.chmod(0o755)
+    run = subprocess.run([str(launcher), 'status'], cwd=tmp_path,
+                         env={**os.environ, 'TMPDIR': '/old-machine/absent'},
+                         capture_output=True, text=True, check=True)
+    assert json.loads(run.stdout) == {'cwd': str(root), 'tmp': str(root / 'tmp')}
+    assert (root / 'tmp').is_dir()

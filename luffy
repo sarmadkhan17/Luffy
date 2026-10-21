@@ -2,4 +2,6 @@
 set -eu
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
+mkdir -p "$ROOT/tmp"
+export TMPDIR="$ROOT/tmp"
 exec "$ROOT/venv/bin/python" -B -m scripts.portable "$@"

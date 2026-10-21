@@ -79,6 +79,8 @@ cd "$DIR"
 # /tmp is wiped on reboot; a redirect into a missing directory fails and bash
 # then never runs the command, so "started" would print over a dead process.
 mkdir -p "$(dirname "$LOG")"
+mkdir -p "$DIR/tmp"
+export TMPDIR="$DIR/tmp"
 if [ "$TARGET" = kernel ]; then
   # Controller rechecks Phase A after graceful stop; it launches exactly one
   # fenced child and retains independent observers on every readiness failure.
