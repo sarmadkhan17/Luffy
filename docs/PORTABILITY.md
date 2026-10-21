@@ -92,3 +92,10 @@ requires starting Kernel and Dashboard with the old application paths unavailabl
 observing a completed cycle and fresh protection evidence, testing authenticated
 Dashboard queries, and verifying graceful shutdown and state continuity. Record
 any unavailable OS isolation or live-data limitation explicitly.
+
+For a contained latency investigation, `LUFFY_PROFILE_FIRST_CYCLE=1 ./luffy
+start-kernel` records standard-library function timings for the first cycle only
+in a private `logs/kernel-cycle-*.prof` file. It does not capture arguments or
+change gates, deadlines or authority. Profiling adds overhead; measured times
+are diagnostic, not normal-runtime performance acceptance. Later cycles use
+the normal path. Diagnostic write failures preserve the cycle result/exception.

@@ -14,6 +14,7 @@ import datetime as dt
 import json
 import logging
 import math
+import os
 from pathlib import Path
 import signal
 import sys
@@ -3208,11 +3209,17 @@ class Kernel:
             start_protection_monitor(self)
         interval = float(self.cfg["timeframes"]["scan_interval_seconds"])
         n = 0
+        profile_next = os.environ.get('LUFFY_PROFILE_FIRST_CYCLE') == '1'
         while not self._stop:
             n += 1
             t0 = time.time()
             try:
-                info = self.cycle()
+                if profile_next:
+                    profile_next = False
+                    from .observability.cycle_profile import profile_cycle
+                    info = profile_cycle(self.cycle, ROOT / 'logs')
+                else:
+                    info = self.cycle()
                 dur = time.time() - t0
                 bits = [f"cycle #{n}",
                         f"{info['deep_processed']} deep candidates",
