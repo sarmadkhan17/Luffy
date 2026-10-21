@@ -427,6 +427,19 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
         query = f"""SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM (SELECT record_json,revision_id,event_ms,available_ms,observed_ms,
             ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY {order}) AS ordinal
             FROM market_revisions {clauses}) WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?"""
+        if not replay_tf and window_start_ms is None:
+            # Rank narrow row identities, not full JSON receipts. Fetch the
+            # selected bodies only after applying the same event limit. This
+            # avoids carrying large payloads through both temporary sorts;
+            # predicates, observed-time/rowid ties and validation stay exact.
+            query = f"""SELECT record_json,revision_id,event_ms,available_ms,observed_ms
+                FROM market_revisions WHERE rowid IN (
+                SELECT selected_rowid FROM (
+                SELECT rowid AS selected_rowid,event_ms,
+                ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY {order}) AS ordinal
+                FROM market_revisions {clauses})
+                WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?)
+                ORDER BY event_ms DESC"""
         if window_start_ms is not None:
             # Filter AFTER exact revision selection. Before the first supplied
             # bar retain its exact predecessor plus only late older events
