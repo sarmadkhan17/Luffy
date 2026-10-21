@@ -9,6 +9,8 @@ import sqlite3
 import subprocess
 import sys
 import time
+import urllib.request
+import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -80,9 +82,41 @@ def verify(root=ROOT, *, sqlite=False):
                 scope='local closure and prerequisites; not a runtime portability certification')
 
 
+def freeze_for_shutdown():
+    """Use the normal authenticated owner route; no offline state fallback."""
+    from trader.core.config import load_config, Env
+    cfg = load_config()['dashboard']
+    host = cfg['host']
+    if host in ('0.0.0.0', '::'):
+        host = '127.0.0.1'
+    request_id = uuid.uuid4().hex
+    query = ('mutation($r:String!,$t:Float!){res:owner_control(operation:"freeze",'
+             'request_id:$r,issued_at_ms:$t){request_id status disposition '
+             'control_state_after reasons}}')
+    request = urllib.request.Request(
+        'http://' + host + ':' + str(cfg['port']) + '/graphql',
+        data=json.dumps({'query': query, 'variables': {
+            'r': request_id, 't': time.time() * 1000}}).encode(),
+        headers={'Content-Type': 'application/json', 'X-Luffy-Token': Env.get('DASH_TOKEN')})
+    try:
+        with urllib.request.urlopen(request, timeout=150) as response:
+            result = json.loads(response.read())['data']['res']
+        print(json.dumps({'shutdown_freeze': result}))
+        return (result['status'] in ('ACCEPTED', 'ALREADY_SET')
+                and result['control_state_after'] == 'FROZEN')
+    except Exception as exc:
+        print(json.dumps({'shutdown_freeze': 'UNCONFIRMED', 'request_id': request_id,
+                          'error_class': type(exc).__name__, 'retry': False}))
+        return False
+
+
 def stop(timeout):
-    from trader.runtime_identity import stop_kernel, proc_start_ticks
+    from trader.runtime_identity import stop_kernel, proc_start_ticks, inspect
     (ROOT / 'data/watchdog.off').touch()
+    identity = inspect(ROOT)
+    if identity.get('state') == 'RUNNING' and identity.get('verified'):
+        if not freeze_for_shutdown():
+            return 5
     result = stop_kernel(ROOT, timeout=timeout)
     if result:
         return result

@@ -43,10 +43,13 @@ Commands from any current working directory:
 /path/to/LUFFY/luffy start-kernel     # existing contained startup, exact Git revision
 /path/to/LUFFY/luffy status
 /path/to/LUFFY/luffy start-dashboard  # only after Kernel readiness passes
-/path/to/LUFFY/luffy stop             # verified graceful stop; never SIGKILL
+/path/to/LUFFY/luffy stop             # authenticated freeze, then graceful stop
 ```
 
-Startup deliberately retains the supported recovery fence. Resume through the
+Stop requires a working LIVE Dashboard owner-control route while the Kernel is
+running; an unconfirmed freeze refuses shutdown instead of silently leaving
+persisted ACTIVE intent. There is no local control-state fallback. Startup
+deliberately retains the supported recovery fence. Resume through the
 authenticated Dashboard only after fresh Supervisor checks pass; copying a
 directory must not grant trading authority. Shutdown keeps the independent
 observers available. Before moving files, record and stop the installation's
