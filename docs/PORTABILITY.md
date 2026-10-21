@@ -23,6 +23,7 @@ Set installation-specific values in the private `.env` file:
 LUFFY_DASHBOARD_HOST=127.0.0.1
 LUFFY_OWNER_IPC_DIR=private/owner
 LUFFY_RECOVERY_ROOT=/path/on/separate/recovery/filesystem
+LUFFY_LEGACY_ROOTS='["/old/installation/LUFFY"]'
 ```
 
 Choose the Dashboard address explicitly for the target host. Recovery must remain
@@ -34,6 +35,17 @@ path settings. Supply credentials securely and preserve existing owner keys at
 `private/owner/keys`; never put secrets in Git or a public manifest. Private owner
 directories must be mode 0700 and key files mode 0600; their ancestors must not
 be group/other writable. Keep `.env` private as well.
+
+`LUFFY_LEGACY_ROOTS` is an explicit JSON list of previous project locations.
+Each maps only to the current project root, preserving the relative suffix;
+paths escaping that root are refused. Preserve the original list when copying
+again and include the source location of the new copy. Population configuration
+paths are resolved in memory. An existing population binding retains its exact
+stored bytes only when its window, schema and freeze identity still match and
+its recorded directory maps to the same copied export directory. Other binding
+conflicts still refuse. Verify the copied declarations, ledgers and export files
+against the recovery manifest before startup; do not use aliases to substitute
+a different dataset or reset a research window.
 
 Commands from any current working directory:
 

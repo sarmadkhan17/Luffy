@@ -36,7 +36,18 @@ def configured(directory):
         return None
     if path.stat().st_size > 16384:
         raise ValueError('population_config_capacity')
-    return json.loads(path.read_text())
+    config = json.loads(path.read_text())
+    from trader.core.installation_paths import owned_path
+    # Only configuration locations are mapped in memory. The declaration,
+    # freeze receipt, export events and database bindings are never rewritten.
+    for key in ('declaration', 'receipt', 'export_directory'):
+        if key in config:
+            config[key] = owned_path(config[key])
+    if 'prior_declarations' in config:
+        config['prior_declarations'] = [owned_path(p) for p in config['prior_declarations']]
+    if 'local_ledgers' in config:
+        config['local_ledgers'] = {k: owned_path(p) for k, p in config['local_ledgers'].items()}
+    return config
 
 
 def meta(db, key):
@@ -61,10 +72,23 @@ def expected_binding(db, version, directory, freeze):
     freeze receipt, so neither a directory nor a refreeze can be rebound.
     """
     if legacy_version(db) in (None, version):
-        return 'binding', encode({'declaration_version': version, 'directory': str(directory.resolve())})
-    return 'binding:'+version, encode({'schema_version': 'pit-population-binding.v2',
-        'declaration_version': version, 'directory': str(directory.resolve()),
-        'freeze_sha256': D.digest(freeze)})
+        key = 'binding'
+        value = {'declaration_version': version, 'directory': str(directory.resolve())}
+    else:
+        key = 'binding:'+version
+        value = {'schema_version': 'pit-population-binding.v2',
+                 'declaration_version': version, 'directory': str(directory.resolve()),
+                 'freeze_sha256': D.digest(freeze)}
+    old = meta(db, key)
+    if old:
+        from trader.core.installation_paths import same_relocated_path
+        retained = json.loads(old)
+        if (isinstance(retained, dict) and 'directory' in retained
+                and {k:v for k,v in retained.items() if k != 'directory'} ==
+                    {k:v for k,v in value.items() if k != 'directory'}
+                and same_relocated_path(retained['directory'], directory)):
+            return key, old
+    return key, encode(value)
 
 
 class Producer:
