@@ -9,6 +9,8 @@ SQLite + WAL; one writer (the OS process), many readers (dashboard, brain).
 from __future__ import annotations
 
 import json
+import faulthandler
+import os
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -659,6 +661,9 @@ class Journal:
         """Serialized write transaction (single-writer discipline)."""
         with self._write_lock:
             conn = None
+            trace_slow = os.environ.get('LUFFY_TRACE_SLOW_TRANSACTIONS') == '1'
+            if trace_slow:
+                faulthandler.dump_traceback_later(4, repeat=False)
             try:
                 conn = self._conn()
                 yield conn
@@ -674,6 +679,9 @@ class Journal:
                 if is_storage_error(exc):
                     journal_failure(self, 'write', exc)
                 raise
+            finally:
+                if trace_slow:
+                    faulthandler.cancel_dump_traceback_later()
 
     # -- writes ----------------------------------------------------------
     def log_cycle(self, snap: Snapshot, cycle_id: str, mode: str) -> None:
