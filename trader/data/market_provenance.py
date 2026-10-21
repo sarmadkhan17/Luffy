@@ -131,7 +131,7 @@ def store_record(conn, record, *, text_cache=None):
     return encode(physical)
 
 
-def read_record(conn, raw):
+def read_record(conn, raw, *, text_cache=None):
     record = json.loads(raw)
     for field in ('source', 'raw_json'):
         marker = record.get(field)
@@ -140,10 +140,18 @@ def read_record(conn, raw):
         key = marker[len(TEXT_REF):]
         if len(key) != 64 or any(c not in '0123456789abcdef' for c in key):
             raise ValueError('market_source_reference_invalid')
-        row = conn.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
-        if row is None or text_reference(row[0]) != marker:
+        if text_cache is not None and key in text_cache:
+            text = text_cache[key]
+        else:
+            row = conn.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
+            text = None if row is None else row[0]
+        # Verify every reference, including a held immutable string. The cache
+        # lives for one bounded load only; nothing survives into another cut.
+        if text is None or text_reference(text) != marker:
             raise ValueError('market_source_reference_missing_or_corrupt')
-        record[field] = row[0]
+        if text_cache is not None:
+            text_cache[key] = text
+        record[field] = text
     return record
 
 
@@ -354,6 +362,24 @@ def append(conn, key, df=None, *, prepared=None):
         market_completion(conn)
 
 
+def _selected_revision_rows(conn, query, args, *, batch=False):
+    """Transport bounded rows once; selection SQL and receipt checks stay exact.
+
+    The cursor fetchall method steps into Python for every row, releasing the GIL each
+    time. Busy background workers can turn a small read into seconds of waits.
+    JSON transports the selected strings/integers in one result. Preserve raw
+    BLOB bytes too, so the existing JSON decoder/validation still decides them.
+    """
+    if not batch:
+        return conn.execute(query, args).fetchall()
+    packet = conn.execute("""SELECT json_group_array(json_array(
+        typeof(record_json), CASE WHEN typeof(record_json)='blob'
+            THEN hex(record_json) ELSE record_json END,
+        revision_id,event_ms,available_ms,observed_ms)) FROM (""" + query + ")", args).fetchone()[0]
+    return [(bytes.fromhex(raw) if kind == 'blob' else raw, rid, event, available, observed)
+            for kind,raw,rid,event,available,observed in json.loads(packet)]
+
+
 def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False):
     """Last retained revision of EACH event eligible at the exact decision cut.
 
@@ -418,13 +444,18 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
                 ORDER BY event_ms DESC LIMIT ?"""
             args += [window_start_ms]*3
         args.append(limit)
-    rows = conn.execute(query,args).fetchall()
+    # A transport optimization only: larger/stream/replay reads retain their
+    # original path. This does not bound or alter the requested evidence set.
+    batch = (not revision_stream and not replay_tf and window_start_ms is None
+             and type(limit) is int and 0 < limit <= 512)
+    rows = _selected_revision_rows(conn, query, args, batch=batch)
+    text_cache = {} if batch else None
     if not revision_stream:
         rows.reverse()
     selected = {}
     stream = []
     for raw, rid, indexed_event, indexed_available, indexed_observed in rows:
-        r = read_record(conn, raw)
+        r = (read_record(conn, raw, text_cache=text_cache) if batch else read_record(conn, raw))
         value = {k: r[k] for k in VALUES if k in r}
         body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
         if r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value':value}) or r['revision_id'] != digest(body):

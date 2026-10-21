@@ -107,3 +107,11 @@ Sampling can be biased by scheduling/GIL contention; it is diagnostic evidence,
 not performance acceptance. On this host Python 3.12.3 function profiling was
 observed to mix background-thread timings; those timings must not be used for
 attribution. Sampling takes precedence if both diagnostic flags are set.
+
+Bounded current revision reads use SQLite JSON transport to avoid one Python
+thread handoff per selected row. The original selection SQL is unchanged.
+Larger, replay, window and revision-stream reads retain their original path.
+Shared source text is held only within one bounded read, with every reference
+hash still checked. This adds no package or OS prerequisite: the existing
+SQLite JSON functions were already required. Sol1’s separate rowid-selection
+correction remains preserved outside this release.
