@@ -15,6 +15,18 @@ def load_config(path: str | None = None) -> dict:
     cfg_path = Path(path) if path else ROOT / "config.yaml"
     with open(cfg_path) as f:
         cfg = yaml.safe_load(f)
+    # Installation locations may differ after copying the release. These
+    # overrides do not alter trading policy, credentials or recorded evidence.
+    for variable, section, key in (
+        ('LUFFY_DASHBOARD_HOST', 'dashboard', 'host'),
+        ('LUFFY_OWNER_IPC_DIR', 'owner_interface', 'ipc_dir'),
+        ('LUFFY_RECOVERY_ROOT', 'deployment', 'recovery_root'),
+    ):
+        if variable in os.environ:
+            value = os.environ[variable].strip()
+            if not value:
+                raise ValueError(variable + ' must not be empty')
+            cfg.setdefault(section, {})[key] = value
     return cfg
 
 

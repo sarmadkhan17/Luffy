@@ -63,6 +63,17 @@ def collect(local):
     return P.collect_facts(local[0], clock=lambda: NOW)
 
 
+def test_configured_recovery_root_reaches_unchanged_filesystem_gate(local, monkeypatch):
+    from trader.core import config
+    original = config.load_config
+    monkeypatch.setattr(config, 'load_config', lambda *a: {
+        **original(*a), 'deployment': {'recovery_root': 'recovery-mount'}})
+    seen = []
+    monkeypatch.setattr(P, '_filesystem', lambda root, recovery: seen.append((root, recovery)))
+    assert P.evaluate(collect(local))['allow']
+    assert seen == [(local[0], local[0] / 'recovery-mount')]
+
+
 def update_health(local):
     (local[0] / 'data/safety_health.json').write_text(json.dumps(local[1]))
 
@@ -286,9 +297,9 @@ raise SystemExit(p.main(sys.argv[3:]))
         path.chmod(0o755)
     env = {**os.environ, 'PATH': str(binpath)+':'+os.environ['PATH'], 'TEST_REPO': str(ROOT),
            'TEST_FACTS': str(fixture), 'TEST_EVENTS': str(events), 'LUFFY_EXPECT_REVISION': 'a'*40}
-    # Stub mkdir intentionally does nothing. Existing log destination is /tmp/opencode;
-    # substitute fixture logs so no production path is used even on success.
-    p = tmp_path / 'restart.sh'; p.write_text(p.read_text().replace('/tmp/opencode', str(tmp_path)))
+    # Stub mkdir intentionally does nothing; launcher logs belong to its root.
+    (tmp_path / 'logs').mkdir()
+    p = tmp_path / 'restart.sh'
     return p, events, env
 
 

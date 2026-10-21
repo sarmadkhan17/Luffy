@@ -225,8 +225,8 @@ def _first_boot_protection(db, facts, clock):
                 generation=dict(boot=floor, seq=0), trading_authority=False)
 
 
-def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contained_cold=False):
-    root, recovery_root = Path(root).resolve(), Path(recovery_root)
+def collect_facts(root, *, recovery_root=None, clock=time.time, contained_cold=False):
+    root = Path(root).resolve()
     facts = {}
     try:
         health = _health(root / 'data/safety_health.json')
@@ -243,6 +243,10 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
     try:
         from trader.core.config import load_config, Env
         cfg = load_config(str(root / 'config.yaml'))
+        recovery = Path(recovery_root if recovery_root is not None else
+                        cfg.get('deployment', {}).get('recovery_root', RECOVERY_ROOT))
+        if not recovery.is_absolute():
+            recovery = root / recovery
         reasons = []
         if Env.get('BINANCE_DEMO').lower() not in ('1', 'true', 'yes'):
             reasons.append('environment_not_demo')
@@ -252,7 +256,7 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
             reasons.append('research_gates_not_disabled')
         if not (root / 'data/watchdog.off').is_file():
             reasons.append('watchdog_hold_missing')
-        _filesystem(root, recovery_root)
+        _filesystem(root, recovery)
         facts['environment'] = _fact(reasons)
         stores = [(root / 'data/luffy.db', 'journal', True)]
         for store in cfg.get('safety_monitor', {}).get('critical_stores', []):

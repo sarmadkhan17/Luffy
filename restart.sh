@@ -15,8 +15,8 @@ set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET="${1:-}"
 case "$TARGET" in
-  kernel)    MOD="trader.kernel"; LOG="/tmp/opencode/luffy_kernel.log" ;;
-  dashboard) MOD="trader.dashboard.server"; LOG="/tmp/opencode/luffy_dash.log" ;;
+  kernel)    MOD="trader.kernel"; LOG="$DIR/logs/kernel-launch.log" ;;
+  dashboard) MOD="trader.dashboard.server"; LOG="$DIR/logs/dashboard-launch.log" ;;
   *) echo "usage: $0 kernel|dashboard"; exit 1 ;;
 esac
 

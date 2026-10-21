@@ -92,3 +92,6 @@ knowledge/.obsidian/
 *~
 .DS_Store
 Thumbs.db
+
+# Installation-local owner authentication keys and socket; copied securely.
+/private/
