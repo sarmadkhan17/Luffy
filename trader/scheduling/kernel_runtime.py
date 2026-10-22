@@ -9,6 +9,7 @@ import threading
 import time
 
 from .runtime import Calendar, Worker
+from .timing import StageTimings, timed_worker
 from .coordination import analysis_context, model_snapshot, input_fingerprint
 from .maintenance import Maintenance
 
@@ -18,6 +19,7 @@ log = logging.getLogger('luffy.cycles')
 class KernelRuntime:
     def __init__(self, kernel):
         self.kernel = kernel
+        self.stage_timings = StageTimings()
         self.execution_lock = threading.RLock()
         self.decision_lock = threading.RLock()
         self.lock = threading.Lock()
@@ -164,6 +166,7 @@ class KernelRuntime:
             self.holdings_market = dict(view._portfolio_holdings_market)
             self.positions_at = time.monotonic()
 
+    @timed_worker('market')
     def market(self):
         view = analysis_context(self)
         view._refresh_btc_context()
@@ -191,6 +194,7 @@ class KernelRuntime:
             self.pending_scan = view
         self.jobs['decisions'].trigger()
 
+    @timed_worker('decisions')
     def decisions(self):
         with self.lock:
             view, self.pending_scan = self.pending_scan, None
@@ -216,6 +220,7 @@ class KernelRuntime:
             self.pending_portfolio = view
         self.jobs['portfolio'].trigger()
 
+    @timed_worker('portfolio')
     def portfolio(self):
         with self.lock:
             view, self.pending_portfolio = self.pending_portfolio, None
@@ -395,6 +400,7 @@ class KernelRuntime:
     def snapshot(self):
         return dict(schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
+            stages=self.stage_timings.snapshot(),
             execution=dict(self.execution_metrics),
             replaced_scan_batches=self.scan_replaced, candles=dict(self.candle_stats))
 

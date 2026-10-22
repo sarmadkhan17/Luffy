@@ -3,6 +3,8 @@
 No order books, symbol candle acquisition, strategy evaluation or account
 permission inference. Venue metadata's underlyingType=COIN proves crypto.
 """
+from trader.scheduling.timing import stage, stage_scope
+
 import math
 import time
 from collections import Counter
@@ -137,6 +139,7 @@ def project(tickers, markets, *, cut, blacklist, stale_ms, capability_exclusions
     return rows,excluded
 
 
+@stage('broad.total')
 def observe(kernel, exposure):
     """Freeze a broad cohort independently of old top-N and deep members."""
     ex = kernel.universe.ex
@@ -144,7 +147,8 @@ def observe(kernel, exposure):
     started = int(time.time()*1000)
     source_exclusions = {}
     try:
-        tickers = ex.fetch_tickers()
+        with stage_scope('broad.tickers'):
+            tickers = ex.fetch_tickers()
         cut = int(time.time()*1000)
         if cut < started:
             raise ValueError('bulk_acquisition_clock_reversed')
@@ -157,56 +161,60 @@ def observe(kernel, exposure):
         if key is None: raise ValueError('venue_metadata_receipt_unavailable')
         metadata_source = mp.venue_source(kernel.exchange)
         if metadata_source is None: raise ValueError('venue_metadata_source_unavailable')
-        metadata = mp.load(kernel.journal._conn(),key,as_of_ms=cut,limit=1,
-                           instrument_id='ref:venue_metadata',source=metadata_source)
-        metadata = mp.eligible_frame(metadata,None,cut)
-        if (metadata is None or metadata.empty or metadata['quality'].iloc[0] != 'VALID'
-                or metadata['revision_id'].iloc[0] != getattr(kernel,'_venue_metadata_revision',None)):
-            raise ValueError('venue_metadata_receipt_unavailable')
-        metadata_receipt = mp.receipt_metadata(metadata.iloc[0])
-        if metadata_receipt['kind'] != 'reference' or metadata_receipt['transform_version'] != 'venue_metadata.v1':
-            raise ValueError('venue_metadata_contract_mismatch')
-        markets = __import__('json').loads(metadata_receipt['raw_json'])['metadata']
-        if not markets: raise ValueError('venue_metadata_unavailable')
-        account_excluded=[]
-        from trader.engine.entry_authority import CAP_KEY
-        for r in kernel.journal.query('SELECT key,value FROM state_kv WHERE key LIKE ?', (CAP_KEY+'%',)):
-            cap=__import__('json').loads(r['value'])
-            if (cap.get('valid_until_ms',-1)>=cut and cap.get('observed_at_ms',cut+1)<=cut
-                    and cap.get('receipt_id')==digest({k:v for k,v in cap.items() if k!='receipt_id'})
-                    and cap.get('record',{}).get('account_eligibility')=='INELIGIBLE'):
-                account_excluded.append(r['key'][len(CAP_KEY):])
-        rows,excluded = project(tickers,markets,cut=cut,blacklist=kernel.universe.blacklist,
-            stale_ms=cfg['attention']['stale_seconds']*1000,capability_exclusions=account_excluded,
-            source_exclusions=source_exclusions)
-        status='VALID'
+        with stage_scope('broad.venue_metadata'):
+            metadata = mp.load(kernel.journal._conn(),key,as_of_ms=cut,limit=1,
+                               instrument_id='ref:venue_metadata',source=metadata_source)
+            metadata = mp.eligible_frame(metadata,None,cut)
+            if (metadata is None or metadata.empty or metadata['quality'].iloc[0] != 'VALID'
+                    or metadata['revision_id'].iloc[0] != getattr(kernel,'_venue_metadata_revision',None)):
+                raise ValueError('venue_metadata_receipt_unavailable')
+            metadata_receipt = mp.receipt_metadata(metadata.iloc[0])
+            if metadata_receipt['kind'] != 'reference' or metadata_receipt['transform_version'] != 'venue_metadata.v1':
+                raise ValueError('venue_metadata_contract_mismatch')
+            markets = __import__('json').loads(metadata_receipt['raw_json'])['metadata']
+            if not markets: raise ValueError('venue_metadata_unavailable')
+        with stage_scope('broad.eligibility'):
+            account_excluded=[]
+            from trader.engine.entry_authority import CAP_KEY
+            for r in kernel.journal.query('SELECT key,value FROM state_kv WHERE key LIKE ?', (CAP_KEY+'%',)):
+                cap=__import__('json').loads(r['value'])
+                if (cap.get('valid_until_ms',-1)>=cut and cap.get('observed_at_ms',cut+1)<=cut
+                        and cap.get('receipt_id')==digest({k:v for k,v in cap.items() if k!='receipt_id'})
+                        and cap.get('record',{}).get('account_eligibility')=='INELIGIBLE'):
+                    account_excluded.append(r['key'][len(CAP_KEY):])
+            rows,excluded = project(tickers,markets,cut=cut,blacklist=kernel.universe.blacklist,
+                stale_ms=cfg['attention']['stale_seconds']*1000,capability_exclusions=account_excluded,
+                source_exclusions=source_exclusions)
+            status='VALID'
     except Exception as exc:
         cut=int(time.time()*1000);tickers={};markets={};rows={};excluded={};source_exclusions={};metadata_receipt=None;status='UNAVAILABLE:'+type(exc).__name__
     # Retain the old strategy-volume peer definition using cheap onboard
     # metadata instead of first-candle network probes (explicit v2 semantics).
-    scan=cfg['universe']['auto_scan']
-    base=[s for s,r in rows.items() if s not in cfg['universe']['majors'] and r['quote_volume']>=scan['min_volume_usdt'] and r['last']>=scan['min_price']
-          and type(r['listing_onboard_ms']) is int and 0<=r['listing_onboard_ms']<=cut-scan['min_age_days']*86400000]
-    base=sorted(base,key=lambda s:(rows[s]['quote_volume'],s),reverse=True)[:scan['top_n']]
-    base=sorted(set(base) | (set(cfg['universe']['majors']) & set(rows)))
-    specs=[sp for _row,sp in getattr(kernel,'_spec_rows',[])]
-    volumes={s:r['quote_volume'] for s,r in rows.items()}
-    broad_plan=plan_scan(specs,rows,volumes) if specs else None
-    peer_plan=plan_scan(specs,base,volumes) if specs else None
-    peers=sorted((set(peer_plan.symbols) if peer_plan else set(base)) & set(rows))
-    relevance={s:sorted(sp.id for sp in specs if broad_plan.wants(sp.id,s)) for s in rows}
-    required_by_strategy={s:sorted(sp.id for sp in specs if s in {norm_symbol(x) for x in (sp.universe or {}).get('required_evaluation',[])}
-        and broad_plan.wants(sp.id,s)) for s in rows}
-    required_symbols=sorted({norm_symbol(s) for sp in specs for s in (sp.universe or {}).get('required_evaluation',[])})
-    if any(norm_symbol(s) not in broad_plan.by_strategy.get(sp.id,()) for sp in specs
-           for s in (sp.universe or {}).get('required_evaluation',[]) if norm_symbol(s) in rows):
-        raise ValueError('required_strategy_symbol_ineligible')
+    with stage_scope('broad.strategy_membership'):
+        scan=cfg['universe']['auto_scan']
+        base=[s for s,r in rows.items() if s not in cfg['universe']['majors'] and r['quote_volume']>=scan['min_volume_usdt'] and r['last']>=scan['min_price']
+              and type(r['listing_onboard_ms']) is int and 0<=r['listing_onboard_ms']<=cut-scan['min_age_days']*86400000]
+        base=sorted(base,key=lambda s:(rows[s]['quote_volume'],s),reverse=True)[:scan['top_n']]
+        base=sorted(set(base) | (set(cfg['universe']['majors']) & set(rows)))
+        specs=[sp for _row,sp in getattr(kernel,'_spec_rows',[])]
+        volumes={s:r['quote_volume'] for s,r in rows.items()}
+        broad_plan=plan_scan(specs,rows,volumes) if specs else None
+        peer_plan=plan_scan(specs,base,volumes) if specs else None
+        peers=sorted((set(peer_plan.symbols) if peer_plan else set(base)) & set(rows))
+        relevance={s:sorted(sp.id for sp in specs if broad_plan.wants(sp.id,s)) for s in rows}
+        required_by_strategy={s:sorted(sp.id for sp in specs if s in {norm_symbol(x) for x in (sp.universe or {}).get('required_evaluation',[])}
+            and broad_plan.wants(sp.id,s)) for s in rows}
+        required_symbols=sorted({norm_symbol(s) for sp in specs for s in (sp.universe or {}).get('required_evaluation',[])})
+        if any(norm_symbol(s) not in broad_plan.by_strategy.get(sp.id,()) for sp in specs
+               for s in (sp.universe or {}).get('required_evaluation',[]) if norm_symbol(s) in rows):
+            raise ValueError('required_strategy_symbol_ineligible')
     # Closed-bar peer data remains independent of admission. Attention's
     # broad statistical cohort deliberately replaces first-16 subset semantics.
     frames={}
     for sym in rows:
         try:
-            df=kernel.feed.cached_ohlcv(sym,cfg['attention']['timeframe'],limit=153,as_of_ms=cut)
+            with stage_scope('broad.history_read', symbol=sym):
+                df=kernel.feed.cached_ohlcv(sym,cfg['attention']['timeframe'],limit=153,as_of_ms=cut)
             if df is not None:
                 frames[sym]={cfg['attention']['timeframe']:df}
                 if 'quality' in df and not df['quality'].eq('VALID').all():
@@ -218,23 +226,26 @@ def observe(kernel, exposure):
     capture_cfg=settings(cfg['attention'])
     capture_cfg['max_symbols']=max(1,len(rows))
     memberships={s:dict(source=SCHEMA,symbol=s,quality='VALID',available_at_ms=cut,observed_at_ms=cut) for s in rows}
-    event=capture(frames,sorted(rows),'broad:'+digest([cut,rows]),capture_cfg,cut,membership_receipts=memberships)
+    with stage_scope('broad.capture'):
+        event=capture(frames,sorted(rows),'broad:'+digest([cut,rows]),capture_cfg,cut,membership_receipts=memberships)
     # Pure evaluator; worker availability cannot alter synchronous admission.
     event['capture_ms'] = None  # elapsed timing is not a deterministic admission input
-    result=evaluate_snapshot(event)
+    with stage_scope('broad.scoring'):
+        result=evaluate_snapshot(event)
     scores={r['symbol']:r for r in result['rows']}
     if status=='VALID' and any(not r.get('eligible') for r in scores.values()): status='DEGRADED_CACHED_HISTORY'
     if peer_plan: kernel._scan_timeframes=peer_plan.timeframes
-    observation=dict(schema=SCHEMA,source_cut_ms=cut,source_identity=digest([SCHEMA,cut,tickers,markets]),
-        rows=rows,excluded=excluded,source_exclusions=source_exclusions,peer_cohort=peers,peer_version=PEER_VERSION,
-        strategy_relevance=relevance,required_by_strategy=required_by_strategy,required_symbols=required_symbols,
-        attention_event=event,strategy_specs=[sp.to_dict() for sp in specs],
-        context_anchors=list(ANCHORS),exposure_required=sorted(exposure),
-        salience_rows=scores,salience_config=result['config'],salience_anchor_ms=result.get('anchor_close_ms',cut//TF_MS[cfg['attention']['timeframe']]*TF_MS[cfg['attention']['timeframe']]),
-        market=result['market'],status=status,acquisition='bulk tickers + local closed-bar cache; no per-symbol network',
-        source_receipts=dict(tickers=tickers,venue_metadata=markets,
-                             venue_metadata_receipt=metadata_receipt,
-                             request_started_ms=started, observed_at_ms=cut))
-    from .attention_history import coverage
-    observation['history_coverage'] = coverage(result, rows, result['config']['min_salience'])
+    with stage_scope('broad.build_evidence'):
+        observation=dict(schema=SCHEMA,source_cut_ms=cut,source_identity=digest([SCHEMA,cut,tickers,markets]),
+            rows=rows,excluded=excluded,source_exclusions=source_exclusions,peer_cohort=peers,peer_version=PEER_VERSION,
+            strategy_relevance=relevance,required_by_strategy=required_by_strategy,required_symbols=required_symbols,
+            attention_event=event,strategy_specs=[sp.to_dict() for sp in specs],
+            context_anchors=list(ANCHORS),exposure_required=sorted(exposure),
+            salience_rows=scores,salience_config=result['config'],salience_anchor_ms=result.get('anchor_close_ms',cut//TF_MS[cfg['attention']['timeframe']]*TF_MS[cfg['attention']['timeframe']]),
+            market=result['market'],status=status,acquisition='bulk tickers + local closed-bar cache; no per-symbol network',
+            source_receipts=dict(tickers=tickers,venue_metadata=markets,
+                                 venue_metadata_receipt=metadata_receipt,
+                                 request_started_ms=started, observed_at_ms=cut))
+        from .attention_history import coverage
+        observation['history_coverage'] = coverage(result, rows, result['config']['min_salience'])
     return observation,frames,memberships

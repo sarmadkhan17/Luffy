@@ -9,6 +9,8 @@ Controls honored every cycle: ACTIVE/FROZEN/HALTED, panic flag, proving sizing.
 """
 from __future__ import annotations
 
+from .scheduling.timing import stage, stage_scope
+
 import argparse
 import datetime as dt
 import json
@@ -1060,6 +1062,7 @@ class Kernel:
         diagnostic.update(status='AVAILABLE', reason='valid')
         return snapshot
 
+    @stage('context.btc')
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
         b15 = self.feed.fetch_ohlcv("BTC/USDT", "15m")
@@ -1078,6 +1081,7 @@ class Kernel:
         self._btc_ctx_receipt = dict(as_of_ms=at, transform_version='btc_context.v1',
                                     source_revisions=b15['revision_id'].tolist()+b1h['revision_id'].tolist())
 
+    @stage('context.anchors')
     def _refresh_context_anchors(self):
         """ETH context stays available even when it earns no deep slot."""
         from .data import market_provenance as mp
@@ -1143,6 +1147,7 @@ class Kernel:
         except (ValueError, TypeError, OverflowError):
             return None
 
+    @stage('deep.order_book', symbol_arg=1)
     def _order_book(self, symbol: str) -> dict | None:
         hit = self._book_cache.get(symbol)
         now = time.time()
@@ -1229,6 +1234,7 @@ class Kernel:
         return {s:out[s] for s in targets if s in out}
 
     # ── main loop ─────────────────────────────────────────────────────────
+    @stage('deep.cycle')
     def cycle(self) -> dict:
         stats = {"deep_processed": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
@@ -1275,8 +1281,9 @@ class Kernel:
 
         try:
             from .learning.runtime import checkpoint as learning_checkpoint
-            stats['learning_application'] = learning_checkpoint(self.journal,self.cfg,
-                at_ms=int(time.time()*1000),max_work=8)
+            with stage_scope('deep.apply_learning'):
+                stats['learning_application'] = learning_checkpoint(self.journal,self.cfg,
+                    at_ms=int(time.time()*1000),max_work=8)
             if runtime is not None and any(row.get('result') == 'APPLIED'
                     for row in stats['learning_application']):
                 runtime.reload_model()
@@ -1392,16 +1399,18 @@ class Kernel:
                     snap.market_provenance_parts = lineage
                 from .learning.capture_runtime import runtime_inputs
                 try:
-                    learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
-                        cut_ms=int(time.time()*1000),control_state=state,additional_original_inputs=dict(
-                            order_book=original_order_book,positioning_funding=funding.get(symbol),
-                            positioning_open_interest=oi.get(symbol),
-                            admission=snap.admission_context))
+                    with stage_scope('deep.learning_inputs'):
+                        learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
+                            cut_ms=int(time.time()*1000),control_state=state,additional_original_inputs=dict(
+                                order_book=original_order_book,positioning_funding=funding.get(symbol),
+                                positioning_open_interest=oi.get(symbol),
+                                admission=snap.admission_context))
                 except Exception:
                     learning_inputs = None
-                d = self.orchestrator.decide(snap, self.population,
-                                             entry_allowed=entry_allowed,
-                                             blocked_reason=blocked)
+                with stage_scope('deep.strategy_decision'):
+                    d = self.orchestrator.decide(snap, self.population,
+                                                 entry_allowed=entry_allowed,
+                                                 blocked_reason=blocked)
                 from .data.attention_history import decision_state
                 stats.setdefault('decision_data_states', {})[symbol] = decision_state(snap, d)
                 if learning_inputs is not None:
@@ -1409,8 +1418,9 @@ class Kernel:
                     learning_inputs['snapshot'] = deepcopy(snap)
                 d.scan_id = scan_id
                 d.learning_inputs = learning_inputs
-                self.orchestrator.journalize(snap, d, self.market_type.value,
-                                             mode="live")
+                with stage_scope('deep.save_decision'):
+                    self.orchestrator.journalize(snap, d, self.market_type.value,
+                                                 mode="live")
                 stats["decisions"] += 1
                 if runtime is not None:
                     runtime.decision_completed(symbol, input_key, d)
@@ -1507,6 +1517,7 @@ class Kernel:
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
 
+    @stage('portfolio.checkpoint')
     def _portfolio_checkpoint(self):
         """Proposal-only consumer; never feeds the existing entry/order path."""
         from .portfolio.current import checkpoint
@@ -1981,6 +1992,7 @@ class Kernel:
                 out.add(norm_symbol(json.loads(row['recovery_json'])['symbol']))
         return tuple(sorted(out))
 
+    @stage('admission.total')
     def _admission_plan(self):
         from . import attention_admission as A
         from .data.broad_crypto import observe, ANCHORS
@@ -1991,8 +2003,9 @@ class Kernel:
             exposure = self._exposure_symbols()
             observation, frames, memberships = observe(self, exposure)
             policy = A.AdmissionPolicy.from_config(self.cfg)
-            receipt = A.persist(self.journal, observation, policy)
-            A.verify_receipt(receipt)
+            with stage_scope('admission.select_persist_verify'):
+                receipt = A.persist(self.journal, observation, policy)
+                A.verify_receipt(receipt)
             self._scan_membership_receipts = memberships
             # Empty explicit eligibility must mean NONE here, unlike legacy
             # genomes whose missing/empty symbols historically means ALL.
@@ -2007,8 +2020,9 @@ class Kernel:
             # Scheduling failure cannot revoke mandatory exposure protection.
             try:
                 from .data.attention_history import prepare
-                self._history_preparation = prepare(self, receipt)
-                self.journal.log_brain_event('attention_history_preparation', 'attention', self._history_preparation)
+                with stage_scope('admission.queue_history'):
+                    self._history_preparation = prepare(self, receipt)
+                    self.journal.log_brain_event('attention_history_preparation', 'attention', self._history_preparation)
             except Exception as exc:
                 self._history_preparation = dict(status='REFUSED', reason=type(exc).__name__)
             return receipt, frames
@@ -2025,6 +2039,7 @@ class Kernel:
                 pass  # a storage failure cannot obstruct mandatory protection
             return None, {}
 
+    @stage('peers.history')
     def _peer_frames(self, peers):
         """Independent strategy peer population: cached PIT data only."""
         at = self._admission_receipt['source_cut_ms'] if self._admission_receipt else int(time.time()*1000)
@@ -2041,6 +2056,7 @@ class Kernel:
             out[sym] = frames
         return out
 
+    @stage('deep.snapshot', symbol_arg=1)
     def _candidate_snapshot_for(self, symbol, receipt, peers):
         from .attention_admission import verify_receipt, candidates
         verify_receipt(receipt)
