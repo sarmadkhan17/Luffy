@@ -24,7 +24,6 @@ import time
 from .agents.flow import FlowAnalyst
 from .agents.momentum import MomentumAnalyst, RotationAnalyst, ValueAnalyst
 from .agents.macro_guard import MacroGuard
-from .agents.news_guard import NewsGuard
 from .agents.orderbook_depth import DepthScout
 from .agents.positioning import PositioningAnalyst
 from .agents.regime import btc_context
@@ -47,6 +46,8 @@ from .observability.portfolio_observation import observe_positions, trading_sour
 from .strategy.plan_owner import decision_owner, exit_score
 from .strategy.genome import Genome
 
+from .scheduling.coordination import coordinated, model_coordinated
+
 log = logging.getLogger("luffy")
 
 AGENTS = {"structure": StructureAnalyst, "flow": FlowAnalyst,
@@ -67,37 +68,6 @@ def setup_logging(cfg: dict) -> None:
             maxBytes=int(cfg["logging"].get("max_bytes", 10 << 20)),
             backupCount=int(cfg["logging"].get("backup_count", 5))),
         logging.StreamHandler(sys.stdout)])
-
-
-def news_status_line(st: dict, stale_after_s: float,
-                     now: float | None = None) -> tuple[str, str]:
-    """(icon, label) for /news. Only a current QUIET check is shown as clear;
-    ARMED is an alert, and uncertain/stale/failed/disabled/unknown are never
-    rendered as healthy. Display only: dampening is the orchestrator's."""
-    truth = str(st.get("truth") or "UNKNOWN")
-    try:
-        age = (now if now is not None else time.time()) - dt.datetime.fromisoformat(
-            str(st.get("assessed_at"))).timestamp()
-    except (TypeError, ValueError):
-        age = None
-    if truth != "DISABLED" and (age is None or age < 0 or age > stale_after_s):
-        return "📰⏳", (f"STALE — last check {truth} is not current "
-                       f"(news risk unknown, not clear)")
-    if truth == "ARMED":
-        return "📰🚨", "ARMED — entries dampened (threshold +0.08, score ×0.75)"
-    if truth == "QUIET":
-        return "📰✅", "CONFIRMED QUIET — every feed read, dated items in window, no blackout"
-    if truth == "UNCERTAIN":
-        return "📰⚠️", ("UNCERTAIN — " + ("entries dampened on undated/future items"
-                                          if st.get("active") else
-                                          "undated/future items; not clear"))
-    if truth in ("FEED_STALE", "EMPTY_FEED"):
-        return "📰⏳", f"{truth} — no current headlines (news risk unknown, not clear)"
-    if truth in ("FETCH_FAILED", "PARSE_FAILED", "ASSESSMENT_FAILED"):
-        return "📰❌", f"{truth} — news risk unknown (fail-open, not clear)"
-    if truth == "DISABLED":
-        return "📰⛔", "DISABLED — no news protection"
-    return "📰❓", f"{truth} — news risk unknown (not clear)"
 
 
 class Kernel:
@@ -132,10 +102,9 @@ class Kernel:
                  "positioning", "depth")
         self.analysts = [self._make_agent(k) for k in order]
         from .engine.orchestrator import Orchestrator
-        self.news_guard = NewsGuard(cfg, self.journal)
         self.macro_guard = MacroGuard(cfg, self.journal)
         self.orchestrator = Orchestrator(self.analysts, self.journal,
-                                         news_guard=self.news_guard, cfg=cfg)
+                                         cfg=cfg)
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type, risk_manager=self.risk)
         self.supervisor = Supervisor(self.journal, self.state_machine,
@@ -191,6 +160,7 @@ class Kernel:
         return AGENTS[key]()
 
     # ── boot ─────────────────────────────────────────────────────────────
+    @model_coordinated
     def _load_population(self) -> list[tuple]:
         from .engine import trade_provenance
         pop = []
@@ -402,27 +372,36 @@ class Kernel:
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
         self._start_owner_interface()
-        threading.Thread(target=self._derivatives_recorder, daemon=True,
-                         name="derivs-recorder").start()
-        if (self.cfg.get("references", {}) or {}).get("enabled", True):
-            threading.Thread(target=self._reference_recorder, daemon=True,
-                             name="ref-recorder").start()
-        threading.Thread(target=self._strategy_mechanism_loop, daemon=True,
-                         name="strategy-mechanism").start()
-        threading.Thread(target=self._maybe_validate_agents, daemon=True,
-                         name="agent-validator").start()
-        if self.cfg.get("scraper", {}).get("enabled", False):
-            threading.Thread(target=self._harvest_loop, daemon=True,
-                             name="scraper").start()
-        if self.cfg.get("crawler", {}).get("enabled", False):
-            threading.Thread(target=self._crawl_loop, daemon=True,
-                             name="crawler").start()
-        if self.cfg.get("rent", {}).get("weekly_usdt"):
-            threading.Thread(target=self._rent_loop, daemon=True,
-                             name="rent-check").start()
-        if (self.cfg.get("research", {}) or {}).get("enabled", False):
-            threading.Thread(target=self._research_loop, daemon=True,
-                             name="research").start()
+        if not getattr(self, "_use_split_cycles", False):
+            threading.Thread(target=self._derivatives_recorder, daemon=True,
+                             name="derivs-recorder").start()
+            if (self.cfg.get("references", {}) or {}).get("enabled", True):
+                threading.Thread(target=self._reference_recorder, daemon=True,
+                                 name="ref-recorder").start()
+            threading.Thread(target=self._strategy_mechanism_loop, daemon=True,
+                             name="strategy-mechanism").start()
+            threading.Thread(target=self._maybe_validate_agents, daemon=True,
+                             name="agent-validator").start()
+            if self.cfg.get("scraper", {}).get("enabled", False):
+                threading.Thread(target=self._harvest_loop, daemon=True,
+                                 name="scraper").start()
+            if self.cfg.get("crawler", {}).get("enabled", False):
+                threading.Thread(target=self._crawl_loop, daemon=True,
+                                 name="crawler").start()
+            if self.cfg.get("rent", {}).get("weekly_usdt"):
+                threading.Thread(target=self._rent_loop, daemon=True,
+                                 name="rent-check").start()
+            if (self.cfg.get("research", {}) or {}).get("enabled", False):
+                threading.Thread(target=self._research_loop, daemon=True,
+                                 name="research").start()
+        from .agents.macro_schedule import MacroSchedule
+        self._macro_schedule = MacroSchedule(self.macro_guard, self._macro_step,
+            release_pending=lambda: self.journal.kv_get('macro_guard_froze', '0') == '1'
+                and self.journal.kv_get('macro_guard_operator_hold', '0') != '1')
+        self._macro_schedule.step()  # establish today's window before any trading cycle
+        threading.Thread(target=self._macro_schedule.run,
+                         kwargs={'stopped': lambda: self._stop},
+                         name='macro-schedule', daemon=True).start()
         self._boot_complete = True
 
     def _filter_universe_to_venue(self) -> None:
@@ -473,6 +452,9 @@ class Kernel:
         self._attention_call("close")
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+        maintenance = getattr(self, "_maintenance", None)
+        if maintenance is not None:
+            maintenance.stop()
         feed = getattr(self, "feed", None)
         if feed is not None and getattr(feed, "background_acquisition", False):
             feed.cancel_background_acquisition()
@@ -615,7 +597,7 @@ class Kernel:
                     return
                 _t.sleep(1)
 
-    def _mechanism_once(self, per_cycle: int = 1, max_book: int = 8) -> dict:
+    def _mechanism_once(self, per_cycle: int = 1, max_book: int = 8, *, review_only=False) -> dict:
         from .brain import ideas as idea_queue
         from .brain.analyst import Analyst
         from .brain.llm import BrainLLM
@@ -653,6 +635,9 @@ class Kernel:
             # Best-effort, nonthrowing and idempotent if review already flushed.
             # Keep telemetry outside lifecycle transactions and before replacements.
             analyst.flush_health_observations()
+
+        if review_only:
+            return {"retired": retired, "added": [], "review_only": True}
 
         # 2. generate replacements — from what the Researcher actually read
         added = []
@@ -911,7 +896,7 @@ class Kernel:
                 log.warning(f"rent check failed: {e}")
             time.sleep(every)
 
-    def _maybe_validate_agents(self) -> None:
+    def _maybe_validate_agents(self, *, scheduled=False) -> None:
         """Re-run analyst validation weekly (or at boot if stale/missing)."""
         import json as _json
         from .agents.validate import run as validate_run
@@ -924,11 +909,12 @@ class Kernel:
         age_days = 999.0
         if wpath.exists():
             age_days = (time.time() - wpath.stat().st_mtime) / 86400
-        if age_days < 7:
+        if age_days < 7 and not scheduled:
             log.info(f"agent weights fresh ({age_days:.1f}d) — skip validation")
             return
         try:
-            time.sleep(90)                     # let boot settle
+            if not scheduled:
+                time.sleep(90)                     # let boot settle
             analysts = {"structure": StructureAnalyst(),
                         "flow": FlowAnalyst(),
                         "momentum": MomentumAnalyst(),
@@ -951,6 +937,8 @@ class Kernel:
                                "updated from measured accuracy.")
         except Exception as e:
             log.warning(f"agent validation failed: {e}")
+            if scheduled:
+                raise
 
     # ── per-symbol pipeline ───────────────────────────────────────────────
     def _snapshot_for(self, symbol: str,
@@ -1246,19 +1234,22 @@ class Kernel:
                  "skips": 0, "exits_detected": 0}
         self._portfolio_market = {}
         self._portfolio_holdings_market = {}
-        supervisor = getattr(self, 'supervisor', None)
-        if supervisor is not None:
-            supervisor.cycle()
-        self.state_machine.refresh()
-        balance, status = self._risk_step()
+        runtime = getattr(self, '_split_runtime', None)
+        supervisor = None
+        if runtime is not None:
+            balance, status = runtime.account_snapshot(self)
+        else:
+            supervisor = getattr(self, 'supervisor', None)
+            if supervisor is not None:
+                supervisor.cycle()
+            self.state_machine.refresh()
+            balance, status = self._risk_step()
 
-        stats["manual_closed"] = self._drain_close_requests()
+            stats["manual_closed"] = self._drain_close_requests()
 
-        n = self._drain_panic()
-        if n is not None:
-            stats["panic_closed"] = n
-
-        self._macro_step(self.macro_guard.check())
+            n = self._drain_panic()
+            if n is not None:
+                stats["panic_closed"] = n
 
         state = self.state_machine.refresh()
         supervisor = getattr(self, "supervisor", None)
@@ -1266,7 +1257,7 @@ class Kernel:
                 and state == ControlState.ACTIVE and self.executor.recovery_pending()):
             supervisor.trigger("entry_recovery_pending")
             state = self.state_machine.refresh()
-        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+        if runtime is None and self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
             self.executor.recover_entries()
         entry_allowed = self.state_machine.can_enter()
         blocked = "" if entry_allowed else f"state={state.value}"
@@ -1282,18 +1273,31 @@ class Kernel:
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
         self._record_risk_assessment(state, status, entry_allowed, blocked)
 
-        self._refresh_btc_context()
-        if self.cfg.get('attention',{}).get('admission'):
-            self._refresh_context_anchors()
-        news = self.news_guard.check()
-        self._publish_news_guard(news)
-        if news.get("active"):
-            log.info(f"news guard: {news['why']} — thresholds raised")
+        try:
+            from .learning.runtime import checkpoint as learning_checkpoint
+            stats['learning_application'] = learning_checkpoint(self.journal,self.cfg,
+                at_ms=int(time.time()*1000),max_work=8)
+            if runtime is not None and any(row.get('result') == 'APPLIED'
+                    for row in stats['learning_application']):
+                runtime.reload_model()
+                runtime.jobs['market'].trigger()
+                return {**stats, 'equity': status['equity'], 'dd_pct': status['drawdown_pct'],
+                        'rescan_reason': 'learning_changed_model'}
+        except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
+            log.info('learning checkpoint refused: %s', exc)
+
+        if runtime is None:
+            self._refresh_btc_context()
+            if self.cfg.get('attention',{}).get('admission'):
+                self._refresh_context_anchors()
         closed_count = int(self.journal.query(
             "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
         exec_tf = self.cfg["timeframes"]["execution"]
-        receipt, broad_frames = self._admission_plan()
+        if runtime is None:
+            receipt, broad_frames = self._admission_plan()
+        else:
+            receipt, broad_frames, prepared_peers, prepared_funding, prepared_oi = self._prepared_scan
         roles = self._symbol_roles
         deep_symbols = list(roles.deep)
         if receipt and receipt.get('required_deferred'):
@@ -1314,9 +1318,9 @@ class Kernel:
         stats['snapshot_refusals'] = {}
         # Peer population is independent; these are cache-only reads and never
         # network candle refreshes for rejected candidates.
-        universe_frames = self._peer_frames(roles.peers)
-        funding = self._funding_map(deep_symbols) if self.market_type == MarketType.FUTURES else {}
-        oi = self._oi_map(symbols=deep_symbols) if self.market_type == MarketType.FUTURES else {}
+        universe_frames = self._peer_frames(roles.peers) if runtime is None else prepared_peers
+        funding = (self._funding_map(deep_symbols) if self.market_type == MarketType.FUTURES else {}) if runtime is None else prepared_funding
+        oi = (self._oi_map(symbols=deep_symbols) if self.market_type == MarketType.FUTURES else {}) if runtime is None else prepared_oi
         # Legacy investigation telemetry remains bounded and asynchronous;
         # it does not choose deep members or stand in for broad admission.
         scan_id = self._attention_call("begin", broad_frames, list(roles.broad_crypto))
@@ -1357,13 +1361,21 @@ class Kernel:
                 stats["deep_processed"] += 1
                 boundaries['snapshots_constructed'] += 1
                 try:
-                    self._manage_paper(snap)
+                    if runtime is None:
+                        self._manage_paper(snap)
                 except Exception as e:
                     log.warning("paper exits refused %s: %s", symbol, e)
                 self.positioning_agent.set_context(symbol, funding.get(symbol),
                                                    oi.get(symbol))
                 original_order_book = self._order_book(symbol)
                 self.depth_agent.set_context(symbol, original_order_book)
+                input_key = None
+                if runtime is not None:
+                    input_key, changed = runtime.changed(self, snap, state, funding.get(symbol),
+                        oi.get(symbol), original_order_book, stats.get('learning_application'))
+                    if not changed:
+                        stats['unchanged_inputs'] = stats.get('unchanged_inputs', 0) + 1
+                        continue
                 lineage = getattr(snap, 'market_provenance_parts', None)
                 if lineage is None and getattr(snap, 'market_provenance_json', None):
                     lineage = json.loads(snap.market_provenance_json)
@@ -1400,6 +1412,8 @@ class Kernel:
                 self.orchestrator.journalize(snap, d, self.market_type.value,
                                              mode="live")
                 stats["decisions"] += 1
+                if runtime is not None:
+                    runtime.decision_completed(symbol, input_key, d)
                 self._portfolio_market[d.id] = snap
 
                 if d.action != Action.HOLD:
@@ -1433,23 +1447,26 @@ class Kernel:
                         "blocked": bool(d.skip_reason),
                         "reason": "decision_recorded", "decision_detail": "see decisions.skip_reason",
                         "evaluations": d.evaluation_causes, "omitted_causes": d.omitted_causes})
-                stats["exits_detected"] += self._detect_exchange_exits(symbol)
-                for t in self.journal.open_trades():
-                    if t["symbol"] != symbol:
-                        continue
-                    score = exit_score(d, t) if d.symbol == symbol else None
-                    if self._manages_exits():
-                        r = self._manage_one(t, snap, score)
-                        if r:
-                            stats["exit_action"] = r
+                if runtime is None:
+                    stats["exits_detected"] += self._detect_exchange_exits(symbol)
+                    for t in self.journal.open_trades():
+                        if t["symbol"] != symbol:
+                            continue
+                        score = exit_score(d, t) if d.symbol == symbol else None
+                        if self._manages_exits():
+                            r = self._manage_one(t, snap, score)
+                            if r:
+                                stats["exit_action"] = r
 
                 scanned.add(symbol)
 
         finally:
-            stats['exposure_serviced'] = self._service_exposure(scanned, universe_frames)
+            if runtime is None:
+                stats['exposure_serviced'] = self._service_exposure(scanned, universe_frames)
 
-        self._maybe_resolve_outcomes()
-        self._record_excursions()
+        if runtime is None:
+            self._maybe_resolve_outcomes()
+            self._record_excursions()
         if supervisor is not None and self.market_type == MarketType.FUTURES:
             state = self.state_machine.refresh()
         self._attention_call("causes", scan_id, attention_causes)
@@ -1458,10 +1475,15 @@ class Kernel:
         if attention_health or attention_error:
             stats["attention"] = attention_health or {"enabled": True, "status": "error"}
             stats["attention"]["kernel_error"] = attention_error
-        self.journal.log_equity(status["equity"], balance,
-                                len(self.journal.open_trades()),
-                                provenance=self._equity_provenance(status["equity"]))
-        stats['portfolio_runtime'] = self._portfolio_checkpoint()
+        if runtime is None:
+            self.journal.log_equity(status["equity"], balance,
+                                    len(self.journal.open_trades()),
+                                    provenance=self._equity_provenance(status["equity"]))
+        if runtime is None:
+            stats['portfolio_runtime'] = self._portfolio_checkpoint()
+        else:
+            runtime.queue_portfolio(self)
+            stats['portfolio_runtime'] = dict(status='QUEUED', execution_routed=False)
         now_ms = int(time.time()*1000)
         try:
             # Replay-complete evidence -> exact registered rules -> queued
@@ -1469,22 +1491,19 @@ class Kernel:
             from .learning.dispatch import dispatch_pending as learning_dispatch
             stats['learning_dispatch'] = [dict(outcome_id=r['outcome_id'], proposals=sum(
                 1 for x in r['results'] if x['result'] == 'PROPOSED'), reasons=sorted({
-                str(x['reason']) for x in r['results']})) for r in learning_dispatch(
-                self.journal,self.cfg,at_ms=now_ms,max_work=8)]
+                str(x['reason']) for x in r['results']})) for r in ([] if getattr(self, '_maintenance', None) is not None else learning_dispatch(
+                self.journal,self.cfg,at_ms=now_ms,max_work=8))]
         except Exception as exc:  # telemetry/learning never reaches trading
             log.info('learning dispatch refused: %s', exc)
-        try:
-            from .learning.runtime import checkpoint as learning_checkpoint
-            stats['learning_application'] = learning_checkpoint(self.journal,self.cfg,
-                at_ms=now_ms,max_work=8)
-        except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
-            log.info('learning checkpoint refused: %s', exc)
-        self.heartbeat.beat({"equity": round(balance, 2),
-                             "startup_state": "CYCLE_READY",
-                             "last_successful_cycle_at": time.time(), **stats,
-                             "state": self.state_machine.state.value,
-                             "boot_complete": getattr(self, '_boot_complete', False),
-                             "stopping": getattr(self, '_stop', True)})
+        if getattr(self, "_maintenance", None) is not None:
+            stats["maintenance_cycles"] = self._maintenance.snapshot()
+        if runtime is None:
+            self.heartbeat.beat({"equity": round(balance, 2),
+                                 "startup_state": "CYCLE_READY",
+                                 "last_successful_cycle_at": time.time(), **stats,
+                                 "state": self.state_machine.state.value,
+                                 "boot_complete": getattr(self, '_boot_complete', False),
+                                 "stopping": getattr(self, '_stop', True)})
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
 
@@ -1509,21 +1528,6 @@ class Kernel:
             log.info('portfolio runtime evidence unavailable: %s', exc)
             return dict(status='BLOCKED', reason=str(exc), execution_routed=False)
 
-    def _publish_news_guard(self, news: dict) -> None:
-        """Publish NewsGuard's own record. `published_at` is this publication;
-        the check's attempt/assessment/success times are NewsGuard's and are
-        never replaced by it (`ts` mirrors assessed_at for legacy readers)."""
-        rec = dict(news) if isinstance(news, dict) else {}
-        rec["active"] = bool(rec.get("active"))
-        rec.setdefault("why", "")
-        rec["ts"] = rec.get("assessed_at")
-        rec["published_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
-        try:
-            payload = json.dumps(rec, allow_nan=False, default=str)
-        except (TypeError, ValueError):
-            payload = json.dumps({"active": rec["active"], "why": str(rec["why"]),
-                                  "ts": None, "published_at": rec["published_at"]})
-        self.journal.kv_set("news_guard_state", payload)
 
     def _top_strategy(self, d) -> str:
         """One shared resolver; historical records retain their original algorithm."""
@@ -1533,6 +1537,7 @@ class Kernel:
             d.skip_reason = 'selection: ' + str(exc)
             return ''
 
+    @coordinated
     def _try_enter(self, d, snap, equity, closed_count) -> bool:
         from .agents.indicators import atr as _atr
         exec_tf = self.cfg["timeframes"]["execution"]
@@ -1795,6 +1800,7 @@ class Kernel:
         return self._paper
 
 
+    @coordinated
     def _manage_paper(self, snap):
         if not self._manages_exits():
             return []
@@ -2064,6 +2070,7 @@ class Kernel:
         reconciliation/protection of the rest. All trades sharing a symbol
         receive exit evaluation, unlike the historical first-orphan shortcut.
         """
+        self._exposure_errors = []
         serviced = set(serviced)
         trades = self.journal.open_trades()
         paper = self._paper.open_positions() if hasattr(self,'_paper') else []
@@ -2071,15 +2078,20 @@ class Kernel:
         try:
             required.update(self._exposure_symbols())
         except Exception as exc:
+            self._exposure_errors.append('inventory:' + type(exc).__name__)
             log.warning('mandatory exposure inventory incomplete: %s',type(exc).__name__)
         count = 0
         for symbol in sorted(required-serviced):
             # Exit detection is independent even when snapshot acquisition fails.
             try: self._detect_exchange_exits(symbol)
-            except Exception as exc: log.warning('exposure reconciliation %s: %s',symbol,type(exc).__name__)
+            except Exception as exc:
+                self._exposure_errors.append('reconcile:' + type(exc).__name__)
+                log.warning('exposure reconciliation %s: %s',symbol,type(exc).__name__)
             try:
                 snap = self._snapshot_for(symbol,universe=peers)
-                if snap is None: continue
+                if snap is None:
+                    self._exposure_errors.append('snapshot_unavailable:' + symbol)
+                    continue
                 snap.admission_context = dict(category='exposure_required',discretionary_slot=False)
                 self._portfolio_holdings_market[symbol] = snap
                 if any(p['symbol']==symbol for p in paper): self._manage_paper(snap)
@@ -2087,6 +2099,7 @@ class Kernel:
                     if t['symbol']==symbol and self._manages_exits(): self._manage_one(t,snap,None)
                 count += 1
             except Exception as exc:
+                self._exposure_errors.append('service:' + type(exc).__name__)
                 log.warning('mandatory exposure service %s: %s',symbol,type(exc).__name__)
         # Admitted held symbols already ran exit handling; their marks must
         # still enter holdings observations independently of candidate identity.
@@ -2094,6 +2107,7 @@ class Kernel:
             if snap.symbol in required: self._portfolio_holdings_market[snap.symbol] = snap
         return count
 
+    @coordinated
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""
         from .strategy import factory_handoff as F
@@ -2104,6 +2118,8 @@ class Kernel:
                 reason = self.exits.manage(t, snap.price, 0, score, snapshot=snap)
             except Exception as e:
                 log.warning(f"versioned exit manage {t['symbol']}: {e}")
+                if getattr(self, '_split_runtime', None) is not None:
+                    raise
                 return None
             if reason:
                 self.notifier.send(f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
@@ -2126,6 +2142,8 @@ class Kernel:
             reason = self.exits.manage(t, snap.price, a, score, snapshot=snap)
         except Exception as e:
             log.warning(f"exit manage {t['symbol']}: {e}")
+            if getattr(self, '_split_runtime', None) is not None:
+                raise
             return None
         if reason:
             self.notifier.send(
@@ -2164,6 +2182,7 @@ class Kernel:
         sm = getattr(self, "state_machine", None)
         return sm.manages_exits() if sm is not None else True
 
+    @coordinated
     def _drain_panic(self) -> int | None:
         """Consume one accepted panic: flatten, then keep it contained.
 
@@ -2213,6 +2232,7 @@ class Kernel:
                 f.apply(ControlState.FROZEN, "operator", f"panic flattened {n}")
         return n
 
+    @coordinated
     def _drain_close_requests(self) -> int:
         """Market-close whatever the operator asked for from the dashboard.
 
@@ -2277,6 +2297,7 @@ class Kernel:
         self._position_account_scope = position_scope
         return rows
 
+    @coordinated
     def _detect_exchange_exits(self, symbol: str) -> int:
         """Reconcile one symbol's journalled size against the venue's.
 
@@ -2317,6 +2338,8 @@ class Kernel:
                       for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
         except Exception:
+            if getattr(self, '_split_runtime', None) is not None:
+                raise
             return 0
         n = 0
         for t in self.journal.open_trades():
@@ -2360,7 +2383,42 @@ class Kernel:
 
     _outcome_tick = 0
 
+    def _scheduled_population_tick(self):
+        now = time.monotonic()
+        if now < getattr(self, "_next_population_tick", 0):
+            return
+        self._next_population_tick = now + 3600
+        try:
+            # Lifecycle rules for the legacy genomes. The LLM strategist
+            # review that used to follow was removed on 2026-09-11: its
+            # "mutate" verdict, Proposer and invention pass were three
+            # creation paths that bypassed the Analyst, and one of them
+            # resurrected a retired genome into paper and traded it.
+            from .strategy.promotion import evaluate_population
+            evaluate_population(self.journal, self.notifier)
+        except Exception as e:
+            log.warning(f"brain tick failed: {e}")
+        try:
+            # hot reload: promote/demote/mutate/harvest writes take
+            # effect within one brain tick — no restart required
+            fresh = self._load_population()
+            sig = [(st.id, st.state, st.params) for st, _g in fresh]
+            if sig != self._pop_sig:
+                self.population = fresh
+                self._pop_sig = sig
+                self.exits.genomes = {st.id: st.params
+                                      for st, _g in fresh}
+                elig = sum(1 for s in sig
+                           if s[1] in ("paper", "active"))
+                log.info(f"population hot-reloaded: {len(fresh)} "
+                         f"strategies ({elig} trade-eligible)")
+        except Exception as e:
+            log.warning(f"population hot-reload failed: {e}")
+
     def _maybe_resolve_outcomes(self):
+        if getattr(self, "_maintenance", None) is not None:
+            self._scheduled_population_tick()
+            return
         Kernel._outcome_tick += 1
         if Kernel._outcome_tick % 12 == 1:      # ~every 12 cycles
             try:
@@ -2467,11 +2525,13 @@ class Kernel:
         fresh = self._fetch_balance_fresh()
         return fresh if fresh is not None else self._last_equity_fallback()
 
+    @coordinated
     def _risk_release(self):
         """Risk's fresh answer to "may we be ACTIVE now?" — venue equity only,
         never the journal fallback; None equity makes Risk fail closed."""
         return self.risk.release_check(self._fetch_balance_fresh())
 
+    @coordinated
     def _risk_step(self) -> tuple[float, dict]:
         """The cycle's Risk step: track equity, HALT on the drawdown breach.
 
@@ -2593,6 +2653,7 @@ class Kernel:
             self.notifier.send(f"🔒 MacroGuard: event cleared — held in {r.control_state}: "
                                f"{', '.join(r.reasons)}")
 
+    @coordinated
     def owner_resume(self, ctx: OwnerContext, *, allow_unhalt: bool = False,
                      expected_intent_event_id: int | None = None):
         """The transport-neutral owner resume/unhalt: every channel calls this.
@@ -2990,6 +3051,7 @@ class Kernel:
                 self.journal, self.state_machine, resume=self.owner_resume,
                 snapshot=self._owner_snapshot, authorizer=Authorizer.from_config(self.cfg),
                 approval_cfg=self.cfg,
+                on_control=lambda: getattr(self, "_split_runtime", None) and self._split_runtime.owner_event(),
                 max_age_s=float(section.get("max_request_age_s", 300)),
                 busy_wait_s=float(section.get("busy_wait_s", 10)))
             self._owner_service = service
@@ -3014,7 +3076,10 @@ class Kernel:
         return {"market": getattr(getattr(self, "market_type", None), "value", None),
                 "open_trades": len(self.journal.open_trades()),
                 "heartbeat_age_s": age,
-                "last_cycle_s": round(getattr(self, "_last_cycle_s", 0.0) or 0.0, 3)}
+                "last_cycle_s": round(getattr(self, "_last_cycle_s", 0.0) or 0.0, 3),
+                "cycles": {name: {key: worker.snapshot().get(key) for key in
+                    ('status', 'last_duration_s', 'last_queue_wait_s', 'missed_deadlines', 'last_error_type')}
+                    for name, worker in getattr(getattr(self, '_split_runtime', None), 'jobs', {}).items()}}
 
     def _start_owner_interface(self) -> None:
         section = self.cfg.get("owner_interface") or {}
@@ -3151,13 +3216,7 @@ class Kernel:
                 return
             reply(owner_tg.reply_text(service.execute(req)))
             return
-        if msg.startswith("/news"):
-            st = self.news_guard.check()
-            emoji, label = news_status_line(st, self.news_guard.stale_after_s)
-            reply(f"{emoji} news guard: {label}"
-                  f"\nchecked {st.get('assessed_at') or 'unknown'}"
-                  f"\n{st.get('why', '')}")
-        elif msg.startswith("/rent"):
+        if msg.startswith("/rent"):
             from .engine.rent_keeper import status_text
             reply(status_text(self.journal))
         elif msg.startswith("/scouts"):
@@ -3200,6 +3259,7 @@ class Kernel:
 
     # ── run ──────────────────────────────────────────────────────────────
     def run(self) -> None:
+        self._use_split_cycles = True
         self.boot()
         if getattr(self, '_bootstrap_token', None):
             self.heartbeat.beat(dict(startup_state='STARTED_FROZEN',
@@ -3207,51 +3267,17 @@ class Kernel:
                 boot_complete=self._boot_complete, stopping=self._stop))
             from .observability.bootstrap import start_protection_monitor
             start_protection_monitor(self)
-        interval = float(self.cfg["timeframes"]["scan_interval_seconds"])
-        n = 0
-        profile_next = os.environ.get('LUFFY_PROFILE_FIRST_CYCLE') == '1'
-        sample_next = os.environ.get('LUFFY_SAMPLE_FIRST_CYCLE') == '1'
-        while not self._stop:
-            n += 1
-            t0 = time.time()
-            try:
-                if sample_next:
-                    sample_next = False
-                    profile_next = False
-                    from .observability.cycle_sampling import sample_cycle
-                    info = sample_cycle(self.cycle, ROOT / 'logs')
-                elif profile_next:
-                    profile_next = False
-                    from .observability.cycle_profile import profile_cycle
-                    info = profile_cycle(self.cycle, ROOT / 'logs')
-                else:
-                    info = self.cycle()
-                dur = time.time() - t0
-                bits = [f"cycle #{n}",
-                        f"{info['deep_processed']} deep candidates",
-                        f"{info['decisions']} decisions"]
-                if info.get("entries"):
-                    bits.append(f"{info['entries']} ENTRIES")
-                if info.get("exits_detected"):
-                    bits.append(f"{info['exits_detected']} exits")
-                if info.get("panic_closed"):
-                    bits.append(f"panic x{info['panic_closed']}")
-                bits.append(f"eq ${info['equity']:,.0f}")
-                if info.get("dd_pct"):
-                    bits.append(f"dd {info['dd_pct']}%")
-                bits.append(f"{dur:.1f}s")
-                log.info(" · ".join(bits))
-            except Exception as e:
-                log.exception(f"cycle #{n} failed: {e}")
-            finally:
-                # ALWAYS updated, success or failure: the research thread
-                # reads this to stand down while the kernel is slow, and a
-                # cycle that raises must not leave the previous fast value
-                # in place — a kernel that is slow AND failing would then
-                # never be recognised as busy.
-                self._last_cycle_s = time.time() - t0
-            self._funding_cache = None                 # refresh funding hourly-ish
-            time.sleep(max(1.0, interval - (time.time() - t0)))
+        if self._stop:
+            return
+        from .scheduling.kernel_runtime import KernelRuntime
+        runtime = KernelRuntime(self)
+        try:
+            runtime.start()
+            while not self._stop:
+                runtime.stop_event.wait(.5)
+        finally:
+            runtime.stop()
+            runtime.join()
         log.info("kernel stopped cleanly")
 
 

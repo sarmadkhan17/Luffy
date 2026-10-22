@@ -809,6 +809,14 @@ class Journal:
             if not updated.rowcount:
                 return
             persist(c, trade_id, "close:"+reason, before, accounting)
+        # Event delivery follows commit. A notification failure cannot undo
+        # booking; the maintenance timer also catches missed notifications.
+        callback = getattr(self, 'on_trade_closed', None)
+        if callback is not None:
+            try:
+                callback()
+            except Exception:
+                pass
 
     def align_trade_amount(self, trade_id: str, amount: float,
                            notional: float, pnl_delta: float = 0.0,

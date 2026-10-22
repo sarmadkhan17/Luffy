@@ -17,8 +17,8 @@ from trader.dashboard import current_truth, owner_api, valuation
 from trader.engine.risk import RiskManager, policy_from_config
 from tests.owner_frontend_fixture import (RISK_FIXTURE_CFG, account_observation,
                                           news_guard_state, risk_assessment)
-from tests.test_current_truth_contract import (RISK_CFG, RSS, _Resp, _get, _guard, _item,
-                                               _kernel, _kv, _obs, _publish, _q, _rfc,
+from tests.test_current_truth_contract import (RISK_CFG,
+                                               _kernel, _kv, _obs, _q,
                                                _trade)
 
 
@@ -54,7 +54,7 @@ def test_owner_readers_never_accept_any_future_time(journal, tmp_path, ahead):
     _kv(journal, "risk_assessment", risk_assessment(fut))
     assert current_truth.read_risk(journal, now)[0]["current"]["status"] == "UNAVAILABLE"
     _kv(journal, "news_guard_state", news_guard_state(fut))
-    assert current_truth.read_news_guard(journal, now)[0]["status"] == "UNAVAILABLE"
+    assert current_truth.read_news_guard(journal, now)[0]["status"] == "RETIRED"
 
 
 def test_truth_has_no_skew_constant_left():
@@ -63,66 +63,6 @@ def test_truth_has_no_skew_constant_left():
 
 
 # ── 2. News ────────────────────────────────────────────────────────────────
-def test_news_empty_feed_is_not_clear(journal, monkeypatch):
-    _get(monkeypatch, lambda: _Resp(RSS.format(""), 200))
-    st = _guard(journal).check()
-    assert st["truth"] == "EMPTY_FEED" and st["active"] is False
-    _publish(journal, st)
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert err is None and v["status"] == "EMPTY_FEED" and v["clear"] is False
-
-
-@pytest.mark.parametrize("pub,counter", [(None, "undated_items"),
-                                         ("not a date", "malformed_dates")])
-def test_news_undated_or_malformed_publication_cannot_prove_quiet(journal, monkeypatch,
-                                                                  pub, counter):
-    body = RSS.format(_item("Calm day", _rfc(time.time() - 60)) + _item("Other", pub))
-    _get(monkeypatch, lambda: _Resp(body, 200))
-    st = _guard(journal).check()
-    assert st[counter] == 1 and st["truth"] == "UNCERTAIN" and st["active"] is False
-    _publish(journal, st)
-    assert current_truth.read_news_guard(journal, _now())[0]["clear"] is False
-
-
-def test_news_publication_one_second_after_fetch_is_future(journal, monkeypatch):
-    from trader.agents import news_guard as ng
-    done = time.time() - 30
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: {
-        "ok": True, "completed_at": done,
-        "items": [{"title": "Calm", "text": "x" * 60, "age_h": 0.0,
-                   "published_ts": done + 1.0}]})
-    st = _guard(journal).check()
-    assert st["future_dated_items"] == 1 and st["truth"] == "UNCERTAIN"
-    assert st["fetched_at"] == datetime.fromtimestamp(done, timezone.utc).isoformat()
-
-
-def test_news_uncertain_dampening_is_applied_exactly_once_by_behaviour():
-    """Behaviour, not source lines: an UNCERTAIN-but-active record changes
-    decide() by exactly +0.08 threshold and x0.75 score, once, like ARMED."""
-    from tests.test_scout_upgrades import _orch, _snap
-    calls = []
-
-    def check(rec):
-        def f():
-            calls.append(1)
-            return dict(rec)
-        return f
-    unc = news_guard_state(_now(), truth="UNCERTAIN")
-    unc.update(active=True)
-    d_unc = _orch(0.5, None, news_guard=NS(check=check(unc))).decide(
-        _snap(), population=[], entry_allowed=True)
-    assert len(calls) == 1                                    # one read per decision
-    d_arm = _orch(0.5, None, news_guard=NS(check=check(news_guard_state(
-        _now(), truth="ARMED")))).decide(_snap(), population=[], entry_allowed=True)
-    d_q = _orch(0.5, None).decide(_snap(), population=[], entry_allowed=True)
-    for d in (d_unc, d_arm):
-        assert d.threshold - d_q.threshold == pytest.approx(0.08)
-        assert d.score == pytest.approx(d_q.score * 0.75)
-    fail = news_guard_state(_now(), truth="FETCH_FAILED", failure_codes=["fetch_timeout"])
-    d_fail = _orch(0.5, None, news_guard=NS(check=check(fail))).decide(
-        _snap(), population=[], entry_allowed=True)
-    assert d_fail.threshold == pytest.approx(d_q.threshold)   # fail-open: no veto, no dampen
-    assert d_fail.score == pytest.approx(d_q.score)
 
 
 # ── 3. Risk ────────────────────────────────────────────────────────────────
@@ -545,135 +485,9 @@ def test_position_quotes_use_a_keyless_exchange(monkeypatch, journal):
 
 
 # ── /news icon ─────────────────────────────────────────────────────────────
-def _news(truth_, active=False, age=0.0):
-    return {"truth": truth_, "active": active, "why": "x",
-            "assessed_at": datetime.fromtimestamp(time.time() - age, timezone.utc).isoformat()}
-
-
-@pytest.mark.parametrize("truth_,active,icon", [
-    ("ARMED", True, "📰🚨"), ("QUIET", False, "📰✅"),
-    ("UNCERTAIN", True, "📰⚠️"), ("UNCERTAIN", False, "📰⚠️"),
-    ("FEED_STALE", False, "📰⏳"), ("EMPTY_FEED", False, "📰⏳"),
-    ("FETCH_FAILED", False, "📰❌"), ("PARSE_FAILED", False, "📰❌"),
-    ("ASSESSMENT_FAILED", False, "📰❌"), ("DISABLED", False, "📰⛔"),
-    ("WHAT", False, "📰❓")])
-def test_news_icon_per_truth(truth_, active, icon):
-    from trader.kernel import news_status_line
-    got, label = news_status_line(_news(truth_, active), 1260.0)
-    assert got == icon
-    assert (got == "📰✅") == (truth_ == "QUIET")                 # only quiet is healthy
-    if truth_ == "UNCERTAIN" and active:
-        assert "dampened" in label
-
-
-@pytest.mark.parametrize("st", [_news("QUIET", age=5000), _news("ARMED", True, age=5000),
-                                {"truth": "QUIET", "assessed_at": None},
-                                {"truth": "QUIET", "assessed_at": "garbage"},
-                                lambda: _news("QUIET", age=-60)])
-def test_news_icon_stale_or_untimed_is_never_healthy(st):
-    st = st() if callable(st) else st  # future at assertion time, not collection time
-    from trader.kernel import news_status_line
-    icon, label = news_status_line(st, 1260.0)
-    assert icon == "📰⏳" and label.startswith("STALE")
-
-
-def test_news_command_renders_through_the_status_line():
-    from trader.kernel import Kernel
-    k = object.__new__(Kernel)
-    k.news_guard = NS(check=lambda: _news("FETCH_FAILED"), stale_after_s=1260.0)
-    out = []
-    k._handle_tg_command("/news", "b", reply=out.append)
-    assert out and out[0].startswith("📰❌ news guard: FETCH_FAILED") and "✅" not in out[0]
-    k.news_guard = NS(check=lambda: _news("QUIET"), stale_after_s=1260.0)
-    out.clear()
-    k._handle_tg_command("/news", "b", reply=out.append)
-    assert out[0].startswith("📰✅ news guard: CONFIRMED QUIET")
 
 
 # ── company cockpit Breaker ────────────────────────────────────────────────
-def _uncertain_active(at):
-    return news_guard_state(at, truth="UNCERTAIN", active=True, why="2 impact headlines",
-                            hits=2, dated_hits=0, undated_items=2, dated_in_window=3,
-                            headlines=["[impact] a", "[impact] b"],
-                            dampening={"applied": True, "threshold_add": 0.08,
-                                       "score_mult": 0.75, "enforcement": "dampen_only"})
-
-
-def _uncertain_inactive(at):
-    # below the rule, but one undated item leaves the quiet unproven
-    return news_guard_state(at, truth="UNCERTAIN", why="1 undated item", undated_items=1,
-                            dated_in_window=4)
-
-
-def _feed_stale(at):
-    old = (at - timedelta(hours=9)).isoformat()
-    return news_guard_state(at, truth="FEED_STALE", why="no publication in window",
-                            dated_in_window=0, newest_publication_at=old,
-                            oldest_publication_at=old)
-
-
-def _empty_feed(at):
-    return news_guard_state(at, truth="EMPTY_FEED", why="feed empty", items_total=0,
-                            items_considered=0, dated_in_window=0,
-                            newest_publication_at=None, oldest_publication_at=None)
-
-
-def _failed(at, truth_, codes):
-    return news_guard_state(at, truth=truth_, why=truth_.lower(), items_total=0,
-                            items_considered=0, dated_in_window=0, failure_codes=codes,
-                            fetched_at=None, succeeded_at=None,
-                            newest_publication_at=None, oldest_publication_at=None)
-
-
-def _risk_card(journal):
-    from trader.dashboard import server
-    co = server.build_company(journal, {"risk": {}})
-    cards = [v for v in _walk(co) if isinstance(v, dict) and isinstance(v.get("stats"), list)
-             and any(isinstance(s, list) and s[:1] == ["Breaker"] for s in v["stats"])]
-    assert len(cards) == 1, cards
-    return cards[0]
-
-
-def _walk(o):
-    yield o
-    for v in (o.values() if isinstance(o, dict) else o if isinstance(o, list) else ()):
-        yield from _walk(v)
-
-
-@pytest.mark.parametrize("make,breaker,guard", [
-    (lambda n: news_guard_state(n), "nominal", "clear"),
-    (lambda n: news_guard_state(n, "ARMED"), "armed", "2 impact headlines (1 severe)"),
-    (_uncertain_active, "dampening", "uncertain · dampening"),
-    (lambda n: news_guard_state(n - timedelta(hours=2)), "stale", "stale"),
-    (lambda n: {"active": False}, "unavailable", "unavailable"),
-    (_uncertain_inactive, "uncertain", "uncertain"),
-    (_feed_stale, "feed stale", "feed_stale"),
-    (_empty_feed, "feed empty", "empty_feed"),
-    (lambda n: _failed(n, "FETCH_FAILED", ["fetch_http_503"]), "failed", "fetch_failed"),
-    (lambda n: _failed(n, "PARSE_FAILED", ["parse_xml_error"]), "failed", "parse_failed"),
-    (lambda n: _failed(n, "ASSESSMENT_FAILED", ["assessment_exception"]), "failed",
-     "assessment_failed"),
-    (lambda n: _failed(n, "DISABLED", []), "disabled", "disabled"),
-])
-def test_cockpit_uncertain_dampening_is_never_nominal(journal, make, breaker, guard):
-    rec = make(_now())
-    _kv(journal, "news_guard_state", rec)
-    st = current_truth.read_news_guard(journal, _now())[0]
-    # the record is valid: only the deliberately missing one reads UNAVAILABLE
-    assert (st["status"] == "UNAVAILABLE") == (guard == "unavailable"), st.get("reasons")
-    if rec.get("truth") and guard not in ("stale", "unavailable"):
-        assert st["status"] == rec["truth"]
-    card = _risk_card(journal)
-    stats = dict(card["stats"])
-    assert stats["Breaker"] == breaker
-    assert stats["Guard"] == guard
-    quiet = guard == "clear"
-    assert ("nominal" in stats["Breaker"]) == quiet
-    if not quiet:
-        assert "nominal" not in card["last_output"] and "clear" not in card["last_output"]
-    assert ("clear" in stats["Guard"]) == quiet
-    if not quiet and breaker not in ("armed", "dampening"):
-        assert card["last_output"].startswith(f"news {breaker} · not confirmed quiet")
 
 
 # ── /enrichment/marks per position ─────────────────────────────────────────

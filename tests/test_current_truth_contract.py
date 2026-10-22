@@ -592,7 +592,7 @@ def test_policy_parse_matches_running_risk_manager(journal):
     assert lim["max_position_margin_pct"] == pytest.approx(rm.max_pos_margin * 100)
 
 
-# ═════════════════════════ 5. News Guard ════════════════════════════════════
+# ═════════════════════════ 5. RSS fetch diagnostics ════════════════════════════════════
 RSS = ("<rss><channel>{}</channel></rss>")
 
 
@@ -620,11 +620,6 @@ def _get(monkeypatch, fn):
         return fn()
     monkeypatch.setattr(sc.requests, "get", get)
     return calls
-
-
-def _guard(journal=None, **cfg):
-    from trader.agents.news_guard import NewsGuard
-    return NewsGuard({"scouts": {"news_guard": {"enabled": True, **cfg}}}, journal)
 
 
 def _raise(e):
@@ -657,270 +652,6 @@ def test_fetch_feed_empty_channel_is_a_successful_quiet_read(monkeypatch):
     assert r["ok"] is True and r["items"] == [] and r["error_code"] is None
 
 
-def _publish(journal, rec):
-    from trader.kernel import Kernel
-    k = object.__new__(Kernel)
-    k.journal = journal
-    k._publish_news_guard(rec)
-    return json.loads(journal.kv_get("news_guard_state"))
-
-
-def test_news_armed_records_dampening_once(journal, monkeypatch):
-    now = time.time()
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Exchange hacked", _rfc(now - 600))), 200))
-    st = _guard(journal).check()
-    assert st["active"] is True and st["truth"] == "ARMED"
-    assert st["dampening"] == {"applied": True, "threshold_add": 0.08, "score_mult": 0.75,
-                               "enforcement": "dampen_only"}
-    assert st["succeeded_at"] and st["assessed_at"] >= st["attempted_at"]
-    assert st["newest_publication_at"] is not None
-    pub = _publish(journal, st)
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert err is None and v["status"] == "ARMED" and v["clear"] is False
-    assert pub["published_at"] and pub["ts"] == st["assessed_at"]
-
-
-def test_news_quiet_is_the_only_clear(journal, monkeypatch):
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Bitcoin steady", _rfc(time.time()))), 200))
-    st = _guard(journal).check()
-    assert st["truth"] == "QUIET" and st["why"] == "feed quiet" and not st["active"]
-    _publish(journal, st)
-    v, _ = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "QUIET" and v["clear"] is True and v["freshness"] == "fresh"
-
-
-@pytest.mark.parametrize("fn,truth_,code", [
-    (_raise(requests.Timeout("slow")), "FETCH_FAILED", "fetch_timeout"),
-    (lambda: _Resp("bad gateway", 502), "FETCH_FAILED", "http_status"),
-    (lambda: _Resp("<html>not a feed</html>", 200), "PARSE_FAILED",
-     "parse_unrecognized_document"),
-])
-def test_news_failure_is_never_quiet_and_fails_open(journal, monkeypatch, fn, truth_, code):
-    _get(monkeypatch, fn)
-    st = _guard(journal).check()
-    assert st["active"] is False                                  # fail-open, no veto
-    assert st["truth"] == truth_ and st["failure_codes"] == [code]
-    assert st["why"] != "feed quiet" and st["dampening"]["applied"] is False
-    assert st["succeeded_at"] is None
-    _publish(journal, st)
-    v, _ = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == truth_ and v["clear"] is False
-
-
-def test_news_partial_feed_failure_is_not_quiet_but_still_arms(journal, monkeypatch):
-    from trader.agents import news_guard as ng
-    monkeypatch.setattr(ng, "FEEDS", ["https://a.test/rss", "https://b.test/rss"])
-    ok = {"ok": True, "items": [], "error_code": None, "http_status": 200}
-    bad = {"ok": False, "items": [], "error_code": "fetch_timeout", "http_status": None}
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: bad if "a." in url else ok)
-    st = _guard(journal).check()
-    assert st["truth"] == "FETCH_FAILED" and st["active"] is False
-    assert st["failure_codes"] == ["fetch_timeout"] and st["succeeded_at"]
-    hot = dict(ok, items=[{"title": "Exchange hacked", "text": "x" * 60, "age_h": 0.1,
-                           "published_ts": time.time() - 360}])
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: bad if "a." in url else hot)
-    st = _guard(journal).check()
-    assert st["truth"] == "ARMED" and st["active"] is True     # arming is unchanged
-    undated = dict(ok, items=[{"title": "Exchange hacked", "text": "x" * 60, "age_h": None}])
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: undated)
-    st = _guard(journal).check()
-    assert st["active"] is True and st["truth"] == "UNCERTAIN"   # dampened, not "known"
-
-
-def test_news_failure_after_success_keeps_last_success_time(journal, monkeypatch):
-    g = _guard(journal, refresh_minutes=0)
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Exchange hacked")), 200))
-    first = g.check()
-    time.sleep(0.01)
-    _get(monkeypatch, _raise(requests.Timeout("slow")))
-    second = g.check()
-    assert second["truth"] == "FETCH_FAILED" and second["active"] is False
-    assert second["succeeded_at"] == first["succeeded_at"] < second["attempted_at"]
-    events = [r["event"] for r in journal.query("SELECT event FROM control_events")]
-    assert events == ["news_blackout", "news_guard_fail_open"]   # never a false news_clear
-
-
-def test_news_cache_is_never_re_aged(journal, monkeypatch):
-    calls = _get(monkeypatch, lambda: _Resp(RSS.format(_item("calm", _rfc(time.time()))),
-                                            200))
-    g = _guard(journal)
-    a = g.check()
-    time.sleep(0.01)
-    b = g.check()
-    assert len(calls) == 1 and a == b                            # same assessed_at
-    p1 = _publish(journal, b)
-    time.sleep(0.01)
-    p2 = _publish(journal, g.check())
-    assert p1["assessed_at"] == p2["assessed_at"] and p1["published_at"] < p2["published_at"]
-    later = datetime.fromisoformat(a["assessed_at"]) + timedelta(seconds=g.stale_after_s + 1)
-    v, _ = current_truth.read_news_guard(journal, later)
-    assert v["status"] == "STALE" and v["last_reported"] == "QUIET" and v["clear"] is False
-
-
-def test_news_old_publication_is_outside_the_window(journal, monkeypatch):
-    old = _rfc(time.time() - 48 * 3600)
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Exchange hacked", old)), 200))
-    st = _guard(journal).check()
-    # a successful fetch of an all-old feed is not a current quiet feed
-    assert st["truth"] == "FEED_STALE" and st["active"] is False
-    assert st["oldest_publication_at"] is not None and st["dated_in_window"] == 0
-    _publish(journal, st)
-    v, _ = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "FEED_STALE" and v["clear"] is False
-
-
-def test_news_future_publication_is_uncertain_not_clear(journal, monkeypatch):
-    fut = _rfc(time.time() + 3600)
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Markets calm", fut)), 200))
-    st = _guard(journal).check()
-    assert st["truth"] == "UNCERTAIN" and st["future_dated_items"] == 1
-    _publish(journal, st)
-    v, _ = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "UNCERTAIN" and v["clear"] is False
-    # a future-dated severe headline still dampens exactly as before (age
-    # clamps to 0) but is not dated evidence: UNCERTAIN, not ARMED
-    _get(monkeypatch, lambda: _Resp(RSS.format(_item("Exchange hacked", fut)), 200))
-    st = _guard().check()
-    assert st["active"] is True and st["truth"] == "UNCERTAIN"
-    assert st["dampening"]["applied"] is True
-
-
-def test_news_disabled_and_exception_paths(journal, monkeypatch):
-    from trader.agents import news_guard as ng
-    st = ng.NewsGuard({"scouts": {"news_guard": {"enabled": False}}}).check()
-    assert st["truth"] == "DISABLED" and st["why"] == "disabled" and not st["active"]
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: (_ for _ in ()).throw(ValueError("x")))
-    st = _guard().check()
-    assert st["truth"] == "FETCH_FAILED" and st["why"].startswith("fetch error")
-    assert st["failure_codes"] == ["fetch_exception"] and st["active"] is False
-    # the feed was read; assessing it raised → ASSESSMENT_FAILED, fail-open
-    monkeypatch.setattr(ng, "fetch_feed", lambda url: {
-        "ok": True, "items": [{"title": None, "text": None, "age_h": 0.1,
-                               "published_ts": time.time() - 60}]})
-    st = _guard(journal).check()
-    assert st["truth"] == "ASSESSMENT_FAILED" and st["active"] is False
-    assert st["failure_codes"] == ["assessment_exception"] and st["fetched_at"]
-    _publish(journal, st)
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert err is None and v["status"] == "ASSESSMENT_FAILED" and not v["clear"]
-
-
-@pytest.mark.parametrize("over,problem", [
-    ({"active": True, "dampening": {"applied": True, "threshold_add": 0.08,
-                                     "score_mult": 0.75}}, "active_contradicts_truth"),
-    ({"active": True}, "dampening_record_inconsistent"),
-    ({"hits": 3, "severe": 1}, "active_contradicts_counts"),
-    ({"failure_codes": ["fetch_timeout"]}, "quiet_with_failure_or_uncertain_items"),
-    ({"undated_items": 1}, "quiet_with_failure_or_uncertain_items"),
-    ({"malformed_dates": 1}, "quiet_with_failure_or_uncertain_items"),
-    ({"future_dated_items": 1}, "quiet_with_failure_or_uncertain_items"),
-    ({"truth": "FETCH_FAILED"}, "failure_without_code"),
-    ({"truth": "PARSE_FAILED", "failure_codes": ["fetch_timeout"]},
-     "parse_failure_code_mismatch"),
-    ({"truth": "ASSESSMENT_FAILED"}, "assessment_failure_without_code"),
-    ({"severe": 2, "hits": 1, "truth": "ARMED", "active": True,
-      "dampening": {"applied": True, "threshold_add": 0.08, "score_mult": 0.75}},
-     "counts_not_nested"),
-    ({"items_considered": 9}, "counts_not_nested"),
-    ({"dated_hits": 1}, "dated_counts_not_nested"),
-    ({"min_headlines": 0}, "min_headlines_malformed"),
-    ({"hits": -1}, "hits_malformed"),
-    ({"dated_in_window": 0}, "quiet_without_current_dated_items"),
-    ({"truth": "FEED_STALE", "why": "x"}, "feed_stale_inconsistent"),
-    ({"truth": "EMPTY_FEED"}, "empty_feed_with_items"),
-    ({"truth": "UNCERTAIN"}, "uncertain_without_cause"),
-    ({"truth": "ARMED", "active": True, "hits": 2, "severe": 1, "dated_hits": 0,
-      "dated_severe": 0, "dampening": {"applied": True, "threshold_add": 0.08,
-                                       "score_mult": 0.75}},
-     "armed_without_dated_evidence"),
-    ({"dampening": {"applied": False, "threshold_add": 0.1, "score_mult": 0.75}},
-     "dampening_record_inconsistent"),
-    ({"truth": "CLEAR"}, "truth_unrecognized"),
-    ({"assessed_at": "yesterday"}, "assessed_at_malformed"),
-    ({"succeeded_at": None}, "assessment_without_successful_fetch"),
-    ({"fetched_at": None}, "assessment_without_successful_fetch"),
-    ({"stale_after_s": 1e9}, "stale_after_malformed"),
-])
-def test_news_reader_refuses_contradictions(journal, over, problem):
-    rec = news_guard_state(_now())
-    rec.update(over)
-    _kv(journal, "news_guard_state", rec)
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "UNAVAILABLE" and v["clear"] is False and problem in err
-
-
-def test_news_reader_time_relationships(journal):
-    now = _now()
-    # any publication later than the fetch is impossible unless recorded as future
-    for ahead in (timedelta(seconds=1), timedelta(hours=1)):
-        rec = news_guard_state(now - timedelta(minutes=1),
-                               newest_publication_at=(now - timedelta(minutes=1)
-                                                      + ahead).isoformat())
-        _kv(journal, "news_guard_state", rec)
-        assert "future_publication_not_recorded" in \
-            current_truth.read_news_guard(journal, now)[1]
-    rec = news_guard_state(now, fetched_at=(now + timedelta(seconds=1)).isoformat(),
-                           published_at=(now + timedelta(seconds=2)).isoformat())
-    _kv(journal, "news_guard_state", rec)
-    assert "fetch_after_assessment" in current_truth.read_news_guard(journal, now)[1]
-    rec = news_guard_state(now, attempted_at=(now + timedelta(minutes=5)).isoformat())
-    _kv(journal, "news_guard_state", rec)
-    assert "attempt_after_assessment" in current_truth.read_news_guard(journal, now)[1]
-    rec = news_guard_state(now, published_at=(now - timedelta(minutes=5)).isoformat())
-    _kv(journal, "news_guard_state", rec)
-    assert "assessment_after_publication" in current_truth.read_news_guard(journal, now)[1]
-    fut = now + timedelta(hours=1)
-    _kv(journal, "news_guard_state", news_guard_state(fut))
-    v, err = current_truth.read_news_guard(journal, now)
-    assert v["status"] == "UNAVAILABLE" and v["last_reported"] == "QUIET" and not v["clear"]
-
-
-def test_news_missing_or_legacy_record_is_unavailable(journal):
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "UNAVAILABLE" and err == "news_guard_state_missing"
-    _kv(journal, "news_guard_state", {"active": False, "why": "feed quiet",
-                                      "ts": _now().isoformat()})   # pre-R1 shape
-    v, err = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "UNAVAILABLE" and not v["clear"]
-
-
-def test_kernel_publication_tolerates_minimal_doubles(journal):
-    pub = _publish(journal, {"active": False})
-    assert pub["active"] is False and pub["ts"] is None and pub["published_at"]
-    v, _ = current_truth.read_news_guard(journal, _now())
-    assert v["status"] == "UNAVAILABLE"
-
-
-def test_orchestrator_dampening_is_applied_exactly_once():
-    from trader.agents import news_guard as ng
-    src = (ROOT / "trader/engine/orchestrator.py").read_text()
-    tree = ast.parse(src)
-    blocks = [n for n in ast.walk(tree) if isinstance(n, ast.If)
-              and "news.get('active')" in ast.unparse(n.test)
-              and any(isinstance(s, ast.AugAssign) for s in n.body)]
-    assert len(blocks) == 1
-    body = [ast.unparse(s) for s in blocks[0].body]
-    assert body == [f"threshold += {ng.THRESHOLD_ADD}", f"net *= {ng.SCORE_MULT}"]
-    assert len(re.findall(r"threshold \+= 0\.08", src)) == 1
-    assert len(re.findall(r"net \*= 0\.75", src)) == 1
-
-
-def test_orchestrator_uses_the_guard_record_unchanged(monkeypatch):
-    """A full NewsGuard record drives decide() exactly like the old {active, why}."""
-    from tests.test_scout_upgrades import _orch, _snap
-    rec = news_guard_state(_now(), truth="ARMED")
-    full = _orch(0.5, None, news_guard=NS(check=lambda: dict(rec)))
-    old = _orch(0.5, None, news_guard=NS(check=lambda: {"active": True, "why": "x"}))
-    quiet = _orch(0.5, None)
-    d_full = full.decide(_snap(), population=[], entry_allowed=True)
-    d_old = old.decide(_snap(), population=[], entry_allowed=True)
-    d_q = quiet.decide(_snap(), population=[], entry_allowed=True)
-    assert d_full.threshold == pytest.approx(d_old.threshold)
-    assert d_full.threshold - d_q.threshold == pytest.approx(0.08)
-    assert d_full.score == pytest.approx(d_old.score)
-    assert d_full.score == pytest.approx(d_q.score * 0.75)
-
-
 # ═════════════════════════ 7. false defaults ════════════════════════════════
 def _gql(journal, query):
     from fastapi import FastAPI
@@ -939,7 +670,7 @@ def test_graphql_missing_values_are_null_not_defaults(journal):
     assert s["equity"] is None                            # not "0"
     assert s["drawdown_pct"] is None and s["daily_pnl_pct"] is None   # not "0"
     assert s["risk_status"] == "UNAVAILABLE" and s["equity_freshness"] == "unavailable"
-    assert n["active"] is None and n["status"] == "UNAVAILABLE" and n["clear"] is False
+    assert n["active"] is None and n["status"] == "RETIRED" and n["clear"] is False
 
 
 def test_graphql_uses_fresh_risk_only(journal):
@@ -951,13 +682,13 @@ def test_graphql_uses_fresh_risk_only(journal):
                       "news_guard { active status } }")["data"]
     assert d["status"] == {"control_state": "FROZEN", "equity": "5164.5",
                            "drawdown_pct": "1.2", "daily_pnl_pct": "-0.4"}
-    assert d["news_guard"] == {"active": True, "status": "ARMED"}
+    assert d["news_guard"] == {"active": None, "status": "RETIRED"}
     _kv(journal, "risk_assessment", risk_assessment(_now() - timedelta(hours=2)))
     _kv(journal, "news_guard_state", news_guard_state(_now() - timedelta(hours=2)))
     d = _gql(journal, "{ status { drawdown_pct daily_pnl_pct risk_status } "
                       "news_guard { active status } }")["data"]
     assert d["status"] == {"drawdown_pct": None, "daily_pnl_pct": None, "risk_status": "STALE"}
-    assert d["news_guard"] == {"active": None, "status": "STALE"}
+    assert d["news_guard"] == {"active": None, "status": "RETIRED"}
 
 
 def test_legacy_company_never_defaults_active_or_clear(journal):
@@ -966,9 +697,10 @@ def test_legacy_company_never_defaults_active_or_clear(journal):
     assert 'kv_get("control_state", "ACTIVE")' not in src
     company = json.dumps(server.build_company(journal, {"risk": {}}))
     assert '["Control", "UNKNOWN"]' in company and '"ACTIVE"' not in company
-    assert '["Guard", "unavailable"]' in company            # missing news ≠ clear
+    assert '["Guard",' not in company
+    assert '["Breaker", "unknown"]' in company
     _kv(journal, "news_guard_state", news_guard_state(_now()))
-    assert '["Guard", "clear"]' in json.dumps(server.build_company(journal, {"risk": {}}))
+    assert '["Guard",' not in json.dumps(server.build_company(journal, {"risk": {}}))
 
 
 # ═════════════════════════ 8. exact latest beyond 500 ═══════════════════════
@@ -1061,14 +793,14 @@ def test_owner_overview_exposes_truth_sections(live):
     o = c.get("/owner-api/v1/overview", headers=h).json()
     assert o["errors"] == {}
     assert o["account"]["status"] == "FRESH" and o["account"]["freshness"] == "fresh"
-    assert o["news_guard"]["status"] == "QUIET" and o["news_guard"]["clear"] is True
+    assert o["news_guard"]["status"] == "RETIRED" and o["news_guard"]["clear"] is False
     assert o["risk"]["current"]["status"] == "PASS"
     assert o["risk"]["current"]["control"]["entries_permitted_by_control"] is False
     assert o["protection"]["naked_exposure"]["status"] in ("OBSERVED", "STALE",
                                                            "UNAVAILABLE")
     journal.kv_set("news_guard_state", "")
     o = c.get("/owner-api/v1/overview", headers=h).json()
-    assert o["news_guard"]["status"] == "UNAVAILABLE" and o["errors"]["news_guard"]
+    assert o["news_guard"]["status"] == "RETIRED" and not o["errors"]
 
 
 def test_owner_valuation_and_marks_never_partial(live):
@@ -1090,6 +822,6 @@ def test_owner_risk_and_latest_routes(live):
     lat = c.get("/owner-api/v1/activity/latest", headers=h).json()
     assert lat["latest_decision"]["record"]["id"] == "d1"
     n = c.get("/owner-api/v1/news-guard", headers=h).json()
-    assert n["news_guard"]["status"] == "QUIET"
+    assert n["news_guard"]["status"] == "RETIRED"
     for path in ("risk", "valuation", "activity/latest", "news-guard"):
         assert c.post(f"/owner-api/v1/{path}", headers=h).status_code in (401, 403, 405)

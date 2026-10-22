@@ -276,7 +276,7 @@ export function mapOverview(o: Json): OverviewData {
       : null,
     live: {
       generatedAt: String(o.generated_at),
-      observedEvidence: Object.fromEntries(["account", "realized_today", "exposure", "control", "kernel_process", "heartbeat", "equity_series", "positions", "protection", "news_guard", "risk", "needs_you"].map(k => [k, o[k] ?? null])),
+      observedEvidence: Object.fromEntries(["account", "realized_today", "exposure", "control", "kernel_process", "heartbeat", "equity_series", "positions", "protection", "risk", "needs_you"].map(k => [k, o[k] ?? null])),
       kernelState: heartbeat?.runtime_state ?? o.kernel_process?.state ?? "UNKNOWN",
       control: obj(o.control)
         ? {

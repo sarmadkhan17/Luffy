@@ -9,7 +9,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
+import stat
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -142,6 +145,44 @@ Fit multiplier 0.55 applies when an analyst votes outside its affinity.
 """
 
 
+def _atomic_write(path: Path, text: str, *, replace: bool = True) -> None:
+    """Publish a complete note: readers see the old file or the new one, never a prefix.
+
+    The text goes to a hidden sibling on the same filesystem and is renamed over
+    the target (`replace=False` links it instead, so an existing file is never
+    overwritten: FileExistsError, as `open("x")` raised). Content, encoding, the
+    target's existing mode (else the umask default `write_text` used), symlink
+    targets and OSError types are as for `Path.write_text`. On any failure
+    before publication the temporary file is removed and the target is untouched.
+    It does not serialise writers: the last complete note wins.
+    """
+    path = Path(os.path.realpath(path)) if path.is_symlink() else Path(path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        mode = stat.S_IMODE(path.stat().st_mode) if replace else None
+    except FileNotFoundError:
+        mode = None
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o666)    # honours the umask
+    try:
+        with os.fdopen(fd, "w") as note:
+            note.write(text)
+            note.flush()
+            os.fsync(note.fileno())
+        if mode is not None:
+            os.chmod(tmp, mode)
+        if replace:
+            os.replace(tmp, path)
+        else:
+            os.link(tmp, path)       # atomic, refuses to overwrite
+            os.unlink(tmp)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
+        raise
+
+
 class Vault:
     def __init__(self, journal, org: Org | None = None):
         self.journal = journal
@@ -159,7 +200,7 @@ class Vault:
     def _write(self, rel: str, text: str) -> Path:
         p = VAULT / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(text)
+        _atomic_write(p, text)
         return p
 
     # ── one-time-ish seeds ──────────────────────────────────────────────
@@ -427,7 +468,7 @@ Filed by [[{author}]]
                 keep += ["", line]
             else:
                 keep[filed:filed] = [line, ""]
-            p.write_text("\n".join(keep).rstrip("\n") + "\n")
+            _atomic_write(p, "\n".join(keep).rstrip("\n") + "\n")
         return len(days)
 
     def write_moc(self) -> None:
@@ -496,8 +537,7 @@ Filed by [[{author}]]
             path = VAULT / f"30 Postmortems/{ts} {title}{extra}.md"
             path.parent.mkdir(parents=True, exist_ok=True)
             try:
-                with path.open("x") as note:
-                    note.write(text)
+                _atomic_write(path, text, replace=False)
                 break
             except FileExistsError:
                 suffix += 1

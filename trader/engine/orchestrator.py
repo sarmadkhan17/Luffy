@@ -85,7 +85,7 @@ def htf_trend_score(df_4h) -> float:
 class Orchestrator:
     def __init__(self, analysts: list[Analyst], journal: Journal,
                  base_threshold: float = 0.24,
-                 news_guard=None, cfg: dict | None = None):
+                 cfg: dict | None = None):
         from ..observability.diagnostics import Receipts
         self._receipts_type = Receipts
         attention = (cfg or {}).get("attention") or {}
@@ -95,7 +95,6 @@ class Orchestrator:
         self.analysts = {a.name: a for a in analysts}
         self.journal = journal
         self.base_threshold = base_threshold
-        self.news_guard = news_guard
         sc = ((cfg or {}).get("scouts") or {})
         self.htf_soft_bump = float(sc.get("htf_soft_bump", 0.07))
         self.htf_hard_veto = float(sc.get("htf_hard_veto", 0.80))
@@ -112,8 +111,6 @@ class Orchestrator:
         snap.adx = regime_info["adx"]
 
         # ── guards ───────────────────────────────────────────────────────
-        news = self.news_guard.check() if self.news_guard else \
-            {"active": False, "why": ""}
         htf = htf_trend_score(snap.df("4h"))
 
         # ── collect votes ────────────────────────────────────────────────
@@ -143,7 +140,6 @@ class Orchestrator:
             receipts.add("analyst", name, "emitted_vote")
             v.meta['evidence_authority'] = 'MEASUREMENT_ONLY'
             v.meta['htf'] = round(htf, 3)
-            v.meta['news_blackout'] = bool(news.get('active'))
             from ..learning.consumers import govern_vote
             govern_vote(self.journal, v, snap.symbol, snap.regime,
                         getattr(analyst, 'evidence_timeframe', None) or v.meta.get('horizon'))
@@ -186,9 +182,6 @@ class Orchestrator:
         strat_veto = selection['basis'] if selection['status'] == 'REFUSED' else ''
         gated_lean = None
 
-        if news.get("active"):
-            threshold += 0.08
-            net *= 0.75
         veto_reason = ""
         if abs(htf) > 0.35 and snap.regime != "VOLATILE":
             opposing = (net < 0 < htf) or (net > 0 > htf)

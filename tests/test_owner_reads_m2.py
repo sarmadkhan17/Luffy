@@ -197,7 +197,7 @@ def test_overview_activity(m2):
     assert d["decisions"]["risk_blocks"] == [{"reason": "risk", "n": 1}]
     assert d["risk_state"]["peak_equity"] == 5200.0
     assert d["rent_state"] is None and "rent_state" in fields(d)       # malformed
-    assert {"approvals", "news_guard"} <= fields(d)
+    assert {"approvals"} <= fields(d)
     assert d["research"]["newest_results"][1]["seed_strategy"]["id"] == "spec_fixture_trend"
     ids = {s["id"] for s in d["strategies"]}
     assert "spec_fixture_trend" in ids and "strat_parent_fx" not in ids

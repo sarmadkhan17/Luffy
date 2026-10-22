@@ -59,9 +59,7 @@ def test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat(tmp_path, mon
     k._drain_close_requests = lambda:0
     k._drain_panic = lambda:None
     k.macro_guard = SimpleNamespace(check=lambda:{})
-    k.news_guard = SimpleNamespace(check=lambda:{})
     k._macro_step = lambda _:None
-    k._publish_news_guard = lambda _:None
     k._record_risk_assessment = lambda *a:None
     k._funding_map = k._oi_map = lambda *a, **kw:{}
     from tests.admission_cycle_fixture import install

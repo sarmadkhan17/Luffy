@@ -45,7 +45,8 @@ def start_protection_monitor(kernel):
     """Wire the existing bounded read-only producer to this admitted boot."""
     from trader.engine.protection_snapshot import make_monitor
     monitor = make_monitor(kernel.exchange, kernel.journal.db_path,
-                           supervisor_busy=kernel.supervisor._pass_lock.locked)
+                           supervisor_busy=kernel.supervisor._pass_lock.locked,
+                           interval_s=30.0 if getattr(kernel, "_use_split_cycles", False) else 60.0)
     kernel._bootstrap_protection_monitor = monitor
     thread = threading.Thread(target=monitor.loop, kwargs={'stopped': lambda: kernel._stop},
                               name='bootstrap-protection', daemon=True)

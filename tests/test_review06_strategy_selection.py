@@ -264,7 +264,7 @@ def test_pre_receipt_schema_migration_does_not_rewrite_history(decide):
     assert after.pop('strategy_selection_json') is None and after==before
 
 
-def test_htf_and_news_guards_remain_strategy_constraints(decide,monkeypatch):
+def test_htf_guards_remain_strategy_constraints(decide,monkeypatch):
     monkeypatch.setattr(mod,'htf_trend_score',lambda *a:.9)
     d,_=decide([sig(action='SELL')])
     assert d.action==Action.HOLD and 'hard veto' in d.skip_reason

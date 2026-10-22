@@ -336,12 +336,7 @@ scouts:
   strategy_leads: true
   htf_soft_bump: 0.07          # extra threshold when entering against a strong 4h trend
   htf_hard_veto: 0.80          # |4h trend score| beyond this refuses counter-trend entries
-  news_guard:
-    enabled: true
-    window_hours: 3            # impact headline age that keeps the blackout armed
-    min_headlines: 2           # count needed to arm (1 if severe: hack/depeg/FOMC...)
-    refresh_minutes: 10
-  macro_guard:
+  macro_guard:                # daily calendar at 00:00 Asia/Bahrain; event-boundary jobs
     enabled: true
     pre_event_min: 30        # freeze N minutes before scheduled event
     post_event_min: 120      # stay frozen N minutes after event

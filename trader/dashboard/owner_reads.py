@@ -1345,9 +1345,7 @@ def overview_activity(journal) -> dict:
                                "LIMIT 5") if _table_exists(journal, "owner_requests") else [])
     missing += [
         _unavailable("approvals", "not read by this historical activity summary; inspect exact "
-                                  "approval evidence and ledger coverage in Needs You"),
-        _unavailable("news_guard", "not read by this historical activity summary; inspect "
-                                   "News Guard source state in Overview global signals")]
+                                  "approval evidence and ledger coverage in Needs You")]
     return {"generated_at": _iso(_now()),
             "decisions_basis": {"executed_skipped": "exact newest over all decisions",
                                 "risk_blocks": f"newest {ACTIVITY_WINDOW} decisions"},

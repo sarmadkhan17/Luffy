@@ -131,8 +131,9 @@ class OwnerService:
                  authorizer: Authorizer | None = None, clock=time.time,
                  max_age_s: float = 300.0, future_skew_s: float = 60.0,
                  busy_wait_s: float = 10.0, request_retention_days: float = 7.0,
-                 audit_retention_days: float = 30.0, approval_cfg=None):
+                 audit_retention_days: float = 30.0, approval_cfg=None, on_control=None):
         self.journal = journal
+        self._on_control = on_control
         self.state_machine = state_machine
         self._resume = resume                  # Kernel.owner_resume (guarded path)
         self.approval_cfg = approval_cfg if approval_cfg is not None else {}
@@ -213,7 +214,13 @@ class OwnerService:
             if isinstance(reserved, OwnerResult):
                 return reserved
             reservation = reserved
-        return self._control(req, reservation)
+        result = self._control(req, reservation)
+        if self._on_control is not None and result.status in ('ACCEPTED', 'ALREADY_SET'):
+            try:
+                self._on_control()
+            except Exception:
+                pass  # committed intent remains queued for the polling fallback
+        return result
 
     def reserve(self, req: OwnerRequest, *, admitted_intent_event_id: int | None = None
                 ) -> Reservation | OwnerResult:

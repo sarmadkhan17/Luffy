@@ -79,11 +79,11 @@ employees:
   - name: Risk Officer
     title: Risk Officer
     reports_to: Manager
-    wraps: [trader.engine.risk, trader.agents.macro_guard, trader.agents.news_guard]
+    wraps: [trader.engine.risk, trader.agents.macro_guard]
     authors: []
     status_source: risk
     category: RISK
-    desc: Sizing, heat cap, daily breaker, macro/news event freezes.
+    desc: Sizing, heat cap, daily breaker, scheduled macro-event freezes.
 
   - name: Trader
     title: Trader

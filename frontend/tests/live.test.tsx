@@ -79,7 +79,7 @@ describe("live adapter", () => {
     const d = mapOverview(overview({ realized_today: realized, news_guard: null, risk: { configured: { limit: 2 }, current: { status: "UNAVAILABLE" } } }));
     expect(d.pnl).toBeNull();
     expect(d.live?.observedEvidence?.realized_today).toEqual(realized);
-    expect(d.live?.observedEvidence?.news_guard).toBeNull();
+    expect(d.live?.observedEvidence?.news_guard).toBeUndefined();
     expect(d.live?.observedEvidence?.risk).toEqual({ configured: { limit: 2 }, current: { status: "UNAVAILABLE" } });
   });
   it("refuses a response that is not the LIVE contract", () => {

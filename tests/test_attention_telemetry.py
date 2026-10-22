@@ -253,7 +253,7 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
                  query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
                  open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
-    k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+    k.macro_guard=NS(check=lambda:{'active':False})
     k.market_type=MarketType.SPOT
     if recovery_pending:
         k.market_type=MarketType.FUTURES

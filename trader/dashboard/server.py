@@ -987,39 +987,13 @@ def build_company(journal, cfg: dict) -> dict:
                 "signal": _spark("trades", "opened_at")}
 
     def risk(e):
-        # News Guard through the truth reader: only a fresh successful quiet
-        # read is "clear"; missing/failed/stale is never shown as clear
-        from .current_truth import read_news_guard
-        from datetime import datetime as _dtm, timezone as _tz
-        ng, _ = read_news_guard(journal, _dtm.now(_tz.utc))
-        ng_status = str(ng.get("status") or "UNAVAILABLE")
-        ng_active = ng_status == "ARMED"
-        # UNCERTAIN may still be dampening entries (the rule met only via
-        # undated/future items): never nominal. A stale/unreadable record
-        # cannot prove whether dampening is on.
-        ng_damp = ng_status == "UNCERTAIN" and ng.get("active") is True
-        # only a fresh confirmed QUIET may read nominal; every other news
-        # status names itself (uncertain, stale, failed, unavailable, disabled)
-        ng_quiet = ng_status == "QUIET" and ng.get("clear") is True
-        ng_label = {"UNCERTAIN": "uncertain", "FEED_STALE": "feed stale",
-                    "EMPTY_FEED": "feed empty", "STALE": "stale",
-                    "FETCH_FAILED": "failed", "PARSE_FAILED": "failed",
-                    "ASSESSMENT_FAILED": "failed", "UNAVAILABLE": "unavailable",
-                    "DISABLED": "disabled"}.get(ng_status, "unknown")
-        guard = ("clear" if ng_quiet else
-                 (ng.get("why") or "armed") if ng_active else
-                 "uncertain · dampening" if ng_damp else ng_status.lower())
-        armed = control in ("HALTED", "FROZEN", "RECOVERY") or ng_active
-        breaker = ("armed" if armed else "dampening" if ng_damp else
-                   "nominal" if ng_quiet else ng_label)
+        armed = control in ("HALTED", "FROZEN", "RECOVERY")
+        breaker = control.lower() if armed else ("not contained" if control == "ACTIVE" else "unknown")
         metric = f"{len(opens)} pos"
         book = (f"exposure {exposure:.1f}x equity" if exposure is not None
                 else f"{len(opens)} positions")
-        out = ("guard armed / frozen" if armed else
-               "guard uncertain · entries dampened" if ng_damp else
-               (book if exposure is not None else f"{book} · limits nominal")
-               if ng_quiet else f"news {ng_label} · not confirmed quiet · {book}")
-        state = "alert" if armed or ng_damp else ("active" if opens else "idle")
+        out = f"{control} · {book} · risk {risk_now}"
+        state = "alert" if armed else ("active" if opens else "idle")
         heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
         bar = (min(100, int(heat_pct / heat_cap_pct * 100))
                if heat_pct is not None and heat_cap_pct else 0)  # exact: heat vs cap
@@ -1027,7 +1001,6 @@ def build_company(journal, cfg: dict) -> dict:
                 "feed": [],
                 "stats": [["Heat", heat_str],
                           ["Breaker", breaker],
-                          ["Guard", guard],
                           # the kernel's current Risk assessment (heat above is
                           # the configured cap vs the journal book)
                           ["Risk", risk_now]],

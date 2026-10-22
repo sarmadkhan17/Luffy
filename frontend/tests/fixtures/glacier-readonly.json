@@ -810,42 +810,15 @@
       "source": "journal state_kv.supervisor_status (Supervisor venue reconciliation pass)"
     },
     "news_guard": {
-      "clear": true,
-      "source": "journal state_kv.news_guard_state (NewsGuard check record, published by the kernel each cycle; times are the check's own)",
-      "truth": "QUIET",
-      "active": false,
-      "why": "feed quiet",
-      "assessed_at": "2026-10-07T20:48:14.163373+00:00",
-      "age_s": 20.1,
-      "freshness": "fresh",
-      "stale_after_s": 1260.0,
-      "attempted_at": "2026-10-07T20:48:14.163373+00:00",
-      "fetched_at": "2026-10-07T20:48:14.163373+00:00",
-      "succeeded_at": "2026-10-07T20:48:14.163373+00:00",
-      "published_at": "2026-10-07T20:48:14.163373+00:00",
-      "newest_publication_at": "2026-10-07T20:48:14.163373+00:00",
-      "oldest_publication_at": "2026-10-07T20:48:14.163373+00:00",
-      "hits": 0,
-      "severe": 0,
-      "dated_hits": 0,
-      "dated_severe": 0,
-      "items_total": 5,
-      "items_considered": 5,
-      "dated_in_window": 5,
-      "undated_items": 0,
-      "malformed_dates": 0,
-      "future_dated_items": 0,
-      "headlines": [],
-      "failure_codes": [],
-      "dampening": {
-        "applied": false,
-        "threshold_add": 0.08,
-        "score_mult": 0.75,
-        "enforcement": "dampen_only"
-      },
-      "status": "QUIET",
-      "last_reported": null,
-      "reasons": []
+      "status": "RETIRED",
+      "active": null,
+      "clear": false,
+      "why": "NewsGuard removed; no news-based entry adjustment",
+      "freshness": "not_applicable",
+      "reasons": [
+        "news_guard_retired"
+      ],
+      "source": "retired feature"
     },
     "risk": {
       "configured": null,

@@ -121,6 +121,8 @@ def _kernel(journal, venue, monkeypatch):
                         {"risk": {"leverage": 5, "take_profit_atr_mult": 3.0}},
                         MarketType.FUTURES)
     k = object.__new__(Kernel)
+    from trader.agents.macro_guard import MacroGuard
+    k.macro_guard = MacroGuard({'scouts': {'macro_guard': {'enabled': False}}})
     k.cfg = {"timeframes": {"scan_interval_seconds": 60},
              "references": {"enabled": False}}
     k.market_type = MarketType.FUTURES
@@ -205,7 +207,8 @@ def test_a_clean_boot_proves_and_activates_without_venue_mutation(world, monkeyp
     assert st["outcome"] == "SAFE" and st["reasons"] == [] and st["safe_to_activate"]
     assert venue.mutations == []
     assert not any("recovery" in m for m in sent)
-    assert WORKERS <= set(started) and "stall-monitor" in started
+    assert {"tg-listener", "macro-schedule", "stall-monitor"} <= set(started)
+    assert not ({"strategy-mechanism", "derivs-recorder", "agent-validator"} & set(started))
 
 
 # ── B. venue unreadable ────────────────────────────────────────────────────
@@ -221,7 +224,8 @@ def test_b_venue_timeout_contains_notifies_and_boots(world, monkeypatch):
     assert st["outcome"] == "NEEDS_OWNER" and st["needs_owner"]
     assert "venue_state_unreadable" in st["reasons"]
     assert sent == ["🔒 recovery NEEDS_OWNER: " + ", ".join(st["reasons"])]
-    assert WORKERS <= set(started) and "stall-monitor" in started
+    assert {"tg-listener", "macro-schedule", "stall-monitor"} <= set(started)
+    assert not ({"strategy-mechanism", "derivs-recorder", "agent-validator"} & set(started))
     assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
     assert not [m for m in venue.mutations if m[0] != "set_leverage"]
 

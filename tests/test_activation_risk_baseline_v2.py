@@ -312,8 +312,6 @@ def _cycle_kernel(journal, venue, monkeypatch, market):
     k.market_type = market
     k.cfg["timeframes"]["execution"] = "15m"
     k._drain_close_requests = lambda: 0
-    k.macro_guard = NS(check=lambda: {"active": False})
-    k.news_guard = NS(check=lambda: {"active": False})
     k._funding_map = k._oi_map = lambda *a, **kw: {}
     k._refresh_btc_context = lambda: None
     from tests.admission_cycle_fixture import install

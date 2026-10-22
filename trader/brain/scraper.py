@@ -81,7 +81,7 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
     embedded HTML and XML entities; shared by the Scraper and the crawler.
 
     Any failure is an empty list (the idea harvesters degrade silently).
-    Callers that must tell a quiet feed from a failed one (NewsGuard) use
+    Callers that must distinguish an empty feed from a failed one use
     fetch_feed(), which reports the failure explicitly."""
     return fetch_feed(feed_url, timeout)["items"]
 

@@ -15,8 +15,12 @@ outside ``data/``, with no live trades. The Kernel never passes one.
 from dataclasses import dataclass
 from enum import Enum
 import json
+import logging
+import time
 
 from . import foundation as L, targets as T, application as A, runtime as R
+
+log = logging.getLogger(__name__)
 
 SCHEMA = 'learning-dispatch-receipt.v1'
 TABLE = 'learning_dispatch_receipts'
@@ -203,31 +207,106 @@ def dispatch_evidence(journal, cfg, ev, *, at_ms, registry=None, shadow=False):
     return dict(body, duplicate=False, written=True)
 
 
-def pending(journal, digest, limit):
+def pending(journal, digest, limit, after_rowid=None):
+    """Replay-complete chains with no receipt for ``digest``, lowest outcome first.
+
+    ``after_rowid=None`` is the original full anti-join. A number restricts the
+    scan to ``rowid > after_rowid``; rows then also carry their ``rowid``. That
+    is only valid under the ``Watermark`` invariant below.
+    """
     if not journal.query("SELECT 1 FROM sqlite_master WHERE name='learning_produced_chains'"):
         return []
     exists = bool(journal.query("SELECT 1 FROM sqlite_master WHERE name=?", (TABLE,)))
     clause = (f" AND NOT EXISTS(SELECT 1 FROM {TABLE} d WHERE d.outcome_id=json_extract(p.payload,'$.evidence.outcome_id')"
               " AND d.registry_digest=?)"
               if exists else '')
-    return journal.query("SELECT p.outcome_id, p.payload FROM learning_produced_chains p "
-                         "WHERE json_extract(p.payload,'$.replay_gate')='REPLAY_COMPLETE'" + clause +
-                         ' ORDER BY p.outcome_id LIMIT ?', ((digest,) if exists else ()) + (limit,))
+    if after_rowid is None:
+        return journal.query("SELECT p.outcome_id, p.payload FROM learning_produced_chains p "
+                             "WHERE json_extract(p.payload,'$.replay_gate')='REPLAY_COMPLETE'" + clause +
+                             ' ORDER BY p.outcome_id LIMIT ?', ((digest,) if exists else ()) + (limit,))
+    return journal.query("SELECT p.rowid AS rowid, p.outcome_id, p.payload FROM learning_produced_chains p "
+                         "WHERE p.rowid>? AND json_extract(p.payload,'$.replay_gate')='REPLAY_COMPLETE'" + clause +
+                         ' ORDER BY p.outcome_id LIMIT ?',
+                         (after_rowid,) + ((digest,) if exists else ()) + (limit,))
 
 
-def dispatch_pending(journal, cfg, *, at_ms, max_work=8, shadow=False, test_registry=None):
-    """Bounded Kernel step: dispatch replay-complete chains not yet dispatched."""
+SWEEP_S = 6 * 3600.0
+
+
+class Watermark:
+    """In-memory cursor that stops dispatch rescanning settled history.
+
+    Invariant: for the current registry digest every chain with ``rowid <= floor``
+    is dispatched (a receipt exists) or can never be dispatched. Chains are
+    immutable (``learning_produced_chains_update``/``_delete`` triggers guard the
+    logical payload; ``compact_completed`` only changes representation) and
+    rowids only grow, so a new chain always lands above ``floor``.
+
+    The floor only advances to ``MAX(rowid)`` read *before* a query that returned
+    fewer rows than the limit, after every returned row dispatched. A raised
+    exception, a full batch, a digest change or a restart leave or reset it to
+    the original full scan, so missed events recover on their own. A periodic
+    sweep rescans from 0 and counts any pending row at or below the old floor as
+    a miss (rowid renumbering, e.g. an offline VACUUM) and dispatches it anyway.
+    """
+
+    def __init__(self, sweep_s=SWEEP_S, clock=time.monotonic):
+        self.sweep_s, self.clock = sweep_s, clock
+        self.floor, self.digest = 0, None
+        self.swept_at, self.sweeping, self.audit_floor = None, False, 0
+        self.misses, self.sweeps = 0, 0
+
+    @staticmethod
+    def _top(journal):
+        # Raw table: O(1) and no logical-view blob resolution.
+        if not journal.query("SELECT 1 FROM sqlite_master WHERE name='learning_produced_chains'"):
+            return 0
+        return journal._conn().execute('SELECT MAX(rowid) FROM learning_produced_chains').fetchone()[0] or 0
+
+    def step(self, journal, digest, limit, dispatch):
+        now = self.clock()
+        if self.digest != digest:
+            self.digest, self.floor, self.swept_at, self.sweeping, self.audit_floor = digest, 0, None, False, 0
+        if not self.sweeping and (self.swept_at is None or now - self.swept_at >= self.sweep_s):
+            self.sweeping, self.audit_floor, self.floor = True, self.floor, 0
+        top = self._top(journal)
+        if not self.sweeping and top <= self.floor:
+            return []                       # nothing newer than everything already settled
+        rows = pending(journal, digest, limit, after_rowid=self.floor)
+        out = []
+        for row in rows:
+            if self.sweeping and row['rowid'] <= self.audit_floor:
+                self.misses += 1
+                log.error('learning dispatch watermark miss: outcome %s rowid %s <= floor %s',
+                          row['outcome_id'], row['rowid'], self.audit_floor)
+            out.append(dispatch(row))       # an exception leaves the floor where it was
+        if len(rows) < limit:
+            self.floor = max(self.floor, top)
+            if self.sweeping:
+                self.sweeping, self.audit_floor, self.swept_at = False, 0, now
+                self.sweeps += 1
+        return out
+
+
+def dispatch_pending(journal, cfg, *, at_ms, max_work=8, shadow=False, test_registry=None, watermark=None):
+    """Bounded Kernel step: dispatch replay-complete chains not yet dispatched.
+
+    ``watermark`` (a ``Watermark`` owned by one dispatching thread) makes this
+    incremental; without it, or in shadow mode, every call is the full scan.
+    """
     if type(max_work) is not int or not 1 <= max_work <= 64:
         raise ValueError('bounded_dispatch_work_required')
     rules = production_registry()
     if test_registry is not None:
         rules = T.registry(journal, test_registry)
     digest = registry_digest(rules)
-    out = []
-    for row in pending(journal, digest, max_work):
+
+    def one(row):
         ev = R.evidence_from_body(json.loads(row['payload'])['evidence'])
-        out.append(dispatch_evidence(journal, cfg, ev, at_ms=at_ms, registry=rules, shadow=shadow))
-    return out
+        return dispatch_evidence(journal, cfg, ev, at_ms=at_ms, registry=rules, shadow=shadow)
+    if watermark is not None and not shadow:
+        return watermark.step(journal, digest, max_work, one)
+    return [one(row) for row in pending(journal, digest, max_work)]
 
 
 def checkpoint_isolated(journal, cfg, registry, *, at_ms, max_work=8, shadow=False):

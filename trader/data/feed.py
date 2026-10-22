@@ -118,6 +118,7 @@ class DataFeed:
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or dict(mp.DEFAULT_TTL_S)
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = OrderedDict()
+        self._cache_lock = threading.Lock()
         self._instruments = {}
         self._db_path = str(db_path) if db_path else None   # resolved lazily
         self._local = threading.local()                     # per-thread conns
@@ -341,6 +342,12 @@ class DataFeed:
                         while len(self._acquisition_outcomes) > self.BACKGROUND_QUEUE_CAPACITY:
                             self._acquisition_outcomes.popitem(last=False)
                         self._acquisition_inflight = None
+                    callback = getattr(self, 'on_candle_acquired', None)
+                    if callback is not None:
+                        try:
+                            callback(request['symbol'], request['tf'], outcome)
+                        except Exception:
+                            pass
                     self._local.acquiring = False
                     conn = getattr(self._local, 'conn', None)
                     if conn is not None:
@@ -945,14 +952,16 @@ class DataFeed:
         def finish(df: pd.DataFrame) -> pd.DataFrame:
             at = self._clock_ms()
             safe = mp.usable_current(df, tf, at, self.ttl.get(tf, 300))
-            self._cache[ck] = (at / 1000, safe)
-            self._cache.move_to_end(ck)
-            while len(self._cache) > self.MAX_CACHE_SERIES:
-                self._cache.popitem(last=False)
+            with self._cache_lock:
+                self._cache[ck] = (at / 1000, safe)
+                self._cache.move_to_end(ck)
+                while len(self._cache) > self.MAX_CACHE_SERIES:
+                    self._cache.popitem(last=False)
             self._local.acquisition_short = safe is not None and len(safe) < min_bars
             return None if self._local.acquisition_short else safe
 
-        hit = self._cache.get(ck)
+        with self._cache_lock:
+            hit = self._cache.get(ck)
         iid,source=self._identity(symbol)
         if hit and hit[1] is not None and ('instrument_id' not in hit[1] or
                 not hit[1]['instrument_id'].eq(iid).all() or not hit[1]['source'].eq(source).all()):

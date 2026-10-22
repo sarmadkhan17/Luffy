@@ -118,9 +118,7 @@ def _vote_from_row(v) -> VoteType:
 
 @strawberry.type
 class NewsGuardType:
-    """current_truth.read_news_guard. `active` is None when no trustworthy
-    current record exists; `status` QUIET (the only clear state) requires a
-    fresh successful read."""
+    """Retired field retained for old API clients; never reads old guard state."""
     active: Optional[bool]
     why: str
     checked_at: str

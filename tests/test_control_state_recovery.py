@@ -158,7 +158,6 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
                 daily_loss_block=.05)
     k._drain_close_requests = lambda: 0
     k.macro_guard = NS(check=lambda: {"active": macro_active, "event": "cpi"})
-    k.news_guard = NS(check=lambda: {"active": False})
     k.market_type = MarketType.FUTURES
     k.executor = NS(recovery_pending=lambda: False, recover_entries=Mock())
     k.supervisor = NS(cycle=Mock())

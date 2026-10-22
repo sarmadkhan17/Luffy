@@ -363,9 +363,9 @@ def full_cycle_kernel(tmp_path,cfg,monkeypatch,n=30):
     k.state_machine=NS(state=ControlState.FROZEN,refresh=lambda:ControlState.FROZEN,can_enter=lambda:False)
     k.executor=NS(recovery_pending=lambda:False,recover_entries=Mock())
     k._risk_step=lambda:(1000,{'equity':1000,'drawdown_pct':0,'risk_state':'ok'})
-    k._record_risk_assessment=Mock();k._macro_step=Mock();k._publish_news_guard=Mock()
+    k._record_risk_assessment=Mock();k._macro_step=Mock()
     k._drain_close_requests=lambda:0;k._drain_panic=lambda:None
-    k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+    k.macro_guard=NS(check=lambda:{'active':False})
     k._refresh_btc_context=Mock();k._refresh_context_anchors=Mock()
     k._funding_map=Mock(return_value={});k._oi_map=Mock(return_value={})
     k._snapshot_for=Mock(side_effect=lambda s,**kw:Snapshot(s,datetime.fromtimestamp(CUT/1000,timezone.utc).isoformat(),10,{},universe=kw.get('universe')))

@@ -193,6 +193,7 @@ def refit(journal) -> dict:
                 m = {}
             if m.get("htf") is not None:
                 hts.append(float(m["htf"]))
+            # Historical training feature only; new decisions omit this field.
             news = news or bool(m.get("news_blackout"))
         if hts:
             htf = sum(hts) / len(hts)

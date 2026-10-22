@@ -180,7 +180,7 @@ class MacroGuard:
                 continue
             if when >= horizon:
                 events.append({"event": e["event"], "when": when})
-        if not events:
+        if not events and raw.get("events"):
             return
         self._calendar = events
         self._cal_fetched = fetched
@@ -290,9 +290,9 @@ class MacroGuard:
     def _now(self) -> datetime:
         return datetime.now(timezone.utc)
 
-    def _find_active_event(self) -> dict | None:
+    def _find_active_event(self, *, refresh_calendar=True) -> dict | None:
         """Return the first calendar event within the freeze window, or None."""
-        calendar = self._fetch_calendar()
+        calendar = self._fetch_calendar() if refresh_calendar else self._calendar
         now = self._now()
         pre = timedelta(minutes=self.pre_min)
         post = timedelta(minutes=self.post_min)
@@ -316,10 +316,12 @@ class MacroGuard:
                 'received_at':self._cal_fetched if self._cal_fetched else None,
                 'request_started_at':self._cal_started}
 
-    def check(self) -> dict:
+    def check(self, *, scheduled=False) -> dict:
         """Return {"active": bool, "event": str, "until": str|None, "why": str}.
 
-        Cached for _refresh_s seconds. Fail-open on any error.
+        Direct callers use the existing cache. The daily scheduler passes
+        scheduled=True to evaluate its retained calendar without network reads
+        or the five-minute state cache. Fail-open on any error.
         """
         if not self.enabled:
             return {"active": False, "event": "", "until": None,
@@ -327,11 +329,12 @@ class MacroGuard:
         now = self._now().timestamp()
         if self._cal_fetched > now:
             self._state['checked'] = 0.0
-        if 0 <= now - self._state["checked"] < self._refresh_s:
+        if not scheduled and 0 <= now - self._state["checked"] < self._refresh_s:
             return self._assessment()
         self._state["checked"] = now
         try:
-            hit = self._find_active_event()
+            hit = (self._find_active_event(refresh_calendar=False) if scheduled
+                   else self._find_active_event())
         except Exception as e:
             log.warning(f"macro_guard check error (fail-open): "
                         f"{_scrub(str(e), self._token)}")
