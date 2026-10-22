@@ -841,7 +841,12 @@ class ProtectionMonitor:
             ok = self.store.publish(snap, boot=gen[0], seq=gen[1], max_seq=self._seq)
         except Exception as exc:
             self.stats["publish_failed"] += 1
-            log.warning("protection snapshot not published: %s", type(exc).__name__)
+            # Native SQLite code distinguishes contention from other failures;
+            # never log SQL, paths, credentials, or arbitrary exception messages.
+            code = getattr(exc, 'sqlite_errorcode', None)
+            code = code if type(code) is int else None
+            log.warning("protection snapshot not published: %s sqlite_errorcode=%s boot=%s seq=%s",
+                        type(exc).__name__, code, gen[0], gen[1])
             return False
         if not ok:
             self.stats["persist_rejected"] += 1

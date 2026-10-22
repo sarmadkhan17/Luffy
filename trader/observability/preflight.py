@@ -8,6 +8,7 @@ Committed storage probes reuse SafetyObserver without resolving persisted faults
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime
 import json
 import math
@@ -102,13 +103,31 @@ def _probe(path, role, journal=False):
     return SafetyObserver(PreserveHealth()).store(path, role, journal=journal)
 
 
-def _protection(db, now, *, require_fresh=True):
+def _protection(db, now, *, require_fresh=True, diagnostics=None):
     # Reuse the persisted monitor contract, not a fresh venue reader.
     from trader.engine.protection_snapshot import STALE_AFTER_S
     row = db.execute('SELECT boot,seq,value FROM protection_evidence WHERE slot=1').fetchone()
+    if diagnostics is not None:
+        diagnostics.update(checked_by_gate_at=now, stale_after_s=STALE_AFTER_S,
+                           record_present=row is not None)
+        if row is not None:
+            # Bind diagnostics to this exact read, never a second, newer receipt.
+            raw = row['value']
+            if isinstance(raw, str):
+                diagnostics['record_sha256'] = hashlib.sha256(raw.encode()).hexdigest()
+            for key in ('boot', 'seq'):
+                if type(row[key]) is int:
+                    diagnostics[key] = row[key]
     if row is None:
         raise ValueError('protection_missing')
     s = strict_json(row['value'])
+    if diagnostics is not None and isinstance(s, dict):
+        # Bounded metadata only; no arbitrary payloads, identifiers or exception text.
+        for key in ('checked_at', 'completed_at', 'status', 'control_state_observed',
+                    'position_count'):
+            value = s.get(key)
+            if type(value) in (int, bool) or (isinstance(value, str) and len(value) <= 64):
+                diagnostics[key] = value
     if (s.get('schema') != 2 or type(row['boot']) is not int or type(row['seq']) is not int
             or s.get('generation') != dict(boot=row['boot'], seq=row['seq'])
             or s.get('status') != 'VERIFIED' or s.get('control_state_observed') != 'FROZEN'

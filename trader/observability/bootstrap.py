@@ -29,6 +29,17 @@ from .shutdown import service_state
 STARTUP_TIMEOUT_S = 240.0  # initialized, protected FROZEN startup; not cycle completion
 STOP_TIMEOUT_S = 300.0    # RUN-01 graceful stop envelope
 
+# Only known local validation codes may cross the diagnostic boundary.
+_READINESS_FAILURE_CODES = frozenset({
+    'duplicate_json_key', 'nonfinite_json', 'safety_health_malformed',
+    'safety_condition_malformed', 'recovery_latch_not_retained',
+    'local_execution_ledger_not_clear', 'protection_missing', 'protection_unverified',
+    'protection_clock_unknown', 'protection_stale_or_future',
+    'protection_orders_or_coverage_uncertain', 'protection_coverage_malformed',
+    'protection_position_uncertain', 'protection_current_book_changed',
+    'protection_prior_boot',
+})
+
 
 def start_protection_monitor(kernel):
     """Wire the existing bounded read-only producer to this admitted boot."""
@@ -96,6 +107,7 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time, require_cycle=T
     result = dashboard_readiness.check(root, cfg, expected_identity=expected, clock=clock,
                                        require_cycle=require_cycle)
     reasons = list(result['reasons'])
+    protection_diagnostics = {}
     try:
         health = preflight._health(Path(root) / 'data/safety_health.json')
         if health['recovery_required'] is not True:
@@ -105,7 +117,7 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time, require_cycle=T
             db.row_factory = sqlite3.Row
             if not require_cycle:
                 preflight._journal_zero(db)
-            protection = preflight._protection(db, clock())
+            protection = preflight._protection(db, clock(), diagnostics=protection_diagnostics)
         at = datetime.fromisoformat(protection['checked_at']).timestamp()
         if (at < expected['started_at']
                 or protection['generation']['boot'] <= baseline['generation']['boot']):
@@ -113,6 +125,12 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time, require_cycle=T
         result['facts']['protection_reconciliation'] = protection
     except Exception as exc:
         reasons.append('fresh_protection_reconciliation_failed:' + type(exc).__name__)
+        code = exc.args[0] if len(exc.args) == 1 and isinstance(exc.args[0], str) else None
+        result['facts']['protection_failure'] = {
+            'error_class': type(exc).__name__,
+            'reason_code': code if code in _READINESS_FAILURE_CODES else 'unclassified',
+            'receipt': protection_diagnostics,
+        }
     return dict(result, phase='CONTAINED_BOOT_READINESS' if require_cycle else 'STARTED_FROZEN_CHECK', trading_authority=False,
                 allow=not reasons, result='FAIL' if reasons else 'PASS', reasons=reasons)
 
