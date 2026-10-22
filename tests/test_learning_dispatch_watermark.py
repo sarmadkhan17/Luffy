@@ -197,12 +197,15 @@ def test_shadow_and_plain_calls_keep_the_original_full_scan(world, monkeypatch):
 def test_worker_owns_watermark_and_drains_bounded_batches(monkeypatch):
     from trader.scheduling.maintenance import Maintenance
     m = Maintenance(object(), {}, object())
+    monkeypatch.setattr(D, "production_registry", lambda: {"r": object()})
+    monkeypatch.setattr(D, "dispatchable", lambda r: True)
     calls = []
     def dispatch(*args, **kwargs):
         calls.append(kwargs)
         return [{}] * (8 if len(calls) == 1 else 1)
     monkeypatch.setattr(D, 'dispatch_pending', dispatch)
     w = m.jobs['learning']
+    w.trigger()
     assert w.run_once()
     assert w.snapshot()['pending']
     assert w.run_once()
@@ -213,10 +216,13 @@ def test_worker_owns_watermark_and_drains_bounded_batches(monkeypatch):
 def test_learning_worker_failure_remains_visible_and_retries(monkeypatch):
     from trader.scheduling.maintenance import Maintenance
     m = Maintenance(object(), {}, object())
+    monkeypatch.setattr(D, "production_registry", lambda: {"r": object()})
+    monkeypatch.setattr(D, "dispatchable", lambda r: True)
     def fail(*args, **kwargs):
         raise RuntimeError('db busy')
     monkeypatch.setattr(D, 'dispatch_pending', fail)
     w = m.jobs['learning']
+    w.trigger()
     w.run_once()
     assert w.snapshot()['failures'] == 1
     assert w.snapshot()['last_success_at'] is None

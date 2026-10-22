@@ -31,8 +31,8 @@ def test_complete_schedule_contract(tmp_path):
     k, r = minimal(tmp_path)
     assert {n:w.interval for n,w in r.jobs.items() if w.interval} == {
         'commands':1, 'account':30, 'positions':30, 'market':60, 'candles':15,
-        'strategy_health':3600, 'health':10, 'learning':60, 'outcomes':60,
-        'reports':3600, 'postmortem':21600, 'derivatives':900, 'references':3600}
+        'strategy_health':3600, 'health':10, 'learning_check':60, 'outcomes':60,
+        'reports':3600, 'postmortem':21600, 'derivatives':900, 'derivative_inputs':300, 'references':3600}
     assert r.jobs['research'].calendar.hours == (9,21)
     assert r.jobs['validation'].calendar.hours == (3,)
     assert r.jobs['validation'].calendar.weekday == 6
@@ -269,3 +269,30 @@ def test_heartbeat_completion_timestamp_is_stable_between_real_completions(tmp_p
     for _ in range(10):
         r.health()
     assert {call.args[0]['last_successful_cycle_at'] for call in k.heartbeat.beat.call_args_list} == {completed}
+
+
+def test_derivative_history_waits_for_daily_boundary(tmp_path):
+    k, r = minimal(tmp_path)
+    history = r.jobs['derivative_history']
+    assert history._pending is None
+    assert history.calendar.hours == (3,)
+    assert history.calendar.minute == 30
+    assert r.jobs['derivative_inputs'].interval == 300
+    assert r.jobs['derivatives'].interval == 900
+
+
+def test_current_derivatives_never_backfill_or_block_input_refresh(tmp_path, monkeypatch):
+    k, r = minimal(tmp_path)
+    view = NS(journal=Mock(), cfg={'universe':{'majors':['BTC/USDT']}}, feed=Mock(),
+              notifier=Mock(), universe=NS(symbols=lambda:['BTC/USDT']),
+              _funding_map=Mock(return_value={'BTC/USDT':.01}),
+              _oi_map=Mock(return_value={'BTC/USDT':{'oi':10}}), _market_aux={'receipt':1})
+    monkeypatch.setattr('trader.scheduling.kernel_runtime.analysis_context', lambda rt:view)
+    h = Mock(symbols=['BTC/USDT'])
+    monkeypatch.setattr('trader.brain.harvester.Harvester', lambda *a:h)
+    r.refresh_derivative_inputs()
+    h.deriv.record_all.assert_not_called()
+    assert r.derivative_inputs == ({'BTC/USDT':.01},{'BTC/USDT':{'oi':10}},{'receipt':1})
+    r.derivatives()
+    h.harvest_once.assert_not_called()
+    h.deriv.record_all.assert_called_once()

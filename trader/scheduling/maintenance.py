@@ -16,7 +16,8 @@ class Maintenance:
         from ..learning.dispatch import Watermark
         self.watermark = Watermark()
         self.jobs = {
-            'learning': Worker('learning', self.learning, interval=60, immediate=True),
+            'learning': Worker('learning', self.learning),
+            'learning_check': Worker('learning-check', self.learning_check, interval=60, immediate=True),
             'outcomes': Worker('outcomes', self.outcomes, interval=60, immediate=True),
             'reports': Worker('reports', self.reports, interval=3600),
             'daily_report': Worker('daily-report', self.daily_report,
@@ -44,7 +45,7 @@ class Maintenance:
     def outcomes(self):
         from ..engine.outcomes import resolve_pending
         from ..engine.outcome_backfill import upgrade_24h
-        resolve_pending(self.journal, self.feed)
+        changed = resolve_pending(self.journal, self.feed)
         symbols = {r['symbol'] for r in self.journal.query(
             'SELECT DISTINCT symbol FROM outcomes WHERE correct_24h IS NULL')}
         frames = {}
@@ -53,14 +54,31 @@ class Maintenance:
             if frame is not None and len(frame):
                 frames[symbol] = frame
         if frames:
-            upgrade_24h(self.journal, frames)
-        self.jobs['learning'].trigger()
+            changed += upgrade_24h(self.journal, frames)
+        if changed:
+            self.jobs['learning'].trigger()
         callback = getattr(self, 'after_outcomes', None)
         if callback is not None:
             callback()
 
+    def learning_check(self):
+        # Cheap recovery check: no payload expansion or historical anti-join.
+        # A restart with registered rules recovers pending evidence. Without
+        # rules there is no learning work, even if old evidence is retained.
+        from ..learning.dispatch import production_registry, dispatchable, registry_digest
+        rules = production_registry()
+        if not any(dispatchable(rule) for rule in rules.values()):
+            return
+        if (self.watermark.digest != registry_digest(rules)
+                or self.watermark._top(self.journal) > self.watermark.floor
+                or self.watermark.swept_at is None
+                or self.watermark.clock() - self.watermark.swept_at >= self.watermark.sweep_s):
+            self.jobs['learning'].trigger()
+
     def learning(self):
-        from ..learning.dispatch import dispatch_pending
+        from ..learning.dispatch import dispatch_pending, production_registry, dispatchable
+        if not any(dispatchable(rule) for rule in production_registry().values()):
+            return
         rows = dispatch_pending(self.journal, self.cfg, at_ms=int(time.time() * 1000),
                                 max_work=8, watermark=self.watermark)
         if len(rows) == 8:

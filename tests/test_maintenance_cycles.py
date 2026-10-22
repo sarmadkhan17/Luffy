@@ -69,3 +69,52 @@ def test_kernel_application_precedes_decisions_and_dispatch_is_off_cycle(tmp_pat
     assert 'decision' in events
     assert result['learning_dispatch'] == []
     assert result['maintenance_cycles']['outcomes']['runs'] == 0
+
+
+def test_no_rules_means_no_learning_scan_or_startup_work(monkeypatch):
+    from unittest.mock import Mock
+    m = Maintenance(Mock(), {}, Mock())
+    monkeypatch.setattr('trader.learning.dispatch.production_registry', lambda: {})
+    scan = Mock(side_effect=AssertionError('unnecessary scan'))
+    monkeypatch.setattr('trader.learning.dispatch.dispatch_pending', scan)
+    m.watermark._top = scan
+    assert m.jobs['learning'].interval is None
+    assert m.jobs['learning']._pending is None
+    m.learning_check()
+    m.learning()
+    assert m.jobs['learning']._pending is None
+    scan.assert_not_called()
+
+
+@pytest.mark.parametrize('resolved,upgraded,expected', [(0,0,False),(1,0,True),(0,1,True)])
+def test_only_changed_outcomes_wake_learning(monkeypatch, resolved, upgraded, expected):
+    from unittest.mock import Mock
+    j = Mock()
+    j.query.return_value = [{'symbol':'BTC/USDT'}]
+    feed = Mock()
+    feed.fetch_ohlcv.return_value = [1]
+    m = Maintenance(j, {}, feed)
+    monkeypatch.setattr('trader.engine.outcomes.resolve_pending', lambda *a: resolved)
+    monkeypatch.setattr('trader.engine.outcome_backfill.upgrade_24h', lambda *a: upgraded)
+    m.outcomes()
+    assert (m.jobs['learning']._pending is not None) is expected
+
+
+def test_recovery_check_recovers_new_evidence_and_restart_without_payload_scan(monkeypatch):
+    from unittest.mock import Mock
+    m = Maintenance(Mock(), {}, Mock())
+    monkeypatch.setattr('trader.learning.dispatch.production_registry', lambda: {'r':object()})
+    monkeypatch.setattr('trader.learning.dispatch.dispatchable', lambda r: True)
+    monkeypatch.setattr('trader.learning.dispatch.registry_digest', lambda r: 'digest')
+    m.learning_check()  # restart: existing evidence may be pending
+    assert m.jobs['learning']._pending is not None
+    m.jobs['learning']._pending = None
+    m.watermark.digest = 'digest'
+    m.watermark.floor = 20
+    m.watermark.swept_at = m.watermark.clock()
+    m.watermark._top = lambda j: 20
+    m.learning_check()
+    assert m.jobs['learning']._pending is None
+    m.watermark._top = lambda j: 21
+    m.learning_check()
+    assert m.jobs['learning']._pending is not None

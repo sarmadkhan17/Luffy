@@ -59,6 +59,11 @@ class KernelRuntime:
         cfg = kernel.cfg
         if cfg.get('derivatives', {}).get('enabled', True):
             self.jobs['derivatives'] = Worker('derivatives', self.derivatives, interval=900, immediate=True)
+            self.jobs['derivative_inputs'] = Worker('derivative-inputs', self.refresh_derivative_inputs,
+                                                   interval=300, immediate=True)
+            if cfg.get('derivatives', {}).get('backfill_on_start', True):
+                self.jobs['derivative_history'] = Worker('derivative-history', self.derivative_history,
+                                                         calendar=Calendar((3,), minute=30))
         if cfg.get('references', {}).get('enabled', True):
             self.jobs['references'] = Worker('references', self.references, interval=3600, immediate=True)
         if cfg.get('scraper', {}).get('enabled', False):
@@ -290,16 +295,26 @@ class KernelRuntime:
             self._harvester = Harvester(view.journal, view.cfg, view.feed, view.notifier)
         h = self._harvester
         h.deriv.cancelled = lambda: self.kernel._stop
-        if not getattr(self, '_deriv_backfilled', False) and view.cfg.get('derivatives', {}).get('backfill_on_start', True):
-            h.harvest_once(backfill=True)
-            self._deriv_backfilled = True
         h.deriv.record_all(h.symbols or view.cfg['universe']['majors'],
                           delay=float(view.cfg.get('derivatives', {}).get('request_delay_s', .3)))
         h.deriv._check_cancelled()
+
+    def refresh_derivative_inputs(self):
+        view = analysis_context(self)
         symbols = view.universe.symbols()
         funding, oi = view._funding_map(symbols), view._oi_map(symbols=symbols)
         with self.lock:
             self.derivative_inputs = (funding, oi, deepcopy(view._market_aux))
+
+    def derivative_history(self):
+        # Separate client/worker: multi-year history never delays current inputs.
+        from ..brain.harvester import Harvester
+        view = analysis_context(self)
+        h = Harvester(view.journal, view.cfg, view.feed, view.notifier)
+        h.deriv.cancelled = lambda: self.kernel._stop
+        result = h.harvest_once(backfill=True)
+        if result.get('error'):
+            raise RuntimeError('derivative_history_incomplete')
 
     def references(self):
         from ..data.ref_sources import refresh_all
