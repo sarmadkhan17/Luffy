@@ -66,6 +66,8 @@ def test_health_cannot_refresh_from_market_or_report_completion(tmp_path):
         r.health()
     k.heartbeat.beat.assert_not_called()
     r.account_data = (time.monotonic()-20, 100, {})
+    r.jobs['account']._metrics['last_success_at'] = time.time()-20
+    r.jobs['positions']._metrics['last_success_at'] = time.time()
     r.health()
     record = k.heartbeat.beat.call_args.args[0]
     assert 19 <= time.time() - record['last_successful_cycle_at'] <= 22
@@ -255,3 +257,15 @@ def test_reconciliation_failure_remains_visible_even_with_valid_position_snapsho
     k._detect_exchange_exits=Mock(side_effect=OSError('venue unavailable'))
     k._service_exposure(set(),{})
     assert k._exposure_errors and all(e=='reconcile:OSError' for e in k._exposure_errors)
+
+
+def test_heartbeat_completion_timestamp_is_stable_between_real_completions(tmp_path):
+    k, r = minimal(tmp_path)
+    r.account_data = (time.monotonic(), 100, {})
+    r.positions_at = time.monotonic()
+    completed = time.time()-2
+    r.jobs['account']._metrics['last_success_at'] = completed
+    r.jobs['positions']._metrics['last_success_at'] = completed+1
+    for _ in range(10):
+        r.health()
+    assert {call.args[0]['last_successful_cycle_at'] for call in k.heartbeat.beat.call_args_list} == {completed}

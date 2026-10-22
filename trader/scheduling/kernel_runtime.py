@@ -398,8 +398,12 @@ class KernelRuntime:
             raise ValueError('essential_cycles_unavailable_or_stale')
         # Completion now means current account AND independent exposure service.
         # Market/research completion cannot impersonate these safety cycles.
+        completed = [self.jobs[name].snapshot()['last_success_at']
+                     for name in ('account', 'positions')]
+        if any(stamp is None or not 0 <= time.time() - stamp <= 60 for stamp in completed):
+            raise ValueError('essential_cycles_unavailable_or_stale')
         k = self.kernel
-        k.heartbeat.beat(dict(startup_state='CYCLE_READY', last_successful_cycle_at=time.time() - max(now-account[0], now-positions),
+        k.heartbeat.beat(dict(startup_state='CYCLE_READY', last_successful_cycle_at=min(completed),
             cycle_basis='account_and_positions', equity=round(account[1], 2),
             state=k.state_machine.state.value, boot_complete=k._boot_complete,
             stopping=k._stop))
