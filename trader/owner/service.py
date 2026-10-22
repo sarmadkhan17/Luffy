@@ -322,16 +322,21 @@ class OwnerService:
             data["snapshot_error"] = type(e).__name__
         if req.operation == "health":
             from ..observability.safety import SafetyHealth, health_path
+            from .health_projection import OVERSIZE_REASON, project_safety, response_fits
             if hasattr(self.journal, 'db_path'):
-                data['safety'] = SafetyHealth(health_path(self.journal)).read()
+                data['safety'] = project_safety(SafetyHealth(health_path(self.journal)).read())
             data["supervisor"] = self._supervisor_summary()
             data["owner_interface"] = {"boot_id": self.boot_id,
                                        "recovery_in_progress": self._recover_lock.locked()}
-        return OwnerResult(req.request_id, req.operation, Status.ACCEPTED,
-                           principal=principal, channel=req.channel,
-                           request_ref=req.request_ref,
-                           control_state_before=data["control_state"],
-                           control_state_after=data["control_state"], data=data)
+        result = OwnerResult(req.request_id, req.operation, Status.ACCEPTED,
+                             principal=principal, channel=req.channel,
+                             request_ref=req.request_ref,
+                             control_state_before=data["control_state"],
+                             control_state_after=data["control_state"], data=data)
+        if req.operation == "health" and not response_fits(result):
+            # never truncate reasons or present partial health as complete
+            return refused(req, OVERSIZE_REASON, principal=principal)
+        return result
 
     def _supervisor_summary(self) -> dict | None:
         try:
