@@ -999,7 +999,7 @@ class FakeClock:
             self.t += dt
 
 
-def _cadence(check_s, n_starts, interval=60.0):
+def _cadence(check_s, n_starts, interval=60.0, start_delay=0.0):
     tmp = Path(__import__("tempfile").mkdtemp())
     journal = Journal(tmp / "j.db")
     venue = Venue()
@@ -1013,7 +1013,7 @@ def _cadence(check_s, n_starts, interval=60.0):
         reads.calls.clear()
         return orig()
     monitor._run = spy
-    monitor.loop(stopped=lambda: len(monitor.starts) >= n_starts, tick_s=1.0)
+    monitor.loop(stopped=lambda: len(monitor.starts) >= n_starts, tick_s=1.0, start_delay_s=start_delay)
     return list(monitor.starts), monitor.stats
 
 
@@ -1190,3 +1190,8 @@ def test_without_configured_credentials_the_monitor_publishes_unreadable(tmp_pat
     assert snap["status"] == "UNREADABLE"
     assert snap["reasons"] == ["venue_reader_unavailable:api_key_not_configured"]
     assert _stored(journal)["value"]["generation"] == snap["generation"]
+
+
+def test_staggered_protection_keeps_thirty_second_fixed_cadence():
+    starts, _ = _cadence(check_s=4.0, n_starts=4, interval=30.0, start_delay=10.0)
+    assert starts == [10.0, 40.0, 70.0, 100.0]

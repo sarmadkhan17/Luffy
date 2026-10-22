@@ -102,6 +102,8 @@ class Harvester:
                       self.deriv.record_all(self.symbols, delay=self.delay))
             stats["rows"] = sum(counts.values())
             stats["per_series"] = counts
+        except InterruptedError:
+            raise
         except Exception as e:
             log.warning(f"harvest acquire failed: {e}")
             stats["error"] = str(e)

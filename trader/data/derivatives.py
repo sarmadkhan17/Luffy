@@ -306,6 +306,7 @@ class DerivFeed:
         # oldest page and stops one call in.
         chunks, cursor = [], floor_ms
         for _ in range(40):                  # hard bound; 40k rows is ~36 years
+            self._check_cancelled()
             raw = self._get("/fapi/v1/fundingRate",
                             {"symbol": sym, "limit": 1000,
                              "startTime": cursor})
@@ -381,8 +382,13 @@ class DerivFeed:
         start = self._clock_ms() - span_ms
         return self._basis_between(symbol, period, start)
 
+    def _check_cancelled(self):
+        if getattr(self, 'cancelled', lambda: False)():
+            raise InterruptedError('derivative_acquisition_stopped')
+
     def _basis_between(self, symbol: str, period: str,
                        start_ms: int) -> pd.DataFrame:
+        self._check_cancelled()
         sym = to_binance(symbol)
         perp = dict(self._klines(FAPI, "/fapi/v1/klines", sym, period,
                                  start_ms, self._KLINE_PAGE))
@@ -399,6 +405,7 @@ class DerivFeed:
             return self._frame([])
         rows = []
         for event, value in pairs:
+            self._check_cancelled()
             components = []
             for receipts, price, venue, market in (
                     (perp_receipts, perp[event], 'binanceusdm', MarketType.FUTURES),
@@ -414,7 +421,11 @@ class DerivFeed:
                         source=r['source'], kind='derivative', received_ms=r['received_ms'],
                         request_id=r.get('request_id'), request_started_ms=r['request_started_ms'],
                         raw=[records[-1]])
-                    components.append({k: component.to_dict('records')[0][k] for k in mp.META})
+                    # Convert once per input receipt, not once per metadata field.
+                    # Repeated conversion makes historical backfill spend most
+                    # of its time constructing the same pandas rows.
+                    component_record = component.to_dict('records')[0]
+                    components.append({k: component_record[k] for k in mp.META})
             valid = len(components) == 2 and all(c['quality'] == 'VALID' for c in components)
             # A derived receipt cannot precede either required input receipt.
             component_times = [c['available_at_ms'] for c in components if c['available_at_ms'] is not None]
@@ -446,6 +457,7 @@ class DerivFeed:
                   else now_ms - int(years * 365.25 * 86400 * 1000))
         chunks = []
         for _ in range(_MAX_BASIS_PAGES):
+            self._check_cancelled()
             df = self._basis_between(symbol, period, cursor)
             if len(df):
                 chunks.append(df)
@@ -489,6 +501,7 @@ class DerivFeed:
         counts: dict = {}
         since = since or {}
         for sym in symbols:
+            self._check_cancelled()
             floor = since.get(sym)
             try:
                 fh = self.funding_history(sym, delay=delay, since_ms=floor)
@@ -496,6 +509,8 @@ class DerivFeed:
                     self.save(sym, "funding", fh)
                     counts["funding@history"] = \
                         counts.get("funding@history", 0) + len(fh)
+            except InterruptedError:
+                raise
             except Exception as e:
                 log.warning(f"derivs backfill {sym}/funding history: {e}")
             try:
@@ -504,14 +519,19 @@ class DerivFeed:
                     self.save(sym, "basis", bh)
                     counts["basis@history"] = \
                         counts.get("basis@history", 0) + len(bh)
+            except InterruptedError:
+                raise
             except Exception as e:
                 log.warning(f"derivs backfill {sym}/basis history: {e}")
             for series, method in self._SERIES_FETCHERS:
+                self._check_cancelled()
                 if series in ("funding", "basis"):
                     continue            # both have real history above
                 for period in self.BACKFILL_PERIODS:
                     try:
                         df = getattr(self, method)(sym, period=period)
+                    except InterruptedError:
+                        raise
                     except Exception as e:
                         log.warning(f"derivs backfill {sym}/{series}"
                                     f"@{period}: {e}")
@@ -533,9 +553,13 @@ class DerivFeed:
         # A duplicated universe member is the same acquisition in this pass.
         # A later pass still retrieves and records a legitimate new receipt.
         for sym in dict.fromkeys(symbols):
+            self._check_cancelled()
             for series, method in self._SERIES_FETCHERS:
+                self._check_cancelled()
                 try:
                     df = getattr(self, method)(sym)
+                except InterruptedError:
+                    raise
                 except Exception as e:
                     log.warning(f"derivs record {sym}/{series}: {e}")
                     continue

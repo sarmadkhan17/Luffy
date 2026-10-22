@@ -286,3 +286,38 @@ def test_backfill_without_a_floor_keeps_the_years_default(feed, monkeypatch):
     monkeypatch.setattr(feed, "ls_ratio", lambda *a, **k: feed._frame([]))
     feed.backfill(["BTC/USDT"], delay=0.0)
     assert seen["BTC/USDT"] is None
+
+
+def test_cancelled_backfill_does_not_fetch_or_publish(feed, monkeypatch):
+    feed.cancelled = lambda: True
+    monkeypatch.setattr(feed, '_get', lambda *a, **kw: pytest.fail('cancelled acquisition fetched'))
+    monkeypatch.setattr(feed, 'save', lambda *a, **kw: pytest.fail('cancelled acquisition published'))
+    with pytest.raises(InterruptedError):
+        feed.backfill(['BTC/USDT'], delay=0)
+    with pytest.raises(InterruptedError):
+        feed.basis_history('BTC/USDT', delay=0)
+    with pytest.raises(InterruptedError):
+        feed.funding_history('BTC/USDT', delay=0)
+
+
+def test_backfill_cancellation_is_not_swallowed_as_source_failure(feed, monkeypatch):
+    monkeypatch.setattr(feed, 'funding_history', lambda *a, **k: pd.DataFrame())
+    def cancel(*args, **kwargs):
+        raise InterruptedError('stop requested')
+    monkeypatch.setattr(feed, 'basis_history', cancel)
+    monkeypatch.setattr(feed, 'save', lambda *a, **kw: pytest.fail('cancelled basis published'))
+    with pytest.raises(InterruptedError):
+        feed.backfill(['BTC/USDT', 'ETH/USDT'], delay=0)
+
+
+def test_harvester_propagates_shutdown_without_later_work():
+    from trader.brain.harvester import Harvester
+    from types import SimpleNamespace
+    def cancel(*args, **kwargs):
+        raise InterruptedError('stop requested')
+    h = object.__new__(Harvester)
+    h.symbols, h.delay = ['BTC/USDT'], 0
+    h.deriv = SimpleNamespace(backfill=cancel)
+    h.deepen = lambda: pytest.fail('continued after cancellation')
+    with pytest.raises(InterruptedError):
+        h.harvest_once(backfill=True)

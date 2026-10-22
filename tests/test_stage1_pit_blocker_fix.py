@@ -327,3 +327,28 @@ def test_universe_result_cannot_precede_component_receipt(universe, monkeypatch)
     monkeypatch.setattr(ex, 'fetch_ohlcv', listing)
     assert 'ALT/USDT' not in u.symbols(as_of_ms=U1), 'selection preceded a required volume receipt'
     assert u._selection_receipt is None
+
+
+def test_basis_component_conversion_is_once_per_receipt(basis_feed, monkeypatch):
+    """Metadata width must not multiply complete dataframe conversions."""
+    feed, _clock, _transport = basis_feed
+    original = pd.DataFrame.to_dict
+    calls = []
+    def counted(frame, *args, **kwargs):
+        calls.append(len(frame))
+        return original(frame, *args, **kwargs)
+    monkeypatch.setattr(pd.DataFrame, 'to_dict', counted)
+    frame = feed.basis('BTC/USDT', limit=1)
+    assert calls == [1, 1]
+    components = json.loads(frame.iloc[0].raw_json)['components']
+    assert len(components) == 2
+    assert all(set(P.META) == set(component) for component in components)
+    assert frame.iloc[0]['value'] == pytest.approx(.1)
+
+
+def test_basis_shutdown_during_page_does_not_return_partial_receipt(basis_feed):
+    feed, _clock, _transport = basis_feed
+    checks = iter([False, True])
+    feed.cancelled = lambda: next(checks)
+    with pytest.raises(InterruptedError):
+        feed.basis('BTC/USDT', limit=1)

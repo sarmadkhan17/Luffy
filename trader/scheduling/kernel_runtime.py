@@ -289,11 +289,13 @@ class KernelRuntime:
         if not hasattr(self, '_harvester'):
             self._harvester = Harvester(view.journal, view.cfg, view.feed, view.notifier)
         h = self._harvester
+        h.deriv.cancelled = lambda: self.kernel._stop
         if not getattr(self, '_deriv_backfilled', False) and view.cfg.get('derivatives', {}).get('backfill_on_start', True):
             h.harvest_once(backfill=True)
             self._deriv_backfilled = True
         h.deriv.record_all(h.symbols or view.cfg['universe']['majors'],
                           delay=float(view.cfg.get('derivatives', {}).get('request_delay_s', .3)))
+        h.deriv._check_cancelled()
         symbols = view.universe.symbols()
         funding, oi = view._funding_map(symbols), view._oi_map(symbols=symbols)
         with self.lock:

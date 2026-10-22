@@ -48,7 +48,8 @@ def start_protection_monitor(kernel):
                            supervisor_busy=kernel.supervisor._pass_lock.locked,
                            interval_s=30.0 if getattr(kernel, "_use_split_cycles", False) else 60.0)
     kernel._bootstrap_protection_monitor = monitor
-    thread = threading.Thread(target=monitor.loop, kwargs={'stopped': lambda: kernel._stop},
+    thread = threading.Thread(target=monitor.loop, kwargs={'stopped': lambda: kernel._stop,
+        'start_delay_s': 10.0 if getattr(kernel, '_use_split_cycles', False) else 0.0},
                               name='bootstrap-protection', daemon=True)
     thread.start()
     return monitor

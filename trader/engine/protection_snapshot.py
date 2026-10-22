@@ -942,8 +942,9 @@ class ProtectionMonitor:
     def stop(self) -> None:
         self._stop.set()
 
-    def loop(self, stopped=lambda: False, tick_s: float = 0.5) -> None:
-        self._slot = self.clock()
+    def loop(self, stopped=lambda: False, tick_s: float = 0.5, start_delay_s: float = 0.0) -> None:
+        # Offset account updates without changing evidence or timeout rules.
+        self._slot = self.clock() + max(0.0, start_delay_s)
         last = None
         while not (self._stop.is_set() or stopped()):
             now = self.clock()
