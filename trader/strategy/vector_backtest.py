@@ -304,7 +304,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_sig: np.ndarray | None = None,
              funding: np.ndarray | None = None,
              fills_out: list | None = None,
-             score_from: int = 0, exit_evidence_out=None, exit_sig_available=None) -> BacktestResult:
+             score_from: int = 0, exit_evidence_out=None, exit_sig_available=None,
+             fill_delay_bars: int = 0) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -359,6 +360,13 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     candidates = np.flatnonzero(long | short)
     cursor = score_from
     fill, _ = fill_timing.fills(df)
+    if type(fill_delay_bars) is not int or fill_delay_bars < 0:
+        raise ValueError('fill_delay_bars must be a non-negative integer')
+    if fill_delay_bars:
+        # Execution-latency stress: the SIGNAL (ATR, stop geometry, exit intent)
+        # is unchanged; only the bar each entry/exit fills on moves later.
+        fill = np.where(fill >= 0, fill + int(fill_delay_bars), fill)
+        fill = np.where(fill >= n, -1, fill)
 
     for raw_i in candidates:
         i = int(raw_i)

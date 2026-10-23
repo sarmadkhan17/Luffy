@@ -284,7 +284,20 @@ class KernelRuntime:
             from ..research.runner import ResearchRunner
             if not hasattr(self, '_research_runner'):
                 self._research_runner = ResearchRunner(view.journal, cfg)
+            import time as _time
+            _t0 = _time.monotonic()
             self._research_runner.step(cycle_seconds=self.kernel._last_cycle_s)
+            # Opt-in closure study (research.closure.enabled, default off). It
+            # takes only what remains of ONE aggregate slot budget after the
+            # legacy step, honours kernel shutdown between units, and its heavy
+            # units run in deadline-bounded child processes. Research-only.
+            closure = cfg.get('research', {}).get('closure') or {}
+            if closure.get('enabled', False):
+                from ..research.closure import study as closure_study
+                closure_study.scheduled(
+                    cfg, cycle_seconds=self.kernel._last_cycle_s,
+                    slot_remaining_s=float(closure.get('slot_budget_s', 900)) - (_time.monotonic() - _t0),
+                    should_stop=lambda: bool(getattr(self.kernel, '_stop', False)))
         if cfg.get('mechanism', {}).get('enabled', True):
             section = cfg.get('mechanism', {})
             view._mechanism_once(int(section.get('specs_per_cycle', 1)), int(section.get('max_specs', 8)))

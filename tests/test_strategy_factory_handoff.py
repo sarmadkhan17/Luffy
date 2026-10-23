@@ -921,6 +921,47 @@ def test_eligibility_is_read_only(tmp_path, cfg):
     assert _dump(tmp_path / "j.db") == before
 
 
+FINGERPRINT_FILE = "trader/research/closure/manifest.py"
+FINGERPRINT_LITERAL = "strategy/factory_handoff.py"
+
+
+def _factory_refs(text, path):
+    """Code references to the Factory module outside the allowlist. A string constant is
+    tolerated ONLY as the exact content-fingerprint path literal in the closure manifest
+    (its bytes are hashed there; nothing is imported or called). Imports, names, attributes
+    and every other string remain violations."""
+    import ast
+    bad = []
+    for n in ast.walk(ast.parse(text)):
+        if isinstance(n, (ast.Import, ast.ImportFrom)):
+            names = [a.name for a in n.names] + [getattr(n, "module", None) or ""]
+            if any("factory_handoff" in x for x in names):
+                bad.append(("import", n.lineno))
+        elif isinstance(n, ast.Name) and "factory_handoff" in n.id:
+            bad.append(("name", n.lineno))
+        elif isinstance(n, ast.Attribute) and "factory_handoff" in n.attr:
+            bad.append(("attribute", n.lineno))
+        elif isinstance(n, ast.Constant) and isinstance(n.value, str) and "factory_handoff" in n.value:
+            if not (path == FINGERPRINT_FILE and n.value == FINGERPRINT_LITERAL):
+                bad.append(("string", n.lineno))
+    return bad
+
+
+def test_factory_reference_guard_distinguishes_fingerprints_from_callers():
+    fp = 'files = ["strategy/factory_handoff.py"]\n'
+    assert _factory_refs(fp, FINGERPRINT_FILE) == []                           # fingerprint literal, closure manifest only
+    assert _factory_refs(fp, "trader/engine/executor.py")                        # same literal anywhere else is a violation
+    assert _factory_refs('x = "strategy/factory_handoff.py.bak"\n', FINGERPRINT_FILE)   # not the exact literal
+    assert _factory_refs('from trader.strategy import factory_handoff\n', FINGERPRINT_FILE)
+    assert _factory_refs('import trader.strategy.factory_handoff as f\n', FINGERPRINT_FILE)
+    assert _factory_refs('from trader.strategy.factory_handoff import create_version\n', FINGERPRINT_FILE)
+    assert _factory_refs('def g(m):\n    return m.factory_handoff.create_version()\n', FINGERPRINT_FILE)
+    assert _factory_refs('fh = factory_handoff\n', FINGERPRINT_FILE)
+    assert _factory_refs('mod = __import__("trader.strategy.factory_handoff")\n', FINGERPRINT_FILE)
+    real = pathlib.Path(FINGERPRINT_FILE).read_text()
+    assert _factory_refs(real, FINGERPRINT_FILE) == [] and FINGERPRINT_LITERAL in real
+
+
 def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     src = pathlib.Path("trader/strategy/factory_handoff.py").read_text()
     code = src.split('"""', 2)[2]
@@ -933,8 +974,8 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
-            assert "factory_handoff" not in f.read_text(), f
+        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+            assert not _factory_refs(f.read_text(), f.as_posix()), f
     # Postmortem delegates only to these existing read-only Factory readers.
     # No writer/alias escape is permitted by this exception.
     import ast

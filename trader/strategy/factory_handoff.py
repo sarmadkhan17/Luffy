@@ -736,6 +736,8 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
                 else "not_a_referee_candidate")
     if kind == Q.SOURCE_KIND:
         return _create_from_qualification(journal, cfg, source, at_ms=at_ms)
+    if kind == HQ_KIND:
+        return _create_from_historical(journal, cfg, source, at_ms=at_ms)
     if kind != "research_candidate" or not source.get("hash"):
         _refuse("not_a_referee_candidate")
     h = source["hash"]
@@ -789,6 +791,91 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
                     receipt["receipt_id"], "factory", at_ms)
     return {"status": v_out, "version_id": vid, "spec_hash": spec_hash,
             "strategy_id": rec["strategy_id"],
+            "validation_receipt_id": receipt["receipt_id"]}
+
+
+# ── 1c. Historical qualification packet -> VALIDATED version ─────────────
+HQ_KIND = "historical_qualification"
+
+
+def _verified_historical(cfg: dict, packet) -> dict:
+    """Re-derive the packet and bind it to the CURRENT configured strictness,
+    evaluator and cost model. Nothing is trusted from `status` or labels."""
+    from ..research.closure import ClosureRefused, manifest as cm, qualification as cq
+    try:
+        q = cq.verify_qualification(packet)
+    except ClosureRefused as e:
+        _refuse("hq_" + e.code)
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError):
+        _refuse("hq_packet_malformed")
+    env = q["envelope"]
+    if env["policy_class"] != "CONFIGURED" or q["authority_class"] != "CONFIGURED":
+        _refuse("hq_test_only_policy_has_no_factory_authority")
+    rcfg = cfg.get("research") or {}
+    # The recorded research stop is honoured: this source does not grant the
+    # authority the closed gates withhold.
+    if not rcfg.get("handoff", False):
+        _refuse("hq_research_handoff_gate_closed")
+    if not rcfg.get("referee", False):
+        _refuse("hq_research_referee_gate_closed")
+    if not cq.calibration_approved(cfg, env):
+        _refuse("hq_calibration_not_approved")
+    if cm.not_weaker(env["policy"], cm.configured_policy(cfg)):
+        _refuse("hq_policy_weaker_than_configured")
+    if env["evaluator_id"] != cm.evaluator_id():
+        _refuse("hq_evaluator_changed_since_qualification")
+    risk = cfg.get("risk") or {}
+    if env["risk"] != {k: risk.get(k) for k in env["risk"]}:
+        _refuse("hq_cost_model_differs_from_configured")
+    return q
+
+
+def _create_from_historical(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
+    q = _verified_historical(cfg, source.get("packet"))
+    env, freeze = q["envelope"], q["freeze"]
+    h = freeze["combo_hash"]
+    ev = gate_evidence(journal, h)
+    d = json.loads(ev["gate1_look"]["detail"])
+    if (d.get("envelope_id"), d.get("freeze_id")) != (env["envelope_id"], freeze["freeze_id"]) or \
+            ev["gate1_look"]["seq"] != next(t["seq"] for t in q["ledger"]["tests"]
+                                            if t["hash"] == h and t["gate"] == "gate1"):
+        _refuse("hq_ledger_look_not_the_packet_look")
+    cand = _one(journal, "SELECT * FROM research_candidates WHERE hash=?", (h,))
+    spec = candidate_spec(journal, cfg, dict(cand), evaluated=ev["evaluated"])
+    spec.universe = {"include": sorted(env["discovery_symbols"] + env["heldout_symbols"]), "exclude": []}
+    spec_d, spec_hash = _frozen_spec(spec)
+    ids = _receipt_evidence(ev)
+    quant = {**ids, "gate1_alpha_t": ev["gate1_look"]["alpha_t"], "cut_ms": d["cut_ms"]}
+    research = {"origin": "historical_qualification", "envelope_id": env["envelope_id"],
+                "freeze_id": freeze["freeze_id"], "qualification_id": q["qualification_id"],
+                "qualification_evidence_id": q["evidence_id"], "manifest_id": env["manifest_id"],
+                "development_result_id": freeze["development_result_id"], "policy_id": env["policy_id"],
+                "protected_fingerprint": env["protected_fingerprint"], "gate3_book": q["gate3_book"],
+                "development_mode": env["development_mode"]}
+    rec = _version_record(spec_d["id"], spec_d, spec_hash, None, {"kind": HQ_KIND, "id": h}, ids,
+                          _lineage(spec_d, _jsha(cfg.get("risk")), research, quant, None))
+    vid = rec["version_id"]
+    r_ident = {"schema": RECEIPT_SCHEMA, "version_id": vid, "strategy_id": rec["strategy_id"],
+               "spec_hash": spec_hash, "evidence": ids}
+    receipt = {**r_ident, "receipt_id": _jsha(r_ident), "gate1_look": ev["gate1_look"], "gate1": ev["gate1"],
+               "gate3": ev["gate3"], "evaluated": ev["evaluated"], "candidate_state_at_receipt": ev["candidate"]["state"],
+               "historical_qualification": {k: research[k] for k in research},
+               "semantics": ("historical-development then independent protected qualification under the policy in "
+                             "force; VALIDATED only. Not post-generation prospective evidence; no paper, live, "
+                             "allocation or order authority")}
+    r_text = canonical(receipt)
+    with journal._tx() as c:
+        _begin(c)
+        v_out = _insert_version(c, rec, at_ms)
+        if v_out == "conflict":
+            _refuse("version_conflict")
+        r_out, _ = _insert(c, "strategy_validation_receipts", "receipt_id",
+                           {"receipt_id": receipt["receipt_id"], "version_id": vid, "canonical_sha256": _sha(r_text),
+                            "canonical_json": r_text, "recorded_at_ms": int(at_ms)})
+        if r_out == "conflict":
+            _refuse("validation_receipt_conflict")
+        _transition(c, vid, VALIDATED, "historical_qualification_bound", receipt["receipt_id"], "factory", at_ms)
+    return {"status": v_out, "version_id": vid, "spec_hash": spec_hash, "strategy_id": rec["strategy_id"],
             "validation_receipt_id": receipt["receipt_id"]}
 
 
