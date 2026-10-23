@@ -151,6 +151,9 @@ def test_normal_broad_producer_carries_history_into_candidate_without_deep_fetch
     from trader.data.broad_crypto import observe
     from tests.test_hierarchical_admission import broad_kernel
     cfg = yaml.safe_load(Path('config.yaml').read_text())
+    # Historical history-ranking contract; production now uses volume selection.
+    cfg['attention'].pop('selection', None)
+    cfg['attention']['admission'] = dict(max_deep_slots=12,event_reserve=2,exploration_reserve=2,minimum_slots=0)
     k = broad_kernel(tmp_path, cfg, n=4)
     data = inputs(short=True)
     k.feed.cached_ohlcv = Mock(side_effect=lambda s, tf, **kw: data[s][tf])

@@ -142,6 +142,8 @@ def admit(observation, policy, state):
     peer = tuple(sorted(set(observation['peer_cohort'])))
     if not set(peer).issubset(members):
         raise ValueError('peer_cohort_invalid')
+    if observation.get('selection') == 'volume':
+        return admit_volume(observation, policy, state, members, peer)
     scores = observation['salience_rows']
     threshold = observation['salience_config']['min_salience']
     if not math.isfinite(threshold) or threshold < 0:
@@ -249,6 +251,47 @@ def admit(observation, policy, state):
     return receipt
 
 
+def admit_volume(observation, policy, state, members, peer):
+    """Rank valid eligible contracts by 24h quote volume; no history gate."""
+    if policy.event_reserve or policy.exploration_reserve:
+        raise ValueError('volume_policy_reserves_forbidden')
+    cut = observation['source_cut_ms']
+    valid = []
+    for sym in members:
+        row = observation['rows'][sym]
+        volume = row.get('quote_volume')
+        if (row.get('quality') == 'VALID' and type(row.get('available_at_ms')) is int
+                and 0 <= row['available_at_ms'] <= cut and type(volume) in (int,float)
+                and math.isfinite(volume) and volume > 0):
+            valid.append(sym)
+    ranked = sorted(valid, key=lambda sym: (-observation['rows'][sym]['quote_volume'], sym))
+    chosen = ranked[:policy.max_deep_slots]
+    detail = [dict(symbol=s, features=observation['rows'][s], score=None,
+        components={}, score_status='NOT_USED_VOLUME_SELECTION',
+        missing_reasons=observation['rows'][s].get('missing_reasons',[]),
+        strategy_relevance=observation['strategy_relevance'].get(s,[]),
+        required_by_strategy=observation.get('required_by_strategy',{}).get(s,[]),
+        context_anchor=s in observation['context_anchors'], exposure_required=s in observation['exposure_required'],
+        category='volume' if s in chosen else 'deferred',
+        reason='top_24h_quote_volume' if s in chosen else ('volume_capacity_deferred' if s in valid else 'broad_input_unusable'),
+        event_reason=None, exploration_reason=None) for s in members]
+    body = dict(verify_state(state)); body['generation'] += 1
+    next_state = dict(body, sha256=digest(body))
+    roles = SymbolRoles(members,peer,tuple(chosen),tuple(observation['context_anchors']),
+                        tuple(observation['exposure_required']),(),())
+    result = dict(schema=SCHEMA, policy_version='volume-crypto.v1', policy=asdict(policy),
+        source_cut_ms=cut,source_identity=observation['source_identity'],observation=observation,
+        prior_state=state,next_state=next_state,roles=asdict(roles),peer_cohort_version=PEER_VERSION,
+        peer_cohort_id=digest([PEER_VERSION,peer]),rows=detail,tie_break_order=ranked,
+        admitted_symbols=chosen,rejected_deferred=[s for s in members if s not in chosen],
+        capacity_used=len(chosen),unused_capacity=policy.max_deep_slots-len(chosen),
+        reserved_unused=dict(event=0,exploration=0),degraded_state=observation['status'],
+        fallback='NONE',required_deferred=[],
+        learned_priority_influence='NONE: volume selection only')
+    result['receipt_id'] = digest(result)
+    return result
+
+
 def verify_receipt(receipt):
     if not isinstance(receipt,dict) or receipt.get('receipt_id') != digest({k:v for k,v in receipt.items() if k!='receipt_id'}):
         raise ValueError('admission_receipt_corrupt')
@@ -318,7 +361,7 @@ def candidates(receipt):
     """
     receipt = verify_receipt(receipt)
     obs, rows = receipt['observation'], {x['symbol']: x for x in receipt['rows']}
-    kinds = dict(event='new_event', strategy_required='required_by_strategy', ranked='standing_salience',
+    kinds = dict(volume='volume_shortlist', event='new_event', strategy_required='required_by_strategy', ranked='standing_salience',
                  relevant='rotating_relevance', warmup_relevant='rotating_relevance', exploration='rotating_exploration')
     out = []
     for rank, sym in enumerate(receipt['admitted_symbols'], 1):

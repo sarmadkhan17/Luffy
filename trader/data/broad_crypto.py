@@ -1,4 +1,4 @@
-"""Cheap crypto observation: one public bulk ticker call and local cached bars.
+"""Crypto observation: bulk tickers; historical ranking only for legacy policy.
 
 No order books, symbol candle acquisition, strategy evaluation or account
 permission inference. Venue metadata's underlyingType=COIN proves crypto.
@@ -87,7 +87,7 @@ def verify_identity_projection(observation):
         tickers, markets = sources['tickers'], sources['venue_metadata']
         if observation['source_identity'] != digest([SCHEMA,cut,tickers,markets]):
             raise ValueError('source_identity_mismatch')
-        stale_ms = observation['attention_event']['capture_settings']['stale_seconds']*1000
+        stale_ms = (observation['ticker_stale_seconds'] if observation.get('selection') == 'volume' else observation['attention_event']['capture_settings']['stale_seconds'])*1000
         matched = {}
         for key,t,m,iid,reason in _identity_matches(tickers,markets):
             if reason is None and _venue_exclusion(m) is None:
@@ -95,6 +95,7 @@ def verify_identity_projection(observation):
         for sym,row in observation['rows'].items():
             label,t,info = matched[row['instrument_id']]
             if (label != sym or row['ticker'] != t or row['metadata'] != info
+                    or row['quote_volume'] != t.get('quoteVolume') or row['last'] != t.get('last')
                     or row['event_time_ms'] != t.get('timestamp') or row['available_at_ms'] != cut
                     or _ticker_clock_exclusion(t.get('timestamp'),cut,stale_ms)):
                 raise ValueError('source_identity_mismatch')
@@ -208,6 +209,19 @@ def observe(kernel, exposure):
         if any(norm_symbol(s) not in broad_plan.by_strategy.get(sp.id,()) for sp in specs
                for s in (sp.universe or {}).get('required_evaluation',[]) if norm_symbol(s) in rows):
             raise ValueError('required_strategy_symbol_ineligible')
+    if cfg['attention'].get('selection') == 'volume':
+        # Volume admission has no historical/anomaly dependency. Preserve the
+        # source evidence and independent strategy peers, never acquire candles.
+        return dict(schema=SCHEMA, selection='volume', ticker_stale_seconds=cfg['attention']['stale_seconds'],
+            source_cut_ms=cut, source_identity=digest([SCHEMA,cut,tickers,markets]),
+            rows=rows, excluded=excluded, source_exclusions=source_exclusions,
+            peer_cohort=peers, peer_version=PEER_VERSION, strategy_relevance=relevance,
+            required_by_strategy=required_by_strategy, required_symbols=required_symbols,
+            strategy_specs=[sp.to_dict() for sp in specs], context_anchors=list(ANCHORS),
+            exposure_required=sorted(exposure), status=status,
+            acquisition='bulk tickers only; volume-first; no history or anomaly scoring',
+            source_receipts=dict(tickers=tickers,venue_metadata=markets,
+                venue_metadata_receipt=metadata_receipt,request_started_ms=started,observed_at_ms=cut)), {}, {}
     # Closed-bar peer data remains independent of admission. Attention's
     # broad statistical cohort deliberately replaces first-16 subset semantics.
     frames={}

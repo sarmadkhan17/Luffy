@@ -25,7 +25,10 @@ def offline(monkeypatch):
 
 @pytest.fixture
 def cfg():
-    return yaml.safe_load(Path('config.yaml').read_text())
+    cfg = yaml.safe_load(Path('config.yaml').read_text())
+    cfg['attention'].pop('selection', None)
+    cfg['attention']['admission'] = dict(max_deep_slots=12,event_reserve=2,exploration_reserve=2,minimum_slots=0)
+    return cfg
 
 
 @pytest.fixture

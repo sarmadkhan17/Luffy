@@ -1330,7 +1330,8 @@ class Kernel:
         oi = (self._oi_map(symbols=deep_symbols) if self.market_type == MarketType.FUTURES else {}) if runtime is None else prepared_oi
         # Legacy investigation telemetry remains bounded and asynchronous;
         # it does not choose deep members or stand in for broad admission.
-        scan_id = self._attention_call("begin", broad_frames, list(roles.broad_crypto))
+        scan_id = (None if receipt and receipt.get('policy_version') == 'volume-crypto.v1'
+                    else self._attention_call("begin", broad_frames, list(roles.broad_crypto)))
         attention_causes = []
         # Bound producer work even if the trading universe is much larger.
         attention_cap = getattr(getattr(self, "_attention", None), "cfg", {}).get("max_symbols", 0)
@@ -2020,6 +2021,9 @@ class Kernel:
             # Scheduling failure cannot revoke mandatory exposure protection.
             try:
                 from .data.attention_history import prepare
+                if receipt.get('policy_version') == 'volume-crypto.v1':
+                    self._history_preparation = dict(status='NOT_REQUIRED', reason='volume_shortlist')
+                    return receipt, frames
                 with stage_scope('admission.queue_history'):
                     self._history_preparation = prepare(self, receipt)
                     self.journal.log_brain_event('attention_history_preparation', 'attention', self._history_preparation)
@@ -2059,7 +2063,8 @@ class Kernel:
     @stage('deep.snapshot', symbol_arg=1)
     def _candidate_snapshot_for(self, symbol, receipt, peers):
         from .attention_admission import verify_receipt, candidates
-        verify_receipt(receipt)
+        with stage_scope('deep.admission_verify'):
+            verify_receipt(receipt)
         if symbol not in receipt['admitted_symbols']:
             raise ValueError('symbol_not_deep_admitted')
         # ATT-01: the typed investigation candidate is the one normal-path
@@ -2068,7 +2073,8 @@ class Kernel:
         if not cache or cache[0] != receipt['receipt_id']:
             cache = self._candidate_cache = (receipt['receipt_id'], {c['symbol']: c for c in candidates(receipt)})
         candidate = cache[1][symbol]
-        snap = self._snapshot_for(symbol, universe=peers)
+        with stage_scope('deep.market_data', symbol=symbol):
+            snap = self._snapshot_for(symbol, universe=peers)
         if snap is not None:
             row = next(r for r in receipt['rows'] if r['symbol']==symbol)
             snap.admission_context = dict(receipt_id=receipt['receipt_id'],schema=receipt['schema'],

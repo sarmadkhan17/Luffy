@@ -177,6 +177,9 @@ def test_failed_refresh_preserves_minimum_and_retains_short_history(tmp_path, mi
 
 def kernel(tmp_path, monkeypatch, v):
     cfg = yaml.safe_load(Path('config.yaml').read_text())
+    # Historical history-ranking contract; production now uses volume selection.
+    cfg['attention'].pop('selection', None)
+    cfg['attention']['admission'] = dict(max_deep_slots=12,event_reserve=2,exploration_reserve=2,minimum_slots=0)
     k = broad_kernel(tmp_path, cfg, n=4)
     k.feed = DataFeed(exchange=v, db_path=tmp_path/'candles.db', clock_ms=lambda:v.now)
     k.market_type = MarketType.FUTURES

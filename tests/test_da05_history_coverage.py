@@ -365,6 +365,9 @@ def test_kernel_prepares_only_after_receipt_commit_and_preserves_admission(tmp_p
     from tests.test_hierarchical_admission import broad_kernel, CUT as K_CUT
     import yaml
     cfg=yaml.safe_load(Path('config.yaml').read_text())
+    # Historical history-ranking contract; production now uses volume selection.
+    cfg['attention'].pop('selection', None)
+    cfg['attention']['admission'] = dict(max_deep_slots=12,event_reserve=2,exploration_reserve=2,minimum_slots=0)
     monkeypatch.setattr('trader.data.broad_crypto.time.time',lambda:K_CUT/1000)
     k=broad_kernel(tmp_path,cfg,n=30)
     submitted=[]

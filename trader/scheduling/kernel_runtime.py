@@ -169,10 +169,10 @@ class KernelRuntime:
     @timed_worker('market')
     def market(self):
         view = analysis_context(self)
+        receipt, frames = view._admission_plan()
         view._refresh_btc_context()
         if view.cfg.get('attention', {}).get('admission'):
             view._refresh_context_anchors()
-        receipt, frames = view._admission_plan()
         peers = view._peer_frames(view._symbol_roles.peers)
         with self.lock:
             funding, oi, aux = deepcopy(self.derivative_inputs)
@@ -401,6 +401,9 @@ class KernelRuntime:
         return dict(schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
+            decision_summary=({key: self.last_decision_stats.get(key) for key in
+                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs')}
+                if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             replaced_scan_batches=self.scan_replaced, candles=dict(self.candle_stats))
 

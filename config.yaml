@@ -461,10 +461,11 @@ logging:
 # Owner-adopted deterministic compute admission plus investigation diagnostics.
 # Admission never replaces Risk permission or mandatory exposure service.
 attention:
+  selection: volume
   admission:
-    max_deep_slots: 12
-    event_reserve: 2
-    exploration_reserve: 2
+    max_deep_slots: 30
+    event_reserve: 0
+    exploration_reserve: 0
     minimum_slots: 0
   enabled: true
   timeframe: 4h
