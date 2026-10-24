@@ -145,7 +145,9 @@ class KernelRuntime:
             k.state_machine.refresh()
             balance, status = k._risk_step()
             state = k.state_machine.refresh()
-            allowed = (k.state_machine.can_enter() and status.get('risk_state') == 'ok'
+            from ..observability.safety import entry_refusal
+            allowed = (state == ControlState.ACTIVE and entry_refusal(k.journal) is None
+                and status.get('risk_state') == 'ok'
                 and (status.get('daily_pnl_pct') or 0) > -k.risk.daily_loss_block * 100
                 and not k.executor.recovery_pending())
             k._record_risk_assessment(state, status, allowed, '' if allowed else 'account_cycle_entry_blocked')

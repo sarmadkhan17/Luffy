@@ -326,3 +326,14 @@ def test_shared_candle_windows_read_maximum_once_then_slice():
     assert reads==[600] and len(first)==400 and len(second)==600
     first.iloc[-1,0]=-1
     assert second.iloc[-1,0]==599
+
+
+def test_hold_scan_never_requests_writable_entry_probe(tmp_path,monkeypatch):
+    k,_,queries=offline_scan(tmp_path,monkeypatch,actionable=False)
+    k.state_machine=NS(state=ControlState.ACTIVE,refresh=lambda:ControlState.ACTIVE,
+        can_enter=lambda:pytest.fail('entry probe belongs at submission boundary'))
+    monkeypatch.setattr('trader.observability.safety.entry_refusal',
+        lambda journal,probe=False: pytest.fail('writable probe in scan') if probe else None)
+    result=run(k)
+    assert result['decisions']==30 and result['persisted_attempts']==0
+    assert not any(q.lstrip().upper().startswith(('INSERT','UPDATE','DELETE')) for q in queries)

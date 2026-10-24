@@ -120,7 +120,10 @@ def run(view):
     with stage_scope('scan.controls'):
         balance, status = runtime.account_snapshot(view)
         state = view.state_machine.refresh()
-        allowed = view.state_machine.can_enter()
+        # Scanning only observes authority. The coordinated entry boundary
+        # and Executor still perform the current writable-storage probes.
+        from ..observability.safety import entry_refusal
+        allowed = state == ControlState.ACTIVE and entry_refusal(view.journal) is None
         blocked = '' if allowed else 'state=' + state.value
         if view.market_type == MarketType.FUTURES and view.executor.recovery_pending():
             supervisor = getattr(view, 'supervisor', None)
