@@ -82,7 +82,7 @@ def _elapsed_minutes(ts: str, now=None) -> float:
     return (now - dt).total_seconds() / 60.0
 
 
-def upgrade_24h(journal, frames: dict, now=None) -> int:
+def upgrade_24h(journal, frames: dict, now=None, *, executed_only=False) -> int:
     """Fill the 24h grade on outcomes that were too young when first written.
 
     A row was written the moment the 4h horizon could be graded, and
@@ -99,7 +99,9 @@ def upgrade_24h(journal, frames: dict, now=None) -> int:
     cut = int(now.timestamp()*1000)
     rows = journal.query(
         "SELECT decision_id, symbol, ts, action, entry_price, correct_24h "
-        "FROM outcomes WHERE correct_24h IS NULL")
+        "FROM outcomes WHERE correct_24h IS NULL" +
+        (" AND EXISTS (SELECT 1 FROM decisions d WHERE d.id=outcomes.decision_id AND d.executed=1)"
+         if executed_only else ""))
     n = 0
     for r in rows:
         if _elapsed_minutes(r["ts"], now) < HORIZONS["24h"]:

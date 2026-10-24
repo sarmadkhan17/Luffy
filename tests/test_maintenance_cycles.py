@@ -94,8 +94,8 @@ def test_only_changed_outcomes_wake_learning(monkeypatch, resolved, upgraded, ex
     feed = Mock()
     feed.fetch_ohlcv.return_value = [1]
     m = Maintenance(j, {}, feed)
-    monkeypatch.setattr('trader.engine.outcomes.resolve_pending', lambda *a: resolved)
-    monkeypatch.setattr('trader.engine.outcome_backfill.upgrade_24h', lambda *a: upgraded)
+    monkeypatch.setattr('trader.engine.outcomes.resolve_pending', lambda *a, **kw: resolved)
+    monkeypatch.setattr('trader.engine.outcome_backfill.upgrade_24h', lambda *a, **kw: upgraded)
     m.outcomes()
     assert (m.jobs['learning']._pending is not None) is expected
 

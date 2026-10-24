@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 HORIZONS = {"1h": 60, "4h": 240, "24h": 1440}
 
 
-def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
+def resolve_pending(journal: Journal, feed, now_ms: int | None = None, *,
+                    executed_only: bool = False) -> int:
     """Resolve outcomes only for horizons whose window has actually elapsed.
 
     A row is consumed (resolved_at set) ONLY once correct_4h is available —
@@ -24,7 +25,9 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
     the whole learning loop (agents_accuracy / calibration / theorist).
     """
     rows = journal.query(
-        "SELECT * FROM outcomes WHERE resolved_at IS NULL")
+        "SELECT * FROM outcomes WHERE resolved_at IS NULL" +
+        (" AND EXISTS (SELECT 1 FROM decisions d WHERE d.id=outcomes.decision_id AND d.executed=1)"
+         if executed_only else ""))
     resolved = 0
     for o in rows:
         ts = o["ts"]                                  # ISO with tz

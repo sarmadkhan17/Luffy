@@ -46,16 +46,17 @@ class Maintenance:
     def outcomes(self):
         from ..engine.outcomes import resolve_pending
         from ..engine.outcome_backfill import upgrade_24h
-        changed = resolve_pending(self.journal, self.feed)
+        changed = resolve_pending(self.journal, self.feed, executed_only=True)
         symbols = {r['symbol'] for r in self.journal.query(
-            'SELECT DISTINCT symbol FROM outcomes WHERE correct_24h IS NULL')}
+            'SELECT DISTINCT o.symbol FROM outcomes o JOIN decisions d ON d.id=o.decision_id '
+            'WHERE o.correct_24h IS NULL AND d.executed=1')}
         frames = {}
         for symbol in sorted(symbols):
             frame = self.feed.fetch_ohlcv(symbol, '1h', limit=400)
             if frame is not None and len(frame):
                 frames[symbol] = frame
         if frames:
-            changed += upgrade_24h(self.journal, frames)
+            changed += upgrade_24h(self.journal, frames, executed_only=True)
         if changed:
             self.jobs['learning'].trigger()
         callback = getattr(self, 'after_outcomes', None)
