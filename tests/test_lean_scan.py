@@ -358,3 +358,10 @@ def test_slow_worker_diagnostics_are_bounded_locations_only(tmp_path):
     locations=runtime.snapshot()['slow_worker_stacks']['account']
     assert 0<len(locations)<=16
     assert all(set(frame)=={'file','line','function'} for frame in locations)
+
+
+def test_stop_request_ends_scan_between_coins(tmp_path,monkeypatch):
+    k,reads,_=offline_scan(tmp_path,monkeypatch)
+    k._split_runtime.kernel=NS(_stop=True)
+    result=run(k)
+    assert result['interrupted'] and result['decisions']==0 and not reads

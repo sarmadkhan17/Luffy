@@ -464,10 +464,12 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
                 ORDER BY event_ms DESC LIMIT ?"""
             args += [window_start_ms]*3
         args.append(limit)
-    # A transport optimization only: larger/stream/replay reads retain their
+    # Cover bounded live inference windows too (the active strategy needs
+    # 617 bars, above the former512-row transport boundary). This remains
+    # a transport optimization only: larger/stream/replay reads retain their
     # original path. This does not bound or alter the requested evidence set.
     batch = (not revision_stream and not replay_tf and window_start_ms is None
-             and type(limit) is int and 0 < limit <= 512)
+             and type(limit) is int and 0 < limit <= 8192)
     rows = _selected_revision_rows(conn, query, args, batch=batch)
     text_cache = {} if batch else None
     if not revision_stream:

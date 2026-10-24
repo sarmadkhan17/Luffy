@@ -102,3 +102,17 @@ def test_live_maintenance_does_not_read_or_write_old_nontrade_backlog(tmp_path,m
     m.outcomes()
     assert not any(sql.lstrip().upper().startswith(('INSERT','UPDATE','DELETE','CREATE')) for sql in queries)
     assert j.query('SELECT resolved_at FROM outcomes')[0]['resolved_at'] is None
+
+
+def test_actual_617_bar_strategy_window_uses_single_transport(monkeypatch):
+    db=sqlite3.connect(':memory:');mp.init(db)
+    events=np.arange(CUT-820*STEP,CUT-20*STEP,STEP,dtype=np.int64)
+    frame=annotated(events);mp.append(db,KEY,frame);db.commit()
+    calls=[];original=mp._selected_revision_rows
+    def read(*a,**kw):
+        calls.append(kw.get('batch'))
+        return original(*a,**kw)
+    monkeypatch.setattr(mp,'_selected_revision_rows',read)
+    result=mp.load(db,KEY,as_of_ms=CUT,limit=617,instrument_id=IID,source=SOURCE)
+    assert calls==[True]
+    assert result['revision_id'].tolist()==frame['revision_id'].tolist()[-617:]

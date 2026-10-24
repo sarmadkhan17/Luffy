@@ -137,6 +137,9 @@ def run(view):
             allowed, blocked = False, 'execution_recovery_pending'
     view._portfolio_market = {}
     for symbol, plan in view._scan_plan.items():
+        if getattr(getattr(runtime, 'kernel', None), '_stop', False):
+            stats['interrupted'] = True
+            break
         with stage_scope('scan.collection', symbol=symbol):
             snap = view._candidate_snapshot_for(symbol, receipt, peers if plan.peers else {})
         if snap is None:
