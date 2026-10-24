@@ -41,6 +41,8 @@ class KernelRuntime:
         self.pending_portfolio = None
         self.holdings_market = {}
         self.scan_replaced = 0
+        self.scan_in_flight = False
+        self.scan_busy_ticks = 0
         self.account_data = None
         self.positions_at = None
         self.last_decisions = {}
@@ -189,20 +191,34 @@ class KernelRuntime:
     @timed_worker('market')
     @_read_batch
     def market(self):
-        view = analysis_context(self)
-        from .timing import stage_scope
-        view._lean_scan = True
-        with stage_scope("scan.shortlist"):
-            receipt, frames = view._admission_plan()
-        from .lean_scan import prepare
-        peers = prepare(view)
-        view._prepared_scan = (receipt, frames, peers, {}, {})
-        view._prepared_at = time.monotonic()
+        # Selection, preparation, queueing and evaluation share one reservation.
+        # Timer/model events during that cycle never create another batch.
         with self.lock:
-            if self.pending_scan is not None:
-                self.scan_replaced += 1
-            self.pending_scan = view
-        self.jobs['decisions'].trigger()
+            if self.scan_in_flight or self.stop_event.is_set():
+                self.scan_busy_ticks += int(self.scan_in_flight)
+                return
+            self.scan_in_flight = True
+        try:
+            view = analysis_context(self)
+            from .timing import stage_scope
+            view._lean_scan = True
+            with stage_scope("scan.shortlist"):
+                receipt, frames = view._admission_plan()
+            from .lean_scan import prepare
+            peers = prepare(view)
+            view._prepared_scan = (receipt, frames, peers, {}, {})
+            view._prepared_at = time.monotonic()
+            with self.lock:
+                self.pending_scan = view
+            if not self.jobs['decisions'].trigger():
+                with self.lock:
+                    self.pending_scan = None
+                    self.scan_in_flight = False
+        except BaseException:
+            with self.lock:
+                self.pending_scan = None
+                self.scan_in_flight = False
+            raise
 
     @timed_worker('decisions')
     @_read_batch
@@ -220,8 +236,11 @@ class KernelRuntime:
                 stats = view.cycle()
             with self.lock:
                 self.last_decision_stats = stats
-        finally:
+            # Discards are not completed scans.
             self.kernel._last_cycle_s = time.monotonic() - start
+        finally:
+            with self.lock:
+                self.scan_in_flight = False
 
     def apply_learning(self):
         # Model updates are independent of trading scans but share their model
@@ -498,7 +517,9 @@ class KernelRuntime:
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),
-            replaced_scan_batches=self.scan_replaced, candles=dict(self.candle_stats))
+            replaced_scan_batches=self.scan_replaced,
+            scan_in_flight=self.scan_in_flight, skipped_busy_scan_ticks=self.scan_busy_ticks,
+            candles=dict(self.candle_stats))
 
     def publish(self):
         target = Path(self.kernel.journal.db_path).parent / 'cycle_runtime.json'

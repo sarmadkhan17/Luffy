@@ -137,7 +137,7 @@ def test_new_owner_hold_refuses_previously_approved_decision():
     assert not calls and 'current_risk' in d.skip_reason
 
 
-def test_pending_scan_queue_is_bounded_and_replaces_old_batch(tmp_path, monkeypatch):
+def test_pending_scan_is_not_replaced_before_completion(tmp_path, monkeypatch):
     import trader.scheduling.kernel_runtime as module
     k,r = minimal(tmp_path)
     def view():
@@ -147,7 +147,8 @@ def test_pending_scan_queue_is_bounded_and_replaces_old_batch(tmp_path, monkeypa
     monkeypatch.setattr(module,'analysis_context',lambda runtime:view())
     r.market(); first=r.pending_scan
     r.market()
-    assert r.pending_scan is not first and r.scan_replaced == 1
+    assert r.pending_scan is first and r.scan_replaced == 0
+    assert r.scan_in_flight and r.scan_busy_ticks == 1
     assert r.jobs['decisions'].snapshot()['pending']
 
 
@@ -297,3 +298,65 @@ def test_current_derivatives_never_backfill_or_block_input_refresh(tmp_path, mon
     r.derivatives()
     h.harvest_once.assert_not_called()
     h.deriv.record_all.assert_called_once()
+
+
+def test_scan_start_waits_until_evaluation_finishes(tmp_path, monkeypatch):
+    import trader.scheduling.kernel_runtime as module
+    k, r = minimal(tmp_path)
+    entered, release = threading.Event(), threading.Event()
+    preparations = []
+    def cycle():
+        entered.set()
+        assert release.wait(3)
+        return {'decisions': 1}
+    def view(runtime):
+        preparations.append(1)
+        return NS(_model_generation=0, cycle=cycle, cfg={},
+            _admission_plan=lambda:({},{}), _symbol_roles=NS(peers=(),deep=()),
+            population=[], feed=NS(), _market_aux={}, _DERIVS_TTL=300)
+    monkeypatch.setattr(module, 'analysis_context', view)
+    r.market()
+    worker = threading.Thread(target=r.decisions)
+    worker.start()
+    try:
+        assert entered.wait(1)
+        for _ in range(3):
+            r.market()
+        assert len(preparations) == 1
+        assert r.pending_scan is None and r.scan_in_flight
+        assert r.scan_busy_ticks == 3
+    finally:
+        release.set()
+        worker.join(2)
+    assert not worker.is_alive() and not r.scan_in_flight
+    r.market()
+    assert len(preparations) == 2 and r.pending_scan is not None
+
+
+@pytest.mark.parametrize('failure', ['prepare', 'evaluation', 'stale', 'stopped'])
+def test_scan_reservation_released_on_failure_or_discard(tmp_path, monkeypatch, failure):
+    import trader.scheduling.kernel_runtime as module
+    k, r = minimal(tmp_path)
+    k._last_cycle_s = 123
+    def bad():
+        raise ValueError('fixture')
+    candidate = NS(_model_generation=0, cycle=bad, cfg={},
+        _admission_plan=(bad if failure == 'prepare' else lambda:({},{})),
+        _symbol_roles=NS(peers=(),deep=()), population=[], feed=NS(),
+        _market_aux={}, _DERIVS_TTL=300)
+    monkeypatch.setattr(module, 'analysis_context', lambda runtime:candidate)
+    if failure == 'prepare':
+        with pytest.raises(ValueError):
+            r.market()
+    else:
+        if failure == 'stopped':
+            r.jobs['decisions'].stop()
+        r.market()
+        if failure == 'evaluation':
+            with pytest.raises(ValueError):
+                r.decisions()
+        elif failure == 'stale':
+            candidate._prepared_at = time.monotonic() - 61
+            r.decisions()
+    assert not r.scan_in_flight and r.pending_scan is None
+    assert k._last_cycle_s == 123
