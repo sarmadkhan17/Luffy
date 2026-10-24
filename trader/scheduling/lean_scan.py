@@ -118,7 +118,11 @@ def run(view):
         return stats
     runtime = view._split_runtime
     with stage_scope('scan.controls'):
-        balance, status = runtime.account_snapshot(view)
+        # No account/network work is needed to analyse a market. The
+        # coordinated _try_enter boundary refreshes actual account/Risk before
+        # it can submit; unknown scan equity is never replaced with zero.
+        balance = None
+        status = {'equity': None, 'drawdown_pct': None}
         state = view.state_machine.refresh()
         # Scanning only observes authority. The coordinated entry boundary
         # and Executor still perform the current writable-storage probes.
@@ -131,10 +135,6 @@ def run(view):
                 supervisor.trigger('entry_recovery_pending')
                 state = view.state_machine.refresh()
             allowed, blocked = False, 'execution_recovery_pending'
-        if status.get('risk_state') != 'ok':
-            allowed, blocked = False, 'risk_state=' + str(status.get('risk_state'))
-        if (status.get('daily_pnl_pct') or 0) <= -view.risk.daily_loss_block * 100:
-            allowed, blocked = False, 'daily_breaker'
     view._portfolio_market = {}
     for symbol, plan in view._scan_plan.items():
         with stage_scope('scan.collection', symbol=symbol):

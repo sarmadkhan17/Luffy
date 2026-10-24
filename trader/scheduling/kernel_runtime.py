@@ -474,7 +474,23 @@ class KernelRuntime:
                                  confirmed_stored=completed, queued=queued)
 
     def snapshot(self):
-        return dict(schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
+        # Read-only bounded stack locations for slow workers: no locals,
+        # arguments, configuration or payloads enter the status surface.
+        import sys
+        slow = {}
+        for name, worker in self.jobs.items():
+            facts = worker.snapshot()
+            if (facts.get('running_for_s') or 0) < 30:
+                continue
+            thread = getattr(worker, '_thread', None)
+            frame = sys._current_frames().get(thread.ident) if thread is not None else None
+            locations = []
+            while frame is not None and len(locations) < 16:
+                locations.append(dict(file=frame.f_code.co_filename, line=frame.f_lineno,
+                                      function=frame.f_code.co_name))
+                frame = frame.f_back
+            slow[name] = locations
+        return dict(slow_worker_stacks=slow, schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in

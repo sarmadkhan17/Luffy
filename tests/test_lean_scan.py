@@ -337,3 +337,24 @@ def test_hold_scan_never_requests_writable_entry_probe(tmp_path,monkeypatch):
     result=run(k)
     assert result['decisions']==30 and result['persisted_attempts']==0
     assert not any(q.lstrip().upper().startswith(('INSERT','UPDATE','DELETE')) for q in queries)
+
+
+def test_analysis_never_needs_account_refresh_before_a_trade(tmp_path,monkeypatch):
+    k,_,_=offline_scan(tmp_path,monkeypatch)
+    k._split_runtime.account_snapshot=lambda *a:pytest.fail('account refresh in analysis')
+    result=run(k)
+    assert result['decisions']==30 and result['equity'] is None
+    assert not result['entries'] and not result['persisted_attempts']
+
+
+def test_slow_worker_diagnostics_are_bounded_locations_only(tmp_path):
+    import threading
+    from tests.test_split_kernel_runtime import minimal
+    _,runtime=minimal(tmp_path)
+    worker=runtime.jobs['account']
+    worker._thread=threading.current_thread()
+    worker._running_mono=time.monotonic()-31
+    worker._metrics['running_since']=time.time()-31
+    locations=runtime.snapshot()['slow_worker_stacks']['account']
+    assert 0<len(locations)<=16
+    assert all(set(frame)=={'file','line','function'} for frame in locations)
