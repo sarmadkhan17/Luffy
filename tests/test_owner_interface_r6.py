@@ -196,7 +196,7 @@ def test_signed_ipc_reservation_write_race(tmp_path, monkeypatch):
     monkeypatch.setattr(service, "_existing", lookup)
     monkeypatch.setattr(journal, "_tx", fail_a)
     monkeypatch.setattr(service, "_claim", pause_claim)
-    with tempfile.TemporaryDirectory(prefix="oi-r6-") as directory:
+    with tempfile.TemporaryDirectory(prefix="oi-r6-", dir="/tmp") as directory:
         ipc_dir = Path(directory) / "ipc"
         server = OwnerIPCServer(service, ipc_dir).start()
         client = OwnerClient(ipc_dir, "dashboard")

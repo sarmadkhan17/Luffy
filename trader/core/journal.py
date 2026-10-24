@@ -564,6 +564,87 @@ def _identity_json(p) -> str | None:
         return json.dumps({"status": "UNKNOWN", "reason": "identity_not_serializable"})
 
 
+SLOW_TX_S = 1.0           # a traced transaction is reported once any phase total reaches this
+_TRACE_LABELS = 6         # caller labels kept per report
+_TRACE_ACTIVE = threading.local()
+
+
+class _TracedConnection(sqlite3.Connection):
+    """Times only explicit BEGIN statements (e.g. Risk._durable_hold's
+    BEGIN IMMEDIATE): that is where another process's SQLite writer is waited
+    on. Never inspects or records statement arguments."""
+    _begin_armed = False       # set by the active trace; reset each transaction
+    _begin_s = None            # None = no explicit BEGIN observed (never a fabricated 0)
+
+    def execute(self, sql, *args):
+        if not self._begin_armed or not isinstance(sql, str) or sql.lstrip()[:5].upper() != 'BEGIN':
+            return super().execute(sql, *args)
+        started = time.monotonic()
+        try:
+            return super().execute(sql, *args)
+        finally:
+            self._begin_s = (self._begin_s or 0.0) + time.monotonic() - started
+
+
+class _TxTrace:
+    """Phase timing for one Journal._tx, started BEFORE the Python writer mutex.
+
+    mutex  = wait for this Journal's in-process lock
+    begin  = explicit BEGIN time (SQLite writer ownership); None when the
+             statement was implicit and is not separately observable
+    body   = caller code between mutex acquisition and its end, minus begin
+    commit / cleanup = COMMIT, and rollback-or-discard plus failure publication
+    """
+
+    def __init__(self):
+        self.started = self.last = time.monotonic()
+        self.phase = {}
+        self.conn = None
+
+    def mark(self, name):
+        if name in self.phase:
+            return
+        now = time.monotonic()
+        self.phase[name] = now - self.last
+        self.last = now
+
+    def emit(self):
+        try:
+            if isinstance(self.conn, _TracedConnection):
+                self.conn._begin_armed = False
+            total = time.monotonic() - self.started
+            if total < SLOW_TX_S or getattr(_TRACE_ACTIVE, 'on', False):
+                return
+            _TRACE_ACTIVE.on = True       # a logging handler must not re-enter this report
+            try:
+                begin = getattr(self.conn, '_begin_s', None)
+                body = self.phase.get('body')
+                if begin is not None and body is not None:
+                    body = max(0.0, body - begin)
+                labels = [f'{Path(f.filename).name}:{f.lineno}:{f.name}'
+                          for f in traceback.extract_stack(limit=24)
+                          if Path(f.filename).name not in ('journal.py', 'contextlib.py')][-_TRACE_LABELS:]
+                logging.getLogger(__name__).warning(
+                    'slow journal transaction %s', json.dumps({
+                        'total_s': round(total, 3),
+                        'mutex_wait_s': _r(self.phase.get('mutex')),
+                        'begin_s': _r(begin),
+                        'body_s': _r(body),
+                        'commit_s': _r(self.phase.get('commit')),
+                        'cleanup_s': _r(self.phase.get('cleanup')),
+                        'pid': os.getpid(), 'thread': threading.current_thread().name[:48],
+                        'connection': None if self.conn is None else f'{id(self.conn) & 0xffffff:06x}',
+                        'callers': labels}))
+            finally:
+                _TRACE_ACTIVE.on = False
+        except Exception:
+            pass  # Diagnostic failure cannot alter commit/rollback.
+
+
+def _r(value):
+    return None if value is None else round(value, 3)
+
+
 class Journal:
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
@@ -644,7 +725,11 @@ class Journal:
     def _conn(self) -> sqlite3.Connection:
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            conn = sqlite3.connect(str(self.db_path), timeout=30)
+            # The timing subclass exists only while the opt-in trace is on, so
+            # an untraced connection carries no per-statement overhead.
+            extra = ({"factory": _TracedConnection}
+                     if os.environ.get('LUFFY_TRACE_SLOW_TRANSACTIONS') == '1' else {})
+            conn = sqlite3.connect(str(self.db_path), timeout=30, **extra)
             conn.row_factory = sqlite3.Row
             from . import journal_evidence
             journal_evidence.install(conn)
@@ -661,35 +746,44 @@ class Journal:
     @contextmanager
     def _tx(self):
         """Serialized write transaction (single-writer discipline)."""
-        with self._write_lock:
-            conn = None
-            trace_slow = os.environ.get('LUFFY_TRACE_SLOW_TRANSACTIONS') == '1'
-            trace_started = time.monotonic() if trace_slow else None
-            try:
-                conn = self._conn()
-                yield conn
-                conn.commit()
-            except BaseException as exc:
-                # Reuse DATA's existing rollback-or-discard cleanup. A failed
-                # rollback or process interrupt must not strand this thread's
-                # connection with SQLite writer ownership, or mask the cause.
-                if conn is not None:
-                    from ..data.sqlite_tx import abort
-                    abort(self._local, conn, 'journal')
-                from ..observability.safety import journal_failure, is_storage_error
-                if is_storage_error(exc):
-                    journal_failure(self, 'write', exc)
-                raise
-            finally:
-                if trace_started is not None and time.monotonic() - trace_started >= 1:
-                    try:
-                        logging.getLogger(__name__).warning(
-                            'slow journal transaction %.3fs; caller frames: %s',
-                            time.monotonic() - trace_started,
-                            [(frame.filename, frame.lineno, frame.name)
-                             for frame in traceback.extract_stack(limit=16)])
-                    except Exception:
-                        pass  # Diagnostic failure cannot alter commit/rollback.
+        trace = _TxTrace() if os.environ.get('LUFFY_TRACE_SLOW_TRANSACTIONS') == '1' else None
+        try:
+            with self._write_lock:
+                if trace:
+                    trace.mark('mutex')
+                conn = None
+                try:
+                    conn = self._conn()
+                    if trace:
+                        trace.conn = conn
+                        if isinstance(conn, _TracedConnection):
+                            conn._begin_armed, conn._begin_s = True, None
+                    yield conn
+                    if trace:
+                        trace.mark('body')
+                    conn.commit()
+                    if trace:
+                        trace.mark('commit')
+                except BaseException as exc:
+                    if trace:
+                        if 'body' in trace.phase:
+                            trace.mark('commit')  # the body had ended: COMMIT itself failed
+                        trace.mark('body')        # body raised
+                    # Reuse DATA's existing rollback-or-discard cleanup. A failed
+                    # rollback or process interrupt must not strand this thread's
+                    # connection with SQLite writer ownership, or mask the cause.
+                    if conn is not None:
+                        from ..data.sqlite_tx import abort
+                        abort(self._local, conn, 'journal')
+                    from ..observability.safety import journal_failure, is_storage_error
+                    if is_storage_error(exc):
+                        journal_failure(self, 'write', exc)
+                    if trace:
+                        trace.mark('cleanup')
+                    raise
+        finally:
+            if trace:
+                trace.emit()
 
     # -- writes ----------------------------------------------------------
     def log_cycle(self, snap: Snapshot, cycle_id: str, mode: str) -> None:

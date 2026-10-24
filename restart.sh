@@ -87,5 +87,17 @@ if [ "$TARGET" = kernel ]; then
   MOD="trader.observability.bootstrap"
   ARGS=(--root "$DIR" --expect-revision "$LUFFY_EXPECT_REVISION")
 fi
+if [ "$TARGET" = dashboard ]; then
+  # Dashboard lifetime is its own managed user-manager unit (verified MainPID,
+  # start ticks and cgroup). A refused/unavailable manager is a failure: there
+  # is deliberately no unmanaged setsid/nohup fallback.
+  mkdir -p "$DIR/logs"
+  if ! ./venv/bin/python -B -m trader.observability.managed launch --role dashboard --root "$DIR"; then
+    echo "managed dashboard launch not established; NOT starting unmanaged" >&2; exit 5
+  fi
+  echo "started $MOD as a managed unit"
+  exit 0
+fi
+# The kernel controller launches the Kernel as a managed unit itself (bootstrap.Host.start).
 setsid nohup ./venv/bin/python -m "$MOD" "${ARGS[@]}" > "$LOG" 2>&1 < /dev/null &
 echo "started $MOD (contained startup requested; readiness not yet established)"

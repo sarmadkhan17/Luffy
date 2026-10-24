@@ -301,6 +301,80 @@ def verify_receipt(receipt):
     return receipt
 
 
+class _FrozenDict(dict):
+    """JSON-compatible containers owned by one verified admission batch."""
+    __slots__ = ('_sealed',)
+    def __init__(self, value):
+        if getattr(self, '_sealed', False):
+            raise TypeError('immutable_admission_batch')
+        dict.__init__(self, value)
+        object.__setattr__(self, '_sealed', True)
+
+    def __setattr__(self, name, value):
+        raise TypeError('immutable_admission_batch')
+
+    __delattr__ = __setattr__
+
+    def _immutable(self, *args, **kwargs):
+        raise TypeError('immutable_admission_batch')
+
+    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = _immutable
+
+    def __deepcopy__(self, memo):
+        return self
+
+
+class _FrozenList(list):
+    __slots__ = ('_sealed',)
+    def __init__(self, value):
+        if getattr(self, '_sealed', False):
+            raise TypeError('immutable_admission_batch')
+        list.__init__(self, value)
+        object.__setattr__(self, '_sealed', True)
+
+    def __setattr__(self, name, value):
+        raise TypeError('immutable_admission_batch')
+
+    __delattr__ = __setattr__
+
+    def _immutable(self, *args, **kwargs):
+        raise TypeError('immutable_admission_batch')
+
+    __setitem__ = __delitem__ = append = extend = insert = pop = remove = clear = reverse = sort = __iadd__ = __imul__ = _immutable
+
+    def __deepcopy__(self, memo):
+        return self
+
+
+def _freeze_batch(value):
+    if isinstance(value, dict):
+        return _FrozenDict({k: _freeze_batch(v) for k, v in value.items()})
+    if isinstance(value, list):
+        return _FrozenList(_freeze_batch(v) for v in value)
+    if isinstance(value, tuple):
+        return tuple(_freeze_batch(v) for v in value)
+    if value is None or type(value) in (str, int, float, bool):
+        return value
+    raise TypeError('admission_batch_requires_json_values')
+
+
+@dataclass(frozen=True, init=False)
+class VerifiedAdmissionBatch:
+    receipt: dict
+    candidates_by_symbol: dict
+    rows_by_symbol: dict
+
+    def __init__(self, receipt):
+        # Detach first. Verification and consumers see the same owned bytes,
+        # never a caller dictionary that could change after verification.
+        owned = json.loads(canonical(receipt))
+        verify_receipt(owned)
+        projected = _candidates_verified(owned)
+        object.__setattr__(self, 'receipt', _freeze_batch(owned))
+        object.__setattr__(self, 'candidates_by_symbol', _freeze_batch({c['symbol']: c for c in projected}))
+        object.__setattr__(self, 'rows_by_symbol', _freeze_batch({r['symbol']: r for r in owned['rows']}))
+
+
 def persist(journal, observation, policy):
     with journal._tx() as db:
         # Verify and compute large receipts before taking SQLite's writer lock.
@@ -360,6 +434,10 @@ def candidates(receipt):
     investigate only, never to trade or size.
     """
     receipt = verify_receipt(receipt)
+    return _candidates_verified(receipt)
+
+
+def _candidates_verified(receipt):
     obs, rows = receipt['observation'], {x['symbol']: x for x in receipt['rows']}
     kinds = dict(volume='volume_shortlist', event='new_event', strategy_required='required_by_strategy', ranked='standing_salience',
                  relevant='rotating_relevance', warmup_relevant='rotating_relevance', exploration='rotating_exploration')

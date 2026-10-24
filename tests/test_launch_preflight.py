@@ -278,6 +278,11 @@ if sys.argv[2] == 'trader.observability.dashboard_readiness':
     raise SystemExit(0)  # OBS-01 isolates its preflight boundary; OBS-02 tests readiness.
 if sys.argv[2] == 'trader.runtime_identity':
     raise SystemExit(0)  # RUN-01 stop/verify step, after the OBS-01 gate; proven in test_run01_instance_identity.
+mod = sys.argv[3] if sys.argv[1] == '-B' else sys.argv[2]
+if mod == 'trader.observability.managed':
+    # SP-05: the dashboard is launched as a managed unit; recorded, never a real service action.
+    with open(os.environ['TEST_EVENTS'], 'a') as out: out.write('managed-launch ' + ' '.join(sys.argv[4:]) + '\\n')
+    raise SystemExit(0)
 from trader.observability import preflight as p
 from trader import runtime_identity as ri
 ri.inspect=lambda *a: dict(state='NONE', legacy_pids=[])
@@ -320,10 +325,13 @@ def test_actual_shell_gate_before_every_stop_start(tmp_path, target, case):
         assert result.returncode == 0 and first['allow'] is True
         assert 'started trader.' in result.stdout
         # The fake setsid records launch without invoking the supplied Python command.
+        launch_marker = 'managed-launch launch --role dashboard' if target == 'dashboard' else 'setsid'
         for _ in range(100):
-            if events.exists() and 'setsid' in events.read_text(): break
+            if events.exists() and launch_marker in events.read_text(): break
             import time; time.sleep(.01)
-        assert 'setsid' in events.read_text()
+        assert launch_marker in events.read_text()
+        if target == 'dashboard':
+            assert 'setsid' not in events.read_text()  # no unmanaged fallback
     else:
         assert result.returncode != 0 and first['allow'] is False
         assert not events.exists()  # even pgrep/sleep/mkdir is unreachable

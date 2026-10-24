@@ -240,7 +240,7 @@ def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=No
         spec['derivs_path'] = str(derivs_snapshot)
     elif auto.get('derivs_path'):
         spec['derivs_path'] = str(auto['derivs_path'])
-    return dict(spec=spec, symbols_considered=len(syms), symbols_covered=len(ok))
+    return dict(spec=spec, symbols_considered=len(syms), symbols_covered=len(ok), prepared_manifest=m)
 
 
 def world_frames(snapshot_path, spec) -> dict:
@@ -313,7 +313,8 @@ def create_job(payload: dict) -> dict:
             world = None
         if world is not None:
             out['spec']['world_path'] = world['path']
-        sid = study.create_study(store, out['spec'], now_ms=int(payload['now_ms']))
+        sid = study.create_study(store, out['spec'], now_ms=int(payload['now_ms']),
+                                 prepared_manifest=out['prepared_manifest'])
         return dict(study_id=sid, world=None if world is None else dict(cuts=world['cuts'], shortlist=world['shortlist']), symbols_considered=out['symbols_considered'], symbols_covered=out['symbols_covered'])
     finally:
         store.close()
@@ -402,6 +403,15 @@ def _ready(store) -> list:
 
 
 def tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop=lambda: False, child=True) -> dict:
+    from . import study
+    with study.single_flight(store) as free:
+        if not free:
+            return dict(status='ALREADY_RUNNING')
+        return _tick(cfg, store, auto, now_ms=now_ms, budget_s=budget_s,
+                     cycle_seconds=cycle_seconds, should_stop=should_stop, child=child)
+
+
+def _tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop=lambda: False, child=True) -> dict:
     """One scheduler invocation under ONE monotonic deadline (`budget_s`): every child gets the time remaining, never a
     fresh full timeout. Always records its outcome in the store."""
     from . import study
@@ -442,8 +452,12 @@ def tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop=
                 stage='copy' if auto.get('snapshot_mode') == 'copy' else 'bounded_publication',
                 tf=auto['tf'], fit_bars=auto['fit_bars'],
                 timeout_s=min(float(auto['prep_timeout_s']), left()), memory_mb=auto['prep_memory_mb']))
-            res = _prepare(job, base, auto, cfg, timeout_s=min(float(auto['prep_timeout_s']), left()), child=child)
+            res = _prepare(job, base, auto, cfg, timeout_s=min(float(auto['prep_timeout_s']), left()), child=child,
+                           should_stop=should_stop)
             if not res.ok:
+                if not getattr(res, 'terminated', True):
+                    study.fence_child(store, res, stage='preparation', attempt_ms=now_ms)
+                    return finish('CHILD_OWNERSHIP_UNKNOWN', detail=dict(stage='preparation'))
                 return finish('PREP_FAILED', detail=dict(stage='snapshot', error=str(res.error)[-200:], timed_out=res.timed_out))
             snap = dict(candles=res.value['candles']['path'], derivs=(res.value['derivs'] or {}).get('path'),
                         consistency=res.value['candles']['consistency'], bytes=res.value['candles']['bytes'],
@@ -453,7 +467,27 @@ def tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop=
             return finish('DEFERRED_BUDGET', detail=dict(reason='snapshot ready; study creation deferred', snapshot=snap['candles']))
         made = _run(create_job, dict(store_path=str(store.path), auto=auto, cfg=_slim(cfg), now_ms=now_ms,
                                      snapshot_path=snap['candles'], derivs_snapshot=snap.get('derivs')),
-                    dict(timeout_s=min(float(auto['prep_timeout_s']), left()), memory_mb=auto['prep_memory_mb']), child)
+                    dict(timeout_s=min(float(auto['prep_timeout_s']), left()), memory_mb=auto['prep_memory_mb']), child,
+                    should_stop=should_stop)
+        if not made.ok:
+            if not getattr(made, 'terminated', True):
+                study.fence_child(store, made, stage='create', attempt_ms=now_ms, snapshot_path=snap['candles'],
+                    pending_paths=[str(Path(auto['snapshot_dir'], f'world-{int(now_ms)}.pending'))])
+                return finish('CHILD_OWNERSHIP_UNKNOWN', detail=dict(stage='create'))
+            # create_job can commit its exact study before its result is lost.
+            # Reconcile by owned input identity, never start a replacement study.
+            from ...core.child import ChildResult
+            row = store._conn().execute("SELECT study_id,payload FROM studies WHERE "
+                "json_extract(payload,'$.snapshot_path')=? AND json_extract(payload,'$.origin')='auto' "
+                "ORDER BY rowid DESC LIMIT 1", (snap['candles'],)).fetchone()
+            if row is not None and getattr(made, 'terminated', True):
+                committed = json.loads(row['payload'])
+                made = ChildResult(ok=True, value=dict(study_id=row['study_id'],
+                    symbols_covered=len(committed['discovery_symbols']) + len(committed['heldout_symbols']),
+                    symbols_considered=len(committed['discovery_symbols']) + len(committed['heldout_symbols']),
+                    recovered_committed_attempt=True))
+            if getattr(made, 'terminated', True):
+                Path(auto['snapshot_dir'], f'world-{int(now_ms)}.pending').unlink(missing_ok=True)
         if not made.ok:
             return finish('PREP_FAILED', detail=dict(stage='study', error=str(made.error)[-200:], timed_out=made.timed_out,
                                                      snapshot=snap['candles']))
@@ -466,8 +500,8 @@ def tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop=
         sid = made.value['study_id']
         prune_snapshots(auto['snapshot_dir'], store)
     remaining = max(left(), 0.0)
-    out = study.step(store, sid, budget_s=remaining, now_ms=now_ms, cycle_seconds=cycle_seconds, should_stop=should_stop,
-                     cfg=cfg, allow_heavy=False, child=child, extra_kinds=('intake', 'search'))
+    out = study._step(store, sid, remaining, now_ms, time.monotonic, cycle_seconds, 45.0, None, child,
+                      should_stop, cfg, allow_heavy=False, extra_kinds=('intake', 'search'))
     return finish('STEPPED', study_id=sid, stop_reason=out.get('step'), units_run=out.get('units_run'),
                   detail=dict(units=out.get('units'), research_outcome=out.get('research_outcome'),
                               waiting_for_data=out.get('waiting_for_data')))
@@ -485,17 +519,18 @@ def _slim(cfg) -> dict:
     return dict(research={x: r[x] for x in RESEARCH_KEYS if x in r}, risk={x: k[x] for x in RISK_KEYS if x in k})
 
 
-def _run(fn, payload, prep, child):
+def _run(fn, payload, prep, child, should_stop=None):
     from ...core.child import ChildResult, run_child
     if not child:
         try:
             return ChildResult(ok=True, value=fn(payload))
         except ClosureRefused as exc:
             return ChildResult(ok=False, error='refused:' + exc.code)
-    return run_child(fn, payload, timeout_s=prep['timeout_s'], nice=19, memory_mb=prep['memory_mb'])
+    return run_child(fn, payload, timeout_s=prep['timeout_s'], nice=19, memory_mb=prep['memory_mb'],
+                     stop_requested=should_stop)
 
 
-def _prepare(job, base, auto, cfg, *, timeout_s, child):
+def _prepare(job, base, auto, cfg, *, timeout_s, child, should_stop=None):
     """Own the child's staging directory so cancellation cannot strand large partial copies.
 
     Only completed files are linked into the study-input directory; an existing
@@ -507,11 +542,14 @@ def _prepare(job, base, auto, cfg, *, timeout_s, child):
     staging = Path(tempfile.mkdtemp(prefix='.preparing-', dir=root))
     installed = []
     complete = False
+    res = None
     try:
         res = _run(job, dict(base, snapshot_dir=str(staging), auto=auto, cfg=_slim(cfg),
                              deadline_s=max(timeout_s - 2.0, 1.0)),
-                   dict(timeout_s=timeout_s, memory_mb=auto['prep_memory_mb']), child)
+                   dict(timeout_s=timeout_s, memory_mb=auto['prep_memory_mb']), child, should_stop=should_stop)
         if not res.ok:
+            if not getattr(res, 'terminated', True):
+                res.owned_pending = (str(staging),)
             return res
         value = dict(res.value)
         for key in ('candles', 'derivs'):
@@ -531,11 +569,13 @@ def _prepare(job, base, auto, cfg, *, timeout_s, child):
     except Exception as exc:
         return ChildResult(ok=False, error='preparation:' + (exc.code if isinstance(exc, ClosureRefused) else type(exc).__name__))
     finally:
-        if not complete:
+        reaped = res is None or getattr(res, 'terminated', True)
+        if not complete and reaped:
             for target, inode in installed:
                 if target.exists() and target.stat().st_ino == inode:
                     target.unlink()
-        shutil.rmtree(staging)
+        if reaped:
+            shutil.rmtree(staging)
 
 
 # ── owner evidence (read-only) ─────────────────────────────────────────────

@@ -83,7 +83,8 @@ def model_coordinated(fn):
 
 
 MODEL_FIELDS = ('population', '_pop_sig', '_spec_exits', '_spec_rows', '_spec_requires',
-                '_scan_timeframes', '_entry_identities', '_spec_identities', '_identities_loaded_at')
+                '_scan_timeframes', '_entry_identities', '_spec_identities', '_identities_loaded_at',
+                '_history_limits', '_history_limit')
 
 
 def model_snapshot(kernel):
@@ -102,6 +103,11 @@ def analysis_context(runtime):
     root = runtime.kernel
     view = copy(root)
     generation, model = runtime.model
+    # A legacy tuple lacking limits must use legacy defaults, not a newer
+    # root's mutable limits inherited by the shallow context copy.
+    for key in ('_history_limits', '_history_limit'):
+        if key not in model:
+            view.__dict__.pop(key, None)
     for key, value in deepcopy(model).items():
         setattr(view, key, value)
     view._model_generation = generation
@@ -111,6 +117,9 @@ def analysis_context(runtime):
         setattr(view, key, {})
     for key in ('_market_cache', '_candidate_cache', '_funding_cache'):
         setattr(view, key, None)
+    view._market_cut_cache = {}
+    view._owned_analysis_batch = True
+    view._verified_admission_batch = None
     view._oi_cache = (0., {})
     view.positioning_agent = PositioningAnalyst(root.exchange)
     view.depth_agent = DepthScout()

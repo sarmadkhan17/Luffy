@@ -168,6 +168,15 @@ class OwnerService:
         self._audit_inflight: set[int] = set()
         self._recovery_watermark: int | None = None
         self._flush_lock = threading.Lock()
+        # One bounded flusher per service lifetime (SP-03), independent of the
+        # IPC transport. Reads only enqueue while it runs.
+        self.audit_flush_interval_s = 2.0
+        self._flusher: threading.Thread | None = None
+        self._flusher_stop = threading.Event()
+        self._flusher_guard = threading.Lock()
+        self._audit_dropped_total = 0
+        self._audit_flushed_total = 0
+        self._audit_flush_failures = 0
         self._init_schema()
 
     def _init_schema(self) -> None:
@@ -699,8 +708,62 @@ class OwnerService:
     def _audit_insert(self, c, req, principal, result: OwnerResult) -> None:
         c.execute(self._AUDIT_SQL, self._audit_values(req, principal, result))
 
+    # ── audit flusher lifetime (SP-03) ────────────────────────────────────
+    def start_audit_flusher(self) -> bool:
+        """Start the service's single audit flusher. Idempotent: returns True
+        only for the call that started it, False when one is already alive
+        (including one still finishing a bounded stop). Call once per service
+        lifetime, never per request."""
+        with self._flusher_guard:
+            if self._flusher is not None and self._flusher.is_alive():
+                return False
+            self._flusher_stop = threading.Event()
+            self._flusher = threading.Thread(
+                target=self._flusher_loop, args=(self._flusher_stop,), daemon=True,
+                name="owner-audit-flush")
+            self._flusher.start()
+            return True
+
+    def _flusher_loop(self, stop: threading.Event) -> None:
+        while not stop.wait(self.audit_flush_interval_s):
+            self._flush_guarded()
+        self._flush_guarded()          # final attempt; the stopper bounds its wait
+
+    def _flush_guarded(self) -> None:
+        try:
+            self.flush_audit()
+        except Exception:
+            log.exception("owner audit flusher pass failed")
+
+    def audit_status(self) -> dict:
+        """Truthful flush accounting; never implies a drain."""
+        with self._audit_lock:
+            remaining, pending_drop = len(self._audit_buffer), self._audit_dropped
+        flusher = self._flusher
+        return {"flusher_alive": flusher is not None and flusher.is_alive(),
+                "flusher_stopping": self._flusher_stop.is_set(),
+                "active_flush": self._flush_lock.locked(),
+                "remaining": remaining, "dropped_unrecorded": pending_drop,
+                "dropped_total": self._audit_dropped_total,
+                "flushed_total": self._audit_flushed_total,
+                "flush_failures": self._audit_flush_failures}
+
+    def stop_audit_flusher(self, timeout_s: float = 5.0) -> dict:
+        """Stop the flusher, waiting at most `timeout_s`. `drained` is True only
+        when the thread has exited and nothing remains buffered, in flight or
+        unrecorded as dropped; a writer that is still held leaves it False."""
+        with self._flusher_guard:
+            flusher = self._flusher
+            self._flusher_stop.set()
+        if flusher is not None:
+            flusher.join(timeout=max(0.0, timeout_s))
+        status = self.audit_status()
+        status["drained"] = (not status["flusher_alive"] and not status["active_flush"]
+                             and status["remaining"] == 0 and status["dropped_unrecorded"] == 0)
+        return status
+
     def flush_audit(self) -> bool:
-        """Write buffered read/ingress audit rows (the IPC server calls this ~2 s).
+        """Write buffered read/ingress audit rows (the service flusher calls this ~2 s).
 
         Rows leave memory only after their transaction commits: a failed or
         rolled-back flush keeps them for the next attempt. One flush at a time,
@@ -725,11 +788,13 @@ class OwnerService:
                     c.executemany(self._AUDIT_SQL, rows)
             except Exception:
                 log.exception("owner audit flush failed; %d rows kept for retry", len(rows))
+                self._audit_flush_failures += 1
                 return False
             written = {seq for seq, _values in entries}
             with self._audit_lock:            # committed: only now drop what was written
                 self._audit_buffer = [e for e in self._audit_buffer if e[0] not in written]
                 self._audit_dropped -= dropped
+                self._audit_flushed_total += len(written)
             self._maybe_prune()
             return True
         finally:
@@ -758,14 +823,13 @@ class OwnerService:
                     else:
                         accept = False
                     self._audit_dropped += 1
+                    self._audit_dropped_total += 1
                 if accept:
                     self._audit_seq += 1
                     self._audit_buffer.append((self._audit_seq,
                                                self._audit_values(req, principal, result)))
-                due = (len(self._audit_buffer) >= self.audit_flush_rows
-                       or time.monotonic() - self._audit_oldest >= self.audit_flush_s)
-            if due:
-                self.flush_audit()
+            # Optional read audit never waits for the writer: the service's
+            # flusher (or an explicit flush_audit() caller) owns the write.
         else:
             try:
                 with self.journal._tx() as c:

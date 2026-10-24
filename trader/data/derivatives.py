@@ -27,10 +27,12 @@ from copy import deepcopy
 import logging
 import threading
 import time
+import uuid
 
 import pandas as pd
 import requests
 
+from . import derivative_tail as tail
 from . import market_provenance as mp
 from ..core.types import MarketType
 from ..core.instrument_registry import InstrumentId
@@ -55,6 +57,8 @@ _MAX_BASIS_PAGES = 96
 _PERIOD_MS = {"5m": 300_000, "15m": 900_000, "30m": 1_800_000,
               "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000,
               "1d": 86_400_000}
+_CLOCK_FIELDS = frozenset(("event_time_ms", "observed_at_ms", "available_at_ms",
+                           "max_age_ms", "request_started_ms"))
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/120 Safari/537.36"}
 
@@ -65,7 +69,11 @@ def to_binance(symbol: str) -> str:
 
 
 class DerivFeed:
-    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None, *, retrospective=None, read_only=False):
+    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None, *, retrospective=None, read_only=False,
+                 incremental=True):
+        #: record_all asks for a bounded tail only from a proven cursor
+        self.incremental = bool(incremental)
+        self.last_pass: list = []
         self._db_path = str(db_path) if db_path else None
         self.read_only = bool(read_only)
         self.retrospective = deepcopy(retrospective) if retrospective is not None else None
@@ -108,6 +116,7 @@ class DerivFeed:
                 "ts INTEGER NOT NULL, value REAL, "
                 "PRIMARY KEY (symbol, series, ts))")
             mp.init(conn)
+            tail.init(conn)
             conn.commit()
             self._local.conn = conn
         return conn
@@ -127,7 +136,7 @@ class DerivFeed:
             "ns" if str(ts.dtype).startswith("datetime64[ns]") else "ms")
         return ts.astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
 
-    def save(self, symbol: str, series: str, df: pd.DataFrame) -> None:
+    def save(self, symbol: str, series: str, df: pd.DataFrame, *, acquisition=None) -> None:
         if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency is read-only')
         if df is None or df.empty:
@@ -142,9 +151,35 @@ class DerivFeed:
         projection = [(symbol, series, int(t), float(v))
                       for t, v in zip(mp.ms(df['ts']), df['value'])]
         from .sqlite_tx import write_tx, save_projection
+        claim = self._coverage_claim(symbol, series, df, acquisition)
         with write_tx(self._local, self.db, 'derivative receipt') as conn:
             mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
             save_projection(conn, 'derivs', ('symbol','series','ts','value'), ('symbol','series','ts'), projection)
+            if claim is not None:
+                # Same transaction as the receipts: a failed save never moves it.
+                if not conn.in_transaction:
+                    conn.execute('BEGIN IMMEDIATE')   # exact retry wrote nothing; still serialize the read
+                state = tail.advance(tail.read(conn, claim['key']), claim['spec'], claim['mode'],
+                                     claim['events'], claim['now_ms'], claim['identity'],
+                                     claim['start_ms'])
+                if state is not None:
+                    tail.write(conn, state)
+
+    def _coverage_claim(self, symbol, series, df, acquisition):
+        """What a retrieval may claim: only a fully VALID response from exactly
+        the planned source and instrument. Anything else leaves the cursor alone."""
+        if acquisition is None or series not in tail.SPECS:
+            return None
+        spec = tail.SPECS[series]
+        instrument = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(symbol)).value
+        if (set(df['quality']) != {'VALID'} or set(df['instrument_id']) != {instrument}
+                or set(df['source']) != {spec.source}):
+            return None
+        key = tail.cursor_key('derivative:'+symbol+':'+series, spec.source, instrument, spec.period)
+        return dict(key=key, spec=spec, mode=acquisition['mode'], events=mp.ms(df['ts']).tolist(),
+                    now_ms=acquisition['now_ms'], start_ms=acquisition.get('start_ms'),
+                    identity=dict(cursor_key=key, series_key='derivative:'+symbol+':'+series,
+                                  source=spec.source, instrument_id=instrument, period=spec.period))
 
     def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
         if self.retrospective is not None:
@@ -270,13 +305,25 @@ class DerivFeed:
     def _parse_ratio(self, raw: list, key: str) -> pd.DataFrame:
         return self._frame([(int(r["timestamp"]), float(r[key])) for r in raw])
 
+    @staticmethod
+    def _range(params: dict, start_ms, end_ms) -> dict:
+        """Optional documented startTime/endTime window (Binance USD-M market
+        data). Callers must keep the range within one page's rows."""
+        if start_ms is not None:
+            params["startTime"] = int(start_ms)
+        if end_ms is not None:
+            params["endTime"] = int(end_ms)
+        return params
+
     def funding(self, symbol: str, limit: int = 1000,
-                period: str | None = None) -> pd.DataFrame:
+                period: str | None = None, *, start_ms=None,
+                end_ms=None) -> pd.DataFrame:
         """Most recent funding settlements. `period` is accepted and ignored
         so the recorder can call every fetcher uniformly."""
         return self._parse_funding(self._get(
             "/fapi/v1/fundingRate",
-            {"symbol": to_binance(symbol), "limit": min(limit, 1000)}))
+            self._range({"symbol": to_binance(symbol), "limit": min(limit, 1000)},
+                        start_ms, end_ms)))
 
     def funding_history(self, symbol: str, years: float = 4.0,
                         delay: float = 0.25,
@@ -330,26 +377,30 @@ class DerivFeed:
         return out
 
     def open_interest(self, symbol: str, period: str = "15m",
-                      limit: int = 500) -> pd.DataFrame:
+                      limit: int = 500, *, start_ms=None,
+                      end_ms=None) -> pd.DataFrame:
         return self._parse_oi(self._get(
             "/futures/data/openInterestHist",
-            {"symbol": to_binance(symbol), "period": period,
-             "limit": min(limit, 500)}))
+            self._range({"symbol": to_binance(symbol), "period": period,
+                         "limit": min(limit, 500)}, start_ms, end_ms)))
 
     def taker_ratio(self, symbol: str, period: str = "15m",
-                    limit: int = 500) -> pd.DataFrame:
+                    limit: int = 500, *, start_ms=None,
+                    end_ms=None) -> pd.DataFrame:
         return self._parse_ratio(self._get(
             "/futures/data/takerlongshortRatio",
-            {"symbol": to_binance(symbol), "period": period,
-             "limit": min(limit, 500)}), "buySellRatio")
+            self._range({"symbol": to_binance(symbol), "period": period,
+                         "limit": min(limit, 500)}, start_ms, end_ms)), "buySellRatio")
 
     def ls_ratio(self, symbol: str, period: str = "15m", limit: int = 500,
-                 kind: str = "top") -> pd.DataFrame:
+                 kind: str = "top", *, start_ms=None,
+                 end_ms=None) -> pd.DataFrame:
         path = ("/futures/data/topLongShortPositionRatio" if kind == "top"
                 else "/futures/data/globalLongShortAccountRatio")
         return self._parse_ratio(self._get(
-            path, {"symbol": to_binance(symbol), "period": period,
-                   "limit": min(limit, 500)}), "longShortRatio")
+            path, self._range({"symbol": to_binance(symbol), "period": period,
+                               "limit": min(limit, 500)}, start_ms, end_ms)),
+            "longShortRatio")
 
     # ── basis ────────────────────────────────────────────────────────────
     #: Binance caps a klines page at 1500 rows on both venues.
@@ -370,7 +421,7 @@ class DerivFeed:
         return out
 
     def basis(self, symbol: str, period: str = "1h",
-              limit: int = 500) -> pd.DataFrame:
+              limit: int = 500, *, start_ms=None) -> pd.DataFrame:
         """Recent spot-perp basis: (perp - spot) / spot, per closed bar.
 
         Unlike OI and the ratio series, nothing here is capped at 30 days —
@@ -379,7 +430,7 @@ class DerivFeed:
         spec reported UNTESTED forever. This is that fetcher.
         """
         span_ms = _PERIOD_MS.get(period, 3600_000) * int(limit)
-        start = self._clock_ms() - span_ms
+        start = self._clock_ms() - span_ms if start_ms is None else int(start_ms)
         return self._basis_between(symbol, period, start)
 
     def _check_cancelled(self):
@@ -403,29 +454,49 @@ class DerivFeed:
         self._local.receipts = perp_receipts + spot_receipts
         if not pairs:
             return self._frame([])
-        rows = []
-        for event, value in pairs:
+        legs = ((perp_receipts, perp, 'binanceusdm', MarketType.FUTURES),
+                (spot_receipts, spot, 'binance', MarketType.SPOT))
+        # One indexed pass per raw receipt, not one scan per event. The bucket
+        # keeps raw order, so records[-1] is still the last match WITHIN a
+        # receipt; every receipt (and its multiplicity) keeps its own component.
+        batches = []
+        for receipts, closes, venue, market in legs:
+            identity = InstrumentId(venue, market, sym).value
+            for r in receipts:
+                by_event = {}
+                for k in r['raw']:
+                    if isinstance(k, (list, tuple)) and len(k) > 6:
+                        try:
+                            by_event.setdefault(k[6], []).append(k)
+                        except TypeError:
+                            pass       # an unhashable stamp never equalled an integer
+                matched = {}
+                for position, (event, _) in enumerate(pairs):
+                    price = closes[event]
+                    records = [k for k in by_event.get(event, ()) if float(k[4]) == price]
+                    if records:
+                        matched[position] = records[-1]
+                batches.append((r, identity, closes, matched))
+        # Components are annotated once per receipt for all of its events.
+        # A receipt without its own request_id must mint one per component
+        # (annotate's behaviour), so it stays on the per-component path.
+        built = []
+        for r, identity, closes, matched in batches:
+            rows = None
+            if matched and r.get('request_id'):
+                rows = dict(zip(matched, self._component_rows(
+                    r, identity, [pairs[p][0] for p in matched],
+                    [closes[pairs[p][0]] for p in matched], list(matched.values()))))
+            built.append(rows)
+        specs = []
+        for position, (event, value) in enumerate(pairs):
             self._check_cancelled()
             components = []
-            for receipts, price, venue, market in (
-                    (perp_receipts, perp[event], 'binanceusdm', MarketType.FUTURES),
-                    (spot_receipts, spot[event], 'binance', MarketType.SPOT)):
-                for r in receipts:
-                    records = [k for k in r['raw'] if isinstance(k, (list, tuple))
-                               and len(k)>6 and k[6] == event and float(k[4]) == price]
-                    if not records:
-                        continue
-                    component = mp.annotate(pd.DataFrame(dict(
-                        ts=pd.to_datetime([event], unit='ms', utc=True), value=[price])),
-                        instrument_id=InstrumentId(venue, market, sym).value,
-                        source=r['source'], kind='derivative', received_ms=r['received_ms'],
-                        request_id=r.get('request_id'), request_started_ms=r['request_started_ms'],
-                        raw=[records[-1]])
-                    # Convert once per input receipt, not once per metadata field.
-                    # Repeated conversion makes historical backfill spend most
-                    # of its time constructing the same pandas rows.
-                    component_record = component.to_dict('records')[0]
-                    components.append({k: component_record[k] for k in mp.META})
+            for (r, identity, closes, matched), rows in zip(batches, built):
+                if position not in matched:
+                    continue
+                components.append(rows[position] if rows is not None else self._component_rows(
+                    r, identity, [event], [closes[event]], [matched[position]])[0])
             valid = len(components) == 2 and all(c['quality'] == 'VALID' for c in components)
             # A derived receipt cannot precede either required input receipt.
             component_times = [c['available_at_ms'] for c in components if c['available_at_ms'] is not None]
@@ -433,13 +504,46 @@ class DerivFeed:
             available = max([self._clock_ms()] + component_times)
             raw = dict(components=components, derivation='basis.spot-perp.v1',
                        event_ms=event, value=value)
-            rows.append(mp.annotate(pd.DataFrame(dict(
-                ts=pd.to_datetime([event], unit='ms', utc=True), value=[value])),
+            specs.append((position, valid, available, event, value, raw, uuid.uuid4().hex))
+        groups = {}
+        for spec in specs:
+            groups.setdefault((spec[1], spec[2], spec[3] <= spec[2]), []).append(spec)
+        frames = []
+        for (valid, available, _), group in groups.items():
+            frame = mp.annotate(pd.DataFrame(dict(
+                ts=pd.to_datetime([g[3] for g in group], unit='ms', utc=True),
+                value=[g[4] for g in group])),
                 instrument_id=InstrumentId('binanceusdm', MarketType.FUTURES, sym).value if valid else None,
                 source='binance:spot+usdm:basis' if valid else None, kind='derivative',
-                received_ms=available, raw=[raw], transform_version='basis.spot-perp.v1',
-                max_age_ms=_PERIOD_MS.get(period, 3_600_000)+1_800_000))
-        return pd.concat(rows, ignore_index=True)
+                received_ms=available, raw=[g[5] for g in group],
+                request_id=group[0][6], transform_version='basis.spot-perp.v1',
+                max_age_ms=_PERIOD_MS.get(period, 3_600_000)+1_800_000)
+            if len(group) > 1:
+                # Each derived receipt keeps its own request identity.
+                frame['request_id'] = [g[6] for g in group]
+                frame = mp.seal(frame)
+            frame['_position'] = [g[0] for g in group]
+            frames.append(frame)
+        out = frames[0] if len(frames) == 1 else pd.concat(frames, ignore_index=True)
+        if len(frames) > 1:
+            out = out.sort_values('_position', kind='stable')
+        return out.drop(columns='_position').reset_index(drop=True)
+
+    @staticmethod
+    def _component_rows(receipt, identity, events, prices, records) -> list:
+        """Receipt metadata dicts for one receipt's matched events, in one batch."""
+        frame = mp.annotate(pd.DataFrame(dict(
+            ts=pd.to_datetime(events, unit='ms', utc=True), value=prices)),
+            instrument_id=identity, source=receipt['source'], kind='derivative',
+            received_ms=receipt['received_ms'], request_id=receipt.get('request_id'),
+            request_started_ms=receipt['request_started_ms'], raw=records)
+        columns = []
+        for key in mp.META:
+            values = frame[key].tolist()
+            if key in _CLOCK_FIELDS:
+                values = [None if v is None or v != v else int(v) for v in values]
+            columns.append(values)
+        return [dict(zip(mp.META, row)) for row in zip(*columns)]
 
     def basis_history(self, symbol: str, years: float = 2.0,
                       period: str = "1h", delay: float = 0.25,
@@ -544,12 +648,42 @@ class DerivFeed:
                         time.sleep(delay)
         return counts
 
+    def _acquire_current(self, sym: str, series: str, method: str):
+        """One series for one symbol: a bounded tail from a proven cursor,
+        otherwise the existing full request. -> (frame, acquisition | None)."""
+        if not self.incremental or series not in tail.SPECS:
+            df = getattr(self, method)(sym)
+            self.last_pass.append(dict(symbol=sym, series=series, mode=tail.FULL,
+                                       reason=tail.FULL_ONLY.get(series, 'incremental_disabled'),
+                                       start_ms=None, rows=0 if df is None else len(df)))
+            return df, None
+        spec = tail.SPECS[series]
+        now = self._clock_ms()
+        instrument = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(sym)).value
+        state = tail.read(self.db, tail.cursor_key('derivative:'+sym+':'+series, spec.source,
+                                                   instrument, spec.period))
+        mode, start, reason = tail.plan(state, spec, now)
+        if mode == tail.TAIL:
+            kwargs = {'start_ms': start} if series == 'basis' else {'start_ms': start, 'end_ms': now}
+            df = getattr(self, method)(sym, **kwargs)
+        else:
+            df = getattr(self, method)(sym)
+        self.last_pass.append(dict(symbol=sym, series=series, mode=mode, reason=reason,
+                                   start_ms=start, rows=0 if df is None else len(df)))
+        return df, dict(mode=mode, now_ms=now, start_ms=start)
+
     def record_all(self, symbols: list, delay: float = 0.3) -> dict:
         """One pass over every symbol and series. Rows already stored are
-        replaced, so this is safe to run at any cadence and safe to retry."""
+        replaced, so this is safe to run at any cadence and safe to retry.
+
+        With a proven per-series cursor (see derivative_tail) a pass asks for
+        a bounded tail; cold, gapped, unproven or reconcile-due series use the
+        full request exactly as before. Every fetched row gets a new receipt
+        either way. `last_pass` reports mode/reason/rows per series."""
         if self.read_only or self.retrospective is not None:
             raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
+        self.last_pass = []
         # A duplicated universe member is the same acquisition in this pass.
         # A later pass still retrieves and records a legitimate new receipt.
         for sym in dict.fromkeys(symbols):
@@ -557,15 +691,22 @@ class DerivFeed:
             for series, method in self._SERIES_FETCHERS:
                 self._check_cancelled()
                 try:
-                    df = getattr(self, method)(sym)
+                    df, acquisition = self._acquire_current(sym, series, method)
                 except InterruptedError:
                     raise
                 except Exception as e:
                     log.warning(f"derivs record {sym}/{series}: {e}")
                     continue
                 if df is not None and len(df):
-                    self.save(sym, series, df)
+                    self.save(sym, series, df, acquisition=acquisition)
                     counts[series] = counts.get(series, 0) + len(df)
                 if delay:
                     time.sleep(delay)          # public endpoints are rate-limited
+        if self.last_pass:
+            modes: dict = {}
+            for item in self.last_pass:
+                bucket = modes.setdefault(item['series'] + ':' + item['mode'], [0, 0])
+                bucket[0] += 1
+                bucket[1] += item['rows']
+            log.info('derivs record_all (requests, rows): %s', modes)
         return counts

@@ -240,8 +240,7 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
     outcome = dev_result['outcome']
     child, change = None, None
     if outcome == 'NEGATIVE_ECONOMICS':
-        root_count = sum(1 for i in store.items(kind='revision') if i['status'] == 'COMPILED'
-                         and json.loads(i['payload']).get('provenance', {}).get('root') == _root(store, parent_candidate_id))
+        root_count = len(store.items(kind='revision', status='COMPILED', root=_root(store, parent_candidate_id)))
         if root_count >= max_revisions:
             status, reason = 'BLOCKED', 'REVISION_BUDGET_EXHAUSTED'
         else:
@@ -255,9 +254,7 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
     elif outcome in ('INCONCLUSIVE_POWER', 'BLOCKED_DATA'):
         status, reason = 'WAITING_DATA', 'power_or_data_shortfall_is_not_negative_evidence; no rule change'
     elif outcome == 'CODE_FAILURE':
-        repairs = sum(1 for i in store.items(kind='revision')
-                      if json.loads(i['payload']).get('parent_candidate_id') == parent_candidate_id
-                      and json.loads(i['payload']).get('outcome') == 'CODE_FAILURE')
+        repairs = len(store.items(kind='revision', parent_candidate_id=parent_candidate_id, outcome='CODE_FAILURE'))
         status, reason = ('BLOCKED', 'CODE_REPAIR_BUDGET_EXHAUSTED') if repairs > max_repairs else (
             'BLOCKED', 'NEEDS_CODE_REPAIR')              # economic identity unchanged
     else:
@@ -276,7 +273,7 @@ def _root(store, candidate_id):
     while candidate_id not in seen:
         seen.add(candidate_id)
         parent = next((json.loads(i['payload']).get('provenance', {}).get('parent_candidate_id')
-                       for i in store.items(kind='revision') if i['candidate_id'] == candidate_id), None)
+                       for i in store.items(kind='revision', candidate_id=candidate_id)), None)
         if not parent:
             return candidate_id
         candidate_id = parent

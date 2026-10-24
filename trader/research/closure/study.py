@@ -36,7 +36,7 @@ def develop_job(payload: dict) -> dict:
     """Child-process entry for one candidate's development (pure: returns the
     result, the parent writes it). Module level so `spawn` can import it."""
     return develop(payload['candidate'], payload['snapshot_path'], payload['env'], derivs_path=payload.get('derivs_path'), world_path=payload.get('world_path'),
-                   references_path=payload.get('references_path'))
+                   references_path=payload.get('references_path'), cache_path=payload.get('store_path'))
 
 
 def intake_job(payload: dict) -> dict:
@@ -106,7 +106,7 @@ def _limits(study) -> dict:
     return dict(memory_mb=int(s.get('memory_mb', csearch.DEFAULT_BUDGET['memory_mb'])))
 
 
-def _call(fn, payload, timeout_s, child, limits=None):
+def _call(fn, payload, timeout_s, child, limits=None, should_stop=None):
     if not child:
         from ...core.child import ChildResult
         t0 = time.monotonic()
@@ -116,6 +116,7 @@ def _call(fn, payload, timeout_s, child, limits=None):
             return ChildResult(ok=False, error='refused:' + exc.code, elapsed_s=time.monotonic() - t0)
     from ...core.child import run_child
     return run_child(fn, payload, timeout_s=timeout_s, nice=19, **(limits or {}),
+                     stop_requested=should_stop,
                      **({'cpu_seconds': timeout_s * 1.5} if limits else {}))
 
 
@@ -136,13 +137,75 @@ def single_flight(store):
         yield False
         return
     try:
+        if not reconcile_child(store):
+            yield False
+            return
         yield True
     finally:
         fcntl.flock(fh, fcntl.LOCK_UN)
         fh.close()
 
 
-def create_study(store: Store, spec: dict, *, now_ms: int) -> str:
+def fence_child(store, result, **attempt):
+    body = dict(pid=getattr(result, 'pid', None), start_ticks=getattr(result, 'start_ticks', None),
+                artifact_dir=getattr(result, 'artifact_dir', None),
+                pending_paths=list(getattr(result, 'owned_pending', ())))
+    body.update(attempt)
+    if body.get('study_id') and body.get('unit_id'):
+        row = store._conn().execute('SELECT seq FROM resource_ledger WHERE study_id=? AND unit_id=? '
+                                     "AND outcome='RUNNING' ORDER BY seq DESC LIMIT 1",
+                                     (body['study_id'], body['unit_id'])).fetchone()
+        body['resource_seq'] = row[0] if row else None
+    path = Path(str(store.path) + '.child-unreaped')
+    pending = path.with_suffix(path.suffix + '.pending')
+    pending.write_text(canonical(body))
+    pending.replace(path)
+
+
+def reconcile_child(store):
+    """Clear only proven cessation, retaining attempt/commit/look history."""
+    path = Path(str(store.path) + '.child-unreaped')
+    if not path.exists():
+        return True
+    from ...core.child import process_state, completed_artifact
+    try:
+        body = json.loads(path.read_text())
+        if not isinstance(body.get('pid'), int) or body.get('start_ticks') is None:
+            return False
+        state = process_state(body['pid'])
+        if state is not None and state[1] == body['start_ticks'] and state[0] not in ('Z', 'X'):
+            return False
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+    if str(body.get('unit_id', '')).startswith('develop:') and body.get('artifact_dir'):
+        try:
+            result = completed_artifact(body['artifact_dir'])
+            spec, env = _load(store, body['study_id'])
+            semantic = {k: v for k, v in result.items() if k not in ('result_id', 'cached')}
+            if (result.get('stage') == 'DEVELOPMENT' and result.get('envelope_id') == env['envelope_id']
+                    and result.get('candidate_id') == body['unit_id'].split(':', 1)[1]
+                    and result.get('result_id') == digest(semantic)):
+                if store.get_run(result['cache_key']) is None:
+                    store.put_run(result['cache_key'], {k: v for k, v in result.items() if k != 'cached'})
+        except (OSError, ValueError, KeyError, TypeError, ClosureRefused):
+            pass  # no invented commit; existing interrupted-unit recovery applies
+    store.log_schedule(Store.now_ms(), 'CHILD_CESSATION_VERIFIED', study_id=body.get('study_id'), detail=body)
+    import shutil
+    for value in body.get('pending_paths') or ():
+        pending = Path(value)
+        if not pending.is_symlink():
+            if pending.name.startswith('.preparing-') and pending.is_dir():
+                shutil.rmtree(pending)
+            elif pending.name.startswith('world-') and pending.suffix == '.pending':
+                pending.unlink(missing_ok=True)
+    directory = Path(body['artifact_dir']) if body.get('artifact_dir') else None
+    if directory is not None and directory.name.startswith('luffy-child-') and not directory.is_symlink():
+        shutil.rmtree(directory, ignore_errors=True)
+    path.unlink()
+    return True
+
+
+def create_study(store: Store, spec: dict, *, now_ms: int, prepared_manifest=None) -> str:
     """Build manifest + envelope from the registry as it stands, record them,
     mark the development window exposed, and return the study id."""
     extra = set(spec) - set(SPEC_KEYS)
@@ -158,7 +221,19 @@ def create_study(store: Store, spec: dict, *, now_ms: int) -> str:
         if json.loads(row['payload']).get('spec_key') == spec_key:
             return row['study_id']
     syms = spec['discovery_symbols'] + spec['heldout_symbols']
-    m = manifest.build_manifest(spec['snapshot_path'], spec['tf'], syms, exposure.events(store))
+    events = exposure.events(store)
+    if prepared_manifest is None:
+        m = manifest.build_manifest(spec['snapshot_path'], spec['tf'], syms, events)
+    else:
+        manifest.verify_manifest(prepared_manifest)
+        manifest.require_unchanged(spec['snapshot_path'], prepared_manifest['snapshot'])
+        if (prepared_manifest['tf'] != spec['tf'] or
+                prepared_manifest['exposure_events'] != sorted(events, key=canonical) or
+                not set(syms) <= set(prepared_manifest['symbols'])):
+            raise ClosureRefused('prepared_manifest_scope_mismatch')
+        body = {k: v for k, v in prepared_manifest.items() if k != 'manifest_id'}
+        body['symbols'] = {s: prepared_manifest['symbols'][s] for s in sorted(set(syms))}
+        m = dict(body, manifest_id=digest(body))
     env = manifest.make_envelope(
         m, spec['snapshot_path'], policy=spec['policy'], discovery_symbols=spec['discovery_symbols'],
         heldout_symbols=spec['heldout_symbols'], fit_start_ms=spec['fit_start_ms'], dev_end_ms=spec['dev_end_ms'],
@@ -234,12 +309,10 @@ def _plan(store, study_id, study, env, now_ms):
         if 'search' not in ids:
             _ensure_unit(store, study_id, 'search', 'search', ['intake'] if study['bank_path'] else [])
         if any(u['unit_id'] == 'search' and u['status'] == 'DONE' for u in units):
-            for attempt in store.all_once('attempts'):
-                if attempt['study_id'] != study_id:
-                    continue
+            for attempt in store.attempts_for(study_id):
                 group = attempt.get('track') if attempt.get('domain') == 'learned' else attempt.get('domain', 'search')
                 queues.setdefault('search:' + str(group), []).append(attempt['candidate_id'])
-    queues['retained'] = [i['candidate_id'] for i in store.items() if i['status'] == 'COMPILED' and i['candidate_id'] and _owned(store, study_id, i)]
+    queues['retained'] = [i['candidate_id'] for i in store.owned_items(study_id) if i['status'] == 'COMPILED' and i['candidate_id']]
     seen = []
     # Round-robin source/track queues before applying the evaluation cap. A
     # large generated stream must not starve retained questions or model tracks.
@@ -275,7 +348,7 @@ def _plan(store, study_id, study, env, now_ms):
         _ensure_unit(store, study_id, 'handoff', 'handoff', ['qualify'])
 
 
-def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, child, cfg):
+def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, child, cfg, should_stop=None):
     kind, uid = unit['kind'], unit['unit_id']
     cap = float(study['unit_timeout_s'])
     hit_cap = timeout_s >= cap
@@ -286,15 +359,19 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
                                       brain_source_path=study.get('source_journal_path'),
                                       source_paths=[str(store.path), study['snapshot_path'], study.get('derivs_path')])) if kind == 'intake' else \
             (search_job, dict(store_path=str(store.path), study=study, study_id=study_id, now_ms=now_ms))
-        res = _call(job, body, timeout_s, child, _limits(study))
-        if res.timed_out:
+        res = _call(job, body, timeout_s, child, _limits(study), should_stop)
+        if not getattr(res, 'terminated', True):
+            fence_child(store, res, study_id=study_id, unit_id=uid)
+            _set_unit(store, study_id, uid, 'RUNNING', now_ms, note='CHILD_NOT_REAPED')
+            raise RuntimeError('research_child_not_reaped: ownership unresolved')
+        if res.timed_out or getattr(res, 'cancelled', False):
             raise UnitTimeout(timeout_s, hit_cap)
         if not res.ok:
             raise ClosureRefused(f'{kind}_worker_failed', str(res.error)[-200:])
         return res.value
     if kind == 'develop':
         cand = store.get_once('candidates', uid.split(':', 1)[1])
-        hit = None if graph.is_graph(cand) or env['risk'].get('real_funding', False) else next((r for r in store.all_once('runs') if r.get('candidate_id') == cand['candidate_id']
+        hit = None if graph.is_graph(cand) or env['risk'].get('real_funding', False) else next((r for r in store.runs_for(candidate_id=cand['candidate_id']) if r.get('candidate_id') == cand['candidate_id']
                     and r.get('envelope_id') == env['envelope_id'] and r.get('evaluator_id') == env['evaluator_id']
                     and r.get('data_id') == env.get('development_data_id')), None)
         if hit is None and env['development_status'] != 'ELIGIBLE':
@@ -302,16 +379,22 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
                           references_path=study.get('references_path'))
         if hit is None:
             res = _call(develop_job, dict(candidate=cand, snapshot_path=study['snapshot_path'], env=env,
+                                          store_path=str(store.path),
                                           derivs_path=study.get('derivs_path'), world_path=study.get('world_path'),
-                                          references_path=study.get('references_path')), timeout_s, child, _limits(study))
-            if res.timed_out:
+                                          references_path=study.get('references_path')), timeout_s, child, _limits(study), should_stop)
+            if not getattr(res, 'terminated', True):
+                fence_child(store, res, study_id=study_id, unit_id=uid)
+                _set_unit(store, study_id, uid, 'RUNNING', now_ms, note='CHILD_NOT_REAPED')
+                raise RuntimeError('research_child_not_reaped: ownership unresolved')
+            if res.timed_out or getattr(res, 'cancelled', False):
                 raise UnitTimeout(timeout_s, hit_cap)
             if not res.ok:
                 raise ClosureRefused('develop_worker_failed', str(res.error)[-200:])
             hit = res.value
             if not isinstance(hit, dict) or 'cache_key' not in hit or 'result_id' not in hit:
                 raise ClosureRefused('develop_worker_result_malformed')
-            store.put_run(hit['cache_key'], hit)
+            if not hit.get('cached'):
+                store.put_run(hit['cache_key'], hit)
         awaited, required = data_access.record(store, study_id, study, env, cand, hit, now_ms)
         out = dict({k: hit.get(k) for k in ('result_id', 'candidate_id', 'outcome', 'reason', 'cached', 'metrics',
                                             'requires', 'context_gaps', 'context_provenance', 'evidence_scope')},
@@ -322,11 +405,11 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
         return out
     if kind == 'revise':
         rid = uid.split(':', 1)[1]
-        res = next(x for x in store.all_once('runs') if x.get('result_id') == rid)
+        res = next(iter(store.runs_for(result_id=rid)))
         item = consumer.revise(store, res['candidate_id'], res, now_ms=now_ms, max_revisions=study['max_revisions'], study_id=study_id)
         return dict(item_id=item['item_id'], status=item['status'], reason=item['reason'], child=item['candidate_id'])
     if kind == 'freeze':
-        mine = [r for r in store.all_once('runs') if r.get('envelope_id') == env['envelope_id']]
+        mine = store.runs_for(envelope_id=env['envelope_id'])
         f, kind_ = qualification.freeze_finalist(store, env, mine), 'alpha'
         if f is None:                      # a protective hedge is frozen on ITS objective, never as alpha
             f, kind_ = hedge_qualification.freeze_hedge_finalist(store, env, mine), 'hedge_protective'
@@ -340,7 +423,11 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
 
         def bounded(fn, payload, **_):
             from ...core.child import ChildResult
-            r = run(fn, payload) if run is not None else _call(fn, payload, timeout_s, child)
+            r = run(fn, payload) if run is not None else _call(fn, payload, timeout_s, child, should_stop=should_stop)
+            if not getattr(r, 'terminated', True):
+                fence_child(store, r, study_id=study_id, unit_id=uid)
+                _set_unit(store, study_id, uid, 'RUNNING', now_ms, note='CHILD_NOT_REAPED')
+                raise RuntimeError('research_child_not_reaped: protected look remains spent')
             if getattr(r, 'timed_out', False):
                 timed.append(1)
             return r if isinstance(r, ChildResult) or hasattr(r, 'ok') else ChildResult(ok=True, value=r)
@@ -446,7 +533,8 @@ def _step(store, study_id, budget_s, now_ms, clock, cycle_seconds, skip_if_cycle
         t0, wall0 = clock(), int(time.time() * 1000)
         ledger = store.start_resource(study_id, u['unit_id'], u['kind'], wall0, fits=fits, reads=reads)
         try:
-            res = _run_unit(store, study_id, study, env, u, now_ms, run, timeout_s=remaining, child=child, cfg=cfg)
+            extra = {'should_stop': should_stop} if child and run is None else {}
+            res = _run_unit(store, study_id, study, env, u, now_ms, run, timeout_s=remaining, child=child, cfg=cfg, **extra)
         except UnitTimeout as exc:
             store.finish_resource(ledger, int(time.time() * 1000), clock() - t0, 'TIMEOUT')
             partial = dict(timed_out=True, timeout_s=round(exc.timeout_s, 1), hit_unit_cap=exc.hit_cap)

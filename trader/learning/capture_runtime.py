@@ -4,8 +4,8 @@ Invocations run inside the producer's journal transaction. Capture failures are
 contained and recorded. No acquisition, strategy activation or learning apply.
 """
 import json
-from copy import deepcopy
-from dataclasses import asdict
+from copy import copy, deepcopy
+from dataclasses import asdict, fields, is_dataclass
 from . import capture as C, foundation as L
 from trader.cognition.outcomes import timestamp
 
@@ -320,11 +320,103 @@ def incident(db,event,at_ms,subject,detail,*,incident_kind='data_quality_inciden
     return C.attach(db,key,key,kind.value,L.Boundary.UNASSESSABLE.value,observation,at_ms,[out])
 
 
+def copy_snapshot(value, memo=None):
+    """Lossless detached snapshot inputs, including immutable World records.
+
+    pandas' deepcopy does not pass its memo to attrs, and WorldHistory owns
+    MappingProxy-backed models. Reconstruct World through its existing exact
+    wire contract; copy frame arrays and attrs separately without flattening
+    types, provenance properties, extension dtypes or nested mutable inputs.
+    """
+    from types import MappingProxyType
+    import numpy as np
+    import pandas as pd
+    from ..core.types import Snapshot
+    from ..world.context import WorldContext
+    from ..world.replay import WorldHistory
+
+    memo = {} if memo is None else memo
+    identity = id(value)
+    if identity in memo:
+        return memo[identity]
+    if isinstance(value, WorldContext):
+        result = WorldContext(copy_snapshot(value.history, memo),
+            copy_snapshot(value.source_status, memo), value.as_of_ms,
+            value.allow_reconstruction, copy_snapshot(value.dataset_id, memo))
+    elif isinstance(value, WorldHistory):
+        result = WorldHistory.from_json(value.to_json())
+    elif isinstance(value, pd.DataFrame):
+        result = pd.DataFrame(index=deepcopy(value.index, memo))
+        memo[identity] = result
+        for i in range(len(value.columns)):
+            # .iloc[:, i] finalizes a Series by deepcopying source attrs,
+            # which would hit the same MappingProxy failure before this copy
+            # adapter can handle them. Extract the stored array directly.
+            source = value._mgr.iget_values(i)
+            array = (copy_snapshot(source, memo) if isinstance(source, np.ndarray)
+                     else deepcopy(source, memo))
+            result.insert(i, i, array)
+        result.columns = deepcopy(value.columns, memo)
+        result.attrs = copy_snapshot(value.attrs, memo)
+        result.flags.allows_duplicate_labels = value.flags.allows_duplicate_labels
+        return result
+    elif isinstance(value, pd.Series):
+        source = value._values
+        array = (copy_snapshot(source, memo) if isinstance(source, np.ndarray)
+                 else deepcopy(source, memo))
+        result = pd.Series(array, index=deepcopy(value.index, memo), name=deepcopy(value.name, memo))
+        memo[identity] = result
+        result.attrs = copy_snapshot(value.attrs, memo)
+        return result
+    elif isinstance(value, np.ndarray):
+        result = value.copy()
+        memo[identity] = result
+        if value.dtype.hasobject:
+            for index in np.ndindex(value.shape):
+                result[index] = copy_snapshot(value[index], memo)
+        return result
+    elif isinstance(value, MappingProxyType):
+        backing = {}
+        result = MappingProxyType(backing)
+        memo[identity] = result
+        backing.update({copy_snapshot(k, memo): copy_snapshot(v, memo) for k, v in value.items()})
+        return result
+    elif isinstance(value, dict):
+        result = {}
+        memo[identity] = result
+        result.update({copy_snapshot(k, memo): copy_snapshot(v, memo) for k, v in value.items()})
+        return result
+    elif isinstance(value, list):
+        result = []
+        memo[identity] = result
+        result.extend(copy_snapshot(v, memo) for v in value)
+        return result
+    elif isinstance(value, tuple):
+        items = tuple(copy_snapshot(v, memo) for v in value)
+        result = type(value)(*items) if hasattr(value, '_fields') else items
+    elif isinstance(value, Snapshot):
+        result = copy(value)
+        memo[identity] = result
+        for key, item in vars(value).items():
+            setattr(result, key, copy_snapshot(item, memo))
+        return result
+    elif is_dataclass(value) and not isinstance(value, type):
+        result = object.__new__(type(value))
+        memo[identity] = result
+        for field in fields(value):
+            object.__setattr__(result, field.name, copy_snapshot(getattr(value, field.name), memo))
+        return result
+    else:
+        return deepcopy(value, memo)
+    memo[identity] = result
+    return result
+
+
 def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=None, control_state=None):
     """Called before deciding, never when replaying historical rows."""
     safe = {k:config[k] for k in CONFIG_KEYS if k in config}
-    result=dict(snapshot=deepcopy(snap),config=json.loads(L.canonical(safe)),source_cut_ms=cut_ms,
-        additional_original_inputs=deepcopy(additional_original_inputs))
+    result=dict(snapshot=copy_snapshot(snap),config=json.loads(L.canonical(safe)),source_cut_ms=cut_ms,
+        additional_original_inputs=copy_snapshot(additional_original_inputs))
     # Only what the decision path itself used is carried (snapshot, config,
     # control; the signal-bound StrategyVersion is bound in decision()). Later
     # stages (WorldModel, Opportunity Context, portfolio cut, proposal, intent)

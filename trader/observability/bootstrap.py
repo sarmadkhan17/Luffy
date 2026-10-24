@@ -14,15 +14,15 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import signal
 import sqlite3
-import subprocess
 import threading
 import time
 from uuid import uuid4
 
 from trader import runtime_identity as ri
-from . import dashboard_readiness, preflight
+from . import dashboard_readiness, managed, preflight
 from .safety import SafetyHealth, publish
 from .shutdown import service_state
 
@@ -137,14 +137,25 @@ def readiness(root, cfg, expected, baseline, *, clock=time.time, require_cycle=T
                 allow=not reasons, result='FAIL' if reasons else 'PASS', reasons=reasons)
 
 
+OBSERVERS = (('heartbeat-only', 10), ('safety-only', 30))
+_TOKEN = re.compile(r'^[0-9a-f]{32}$')
+
+
+class ObserverCoverageIncomplete(RuntimeError):
+    pass
+
+
 class Host:
-    def __init__(self, root, revision):
+    def __init__(self, root, revision, manager=None, proc_root=Path('/proc')):
         self.root = Path(root).resolve()
         self.revision = revision
         self.token = uuid4().hex
         self.units = []
-        self.process = None
+        self.process = None          # verified managed main process, never a launcher PID
+        self.unit = None
         self.expected = None
+        self.manager = manager or managed.UserManager()
+        self.proc_root = Path(proc_root)
         self.directory = self.root / 'data/bootstrap' / self.token
         self.python = str(self.root / 'venv/bin/python')
 
@@ -165,39 +176,133 @@ class Host:
         record_fence(self.root, self.token, 'STARTED_FROZEN', self.revision,
                      expected_health=phase_b['facts']['health'])
 
+    def _manifest(self, status, **extra):
+        publish(self.directory / 'observers.json', dict(
+            units=self.units, cleanup='OWNER_ONLY', root=str(self.root),
+            revision=self.revision, token=self.token, status=status, **extra))
+
     def observers_start(self):
-        # Record each unit BEFORE its creation, so partial setup is retained.
+        """Create this generation's pair, verify it covers both modes, and only
+        then retire exact superseded pairs. A failure at any step leaves every
+        earlier pair untouched, so detection coverage never has a gap."""
         self.directory.mkdir(parents=True)
-        for mode, seconds in [('heartbeat-only', 10), ('safety-only', 30)]:
-            unit = 'luffy-bootstrap-' + self.token + '-' + mode
-            self.units.append(unit)
-            publish(self.directory / 'observers.json', dict(units=self.units, cleanup='OWNER_ONLY'))
-            subprocess.run(['systemd-run', '--user', '--unit=' + unit, '--on-active=1s',
-                '--on-unit-inactive=' + str(seconds) + 's', '--timer-property=AccuracySec=1s',
-                '--property=WorkingDirectory=' + str(self.root), '--property=Restart=no',
-                '--setenv=TMPDIR=' + str(self.root / 'tmp'),
-                '--property=SuccessExitStatus=1', '--property=TimeoutStartSec=20s',
-                self.python, '-B', '-m', 'scripts.monitor', '--' + mode], check=True, timeout=30)
+        for mode, seconds in OBSERVERS:
+            # Record each unit BEFORE its creation, so partial setup is retained.
+            self.units.append('luffy-bootstrap-' + self.token + '-' + mode)
+            self._manifest('PENDING')
+            self.manager.run_timer(self.units[-1], [self.python, '-B', '-m', 'scripts.monitor', '--' + mode],
+                                   cwd=self.root, period_s=seconds, env={'TMPDIR': str(self.root / 'tmp')})
+        coverage = {}
+        for (mode, seconds), unit in zip(OBSERVERS, self.units):
+            # Exact timer + service identity (root, command), not merely "active".
+            timer, service, problem = self._observer_facts(unit, mode)
+            if (problem or timer.get('LoadState') != 'loaded' or timer.get('ActiveState') != 'active'
+                    or service.get('LoadState') != 'loaded'):
+                self._manifest('PENDING', coverage=coverage)
+                raise ObserverCoverageIncomplete(mode)
+            coverage[mode] = dict(unit=unit, period_s=seconds, timer='active',
+                                  root=str(self.root), command=self._observer_argv(mode))
+        self._manifest('COVERED', coverage=coverage)
+        self._manifest('COVERED', coverage=coverage, superseded=self.retire_superseded(coverage))
+
+    def retire_superseded(self, coverage):
+        """Stop only manifest-listed, correctly named, root-verified older pairs,
+        and only for modes this generation's verified timers now cover."""
+        results = []
+        base = self.root / 'data/bootstrap'
+        for old in sorted(base.iterdir()) if base.is_dir() else []:
+            if old.name == self.token or not _TOKEN.match(old.name) or not old.is_dir():
+                continue
+            try:
+                manifest = json.loads((old / 'observers.json').read_text())
+                units = manifest['units']
+                if manifest['cleanup'] != 'OWNER_ONLY' or not isinstance(units, list):
+                    raise ValueError
+            except (OSError, ValueError, KeyError, TypeError):
+                results.append(dict(generation=old.name, result='manifest_unusable'))
+                continue
+            if manifest.get('root', str(self.root)) != str(self.root):
+                results.append(dict(generation=old.name, result='foreign_root'))
+                continue
+            for unit in units:
+                mode = next((m for m, _s in OBSERVERS if unit == 'luffy-bootstrap-%s-%s' % (old.name, m)), None)
+                if mode is None:
+                    results.append(dict(unit=str(unit), result='not_owned_by_manifest'))
+                elif mode not in coverage:
+                    results.append(dict(unit=unit, result='replacement_not_covering'))
+                else:
+                    results.append(dict(unit=unit, result=self._retire(unit, mode)))
+        return results
+
+    def _observer_argv(self, mode):
+        return [self.python, '-B', '-m', 'scripts.monitor', '--' + mode]
+
+    def _observer_facts(self, unit, mode):
+        """(timer props, service props, problem|None): the one verification used
+        for both a replacement's coverage and a superseded unit's ownership."""
+        service = self.manager.show(unit + '.service', 'Id', 'LoadState', 'WorkingDirectory', 'ExecStart')
+        timer = self.manager.show(unit + '.timer', 'Id', 'LoadState', 'ActiveState')
+        argv = re.search(r'argv\[\]=([^;]*);', service.get('ExecStart', ''))
+        problem = None
+        if (timer.get('Id') != unit + '.timer' or service.get('Id') != unit + '.service'
+                or service.get('WorkingDirectory') != str(self.root)
+                or argv is None or argv.group(1).split() != self._observer_argv(mode)):
+            problem = 'identity_unverified'
+        return timer, service, problem
+
+    def _retire(self, unit, mode):
+        try:
+            timer, service, problem = self._observer_facts(unit, mode)
+            if timer.get('LoadState') == 'not-found' and service.get('LoadState') == 'not-found':
+                return 'already_absent'
+            if problem:
+                return 'identity_unverified_retained'
+            self.manager.stop(unit + '.timer')    # no further invocations first
+            if self.manager.show(unit + '.service', 'ActiveState').get('ActiveState') in ('active', 'activating'):
+                self.manager.stop(unit + '.service')
+            states = [self.manager.show(unit + suffix, 'ActiveState').get('ActiveState')
+                      for suffix in ('.timer', '.service')]
+            return ('retired' if not {'active', 'activating', 'deactivating'} & set(states)
+                    else 'stop_unconfirmed_retained')
+        except managed.ManagedUnavailable as exc:
+            return 'retained:' + str(exc)
 
     def start(self):
-        if self.process is not None:
+        if self.process is not None or self.unit is not None:
             raise RuntimeError('one_launch_only')
         command = [self.python, '-B', '-m', 'trader.kernel', '--expect-revision', self.revision,
                    '--bootstrap-token', self.token]
-        self.process = subprocess.Popen(command, cwd=self.root, start_new_session=True)
-        self.expected = dict(pid=self.process.pid, start_ticks=ri.proc_start_ticks(self.process.pid),
-                             started_at=time.time())
+        self.unit = 'luffy-kernel-' + self.token
+        # Raises (leaving self.unit set) when the manager is unavailable or the
+        # unit's actual main process cannot be verified; never an unmanaged Popen.
+        self.process = managed.launch(
+            self.manager, self.unit, command, cwd=self.root, proc_root=self.proc_root,
+            env={'TMPDIR': str(self.root / 'tmp')},
+            properties=('StandardOutput=append:' + str(self.root / 'logs/kernel-unit.log'),
+                        'StandardError=inherit'),
+            monotonic=self.monotonic, sleep=self.sleep)
+        self.expected = dict(pid=self.process.pid, start_ticks=self.process.start_ticks,
+                             started_at=time.time(), unit=self.unit, cgroup=self.process.cgroup,
+                             revision=self.revision, token=self.token)
         publish(self.directory / 'child.json', self.expected)
 
     def sample(self, baseline):
         from trader.core.config import load_config
-        # Bind to owned child PID/ticks, then require its lock record and revision.
+        # Bind to the unit's actual main PID/ticks, then require its lock record.
         if service_state(self.process, self.expected) != 'LIVE':
             return dict(allow=False, fatal=True, reasons=['owned_child_not_live'])
+        mixed = self.process.verify()
+        if mixed:
+            return dict(allow=False, fatal=True, reasons=['managed_identity_mixed'] + mixed)
         expected = dict(self.expected)
-        record = (ri.inspect(self.root).get('record') or {})
+        identity = ri.inspect(self.root)
+        record = identity.get('record') or {}
+        if (identity.get('state') == 'RUNNING' and record.get('pid') != expected['pid']
+                and ri.proc_start_ticks(record.get('pid', -1)) == record.get('start_ticks')):
+            # A different live, verified Kernel holds the lock: not our unit.
+            return dict(allow=False, fatal=True, reasons=['kernel_record_names_other_process'])
         # Publication follows process creation: protection must start after the
-        # identity record, never merely after this controller's Popen timestamp.
+        # identity record, never merely after this controller's launch time.
         expected['started_at'] = max(expected['started_at'], record.get('started_at', float('inf')))
         cfg = load_config(str(self.root / 'config.yaml'))
         result = readiness(self.root, cfg, expected, baseline, require_cycle=False)
@@ -208,13 +313,28 @@ class Host:
         return result
 
     def contain_stop(self):
-        if self.process is None:
+        if self.process is None and self.unit is None:
             return dict(stop='NOT_LAUNCHED', observers_retained=True)
+        if self.process is None:
+            # The job was accepted but its main process was never verified.
+            # Adopt it only if it now matches exactly; absence needs proof.
+            command = [self.python, '-B', '-m', 'trader.kernel', '--expect-revision',
+                       self.revision, '--bootstrap-token', self.token]
+            try:
+                self.process = managed.adopt(self.manager, self.unit, proc_root=self.proc_root,
+                                             expect_argv=command, timeout_s=5.0,
+                                             monotonic=self.monotonic, sleep=self.sleep)
+            except (managed.ManagedUnavailable, managed.ManagedIdentityMixed):
+                absent = managed.unit_absent(self.manager, self.unit, self.token, self.proc_root)
+                return dict(stop='TERMINATED' if absent else 'UNKNOWN', unit=self.unit,
+                            observers_retained=True)
+            self.expected = dict(pid=self.process.pid, start_ticks=self.process.start_ticks,
+                                 started_at=time.time(), unit=self.unit)
         state = service_state(self.process, self.expected)
         if state == 'LIVE':
             try:
-                self.process.send_signal(signal.SIGTERM)  # owned child identity verified
-            except ProcessLookupError:
+                self.process.send_signal(signal.SIGTERM)  # managed identity verified
+            except (ProcessLookupError, managed.ManagedUnavailable, managed.ManagedIdentityMixed):
                 pass  # signal delivery is never exit confirmation
         deadline = self.monotonic() + STOP_TIMEOUT_S
         while self.monotonic() < deadline and service_state(self.process, self.expected) != 'TERMINATED':

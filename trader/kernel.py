@@ -336,6 +336,13 @@ class Kernel:
         if not reqs:
             return None
         hit = getattr(self, "_market_cache", None)
+        # Reuse only identical explicit cuts inside this isolated worker's
+        # owned analysis batch. Recursive reference inputs keep the full reader.
+        cut_cache = getattr(self, '_market_cut_cache', None) if getattr(self, '_owned_analysis_batch', False) else None
+        cut_key = (tuple(reqs), as_of_ms)
+        if as_of_ms is not None and cut_cache is not None and cut_key in cut_cache:
+            from .learning.capture_runtime import copy_snapshot
+            return copy_snapshot(cut_cache[cut_key])
         now = time.time()
         if as_of_ms is None and hit and 0 <= now - hit[0] < self._MARKET_TTL:
             return hit[1]
@@ -346,6 +353,9 @@ class Kernel:
             log.warning(f"reference series unavailable: {e}")
             out = None
         self._market_cache = (now, out)
+        if as_of_ms is not None and cut_cache is not None and len(cut_cache) < 64:
+            from .learning.capture_runtime import copy_snapshot
+            cut_cache[cut_key] = copy_snapshot(out)
         return out
 
     def boot(self) -> None:
@@ -470,6 +480,17 @@ class Kernel:
         server = getattr(self, "_owner_ipc", None)
         if server is not None:
             server.stop()
+        self._stop_owner_audit()
+
+    def _stop_owner_audit(self):
+        service = getattr(self, '_owner_service', None)
+        if service is not None and not getattr(self, '_owner_audit_stopped', False):
+            self._owner_audit_stopped = True
+            try:
+                self._owner_audit_shutdown = service.stop_audit_flusher(timeout_s=5.0)
+            except Exception as exc:
+                self._owner_audit_shutdown = dict(drained=False, error_type=type(exc).__name__)
+            log.info('owner audit shutdown: %s', self._owner_audit_shutdown)
 
     def _derivatives_recorder(self) -> None:
         """Record funding / open interest / taker ratio / long-short every N
@@ -989,8 +1010,20 @@ class Kernel:
         from .data import market_provenance as mp
         # Reuse the exact already acquired BTC frame when it is this symbol's
         # context, rather than reading it again and mixing two observations.
+        shared_btc_cut = None
         try:
-            btc = dfs.get('1h') if symbol == 'BTC/USDT' and '1h' in dfs else self.feed.fetch_ohlcv('BTC/USDT', '1h')
+            if symbol == 'BTC/USDT' and '1h' in dfs:
+                btc = dfs['1h']
+            elif (getattr(self, '_owned_analysis_batch', False)
+                    and getattr(self, '_btc_ctx_receipt', None)
+                    and '1h' in getattr(self, '_context_anchor_frames', {}).get('BTC/USDT', {})):
+                # The market view already owns this observation. Revalidate it
+                # below at each consumer cut; a later market generation reads
+                # new receipts rather than renewing this frame's freshness.
+                btc = self._context_anchor_frames['BTC/USDT']['1h']
+                shared_btc_cut = self._btc_ctx_receipt['as_of_ms']
+            else:
+                btc = self.feed.fetch_ohlcv('BTC/USDT', '1h')
         except Exception:
             btc = None  # optional context cannot abort other symbols
         # Use a post-acquisition cut: this is when these receipts were held.
@@ -1051,6 +1084,8 @@ class Kernel:
         btc_context_receipt = getattr(self, '_btc_ctx_receipt', None)
         btc_ctx = self._btc_ctx if btc_context_receipt and 0 <= as_of-btc_context_receipt['as_of_ms'] <= 600_000 else {}
         lineage['btc_context'] = btc_context_receipt if btc_ctx else None
+        if shared_btc_cut is not None:
+            lineage['shared_btc_read_cut_ms'] = shared_btc_cut
         from .core.journal_evidence import FrozenJSON
         cache = self.__dict__.setdefault('_provenance_acquisitions', {})
         for name, receipts in (
@@ -1276,27 +1311,28 @@ class Kernel:
             if n is not None:
                 stats["panic_closed"] = n
 
-        state = self.state_machine.refresh()
-        supervisor = getattr(self, "supervisor", None)
-        if (supervisor is not None and self.market_type == MarketType.FUTURES
-                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
-            supervisor.trigger("entry_recovery_pending")
+        with stage_scope('deep.control_risk'):
             state = self.state_machine.refresh()
-        if runtime is None and self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
-            self.executor.recover_entries()
-        entry_allowed = self.state_machine.can_enter()
-        blocked = "" if entry_allowed else f"state={state.value}"
-        if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
-            entry_allowed = False
-            blocked = "execution_recovery_pending"
-        if entry_allowed and status.get("risk_state") != "ok":
-            entry_allowed = False
-            blocked = f"risk_state={status.get('risk_state')}"
-        if entry_allowed and (status.get("daily_pnl_pct") or 0) <= \
-                -self.risk.daily_loss_block * 100:
-            entry_allowed = False
-            blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
-        self._record_risk_assessment(state, status, entry_allowed, blocked)
+            supervisor = getattr(self, "supervisor", None)
+            if (supervisor is not None and self.market_type == MarketType.FUTURES
+                    and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+                supervisor.trigger("entry_recovery_pending")
+                state = self.state_machine.refresh()
+            if runtime is None and self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+                self.executor.recover_entries()
+            entry_allowed = self.state_machine.can_enter()
+            blocked = "" if entry_allowed else f"state={state.value}"
+            if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
+                entry_allowed = False
+                blocked = "execution_recovery_pending"
+            if entry_allowed and status.get("risk_state") != "ok":
+                entry_allowed = False
+                blocked = f"risk_state={status.get('risk_state')}"
+            if entry_allowed and (status.get("daily_pnl_pct") or 0) <= \
+                    -self.risk.daily_loss_block * 100:
+                entry_allowed = False
+                blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
+            self._record_risk_assessment(state, status, entry_allowed, blocked)
 
         try:
             from .learning.runtime import checkpoint as learning_checkpoint
@@ -1316,8 +1352,9 @@ class Kernel:
             self._refresh_btc_context()
             if self.cfg.get('attention',{}).get('admission'):
                 self._refresh_context_anchors()
-        closed_count = int(self.journal.query(
-            "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
+        with stage_scope('deep.closed_trade_count'):
+            closed_count = int(self.journal.query(
+                "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
         exec_tf = self.cfg["timeframes"]["execution"]
         if runtime is None:
@@ -1373,7 +1410,7 @@ class Kernel:
                     stats['snapshot_refusals'][reason] = stats['snapshot_refusals'].get(reason, 0) + 1
                     try:
                         from .learning import capture as lc, capture_runtime as lr
-                        with self.journal._tx() as capture_db:
+                        with stage_scope('deep.missed_snapshot_capture'), self.journal._tx() as capture_db:
                             lc.safely(capture_db, 'missed-snapshot:'+symbol, lr.missed_snapshot,
                                 scan_id, symbol, int(time.time()*1000),
                                 admission_context=dict(receipt_id=receipt['receipt_id'],
@@ -1398,8 +1435,9 @@ class Kernel:
                 self.depth_agent.set_context(symbol, original_order_book)
                 input_key = None
                 if runtime is not None:
-                    input_key, changed = runtime.changed(self, snap, state, funding.get(symbol),
-                        oi.get(symbol), original_order_book, stats.get('learning_application'))
+                    with stage_scope('deep.input_fingerprint', symbol=symbol):
+                        input_key, changed = runtime.changed(self, snap, state, funding.get(symbol),
+                            oi.get(symbol), original_order_book, stats.get('learning_application'))
                     if not changed:
                         stats['unchanged_inputs'] = stats.get('unchanged_inputs', 0) + 1
                         continue
@@ -1425,8 +1463,11 @@ class Kernel:
                                 order_book=original_order_book,positioning_funding=funding.get(symbol),
                                 positioning_open_interest=oi.get(symbol),
                                 admission=snap.admission_context))
-                except Exception:
+                except Exception as exc:
                     learning_inputs = None
+                    stats['learning_input_failures'] = stats.get('learning_input_failures', 0) + 1
+                    stats['learning_input_error_type'] = type(exc).__name__
+                    log.warning('learning input capture unavailable: %s', type(exc).__name__)
                 with stage_scope('deep.strategy_decision'):
                     d = self.orchestrator.decide(snap, self.population,
                                                  entry_allowed=entry_allowed,
@@ -1434,8 +1475,14 @@ class Kernel:
                 from .data.attention_history import decision_state
                 stats.setdefault('decision_data_states', {})[symbol] = decision_state(snap, d)
                 if learning_inputs is not None:
-                    from copy import deepcopy
-                    learning_inputs['snapshot'] = deepcopy(snap)
+                    from .learning.capture_runtime import copy_snapshot
+                    try:
+                        learning_inputs['snapshot'] = copy_snapshot(snap)
+                    except Exception as exc:
+                        learning_inputs = None
+                        stats['learning_input_failures'] = stats.get('learning_input_failures', 0) + 1
+                        stats['learning_input_error_type'] = type(exc).__name__
+                        log.warning('learning input capture unavailable: %s', type(exc).__name__)
                 d.scan_id = scan_id
                 d.learning_inputs = learning_inputs
                 with stage_scope('deep.save_decision'):
@@ -1499,8 +1546,9 @@ class Kernel:
             self._record_excursions()
         if supervisor is not None and self.market_type == MarketType.FUTURES:
             state = self.state_machine.refresh()
-        self._attention_call("causes", scan_id, attention_causes)
-        attention_health = self._attention_call("health")
+        with stage_scope('deep.attention_tail'):
+            self._attention_call("causes", scan_id, attention_causes)
+            attention_health = self._attention_call("health")
         attention_error = getattr(self, "_attention_error", None)
         if attention_health or attention_error:
             stats["attention"] = attention_health or {"enabled": True, "status": "error"}
@@ -2025,7 +2073,9 @@ class Kernel:
             policy = A.AdmissionPolicy.from_config(self.cfg)
             with stage_scope('admission.select_persist_verify'):
                 receipt = A.persist(self.journal, observation, policy)
-                A.verify_receipt(receipt)
+                batch = A.VerifiedAdmissionBatch(receipt)
+                receipt = batch.receipt
+            self._verified_admission_batch = batch
             self._scan_membership_receipts = memberships
             # Empty explicit eligibility must mean NONE here, unlike legacy
             # genomes whose missing/empty symbols historically means ALL.
@@ -2052,6 +2102,7 @@ class Kernel:
         except Exception as exc:
             self._symbol_roles = A.SymbolRoles((),(),(),ANCHORS,tuple(exposure),(),())
             self._admission_receipt = None
+            self._verified_admission_batch = None
             self._admission_error = type(exc).__name__
             log.warning('discretionary admission refused: %s', self._admission_error)
             try:
@@ -2082,16 +2133,21 @@ class Kernel:
     @stage('deep.snapshot', symbol_arg=1)
     def _candidate_snapshot_for(self, symbol, receipt, peers):
         from .attention_admission import verify_receipt, candidates
-        with stage_scope('deep.admission_verify'):
-            verify_receipt(receipt)
-        if symbol not in receipt['admitted_symbols']:
-            raise ValueError('symbol_not_deep_admitted')
-        # ATT-01: the typed investigation candidate is the one normal-path
-        # truth for why/how-urgently this symbol is investigated.
-        cache = getattr(self, '_candidate_cache', None)
-        if not cache or cache[0] != receipt['receipt_id']:
-            cache = self._candidate_cache = (receipt['receipt_id'], {c['symbol']: c for c in candidates(receipt)})
-        candidate = cache[1][symbol]
+        batch = getattr(self, '_verified_admission_batch', None)
+        if batch is not None and receipt is batch.receipt:
+            if symbol not in batch.candidates_by_symbol:
+                raise ValueError('symbol_not_deep_admitted')
+            candidate = batch.candidates_by_symbol[symbol]
+            row = batch.rows_by_symbol[symbol]
+        else:
+            # Foreign/restored mutable receipts remain untrusted. A receipt id
+            # or a prior object's id is never a verification capability.
+            with stage_scope('deep.admission_verify'):
+                verify_receipt(receipt)
+            if symbol not in receipt['admitted_symbols']:
+                raise ValueError('symbol_not_deep_admitted')
+            candidate = next(c for c in candidates(receipt) if c['symbol'] == symbol)
+            row = next(r for r in receipt['rows'] if r['symbol'] == symbol)
         with stage_scope('deep.market_data', symbol=symbol):
             snap = self._snapshot_for(symbol, universe=peers)
         if snap is not None:
@@ -2099,7 +2155,6 @@ class Kernel:
                 from .research.compose.world_producer import snapshot_context
                 with stage_scope('deep.world_context', symbol=symbol):
                     snap.world = snapshot_context(snap)
-            row = next(r for r in receipt['rows'] if r['symbol']==symbol)
             snap.admission_context = dict(receipt_id=receipt['receipt_id'],schema=receipt['schema'],
                 policy_version=receipt['policy_version'],source_cut_ms=receipt['source_cut_ms'],
                 category=row['category'],reason=row['reason'],peer_cohort_id=receipt['peer_cohort_id'],
@@ -3100,6 +3155,7 @@ class Kernel:
                 max_age_s=float(section.get("max_request_age_s", 300)),
                 busy_wait_s=float(section.get("busy_wait_s", 10)))
             self._owner_service = service
+            service.start_audit_flusher()
         self._bind_telegram_owner(service.authorizer)
         return service
 
@@ -3323,6 +3379,7 @@ class Kernel:
         finally:
             runtime.stop()
             runtime.join()
+            self._stop_owner_audit()
         log.info("kernel stopped cleanly")
 
 
@@ -3382,6 +3439,7 @@ def main() -> None:
     k = Kernel(cfg)
     if instance is not None:
         instance.bind_heartbeat(k.heartbeat.instance_id)
+        k._runtime_revision = rec['revision']
         k._bootstrap_token = args.bootstrap_token
     if args.status:
         print(json.dumps({

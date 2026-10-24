@@ -155,6 +155,11 @@ def refuse_live(path) -> Path:
 
 def snapshot_identity(path) -> dict:
     p = refuse_live(path)
+    # Publications are settled standalone files. A sidecar can change SQLite's
+    # logical contents without changing the main-file digest.
+    for suffix in ('-wal', '-journal'):
+        if Path(str(p) + suffix).exists():
+            raise ClosureRefused('snapshot_sidecar_present', suffix)
     before = _stat_id(p)
     h = hashlib.sha256()
     with open(p, 'rb') as f:
@@ -162,6 +167,9 @@ def snapshot_identity(path) -> dict:
             h.update(chunk)
     if _stat_id(p) != before:
         raise ClosureRefused('snapshot_changed_while_hashing')
+    for suffix in ('-wal', '-journal'):
+        if Path(str(p) + suffix).exists():
+            raise ClosureRefused('snapshot_sidecar_present', suffix)
     return dict(before, sha256=h.hexdigest(), name=p.name)
 
 

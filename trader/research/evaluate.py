@@ -376,7 +376,7 @@ def _clock(df) -> np.ndarray:
 
 
 def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
-             min_symbol_trades: int = MIN_SYMBOL_TRADES) -> dict:
+             min_symbol_trades: int = MIN_SYMBOL_TRADES, *, raw_runs=None, traces=False) -> dict:
     """Score `c` over the bundle's discovery slice."""
     spec = c.to_spec()
     out = {"hash": c.hash, "tf": c.tf, "geo": c.geo, "k": c.k,
@@ -464,9 +464,17 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             ) if spec.exit.signal_exit.strip() else (None, None)
             fund = retrospective_funding.get(sym) if b.evidence else funding_for(sym, df, b.risk)
             mine: list = []
+            trace = [] if raw_runs is not None and traces else None
             r = simulate(lo, sh, df, spec.exit, b.risk, symbol=sym,
-                         funding=fund, fills_out=mine, exit_sig=ex, exit_sig_available=ex_available)
+                         funding=fund, fills_out=mine, exit_sig=ex, exit_sig_available=ex_available,
+                         **({'trace_out': trace} if raw_runs is not None else {}))
+            if raw_runs is not None:
+                raw_runs[sym] = dict(result=r, fills=mine, df=df, trace=trace)
         except Exception as e:                          # noqa: BLE001
+            if raw_runs is not None:
+                # Closure previously ran run_symbols afterwards, where this
+                # exception failed the whole development result. Do not hide it.
+                raise
             log.debug(f"research {c.hash} {sym}: {e}")
             rec["error"] = str(e)[:200]
             continue

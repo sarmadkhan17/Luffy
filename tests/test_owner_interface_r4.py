@@ -199,7 +199,7 @@ def check_admission_refusal_consults_the_record(tmp_path, monkeypatch):
     j = Journal(tmp_path / "w4.db")
     resume = _SlowResume(0.8)
     s = OwnerService(j, ControlStateMachine(j), resume=resume)
-    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-")) / "ipc"
+    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-", dir="/tmp")) / "ipc"
     # one recovery slot, held by the executing request: every other recovery
     # delivery reaches the class-slot admission refusal path
     server = OwnerIPCServer(s, ipc_dir, class_slots={"recovery": 1}).start()
@@ -226,6 +226,7 @@ def check_admission_refusal_consults_the_record(tmp_path, monkeypatch):
         assert resume.calls == 2
     finally:
         server.stop()
+        shutil.rmtree(ipc_dir.parent, ignore_errors=True)
 
 
 def test_w4_admission_refusal_consults_the_record(tmp_path, monkeypatch):

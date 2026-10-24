@@ -436,7 +436,9 @@ def test_w5_kernel_drain_consumes_owner_appends(world, monkeypatch):
 # ── IPC ─────────────────────────────────────────────────────────────────────
 @pytest.fixture
 def ipc_dir():
-    return Path(tempfile.mkdtemp(prefix="oi-")) / "ipc"
+    # IPC validates every ancestor; TMPDIR may be a shared non-sticky mount.
+    with tempfile.TemporaryDirectory(prefix="oi-", dir="/tmp") as directory:
+        yield Path(directory) / "ipc"
 
 
 class SlowResume:
@@ -746,11 +748,21 @@ def test_n2_schema_version_is_checked(tmp_path):
 
 
 def test_n4_read_audit_batch_flushes_by_size(tmp_path):
+    # SP-03: while the service's flusher owns flushing, reads only enqueue; the
+    # size trigger no longer makes a read wait for the writer. The lifecycle
+    # flusher or an explicit flush owns persistence.
     j, s = _plain_service(tmp_path, SlowResume(0))
     _bind_tester(s.authorizer)
-    for _ in range(s.audit_flush_rows):
-        s.execute(req("status"))
-    assert len(_audit(j)) == s.audit_flush_rows
+    s.audit_flush_interval_s = 3600            # only an explicit pass may write
+    assert s.start_audit_flusher() is True
+    try:
+        for _ in range(s.audit_flush_rows):
+            s.execute(req("status"))
+        assert _audit(j) == [] and s.audit_status()["remaining"] == s.audit_flush_rows
+        assert s.flush_audit() is True         # the lifecycle pass persists each row once
+        assert len(_audit(j)) == s.audit_flush_rows and s.audit_status()["remaining"] == 0
+    finally:
+        s.stop_audit_flusher(timeout_s=5)
 
 
 def test_n3_completed_records_are_pruned_after_retention(tmp_path):

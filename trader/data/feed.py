@@ -9,7 +9,7 @@ from copy import deepcopy
 import logging
 import threading
 from collections import OrderedDict
-from contextlib import nullcontext
+from contextlib import nullcontext, contextmanager
 
 import numpy as np
 import time
@@ -709,15 +709,42 @@ class DataFeed:
                            request_started_ms=getattr(self._local,'acquisition_started_ms',None),
                            raw=valid_raw if len(valid_raw) == len(df) else None)
 
+    @contextmanager
+    def immutable_read_batch(self):
+        """Only identical explicit cuts may reuse a detached first read.
+
+        No TTL/current cache spans this boundary. Other writers and newly
+        eligible receipts are observed afresh in the next batch/cut. Nested
+        callers on this thread share the same bounded owned evidence set.
+        """
+        existing = getattr(self._local, 'immutable_reads', None)
+        if existing is not None:
+            yield self
+            return
+        self._local.immutable_reads = OrderedDict()
+        try:
+            yield self
+        finally:
+            del self._local.immutable_reads
+
     def ohlcv_asof(self, symbol, tf='15m', *, as_of_ms, limit=20000,
                    include_partial=False):
         """Offline historical read; never routes through latest or the network."""
         iid,source=self._identity(symbol)
-        df = mp.load(self.db, self._series_key(symbol, tf), as_of_ms=as_of_ms,
+        conn = self.db
+        batch = getattr(self._local, 'immutable_reads', None)
+        key = (id(conn), self._db_path, iid, source, self._series_key(symbol, tf),
+               tf, as_of_ms, limit, include_partial)
+        if batch is not None and key in batch:
+            return deepcopy(batch[key])
+        df = mp.load(conn, self._series_key(symbol, tf), as_of_ms=as_of_ms,
                      limit=limit, include_partial=include_partial, instrument_id=iid, source=source)
         if df is not None:
             df.attrs['timeframe'] = tf
-        return mp.eligible_frame(df, tf, as_of_ms, final=not include_partial)
+        result = mp.eligible_frame(df, tf, as_of_ms, final=not include_partial)
+        if batch is not None and len(batch) < self.MAX_CACHE_SERIES:
+            batch[key] = deepcopy(result)
+        return result
 
     def latest_ohlcv(self, symbol, tf='15m', limit=20000):
         """Explicit current offline view; unsuitable for historical decisions."""

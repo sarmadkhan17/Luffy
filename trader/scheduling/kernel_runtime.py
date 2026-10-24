@@ -1,5 +1,7 @@
 """Independent kernel cycles, with one serialized venue-mutation boundary."""
 from collections import deque
+from functools import wraps
+from contextlib import nullcontext
 from copy import deepcopy
 import json
 import logging
@@ -14,6 +16,16 @@ from .coordination import analysis_context, model_snapshot, input_fingerprint
 from .maintenance import Maintenance
 
 log = logging.getLogger('luffy.cycles')
+
+
+def _read_batch(fn):
+    @wraps(fn)
+    def run(self, *args, **kwargs):
+        feed = self.kernel.feed
+        context = feed.immutable_read_batch() if hasattr(feed, 'immutable_read_batch') else nullcontext()
+        with context:
+            return fn(self, *args, **kwargs)
+    return run
 
 
 class KernelRuntime:
@@ -151,6 +163,7 @@ class KernelRuntime:
                 setattr(view, name, value)
         return data[1], data[2]
 
+    @_read_batch
     def positions(self):
         view = analysis_context(self)
         required = view._exposure_symbols()
@@ -167,6 +180,7 @@ class KernelRuntime:
             self.positions_at = time.monotonic()
 
     @timed_worker('market')
+    @_read_batch
     def market(self):
         view = analysis_context(self)
         receipt, frames = view._admission_plan()
@@ -195,6 +209,7 @@ class KernelRuntime:
         self.jobs['decisions'].trigger()
 
     @timed_worker('decisions')
+    @_read_batch
     def decisions(self):
         with self.lock:
             view, self.pending_scan = self.pending_scan, None
@@ -286,17 +301,43 @@ class KernelRuntime:
             # compositional mechanism indefinitely.
             closure = cfg.get('research', {}).get('closure') or {}
             if closure.get('enabled', False):
-                from ..research.closure import study as closure_study
-                outcome = closure_study.scheduled(
-                    # This is an independent, bounded worker. The old 45-second
-                    # synchronous-cycle guard would otherwise defer every slot
-                    # indefinitely on this installation.
-                    cfg, cycle_seconds=None,
-                    slot_remaining_s=float(closure.get('slot_budget_s', 900)),
-                    should_stop=lambda: bool(getattr(self.kernel, '_stop', False)))
-                # The closure store keeps the full record (schedule_events); the log line makes it visible too.
-                log.info('closure research slot: %s', {k: outcome.get(k) for k in ('status', 'stop_reason', 'step', 'units_run', 'reason')
-                                                        if isinstance(outcome, dict) and k in outcome})
+                from ..observability.managed import launch_role, wait_role, release_role
+                from ..core.config import ROOT
+                revision = getattr(self.kernel, '_runtime_revision', None)
+                if not revision:
+                    self._research_managed_status = dict(state='UNKNOWN',
+                        reason='runtime_revision_unavailable', mechanism_pending=True)
+                    raise ValueError('managed_research_runtime_revision_unavailable')
+                try:
+                    handle = getattr(self, '_managed_research_receipt', None)
+                    if handle is None:
+                        handle = launch_role('research', ROOT, revision=revision)
+                        self._managed_research_receipt = handle
+                    self._research_managed_status = dict(state='RUNNING',
+                        reason='awaiting_verified_completion', unit=handle.get('unit'),
+                        mechanism_pending=True)
+                    # Only this research thread waits. A stop/timeout releases
+                    # the caller, not the independently managed workload.
+                    outcome = wait_role(handle, ROOT, revision,
+                        timeout_s=float(closure.get('slot_budget_s', 900)) + 30.0,
+                        should_stop=lambda: bool(getattr(self.kernel, '_stop', False)))
+                    state = outcome.get('state', 'UNKNOWN')
+                    self._research_managed_status = dict(state=state,
+                        reason=outcome.get('reason'), unit=handle.get('unit'),
+                        mechanism_pending=state != 'SUCCEEDED')
+                    if state in ('SUCCEEDED', 'FAILED'):
+                        released = release_role(handle)
+                        self._research_managed_status['unit_released'] = bool(released)
+                        self._managed_research_receipt = None
+                    if state != 'SUCCEEDED':
+                        raise ValueError('managed_research_not_complete:' + state)
+                except ValueError:
+                    raise
+                except Exception as exc:
+                    self._research_managed_status = dict(state='UNKNOWN',
+                        reason=type(exc).__name__, mechanism_pending=True)
+                    raise ValueError('managed_research_unavailable') from exc
+                log.info('closure research slot: %s', self._research_managed_status)
             else:
                 from ..research.runner import ResearchRunner
                 if not hasattr(self, '_research_runner'):
@@ -429,9 +470,10 @@ class KernelRuntime:
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in
-                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs')}
+                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type')}
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
+            research_managed=deepcopy(getattr(self, '_research_managed_status', None)),
             replaced_scan_batches=self.scan_replaced, candles=dict(self.candle_stats))
 
     def publish(self):

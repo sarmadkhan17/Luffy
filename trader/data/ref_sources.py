@@ -133,6 +133,79 @@ def binance_klines(fetch, symbol: str, tf: str, since_ms: int, now_ms: int,
 
 
 # ── the alt index ─────────────────────────────────────────────────────────
+def _member_closes(frames: dict) -> dict:
+    """{member: sorted, de-duplicated close Series}; members under 2 bars drop out."""
+    closes = {}
+    for sym, df in frames.items():
+        if df is None or len(df) < 2:
+            continue
+        s = pd.Series(df["close"].to_numpy(dtype=float),
+                      index=pd.to_datetime(df["ts"], utc=True))
+        closes[sym] = s[~s.index.duplicated(keep="last")].sort_index()
+    return closes
+
+
+def _grid_of(closes: dict) -> pd.DatetimeIndex:
+    lo = min(s.index[0] for s in closes.values())
+    hi = max(s.index[-1] for s in closes.values())
+    return pd.date_range(lo, hi, freq="4h")
+
+
+def _full_numeric(closes: dict, grid, min_members: int):
+    """(cumulative product, level) over the whole grid -- the definition."""
+    panel = pd.DataFrame(closes).sort_index()
+    rets = panel.reindex(grid).pct_change(fill_method=None)
+    measured = rets.notna().sum(axis=1)
+    r = rets.mean(axis=1).where(measured >= min_members)
+    cum = (1.0 + r.fillna(0.0)).cumprod()
+    return cum.to_numpy(), (cum * 100.0).where(r.notna()).to_numpy()
+
+
+def _suffix_numeric(closes: dict, grid, min_members: int, start: int, cum_prev: float):
+    """The full definition's rows grid[start:], continuing from `cum_prev`, the
+    cumulative product through row start-1. Row start-1 is read only as the
+    predecessor close of the first return; the multiplication order is the
+    full cumprod's, so the result is bit-identical."""
+    sub = grid[start - 1:] if start > 0 else grid
+    panel = pd.DataFrame({sym: s.reindex(sub) for sym, s in closes.items()})
+    rets = panel.pct_change(fill_method=None)
+    measured = rets.notna().sum(axis=1)
+    r = rets.mean(axis=1).where(measured >= min_members)
+    if start > 0:
+        r = r.iloc[1:]
+    x = (1.0 + r.fillna(0.0)).to_numpy(copy=True)
+    if start > 0 and len(x):
+        x[0] = cum_prev * x[0]
+    cum = np.cumprod(x)
+    return cum, np.where(r.notna().to_numpy(), cum * 100.0, np.nan)
+
+
+def _alts_frame(grid, level, frames: dict, min_members: int) -> pd.DataFrame:
+    df = pd.DataFrame({"ts": grid, "close": level})
+    for c in ("open", "high", "low", "volume"):
+        df[c] = np.nan
+    result = _finish(df)
+    from . import market_provenance as mp
+    constituents = _constituents(frames)
+    if constituents is not None:
+        result.attrs.update(source='derived:equal_weight_alt_index.v1',
+                            raw_source_record={'derivation':'equal_weight_alt_index.v1',
+                              'min_members':min_members,
+                              'constituents':constituents})
+    return result
+
+
+def _constituents(frames: dict):
+    """Constituent revision IDs per member, or None unless every member is receipt-qualified."""
+    from . import market_provenance as mp
+    qualified = all(all(key in member for key in mp.META) for member in frames.values()
+                    if member is not None and len(member))
+    if not qualified:
+        return None
+    return {sym: member['revision_id'].tolist()
+            for sym, member in frames.items() if member is not None and len(member)}
+
+
 def alts_index(frames: dict, min_members: int = 5) -> pd.DataFrame:
     """Equal-weight index of the alt perps, on a 4h grid, close-only.
 
@@ -141,40 +214,50 @@ def alts_index(frames: dict, min_members: int = 5) -> pd.DataFrame:
     and a bar with fewer than `min_members` measured returns is NaN rather
     than a level. The caller's member list excludes BTC and stablecoins.
     """
-    closes = {}
-    for sym, df in frames.items():
-        if df is None or len(df) < 2:
-            continue
-        s = pd.Series(df["close"].to_numpy(dtype=float),
-                      index=pd.to_datetime(df["ts"], utc=True))
-        closes[sym] = s[~s.index.duplicated(keep="last")].sort_index()
+    closes = _member_closes(frames)
     if not closes:
         return _empty()
-    panel = pd.DataFrame(closes).sort_index()
-    grid = pd.date_range(panel.index.min(), panel.index.max(), freq="4h")
-    rets = panel.reindex(grid).pct_change(fill_method=None)
-    measured = rets.notna().sum(axis=1)
-    r = rets.mean(axis=1).where(measured >= min_members)
-    level = ((1.0 + r.fillna(0.0)).cumprod() * 100.0).where(r.notna())
-    df = pd.DataFrame({"ts": grid, "close": level.to_numpy()})
-    for c in ("open", "high", "low", "volume"):
-        df[c] = np.nan
-    result = _finish(df)
-    from . import market_provenance as mp
-    qualified = all(all(key in member for key in mp.META) for member in frames.values()
-                    if member is not None and len(member))
-    if qualified:
-        result.attrs.update(source='derived:equal_weight_alt_index.v1',
-                            raw_source_record={'derivation':'equal_weight_alt_index.v1',
-                              'min_members':min_members,
-                              'constituents':{sym:member['revision_id'].tolist()
-                                for sym,member in frames.items() if member is not None and len(member)}})
-    return result
+    grid = _grid_of(closes)
+    _, level = _full_numeric(closes, grid, min_members)
+    return _alts_frame(grid, level, frames, min_members)
 
 
 # ── one refresh of everything ─────────────────────────────────────────────
 #: BTCDOM/USDT was listed on 2021-06-17; ask from the start of that month
 BTCDOM_FROM_MS = 1_622_505_600_000
+
+
+def _refresh_alts(feed, members, store, now, out):
+    """Rebuild only what the constituents' committed closes/revisions require
+    (alt_index_state), isolated like every other source. Never raises."""
+    from .alt_index_state import CACHE
+    try:
+        started = store._clock_ms()
+        names = tuple(dict.fromkeys(members))
+        frames = {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in names}
+        key = (getattr(store, '_db_path', None) or id(store), names, 5)
+        try:
+            last_before = store.last_ts("alts")
+        except Exception:
+            last_before = None
+        # No same-store committed-content witness exists (last_ts cannot show the
+        # stored history was not corrected/replaced), so never skip the save.
+        plan = CACHE.prepare(key, frames, 5, store_last_ts=last_before, allow_skip=False)
+        if plan.kind == 'unchanged':
+            out["alts"] = 0
+        else:
+            plan.frame.attrs['request_started_ms'] = started
+            saved_now = store._clock_ms()
+            out["alts"] = store.save("alts", plan.frame, now_ms=saved_now)
+            try:
+                last_after = store.last_ts("alts")
+            except Exception:
+                last_after = None
+            CACHE.commit(key, plan, out["alts"], saved_now, last_after)
+        out["alts_reuse"] = plan.report()
+    except Exception as e:
+        out["alts"] = f"error: {e}"
+        log.warning(f"reference alts: {e}")
 
 
 def refresh_all(feed, members: list, store=None, get=get_json,
@@ -216,8 +299,7 @@ def refresh_all(feed, members: list, store=None, get=get_json,
         elif ref.source == "defillama":
             run(key, lambda: defillama_stables(get))
 
-    run("alts", lambda: alts_index(
-        {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in dict.fromkeys(members)}))
+    _refresh_alts(feed, members, store, now, out)
 
     last = store.last_ts("cg_btc_d")
     if last is None or now - last >= cg_every:

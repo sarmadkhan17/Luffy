@@ -131,16 +131,17 @@ def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P) 
     return 'DEVELOPMENT_POSITIVE', f'p={p} total_pct={pct}; beats every one-part baseline'
 
 
-def cache_key(candidate: dict, env: dict, data_id: str, external_id: str = '') -> str:
+def cache_key(candidate: dict, env: dict, data_id: str, external_id: str = '', *, draws=None) -> str:
     body = dict(candidate=candidate['candidate_id'], envelope=env['envelope_id'],
-                data=data_id, evaluator=env['evaluator_id'], cost=env['cost_id'], split=env['split_id'])
+                data=data_id, evaluator=env['evaluator_id'], cost=env['cost_id'], split=env['split_id'],
+                cache_schema='development-cache.v2', draws=int(draws or env['policy']['draws']))
     if external_id:
         body['external'] = external_id          # absent for legacy candidates: their keys are unchanged
     return digest(body)
 
 
 def develop(candidate: dict, snapshot_path, env: dict, *, store=None, draws: int | None = None,
-            derivs_path=None, world_path=None, references_path=None) -> dict:
+            derivs_path=None, world_path=None, references_path=None, cache_path=None) -> dict:
     """Run (or recall) the development stage for one candidate.
 
     `references_path` names a detached reference store (e.g. a published CSV
@@ -154,7 +155,7 @@ def develop(candidate: dict, snapshot_path, env: dict, *, store=None, draws: int
                    envelope_id=env['envelope_id'], evaluator_id=env['evaluator_id'], data_id=None,
                    data_mode=env['development_mode'], policy_class=env['policy_class'], authority='RESEARCH_ONLY',
                    reason='development_blocked: ' + ';'.join(env['development_reasons'])[:300])
-        res['cache_key'] = cache_key(candidate, env, 'blocked')
+        res['cache_key'] = cache_key(candidate, env, 'blocked', draws=draws)
         res['result_id'] = digest({k: v for k, v in res.items() if k != 'result_id'})
         if store is not None:
             store.put_run(res['cache_key'], res)          # recorded: revision and status read it like any result
@@ -165,12 +166,27 @@ def develop(candidate: dict, snapshot_path, env: dict, *, store=None, draws: int
     if graph.is_graph(candidate) or env['risk'].get('real_funding', False):
         external = _external(candidate, snapshot_path, derivs_path, frames, env, world_path, references_path)
         ext_id = external['data_id']
-    key = cache_key(candidate, env, data_id, ext_id)
-    if store is not None:
-        hit = store.get_run(key)
-        if hit is not None:
+    key = cache_key(candidate, env, data_id, ext_id, draws=draws)
+    # Full consumed data/eligibility is rechecked above. Negative dependency and
+    # transient failure reuse stays disabled until an absence witness exists.
+    eligible_cache = external is None or not external.get('gaps')
+    if eligible_cache and (store is not None or cache_path is not None):
+        if store is not None:
+            hit = store.get_run(key)
+        else:
+            from .store import read_cached_run
+            hit = read_cached_run(cache_path, key)
+        if hit is not None and hit.get('outcome') not in ('BLOCKED_DATA', 'CODE_FAILURE'):
+            from ...strategy import fitted
+            for part in (hit.get('combo') or {}).get('parts', []):
+                for artifact in part.get('artifacts') or []:
+                    fitted.register_artifact(artifact)
             return dict(hit, cached=True)
     result = _develop(candidate, frames, data_id, env, draws, external)
+    if result.get('outcome') == 'CODE_FAILURE':
+        # Retain failure evidence without occupying the reusable computation
+        # key: a transient failure must not conflict with a later valid result.
+        key = digest(['nonreusable-failure.v1', key, result])
     result['cache_key'] = key
     result['result_id'] = digest({k: v for k, v in result.items() if k not in ('result_id',)})
     if store is not None:
@@ -257,12 +273,15 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
         return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200])
     fit = {e: {k: g.get(k) for k in ('p10', 'p25', 'p75', 'p90', 'n', 'usable')} for e, g in gauges.items()}
     try:
-        res = ev.evaluate(c, bundle, draws=n_draws, seed=seed, min_symbol_trades=floor)
+        sims = {}
+        res = ev.evaluate(c, bundle, draws=n_draws, seed=seed, min_symbol_trades=floor,
+                          raw_runs=sims, traces=graph_fit is not None)
         variants = [s for _, s in _graph_baselines(resolved, env)] if graph_fit is not None else families.baselines(c)
         sub = {s.keys[0] if s.k == 1 else ','.join(s.keys): ev.evaluate(s, bundle, draws=n_draws, seed=seed,
                                                                          min_symbol_trades=floor)
                for s in variants}
-        sims = run_symbols(c, bundle, traces=graph_fit is not None)
+        if not sims:  # compile/dependency preflight returned before simulation
+            sims = run_symbols(c, bundle, traces=graph_fit is not None)
         censored = sum(r['result'].censored_position_count for r in sims.values())
     except Exception as exc:                                  # noqa: BLE001
         return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200], combo=c.as_dict(), combo_hash=c.hash,

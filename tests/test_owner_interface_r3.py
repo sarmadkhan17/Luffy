@@ -300,7 +300,7 @@ def test_w4_unwritable_journal_is_bounded_and_the_loss_recorded(tmp_path, monkey
 
 def check_slot_refusal_is_audited(tmp_path, monkeypatch):
     j, s = _service(tmp_path)
-    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-")) / "ipc"
+    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-", dir="/tmp")) / "ipc"
     server = OwnerIPCServer(s, ipc_dir, class_slots={"control": 0}).start()
     try:
         r = OwnerClient(ipc_dir, "dashboard").call(OwnerRequest(
@@ -313,6 +313,7 @@ def check_slot_refusal_is_audited(tmp_path, monkeypatch):
         assert j.kv_get("control_state") is None
     finally:
         server.stop()
+        shutil.rmtree(ipc_dir.parent, ignore_errors=True)
 
 
 def test_w4_slot_refusal_is_audited(tmp_path, monkeypatch):

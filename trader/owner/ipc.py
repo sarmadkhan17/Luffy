@@ -230,6 +230,7 @@ class OwnerIPCServer:
         self._inode: tuple[int, int] | None = None
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
+        self._owns_flusher = False
 
     def start(self) -> "OwnerIPCServer":
         self._keys = ensure_keys(self.dir, self.channels)
@@ -266,20 +267,18 @@ class OwnerIPCServer:
         self._thread = threading.Thread(target=self._accept_loop, daemon=True,
                                         name="owner-interface")
         self._thread.start()
-        flush = getattr(self.service, "flush_audit", None)
-        if flush is not None:
-            threading.Thread(target=self._flush_loop, args=(flush,), daemon=True,
-                             name="owner-audit-flush").start()
+        # The service owns its single audit flusher. Kernel starts it with the
+        # service; this only starts it for a service nobody else started, and
+        # then stops it with this server so a transport never leaks a thread.
+        starter = getattr(self.service, "start_audit_flusher", None)
+        self._owns_flusher = bool(starter()) if starter is not None else False
         log.info("owner interface listening on %s", self.path)
         return self
 
-    def _flush_loop(self, flush) -> None:
-        while not self._stop.wait(2.0):
-            flush()
-        flush()
-
     def stop(self) -> None:
         self._stop.set()
+        if self._owns_flusher:
+            self.service.stop_audit_flusher(timeout_s=2.0)
         if self._thread:
             self._thread.join(timeout=2)
         if self._sock:

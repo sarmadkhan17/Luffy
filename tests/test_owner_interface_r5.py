@@ -14,6 +14,7 @@ AUD The audit buffer never exceeds its cap; in-flight rows are never
 """
 import json
 import tempfile
+import shutil
 import threading
 import time
 from contextlib import contextmanager
@@ -253,7 +254,7 @@ def check_ipc_duplicate_before_claim(tmp_path, monkeypatch):
         gate.wait(5)
         return real_claim(r, res, now)
     monkeypatch.setattr(s, "_claim", claim)
-    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-")) / "ipc"
+    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-", dir="/tmp")) / "ipc"
     server = OwnerIPCServer(s, ipc_dir).start()
     client = OwnerClient(ipc_dir, "dashboard")
     R = lambda: OwnerRequest("dashboard-dup-claim-1", "resume", "dashboard", "session",
@@ -274,6 +275,7 @@ def check_ipc_duplicate_before_claim(tmp_path, monkeypatch):
     finally:
         gate.set()
         server.stop()
+        shutil.rmtree(ipc_dir.parent, ignore_errors=True)
 
 
 def check_telegram_duplicate_before_execution(world, monkeypatch):
@@ -362,7 +364,7 @@ def test_w3_restart_after_claim_is_outcome_unknown(tmp_path):
 def test_w3_timeout_after_reservation(tmp_path):
     resume = _Slow(0.8)
     j, s = _svc(tmp_path, resume)
-    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-")) / "ipc"
+    ipc_dir = Path(tempfile.mkdtemp(prefix="oi-", dir="/tmp")) / "ipc"
     server = OwnerIPCServer(s, ipc_dir).start()
     R = lambda: OwnerRequest("dashboard-timeout-rsv", "resume", "dashboard", "session",
                              issued_at=time.time())
@@ -375,6 +377,7 @@ def test_w3_timeout_after_reservation(tmp_path):
         assert done.replayed and done.status == Status.ACTIVATED and resume.calls == 1
     finally:
         server.stop()
+        shutil.rmtree(ipc_dir.parent, ignore_errors=True)
 
 
 def test_w3_reservation_failure_never_executes(tmp_path, monkeypatch):

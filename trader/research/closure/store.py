@@ -18,6 +18,14 @@ ONCE_TABLES = ('candidates', 'runs', 'freezes', 'qualifications', 'looks', 'mani
                 'budgets', 'attempts', 'requirements', 'proposals', 'proposal_reservations')
 
 
+def read_cached_run(path, key):
+    """Detached worker reads an existing research cache; never creates/writes."""
+    from contextlib import closing
+    with closing(sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True, timeout=1)) as db:
+        row = db.execute('SELECT payload FROM runs WHERE id=?', (key,)).fetchone()
+    return json.loads(row[0]) if row else None
+
+
 class Store:
     def __init__(self, path):
         self.path = Path(path)
@@ -42,6 +50,8 @@ class Store:
             c.execute('CREATE TABLE IF NOT EXISTS run_index(run_id TEXT PRIMARY KEY, candidate_id TEXT, envelope_id TEXT, '
                       'result_id TEXT, stage TEXT)')
             c.execute('CREATE INDEX IF NOT EXISTS run_index_candidate ON run_index(candidate_id)')
+            c.execute('CREATE INDEX IF NOT EXISTS run_index_envelope ON run_index(envelope_id)')
+            c.execute('CREATE INDEX IF NOT EXISTS run_index_result ON run_index(result_id)')
             c.execute('CREATE TABLE IF NOT EXISTS run_summaries(run_id TEXT PRIMARY KEY, outcome TEXT, reason TEXT, data_id TEXT)')
             c.execute('CREATE TABLE IF NOT EXISTS resource_ledger(seq INTEGER PRIMARY KEY AUTOINCREMENT, study_id TEXT NOT NULL, '
                       'unit_id TEXT NOT NULL, kind TEXT NOT NULL, started_ms INTEGER, ended_ms INTEGER, elapsed_s REAL NOT NULL, '
@@ -102,6 +112,31 @@ class Store:
         assert table in ONCE_TABLES
         return [json.loads(r[0]) for r in self._conn().execute(f'SELECT payload FROM {table} ORDER BY rowid')]
 
+    def runs_for(self, *, envelope_id=None, result_id=None, candidate_id=None):
+        """Select indexed identities before decoding numerical result payloads."""
+        filters = [(k, v) for k, v in (('envelope_id', envelope_id), ('result_id', result_id),
+                                      ('candidate_id', candidate_id)) if v is not None]
+        if not filters:
+            raise ValueError('run selector required')
+        # Legacy put_once records may predate run_index. Narrow them in SQL too;
+        # absence of an acceleration index must never hide existing evidence.
+        indexed = ' AND '.join('i.' + k + '=?' for k, _ in filters)
+        legacy = ' AND '.join("json_extract(r.payload,'$." + k + "')=?" for k, _ in filters)
+        sql = ('SELECT r.payload FROM runs r LEFT JOIN run_index i ON i.run_id=r.id '
+               'WHERE (' + indexed + ') OR (i.run_id IS NULL AND ' + legacy + ') ORDER BY r.rowid')
+        args = [v for _, v in filters]
+        return [json.loads(r[0]) for r in self._conn().execute(sql, args + args)]
+
+    def attempts_for(self, study_id):
+        return [json.loads(r[0]) for r in self._conn().execute(
+            "SELECT payload FROM attempts WHERE json_extract(payload,'$.study_id')=? ORDER BY rowid", (study_id,))]
+
+    def owned_items(self, study_id):
+        legacy = self._conn().execute('SELECT COUNT(*) FROM studies').fetchone()[0] == 1
+        return [dict(r) for r in self._conn().execute(
+            "SELECT * FROM items WHERE json_extract(payload,'$.study_id')=? OR "
+            "(? AND json_extract(payload,'$.study_id') IS NULL) ORDER BY updated_ms,item_id", (study_id, legacy))]
+
     def get_run(self, key):
         return self.get_once('runs', key)
 
@@ -128,12 +163,16 @@ class Store:
         r = self._conn().execute('SELECT * FROM items WHERE item_id=?', (item_id,)).fetchone()
         return dict(r) if r else None
 
-    def items(self, status=None, kind=None):
+    def items(self, status=None, kind=None, candidate_id=None, root=None, parent_candidate_id=None, outcome=None):
         sql, args = 'SELECT * FROM items WHERE 1=1', []
-        for col, v in (('status', status), ('kind', kind)):
+        for col, v in (('status', status), ('kind', kind), ('candidate_id', candidate_id)):
             if v is not None:
                 sql += f' AND {col}=?'
                 args.append(v)
+        for key, value in (('provenance.root', root), ('parent_candidate_id', parent_candidate_id), ('outcome', outcome)):
+            if value is not None:
+                sql += " AND json_extract(payload, '$." + key + "')=?"
+                args.append(value)
         return [dict(r) for r in self._conn().execute(sql + ' ORDER BY updated_ms,item_id', args)]
 
     def set_item(self, item_id, status, reason, now_ms, candidate_id=None, bump=False):

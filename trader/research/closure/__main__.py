@@ -18,9 +18,31 @@ from . import ClosureRefused
 from .store import Store
 
 
+def scheduled_once(expected_revision, *, cfg=None, should_stop=None):
+    """Bounded managed-role callback; no Kernel/venue/trading boot.
+
+    Manager owns lifetime/identity. Existing study lock and schedule_events
+    own single flight and durable progress. Approval gates remain unchanged.
+    """
+    from pathlib import Path
+    from ... import runtime_identity
+    runtime_identity.check_revision(expected_revision, Path(__file__).resolve().parents[3])
+    if cfg is None:
+        from ...core.config import load_config
+        cfg = load_config()
+    from . import study
+    closure = (cfg.get('research') or {}).get('closure') or {}
+    if not (cfg.get('research') or {}).get('enabled', False):
+        return dict(status='NOT_ENABLED')
+    return study.scheduled(cfg, slot_remaining_s=float(closure.get('slot_budget_s', 900)),
+                           should_stop=should_stop or (lambda: False))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
+    scheduled_parser = sub.add_parser('scheduled')
+    scheduled_parser.add_argument('--expected-revision', required=True)
     for name in ('status', 'seal', 'create', 'step'):
         p = sub.add_parser(name)
         p.add_argument('--store', required=True)
@@ -39,7 +61,19 @@ def main(argv=None):
     cal.add_argument('--preset', default='smoke', choices=('smoke', 'final'))
     a = ap.parse_args(argv)
     try:
-        if a.cmd == 'calibrate':
+        if a.cmd == 'scheduled':
+            import signal
+            import threading
+            stopping = threading.Event()
+            def stop(*_):
+                stopping.set()
+            prior = {s: signal.signal(s, stop) for s in (signal.SIGTERM, signal.SIGINT)}
+            try:
+                out = scheduled_once(a.expected_revision, should_stop=stopping.is_set)
+            finally:
+                for sig, handler in prior.items():
+                    signal.signal(sig, handler)
+        elif a.cmd == 'calibrate':
             from . import calibration
             proto = dict(calibration.PROTOCOL, **(calibration.SMOKE if a.preset == 'smoke' else {}))
             out = calibration.run(proto, a.workdir, replicates=a.replicates)

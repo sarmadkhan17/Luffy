@@ -332,15 +332,17 @@ def _run_check(check, tmp_path, monkeypatch, **fixtures):
     import tempfile
     import tests.test_owner_interface as matrix
     fn = getattr(matrix, check)
-    kwargs = {}
-    for name in fn.__code__.co_varnames[:fn.__code__.co_argcount]:
-        kwargs[name] = {"tmp_path": tmp_path, "monkeypatch": monkeypatch,
-                        "ipc_dir": Path(tempfile.mkdtemp(prefix="oi-")) / "ipc",
-                        "world": (Journal(tmp_path / "w.db"),
-                                  __import__("tests.test_owner_recovery",
-                                             fromlist=["x"]).HookVenue()),
-                        **fixtures}[name]
-    return fn(**kwargs)
+    # A short private IPC path under sticky /tmp satisfies real ancestry checks.
+    with tempfile.TemporaryDirectory(prefix="oi-", dir="/tmp") as directory:
+        kwargs = {}
+        for name in fn.__code__.co_varnames[:fn.__code__.co_argcount]:
+            kwargs[name] = {"tmp_path": tmp_path, "monkeypatch": monkeypatch,
+                            "ipc_dir": Path(directory) / "ipc",
+                            "world": (Journal(tmp_path / "w.db"),
+                                      __import__("tests.test_owner_recovery",
+                                                 fromlist=["x"]).HookVenue()),
+                            **fixtures}[name]
+        return fn(**kwargs)
 
 
 def _old_code_only_confirmations(monkeypatch):

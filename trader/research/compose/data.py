@@ -103,10 +103,10 @@ def _load_refs_retrospective(ref_keys, path, retro, gaps, market, first_obs, ids
         store.db.close()
 
 
-def _lineage(df) -> dict:
+def _lineage(df, frame_id=None) -> dict:
     """Candidate input -> source lineage for a served frame: identity, source and revision digest, never values."""
     col = lambda c: sorted({str(x) for x in df[c].dropna().unique()}) if c in df else []   # noqa: E731
-    return dict(read_mode=df.attrs.get('read_mode'), rows=int(len(df)), frame_id=_frame_id(df),
+    return dict(read_mode=df.attrs.get('read_mode'), rows=int(len(df)), frame_id=frame_id if frame_id is not None else _frame_id(df),
                 instrument_ids=col('instrument_id')[:4], sources=col('source')[:4],
                 revision_digest=digest(df['revision_id'].tolist()) if 'revision_id' in df else None,
                 first_ms=int(slices._ms(df).min()), last_ms=int(slices._ms(df).max()))
@@ -200,7 +200,7 @@ def load_external(requires, snapshot_path, derivs_path, symbols, dev_end_ms: int
                         v = derivs[s].get(_SERIES_FOR[r])
                         if v is not None and len(v):
                             ids[f'{r}:{s}'] = _frame_id(v)
-                            provenance[f'{r}:{s}'] = _lineage(v)
+                            provenance[f'{r}:{s}'] = _lineage(v, ids[f'{r}:{s}'])
                             first_obs[r] = min(first_obs.get(r, 1 << 62), int(slices._ms(v).min()))
             finally:
                 feed.db.close()

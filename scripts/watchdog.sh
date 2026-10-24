@@ -29,24 +29,36 @@ act() { if [ -n "${DRY_RUN:-}" ]; then say "DRY_RUN would run: $*"; else "$@" >>
 # never contacts a venue and publishes without requiring Journal writes.
 act ./venv/bin/python -m scripts.monitor --safety-only
 
-# -x: the WHOLE command line must match, so `python -m trader.kernel --status`
-# and shells that merely mention the module are not mistaken for the kernel
-kpid=$(pgrep -f -x '.*/python[0-9.]* -m trader\.kernel' | head -1)
-if [ -z "$kpid" ]; then
-  say "kernel not running -> starting"
-  act ./restart.sh kernel
-else
-  # A kernel younger than STALE_S has not had the chance to beat yet; the file
-  # still holds the previous process's last beat. Judging it would restart
-  # every fresh kernel in a loop.
-  up=$(ps -o etimes= -p "$kpid" | tr -d ' ')
-  age=$(python3 -c 'import json,sys,time; print(int(time.time()-json.load(open(sys.argv[1]))["timestamp"]))' \
-        data/heartbeat_luffy.json 2>/dev/null)
-  if [ "${up:-0}" -gt "$STALE_S" ] && { [ -z "$age" ] || [ "$age" -gt "$STALE_S" ]; }; then
-    say "kernel pid $kpid up ${up}s, heartbeat ${age:-missing}s old (> ${STALE_S}s) -> restarting"
+# Kernel presence comes from the verified, noncreating identity probe (lock
+# table + record + /proc start ticks + real `python -B -m trader.kernel` argv,
+# excluding --status/--panic). It creates no path and takes no lock. Exit codes:
+# 0 verified RUNNING, 10 NONE, 11 STALE_RECORD, anything else = not verifiable,
+# in which case nothing is started or restarted.
+kstatus=$(./venv/bin/python -B -m trader.runtime_identity status-only --root "$DIR" 2>/dev/null)
+krc=$?
+case "$krc" in
+  10|11)
+    say "kernel not running (status-only exit $krc) -> starting"
     act ./restart.sh kernel
-  fi
-fi
+    ;;
+  0)
+    # A kernel younger than STALE_S has not had the chance to beat yet; the file
+    # still holds the previous process's last beat. Judging it would restart
+    # every fresh kernel in a loop.
+    kpid=$(printf '%s' "$kstatus" | python3 -c 'import json,sys; print(json.load(sys.stdin)["record"]["pid"])' 2>/dev/null)
+    # Only a heartbeat bound to THIS kernel instance counts as health; a fresh
+    # beat from another instance is treated as missing, never as a live kernel.
+    age=$(printf '%s' "$kstatus" | python3 -c 'import json,sys; d=json.load(sys.stdin); v=d["heartbeat_age_s"] if d.get("heartbeat_belongs_to_instance") is True else None; print("" if v is None else int(v))' 2>/dev/null)
+    up=$(ps -o etimes= -p "${kpid:-0}" 2>/dev/null | tr -d ' ')
+    if [ "${up:-0}" -gt "$STALE_S" ] && { [ -z "$age" ] || [ "$age" -gt "$STALE_S" ]; }; then
+      say "kernel pid $kpid up ${up}s, heartbeat ${age:-missing}s old (> ${STALE_S}s) -> restarting"
+      act ./restart.sh kernel
+    fi
+    ;;
+  *)
+    say "kernel identity not verifiable (status-only exit $krc) -> no action"
+    ;;
+esac
 
 if ! pgrep -f -x '.*/python[0-9.]* -m trader\.dashboard\.server' >/dev/null; then
   say "dashboard not running -> starting"

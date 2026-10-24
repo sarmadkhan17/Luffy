@@ -75,9 +75,9 @@ def check_revision(expected: str, root: Path = ROOT) -> dict:
     return cur
 
 
-def proc_start_ticks(pid: int) -> int | None:
+def proc_start_ticks(pid: int, proc_root: Path = Path("/proc")) -> int | None:
     try:
-        stat = Path(f"/proc/{pid}/stat").read_text()
+        stat = (proc_root / str(pid) / "stat").read_text()
         return int(stat.rsplit(")", 1)[1].split()[19])
     except Exception:
         return None
@@ -147,6 +147,167 @@ def inspect(root: Path = ROOT, heartbeat_path: Path | None = None) -> dict:
             out["heartbeat_belongs_to_instance"] = False
     if out["legacy_pids"]:
         out["state"] = "LEGACY_UNLOCKED"
+    return out
+
+
+# ── status-only identity (SP-06) ─────────────────────────────────────────────
+# Strictly noncreating: nothing here makes a directory, opens a file for
+# append/create, takes or probes a lock, imports startup/Journal code, loads
+# the environment or touches the network. Evidence that cannot be read is
+# UNKNOWN, never "no kernel".
+STATUS_SCHEMA = "luffy-kernel-status.v1"
+STATUS_EXIT = {"RUNNING": 0, "NONE": 10, "STALE_RECORD": 11}   # any other state: 12
+_UNKNOWN_EXIT = 12
+_PY_FLAGS_WITHOUT_VALUE = {"-B", "-E", "-I", "-O", "-OO", "-S", "-s", "-u", "-b", "-bb", "-q", "-R", "-d", "-v"}
+
+
+def kernel_argv(argv: list[bytes]) -> dict | None:
+    """Parse the argv of a real ``python [flags] -m trader.kernel [opts]`` run.
+
+    Returns its revision/token options, or None when it is not a kernel run
+    (other module, ``-c``, or a ``--status``/``--panic`` invocation)."""
+    try:
+        args = [a.decode() for a in argv if a != b""]
+    except UnicodeDecodeError:
+        return None
+    if len(args) < 3 or not Path(args[0]).name.startswith("python"):
+        return None
+    i = 1
+    while i < len(args) and args[i] in _PY_FLAGS_WITHOUT_VALUE:
+        i += 1
+    if i + 1 >= len(args) or args[i] != "-m" or args[i + 1] != "trader.kernel":
+        return None
+    rest = args[i + 2:]
+    if {"--status", "--panic"} & set(rest):
+        return None
+    out = {"flags": args[1:i], "revision": None, "token": None}
+    for name, key in (("--expect-revision", "revision"), ("--bootstrap-token", "token")):
+        for j, a in enumerate(rest):
+            if a == name and j + 1 < len(rest):
+                out[key] = rest[j + 1]
+            elif a.startswith(name + "="):
+                out[key] = a.split("=", 1)[1]
+    return out
+
+
+def kernel_processes(root: Path, proc_root: Path = Path("/proc")) -> tuple[list[dict], list[int]]:
+    """(kernel runs whose cwd is ``root``, pids whose cmdline/cwd could not be read).
+
+    A process that vanishes mid-read is not ambiguity; a permission failure is."""
+    found, ambiguous = [], []
+    me = os.getpid()
+    for entry in proc_root.iterdir():
+        if not entry.name.isdigit() or int(entry.name) == me:
+            continue
+        try:
+            argv = (entry / "cmdline").read_bytes().split(b"\0")
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+        except OSError:
+            ambiguous.append(int(entry.name))
+            continue
+        parsed = kernel_argv(argv)
+        if parsed is None:
+            continue
+        try:
+            cwd = Path(os.readlink(entry / "cwd"))
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+        except OSError:
+            ambiguous.append(int(entry.name))
+            continue
+        if cwd == root:
+            found.append({"pid": int(entry.name), "start_ticks": proc_start_ticks(int(entry.name), proc_root),
+                          **{k: parsed[k] for k in ("revision", "token", "flags")}})
+    return found, ambiguous
+
+
+def lock_holders(lock_path: Path, locks_file: Path = Path("/proc/locks")) -> list[int] | None:
+    """Pids holding a flock on ``lock_path`` per the kernel's lock table; [] when
+    the file is absent or unlocked; None when the table cannot be trusted.
+
+    Reading /proc/locks neither opens nor locks the file, so it cannot make a
+    starting Kernel's non-blocking acquire fail."""
+    try:
+        st = os.stat(lock_path)
+    except FileNotFoundError:
+        return []
+    except OSError:
+        return None
+    try:
+        text = locks_file.read_text()
+    except OSError:
+        return None
+    want = f"{os.major(st.st_dev):02x}:{os.minor(st.st_dev):02x}:{st.st_ino}"
+    holders = []
+    for line in text.splitlines():
+        f = line.split()
+        if "FLOCK" in f and want in f:
+            try:
+                holders.append(int(f[f.index(want) - 1]))
+            except (ValueError, IndexError):
+                return None
+    return holders
+
+
+def status_only(root: Path = ROOT, *, heartbeat_path: Path | None = None,
+                proc_root: Path = Path("/proc"), locks_file: Path = Path("/proc/locks")) -> dict:
+    """Noncreating verified kernel identity: RUNNING / NONE / STALE_RECORD /
+    UNLOCKED_PROCESS / UNKNOWN. Only RUNNING+verified licenses inference that a
+    kernel is alive; only NONE / STALE_RECORD license inference that none is."""
+    root = Path(root).resolve()
+    lock_path, rec_path = _paths(root)
+    reasons: list[str] = []
+    rec = None
+    try:
+        text = rec_path.read_text()
+    except FileNotFoundError:
+        text = None
+    except OSError:
+        text = None
+        reasons.append("record_unreadable")
+    if text is not None:
+        rec = _read_record(rec_path)
+        if rec is None:
+            reasons.append("record_malformed")
+    holders = lock_holders(lock_path, locks_file)
+    if holders is None:
+        reasons.append("lock_table_unavailable")
+    procs, ambiguous = kernel_processes(root, proc_root)
+    if ambiguous:
+        reasons.append("process_table_ambiguous")
+    out = {"schema": STATUS_SCHEMA, "state": "UNKNOWN", "reasons": reasons, "record": rec,
+           "verified": False, "holder_pids": holders or [], "processes": procs,
+           "heartbeat_belongs_to_instance": None, "heartbeat_age_s": None}
+    if reasons:
+        return out
+    held = bool(holders)
+    ticks = proc_start_ticks(rec["pid"], proc_root) if rec else None
+    alive = bool(rec) and ticks == rec["start_ticks"]
+    if held:
+        if rec is None:
+            reasons.append("lock_held_without_record")
+        elif rec["pid"] not in holders or not alive:
+            reasons.append("record_does_not_match_lock_holder")
+        elif not any(p["pid"] == rec["pid"] for p in procs):
+            reasons.append("holder_not_a_kernel_run")
+        else:
+            out.update(state="RUNNING", verified=True)
+            try:
+                hb = json.loads((heartbeat_path or root / "data" / "heartbeat_luffy.json").read_text())
+                bound = rec.get("heartbeat_instance_id")
+                out["heartbeat_belongs_to_instance"] = bound is not None and hb.get("instance_id") == bound
+                if out["heartbeat_belongs_to_instance"] and isinstance(hb.get("timestamp"), (int, float)):
+                    out["heartbeat_age_s"] = max(0, int(time.time() - hb["timestamp"]))
+            except Exception:
+                out["heartbeat_belongs_to_instance"] = False
+        return out
+    if procs:
+        out["state"] = "UNLOCKED_PROCESS"      # booting before its lock, or a legacy run
+    elif alive:
+        reasons.append("record_pid_alive_without_lock")
+    else:
+        out["state"] = "STALE_RECORD" if rec else "NONE"
     return out
 
 
@@ -230,6 +391,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="runtime_identity")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
+    so = sub.add_parser("status-only")
+    so.add_argument("--root", type=Path, default=ROOT)
     v = sub.add_parser("verify")
     v.add_argument("--expect-revision", required=True)
     s = sub.add_parser("stop")
@@ -238,6 +401,10 @@ def main(argv=None) -> int:
     if a.cmd == "status":
         print(json.dumps(inspect(), indent=2, default=str))
         return 0
+    if a.cmd == "status-only":
+        result = status_only(a.root)
+        print(json.dumps(result, sort_keys=True, default=str))
+        return STATUS_EXIT.get(result["state"], _UNKNOWN_EXIT)
     if a.cmd == "verify":
         try:
             print(json.dumps(check_revision(a.expect_revision)))

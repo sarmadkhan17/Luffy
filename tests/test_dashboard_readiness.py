@@ -263,6 +263,7 @@ def test_actual_kernel_boot_marks_complete_only_after_success(monkeypatch, fail)
     from trader import kernel
     from trader.core.types import MarketType, ControlState
     from trader.observability import stage5_activation
+    from trader.agents import macro_schedule
     k = object.__new__(kernel.Kernel)
     k._boot_complete = True  # A failed retry cannot retain a prior completion flag.
     k.market_type = MarketType.FUTURES; k.state_machine = SimpleNamespace(state=ControlState.FROZEN)
@@ -273,6 +274,12 @@ def test_actual_kernel_boot_marks_complete_only_after_success(monkeypatch, fail)
     k._filter_universe_to_venue = lambda: None
     k.supervisor = SimpleNamespace(pass_once=lambda **kw: SimpleNamespace(actions={'reconcile': {}}, reasons=[]))
     k.heartbeat = object(); k._start_owner_interface = lambda: None
+    k.macro_guard = object()
+    macro_steps = []
+    def schedule(guard, apply, **kwargs):
+        assert guard is k.macro_guard and apply == k._macro_step
+        return SimpleNamespace(step=lambda: macro_steps.append(k._boot_complete), run=lambda **kw: None)
+    monkeypatch.setattr(macro_schedule, 'MacroSchedule', schedule)
     monkeypatch.setattr(stage5_activation, 'start', lambda *a: None)
     monkeypatch.setattr(kernel, 'start_stall_monitor', lambda *a, **k: None)
     monkeypatch.setattr(kernel.signal, 'signal', lambda *a: None)
@@ -280,15 +287,17 @@ def test_actual_kernel_boot_marks_complete_only_after_success(monkeypatch, fail)
     if fail:
         with pytest.raises(RuntimeError, match='fixture boot failure'): k.boot()
         assert k._boot_complete is False
+        assert macro_steps == []
     else:
         k.boot(); assert k._boot_complete is True
+        assert macro_steps == [False]
 
 
 def test_actual_cycle_publishes_boot_and_stop_truth_after_statistics():
     tree = ast.parse((ROOT / 'trader/kernel.py').read_text())
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Kernel')
     cycle = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'cycle')
-    expression = next(n for n in cycle.body if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call)
+    expression = next(n for n in ast.walk(cycle) if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call)
                       and isinstance(n.value.func, ast.Attribute) and n.value.func.attr == 'beat')
     records = []
     for complete, stopping, control in ((False, False, 'FROZEN'), (True, False, 'FROZEN'),
@@ -378,8 +387,12 @@ def test_actual_restart_orders_both_gates_before_process_effects(ready, tmp_path
     events = tmp_path / 'events'
     shim = venv / 'python'
     shim.write_text('#!' + sys.executable + '\n' + '''import json,os,sys
-with open(os.environ['OBS02_EVENTS'],'a') as out: out.write(sys.argv[2]+'\\n')
-if sys.argv[2].endswith('dashboard.phase'):
+mod = sys.argv[3] if sys.argv[1] == '-B' else sys.argv[2]
+with open(os.environ['OBS02_EVENTS'],'a') as out:
+    out.write(('managed-launch ' + ' '.join(sys.argv[4:]) if mod == 'trader.observability.managed' else mod)+'\\n')
+if mod == 'trader.observability.managed':
+    raise SystemExit(0)  # SP-05 managed dashboard launch: recorded only, no real service
+if mod.endswith('dashboard.phase'):
     sys.path.insert(0, os.environ['OBS02_REPO'])
     from trader import runtime_identity as ri
     from trader.observability import dashboard_readiness as gate
@@ -407,10 +420,11 @@ raise SystemExit(0 if allow else 1)
     else:
         import time
         for _ in range(100):
-            if 'setsid' in events.read_text(): break
+            if 'managed-launch' in events.read_text(): break
             time.sleep(.01)
         assert events.read_text().splitlines()[0] == 'trader.dashboard.phase'
-        assert 'setsid' in events.read_text()
+        assert 'managed-launch launch --role dashboard' in events.read_text()
+        assert 'setsid' not in events.read_text()  # no unmanaged fallback
     assert (result.returncode == 0) == (preflight and readiness)
 
 
@@ -447,8 +461,20 @@ def test_original_launcher_selected_dashboard_without_boot_evidence(tmp_path):
 
 
 def test_run01_groundwork_is_reused_verbatim():
-    expected = subprocess.check_output(['git', 'show', '0ecaad8:trader/runtime_identity.py'], cwd=ROOT)
-    assert Path(ri.__file__).read_bytes() == expected
+    # SP-06 deliberately ADDED a noncreating status-only path (and a proc_root
+    # parameter on proc_start_ticks). The RUN-01 singleton/stop/revision
+    # behaviour must still be definition-for-definition identical to the baseline.
+    expected = ast.parse(subprocess.check_output(['git', 'show', '0ecaad8:trader/runtime_identity.py'], cwd=ROOT).decode())
+    current = ast.parse(Path(ri.__file__).read_text())
+    def defs(tree):
+        return {n.name: ast.dump(n) for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+    old, new = defs(expected), defs(current)
+    for name in ('AlreadyRunning', 'WrongRevision', '_git', 'code_revision', 'check_revision', '_paths',
+                 '_read_record', '_lock_held_elsewhere', 'legacy_kernel_pids', 'inspect', 'KernelInstance',
+                 'stop_kernel'):
+        assert new[name] == old[name], name
+    assert set(old) - set(new) == set()
+    assert {'status_only', 'kernel_argv', 'kernel_processes', 'lock_holders'} <= set(new) - set(old) | {'proc_start_ticks'}
 
 
 def test_absent_identity_refuses_without_creating_runtime_files(tmp_path, monkeypatch):

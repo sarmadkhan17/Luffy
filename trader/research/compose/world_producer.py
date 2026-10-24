@@ -95,12 +95,12 @@ class ShortlistDataset:
         return sorted(s for _, s in sorted(scored)[:self.n])
 
 
-def produce_rows(frames: dict, tf: str, cuts, *, retrospective: bool, shortlist: int = SHORTLIST) -> list:
+def iter_rows(frames: dict, tf: str, cuts, *, retrospective: bool, shortlist: int = SHORTLIST):
     """[(as_of_ms, payload_json)] for each cut that yields a model. A cut whose model cannot be built is simply absent
     (retention gaps stay gaps; nothing is filled)."""
     ds = ShortlistDataset(dataset_from_frames(frames, tf, retrospective=retrospective), shortlist)
-    out = []
-    for as_of in list(cuts)[:MAX_CUTS]:
+    from itertools import islice
+    for as_of in islice(cuts, MAX_CUTS):
         try:
             model = WP.build(ds, int(as_of), f'research-world:{int(as_of)}')
             scope = 'retrospective_observation' if retrospective else 'point_in_time'
@@ -143,8 +143,12 @@ def produce_rows(frames: dict, tf: str, cuts, *, retrospective: bool, shortlist:
         receipt['producer_id'] = 'research.compose.world_producer.v1'
         payload = dict(as_of_ms=int(as_of), world_model=receipt, producer='research.compose.world_producer.v1',
                        shortlist=int(shortlist), evidence_scope='retrospective_observation' if retrospective else 'point_in_time')
-        out.append((int(as_of), json.dumps(payload, sort_keys=True, allow_nan=False)))
-    return out
+        yield int(as_of), json.dumps(payload, sort_keys=True, allow_nan=False)
+
+
+def produce_rows(frames: dict, tf: str, cuts, *, retrospective: bool, shortlist: int = SHORTLIST) -> list:
+    """Compatibility list API; store production streams through iter_rows."""
+    return list(iter_rows(frames, tf, cuts, retrospective=retrospective, shortlist=shortlist))
 
 
 def snapshot_context(snapshot):
@@ -179,12 +183,21 @@ def write_store(path, rows) -> dict:
     path = Path(path)
     tmp = path.with_suffix('.pending')
     tmp.unlink(missing_ok=True)
-    with closing(sqlite3.connect(tmp)) as db:
-        db.execute('CREATE TABLE scans(as_of_ms INTEGER NOT NULL, payload TEXT NOT NULL)')
-        db.executemany('INSERT INTO scans VALUES (?,?)', rows)
-        db.commit()
-    tmp.replace(path)
-    return dict(path=str(path), cuts=len(rows))
+    count = 0
+    def counted():
+        nonlocal count
+        for row in rows:
+            count += 1
+            yield row
+    try:
+        with closing(sqlite3.connect(tmp)) as db:
+            db.execute('CREATE TABLE scans(as_of_ms INTEGER NOT NULL, payload TEXT NOT NULL)')
+            db.executemany('INSERT INTO scans VALUES (?,?)', counted())
+            db.commit()
+        tmp.replace(path)
+        return dict(path=str(path), cuts=count)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def produce_store(frames: dict, tf: str, path, *, start_ms: int, end_ms: int, retrospective: bool, shortlist: int = SHORTLIST) -> dict:
@@ -194,7 +207,7 @@ def produce_store(frames: dict, tf: str, path, *, start_ms: int, end_ms: int, re
     cuts = range(first, int(end_ms) + 1, step)
     if len(cuts) > MAX_CUTS:
         raise ValueError(f'world_cuts_exceed_bound:{len(cuts)}>{MAX_CUTS}')
-    rows = produce_rows(frames, tf, cuts, retrospective=retrospective, shortlist=shortlist)
+    rows = iter_rows(frames, tf, cuts, retrospective=retrospective, shortlist=shortlist)
     out = write_store(path, rows)
     out.update(cuts_requested=len(cuts), shortlist=int(shortlist), retrospective=bool(retrospective),
                window=CognitionConfig().window)

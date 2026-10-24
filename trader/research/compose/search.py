@@ -95,7 +95,7 @@ def validate_budget(b):
 
 
 def _attempts(store, study_id):
-    return [a for a in store.all_once('attempts') if a['study_id'] == study_id]
+    return store.attempts_for(study_id)
 
 
 def _fit_specs(node):
