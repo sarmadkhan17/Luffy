@@ -227,6 +227,7 @@ class Kernel:
         pop = []
         requires: set = set()
         population_specs: list = []
+        self._strategy_inputs = {}
         spec_exits: dict = {}
         self._spec_exits = spec_exits
         self._spec_rows = []
@@ -247,6 +248,7 @@ class Kernel:
             family = f"spec:{spec.id}"
             requires.update(compiled.data_requires)
             population_specs.append(compiled.spec)
+            self._strategy_inputs[spec.id] = (compiled.spec, tuple(compiled.data_requires))
             # the geometry this spec was validated with must be the geometry
             # the ExitEngine runs, or the backtest evidenced a different
             # strategy than the one trading
@@ -989,9 +991,10 @@ class Kernel:
             bound_iid = InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol'])
             self.feed.bind_instrument(symbol,bound_iid)
         try:
-            limits = getattr(self, '_history_limits', {}) or {}
+            plan = getattr(self, '_scan_plan', {}).get(symbol)
+            limits = plan.limits if plan is not None else (getattr(self, '_history_limits', {}) or {})
             # configured frames PLUS the timeframes the admitted specs themselves name (their own and htf sources); only the selected symbol
-            tfs_all = list(dict.fromkeys(self.cfg['timeframes']['context'] + [exec_tf] + sorted(limits)))
+            tfs_all = sorted(limits) if plan is not None else list(dict.fromkeys(self.cfg['timeframes']['context'] + [exec_tf] + sorted(limits)))
             if not any(limits.get(t, 400) != 400 for t in tfs_all) and set(tfs_all) == set(self.cfg['timeframes']['context'] + [exec_tf]):
                 dfs = self.feed.fetch_multi(symbol, self.cfg['timeframes']['context'] + [exec_tf])
             else:                                   # group timeframes by the history each really needs; only the selected symbol
@@ -1012,7 +1015,9 @@ class Kernel:
         # context, rather than reading it again and mixing two observations.
         shared_btc_cut = None
         try:
-            if symbol == 'BTC/USDT' and '1h' in dfs:
+            if plan is not None:
+                btc = None  # exact strategy BTC frames are supplied below
+            elif symbol == 'BTC/USDT' and '1h' in dfs:
                 btc = dfs['1h']
             elif (getattr(self, '_owned_analysis_batch', False)
                     and getattr(self, '_btc_ctx_receipt', None)
@@ -1038,9 +1043,10 @@ class Kernel:
         for key, frame in dfs.items():
             tf = '1h' if key == 'BTC_1h' else key
             try:
-                current, reason = mp.current_frame_status(frame, tf, as_of, self.feed.ttl.get(tf, 300),
-                    instrument_id=expected_iid if key != 'BTC_1h' else None,
-                    source=expected_source if key != 'BTC_1h' else None)
+                with stage_scope('scan.validation', symbol=symbol):
+                    current, reason = mp.current_frame_status(frame, tf, as_of, self.feed.ttl.get(tf, 300),
+                        instrument_id=expected_iid if key != 'BTC_1h' else None,
+                        source=expected_source if key != 'BTC_1h' else None)
             except Exception:
                 current, reason = None, 'invalid'
             reasons[key] = reason
@@ -1072,9 +1078,13 @@ class Kernel:
         # Only revisions that can affect these supplied market bars are current
         # inputs. Research/replay keep the full historical loader.
         window_start = min(int(mp.ms(frame['ts'])[0]) for frame in dfs.values())
-        derivs = self._derivs_for(symbol, as_of_ms=as_of, window_start_ms=window_start)
+        if plan is not None:
+            from .strategy.spec_evidence import load_derivs
+            derivs = load_derivs(symbol, plan.requires, as_of_ms=as_of, window_start_ms=window_start) if any(r in ('funding','open_interest','taker_ratio','ls_ratio','ls_account_ratio','basis') for r in plan.requires) else {}
+        else:
+            derivs = self._derivs_for(symbol, as_of_ms=as_of, window_start_ms=window_start)
         derivs = {key: frame for key, frame in (derivs or {}).items() if frame['instrument_id'].eq(iid).all()}
-        market = self._market_for(as_of_ms=as_of)
+        market = ({key: frame for key, frame in getattr(self, '_scan_references', {}).items() if 'ref:' + key in plan.requires} if plan is not None else self._market_for(as_of_ms=as_of))
         lineage = dict(schema_version=mp.SCHEMA, as_of_ms=as_of, instrument_id=iid,
                        frames={tf: frame['revision_id'].tolist() for tf, frame in dfs.items()},
                        derivs={key: frame['revision_id'].tolist() for key, frame in (derivs or {}).items()},
@@ -1110,9 +1120,17 @@ class Kernel:
                         ts=dt.datetime.fromtimestamp(as_of/1000, dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs, market_type=self.market_type.value,
                         btc_ctx=btc_ctx, universe=safe_universe, derivs=derivs, market=market,
-                        anchor_frames=getattr(self,'_context_anchor_frames',{}),
+                        anchor_frames=({'BTC/USDT': {tf: frame for tf, frame in getattr(self,'_scan_btc', {}).items() if tf in plan.btc}} if plan is not None else getattr(self,'_context_anchor_frames',{})),
                         instrument_binding_json=instrument_binding,
                         market_provenance_parts=lineage)
+        if plan is not None and plan.btc:
+            from .data.market_provenance import usable_current
+            btc_frames = {tf: usable_current(frame, tf, as_of, self.feed.ttl.get(tf, 300))
+                          for tf, frame in getattr(self, '_scan_btc', {}).items()}
+            snapshot.btc_frames = {tf: frame for tf, frame in btc_frames.items() if frame is not None}
+            if '1h' in snapshot.btc_frames:
+                snapshot.dfs['BTC_1h'] = snapshot.btc_frames['1h']
+            lineage['btc_frames'] = {tf: frame['revision_id'].tolist() for tf, frame in snapshot.btc_frames.items()}
         diagnostic.update(status='AVAILABLE', reason='valid')
         return snapshot
 
@@ -1290,6 +1308,9 @@ class Kernel:
     # ── main loop ─────────────────────────────────────────────────────────
     @stage('deep.cycle')
     def cycle(self) -> dict:
+        if getattr(self, "_lean_scan", False):
+            from .scheduling.lean_scan import run
+            return run(self)
         stats = {"deep_processed": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
         self._portfolio_market = {}
@@ -1695,17 +1716,23 @@ class Kernel:
             open_positions=risk_positions,
             equity=equity, closed_trades_count=closed_count,
             market_type=self.market_type.value)
-        try:
-            from .learning import capture as lc
-            with self.journal._tx() as capture_db:
-                lc.safely(capture_db, 'decision:'+d.id, lc.record_action, 'decision:'+d.id,
-                    dict(vars(sizing), config_risk_sha256=lc.L.digest(self.cfg['risk']),
-                         input=dict(state=risk_state,symbol=d.symbol,price=snap.price,atr=a,
-                             stop_fraction=stop_frac,equity=equity,closed_trades_count=closed_count,
-                             market_type=self.market_type.value,open_positions=[vars(p) for p in risk_positions])),
-                    int(time.time()*1000), risk=True)
-        except Exception:
-            pass
+        if getattr(self, '_lean_scan', False):
+            d._lean_risk_inputs = dict(sizing=vars(sizing).copy(), state=risk_state,
+                symbol=d.symbol, price=snap.price, atr=a, stop_fraction=stop_frac,
+                equity=equity, closed_trades_count=closed_count, market_type=self.market_type.value,
+                open_positions=[vars(p) for p in risk_positions])
+        else:
+            try:
+                from .learning import capture as lc
+                with self.journal._tx() as capture_db:
+                    lc.safely(capture_db, 'decision:'+d.id, lc.record_action, 'decision:'+d.id,
+                        dict(vars(sizing), config_risk_sha256=lc.L.digest(self.cfg['risk']),
+                             input=dict(state=risk_state,symbol=d.symbol,price=snap.price,atr=a,
+                                 stop_fraction=stop_frac,equity=equity,closed_trades_count=closed_count,
+                                 market_type=self.market_type.value,open_positions=[vars(p) for p in risk_positions])),
+                        int(time.time()*1000), risk=True)
+            except Exception:
+                pass
         if not sizing.ok:
             d.skip_reason = f"risk: {sizing.reason}"
             d.reason_codes = [getattr(sizing, "code", "")]
@@ -2072,7 +2099,9 @@ class Kernel:
             observation, frames, memberships = observe(self, exposure)
             policy = A.AdmissionPolicy.from_config(self.cfg)
             with stage_scope('admission.select_persist_verify'):
-                receipt = A.persist(self.journal, observation, policy)
+                receipt = (A.admit(observation, policy, A.initial_state())
+                    if getattr(self, "_lean_scan", False) and observation.get("selection") == "volume"
+                    else A.persist(self.journal, observation, policy))
                 batch = A.VerifiedAdmissionBatch(receipt)
                 receipt = batch.receipt
             self._verified_admission_batch = batch
@@ -2151,7 +2180,8 @@ class Kernel:
         with stage_scope('deep.market_data', symbol=symbol):
             snap = self._snapshot_for(symbol, universe=peers)
         if snap is not None:
-            if ((self.cfg.get('research') or {}).get('closure') or {}).get('world_live_enabled', False):
+            plan = getattr(self, '_scan_plan', {}).get(symbol)
+            if (plan.world if plan is not None else ((self.cfg.get('research') or {}).get('closure') or {}).get('world_live_enabled', False)):
                 from .research.compose.world_producer import snapshot_context
                 with stage_scope('deep.world_context', symbol=symbol):
                     snap.world = snapshot_context(snap)

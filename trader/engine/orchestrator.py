@@ -103,7 +103,8 @@ class Orchestrator:
 
     def decide(self, snap: Snapshot, population: list[tuple],
                entry_allowed: bool = True,
-               blocked_reason: str = "") -> Decision:
+               blocked_reason: str = "", *, measurements: bool = True,
+               persist_cooldown: bool = True) -> Decision:
         receipts = self._receipts_type(self.diagnostics_enabled, self.diagnostics_cap)
         cycle_id = new_id("cyc")
         regime_info = classify(snap.df("15m"), snap.df("1h"))
@@ -115,7 +116,7 @@ class Orchestrator:
 
         # ── collect votes ────────────────────────────────────────────────
         votes: list[Vote] = []
-        for name, analyst in self.analysts.items():
+        for name, analyst in (self.analysts.items() if measurements else ()):
             try:
                 v = analyst.evaluate(snap)
             except Exception as e:
@@ -224,11 +225,12 @@ class Orchestrator:
                     if age_min < 45:
                         action = Action.HOLD
                         net = _clean(net)  # keep score for transparency
-                        self.journal.log_control_event(
-                            "signal_cooldown", "orchestrator",
-                            detail={"symbol": snap.symbol,
-                                    "since": last[0]["ts"][:19],
-                                    "action": action.value})
+                        if persist_cooldown:
+                            self.journal.log_control_event(
+                                "signal_cooldown", "orchestrator",
+                                detail={"symbol": snap.symbol,
+                                        "since": last[0]["ts"][:19],
+                                        "action": action.value})
             except Exception as e:
                 log.debug(f"cooldown check failed: {e}")
 
@@ -261,7 +263,7 @@ class Orchestrator:
         return d
 
     def journalize(self, snap: Snapshot, decision: Decision,
-                   market_type: str, mode: str) -> None:
+                   market_type: str, mode: str, *, schedule_outcomes: bool = True) -> None:
         receipt = getattr(snap, 'market_provenance_parts', None)
         if receipt is None and snap.market_provenance_json:
             import json
@@ -278,6 +280,8 @@ class Orchestrator:
         # every directional decision — taken OR skipped — becomes a
         # falsifiable prediction with resolved outcomes. Skipped setups are
         # the majority of evidence; without them the learning loop starves.
+        if not schedule_outcomes:
+            return
         lean = getattr(decision, "gated_lean", None)
         if decision.action != Action.HOLD:
             self.journal.schedule_outcome(

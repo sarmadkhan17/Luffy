@@ -55,6 +55,7 @@ class KernelRuntime:
         self.execution_metrics = dict(status="idle", runs=0, submitted=0, failures=0,
             last_duration_s=None, max_duration_s=None, last_error_type=None)
         self.maintenance = Maintenance(kernel.journal, kernel.cfg, kernel.feed)
+        self.maintenance.apply_learning = self.apply_learning
         self.maintenance.after_outcomes = lambda: analysis_context(self)._record_excursions()
         self.jobs = {
             'commands': Worker('commands', self.commands, interval=1, immediate=True),
@@ -144,6 +145,10 @@ class KernelRuntime:
             k.state_machine.refresh()
             balance, status = k._risk_step()
             state = k.state_machine.refresh()
+            allowed = (k.state_machine.can_enter() and status.get('risk_state') == 'ok'
+                and (status.get('daily_pnl_pct') or 0) > -k.risk.daily_loss_block * 100
+                and not k.executor.recovery_pending())
+            k._record_risk_assessment(state, status, allowed, '' if allowed else 'account_cycle_entry_blocked')
             if k.market_type == MarketType.FUTURES and state != ControlState.HALTED:
                 k.executor.recover_entries()
             with self.lock:
@@ -183,24 +188,13 @@ class KernelRuntime:
     @_read_batch
     def market(self):
         view = analysis_context(self)
-        receipt, frames = view._admission_plan()
-        view._refresh_btc_context()
-        if view.cfg.get('attention', {}).get('admission'):
-            view._refresh_context_anchors()
-        peers = view._peer_frames(view._symbol_roles.peers)
-        with self.lock:
-            funding, oi, aux = deepcopy(self.derivative_inputs)
-        now_ms = int(time.time()*1000)
-        def fresh(kind, symbol, ttl):
-            receipt = aux.get(kind + ':' + symbol)
-            return receipt is not None and 0 <= now_ms - receipt['available_at_ms'] <= ttl * 1000
-        funding = {symbol: value for symbol, value in funding.items()
-                   if fresh('funding', symbol, view._DERIVS_TTL)}
-        oi = {symbol: value for symbol, value in oi.items()
-              if fresh('open_interest', symbol, 900)}
-        view._market_aux.update({key: value for key, value in aux.items()
-            if key.split(':', 1)[1] in (funding if key.startswith('funding:') else oi)})
-        view._prepared_scan = (receipt, frames, peers, funding, oi)
+        from .timing import stage_scope
+        view._lean_scan = True
+        with stage_scope("scan.shortlist"):
+            receipt, frames = view._admission_plan()
+        from .lean_scan import prepare
+        peers = prepare(view)
+        view._prepared_scan = (receipt, frames, peers, {}, {})
         view._prepared_at = time.monotonic()
         with self.lock:
             if self.pending_scan is not None:
@@ -226,6 +220,18 @@ class KernelRuntime:
                 self.last_decision_stats = stats
         finally:
             self.kernel._last_cycle_s = time.monotonic() - start
+
+    def apply_learning(self):
+        # Model updates are independent of trading scans but share their model
+        # lock, so a batch cannot mix two strategy generations.
+        from ..learning.runtime import checkpoint
+        with self.decision_lock:
+            rows = checkpoint(self.kernel.journal, self.kernel.cfg,
+                at_ms=int(time.time()*1000), max_work=8)
+            if any(row.get('result') == 'APPLIED' for row in rows):
+                self.reload_model()
+                self.jobs['market'].trigger()
+        return rows
 
     def queue_portfolio(self, view):
         # Transfer the finished batch to a separate proposal-only consumer.
@@ -470,7 +476,7 @@ class KernelRuntime:
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in
-                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type')}
+                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type', 'input_policy', 'shortlisted', 'no_strategy', 'eligible_strategies', 'requirement_errors', 'persisted_attempts')}
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),

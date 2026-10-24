@@ -333,7 +333,7 @@ class CompiledStrategy:
                     if diagnostic:
                         diagnostic(f"{why}:{tf_}")
                     return None
-            btc = ({"15m": frames["BTC_1h"]}
+            btc = getattr(snap, "btc_frames", None) or ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
             try:
                 world = getattr(snap, "world", None)

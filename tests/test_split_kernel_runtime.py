@@ -31,7 +31,7 @@ def test_complete_schedule_contract(tmp_path):
     k, r = minimal(tmp_path)
     assert {n:w.interval for n,w in r.jobs.items() if w.interval} == {
         'commands':1, 'account':30, 'positions':30, 'market':60, 'candles':15,
-        'strategy_health':3600, 'health':10, 'learning_check':60, 'outcomes':60,
+        'strategy_health':3600, 'health':10, 'learning_apply':60, 'learning_check':60, 'outcomes':60,
         'reports':3600, 'postmortem':21600, 'derivatives':900, 'derivative_inputs':300, 'references':3600}
     assert r.jobs['research'].calendar.hours == (9,21)
     assert r.jobs['validation'].calendar.hours == (3,)
@@ -143,7 +143,7 @@ def test_pending_scan_queue_is_bounded_and_replaces_old_batch(tmp_path, monkeypa
     def view():
         return NS(_refresh_btc_context=lambda:None,cfg={},
                   _admission_plan=lambda:({},{}),_peer_frames=lambda p:{},
-                  _symbol_roles=NS(peers=()),_market_aux={},_DERIVS_TTL=300)
+                  _symbol_roles=NS(peers=(),deep=()),population=[],feed=NS(),_market_aux={},_DERIVS_TTL=300)
     monkeypatch.setattr(module,'analysis_context',lambda runtime:view())
     r.market(); first=r.pending_scan
     r.market()
@@ -235,11 +235,11 @@ def test_shutdown_refuses_new_entry_before_any_venue_read():
     assert 'stopping' in decision.skip_reason
 
 
-def test_scheduled_derivative_inputs_keep_existing_freshness_limits(tmp_path, monkeypatch):
+def test_scan_does_not_consume_unrequested_derivative_inputs(tmp_path, monkeypatch):
     import trader.scheduling.kernel_runtime as module
     k,r=minimal(tmp_path)
     view=NS(_refresh_btc_context=lambda:None,cfg={},_admission_plan=lambda:({},{}),
-            _peer_frames=lambda p:{},_symbol_roles=NS(peers=()),_market_aux={},_DERIVS_TTL=300)
+            _peer_frames=lambda p:{},_symbol_roles=NS(peers=(),deep=()),population=[],feed=NS(),_market_aux={},_DERIVS_TTL=300)
     monkeypatch.setattr(module,'analysis_context',lambda _:view)
     now=int(time.time()*1000)
     r.derivative_inputs=({'BTC/USDT':.01},{'BTC/USDT':{'oi':10}},
@@ -247,7 +247,8 @@ def test_scheduled_derivative_inputs_keep_existing_freshness_limits(tmp_path, mo
          'open_interest:BTC/USDT':{'available_at_ms':now-899000}})
     r.market()
     assert view._prepared_scan[3]=={}
-    assert view._prepared_scan[4]=={'BTC/USDT':{'oi':10}}
+    assert view._prepared_scan[4]=={}
+    assert r.derivative_inputs[1]=={'BTC/USDT':{'oi':10}}  # independent producer untouched
     assert 'funding:BTC/USDT' not in view._market_aux
 
 

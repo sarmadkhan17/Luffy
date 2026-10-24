@@ -82,7 +82,7 @@ def model_coordinated(fn):
     return call
 
 
-MODEL_FIELDS = ('population', '_pop_sig', '_spec_exits', '_spec_rows', '_spec_requires',
+MODEL_FIELDS = ('_strategy_inputs', 'population', '_pop_sig', '_spec_exits', '_spec_rows', '_spec_requires',
                 '_scan_timeframes', '_entry_identities', '_spec_identities', '_identities_loaded_at',
                 '_history_limits', '_history_limit')
 

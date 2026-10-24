@@ -1,7 +1,6 @@
 """Off-cycle outcome, learning and reporting workers.
 
-These jobs cannot submit orders. Learning applications stay at the kernel's
-existing checkpoint. Each dispatch worker exclusively owns its watermark.
+These jobs cannot submit orders. Learning applications run in a separate coordinated worker. Each dispatch worker exclusively owns its watermark.
 """
 import threading
 import time
@@ -12,11 +11,13 @@ from .runtime import Calendar, Worker
 class Maintenance:
     def __init__(self, journal, cfg, feed):
         self.journal, self.cfg, self.feed = journal, cfg, feed
+        self.apply_learning = lambda: []  # runtime installs its coordinated checkpoint
         self._vault_lock = threading.Lock()
         from ..learning.dispatch import Watermark
         self.watermark = Watermark()
         self.jobs = {
             'learning': Worker('learning', self.learning),
+            'learning_apply': Worker('learning-apply', lambda: self.apply_learning(), interval=60),
             'learning_check': Worker('learning-check', self.learning_check, interval=60, immediate=True),
             'outcomes': Worker('outcomes', self.outcomes, interval=60, immediate=True),
             'reports': Worker('reports', self.reports, interval=3600),

@@ -224,6 +224,9 @@ class PaperExecutor:
                    pnl_basis='GROSS_BEFORE_UNAVAILABLE_COSTS', entry_bar_ms=entry_bar,
                    last_bar_ms=entry_bar, initial_risk=policy.initial_r, best=ref,
                    exit_state_json=E.encode(policy,exit_state), exit_semantics_id=inst['exit_semantics_id'])
+        persist = getattr(decision, '_persist_trade_evidence', None)
+        if persist is not None:
+            persist()
         with self.journal._tx() as c:
             c.execute('BEGIN IMMEDIATE')
             if c.execute(f'SELECT id FROM {TABLE} WHERE id=?', (ident,)).fetchone():
@@ -232,6 +235,7 @@ class PaperExecutor:
                 raise ValueError('paper_symbol_already_open')
             c.execute(f"INSERT INTO {TABLE} ({','.join(row)}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
             X.record(c, X.start(ident, identity, policy, exit_state, amount))
+        decision._paper_entry_id = ident
         if self.capture:
             self.capture.book(dict(decision_id=decision.id,intent_id=ident,symbol=snap.symbol.split(':')[0].replace('/',''),
                 side='buy' if side=='long' else 'sell',requested_quantity=amount,phase='pre_paper_execution',

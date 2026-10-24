@@ -212,6 +212,9 @@ class Executor:
         if amount <= 0:
             log.warning(f"ENTRY SKIPPED {sym}: size rounds to zero lots")
             return None
+        persist = getattr(decision, '_persist_trade_evidence', None)
+        if persist is not None:
+            persist()  # storage failure aborts before any submission
         position_id = new_id("pos")
         intent = None
         order = error = None
