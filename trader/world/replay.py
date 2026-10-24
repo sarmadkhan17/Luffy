@@ -6,6 +6,8 @@ its stored model_id and any relationship evidence absent from model states.
 """
 from __future__ import annotations
 
+from types import MappingProxyType
+
 import json
 from dataclasses import dataclass
 from hashlib import sha256
@@ -240,9 +242,11 @@ class WorldHistory:
     """Immutable index of self-contained records by exact historical cut."""
 
     _records: tuple[WorldModelRecord, ...]
+    _models: Mapping[int, WorldModel]
 
     def __init__(self, models: Iterable[WorldModel | WorldModelRecord]):
         by_cut: dict[int, WorldModelRecord] = {}
+        verified = {}
         for item in models:
             if isinstance(item, WorldModel):
                 record = WorldModelRecord.from_model(item)
@@ -250,12 +254,15 @@ class WorldHistory:
                 record = WorldModelRecord.from_json(item.to_json())
             else:
                 raise TypeError("history items must be WorldModel or WorldModelRecord")
-            cut = record.reconstruct().as_of_ms
+            model = record.reconstruct()
+            cut = model.as_of_ms
             prior = by_cut.get(cut)
             if prior is not None and prior.record_id != record.record_id:
                 raise ValueError(f"ambiguous WorldModel at exact cut {cut}")
             by_cut[cut] = record
+            verified[cut] = model
         object.__setattr__(self, "_records", tuple(by_cut[cut] for cut in sorted(by_cut)))
+        object.__setattr__(self, "_models", MappingProxyType(verified))
 
     @classmethod
     def from_json(cls, historical_json: str) -> WorldHistory:
@@ -271,10 +278,14 @@ class WorldHistory:
 
     def get_exact(self, as_of_ms: int) -> WorldModel:
         _timestamp(as_of_ms, "as_of_ms")
-        for record in self._records:
-            if record.reconstruct().as_of_ms == as_of_ms:
-                return record.reconstruct()
-        raise LookupError(f"no historical WorldModel at exact cut {as_of_ms}")
+        try:
+            return self._models[as_of_ms]
+        except KeyError:
+            raise LookupError(f"no historical WorldModel at exact cut {as_of_ms}") from None
+
+    @property
+    def cuts(self) -> tuple[int, ...]:
+        return tuple(sorted(self._models))
 
     def to_json(self) -> str:
         return _canonical([json.loads(record.to_json()) for record in self._records])

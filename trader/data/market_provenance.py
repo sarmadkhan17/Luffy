@@ -648,13 +648,24 @@ def retrospective_load(conn, key, *, cut_ms, tf=None, start_ms=0,
     if end_ms is not None:
         clauses += ' AND event_ms<?'
         args.append(end_ms)
-    rows = conn.execute('SELECT record_json,revision_id,event_ms,available_ms,observed_ms '
-        'FROM (SELECT *,ROW_NUMBER() OVER (PARTITION BY event_ms '
-        'ORDER BY observed_ms DESC,rowid DESC) ordinal FROM market_revisions WHERE '+
-        clauses+') WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?', args+[limit]).fetchall()
+    # Bounded tail: first the `limit` newest DISTINCT event times inside the exact bounds (a backward walk of the
+    # (series_key, event_ms, ...) index, touching only those keys), THEN the latest revision of each of those times
+    # (observed_ms DESC, rowid DESC), then their bodies. Raw revision rows are never limited before the per-event pick and
+    # invalid/corrupt latest revisions are never filtered out of that pick, so a bad latest revision cannot fall back to an
+    # older valid one. Work is bounded by the requested tail, not by the series' history.
+    times = [r[0] for r in conn.execute(
+        'SELECT DISTINCT event_ms FROM market_revisions WHERE ' + clauses + ' ORDER BY event_ms DESC LIMIT ?', args + [limit])]
+    rows = []
+    if times:
+        rows = conn.execute(
+            'SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM market_revisions WHERE rowid IN ('
+            'SELECT selected_rowid FROM (SELECT rowid AS selected_rowid,ROW_NUMBER() OVER (PARTITION BY event_ms '
+            'ORDER BY observed_ms DESC,rowid DESC) ordinal FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=?) '
+            'WHERE ordinal=1) ORDER BY event_ms DESC', (key, min(times), max(times))).fetchall()
     selected = []
+    text_cache = {}  # one bounded load; shared immutable bodies still have their hash verified on every reference
     for raw, rid, event, available, observed in reversed(rows):
-        r = read_record(conn, raw)
+        r = read_record(conn, raw, text_cache=text_cache)
         value = {k:r[k] for k in VALUES if k in r}
         body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
         if r['content_hash'] != digest({'raw':json.loads(r['raw_json']),'value':value}) or r['revision_id'] != digest(body):

@@ -76,7 +76,7 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
            bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None,
-           fill=None, exit_sig_available=None):
+           fill=None, exit_sig_available=None, detail_out=None):
     """One trade signalled on bar `i`: (exit_i, stop distance, P&L per unit
     of size). `fill` is `fill_timing.fills`: the entry fills at the OPEN of
     bar fill[i], and a declared signal exit seen on bar j at the open of bar
@@ -95,6 +95,8 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     px = float(df["open"].iloc[f])
     slip = atr[i] * slip_frac
     entry = px + sign * slip
+    if detail_out is not None:      # observation only: the ACTUAL slipped fill, never read back by the engine
+        detail_out.update(entry=float(entry), entry_open=float(px), fill_bar=int(f))
     n = len(closes)
     # stop distance is measured from the CLOSE (as the old engine does),
     # then applied from the slipped entry
@@ -207,6 +209,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     hours = (held_to - e) * bar_minutes / 60.0
     if fund_arr is None:
         carry = abs(funding_8h) * (hours / 8.0)
+        basis = 'flat_estimate'
     else:
         held = fund_arr[e:held_to]
         known = held[np.isfinite(held)]
@@ -215,7 +218,29 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
         # conservative charge for every bar it did not
         carry = float(np.sum(known) * sign * per_bar) \
             + abs(funding_8h) * (len(held) - len(known)) * per_bar
+        basis = 'actual_signed' if len(known) == len(held) else 'mixed_actual_and_flat'
+    if detail_out is not None:
+        detail_out.update(exit_px=float(exit_px), exit_bar=int(exit_i), held_to=int(held_to), fees_per_unit=float(fees),
+                          carry_per_unit=float(carry * exit_px), funding_basis=basis)
     return exit_i, sl_dist, gross - fees - carry * exit_px
+
+
+ENTRY_REFUSAL = 'exit_geometry_nonpositive'
+
+
+def _try_trade(*args, **kw):
+    """`_trade`, or None when the canonical exit policy refuses THIS entry for
+    unexecutable price geometry (a stop or target at or below zero), as the live
+    entry path does: nothing fills, no cost or exposure, later signals still
+    evaluate. Every other error, including an invalid reference price or ATR,
+    propagates. Both `simulate` and `trade_table` enter through here so the
+    same entries are eligible in each."""
+    try:
+        return _trade(*args, **kw)
+    except ValueError as e:
+        if str(e) != ENTRY_REFUSAL:
+            raise
+        return None
 
 
 def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
@@ -261,10 +286,13 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
         for i in range(max(WARMUP, int(first_bar)), n - 1):
             if fill[i] < 0 or not np.isfinite(atr[i]) or atr[i] <= 0:
                 continue
-            e, sl_dist, unit = _trade(
+            trade = _try_trade(
                 i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
                 fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
                 funding_8h, bar_minutes, fill=fill, exit_sig_available=exit_sig_available)
+            if trade is None:               # refused entry: no trade can open here
+                continue
+            e, sl_dist, unit = trade
             ex[i], r[i], pos[i] = e, unit / sl_dist, closes[i] / sl_dist
         out[side] = (ex, r, pos)
     return out
@@ -305,7 +333,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              funding: np.ndarray | None = None,
              fills_out: list | None = None,
              score_from: int = 0, exit_evidence_out=None, exit_sig_available=None,
-             fill_delay_bars: int = 0) -> BacktestResult:
+             fill_delay_bars: int = 0, trace_out: list | None = None) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -368,6 +396,21 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         fill = np.where(fill >= 0, fill + int(fill_delay_bars), fill)
         fill = np.where(fill >= n, -1, fill)
 
+    def mark_funding(i, f, end, side):
+        # Same accrual convention as _trade: one bar's signed eight-hour rate
+        # allocated by bar duration, with the existing conservative missing-rate estimate.
+        sign = 1.0 if side == "long" else -1.0
+        rates = np.full(max(end - (f - 1), 0), abs(funding_8h))
+        if fund_arr is not None:
+            raw = fund_arr[f - 1:end]
+            rates = np.where(np.isfinite(raw), raw * sign, abs(funding_8h))
+        step_minutes = bar_minutes
+        if getattr(exit_spec, "_exit_semantics_id", None) is not None:
+            from ..core.types import TF_MS
+            step_minutes = TF_MS[exit_spec._exit_timeframe] / 60_000
+        prefix = np.cumsum(rates) * step_minutes / 480.0
+        return tuple(float(v) for v in prefix[:max(end - f, 0)])
+
     for raw_i in candidates:
         i = int(raw_i)
         if i < cursor or i >= n - 1 or fill[i] < 0:
@@ -376,15 +419,27 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
             continue
         side = "long" if long[i] else "short"
         px = closes[i]
-        exit_i, sl_dist, unit_pnl = _trade(
+        detail = {} if trace_out is not None else None
+        trade = _try_trade(
             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-            funding_8h, bar_minutes, trace, fill=fill, exit_sig_available=exit_sig_available)
+            funding_8h, bar_minutes, trace, fill=fill, exit_sig_available=exit_sig_available, detail_out=detail)
+        if trade is None:                   # refused before any fill, cost or exposure
+            res.errors.append(f'entry_refused:{ENTRY_REFUSAL}:{side}:{i}')
+            continue
+        exit_i, sl_dist, unit_pnl = trade
         amount = (equity_curve[-1] * risk_frac) / sl_dist
         if amount * px < 10:                          # dust guard
             continue
         if exit_i == -2:
             res.censored_position_count += 1
+            if trace_out is not None:           # opt-in position trace: the still-open position, as the engine held it
+                trace_out.append(dict(symbol=symbol, entry_i=i, fill_i=int(fill[i]), exit_i=None, side=side,
+                                      entry_px=detail['entry'], signal_close_px=float(px), entry_open_px=detail['entry_open'],
+                                      sl_dist=float(sl_dist), amount=float(amount),
+                                      stake=float(equity_curve[-1] * risk_frac), fee_rate=fee, slip_frac=slip_frac,
+                                      atr=float(atr[i]), open_at_end=True, pnl_usdt=None,
+                                      mark_funding_rate=mark_funding(i, int(fill[i]), n, side)))
             break  # open through dataset end; subsequent entries cannot open
         if trace is not None and trace:
             evidence = trace[-1]
@@ -403,6 +458,15 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
             staked = equity_curve[-1] * risk_frac
             fills_out.append(Fill(entry_i=i, exit_i=exit_i, symbol=symbol,
                                   r_multiple=pnl / staked if staked else 0.0))
+        if trace_out is not None:
+            trace_out.append(dict(symbol=symbol, entry_i=i, fill_i=int(fill[i]), exit_i=int(exit_i), side=side,
+                                  entry_px=detail['entry'], signal_close_px=float(px), entry_open_px=detail['entry_open'],
+                                  exit_px=detail['exit_px'], fees_per_unit=detail['fees_per_unit'],
+                                  carry_per_unit=detail['carry_per_unit'], funding_basis=detail['funding_basis'],
+                                  sl_dist=float(sl_dist), amount=float(amount),
+                                  stake=float(equity_curve[-1] * risk_frac), fee_rate=fee, slip_frac=slip_frac,
+                                  atr=float(atr[i]), open_at_end=False, pnl_usdt=float(pnl),
+                                  mark_funding_rate=mark_funding(i, int(fill[i]), int(exit_i), side)))
         res.trades += 1
         res.pnl_usdt += pnl
         if pnl > 0:
@@ -484,6 +548,14 @@ def funding_for(symbol: str, df, risk_cfg: dict):
         raise ValueError('retrospective measured funding requires explicit market symbol')
     if not risk_cfg.get("real_funding", True) or not symbol or symbol == "BT":
         return None
+    bound = getattr(df, 'attrs', {}).get('research_funding_binding')
+    if bound is not None:
+        from ..data.market_provenance import digest, ms
+        rates = np.asarray(bound['rates'], dtype=float)
+        if (bound.get('symbol') != symbol or len(rates) != len(df) or not np.isfinite(rates).all()
+                or not bound.get('source_id') or bound.get('timestamp_id') != digest(ms(df['ts']).tolist())):
+            raise ValueError('research funding binding does not match the scored frame')
+        return rates.copy()
     if df is None or not len(df) or "ts" not in getattr(df, "columns", ()):
         return None
     if df.attrs.get('research_read_paths') is not None:

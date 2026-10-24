@@ -95,6 +95,9 @@ def make_candidate(family_id: str, params: dict | None = None) -> dict:
 
 
 def verify_candidate(c: dict) -> dict:
+    if c.get('schema') == 'closure-graph-candidate.v1':
+        from ..compose import graph
+        return graph.verify(c)
     if c.get('schema') != CANDIDATE_SCHEMA or c.get('candidate_id') != digest(
             {k: v for k, v in c.items() if k != 'candidate_id'}):
         raise ClosureRefused('candidate_integrity')
@@ -104,6 +107,9 @@ def verify_candidate(c: dict) -> dict:
 
 
 def mutations(candidate: dict) -> list:
+    if candidate.get('schema') == 'closure-graph-candidate.v1':
+        from ..compose import search
+        return search.mutations(candidate)
     """Every legal single-slot neighbour of `candidate`, in a fixed order.
     This list is the whole mutation space: there is no other legal change."""
     fam = FAMILIES[candidate['family_id']]
@@ -116,6 +122,9 @@ def mutations(candidate: dict) -> list:
 
 
 def mutate(candidate: dict, change: dict) -> dict:
+    if candidate.get('schema') == 'closure-graph-candidate.v1':
+        from ..compose import search
+        return search.apply_change(candidate, change)
     if change not in mutations(candidate):
         raise ClosureRefused('mutation_not_allowed', str(change))
     return make_candidate(candidate['family_id'], dict(candidate['params'], **{change['slot']: change['to']}))

@@ -131,11 +131,43 @@ def query(journal, kind, identity=None, *, root=None, cfg=None, offset=0):
         if not records:
             missing.append('exact_world_or_learning_capture_NOT_RECORDED')
     elif kind in ('research', 'capability', 'cost'):
-        if kind == 'research':
+        if kind == 'research' and identity != 'closure-studies' and not str(identity or '').startswith(('closure-candidate:', 'closure-run:')):
             for row in rows(journal, 'research_combos', 'hash', identity):
                 value = R.research_item(journal, row['hash'])
                 records.append(record('experiment', row['hash'], value,
                                       source='quantitative research ledger; registered referee status only', at=row['created_at']))
+        if kind == 'research':
+            path = (((cfg or {}).get('research') or {}).get('closure') or {}).get('store_path')
+            if path and identity in (None, 'closure-studies'):
+                try:
+                    from trader.research.closure import auto
+                    ev = auto.evidence(path)
+                    records.append(record('closure_research', 'closure-studies', ev,
+                                          source='configured closure store (read-only): studies, units, stage timings, scheduler events'))
+                except (ValueError, OSError, sqlite3.Error) as exc:
+                    missing.append('closure_research_store_unavailable:' + type(exc).__name__)
+            elif path and str(identity or '').startswith('closure-candidate:'):
+                parts = identity.split(':')
+                try:
+                    from trader.research.closure import auto
+                    detail = auto.candidate_detail(path, parts[1], parts[2] if len(parts) > 2 else None,
+                                                   int(parts[3]) if len(parts) > 3 else 0, parts[4] if len(parts) > 4 else None)
+                    records.append(record('closure_candidate', identity, detail,
+                                          source='configured closure store (read-only, indexed, bounded, paged)'))
+                except (ValueError, OSError, sqlite3.Error, IndexError) as exc:
+                    missing.append('closure_candidate_unavailable:' + (str(exc)[:60] if isinstance(exc, ValueError) else type(exc).__name__))
+            elif path and str(identity or '').startswith('closure-run:'):
+                parts = identity.split(':')
+                try:
+                    from trader.research.closure import auto
+                    detail = auto.run_detail(path, parts[1], parts[2] if len(parts) > 2 else 'evaluated',
+                                             int(parts[3]) if len(parts) > 3 else 0)
+                    records.append(record('closure_candidate', identity, detail,
+                                          source='configured closure store (read-only exact immutable run)'))
+                except (ValueError, OSError, sqlite3.Error, IndexError) as exc:
+                    missing.append('closure_candidate_unavailable:' + (str(exc)[:60] if isinstance(exc, ValueError) else type(exc).__name__))
+            elif str(identity or '').startswith(('closure-candidate:', 'closure-run:')):
+                missing.append('closure_store_not_configured')
         if kind == 'cost':
             usage = root / 'data/brain_usage.json'
             if identity in (None, 'brain_usage') and usage.is_file():

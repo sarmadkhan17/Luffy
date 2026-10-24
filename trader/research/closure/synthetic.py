@@ -22,7 +22,7 @@ def symbols(n):
 
 
 def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
-                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60):
+                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60, lever=None):
     """Candles with an optional planted continuation `edge` (drift per bar in
     alternating regime blocks shared by all markets) and a `common` factor
     loading that makes the markets move together (correlated no-edge when
@@ -38,12 +38,17 @@ def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
     rng0 = np.random.default_rng(seed)
     factor = rng0.normal(0.0, vol, n_bars)
     names = symbols(n_symbols)
+    rets = {}                      # `lever={i: (j, m)}`: symbol i follows symbol j's returns times m (a leveraged twin), planted
     for i, name in enumerate(names):
         rng = np.random.default_rng(seed * 1009 + i)
         px, rows = 100.0, []
+        rets[i] = np.zeros(n_bars)
         for b in range(n_bars):
             drift = (edge if (b // block) % 2 == 0 else -edge / 7.0) if edge else 0.0
             ret = drift + common * factor[b] + rng.normal(0.0, vol * (1.0 - 0.5 * common))
+            if lever and i in lever:
+                ret = lever[i][1] * rets[lever[i][0]][b]
+            rets[i][b] = ret
             px *= 1.0 + ret
             volume = 10.0 * (1.0 + abs(rng.normal(0, 0.3)))
             rows.append((name, '4h', start_ms + b * TF_MS, px, px * 1.004, px * 0.996, px, volume, volume / 2))

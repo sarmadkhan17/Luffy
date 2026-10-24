@@ -34,7 +34,8 @@ export function NeedsYou({compact = false}: {compact?: boolean}) {
       <p className="quiet">Validity last checked {value(d.generated_at)}. Submission revalidates exact context.</p>
       <UnavailableFields items={d.unavailable} />
       {typeof d.pending_total === "number" && <p>{d.pending_total} pending or stale owner items across available ledgers.</p>}
-      {rows(d.items).filter(i => !compact || !i.receipt || i.validity !== "VALID").map(i => {
+      {rows(d.items).filter(i => !compact || (i.action_type === "research_data_access" ? i.status === "PENDING" : !i.receipt || i.validity !== "VALID")).map(i => {
+        if (i.action_type === "research_data_access") return <DataRequest key={String(i.item_id)} item={i} compact={compact} />;
         const expired=typeof i.valid_until_ms === "number" && now >= i.valid_until_ms;
         return <article key={String(i.item_id)}>
         <strong>{value(i.action_type)} · {expired ? "STALE — expired" : value(i.validity)}</strong><p>{value(i.reason)}</p>
@@ -56,6 +57,26 @@ export function NeedsYou({compact = false}: {compact?: boolean}) {
     </>}</Loaded>
     {result && <p role="status">{result}</p>}
   </section>;
+}
+
+/** Research data-access alert: what to provide and why. Not an approval, so no decision controls. */
+function DataRequest({item: i, compact}: {item: Record<string, unknown>; compact: boolean}) {
+  const b = (rec(i.bindings) ?? {}) as Record<string, unknown>;
+  const resolved = i.status === "RESOLVED";
+  return <article data-testid={`data-request-${String(i.item_id)}`}>
+    <strong>research data access · {resolved ? "RESOLVED" : "DATA NEEDED"}</strong>
+    <p>{value(i.reason)}</p>
+    {!resolved && <p data-testid="data-request-action"><b>What to do:</b> {value(i.required_owner_action)}</p>}
+    {!compact && <dl>
+      <dt>Provider</dt><dd>{value(b.provider)}</dd><dt>Series</dt><dd>{value(b.series)} · {value(b.tf)}</dd>
+      <dt>Span</dt><dd data-testid="data-request-span">{value(b.span_utc)}</dd>
+      <dt>Why it is needed</dt><dd>{value(b.missing_reason)}</dd>
+      <dt>Question / candidate</dt><dd>{value(b.question_id)} / {value(b.candidate_id)}</dd>
+      <dt>Import into</dt><dd>{value(b.references_store)}</dd>
+    </dl>}
+    <p className="quiet">This is not an approval and grants nothing. It clears only when the candidate is re-evaluated on eligible data.</p>
+    {typeof i.context_link === "string" && <a href={i.context_link}>Open research context ↗</a>}
+  </article>;
 }
 
 const kinds = ["decision","trade","research","portfolio","world","strategies","cost","approvals","learning","capability"];

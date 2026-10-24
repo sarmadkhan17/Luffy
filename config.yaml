@@ -136,6 +136,41 @@ research:                        # the search — docs/superpowers/specs/
   # the search to them would spend two cores on a question the gate cannot
   # answer. Re-measure with `--measure --tf <x>` and `--once --tf <x>`
   # before adding either back.
+  # Compositional research owns the twice-daily research slot. Qualification
+  # and strategy handoff remain separate and retain their existing stops.
+  closure:
+    enabled: true
+    store_path: /mnt/luffy-data/research/compositional/research.db
+    slot_budget_s: 3600
+    budget_s: 3600
+    world_live_enabled: true
+    auto:
+      enabled: true
+      interval_hours: 12
+      tf: 4h
+      market_db: /mnt/luffy-data/LUFFY/data/candles.db
+      derivs_db: /mnt/luffy-data/LUFFY/data/derivs.db
+      development_derivatives_only: true
+      snapshot_dir: /mnt/luffy-data/research/compositional/inputs
+      bank_path: /mnt/luffy-data/research/compositional/questions.db
+      source_journal_path: /mnt/luffy-data/LUFFY/data/luffy.db
+      references_path: /mnt/luffy-data/research/compositional/published-context.db
+      development_mode: RETROSPECTIVE
+      fit_bars: 1620
+      prep_timeout_s: 1800
+      unit_timeout_s: 900
+      prep_memory_mb: 3072
+      step_memory_mb: 3072
+      max_candidates: 8
+      max_snapshot_payload_bytes: 2147483648
+      world_shortlist: 30
+      search:
+        max_attempts: 24
+        max_fits: 40
+        cpu_seconds: 3600
+        dataset_reads: 2000
+        memory_mb: 3072
+        interaction_share: 0.25
   horizons: ["4h"]
   min_discovery_symbols: 16
   geometries: ["trail", "fixed"]

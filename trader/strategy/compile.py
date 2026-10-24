@@ -92,7 +92,7 @@ class CompiledStrategy:
         # This accumulator is mutated below; pandas can expose a read-only view.
         quality_column = 'observation_quality' if ctx.df.attrs.get('read_mode') == 'retrospective' else 'quality'
         quality_ok = (ctx.df[quality_column].eq('VALID').to_numpy(copy=True)
-                      if 'quality' in ctx.df else np.ones(n, dtype=bool))
+                      if quality_column in ctx.df else np.ones(n, dtype=bool))
         keep = quality_ok.copy()
         for f in self._filters:
             keep &= dsl.evaluate_bool(f, ctx)
@@ -141,7 +141,11 @@ class CompiledStrategy:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
         if frames[tf].attrs.get('read_mode') == 'retrospective' and "world" in self.data_requires:
-            raise dsl.SpecError('retrospective world dependency requires dataset-bound historical evidence; global fallback forbidden')
+            descriptor = frames[tf].attrs.get('retrospective') or {}
+            if (world is None or not world.allow_reconstruction
+                    or world.dataset_id != descriptor.get('dataset_id')
+                    or world.as_of_ms != descriptor.get('cut_ms')):
+                raise dsl.SpecError('retrospective world dependency requires dataset-bound historical evidence; global fallback forbidden')
         if world is None and "world" in self.data_requires:
             # No latest/unbounded fallback: an uncut load would answer a
             # historical evaluation from a different world than a current one.
@@ -301,6 +305,34 @@ class CompiledStrategy:
                 if diagnostic:
                     diagnostic("missing_closed_timeframe")
                 return None
+            try:                                   # the dependency the expressions (and fitted inputs) ACTUALLY consume
+                need = fill_timing.history_requirements(self.spec)
+            except Exception as e:                 # noqa: BLE001 - unknown dependency (e.g. artifact unavailable) abstains
+                if diagnostic:
+                    diagnostic("history_requirement_unknown", e)
+                return None
+            if need['exceeds_bound']:
+                if diagnostic:
+                    diagnostic("history_exceeds_bound")
+                return None
+            if len(frames[self.spec.timeframe]) < need['base']:
+                if diagnostic:
+                    diagnostic(f"insufficient_inference_history:{len(frames[self.spec.timeframe])}<{need['base']}")
+                return None
+            short = [tf for tf, bars in need['htf'].items() if tf in frames and len(frames[tf]) < bars]
+            if short:
+                if diagnostic:
+                    diagnostic("insufficient_inference_history_htf:" + ",".join(short))
+                return None
+            # the consumed tail must be CONTIGUOUS and usable, not merely long enough (same discipline as historical fill_timing)
+            for tf_, bars_ in [(self.spec.timeframe, need['base']), *need['htf'].items()]:
+                if tf_ not in frames:
+                    continue
+                why = fill_timing.tail_validity(frames[tf_], tf_, bars_)
+                if why:
+                    if diagnostic:
+                        diagnostic(f"{why}:{tf_}")
+                    return None
             btc = ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
             try:

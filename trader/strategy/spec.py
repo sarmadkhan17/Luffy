@@ -70,6 +70,11 @@ class StrategySpec:
     @staticmethod
     def from_dict(d: dict) -> "StrategySpec":
         d = dict(d)
+        arts = (d.get("provenance") or {}).get("fitted_artifacts")
+        if arts:                        # a serialized model must resolve to the SAME artifact at inference
+            from . import fitted
+            for a in arts:
+                fitted.register_artifact(a)
         ex = d.get("exit") or {}
         d["exit"] = ex if isinstance(ex, ExitSpec) else ExitSpec(**ex)
         return StrategySpec(**d)

@@ -188,13 +188,17 @@ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
                     known = np.maximum(known, cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
                 ctx_idx[k] = (cdf, np.maximum.accumulate(known))
 
+    bar_close = None               # the primary bar-close vector is invariant: built once, indexed per bar (was rebuilt every bar)
+    if ctx_idx:
+        from ..data.market_provenance import ms as _ms
+        from ..core.types import TF_MS as _TF
+        bar_close = _ms(df['ts']) + _TF[df.attrs.get('timeframe') or '15m']
+
     def ctx_at(i: int) -> dict:
         """Context frames truncated to bars that had CLOSED by bar i."""
         if not ctx_idx:
             return {}
-        from ..data.market_provenance import ms
-        from ..core.types import TF_MS
-        now = ms(df['ts'])[i] + TF_MS[df.attrs.get('timeframe') or '15m']
+        now = bar_close[i]
         out = {}
         for k, (cdf, cts) in ctx_idx.items():
             j = int(np.searchsorted(cts, now, side="right"))

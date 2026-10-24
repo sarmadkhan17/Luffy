@@ -21,7 +21,7 @@ import json
 from dataclasses import dataclass
 
 from ..strategy.geometries import GEOS
-from ..strategy.spec import StrategySpec
+from ..strategy.spec import ExitSpec, StrategySpec
 from .vocab import Part, part_requires
 
 #: 1 trigger + 5 context, per the spec
@@ -71,6 +71,7 @@ class Combination:
     round: str = "singles"     # singles | grow | seeded | control | ablation
     parent: str = ""           # parent hash, for the growth comparison
     evaluation_scope: str = "" # isolated predictive experiment; empty preserves legacy identities
+    exit_spec: dict | None = None  # composable exit/holding/risk declaration; None = the named `geo` geometry
 
     # ── identity ─────────────────────────────────────────────────────────
     @property
@@ -84,6 +85,8 @@ class Combination:
                            "parts": list(self.keys)}
         if self.evaluation_scope:
             identity['evaluation_scope'] = self.evaluation_scope
+        if self.exit_spec is not None:
+            identity['exit_spec'] = self.exit_spec
         blob = json.dumps(identity, sort_keys=True)
         return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -141,13 +144,15 @@ class Combination:
         return bind_research(StrategySpec(
             id=f"research_{h}", name=f"search {h} {self.tf} {self.geo}",
             thesis=_THESIS, invalidation=_INVALIDATION,
-            provenance={"source_kind": "research", "round": self.round,
-                        "parts": list(self.keys), "trigger": self.trigger,
-                        "parent": self.parent},
+            provenance=dict({"source_kind": "research", "round": self.round,
+                             "parts": list(self.keys), "trigger": self.trigger,
+                             "parent": self.parent},
+                            **({"fitted_artifacts": [a for p in self.parts for a in p.artifacts]}
+                               if any(p.artifacts for p in self.parts) else {})),
             universe={"include": [], "exclude": []},
             timeframe=self.tf, direction="both",
             entry_long=self.long, entry_short=self.short, filters=[],
-            exit=GEOS[self.geo], regime_filter=[], markets=["futures"],
+            exit=(ExitSpec(**self.exit_spec) if self.exit_spec is not None else GEOS[self.geo]), regime_filter=[], markets=["futures"],
             data_requires=list(self.requires)))
 
     # ── transport ────────────────────────────────────────────────────────
@@ -157,6 +162,8 @@ class Combination:
                 "round": self.round, "parent": self.parent}
         if self.evaluation_scope:
             out['evaluation_scope'] = self.evaluation_scope
+        if self.exit_spec is not None:
+            out['exit_spec'] = self.exit_spec
         return out
 
     @staticmethod
@@ -165,7 +172,7 @@ class Combination:
             parts=tuple(Part.from_dict(p) for p in d["parts"]),
             tf=d["tf"], geo=d["geo"], trigger=d.get("trigger", ""),
             round=d.get("round", "singles"), parent=d.get("parent", ""),
-            evaluation_scope=d.get('evaluation_scope', ''))
+            evaluation_scope=d.get('evaluation_scope', ''), exit_spec=d.get('exit_spec'))
 
 
 #: what a referee look records about the rule it actually evaluated
@@ -200,5 +207,6 @@ def subsets(c: Combination) -> list:
         parts = c.parts[:i] + c.parts[i + 1:]
         out.append(Combination(parts=parts, tf=c.tf, geo=c.geo,
                                trigger=c.trigger, round="ablation",
-                               parent=c.hash, evaluation_scope=c.evaluation_scope))
+                               parent=c.hash, evaluation_scope=c.evaluation_scope,
+                               exit_spec=c.exit_spec))
     return out

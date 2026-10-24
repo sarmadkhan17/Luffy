@@ -88,7 +88,15 @@ class FeatureCtx:
                 for tf, frame in (group or {}).items():
                     if frame is None:
                         continue
-                    if frame.attrs.get('retrospective') != descriptor:
+                    other = frame.attrs.get('retrospective')
+                    if (group is self.market or group is self.derivs) and other and other.get('start_ms') is not None and descriptor.get('start_ms') is not None:
+                        # Context history may reach BACK before the scored window (warmup for rolling features); it must
+                        # still be the same dataset and the same cut, and the cut check below forbids any later row.
+                        same = (dict(other, start_ms=None) == dict(descriptor, start_ms=None)
+                                and int(other['start_ms']) <= int(descriptor['start_ms']))
+                    else:
+                        same = other == descriptor
+                    if not same:
                         raise ValueError('retrospective feature dependency dataset mismatch')
                     duration = TF_MS.get(frame.attrs.get('timeframe') or tf, 0)
                     if len(frame) and (mp.ms(frame['ts']) + duration > cut).any():
@@ -97,6 +105,15 @@ class FeatureCtx:
             from ..world.context import WorldContext
             if not isinstance(self.world, WorldContext):
                 raise TypeError("world must be WorldContext")
+            base = self.frames[self.tf]
+            if base.attrs.get('read_mode') == 'retrospective':
+                descriptor = base.attrs.get('retrospective') or {}
+                if (not self.world.allow_reconstruction
+                        or self.world.dataset_id != descriptor.get('dataset_id')
+                        or self.world.as_of_ms != descriptor.get('cut_ms')):
+                    raise ValueError('retrospective World dataset/cut mismatch')
+            elif self.world.source_status == 'RECONSTRUCTED_RETROSPECTIVE':
+                raise ValueError('retrospective World cannot serve live/replay inference')
         from ..data import market_provenance as mp
         if self.as_of_ms is None:
             self.as_of_ms = self.frames.get(self.tf, pd.DataFrame()).attrs.get('as_of_ms')
@@ -229,7 +246,7 @@ def world_observation(ctx: FeatureCtx, kind: str, horizon: str) -> pd.Series:
             values.append(np.nan)
             receipts.append(dict(quality="UNKNOWN", reason="SYMBOL_OR_CUT_UNAVAILABLE"))
             continue
-        query = context.observations(int(cut), Scope(ScopeLevel.INSTRUMENT, ctx.symbol), h, kind=kind)
+        query = context.observations(int(cut), Scope(ScopeLevel.INSTRUMENT, ctx.symbol), h, kind=kind, timeframe=ctx.tf)
         value = query.observations[0].value if query.quality is Quality.VALID else None
         numeric = type(value) in (int, float) and np.isfinite(value)
         values.append(float(value) if numeric else np.nan)
@@ -355,6 +372,24 @@ def _ret(ctx, n):
 def _zscore(ctx, s, n):
     # a z-score of an unfilled window is unknown, not average
     return ind.zscore_series(_series(ctx, s), int(n), fill=None)
+
+
+@register("rolling_std", arg_specs=(SERIES_ARG, (int, 5, 500)))
+def _rolling_std(ctx, s, n):
+    return _series(ctx, s).rolling(int(n)).std()
+
+
+@register("rolling_corr", arg_specs=(SERIES_ARG, SERIES_ARG, (int, 12, 500)), domain=(-1.0, 1.0))
+def _rolling_corr(ctx, a, b, n):
+    return _series(ctx, a).rolling(int(n)).corr(_series(ctx, b))
+
+
+@register("stoch_k", arg_specs=((int, 5, 100),), domain=(0.0, 100.0))
+def _stoch_k(ctx, n):
+    lo = ctx.df["low"].rolling(int(n)).min()
+    hi = ctx.df["high"].rolling(int(n)).max()
+    rng = (hi - lo).where(hi - lo > 0)
+    return 100.0 * (ctx.df["close"] - lo) / rng
 
 
 @register("pct_rank", arg_specs=(SERIES_ARG, (int, 12, 500)), domain=(0.0, 1.0))
@@ -634,3 +669,4 @@ def _vol_of_vol(ctx, n):
 
 from . import features_deriv          # noqa: E402,F401  (registration side-effect)
 from . import features_xs             # noqa: E402,F401  (registration side-effect)
+from . import fitted               # noqa: E402,F401  (registration side-effect)

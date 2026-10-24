@@ -281,23 +281,27 @@ class KernelRuntime:
         view = analysis_context(self)
         cfg = view.cfg
         if cfg.get('research', {}).get('enabled', False):
-            from ..research.runner import ResearchRunner
-            if not hasattr(self, '_research_runner'):
-                self._research_runner = ResearchRunner(view.journal, cfg)
-            import time as _time
-            _t0 = _time.monotonic()
-            self._research_runner.step(cycle_seconds=self.kernel._last_cycle_s)
-            # Opt-in closure study (research.closure.enabled, default off). It
-            # takes only what remains of ONE aggregate slot budget after the
-            # legacy step, honours kernel shutdown between units, and its heavy
-            # units run in deadline-bounded child processes. Research-only.
+            # The configured research engine owns this slot. Running legacy
+            # discovery first could consume the entire slot and starve the
+            # compositional mechanism indefinitely.
             closure = cfg.get('research', {}).get('closure') or {}
             if closure.get('enabled', False):
                 from ..research.closure import study as closure_study
-                closure_study.scheduled(
-                    cfg, cycle_seconds=self.kernel._last_cycle_s,
-                    slot_remaining_s=float(closure.get('slot_budget_s', 900)) - (_time.monotonic() - _t0),
+                outcome = closure_study.scheduled(
+                    # This is an independent, bounded worker. The old 45-second
+                    # synchronous-cycle guard would otherwise defer every slot
+                    # indefinitely on this installation.
+                    cfg, cycle_seconds=None,
+                    slot_remaining_s=float(closure.get('slot_budget_s', 900)),
                     should_stop=lambda: bool(getattr(self.kernel, '_stop', False)))
+                # The closure store keeps the full record (schedule_events); the log line makes it visible too.
+                log.info('closure research slot: %s', {k: outcome.get(k) for k in ('status', 'stop_reason', 'step', 'units_run', 'reason')
+                                                        if isinstance(outcome, dict) and k in outcome})
+            else:
+                from ..research.runner import ResearchRunner
+                if not hasattr(self, '_research_runner'):
+                    self._research_runner = ResearchRunner(view.journal, cfg)
+                self._research_runner.step(cycle_seconds=self.kernel._last_cycle_s)
         if cfg.get('mechanism', {}).get('enabled', True):
             section = cfg.get('mechanism', {})
             view._mechanism_once(int(section.get('specs_per_cycle', 1)), int(section.get('max_specs', 8)))
@@ -337,6 +341,16 @@ class KernelRuntime:
     def references(self):
         from ..data.ref_sources import refresh_all
         report = refresh_all(self.kernel.feed, list(self.kernel.cfg.get('references', {}).get('alts_members') or []))
+        exports = self.kernel.cfg.get('references', {}).get('chart_exports') or []
+        if exports:
+            from ..data.chart_exports import ingest_exports
+            from ..data.references import RefStore
+            store = RefStore()
+            try:
+                report['published_charts'] = ingest_exports(exports, store, captured_ms=int(time.time()*1000))
+            finally:
+                store.db.close()
+
         if any(isinstance(v, str) for v in report.values()):
             raise ValueError('reference_sources_incomplete')
 

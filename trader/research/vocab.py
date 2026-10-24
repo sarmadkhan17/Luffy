@@ -33,7 +33,7 @@ needs from the DSL rather than trusting a declaration.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..strategy import dsl
 
@@ -58,14 +58,27 @@ class Part:
     gauge: str          # what it is about — two parts of one gauge conflict
     long: str
     short: str
+    #: serialized fitted-model artifacts the expressions call (`fitted("id")`);
+    #: they travel with the part so every worker/replay resolves the SAME model
+    artifacts: tuple = field(default=(), hash=False, compare=False)
+
+    def __post_init__(self):
+        if self.artifacts:
+            from ..strategy import fitted
+            for art in self.artifacts:
+                fitted.register_artifact(art)
 
     def as_dict(self) -> dict:
-        return {"key": self.key, "kind": self.kind, "gauge": self.gauge,
-                "long": self.long, "short": self.short}
+        out = {"key": self.key, "kind": self.kind, "gauge": self.gauge,
+               "long": self.long, "short": self.short}
+        if self.artifacts:
+            out["artifacts"] = list(self.artifacts)
+        return out
 
     @staticmethod
     def from_dict(d: dict) -> "Part":
-        return Part(d["key"], d["kind"], d["gauge"], d["long"], d["short"])
+        return Part(d["key"], d["kind"], d["gauge"], d["long"], d["short"],
+                    tuple(d.get("artifacts") or ()))
 
 
 def _neg(expr: str) -> str:

@@ -185,8 +185,10 @@ export default function Overview() {
           href: "#trades",
         });
     }
-    for (const i of asRows(needsQ.data?.items).filter((x) => x.validity === "VALID" && !x.receipt))
-      out.push({ id: `approval:${String(i.item_id)}`, t: String(i.action_type ?? "Owner decision"), w: "approval", dsc: String(i.reason ?? ""), cta: "Decide in LUFFY", href: "#luffy" });
+    for (const i of asRows(needsQ.data?.items).filter((x) => x.validity === "VALID" && !x.receipt && (x.action_type !== "research_data_access" || x.status === "PENDING")))
+      out.push(i.action_type === "research_data_access"
+        ? { id: `approval:${String(i.item_id)}`, t: "Research needs data", w: "data", dsc: String(i.reason ?? ""), cta: "See what to provide", href: "#luffy" }
+        : { id: `approval:${String(i.item_id)}`, t: String(i.action_type ?? "Owner decision"), w: "approval", dsc: String(i.reason ?? ""), cta: "Decide in LUFFY", href: "#luffy" });
     return out;
   }, [control, kernelState, L, hb, sup, lastEvent, positions, now, needsQ.data]);
   const needsUnavailable = live && (q.isError || needsQ.isError || (!q.isPending && (!L?.needsYou || L.needsYou.provenance?.freshness !== "fresh")) || (!needsQ.isPending && (!Array.isArray(needsQ.data?.items) || asRows(needsQ.data?.unavailable).length > 0)));

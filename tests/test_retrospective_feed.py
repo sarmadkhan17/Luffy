@@ -118,3 +118,30 @@ def test_unverified_flow_proxy_is_missing_and_matching_source_flow_works(tmp_pat
     known = DataFeed(db_path=path,retrospective=descriptor).cached_ohlcv('BTC/USDT','1h')
     assert known.taker_buy.iloc[0] == 50.
     assert pd.isna(known.taker_buy.iloc[1])
+
+
+def test_bounded_revision_selection_preserves_latest_observation_ties_limits_and_integrity(tmp_path):
+    path = tmp_path / 'selection.db'
+    with sqlite3.connect(path) as con:
+        mp.init(con)
+        for event, close, received in ((0, 11., 20_000_000), (0, 12., 21_000_000),
+                                        (3_600_000, 13., 20_000_000), (3_600_000, 14., 20_000_000),
+                                        (7_200_000, 15., 20_000_000)):
+            raw = pd.DataFrame(dict(ts=pd.to_datetime([event], unit='ms', utc=True), open=[10.],
+                                    high=[16.], low=[9.], close=[close], volume=[100.]))
+            receipt = mp.annotate(raw, instrument_id='known', source='known', kind='candle',
+                                  received_ms=received, timeframe='1h')
+            mp.append(con, 'candle:A:1h', receipt)
+        con.commit()
+        two = mp.retrospective_load(con, 'candle:A:1h', cut_ms=7_200_000, tf='1h', limit=2)
+        assert two.event_time_ms.tolist() == [0, 3_600_000]
+        assert two.close.tolist() == [12., 14.]
+        assert two.observed_at_ms.tolist() == [21_000_000, 20_000_000]
+        one = mp.retrospective_load(con, 'candle:A:1h', cut_ms=7_200_000, tf='1h', limit=1)
+        assert one.revision_id.tolist() == [two.revision_id.iloc[-1]]
+        # A corrupt future receipt is not decoded before its closed-bar cut.
+        con.execute('UPDATE market_revisions SET observed_ms=1 WHERE event_ms=?', (7_200_000,))
+        same = mp.retrospective_load(con, 'candle:A:1h', cut_ms=7_200_000, tf='1h', limit=2)
+        pd.testing.assert_frame_equal(two, same)
+        with pytest.raises(ValueError, match='index_corrupt'):
+            mp.retrospective_load(con, 'candle:A:1h', cut_ms=10_800_000, tf='1h', limit=3)

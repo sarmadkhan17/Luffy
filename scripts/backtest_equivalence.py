@@ -53,16 +53,21 @@ def legacy_signals(genome, df: pd.DataFrame, ctx: dict | None = None):
                 from trader.data.market_provenance import ms
                 from trader.core.types import TF_MS
                 known = ms(cdf['ts']) + TF_MS.get(k.removeprefix('BTC_'), 0)
-                if 'available_at_ms' in cdf:
+                # the SAME declared semantics as backtest.ctx_at: an explicitly retrospective frame makes no availability claim
+                if 'available_at_ms' in cdf and cdf.attrs.get('read_mode') != 'retrospective':
                     known = np.maximum(known,cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
                 ctx_idx[k] = (cdf, np.maximum.accumulate(known))
+
+    bar_close = None               # invariant primary bar-close vector, built once (identical values to the per-bar construction)
+    if ctx_idx:
+        from trader.data.market_provenance import ms as _ms
+        from trader.core.types import TF_MS as _TF
+        bar_close = _ms(df['ts']) + _TF[df.attrs.get('timeframe') or '15m']
 
     def ctx_at(i):
         if not ctx_idx:
             return {}
-        from trader.data.market_provenance import ms
-        from trader.core.types import TF_MS
-        now = ms(df['ts'])[i] + TF_MS[df.attrs.get('timeframe') or '15m']
+        now = bar_close[i]
         out = {}
         for k, (cdf, cts) in ctx_idx.items():
             j = int(np.searchsorted(cts, now, side="right"))

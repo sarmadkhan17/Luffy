@@ -157,7 +157,7 @@ def import_sequence(journal, source_path) -> str:
 
 
 def qualify(store, freeze: dict, env: dict, snapshot_path, workdir, *, now_ms: int, run=None, cfg=None, book=None,
-            source_journal=None, budget_journal=None) -> dict:
+            source_journal=None, budget_journal=None, derivs_path=None, world_path=None) -> dict:
     """Run (or recall) the independent qualification. Idempotent: a recorded
     qualification is returned unchanged and a spent look is never retaken."""
     c = verify_freeze(freeze, env)
@@ -202,6 +202,32 @@ def qualify(store, freeze: dict, env: dict, snapshot_path, workdir, *, now_ms: i
         return record(_packet('BLOCKED', f'snapshot_unverifiable:{exc.code}', env, freeze))
     if fp != env['protected_fingerprint']:
         return record(_packet('BLOCKED', 'protected_data_changed_since_envelope', env, freeze))
+    ctx_paths, ctx_id = {}, None
+    external = [r for r in c.requires if r not in ('ohlcv', 'world')]
+    if external:
+        # dependency-complete BEFORE any look: a candidate whose context cannot be served in the sealed window
+        # would otherwise read NaN, take no trades and burn the look as "no edge"
+        sealed_derivs = workdir / 'protected-derivs.db'
+        if sealed_derivs.exists():
+            sealed_derivs.unlink()
+        try:
+            ctx = manifest.freeze_context(snapshot_path, derivs_path, sealed, sealed_derivs, env, external)
+        except ClosureRefused as exc:
+            return record(_packet('BLOCKED', f'context_unverifiable:{exc.code}', env, freeze))
+        if ctx['gaps']:
+            return _packet('BLOCKED', 'context_missing_in_protected_window (no look spent): ' +
+                           ';'.join(f"{g['requirement']}: {g['reason']}" for g in ctx['gaps'])[:300], env, freeze)
+        ctx_id = ctx['fingerprint']
+        ctx_paths = dict(derivs=str(sealed_derivs)) if sealed_derivs.exists() else {}
+
+    if 'world' in c.requires:
+        from ..compose.world_snapshot import seal_world
+        try:
+            world_receipt = seal_world(world_path, workdir / 'protected-world.db', env)
+        except ClosureRefused as exc:
+            return _packet('BLOCKED', f'world_context_unavailable:{exc.code} (no look spent)', env, freeze)
+        ctx_paths['world'] = str(workdir / 'protected-world.db')
+        ctx_id = digest([ctx_id, world_receipt])
 
     from ...core.journal import Journal
     journal = Journal(budget_journal or workdir / 'qualification.db')
@@ -217,13 +243,13 @@ def qualify(store, freeze: dict, env: dict, snapshot_path, workdir, *, now_ms: i
     try:
         import fcntl
         fcntl.flock(lock, fcntl.LOCK_EX)          # serialise next_alpha -> record_test across stores/processes
-        return _look(**locals())
+        return _look(**dict(locals(), ctx_paths=ctx_paths, ctx_id=ctx_id))
     finally:
         lock.close()
 
 
 def _look(*, store, freeze, env, c, journal, led, h, tf, geo, pol, spent, workdir, sealed, snapshot_path, now_ms, run,
-          record, book, seq_id, qid, **_):
+          record, book, seq_id, qid, ctx_paths=None, ctx_id=None, **_):
     s = env['split']
     if spent is None:
         reg_a, reg_w = led.register_budget(pol['fdr_target'], pol['lord_w0'])
@@ -234,6 +260,7 @@ def _look(*, store, freeze, env, c, journal, led, h, tf, geo, pol, spent, workdi
         cfg = research_cfg(env)
         cfg['research'].update(predictive_split=s, horizons=[tf], geometries=[geo], referee=False, handoff=False)
         paths = dict(candles=str(sealed), derivs=str(workdir / 'unused-derivs.db'))
+        paths.update(ctx_paths or {})
         capacity = referee.rotation_capacity(tf, s['cut_ms'], env['heldout_symbols'],
                                              env['discovery_symbols'] + env['heldout_symbols'], cfg, paths)
         if draws is not None and capacity is not None and capacity['b']:
@@ -286,19 +313,20 @@ def _look(*, store, freeze, env, c, journal, led, h, tf, geo, pol, spent, workdi
                 draws=(v.get('rotation') or {}).get('draws', draws), t=t, envelope_id=env['envelope_id'],
                 freeze_id=freeze['freeze_id']), state, gate1={**g1, 'alpha': alpha, 't': t, 'a': v.get('a'),
                 'b': v.get('b'), 'rotation': v.get('rotation')}, gate3=g3, reason=why)
+    ctx_extra = dict(context_fingerprint=ctx_id, required_inputs=list(c.requires))
     cand = led.candidate(h)
     pending = json.loads(led.spent(h)['detail']).get('look_state') == 'pending'
     if pending:
-        return record(_packet('INCONCLUSIVE', 'look_spent_but_not_completed (interrupted); p=1 charged, no retry', env, freeze))
+        return record(_packet('INCONCLUSIVE', 'look_spent_but_not_completed (interrupted); p=1 charged, no retry', env, freeze, extra=ctx_extra))
     ledger = dict(budget=_row(journal.query('SELECT * FROM research_budget WHERE id=1'))[0],
                   tests=_row(journal.query('SELECT * FROM research_tests ORDER BY seq')),
                   candidate=dict(cand), combo=_row(journal.query('SELECT * FROM research_combos WHERE hash=?', (h,)))[0])
     if cand['state'] == 'referee_passed':
-        return record(_packet('QUALIFIED', cand['reason'], env, freeze, ledger, book=book, sequence_id=seq_id))
+        return record(_packet('QUALIFIED', cand['reason'], env, freeze, ledger, book=book, sequence_id=seq_id, extra=ctx_extra))
     g1 = json.loads(cand['gate1'] or '{}')
     untestable = str(g1.get('reason', '')).startswith('untestable') or 'failed look' in (cand['reason'] or '')
     return record(_packet('INCONCLUSIVE' if untestable else 'NOT_QUALIFIED', cand['reason'], env, freeze, ledger,
-                          book=book, sequence_id=seq_id))
+                          book=book, sequence_id=seq_id, extra=ctx_extra))
 
 
 def verify_qualification(q: dict) -> dict:

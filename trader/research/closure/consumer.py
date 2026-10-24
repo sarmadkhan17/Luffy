@@ -101,8 +101,10 @@ def _parent_result(question_id, results):
     return None
 
 
-def _resolve(question, source_type, source, bank) -> tuple:
+def _resolve(question, source_type, source, bank, *, proposer=None) -> tuple:
     """(status, reason, candidate|None, extra provenance)."""
+    if proposer is not None:
+        return proposer(question, source_type, source)
     from ...cognition import predictive as P
     intent = INTENTS.get(question.get('text'))
     if intent is None:
@@ -141,7 +143,8 @@ def _resolve(question, source_type, source, bank) -> tuple:
     return 'NO_CHANGE_JUSTIFIED', f'{intent}: no registered family or discriminator expresses it', None, extra
 
 
-def consume(store: Store, bank_path, *, now_ms: int, limit: int = 8, max_attempts: int = MAX_ATTEMPTS) -> dict:
+def consume(store: Store, bank_path, *, now_ms: int, limit: int = 8, max_attempts: int = MAX_ATTEMPTS, proposer=None,
+            study_id=None) -> dict:
     """Resolve up to `limit` unresolved questions. Idempotent and resumable."""
     counts = dict(seen=0, compiled=0, unsupported=0, waiting=0, no_change=0, blocked=0, deferred=0, skipped=0)
     try:
@@ -155,7 +158,8 @@ def consume(store: Store, bank_path, *, now_ms: int, limit: int = 8, max_attempt
             continue
         item_id = digest(['question', q['question_id']])
         store.claim_item(item_id, 'question', q['question_id'],
-                         dict(schema=ITEM_SCHEMA, question_id=q['question_id'], source_bank_id=q.get('source_bank_id')),
+                         dict(schema=ITEM_SCHEMA, question_id=q['question_id'], source_bank_id=q.get('source_bank_id'),
+                              **({'study_id': study_id} if study_id else {})),
                          now_ms)
         item = store.item(item_id)
         if item['status'] != 'PENDING':
@@ -172,7 +176,7 @@ def consume(store: Store, bank_path, *, now_ms: int, limit: int = 8, max_attempt
             continue
         try:
             stype, source = verify_source(q, sources)
-            status, reason, cand, extra = _resolve(q, stype, source, bank)
+            status, reason, cand, extra = _resolve(q, stype, source, bank, proposer=proposer)
             extra = dict(extra, source_type=stype)
         except _Blocked as b:
             status, reason, cand, extra = b.status, b.reason, None, {}
@@ -215,7 +219,7 @@ def lineage(store: Store, candidate_id: str) -> list:
 
 
 def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: int,
-           max_revisions: int = MAX_REVISIONS, max_repairs: int = MAX_REPAIRS) -> dict:
+           max_revisions: int = MAX_REVISIONS, max_repairs: int = MAX_REPAIRS, study_id=None) -> dict:
     """The next step after one DEVELOPMENT result. Returns the work item."""
     import json
     from . import canonical
@@ -229,7 +233,7 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
     item_id = digest(['revision', parent_candidate_id, dev_result['result_id']])
     store.claim_item(item_id, 'revision', None, dict(
         schema=ITEM_SCHEMA, parent_candidate_id=parent_candidate_id, result_id=dev_result['result_id'],
-        outcome=dev_result['outcome']), now_ms)
+        outcome=dev_result['outcome'], **({'study_id': study_id} if study_id else {})), now_ms)
     item = store.item(item_id)
     if item['status'] != 'PENDING':
         return item

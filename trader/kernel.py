@@ -226,6 +226,7 @@ class Kernel:
         from .strategy.library import register_evaluator
         pop = []
         requires: set = set()
+        population_specs: list = []
         spec_exits: dict = {}
         self._spec_exits = spec_exits
         self._spec_rows = []
@@ -245,6 +246,7 @@ class Kernel:
                 continue
             family = f"spec:{spec.id}"
             requires.update(compiled.data_requires)
+            population_specs.append(compiled.spec)
             # the geometry this spec was validated with must be the geometry
             # the ExitEngine runs, or the backtest evidenced a different
             # strategy than the one trading
@@ -283,6 +285,11 @@ class Kernel:
             g.symbols = frozenset((spec.universe or {}).get("include") or ())
             pop.append((st, g))
         self._spec_requires = tuple(sorted(requires))
+        # selected symbols fetch no more than the population's real inference dependency (+ a small margin); the default
+        # 400-bar window is unchanged when nothing needs more. Oversized needs abstain in the evaluator, never truncate here.
+        from .strategy import fill_timing as _ft
+        self._history_limits = _ft.inference_limits(population_specs)          # per timeframe, selected symbols only
+        self._history_limit = max(self._history_limits.values(), default=400)
         self._spec_exits = spec_exits
         self._derivs_cache = {}
         self._market_cache = None
@@ -961,8 +968,20 @@ class Kernel:
             bound_iid = InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol'])
             self.feed.bind_instrument(symbol,bound_iid)
         try:
-            dfs = self.feed.fetch_multi(
-                symbol, self.cfg['timeframes']['context'] + [exec_tf])
+            limits = getattr(self, '_history_limits', {}) or {}
+            # configured frames PLUS the timeframes the admitted specs themselves name (their own and htf sources); only the selected symbol
+            tfs_all = list(dict.fromkeys(self.cfg['timeframes']['context'] + [exec_tf] + sorted(limits)))
+            if not any(limits.get(t, 400) != 400 for t in tfs_all) and set(tfs_all) == set(self.cfg['timeframes']['context'] + [exec_tf]):
+                dfs = self.feed.fetch_multi(symbol, self.cfg['timeframes']['context'] + [exec_tf])
+            else:                                   # group timeframes by the history each really needs; only the selected symbol
+                dfs, merged = {}, {}
+                for lim in sorted({limits.get(t, 400) for t in tfs_all}):
+                    group = [t for t in tfs_all if limits.get(t, 400) == lim]
+                    got = self.feed.fetch_multi(symbol, group, **({'limit': lim} if lim != 400 else {}))
+                    dfs.update(got)
+                    merged.update(getattr(self.feed._local, 'multi_diagnostics', {}) or {})
+                if hasattr(self.feed, '_local'):
+                    self.feed._local.multi_diagnostics = merged
         except Exception:
             diagnostic['reason'] = 'read_failure'
             return None
@@ -2047,13 +2066,13 @@ class Kernel:
     def _peer_frames(self, peers):
         """Independent strategy peer population: cached PIT data only."""
         at = self._admission_receipt['source_cut_ms'] if self._admission_receipt else int(time.time()*1000)
-        tfs = list(dict.fromkeys([self.cfg['timeframes']['execution'],*getattr(self,'_scan_timeframes',())]))
+        tfs = list(dict.fromkeys([self.cfg['timeframes']['execution'],*getattr(self,'_scan_timeframes',()),*sorted(getattr(self,'_history_limits',None) or {})]))
         out = {}
         for sym in peers:
             frames = {}
             for tf in tfs:
                 try:
-                    frame = self.feed.cached_ohlcv(sym,tf,limit=400,as_of_ms=at)  # existing snapshot window
+                    frame = self.feed.cached_ohlcv(sym,tf,limit=int((getattr(self,'_history_limits',None) or {}).get(tf,400)),as_of_ms=at)  # snapshot window sized to the real inference dependency
                     if frame is not None and len(frame): frames[tf] = frame
                 except Exception:
                     pass  # unavailable peer data remains missing, never admitted-only
@@ -2076,6 +2095,10 @@ class Kernel:
         with stage_scope('deep.market_data', symbol=symbol):
             snap = self._snapshot_for(symbol, universe=peers)
         if snap is not None:
+            if ((self.cfg.get('research') or {}).get('closure') or {}).get('world_live_enabled', False):
+                from .research.compose.world_producer import snapshot_context
+                with stage_scope('deep.world_context', symbol=symbol):
+                    snap.world = snapshot_context(snap)
             row = next(r for r in receipt['rows'] if r['symbol']==symbol)
             snap.admission_context = dict(receipt_id=receipt['receipt_id'],schema=receipt['schema'],
                 policy_version=receipt['policy_version'],source_cut_ms=receipt['source_cut_ms'],

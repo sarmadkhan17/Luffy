@@ -29,6 +29,8 @@ class WorldContext:
     history: WorldHistory
     source_status: str = "RETAINED"
     as_of_ms: int | None = None
+    allow_reconstruction: bool = False
+    dataset_id: str | None = None
 
     def __post_init__(self):
         if not isinstance(self.history, WorldHistory):
@@ -37,10 +39,11 @@ class WorldContext:
 
     @property
     def context_id(self):
-        return (self.history.history_id, self.source_status, self.as_of_ms)
+        base = (self.history.history_id, self.source_status, self.as_of_ms)
+        return base + ('RETROSPECTIVE_ONLY', self.dataset_id) if self.allow_reconstruction else base
 
     def observations(self, as_of_ms: int, scope: Scope, horizon: Horizon,
-                     *, kind: str) -> ObservationQuery:
+                     *, kind: str, timeframe: str | None = None) -> ObservationQuery:
         _timestamp(as_of_ms, "as_of_ms")
         if not isinstance(scope, Scope) or not isinstance(horizon, Horizon):
             raise TypeError("typed scope and horizon required")
@@ -48,6 +51,8 @@ class WorldContext:
             raise ValueError("kind must be nonempty")
         def unknown(reason):
             return ObservationQuery(as_of_ms, scope, horizon, kind, Quality.UNKNOWN, reason)
+        if self.source_status == 'RECONSTRUCTED_RETROSPECTIVE' and not self.allow_reconstruction:
+            return unknown('RECONSTRUCTION_IS_NOT_ORIGINAL_TIME_EVIDENCE')
         if self.as_of_ms is not None and as_of_ms > self.as_of_ms:
             return unknown("QUERY_AFTER_CONTEXT_CUT")
         try:
@@ -56,6 +61,8 @@ class WorldContext:
             return unknown("HISTORICAL_CONTEXT_UNAVAILABLE:" + self.source_status)
         try:
             records = model.get_observations(scope, horizon, kind=kind)
+            if timeframe is not None:
+                records = tuple(r for r in records if r.timeframe == timeframe)
         except (LookupError, ValueError):
             return unknown("SCOPE_OR_HORIZON_UNAVAILABLE")
         # Preserve conflicts and qualities in the typed result. A scalar
@@ -68,11 +75,11 @@ class WorldContext:
                                 model.model_id, records)
 
 
-def load_context(path=None, *, as_of_ms=None) -> WorldContext:
+def load_context(path=None, *, as_of_ms=None, immutable=False, allow_reconstruction=False, dataset_id=None) -> WorldContext:
     """Read-only retained source adapter. No latest/live/network fallback."""
     from ..observability.store import read_world_history
     if path is None:
         from ..core.config import ROOT
         path = ROOT / "data" / "attention.db"
-    history, status = read_world_history(path, as_of_ms=as_of_ms)
-    return WorldContext(history, status, as_of_ms)
+    history, status = read_world_history(path, as_of_ms=as_of_ms, immutable=immutable)
+    return WorldContext(history, status, as_of_ms, allow_reconstruction, dataset_id)

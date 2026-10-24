@@ -75,6 +75,23 @@ REFS: dict[str, Ref] = {r.key: r for r in [
         close_only=True),
 ]}
 
+# CoinGecko website CSV export of TOTAL market cap (USD). A daily SNAPSHOT of
+# the provider's published figure at snapped_at (00:00 UTC), not an OHLC bar;
+# distinct from the `cg_total` forward-recorded API snapshot and from
+# TradingView CRYPTOCAP:TOTAL. The export does not state when a day's value was
+# final, so it is conservatively known one full day after its stamp.
+REFS["cg_total_daily"] = Ref("cg_total_daily", "coingecko-website-csv", "1d",
+                             "total_market_cap_usd", DAY, 3 * DAY, close_only=True)
+
+
+# Published chart imports have their own provider identity; never alias CoinGecko.
+for _ticker in ('TOTAL', 'TOTAL2', 'TOTAL3', 'BTC.D', 'USDT.D'):
+    for _tf in ('1d', '4h', '1h'):
+        _base = 'tv_' + _ticker.lower().replace('.', '_')
+        _key = _base if _tf == '1d' else _base + '_' + _tf
+        REFS[_key] = Ref(_key, 'tradingview-export', _tf, 'CRYPTOCAP:' + _ticker,
+                         TF_MS[_tf], 3 * TF_MS[_tf], close_only=True)
+
 
 def to_ms(ts) -> np.ndarray:
     """Epoch milliseconds of a timestamp Series, whatever its resolution."""

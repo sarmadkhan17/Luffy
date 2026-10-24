@@ -105,6 +105,11 @@ def evaluator_id() -> str:
                 'strategy/geometries.py', 'data/market_provenance.py', 'data/feed.py', 'research/factory_transfer.py',
                 'strategy/factory_handoff.py'):
         files[rel] = hashlib.sha256((root / rel).read_bytes()).hexdigest()
+    for folder in ('research/compose', 'world'):
+        for p in sorted((root / folder).glob('*.py')):
+            files[str(p.relative_to(root))] = hashlib.sha256(p.read_bytes()).hexdigest()
+    for rel in ('strategy/fitted.py', 'strategy/features.py', 'strategy/vector_backtest.py'):
+        files[rel] = hashlib.sha256((root / rel).read_bytes()).hexdigest()
     return digest(dict(base=evaluation_version(), extra=files))
 
 
@@ -291,6 +296,52 @@ def _coverage(inv, start_ms, end_ms, step, max_gap, min_bars, mode):
     return None
 
 
+RESEARCH_COST_KEYS = ('taker_fee_pct', 'slippage_atr_frac', 'funding_rate_8h')
+
+
+def research_risk(risk) -> dict:
+    """The one frozen research risk/cost block, normalised BEFORE hashing so development,
+    qualification and the handoff comparison see identical explicit values.
+
+    real_funding defaults to False (the closure contract: flat funding_rate_8h unless signed
+    funding is bound). max_open_trades keeps an explicit value; else the configured live
+    breadth limit max_open_positions (same meaning, read only); else 8. Cost fields are
+    kept only when present. Null/invalid values are a typed refusal, never silently defaulted."""
+    risk = risk or {}
+
+    def num(k, default=None):
+        v = risk.get(k, default)
+        if v is None and k in risk:
+            raise ClosureRefused('risk_value_invalid', f'{k} is null')
+        if v is None:
+            return None
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float('inf'), float('-inf')):
+            raise ClosureRefused('risk_value_invalid', f'{k}={v!r}')
+        return v
+
+    out = {}
+    for k in RESEARCH_COST_KEYS:
+        v = num(k)
+        if v is not None:
+            if v < 0:
+                raise ClosureRefused('risk_value_invalid', f'{k}={v!r}')
+            out[k] = v
+    rf = risk.get('real_funding', False)
+    if not isinstance(rf, bool):
+        raise ClosureRefused('risk_value_invalid', f'real_funding={rf!r}')
+    out['real_funding'] = rf
+    pct = num('risk_per_trade_pct', 0.5)
+    if not 0 < pct <= 100:
+        raise ClosureRefused('risk_value_invalid', f'risk_per_trade_pct={pct!r}')
+    out['risk_per_trade_pct'] = pct
+    key = 'max_open_trades' if risk.get('max_open_trades') is not None or 'max_open_trades' in risk else 'max_open_positions'
+    mo = num(key, 8)
+    if isinstance(mo, float) and mo != int(mo) or mo < 1:
+        raise ClosureRefused('risk_value_invalid', f'{key}={mo!r}')
+    out['max_open_trades'] = int(mo)
+    return out
+
+
 def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout_symbols, fit_start_ms,
                   dev_end_ms, embargo_bars, protected_start_ms, protected_end_ms, risk,
                   development_mode='REPLAY') -> dict:
@@ -350,8 +401,7 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
                   b={s: sum(1 for t in elig[s] if cut <= t <= protected_end_ms) for s in disc + held})
     dev_ids = sorted((s, inv[s]['eligible_sha256'] if development_mode == 'REPLAY' else inv[s]['stored_gap_count'])
                      for s in disc)
-    risk_id = {k: risk.get(k) for k in ('taker_fee_pct', 'slippage_atr_frac', 'funding_rate_8h', 'real_funding',
-                                        'risk_per_trade_pct', 'max_open_trades')}
+    risk_id = research_risk(risk)
     body = dict(schema=ENVELOPE_SCHEMA, manifest_id=manifest['manifest_id'], tf=tf, development_mode=development_mode,
                 fit_window=[fit_start_ms, dev_end_ms], dev_end_ms=dev_end_ms, embargo_bars=embargo_bars,
                 protected_window=[protected_start_ms, protected_end_ms], discovery_symbols=disc, heldout_symbols=held,
@@ -493,3 +543,82 @@ def protected_fingerprint(snapshot_path, env) -> str:
     import tempfile
     with tempfile.TemporaryDirectory(prefix='closure-fp-') as tmp:
         return freeze_window(snapshot_path, Path(tmp) / 'p.db', env)
+
+
+_DERIV_SERIES = {'funding': 'funding', 'open_interest': 'oi', 'taker_ratio': 'taker_ratio', 'ls_ratio': 'ls_ratio',
+                 'ls_account_ratio': 'ls_account_ratio', 'basis': 'basis'}
+
+
+def freeze_context(snapshot_path, derivs_path, dest_candles, dest_derivs, env, requires) -> dict:
+    """Seal the EXTERNAL series a candidate reads (references into the sealed
+    candle file's `refs`/`market_revisions`, derivatives into their own sealed
+    file), limited to the protected window and to observations that were
+    available by its end. Returns {fingerprint, counts, gaps}: a requirement with
+    no sealed rows is a gap the caller must treat as BLOCKED before any look."""
+    from ...data import market_provenance as mp
+    import sqlite3
+    src_path = refuse_live(snapshot_path)
+    s, step = env['split'], TF_MS[env['tf']]
+    fp, counts, gaps = hashlib.sha256(), {}, []
+    ref_keys = [r.split(':', 1)[1] for r in requires if isinstance(r, str) and r.startswith('ref:')]
+    series = [(r, _DERIV_SERIES[r]) for r in requires if r in _DERIV_SERIES]
+    end = s['end_ms'] + step
+    with closing(readonly(src_path)) as src, closing(sqlite3.connect(dest_candles)) as dst:
+        src.execute('BEGIN')
+        if ref_keys:
+            dst.execute('CREATE TABLE IF NOT EXISTS refs(key TEXT NOT NULL,ts INTEGER NOT NULL,open REAL,high REAL,low REAL,'
+                        'close REAL,volume REAL,PRIMARY KEY(key,ts))')
+            mp.init(dst)
+        for k in ref_keys:
+            rows = src.execute('SELECT * FROM refs WHERE key=? AND ts<=? ORDER BY ts', (k, end)).fetchall()
+            revs = src.execute('SELECT * FROM market_revisions WHERE series_key=? AND event_ms<=? AND available_ms<=? '
+                               'AND observed_ms<=? ORDER BY event_ms,revision_id', ('reference:' + k, end, end, end)).fetchall()
+            logical = [(*r[:-1], mp.logical_record_json(src, r[-1])) for r in revs]
+            dst.executemany('INSERT OR IGNORE INTO refs VALUES (?,?,?,?,?,?,?)', rows)
+            dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', logical)
+            for r in revs:
+                raw = src.execute('SELECT * FROM market_raw_sources WHERE content_hash=?',
+                                  (mp.read_record(src, r[-1])['content_hash'],)).fetchone()
+                if raw:
+                    dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', raw)
+            in_win = sum(1 for r in logical if s['start_ms'] <= r[2] <= s['end_ms'])
+            counts['ref:' + k] = dict(rows=len(rows), receipts=len(logical), in_window=in_win)
+            if not len(logical) or not in_win:
+                gaps.append(dict(requirement='ref:' + k, reason='no receipted observations in the protected window'))
+            fp.update(canonical(['ref', k, rows, logical]).encode())
+        dst.commit()
+    if series:
+        if derivs_path is None:
+            gaps += [dict(requirement=r, reason='no derivatives snapshot supplied') for r, _ in series]
+        else:
+            with closing(readonly(refuse_live(derivs_path))) as src, closing(sqlite3.connect(dest_derivs)) as dst:
+                src.execute('BEGIN')
+                dst.execute('CREATE TABLE IF NOT EXISTS derivs(symbol TEXT NOT NULL,series TEXT NOT NULL,ts INTEGER NOT NULL,'
+                            'value REAL,PRIMARY KEY(symbol,series,ts))')
+                mp.init(dst)
+                for r, name in series:
+                    have = 0
+                    for sym in env['discovery_symbols'] + env['heldout_symbols']:
+                        # one prior settlement interval (24h) of history BEFORE the window: a protected bar needs the funding rate in
+                        # force at its open, which was set before the window began. Development-era data, not protected values.
+                        lo = s['start_ms'] - 24 * 3_600_000
+                        rows = src.execute('SELECT * FROM derivs WHERE symbol=? AND series=? AND ts>=? AND ts<=? ORDER BY ts',
+                                           (sym, name, lo, end)).fetchall()
+                        revs = src.execute('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
+                                           'AND available_ms<=? AND observed_ms<=? ORDER BY event_ms,revision_id',
+                                           (f'derivative:{sym}:{name}', lo, end, end, end)).fetchall()
+                        logical = [(*x[:-1], mp.logical_record_json(src, x[-1])) for x in revs]
+                        dst.executemany('INSERT OR IGNORE INTO derivs VALUES (?,?,?,?)', rows)
+                        dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', logical)
+                        for x in revs:
+                            raw = src.execute('SELECT * FROM market_raw_sources WHERE content_hash=?',
+                                              (mp.read_record(src, x[-1])['content_hash'],)).fetchone()
+                            if raw:
+                                dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', raw)
+                        have += 1 if logical else 0
+                        fp.update(canonical([r, sym, rows, logical]).encode())
+                    counts[r] = dict(symbols_with_receipts=have)
+                    if have < len(env['discovery_symbols'] + env['heldout_symbols']):
+                        gaps.append(dict(requirement=r, reason=f'{have} symbols have receipted rows in the protected window'))
+                dst.commit()
+    return dict(fingerprint=fp.hexdigest(), counts=counts, gaps=gaps)

@@ -34,10 +34,25 @@ class ChildResult:
     exitcode: int | None = None
 
 
-def _entry(conn, fn, args, kwargs, nice):
+def _apply_limits(memory_mb, cpu_seconds):
+    """Enforced by the kernel of the OS, not by the worker's good behaviour: an address-space ceiling turns a
+    memory blow-up into a MemoryError in the child; a CPU ceiling ends a runaway loop even if the deadline poll
+    is starved."""
+    import resource
+    if memory_mb:
+        cap = int(memory_mb) * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (cap, cap))
+    if cpu_seconds:
+        cpu = max(1, int(cpu_seconds))
+        resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu + 5))
+
+
+def _entry(conn, fn, args, kwargs, nice, limits=None):
     try:
         if nice:
             os.nice(nice)
+        if limits:
+            _apply_limits(**limits)
         conn.send(("ok", fn(*args, **kwargs)))
     except BaseException:
         conn.send(("err", traceback.format_exc()[-4000:]))
@@ -45,11 +60,12 @@ def _entry(conn, fn, args, kwargs, nice):
         conn.close()
 
 
-def run_child(fn: Callable, *args, timeout_s: float, nice: int = 19,
-              **kwargs) -> ChildResult:
+def run_child(fn: Callable, *args, timeout_s: float, nice: int = 19, memory_mb: int | None = None,
+              cpu_seconds: float | None = None, **kwargs) -> ChildResult:
     ctx = mp.get_context("spawn")
     parent, child = ctx.Pipe(duplex=False)
-    p = ctx.Process(target=_entry, args=(child, fn, args, kwargs, nice),
+    limits = dict(memory_mb=memory_mb, cpu_seconds=cpu_seconds) if (memory_mb or cpu_seconds) else None
+    p = ctx.Process(target=_entry, args=(child, fn, args, kwargs, nice, limits),
                     daemon=True)
     t0 = time.monotonic()
     p.start()

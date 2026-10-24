@@ -155,6 +155,47 @@ def validity(journal, cfg, item, now_ms):
     return ('STALE' if reasons else 'VALID'), reasons
 
 
+DATA_ACCESS = 'research_data_access'
+
+
+def research_data_items(cfg, identity, unavailable, meta) -> list:
+    """Open and historical research data-access requests from the CONFIGURED closure store, read-only
+    (no Store instance, no schema or row written). No configured store adds nothing; an unreadable one is
+    reported as unavailable, never as 'no requests'. These are alerts: nothing here grants or decides."""
+    path = (((cfg or {}).get('research') or {}).get('closure') or {}).get('store_path')
+    if not path:
+        return []
+    from trader.research.closure import data_access
+    proj = data_access.project(path, identity)
+    if proj['reason']:
+        unavailable.append(proj['reason'])
+    meta.update(source='configured closure store data_requests', open_total=proj['open_total'],
+                history_total=proj['history_total'], history_shown=proj['history_shown'],
+                history_hidden=proj['history_total'] - proj['history_shown'])
+    out = []
+    for r in proj['requests']:
+        if identity and r['request_id'] != identity:
+            continue
+        open_ = r['status'] == 'OPEN'
+        out.append(dict(
+            item_id=r['request_id'], action_type=DATA_ACCESS,
+            affected_object=f"study {r['study_id'][:12]} / candidate {r['candidate_id'][:12]}",
+            reason=(f"Research is waiting for {r['provider']} {r['series']} ({r['tf']}, {r.get('span_utc')}) for candidate {r['candidate_id'][:12]}: "
+                    f"{r['missing_reason']}. " + r['effect']) if open_ else
+                   f"Resolved: {r['series']} was served and the candidate re-evaluated ({(r.get('resolution') or {}).get('outcome')}).",
+            required_owner_action=r['owner_action'] if open_ else 'None; resolved by re-evaluation',
+            created_at_ms=r['created_ms'], available_at_ms=r['created_ms'], updated_at_ms=r['updated_ms'],
+            config_sha256=digest(cfg), binding_hash=digest(r), bindings=dict(
+                {k: r[k] for k in ('study_id', 'candidate_id', 'question_id', 'question', 'requirement', 'reference_key',
+                                   'requirements', 'provider', 'series', 'tf', 'span_start_ms', 'span_end_ms', 'development_mode',
+                                   'references_store') if k in r}, span_utc=r.get('span_utc'),
+                missing_reason=r.get('missing_reason')),
+            validity='VALID', invalid_reasons=[], receipt=None, resolution=r.get('resolution'),
+            status='PENDING' if open_ else 'RESOLVED', decision_operation='provide_data',
+            context_link='#research', grants='None. A data request is not an approval, trading or capability grant.'))
+    return out
+
+
 def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
     if type(offset) is not int or offset < 0 or (identity and offset):
         raise ValueError("invalid_approval_offset")
@@ -217,6 +258,8 @@ def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
                             decision_operation='approval_decision'))
     else:
         unavailable.append('first_live_request_ledger_not_recorded')
+    research_meta = {}
+    out.extend(research_data_items(cfg, identity, unavailable, research_meta))
     from datetime import datetime, timezone
     from trader.dashboard.owner_api import read_supervisor
     supervisor, error = read_supervisor(journal, datetime.fromtimestamp(now_ms/1000, timezone.utc))
@@ -240,8 +283,12 @@ def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
                             status='PENDING', receipt=None, decision_operation='resume'))
     # Pending/stale mandatory actions precede completed history across all ledgers.
     # Slice only after ordering, and expose every later page to the owner.
-    pending = [i for i in out if not i['receipt'] or i['validity'] != 'VALID']
-    complete = [i for i in out if i['receipt'] and i['validity'] == 'VALID']
+    def is_pending(i):
+        if i['action_type'] == DATA_ACCESS:       # an alert: pending until its candidate is re-evaluated on eligible data
+            return i['status'] == 'PENDING'
+        return not i['receipt'] or i['validity'] != 'VALID'
+    pending = [i for i in out if is_pending(i)]
+    complete = [i for i in out if not is_pending(i)]
     ordered = pending + complete
     has_more = len(ordered) > offset+100
     return dict(generated_at=datetime.now(timezone.utc).isoformat(),
@@ -250,7 +297,9 @@ def items(journal, cfg, *, now_ms=None, identity=None, offset=0):
                 page=dict(offset=offset, limit=100, has_more=has_more,
                           next_offset=offset+100 if has_more else None, order='pending/stale before completed history'),
                 unavailable=[dict(field='approvals', reason=x) for x in unavailable],
-                source='exact owner governance and Strategy Factory request ledgers',
+                research_data=research_meta or None,
+                source='exact owner governance and Strategy Factory request ledgers, plus the configured research '
+                       'dependency (data-request) ledger when a closure store is configured',
                 classes=list(CLASSES), grants='Decisions only. No activation, spend, risk/config mutation or order.')
 
 
@@ -259,6 +308,8 @@ def decide(journal, cfg, args, *, actor, request_id, now_ms):
     if len(matches) != 1:
         raise ValueError('approval_missing_or_outside_bounded_window')
     item = matches[0]
+    if item['action_type'] == DATA_ACCESS:
+        raise ValueError('data_request_is_not_an_approval')      # before any ledger write: it is an alert
     if item['binding_hash'] != args['binding_hash'] or item['validity'] != 'VALID':
         raise ValueError('approval_stale_or_hash_changed')
     if item['action_type'] == 'serious_recovery':

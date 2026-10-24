@@ -271,7 +271,7 @@ def read_latest(path, *, now_ms=None, stale_seconds=300, health=None):
     return result
 
 
-def read_world_history(path, *, as_of_ms=None):
+def read_world_history(path, *, as_of_ms=None, immutable=False, latest_only=False):
     """Public retained WorldModel source, under one read-only transaction.
 
     Retention gaps stay absent. Accepted receipts must bind their exact
@@ -284,14 +284,22 @@ def read_world_history(path, *, as_of_ms=None):
     if not Path(path).is_file():
         return WorldHistory(()), "SOURCE_UNAVAILABLE"
     try:
-        with closing(sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro",
+        with closing(sqlite3.connect(Path(path).resolve().as_uri() + ("?mode=ro&immutable=1" if immutable else "?mode=ro"),
                                      uri=True, timeout=.05)) as db:
             db.execute("PRAGMA query_only=ON")
             db.execute("BEGIN")
             sql = "SELECT as_of_ms,payload FROM scans WHERE payload IS NOT NULL"
-            rows = db.execute(sql + (" AND as_of_ms <= ?" if as_of_ms is not None else ""),
-                              (as_of_ms,) if as_of_ms is not None else ()).fetchall()
+            params = (as_of_ms,) if as_of_ms is not None else ()
+            if latest_only:
+                # Capability inventory needs one fully verified record, not every model in history.
+                # Historical evaluation still uses the default complete exact-cut reader.
+                cutoff = " AND as_of_ms <= ?" if as_of_ms is not None else ""
+                sql += " AND as_of_ms = (SELECT MAX(as_of_ms) FROM scans WHERE payload IS NOT NULL" + cutoff + ")"
+            else:
+                sql += " AND as_of_ms <= ?" if as_of_ms is not None else ""
+            rows = db.execute(sql, params).fetchall()
             records = []
+            reconstructed = False
             for cut, payload in rows:
                 scan = json.loads(payload)
                 receipt = scan.get("world_model")
@@ -301,13 +309,21 @@ def read_world_history(path, *, as_of_ms=None):
                     raise ValueError("invalid world receipt")
                 record = WorldModelRecord.from_json(receipt["record_json"])
                 model = record.reconstruct()
+                modes = {obs.value for state in model.states for obs in state.observations
+                         if obs.kind == 'research_evidence_scope'}
+                if modes - {'point_in_time', 'retrospective_observation'} or len(modes) > 1:
+                    raise ValueError('ambiguous research World data mode')
+                if receipt.get('producer_id') == 'research.compose.world_producer.v1' and model.states and not modes:
+                    raise ValueError('research World data mode missing from immutable record')
+                if 'retrospective_observation' in modes or scan.get('evidence_scope') == 'retrospective_observation':
+                    reconstructed = True
                 if (record.record_id != receipt.get("record_id")
                         or record.model_id != receipt.get("model_id")
                         or model.as_of_ms != cut or scan.get("as_of_ms") != cut
                         or receipt.get("as_of_ms") != cut):
                     raise ValueError("world receipt identity/cut mismatch")
                 records.append(record)
-            return WorldHistory(records), "RETAINED"
+            return WorldHistory(records), "RECONSTRUCTED_RETROSPECTIVE" if reconstructed else "RETAINED"
     except (sqlite3.Error, OSError, ValueError, TypeError, KeyError, AttributeError):
         return WorldHistory(()), "SOURCE_INVALID_OR_AMBIGUOUS"
 

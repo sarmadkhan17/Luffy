@@ -24,7 +24,7 @@ def spec_for(b, **over):
     return spec
 
 
-def positive(cand, snap, env, store=None, draws=None):
+def positive(cand, snap, env, store=None, draws=None, **_context_paths):          # production passes derivs/world/references paths
     c = families.realize(cand, {}, env['envelope_id']) if not families.gauge_expressions(cand) else None
     if c is None:                                             # gauge families: not needed by these cases
         r = dict(outcome='NEGATIVE_ECONOMICS')

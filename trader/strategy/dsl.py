@@ -84,6 +84,12 @@ def parse(expr: str) -> ast.Expression:
                     Horizon(node.args[1].value)
                 except ValueError:
                     raise SpecError('world_observation: unknown typed horizon') from None
+            if name in ('htf', 'ref', 'xs_rank', 'breadth', 'dispersion') and any(
+                    isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name)
+                    and sub.func.id in ('fitted', 'fitted_pass') for sub in ast.walk(node)):
+                # a model's inputs may read refs/derivatives/the book, which a wrapped sub-context cannot serve;
+                # inspecting only the wrapper's own arguments would miss that, so fitted inside a wrapper is refused
+                raise SpecError('fitted models cannot be evaluated inside ref/htf/cross-sectional wrappers')
             if name == "ref":
                 _check_ref(node)
         elif isinstance(node, ast.Name):
@@ -162,6 +168,11 @@ def data_requires(*trees: ast.Expression) -> tuple[str, ...]:
                 req.add(f"ref:{node.args[0].value}")
         for name in features_used(tree):
             req.update(FEATURES[name].requires)
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                    and node.func.id in ("fitted", "fitted_pass")):
+                from . import fitted
+                req.update(fitted.requires_of(node.args[0].value))
     return tuple(sorted(req or {"ohlcv"}))
 
 
@@ -305,10 +316,21 @@ def _eval_htf(node: ast.Call, ctx):
             base_cut[-1] = ctx.as_of_ms
     pos = np.searchsorted(known, base_cut, side='right') - 1
     arr = vals.to_numpy(dtype=float,na_value=np.nan)
+    bad = np.zeros(len(frame), dtype=bool)
     if 'quality' in frame:
         quality = frame['observation_quality' if frame.attrs.get('read_mode') == 'retrospective' else 'quality'].eq('VALID')
         final = frame['bar_state'].eq('FINAL') if 'bar_state' in frame else True
-        arr = np.where(quality & final, arr, np.nan)
+        bad = ~np.asarray(quality & final, dtype=bool)
+    # The value at source row k depends on the previous (window-1) source rows. A missing source interval or an unusable
+    # row ANYWHERE in that actual dependency window invalidates it (no bridging of a hole, no silent fill); only the
+    # anchor row used to be checked. Applies to replay, retrospective and current frames alike (contiguity is not
+    # availability); the window is the expression's own span in source bars.
+    from . import fill_timing
+    window = fill_timing._span(node.args[1]) + 1
+    src = ms(frame['ts'])
+    hole = np.r_[False, np.diff(src) != TF_MS[tf]] if len(src) else np.zeros(0, dtype=bool)
+    tainted = pd.Series(hole | bad).rolling(max(window, 1), min_periods=1).max().to_numpy(dtype=bool)
+    arr = np.where(tainted, np.nan, arr)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
 

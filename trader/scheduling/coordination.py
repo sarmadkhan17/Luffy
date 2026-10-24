@@ -130,6 +130,19 @@ def input_fingerprint(snap, *, generation, control, funding, oi, book, learning)
     import pandas as pd
     h = hashlib.sha256()
     def add(value):
+        from ..world.context import WorldContext
+        if isinstance(value, WorldContext):
+            # A fresh observation cut alone must not retrigger identical economic decisions.
+            # Exact World identities remain in the decision evidence; this is the input-change key.
+            observations = []
+            if value.history.cuts:
+                model = value.history.get_exact(max(value.history.cuts))
+                observations = [(s.instrument, o.kind, o.timeframe, o.horizon, o.timestamp_ms,
+                                 o.value, o.quality.value, o.is_fresh_at(model.as_of_ms), o.transform_version)
+                                for s in model.states for o in s.observations if o.kind != 'research_evidence_scope']
+                observations.sort(key=lambda row: json.dumps(row, sort_keys=True, default=str))
+            add((value.source_status, observations))
+            return
         if isinstance(value, pd.DataFrame):
             columns = [c for c in value.columns if c not in
                        ('received_at_ms', 'request_started_ms', 'available_at_ms', 'revision_id')]

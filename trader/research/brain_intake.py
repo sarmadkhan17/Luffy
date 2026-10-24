@@ -55,11 +55,43 @@ class Queue:
     Source rows are read in one SQLite snapshot. The Bank overlays only its own
     research consumption; source consumption rows are retained exactly as read.
     """
+    _BATCH = 500  # below SQLite's historical 999-variable limit
+    _PENDING = 'SELECT id, ts, kind, subject, detail FROM brain_events e WHERE e.kind=? '
+    _CONSUMED_DETAIL = 'SELECT detail FROM brain_events WHERE kind=? AND subject=?'
+
     def __init__(self, source, bank, append):
         self.source, self.bank, self.append = source, bank, append
+        self._consumed = {}  # subject -> exact source consumption rows in id order; one snapshot only
+
+    def _prefetch(self, subjects):
+        """One bounded batched scan per 500 subjects instead of one scan per idea.
+
+        The source is a single BEGIN snapshot, so rows read here equal what any
+        later per-subject SELECT would return; ORDER BY id is the rowid scan order.
+        """
+        wanted = list(dict.fromkeys(s for s in subjects if s not in self._consumed))
+        for i in range(0, len(wanted), self._BATCH):
+            chunk = wanted[i:i + self._BATCH]
+            found = {s: [] for s in chunk}
+            for r in self.source.execute(
+                    'SELECT id,ts,kind,subject,detail FROM brain_events WHERE kind=? AND subject IN (%s) ORDER BY id'
+                    % ','.join('?' * len(chunk)), (ideas.CONSUMED, *chunk)):
+                found[r['subject']].append(dict(r))
+            self._consumed.update(found)
+
+    def consumption(self, idea_id):
+        """Exact source consumption rows (id order) for the retained receipt."""
+        if idea_id not in self._consumed:
+            self._prefetch([idea_id])
+        return self._consumed[idea_id]
 
     def query(self, sql, args=()):
-        rows = [dict(r) for r in self.source.execute(sql, args)]
+        if sql == self._CONSUMED_DETAIL and args[0] == ideas.CONSUMED and args[1] in self._consumed:
+            rows = [{'detail': r['detail']} for r in self._consumed[args[1]]]
+        else:
+            rows = [dict(r) for r in self.source.execute(sql, args)]
+            if sql.startswith(self._PENDING) and args and args[0] == ideas.KIND:
+                self._prefetch(r['subject'] for r in rows)
         if args and args[0] == ideas.CONSUMED:
             rows += [json.loads(p) for p, in self.bank.execute(
                 'SELECT payload FROM bridge_idea_consumption WHERE json_extract(payload,\'$.subject\')=?', (args[1],))]
@@ -104,9 +136,7 @@ def intake(source_path, bank, append, *, now_ms, limit):
                                  now_ms=now_ms, retain_queue_row=True)
         for idea in selected:
             row = idea['queue_row']
-            consumed = [dict(r) for r in source.execute(
-                'SELECT id,ts,kind,subject,detail FROM brain_events WHERE kind=? AND subject=? ORDER BY id',
-                (ideas.CONSUMED, idea['idea_id']))]
+            consumed = queue.consumption(idea['idea_id'])
             fields = dict(schema=SCHEMA, authority='QUESTION_ONLY', source_path=path,
                           idea_id=idea['idea_id'], queue_row=row, consumption_at_intake=consumed)
             retained = dict(bank_id=P.digest(fields), **fields)

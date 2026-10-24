@@ -1,0 +1,345 @@
+"""Publish a consistent, BOUNDED, exact-cut study snapshot through the data service's own reader contract.
+
+A physical copy of every timeframe of the whole cache (candles 5.2 GB, derivatives 6.4 GB) is not what a study needs
+and was measured to exceed the slot. This reads ONLY the declared rows through ONE read transaction of the source
+(WAL snapshot isolation) per source. Candles, receipts and references share one source transaction; derivatives
+have their own transaction at the same event cut, not a cross-database atomic snapshot. Retained receipts and bodies are copied
+together without expanding repeated raw responses; the existing reader verifies their logical form. Provenance is
+never weakened or synthesised. The source is opened read-only, never written, and is never copied as a file. The
+caller runs this in a killable child with a deadline.
+
+Bounds: symbols x window bars (+ declared warmup) of ONE timeframe, the reference keys' rows in the window, and the
+declared derivative series for those symbols. `max_rows` refuses an unexpectedly large request instead of filling disk.
+"""
+from __future__ import annotations
+
+import os
+import json
+import sqlite3
+import time
+import uuid
+from contextlib import closing
+from pathlib import Path
+
+from ...core.types import TF_MS
+from ...data import market_provenance as mp
+from . import ClosureRefused
+from ..predictive_experiment import readonly
+
+DERIV_SERIES = ('funding', 'oi', 'taker_ratio', 'ls_ratio', 'ls_account_ratio', 'basis')
+
+
+class Bounds:
+    """One shared input-work/payload ceiling across all source transactions and outputs."""
+    def __init__(self, rows, size, deadline):
+        self.rows, self.size, self.deadline = int(rows), int(size), deadline
+        self.used_rows = self.used_bytes = 0
+        self.raw_seen = set()
+        self.raw_texts = {}  # bounded by the same charged payload ceiling, scoped to this single source cut
+
+    def charge(self, row):
+        _tick(self.deadline)
+        size = sum(len(v.encode()) if isinstance(v, str) else len(v) if isinstance(v, bytes) else 16 for v in row)
+        self.used_rows += 1
+        self.used_bytes += size
+        if self.used_rows > self.rows:
+            raise ClosureRefused('publish_rows_exceed_bound')
+        if self.used_bytes > self.size:
+            raise ClosureRefused('publish_bytes_exceed_bound')
+
+    def take(self, db, sql, params=()):
+        _tick(self.deadline)
+        cur = db.execute(sql + ' LIMIT ?', (*params, max(1, self.rows - self.used_rows + 1)))
+        out = []
+        for row in cur:
+            self.charge(row)                 # enforce before accumulating a large result or writing it
+            out.append(row)
+        return out
+
+    def attach(self, db):
+        db.set_progress_handler(lambda: int(self.deadline is not None and time.monotonic() > self.deadline), 2000)
+
+
+def _raw(src, dst, key, bound):
+    if not key or key in bound.raw_seen:
+        return
+    length = src.execute('SELECT length(CAST(raw_json AS BLOB)) FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
+    if length and length[0] > min(8 * 1024 * 1024, bound.size - bound.used_bytes):
+        raise ClosureRefused('publish_bytes_exceed_bound')
+    for row in bound.take(src, 'SELECT * FROM market_raw_sources WHERE content_hash=?', (key,)):
+        dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', row)
+        bound.raw_texts[key] = row[-1]
+    bound.raw_seen.add(key)
+
+
+def _tick(deadline):
+    if deadline is not None and time.monotonic() > deadline:
+        raise ClosureRefused('publish_deadline')
+
+
+def _ddl(src, names) -> list:
+    return [r[0] for r in src.execute("SELECT sql FROM sqlite_master WHERE tbl_name IN (%s) AND sql IS NOT NULL "
+                                      "AND name NOT LIKE 'sqlite_%%' ORDER BY type DESC" % ','.join('?' * len(names)), names)]
+
+
+def _has(src, name) -> bool:
+    return bool(src.execute('SELECT 1 FROM sqlite_master WHERE name=?', (name,)).fetchone())
+
+
+def _candle_tails(src, tf, cut, symbols, deadline):
+    """Seek the (symbol,tf,ts) index, rather than scan every cached timeframe for MAX(ts).
+
+    The same closed-event maximum is preserved. With no explicit universe, skip directly to
+    the next distinct symbol; a normal DISTINCT scan would still walk millions of index rows.
+    """
+    names = []
+    row = src.execute('SELECT symbol FROM candles ORDER BY symbol LIMIT 1').fetchone()
+    while row is not None:
+        _tick(deadline)
+        names.append(row[0])
+        row = src.execute('SELECT symbol FROM candles WHERE symbol>? ORDER BY symbol LIMIT 1', (row[0],)).fetchone()
+    tails = {}
+    for sym in names:
+        _tick(deadline)
+        row = src.execute('SELECT ts FROM candles WHERE symbol=? AND tf=? AND ts<=? ORDER BY ts DESC LIMIT 1',
+                          (sym, tf, cut)).fetchone()
+        if row is not None:
+            tails[sym] = int(row[0])
+    return names if symbols is None else list(symbols), tails
+
+
+def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, retrospective=False, latest_before=None):
+    if retrospective:
+        # Match retrospective_load's exact per-event winner, including rowid
+        # ties and invalid latest receipts. Older versions cannot affect that
+        # reader; replay publications still retain the full revision history.
+        cutoff = hi + 1 if latest_before is None else latest_before
+        sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
+               'AND (event_ms>=? OR rowid IN ('
+               'SELECT selected_rowid FROM (SELECT rowid AS selected_rowid,ROW_NUMBER() OVER ('
+               'PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) ordinal '
+               'FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<?) '
+               'WHERE ordinal=1)) ORDER BY event_ms,observed_ms,rowid')
+        params = (series_key, lo, hi, cutoff, series_key, lo, cutoff)
+    else:
+        sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
+               'ORDER BY event_ms,observed_ms,rowid')
+        params = (series_key, lo, hi)
+    rows = bound.take(src, sql, params)
+    for r in rows:
+        _tick(deadline)
+        physical = json.loads(r[-1])
+        for field in ('source', 'raw_json'):
+            text = physical.get(field)
+            if isinstance(text, str) and text.startswith(mp.TEXT_REF):
+                _raw(src, dst, text[len(mp.TEXT_REF):], bound)
+        # Reuse shared bodies within this transaction. read_record still verifies
+        # each text reference/hash; the cache only removes repeated SQLite reads.
+        rec = mp.read_record(src, r[-1], text_cache=bound.raw_texts)
+        _raw(src, dst, rec.get('content_hash'), bound)
+        raw_hash = None
+        try:
+            raw_hash = json.loads(rec.get('raw_json') or 'null').get('raw_source_hash')   # reference receipts point at a retained response
+        except (ValueError, AttributeError):
+            pass
+        if raw_hash:
+            _raw(src, dst, raw_hash, bound)
+    # Preserve physical references plus their checked immutable bodies; expanding every repeated
+    # response into each receipt would make a bounded source into an enormous duplicated snapshot.
+    dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
+    counters['revisions'] += len(rows)
+
+
+def publish_exact_cut(src_candles, dst_candles, *, tf, window_bars, symbols=None, deriv_src=None, dst_derivs=None,
+                      deriv_series=DERIV_SERIES, deadline=None, max_rows=5_000_000,
+                      max_bytes=512 * 1024 * 1024, now_ms=None, coverage_filter=None, retrospective=False,
+                      development_derivatives_only=False, _between=None) -> dict:
+    """Write the bounded study snapshot. `deadline` is a monotonic instant. Returns what was published and its cut."""
+    step = TF_MS[tf]
+    if coverage_filter is not None:
+        if (set(coverage_filter) != {'fit_bars', 'reserve_bars', 'max_gap_bars'} or
+                any(type(v) is not int or v < 0 for v in coverage_filter.values()) or not coverage_filter['fit_bars']):
+            raise ClosureRefused('publish_coverage_filter_invalid')
+    if development_derivatives_only and coverage_filter is None:
+        raise ClosureRefused('development_derivatives_require_declared_window')
+    _tick(deadline)
+    dst_candles = Path(dst_candles)
+    if Path(src_candles).resolve() == dst_candles.resolve():
+        raise ClosureRefused('publish_destination_is_source')
+    bound = Bounds(max_rows, max_bytes, deadline)
+    clock_ms = int(time.time() * 1000) if now_ms is None else int(now_ms)
+    destinations = [dst_candles] + ([Path(dst_derivs)] if deriv_src is not None and dst_derivs is not None else [])
+    if len({p.resolve() for p in destinations}) != len(destinations):
+        raise ClosureRefused('publish_destinations_collide')
+    sources = {Path(p).resolve() for p in (src_candles, deriv_src) if p is not None}
+    if any(p.resolve() in sources for p in destinations):
+        raise ClosureRefused('publish_destination_is_source')
+    if any(p.exists() for p in destinations):
+        raise ClosureRefused('publish_destination_exists')
+    token = uuid.uuid4().hex
+    tmp = dst_candles.with_name('.publishing-' + token + '-' + dst_candles.name)
+    staged_derivs = Path(dst_derivs).with_name('.publishing-' + token + '-' + Path(dst_derivs).name) if len(destinations) > 1 else None
+    installed = []
+    success = False
+    dst_candles.parent.mkdir(parents=True, exist_ok=True)
+    counters = dict(rows=0, revisions=0)
+    out = {}
+    try:
+        with closing(readonly(src_candles)) as src, closing(sqlite3.connect(tmp)) as dst:
+            bound.attach(src)
+            bound.attach(dst)
+            src.execute('BEGIN')                                         # ONE read transaction: one consistent instant
+            names, tails = _candle_tails(src, tf, (clock_ms // step) * step - step, symbols, deadline)
+            if not tails:
+                raise ClosureRefused('publish_source_empty')
+            last = max(tails.values())
+            if _between is not None:
+                _between()                                               # test seam: a writer commits during the publish
+            as_of = int(last) + step
+            # Development can use retained latest observations. The reserved
+            # final-test region must keep every receipt for later as-of replay.
+            latest_before = as_of - coverage_filter['reserve_bars'] * step if coverage_filter else None
+            start = as_of - int(window_bars) * step
+            tables = [t for t in ('candles', 'candle_floor', 'refs', 'market_revisions', 'market_raw_sources') if _has(src, t)]
+            for sql in _ddl(src, tables):
+                dst.execute(sql)
+            mp.init(dst)
+            syms = names if symbols is not None else [sym for sym in names if tails.get(sym, -1) >= start]
+            cohort = None
+            if coverage_filter is not None:
+                fit_start = as_of - (coverage_filter['fit_bars'] + coverage_filter['reserve_bars']) * step
+                fit_end = as_of - coverage_filter['reserve_bars'] * step
+                gap = coverage_filter['max_gap_bars'] * step
+                selected, excluded = [], []
+                for sym in syms:
+                    _tick(deadline)
+                    first = src.execute('SELECT ts FROM candles WHERE symbol=? AND tf=? AND ts>=? AND ts<=? '
+                                        'ORDER BY ts LIMIT 1', (sym, tf, start, last)).fetchone()
+                    if first is not None and first[0] <= fit_start + gap and tails.get(sym, -1) >= fit_end - step - gap:
+                        selected.append(sym)
+                    else:
+                        excluded.append(sym)
+                # This only removes symbols that CANNOT pass the existing fit
+                # coverage rule. It grants no eligibility: full gap/quality/
+                # receipt checks still run on the published cohort below.
+                cohort = dict(considered=len(syms), published=len(selected), excluded=len(excluded),
+                              excluded_symbols=excluded, fit_window_ms=[fit_start, fit_end],
+                              reason='stored endpoints cannot cover the predeclared fit window; no value or performance ranking')
+                syms = selected
+            cols = len(src.execute('SELECT * FROM candles LIMIT 0').description)
+            for sym in syms:
+                _tick(deadline)
+                rows = bound.take(src, 'SELECT * FROM candles WHERE symbol=? AND tf=? AND ts>=? AND ts<=? ORDER BY ts',
+                                   (sym, tf, start, last))
+                dst.executemany('INSERT INTO candles VALUES (%s)' % ','.join('?' * cols), rows)
+                counters['rows'] += len(rows)
+                if _has(src, 'candle_floor'):
+                    floor = src.execute('SELECT * FROM candle_floor WHERE symbol=? AND tf=?', (sym, tf)).fetchall()
+                    dst.executemany('INSERT INTO candle_floor VALUES (%s)' % ','.join('?' * len(floor[0])), floor) if floor else None
+                if _has(src, 'market_revisions'):
+                        _copy_revisions(src, dst, f'candle:{sym}:{tf}', start, last, deadline, counters, bound, retrospective, latest_before)
+            if counters['rows'] > max_rows:
+                raise ClosureRefused('publish_rows_exceed_bound')
+            if _has(src, 'refs'):
+                keys = [r[0] for r in src.execute('SELECT DISTINCT key FROM refs')]
+                rcols = len(src.execute('SELECT * FROM refs LIMIT 0').description)
+                for k in keys:
+                    _tick(deadline)
+                    rows = bound.take(src, 'SELECT * FROM refs WHERE key=? AND ts>=? AND ts<=?', (k, start, last))
+                    dst.executemany('INSERT INTO refs VALUES (%s)' % ','.join('?' * rcols), rows)
+                    counters['rows'] += len(rows)
+                    if _has(src, 'market_revisions'):
+                        _copy_revisions(src, dst, 'reference:' + k, start, last, deadline, counters, bound, retrospective, latest_before)
+            dst.commit()
+            out = dict(as_of_ms=as_of, start_ms=start, symbols=syms, rows=counters['rows'], revisions=counters['revisions'],
+                       captured_at_ms=clock_ms, consistency='SINGLE_READ_TRANSACTION_EXACT_CUT',
+                       revision_scope='RETROSPECTIVE_LATEST_PER_EVENT' if retrospective else 'FULL_REPLAY_HISTORY',
+                       full_revision_history_from_ms=latest_before if retrospective else start,
+                       source='candles/references one read transaction; derivatives separate transaction at same event cut')
+            if cohort is not None:
+                out['coverage_filter'] = cohort
+        out['derivs'] = None
+        if deriv_src is not None and dst_derivs is not None:
+            deriv_last = min(last, latest_before - step) if development_derivatives_only else last
+            out['derivs'] = _publish_derivs(deriv_src, staged_derivs, syms, deriv_series, start, deriv_last, deadline, bound, retrospective, latest_before)
+            out['derivs']['data_scope'] = 'DEVELOPMENT_ONLY' if development_derivatives_only else 'DEVELOPMENT_AND_PROTECTED'
+            out['cross_source_atomic'] = False
+        with closing(sqlite3.connect(tmp)) as chk:                       # settle: one quiescent file, no sidecars
+            chk.execute('PRAGMA journal_mode=DELETE')
+        for suffix in ('-wal', '-shm', '-journal'):
+            Path(str(tmp) + suffix).unlink(missing_ok=True)
+        _tick(deadline)
+        disk_bytes = tmp.stat().st_size + (staged_derivs.stat().st_size if staged_derivs is not None else 0)
+        if disk_bytes > max_bytes:
+            raise ClosureRefused('publish_disk_bytes_exceed_bound')
+        # Never replace an earlier study or another publisher's output. Two outputs
+        # are not atomic: remove our first link if publishing the second fails.
+        for source, target in [(tmp, dst_candles)] + ([(staged_derivs, Path(dst_derivs))] if staged_derivs is not None else []):
+            os.link(source, target)
+            installed.append((target, source.stat().st_ino))
+        if out['derivs'] is not None:
+            out['derivs']['path'] = str(dst_derivs)
+        out['bytes'] = dst_candles.stat().st_size
+        out['path'] = str(dst_candles)
+        out.update(input_rows=bound.used_rows, input_payload_bytes=bound.used_bytes,
+                   payload_byte_limit=bound.size, row_limit=bound.rows)
+        success = True
+        return out
+    except sqlite3.OperationalError:
+        _tick(deadline)
+        raise
+    finally:
+        if not success:
+            for target, inode in installed:
+                if target.exists() and target.stat().st_ino == inode:
+                    target.unlink()
+        if staged_derivs is not None:
+            staged_derivs.unlink(missing_ok=True)
+        for p in (tmp, Path(str(tmp) + '-wal'), Path(str(tmp) + '-shm'), Path(str(tmp) + '-journal')):
+            p.unlink(missing_ok=True)
+
+
+def _publish_derivs(src_path, dst_path, symbols, series, lo, hi, deadline, bound, retrospective=False, latest_before=None) -> dict:
+    bound.raw_seen.clear()                     # each destination needs its own referenced immutable bodies
+    dst_path = Path(dst_path)
+    if Path(src_path).resolve() == dst_path.resolve():
+        raise ClosureRefused('publish_destination_is_source')
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst_path.with_name('.publishing-' + uuid.uuid4().hex + '-' + dst_path.name)
+    for p in (tmp, Path(str(tmp) + '-wal'), Path(str(tmp) + '-shm')):
+        p.unlink(missing_ok=True)
+    counters = dict(rows=0, revisions=0)
+    try:
+        with closing(readonly(src_path)) as src, closing(sqlite3.connect(tmp)) as dst:
+            # Separate source transaction AND destination: even an identical
+            # content key must be read, verified and written again here.
+            bound.raw_seen.clear()
+            bound.raw_texts.clear()
+            bound.attach(src)
+            bound.attach(dst)
+            src.execute('BEGIN')
+            src.execute('SELECT 1 FROM sqlite_master LIMIT 1').fetchone()
+            for sql in _ddl(src, [t for t in ('derivs',) if _has(src, t)]):
+                dst.execute(sql)
+            mp.init(dst)
+            ncol = len(src.execute('SELECT * FROM derivs LIMIT 0').description)
+            for sym in symbols:
+                for name in series:
+                    _tick(deadline)
+                    rows = bound.take(src, 'SELECT * FROM derivs WHERE symbol=? AND series=? AND ts>=? AND ts<=? ORDER BY ts',
+                                       (sym, name, lo, hi))
+                    dst.executemany('INSERT INTO derivs VALUES (%s)' % ','.join('?' * ncol), rows)
+                    counters['rows'] += len(rows)
+                    if _has(src, 'market_revisions'):
+                        _copy_revisions(src, dst, f'derivative:{sym}:{name}', lo, hi, deadline, counters, bound, retrospective, latest_before)
+            dst.commit()
+        with closing(sqlite3.connect(tmp)) as chk:
+            chk.execute('PRAGMA journal_mode=DELETE')
+        for suffix in ('-wal', '-shm', '-journal'):
+            Path(str(tmp) + suffix).unlink(missing_ok=True)
+        os.replace(tmp, dst_path)
+        return dict(path=str(dst_path), rows=counters['rows'], revisions=counters['revisions'], bytes=dst_path.stat().st_size,
+                    event_range_ms=[lo, hi], consistency='SINGLE_READ_TRANSACTION')
+    finally:
+        for p in (tmp, Path(str(tmp) + '-wal'), Path(str(tmp) + '-shm'), Path(str(tmp) + '-journal')):
+            p.unlink(missing_ok=True)

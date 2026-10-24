@@ -242,3 +242,93 @@ def test_passage_and_investigation_sources_share_existing_bank(population, tmp_p
     assert attachment['question_source'] is None and attachment['hypotheses']
     assert run()['counts']['eligible_research_results'] == 0
     assert len(rows(bank, 'bridge_sources')) == 2
+
+
+BatchedQueue = Q.Queue
+
+
+class NaiveQueue(BatchedQueue):
+    """The pre-batch adapter: one source scan per idea, for equivalence only."""
+    def query(self, sql, args=()):
+        rows = [dict(r) for r in self.source.execute(sql, args)]
+        if args and args[0] == ideas.CONSUMED:
+            rows += [json.loads(p) for p, in self.bank.execute(
+                'SELECT payload FROM bridge_idea_consumption WHERE json_extract(payload,\'$.subject\')=?', (args[1],))]
+        return rows
+
+    def consumption(self, idea_id):
+        return [dict(r) for r in self.source.execute(
+            'SELECT id,ts,kind,subject,detail FROM brain_events WHERE kind=? AND subject=? ORDER BY id',
+            (ideas.CONSUMED, idea_id))]
+
+
+def _many_subject_source(tmp_path):
+    j = Journal(tmp_path / 'many.db')
+    n = 150
+    for i in range(n):
+        assert ideas.record(j, dict(idea_id=f'p{i:03d}', title='Unverified research', text=TEXT + f'variant {i} ' * (i % 7),
+                                    source='fixture-paper', url='https://example.test/p' if i % 11 else ''),
+                            streams=('research', 'strategy') if i % 5 else ('research',))
+    with j._tx() as db:
+        for i in range(n):
+            db.execute('UPDATE brain_events SET ts=? WHERE subject=? AND kind=?', (stamp(NOW - 1000 - i), f'p{i:03d}', ideas.KIND))
+        # Upgraded ideas: a second, newer row for the same subject.
+        db.execute('INSERT INTO brain_events(ts,kind,subject,detail) SELECT ?,kind,subject,detail FROM brain_events '
+                   'WHERE kind=? AND CAST(substr(subject,2) AS INT)%9=0', (stamp(NOW - 1), ideas.KIND))
+    # Interleaved, multiple and out-of-order consumption across streams.
+    for i in range(0, n, 2):
+        ideas.mark_consumed(j, f'p{i:03d}', 'strategy-used', stream=ideas.STRATEGY)
+    for i in range(0, n, 6):
+        ideas.mark_consumed(j, f'p{i:03d}', 'research-used', stream=ideas.RESEARCH)
+    for i in range(1, n, 13):
+        ideas.mark_consumed(j, f'p{i:03d}', 'legacy-used')
+    for i in range(3, n, 17):
+        ideas.mark_consumed(j, f'p{i:03d}', 'second', stream=ideas.STRATEGY)
+        ideas.mark_consumed(j, f'p{i:03d}', 'third', stream=ideas.STRATEGY)
+    with j._tx() as db:
+        db.execute('INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)', (stamp(NOW), ideas.CONSUMED, 'p005', 'not json'))
+        # Legacy rows inside the pending window: NULL and BLOB subjects mixed with text ones.
+        for subj in (None, b'p001', b'\xff\x00'):
+            db.execute('INSERT INTO brain_events(ts,kind,subject,detail) SELECT ?,kind,?,detail FROM brain_events '
+                       'WHERE kind=? AND subject=?', (stamp(NOW - 1500), subj, ideas.KIND, 'p010'))
+    return tmp_path / 'many.db', n
+
+
+def _run_intake(module_queue, monkeypatch, source, bank_path, limit, trace):
+    monkeypatch.setattr(Q, 'Queue', module_queue)
+    real = Q.readonly
+    def traced(path):
+        db = real(path)
+        db.set_trace_callback(trace.append)
+        return db
+    monkeypatch.setattr(Q, 'readonly', traced)
+    bank = B.store(bank_path)
+    for i in (2, 4, 7, 20):  # Bank-only research consumption overlay
+        B.append(bank, 'bridge_idea_consumption', f'overlay{i}', dict(
+            kind=ideas.CONSUMED, subject=f'p{i:03d}', detail=P.canonical(dict(stream='research', outcome='bank-only'))))
+    bank.commit()
+    counts = Q.intake(source, bank, B.append, now_ms=NOW, limit=limit)
+    bank.commit()
+    out = {t: B.records(bank, t) for t in B.TABLES}
+    bank.close()
+    return counts, out
+
+
+@pytest.mark.parametrize('batch', [500, 7])
+def test_batched_source_consumption_equals_naive_with_bounded_queries(tmp_path, monkeypatch, batch):
+    source, n = _many_subject_source(tmp_path)
+    original = source.read_bytes()
+    naive_trace, batch_trace = [], []
+    naive = _run_intake(NaiveQueue, monkeypatch, source, tmp_path / 'naive.db', 60, naive_trace)
+    monkeypatch.setattr(BatchedQueue, '_BATCH', batch)
+    fast = _run_intake(BatchedQueue, monkeypatch, source, tmp_path / 'fast.db', 60, batch_trace)
+    assert source.read_bytes() == original
+    assert fast == naive                       # counts and every accepted/refused/question/consumption payload
+    counts, tables = fast
+    assert counts['accepted'] and counts['refused'] and tables['bridge_questions']
+    assert any(json.loads(c['detail']).get('stream') == 'research' for c in tables['bridge_idea_consumption'])
+    scans = lambda trace: [s for s in trace if 'FROM brain_events' in s]
+    subjects_in_window = 1 + -(-n // batch)    # selection + ceil(subjects/batch)
+    assert len(scans(batch_trace)) == subjects_in_window
+    assert not [s for s in scans(batch_trace) if 'subject=' in s.replace(' ', '')]
+    assert len(scans(naive_trace)) > n         # the old per-idea scans

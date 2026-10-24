@@ -14,6 +14,7 @@ import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
 import { useRouteParam } from "../links";
 import { ResearchItem } from "./Evidence";
+import { ResearchStudies } from "../components/ResearchStudies";
 
 type Combo = Record<string, any>;
 const OK = "#3ddc97", BAD = "#ff7b72", WARN = "#f2b44a", GREY = "#8d9fb2", BLUE = "#7fd3ff";
@@ -106,6 +107,7 @@ export default function Research() {
       <PageHeader title="Research">
         <span className={`gl-state ${active ? "live" : "blink"}`} style={{ color: active ? OK : GREY }}><i />{state}</span>
       </PageHeader>
+      <ResearchStudies />
       {comboHash && <div className="gl-legacy"><ResearchItem key={comboHash} hash={comboHash} /></div>}
       {q.isError && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted.</div>}
       {adapter.mode !== "LIVE" && <p className="gl-empty">The research ledger is unavailable in fixture mode.</p>}

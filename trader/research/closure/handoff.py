@@ -49,3 +49,26 @@ def hand_off(journal, cfg: dict, packet: dict, *, at_ms: int | None = None) -> d
     if ver['status'] != 'duplicate':
         journal.log_brain_event('research_factory_validated', q['qualification_id'], out)
     return out
+
+
+def hand_off_hedge(journal, cfg: dict, packet: dict, *, at_ms: int | None = None) -> dict:
+    """A QUALIFIED hedge/relative-value packet -> one VALIDATED multi-leg Factory version, execution authority NONE.
+
+    There is no statistical admission method registered, so no packet is QUALIFIED today and this returns REFUSED with the
+    exact code (hq_hedge_status_not_qualified:<status> / hq_hedge_admission_not_registered ...). It never converts an
+    ASSESSED_* result, a TEST_ONLY packet or an uncalibrated run into a version, and it grants no paper/live authority: a
+    version carrying a `multi_leg` block cannot be installed or live-authorized by the single-leg Factory path."""
+    at_ms = int(time.time() * 1000) if at_ms is None else at_ms
+    try:
+        fh._verified_hedge(cfg, packet)
+        ver = fh.create_version(journal, cfg, {'kind': fh.HEDGE_HQ_KIND, 'packet': packet}, at_ms=at_ms)
+    except fh.HandoffRefused as exc:
+        return dict(status='REFUSED', reason_code=exc.code, execution_authority='NONE')
+    except (ClosureRefused, KeyError, TypeError, ValueError) as exc:
+        return dict(status='REFUSED', reason_code='packet_malformed:' + type(exc).__name__, execution_authority='NONE')
+    out = dict(status='VALIDATED', qualification_id=packet['qualification_id'], version_id=ver['version_id'],
+               validation_receipt_id=ver['validation_receipt_id'], outcome=ver['status'], execution_authority='NONE',
+               multi_leg=True, execution='NOT_EXECUTABLE: coordinated multi-leg execution integration absent')
+    if ver['status'] != 'duplicate':
+        journal.log_brain_event('research_factory_validated_hedge', packet['qualification_id'], out)
+    return out

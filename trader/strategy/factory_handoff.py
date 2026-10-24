@@ -738,6 +738,8 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
         return _create_from_qualification(journal, cfg, source, at_ms=at_ms)
     if kind == HQ_KIND:
         return _create_from_historical(journal, cfg, source, at_ms=at_ms)
+    if kind == HEDGE_HQ_KIND:
+        return _create_from_hedge_historical(journal, cfg, source, at_ms=at_ms)
     if kind != "research_candidate" or not source.get("hash"):
         _refuse("not_a_referee_candidate")
     h = source["hash"]
@@ -796,6 +798,7 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
 
 # ── 1c. Historical qualification packet -> VALIDATED version ─────────────
 HQ_KIND = "historical_qualification"
+HEDGE_HQ_KIND = "historical_hedge_qualification"
 
 
 def _verified_historical(cfg: dict, packet) -> dict:
@@ -825,9 +828,117 @@ def _verified_historical(cfg: dict, packet) -> dict:
     if env["evaluator_id"] != cm.evaluator_id():
         _refuse("hq_evaluator_changed_since_qualification")
     risk = cfg.get("risk") or {}
-    if env["risk"] != {k: risk.get(k) for k in env["risk"]}:
+    if env["risk"] != cm.research_risk(risk):
         _refuse("hq_cost_model_differs_from_configured")
     return q
+
+
+def _verified_hedge(cfg: dict, packet) -> dict:
+    """Re-derive a protective-hedge packet and bind it to the CURRENT configured strictness. Only a QUALIFIED packet from a
+    registered, calibrated admission method under a CONFIGURED policy and the open research gates can pass; ASSESSED_* /
+    TEST_ONLY / uncalibrated packets are refused with a stable code. Nothing is trusted from `status`."""
+    from ..research.closure import ClosureRefused, hedge_qualification as hq, manifest as cm, qualification as cq
+    try:
+        q = hq.verify_hedge_qualification(packet, cfg)
+    except ClosureRefused as e:
+        _refuse("hq_hedge_" + e.code)
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError):
+        _refuse("hq_hedge_packet_malformed")
+    if q["status"] != "QUALIFIED":
+        _refuse(f"hq_hedge_status_not_qualified:{q['status']}")
+    env = q["envelope"]
+    if env["policy_class"] != "CONFIGURED" or q["authority_class"] != "CONFIGURED":
+        _refuse("hq_test_only_policy_has_no_factory_authority")
+    rcfg = cfg.get("research") or {}
+    if not rcfg.get("handoff", False):
+        _refuse("hq_research_handoff_gate_closed")
+    if not rcfg.get("referee", False):
+        _refuse("hq_research_referee_gate_closed")
+    if hq.registered_method(cfg) is None:
+        _refuse("hq_hedge_admission_not_registered")
+    if not cq.calibration_approved(cfg, env):
+        _refuse("hq_calibration_not_approved")
+    if cm.not_weaker(env["policy"], cm.configured_policy(cfg)):
+        _refuse("hq_policy_weaker_than_configured")
+    if env["evaluator_id"] != cm.evaluator_id():
+        _refuse("hq_evaluator_changed_since_qualification")
+    risk = cfg.get("risk") or {}
+    if env["risk"] != cm.research_risk(risk):
+        _refuse("hq_cost_model_differs_from_configured")
+    return q
+
+
+def multi_leg_block(version: dict) -> str | None:
+    """Stable refusal code for a version whose strategy is a coordinated TWO-LEG book. Its single-leg spec compiles and
+    would trade only the primary leg, which is a different, unhedged strategy: install, first-live and live entry stay
+    closed until a coordinated multi-leg execution integration exists (a CODE gap, not a provider limitation)."""
+    lineage = version.get("lineage") if isinstance(version.get("lineage"), dict) else {}
+    research = lineage.get("research") if isinstance(lineage.get("research"), dict) else {}
+    if research.get("multi_leg"):
+        return "multi_leg_requires_coordinated_execution"
+    return None
+
+
+def _create_from_hedge_historical(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
+    from ..research.closure import hedge_qualification as hq
+    from ..research.combo import Combination
+    from ..research.compose import hedge as H
+    from .exit_policy import EXIT_SEMANTICS_ID
+    q = _verified_hedge(cfg, source.get("packet"))
+    env, freeze = q["envelope"], q["freeze"]
+    c = Combination.from_dict(freeze["combo"])
+    spec = c.to_spec()
+    hs = freeze["hedge_spec"]
+    spec.universe = {"include": [hs["primary"]["symbol"]], "exclude": []}
+    spec_d, spec_hash = _frozen_spec(spec)
+    ids = {"exit_semantics_id": EXIT_SEMANTICS_ID, "hedge_qualification_id": q["qualification_id"],
+           "hedge_evidence_id": q["evidence_id"], "protected_fingerprint": env["protected_fingerprint"],
+           "freeze_id": freeze["freeze_id"], "rule_id": q["rule_id"], "hedge_spec_id": hs["spec_id"]}
+    research = {"origin": "historical_hedge_qualification", "envelope_id": env["envelope_id"],
+                "freeze_id": freeze["freeze_id"], "qualification_id": q["qualification_id"],
+                "development_result_id": freeze["development_result_id"], "policy_id": env["policy_id"],
+                "protected_fingerprint": env["protected_fingerprint"], "development_mode": env["development_mode"],
+                "multi_leg": {"hedge_spec": hs, "ratio_frozen": freeze["ratio_frozen"], "objective": freeze["objective"],
+                              "deployment": H.deployment_contract(hs), "packet": q,
+                              "execution": "NOT_EXECUTABLE: single-leg entries compile; the hedge leg has no coordinated execution path"}}
+    quant = {**ids, "cut_ms": env["split"]["cut_ms"]}
+    rec = _version_record(spec_d["id"], spec_d, spec_hash, None, {"kind": HEDGE_HQ_KIND, "id": q["qualification_id"]}, ids,
+                          _lineage(spec_d, _jsha(cfg.get("risk")), research, quant, None))
+    vid = rec["version_id"]
+    r_ident = {"schema": RECEIPT_SCHEMA, "version_id": vid, "strategy_id": rec["strategy_id"],
+               "spec_hash": spec_hash, "evidence": ids}
+    receipt = {**r_ident, "receipt_id": _jsha(r_ident), "protected_result_status": q["status"],
+               "statistical_admission": q["statistical_admission"],
+               "semantics": ("frozen development-only hedge ratio, independent protected risk/return-objective qualification under a "
+                             "registered admission method; VALIDATED only. A two-leg book: no paper, live, allocation or order "
+                             "authority, and no single-leg execution")}
+    r_text = canonical(receipt)
+    with journal._tx() as c2:
+        _begin(c2)
+        v_out = _insert_version(c2, rec, at_ms)
+        if v_out == "conflict":
+            _refuse("version_conflict")
+        r_out, _ = _insert(c2, "strategy_validation_receipts", "receipt_id",
+                           {"receipt_id": receipt["receipt_id"], "version_id": vid, "canonical_sha256": _sha(r_text),
+                            "canonical_json": r_text, "recorded_at_ms": int(at_ms)})
+        if r_out == "conflict":
+            _refuse("validation_receipt_conflict")
+        _transition(c2, vid, VALIDATED, "historical_hedge_qualification_bound", receipt["receipt_id"], "factory", at_ms)
+    return {"status": v_out, "version_id": vid, "spec_hash": spec_hash, "strategy_id": rec["strategy_id"],
+            "validation_receipt_id": receipt["receipt_id"]}
+
+
+def _verify_hedge_validation(version: dict, rec: dict) -> dict:
+    from ..research.closure import ClosureRefused, hedge_qualification as hq
+    ml = ((version.get("lineage") or {}).get("research") or {}).get("multi_leg") or {}
+    try:
+        q = hq.verify_hedge_qualification(ml.get("packet"))
+    except (ClosureRefused, KeyError, TypeError, ValueError, AttributeError):
+        _refuse("validation_evidence_changed")
+    if (q["status"] != "QUALIFIED" or q["qualification_id"] != rec["evidence"].get("hedge_qualification_id")
+            or q["evidence_id"] != rec["evidence"].get("hedge_evidence_id") or rec["evidence"] != version["evidence_ids"]):
+        _refuse("validation_evidence_changed")
+    return rec
 
 
 def _create_from_historical(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
@@ -1133,6 +1244,8 @@ def verify_validation(journal, version: dict) -> dict:
     rec = verify_exit_binding(journal, version)
     if version["source"]["kind"] == Q.SOURCE_KIND:
         return _verify_qualification(version, rec)
+    if version["source"]["kind"] == HEDGE_HQ_KIND:
+        return _verify_hedge_validation(version, rec)
     now = gate_evidence(journal, version["source"]["id"])
     if _receipt_evidence(now) != rec["evidence"] \
             or rec["evidence"] != version["evidence_ids"]:
@@ -1180,6 +1293,8 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
     v = load_version(journal, version_id)
     if "lineage" not in v:
         _refuse("legacy_version_lacks_lineage_contract")
+    if multi_leg_block(v):
+        _refuse(multi_leg_block(v))      # a regular entry expression compiling is not a coordinated two-leg strategy
     val = verify_validation(journal, v)
     old = _install_record(journal, version_id)
     if old is not None:
@@ -1824,6 +1939,8 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                                     CAPACITY)
     if not isinstance(v.get("lineage"), dict):
         reasons.append("version_lineage_absent")
+    if multi_leg_block(v):
+        reasons.append(multi_leg_block(v))
     reached = [e["to_state"] for e in events(journal, version_id)]
     for bad in (DEGRADED, RETIRED, REJECTED):
         if bad in reached:
@@ -2022,6 +2139,9 @@ def live_entry_block(journal, strategy_id: str, *, cfg: dict | None = None
                 return "version_install_unbound"
             raise
         vid = inst['version_id']
+        block = multi_leg_block(load_version(journal, vid))
+        if block:
+            return block                     # never trade one leg of a two-leg strategy
         st = state_of(journal, vid)
         if projection_gap(journal, vid):
             return "version_projection_diverged"
