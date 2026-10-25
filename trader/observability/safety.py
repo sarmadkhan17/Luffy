@@ -140,13 +140,28 @@ class SafetyHealth:
         return 'critical_safety_requires_recovery' if v['recovery_required'] or any(
             c.get('status') == 'ACTIVE' for c in v['conditions'].values()) else None
 
-    def clear_after_supervisor(self, revision):
+    def clear_after_supervisor(self, revision, *, baseline=None):
         with self.locked():
             v = self.read()
-            if (self.bootstrap_block(v) or v['revision'] != revision
+            if (self.bootstrap_block(v)
                     or any(c.get('status') == 'ACTIVE' for c in v['conditions'].values())):
                 return False
-            v.update(recovery_required=False, revision=revision + 1, observed_at=self.clock())
+            if v['revision'] != revision:
+                # A heartbeat publication advances the artifact revision without
+                # changing any fault or containment. Accept only that existing
+                # monotonic same-producer progression, never a newer incident
+                # (including one resolved during the verification) or bootstrap.
+                from .dashboard_readiness import _health_progression
+                if not isinstance(baseline, dict) or baseline.get('revision') != revision:
+                    return False
+                ignored = {'revision', 'observed_at', 'heartbeats'}
+                core = lambda value: {k: item for k, item in value.items() if k not in ignored}
+                before_beats, after_beats = baseline.get('heartbeats', {}), v.get('heartbeats', {})
+                if (core(baseline) != core(v) or set(before_beats) != set(after_beats)
+                        or any(before_beats[k] != after_beats[k] for k in before_beats if k != 'luffy')
+                        or not _health_progression(baseline, v)):
+                    return False
+            v.update(recovery_required=False, revision=v['revision'] + 1, observed_at=self.clock())
             publish(self.path, v)
             return True
 

@@ -329,7 +329,8 @@ class Supervisor:
             return RecoveryResult(control_state_observed='UNAVAILABLE', outcome='NEEDS_OWNER',
                 stage='STORAGE_UNAVAILABLE', safe_to_activate=False, needs_owner=True,
                 reasons=safety.active_reasons() or ['critical_journal_unavailable'])
-        safety_revision = safety.read()['revision'] if safety else None
+        safety_baseline = safety.read() if safety else None
+        safety_revision = safety_baseline['revision'] if safety else None
         prior = self._prior_status()
         state = self.state_machine.refresh()
         prior, actions = self._acknowledge(prior, state)
@@ -497,7 +498,7 @@ class Supervisor:
         self._next_pass = time.monotonic() + self.interval_s
         saved = self._save(result)
         if safety and safe and current == ControlState.ACTIVE:
-            safety.clear_after_supervisor(safety_revision)
+            safety.clear_after_supervisor(safety_revision, baseline=safety_baseline)
         return saved
 
     def cycle(self) -> RecoveryResult | None:
