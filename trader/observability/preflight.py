@@ -271,8 +271,11 @@ def collect_facts(root, *, recovery_root=None, clock=time.time, contained_cold=F
             reasons.append('environment_not_demo')
         if cfg['brain']['enabled'] is not False:
             reasons.append('providers_not_disabled')
-        if cfg['research']['referee'] is not False or cfg['research']['handoff'] is not False:
-            reasons.append('research_gates_not_disabled')
+        # Research validation/handoff grants no trading authority. Owner-enabled
+        # boolean gates may coexist with the independently enforced frozen/demo
+        # controls; malformed configuration still refuses launch.
+        if any(type(cfg['research'][key]) is not bool for key in ('referee', 'handoff')):
+            reasons.append('research_gates_invalid')
         if not (root / 'data/watchdog.off').is_file():
             reasons.append('watchdog_hold_missing')
         _filesystem(root, recovery)

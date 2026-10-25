@@ -196,12 +196,9 @@ research:                        # the search — docs/superpowers/specs/
   min_threshold_samples: 5000
   equity: 2000.0                 # the account the compounded return is walked on
   # ── the referee (phase 3) — docs/superpowers/plans/2026-09-14-research-phase3-referee.md
-  # OFF pending a gate decision (2026-09-14, plan Task 9): the known-good
-  # rule reads common-rotation p=0.049 on held-out B, so the referee as
-  # built cannot admit the incumbent, and switching it on would spend the
-  # LORD++ budget on looks that cannot succeed.
-  referee: false                 # examine survivors on held-out A (unseen
-                                 # markets) and B (the era after the cut)
+  # Owner enabled final validation on 2026-10-25. Existing evidence,
+  # calibration, cumulative-budget and statistical requirements still apply.
+  referee: true                  # validate survivors on held-out A and B
   fdr_target: 0.10               # LORD++ target false-discovery rate
   lord_w0: 0.05                  # initial wealth; alpha_1 = 0.0025
   # the common-rotation p is exact and empirical, so its resolution is
@@ -211,10 +208,9 @@ research:                        # the search — docs/superpowers/specs/
   # cannot reach.
   referee_max_draws: 19999
   referee_select_batch: 20       # survivors given entry sets per select step
-  # CLOSED until phase 4 adds the reasoning test: the spec admits nothing
-  # without a tested thesis. The kernel reads only `reason_passed`
-  # candidates, and nothing in phase 3 writes that state.
-  handoff: false
+  # Owner enabled research-to-strategy transfer on 2026-10-25. Only
+  # qualified evidence can create a VALIDATED version, authority NONE.
+  handoff: true
 
 strategies:
   # Optional TradingView advice uses the exact spec timeframe and tv_harness.*;
