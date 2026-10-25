@@ -84,3 +84,17 @@ def test_executor_checks_actual_venue_and_retains_frozen_control(setup,monkeypat
  ex.ex=make_exchange('futures',demo=True,with_keys=False)
  assert ex.open(decision(),1,1,99,102,strategy_id=s.id,strategy_name=s.name,exec_mode='live')=='DEMO_SUBMIT_BOUNDARY'
  assert len(calls)==1
+
+
+def test_frozen_startup_requires_every_active_strategy_exactly_authorized(setup,monkeypatch):
+ from tests.test_universal_strategy_authority import proposal
+ j,s,cfg=setup
+ assert D.startup_allowed(j,cfg) is False
+ grant(j,cfg)
+ assert D.startup_allowed(j,cfg) is True
+ other=proposal('other','Other')
+ j.upsert_spec(other,state='active')
+ assert D.startup_allowed(j,cfg) is False
+ with j._tx() as db:db.execute("UPDATE strategies SET state='paper' WHERE id='other'")
+ monkeypatch.setenv('BINANCE_DEMO','false')
+ assert D.startup_allowed(j,cfg) is False

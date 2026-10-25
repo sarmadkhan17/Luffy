@@ -102,3 +102,12 @@ def venue_block(journal, strategy_id, exchange):
         return None if trading_source(exchange)[0] == 'demo' else 'OWNER_DEMO_ACTUAL_VENUE_REQUIRED'
     except (ValueError, TypeError, AttributeError):
         return 'OWNER_DEMO_ACTUAL_VENUE_REQUIRED'
+
+
+def startup_allowed(journal, cfg):
+    """A frozen Demo startup may contain only explicitly owner-authorized active specs."""
+    try:
+        active = journal.query("SELECT id FROM strategies WHERE state='active'")
+        return bool(active) and all(block(journal, row['id'], cfg) is None for row in active)
+    except (ValueError, KeyError, TypeError):
+        return False

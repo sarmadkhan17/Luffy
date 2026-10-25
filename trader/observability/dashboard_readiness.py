@@ -148,7 +148,16 @@ def check(root, cfg, *, expected_identity=None, clock=time.time, require_cycle=T
             require(controls == {'control_state': 'FROZEN', 'macro_guard_operator_hold': '1'},
                     'current_control_not_frozen_held')
             if not require_cycle:
-                require(cfg.get('mode', {}).get('execution') == 'paper', 'startup_execution_not_paper')
+                paper_or_owner_demo = cfg.get('mode', {}).get('execution') == 'paper'
+                if not paper_or_owner_demo:
+                    from trader.strategy import owner_demo
+                    from trader.engine.protection_snapshot import ro_connect
+                    with ro_connect(root / 'data/luffy.db') as owner_db:
+                        class OwnerReads:
+                            def query(self, sql, args=()):
+                                return [dict(row) for row in owner_db.execute(sql, args)]
+                        paper_or_owner_demo = owner_demo.startup_allowed(OwnerReads(), cfg)
+                require(paper_or_owner_demo, 'startup_execution_not_paper')
             # A process/record replacement during the read cannot inherit acceptance.
             final = runtime_identity.inspect(root)
             require(final.get('state') == 'RUNNING' and final.get('verified') is True
