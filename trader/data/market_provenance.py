@@ -1241,7 +1241,7 @@ def run_warm(max_s=5.0, max_items=64):
     return done
 
 
-def refresh_entries(conn, key):
+def refresh_entries(conn, key, *, deferred=False):
     """After a producer commit: re-read cached windows of that series now.
 
     Runs on the producer's thread, outside any transaction, so the next scan
@@ -1251,8 +1251,13 @@ def refresh_entries(conn, key):
     if dbid is None or conn.in_transaction:
         return 0
     with CURRENT.lock:
-        refills = [e['refill'] for ck, e in CURRENT.entries.items()
+        entries = [(ck, e['refill']) for ck, e in CURRENT.entries.items()
                    if ck[0] == dbid and ck[1] == key and e['refill'] is not None]
+    if deferred:
+        for ck, refill in entries:
+            enqueue_warm(ck, refill)
+        return len(entries)
+    refills = [refill for _, refill in entries]
     for refill in refills:
         token = _CACHE_ONLY.set(False)
         try:

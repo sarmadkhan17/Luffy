@@ -166,6 +166,7 @@ def run(view):
         execution_datafeed_available=0, snapshots_constructed=0)
     stats['strategy_coverage'] = {}
     stats['blocked_reasons'] = {}
+    stats['input_refusals'] = []
     totals = ('expected', 'blocked', 'regime_ineligible', 'ineligible_other', 'attempted', 'completed',
               'completed_unreported', 'refused', 'not_invoked')
     for name in totals:
@@ -226,6 +227,7 @@ def run(view):
             bump(st, 'expected')
             missing = readiness(snap, plan.needs[st.id]) if st.id in plan.needs else []
             if missing:
+                stats['input_refusals'].append(dict(symbol=symbol, strategy=st.id, missing=list(missing)))
                 bump(st, 'blocked')
                 for m in missing:
                     note_reason(st, 'missing:' + m)

@@ -328,8 +328,11 @@ def test_cache_only_miss_queues_warm_refill_and_producer_commit_refreshes(tmp_pa
     with M.cache_only():
         assert typed(feed, 5000)['value'].tolist() == [1]  # warmed
         decoded = M.STATS['payload_rows_decoded']
-        save(feed, [1000], 2000, values=[9])               # producer commit refreshes in its own thread
-        assert M.STATS['payload_rows_decoded'] > decoded
+        save(feed, [1000], 2000, values=[9])               # collector queues work; no history read here
+        assert M.STATS['payload_rows_decoded'] == decoded
+        assert typed(feed, 5000) is None                  # invalidated values never reused
+    assert M.run_warm() == 1
+    with M.cache_only():
         assert typed(feed, 5000)['value'].tolist() == [9]
 
 

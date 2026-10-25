@@ -87,7 +87,7 @@ class KernelRuntime:
         }
         cfg = kernel.cfg
         if cfg.get('derivatives', {}).get('enabled', True):
-            self.jobs['derivatives'] = Worker('derivatives', self.derivatives, interval=900, immediate=True)
+            self.jobs['derivatives'] = Worker('derivatives', self.derivatives, interval=900, immediate=False)
             self.jobs['derivative_needs'] = Worker('derivative-needs', self.derivative_current_needs,
                                                    interval=60, immediate=False)
             self.jobs['derivative_inputs'] = Worker('derivative-inputs', self.refresh_derivative_inputs,
@@ -421,7 +421,9 @@ class KernelRuntime:
             self._harvester = Harvester(view.journal, view.cfg, view.feed, view.notifier)
         h = self._harvester
         h.deriv.cancelled = lambda: self.kernel._stop
-        h.deriv.record_all(h.symbols or view.cfg['universe']['majors'],
+        with self.lock:
+            current_pairs = {(n[0], n[1]) for n in self.derivative_needs}
+        h.deriv.record_all(h.symbols or view.cfg['universe']['majors'], exclude=current_pairs,
                           delay=float(view.cfg.get('derivatives', {}).get('request_delay_s', .3)))
         h.deriv._check_cancelled()
 
@@ -449,7 +451,7 @@ class KernelRuntime:
         feed.cancelled = lambda: self.kernel._stop
         cfg = self.kernel.cfg.get('derivatives', {})
         result = feed.acquire_needs(needs, max_requests=int(cfg.get('needs_per_pass', 20)),
-                                    delay=float(cfg.get('request_delay_s', .3)))
+                                    delay=float(cfg.get('request_delay_s', .3)), held=held)
         with self.lock:
             self.need_stats = dict(result, required=len(needs), at=time.time())
 
