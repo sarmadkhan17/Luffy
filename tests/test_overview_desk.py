@@ -56,7 +56,7 @@ def test_http_desk(tmp_path, monkeypatch):
     before = realized_curve(journal)["total"] or 0.0
     add(journal, "x", T0 + timedelta(days=400), pnl=2.0)
     body = TestClient(app).get("/owner-api/v1/desk", headers=H).json()
-    assert body["errors"] == {} and body["scan"] is None
+    assert body["errors"].get("scan") == "scan_unreadable:ValueError" and body["scan"] is None
     assert body["realized"]["total"] == before + 2.0 and body["realized"]["points"][-1]["trade_id"] == "x"
 
 

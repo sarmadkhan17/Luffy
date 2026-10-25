@@ -147,6 +147,11 @@ def offline_scan(tmp_path, monkeypatch, *, stale=False, actionable=False):
 def test_thirty_coin_real_pipeline_does_not_write_nontrades(tmp_path,monkeypatch,stale):
     k,reads,queries=offline_scan(tmp_path,monkeypatch,stale=stale)
     result=run(k)
+    assert len(result['scan_coins']) == 30
+    assert all(row['persisted'] is False for row in result['scan_coins'])
+    assert sum(row['evaluated'] for row in result['scan_coins']) == (0 if stale else 30)
+    import json
+    assert len(json.dumps(result['scan_coins'])) < 50000
     assert result['persisted_attempts']==0 and result['entries']==0
     assert result['decisions']==(0 if stale else 30)
     assert len(reads)==60 and len(set(reads))==60
