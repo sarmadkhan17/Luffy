@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi } from 'vitest';
 import { PreviewProvider } from '../src/context';
@@ -16,15 +16,28 @@ function setup(now:number){
  return {ownerRead,view};
 }
 describe('current completed scan',()=>{
- it('shows actual zero scores and skipped coins with local details, without querying nonexistent journal evidence',()=>{
+ it('shows one list with concise no-signal and not-applicable results without fabricated metrics',()=>{
   const {ownerRead}=setup(at+10000);
   expect(screen.getByText(/1 evaluated of 2 shortlisted/)).toBeInTheDocument();
-  expect(screen.getByText(/score \+0.000/)).toBeInTheDocument();
-  expect(screen.getByText(/ETH · not evaluated: no applicable strategy/)).toBeInTheDocument();
+  expect(screen.getByText('No signal')).toBeInTheDocument();
+  expect(screen.getByText('Not applicable')).toBeInTheDocument();
+  expect(screen.getAllByRole('table')).toHaveLength(1);
+  expect(screen.getAllByRole('row')).toHaveLength(3);
+  expect(screen.queryByText(/strongest 5|All 2 shortlisted/)).not.toBeInTheDocument();
+  const skipped=screen.getByText('ETH').closest('tr')!;
+  expect(within(skipped).getAllByText('—')).toHaveLength(3);
   fireEvent.click(screen.getByRole('button',{name:'BTC decision detail'}));
-  expect(screen.getByText(/Full decision evidence is saved only for trade attempts/)).toBeInTheDocument();
+  expect(screen.getByText('Strategy checks')).toBeInTheDocument();
   expect(screen.queryByText('Analyst votes')).not.toBeInTheDocument();
   expect(ownerRead).not.toHaveBeenCalled();
+ });
+ it('skipped details contain only a short status and no numeric fields',()=>{
+  setup(at+10000);
+  fireEvent.click(screen.getByRole('button',{name:'ETH decision detail'}));
+  const detail=screen.getByRole('dialog');
+  expect(within(detail).getByText('Not applicable')).toBeInTheDocument();
+  expect(within(detail).queryByText('Score')).not.toBeInTheDocument();
+  expect(within(detail).queryByText('Strategy checks')).not.toBeInTheDocument();
  });
  it('expires on browser time even when the last successful poll said fresh',()=>{
   setup(at+181000);

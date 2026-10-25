@@ -2,7 +2,7 @@
 
 mode:
   market: futures          # spot | futures — switchable from dashboard
-  execution: paper         # paper | live (live requires explicit flag + keys)
+  execution: live          # paper | live (live requires explicit flag + keys)
 
 universe:
   majors: [BTC/USDT, ETH/USDT, SOL/USDT]

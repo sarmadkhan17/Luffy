@@ -409,65 +409,34 @@ function RealizedChart({ desk, loading, error }: { desk?: Desk; loading: boolean
 export function SignalsCard({ desk, loading, now = Date.now() }: { desk?: Desk; loading: boolean; now?: number }) {
   const scan = desk?.scan;
   const coins = scan?.coins ?? [];
-  const ratio = (c: DeskCoin) => (c.score !== null && c.threshold ? Math.abs(c.score) / c.threshold : 0);
-  const top = [...coins].filter(c => c.evaluated !== false).sort((a, b) => ratio(b) - ratio(a)).slice(0, 5);
   const [open, setOpen] = useState<DeskCoin | null>(null);
   useEffect(() => setOpen(null), [scan?.scan_id]);
   const stale = !!scan && (scan.freshness === 'stale' || now - Date.parse(scan.observed_at) > 180000);
-  const sc = (z: number, th: number) => 50 + Math.max(-1, Math.min(1, z / (th * 1.25))) * 50;
   return (
     <Card className="pad" label="Latest cycle signals">
       <CardHead icon={<Eye size={16} />} title="Latest cycle · signals" tone="teal" sub={scan ? `${day(scan.observed_at)} ${hhmm(scan.observed_at)} · ${scan.evaluated ?? coins.length} evaluated of ${scan.shortlisted ?? coins.length} shortlisted · ${scan.traded} orders sent` : undefined}>
-        <span style={{ fontSize: 12, color: stale ? WARN : GREY }}>{scan ? (stale ? "STALE · last completed scan" : "Current completed scan") : "Waiting for a completed scan"} · strongest 5 shown</span>
+        <span style={{ fontSize: 12, color: stale ? WARN : GREY }}>{scan ? (stale ? "STALE · last completed scan" : "Current completed scan") : "Waiting for a completed scan"}</span>
       </CardHead>
       {!scan ? (
         <p className="gl-empty">{loading ? "Loading the latest scan…" : desk?.errors?.scan ?? "Waiting for the current kernel to complete its first scan."}</p>
       ) : (
         <>
-          <div className="gl-sigs">
-            {top.map((c) => (
-              <button key={c.decision_id} type="button" className="gl-sig" onClick={() => setOpen(c)} aria-label={`${base(c.symbol)} decision detail`}>
-                <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span className="gl-coin" style={{ background: hue(c.symbol) }}>{base(c.symbol)[0]}</span>
-                  <span style={{ display: "flex", flexDirection: "column" }}><b style={{ fontWeight: 600 }}>{base(c.symbol)}-USDT</b><span className="m" style={{ fontSize: 11, color: GREY }}>cycle {hhmm(scan.observed_at)}</span></span>
-                </span>
-                <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 12, color: "#c9d4df" }}>{c.score === null ? "score UNAVAILABLE" : `score ${c.score >= 0 ? "+" : "−"}${Math.abs(c.score).toFixed(3)} · recorded threshold ${c.threshold === null ? "UNAVAILABLE" : `±${c.threshold.toFixed(3)}`}`}</span>
-                  <span className="gl-meter"><i style={{ width: `${Math.min(100, Math.round(ratio(c) * 100))}%` }} /></span>
-                </span>
-                <span style={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "flex-start" }}>
-                  <span className="gl-pill" style={{ background: c.action === "LONG" ? "#3ddc9722" : c.action === "SHORT" ? "#ff7b7222" : "#ffffff14", color: c.action === "LONG" ? OK : c.action === "SHORT" ? BAD : "#c9d4df" }}>{c.action}</span>
-                  <span className="m" style={{ fontSize: 11, color: GREY }}>{c.confidence === null ? "—" : `${Math.round(c.confidence * 100)}%`} conf.</span>
-                </span>
-                <span style={{ fontSize: 13, color: "#b9c5d1", lineHeight: 1.4 }}>
-                  {c.skip_reason ?? (c.score !== null && c.threshold ? `Leaning ${c.score >= 0 ? "long" : "short"} but only ${Math.round(ratio(c) * 100)}% of the way to the threshold.` : "No score recorded.")}
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: c.executed ? OK : GREY }}><i style={{ width: 7, height: 7, borderRadius: "50%", background: c.executed ? OK : GREY }} />{c.executed ? "Order sent" : "No trade"}</span>
-              </button>
-            ))}
-          </div>
-          <div className="gl-allc">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px", alignItems: "baseline" }}>
-              <span className="cz" style={{ fontSize: 12, color: "rgb(var(--hi))" }}>All {coins.length} shortlisted coins · current score / threshold</span>
-              <span style={{ fontSize: 12, color: "var(--txt2)" }}>amber lines = threshold · {scan.traded === 0 ? "no trade recorded" : `${scan.traded} orders sent`}</span>
-            </div>
-            <div className="grid">
-              {coins.map((c) => {
-                if (c.evaluated === false) return <button key={c.decision_id} type="button" onClick={() => setOpen(c)}>{base(c.symbol)} · not evaluated: {c.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "no applicable strategy" : "required inputs unavailable"}</button>;
-                if (c.threshold === null || c.threshold <= 0 || c.score === null) return <button key={c.decision_id} type="button" onClick={() => setOpen(c)}>{base(c.symbol)} · score/threshold UNAVAILABLE</button>;
-                const th = c.threshold, v = c.score, p = sc(v, th);
-                const crossed = Math.abs(v) >= th;
-                const col = crossed ? OK : v >= 0 ? "#7fd3ff" : "#ff9d95";
-                return (
-                  <button key={c.decision_id} type="button" onClick={() => setOpen(c)} aria-label={`${base(c.symbol)} score ${v.toFixed(3)}, open detail`}>
-                    <span className="m" style={{ color: "#c9d4df" }}>{base(c.symbol)}</span>
-                    <span className="gl-track"><u style={{ left: `${sc(-th, th)}%` }} /><u style={{ left: `${sc(th, th)}%` }} /><u className="mid" /><b style={{ left: `${Math.min(p, 50)}%`, width: `${Math.max(1, Math.abs(p - 50))}%`, background: col }} /></span>
-                    <span className="m" style={{ textAlign: "right", color: col }}>{c.score === null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(3)}`}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <span style={{ fontSize: 12, color: GREY }}>Select a coin for its current strategy checks. Detailed evidence is saved for trade attempts. Scores do not establish order permission.</span>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }} aria-label="Current shortlisted coins">
+              <thead><tr>{["Coin", "Result", "Score", "Threshold", "Confidence"].map(title => <th key={title} style={{ padding: "10px 8px", color: GREY, fontWeight: 500 }}>{title}</th>)}</tr></thead>
+              <tbody>{coins.map(c => {
+                const skipped = c.evaluated === false;
+                const noSignal = !skipped && c.action === "HOLD" && c.score === 0;
+                const result = skipped ? (c.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable") : c.executed ? "Order sent" : noSignal ? "No signal" : c.action;
+                return <tr key={c.decision_id} style={{ borderTop: "1px solid #ffffff10" }}>
+                  <td style={{ padding: "8px" }}><button type="button" onClick={() => setOpen(c)} aria-label={`${base(c.symbol)} decision detail`} style={{ background: "none", border: 0, color: "#c9d4df", cursor: "pointer", padding: 0 }}>{base(c.symbol)}</button></td>
+                  <td style={{ padding: "8px", color: c.executed ? OK : GREY }}>{result}</td>
+                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.score === null ? "—" : c.score.toFixed(3)}</td>
+                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.threshold === null ? "—" : `±${c.threshold.toFixed(3)}`}</td>
+                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.confidence === null ? "—" : `${Math.round(c.confidence * 100)}%`}</td>
+                </tr>;
+              })}</tbody>
+            </table>
           </div>
         </>
       )}
@@ -482,8 +451,8 @@ function DecisionPanel({ coin, scanAt, onClose }: { coin: DeskCoin | null; scanA
   const votes = asRows(value?.votes);
   const cycle = rec(value?.cycle);
   return (
-    <DetailPanel open={!!coin} onClose={onClose} title={coin ? `${base(coin.symbol)}-USDT · ${coin.action}` : ""} description={coin ? `Decision ${coin.decision_id} · scan ${hhmm(scanAt)}` : undefined}>
-      {coin && (
+    <DetailPanel open={!!coin} onClose={onClose} title={coin ? `${base(coin.symbol)}-USDT · ${coin.evaluated === false ? (coin.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable") : coin.action}` : ""} description={coin ? `Decision ${coin.decision_id} · scan ${hhmm(scanAt)}` : undefined}>
+      {coin && (coin.evaluated === false ? <p>{coin.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable"}</p> :
         <>
           <KV items={[
             ["Score", coin.score === null ? null : coin.score.toFixed(4)],
@@ -496,7 +465,6 @@ function DecisionPanel({ coin, scanAt, onClose }: { coin: DeskCoin | null; scanA
           {coin.persisted === false ? <>
             <h3>Strategy checks</h3>
             {(coin.strategy_checks ?? []).map(check => <p key={check.strategy} className="gl-note">{check.strategy}: {check.reasons.map(reason => reason.replaceAll("_", " ")).join(", ")}</p>)}
-            <p className="gl-note">Current scan observation. Full decision evidence is saved only for trade attempts. Analysts do not run in this strategy scan.</p>
           </> : <>
           <h3 className="cz" style={{ margin: 0, fontSize: 11, color: "rgb(var(--mut))" }}>Analyst votes</h3>
           {q.isPending && <p className="gl-note">Loading recorded votes…</p>}

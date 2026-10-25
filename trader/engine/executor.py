@@ -153,6 +153,9 @@ class Executor:
             return None
         from ..strategy import factory_handoff as fh
         blocked = fh.live_entry_block(self.journal, strategy_id, cfg=self.cfg)
+        if not blocked:
+            from ..strategy.owner_demo import venue_block
+            blocked = venue_block(self.journal, strategy_id, self.ex)
         if blocked:
             decision.skip_reason = f"version fence: {blocked}"
             decision.reason_codes = [rc.VERSIONED_AUTHORITY_REQUIRED if blocked == "VERSIONED_AUTHORITY_REQUIRED"
