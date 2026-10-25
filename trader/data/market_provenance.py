@@ -1396,8 +1396,9 @@ def _incremental(conn, key, stale, wit, cut_ms, limit, instrument_id, source, in
     if change is None or not change[1] or change[0] is None:
         return _NO_DELTA
     floor = change[0]
-    delta = load(conn, key, as_of_ms=cut_ms, limit=limit, instrument_id=instrument_id, source=source,
-                 min_event_ms=floor, include_partial=include_partial)
+    reader = load_current_candles if key.startswith('candle:') else load
+    delta = reader(conn, key, as_of_ms=cut_ms, limit=limit, instrument_id=instrument_id, source=source,
+                   min_event_ms=floor, include_partial=include_partial)
     kept = stale['frame']
     kept = None if kept is None else kept[kept['event_time_ms'] < floor]
     if delta is None:
@@ -1416,6 +1417,77 @@ def _incremental(conn, key, stale, wit, cut_ms, limit, instrument_id, source, in
     return merged
 
 
+def load_current_candles(conn, key, *, as_of_ms, limit, instrument_id, source,
+                         include_partial=False, min_event_ms=None):
+    """Rank covering-index metadata first; decode only current candle candidates.
+
+    A candidate from another identity/source or a forming candle falls back to
+    the exact original predicate for THAT event. Older matching revisions remain
+    selectable, without authenticating every historical version in the window.
+    """
+    cut(as_of_ms)
+    if min_event_ms is not None:
+        cut(min_event_ms)
+    if instrument_id is None or source is None or type(limit) is not int or limit <= 0:
+        return load(conn, key, as_of_ms=as_of_ms, limit=limit, instrument_id=instrument_id,
+                    source=source, include_partial=include_partial, min_event_ms=min_event_ms)
+    owned = not conn.in_transaction
+    if owned:
+        conn.execute('BEGIN')
+    try:
+        selected, before = [], None
+        source_marker = text_reference(source)
+        while len(selected) < limit:
+            n = min(256, limit - len(selected))
+            predicates = 'series_key=? AND available_ms<=? AND observed_ms<=?'
+            args = [key, as_of_ms, as_of_ms]
+            if before is not None:
+                predicates += ' AND event_ms<?'; args.append(before)
+            if min_event_ms is not None:
+                predicates += ' AND event_ms>=?'; args.append(min_event_ms)
+            # Both phases use only columns in market_revision_cut plus rowid.
+            q = f'''WITH events AS MATERIALIZED (
+                SELECT event_ms FROM market_revisions WHERE {predicates}
+                GROUP BY event_ms ORDER BY event_ms DESC LIMIT ?), winners AS (
+                SELECT rowid AS selected_rowid, event_ms,
+                  ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+                FROM market_revisions WHERE series_key=? AND available_ms<=? AND observed_ms<=?
+                  AND event_ms IN (SELECT event_ms FROM events))
+                SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM market_revisions
+                WHERE rowid IN (SELECT selected_rowid FROM winners WHERE ordinal=1)
+                ORDER BY event_ms DESC'''
+            rows = _selected_revision_rows(conn, q, [*args, n, key, as_of_ms, as_of_ms], batch=True)
+            if not rows:
+                break
+            for row in rows:
+                physical = json.loads(row[0])
+                matching = (physical.get('instrument_id') == instrument_id and
+                            physical.get('source') in (source, source_marker) and
+                            (include_partial or (physical.get('bar_state') is not None and physical['bar_state'] != 'PARTIAL')))
+                if matching:
+                    selected.append(row)
+                    continue
+                # Filtering precedes ranking in the original reader. If the
+                # newest row is excluded, retain its newest MATCHING predecessor.
+                q2 = '''SELECT record_json,revision_id,event_ms,available_ms,observed_ms
+                    FROM market_revisions WHERE series_key=? AND event_ms=?
+                    AND available_ms<=? AND observed_ms<=?
+                    AND json_extract(record_json,'$.instrument_id')=?
+                    AND json_extract(record_json,'$.source') IN (?,?)'''
+                a2 = [key, row[2], as_of_ms, as_of_ms, instrument_id, source, source_marker]
+                if not include_partial:
+                    q2 += " AND json_extract(record_json,'$.bar_state')!='PARTIAL'"
+                q2 += ' ORDER BY observed_ms DESC,rowid DESC LIMIT 1'
+                selected.extend(_selected_revision_rows(conn, q2, a2, batch=True))
+            before = rows[-1][2]
+        return _assemble(conn, selected, batch=True, as_of_ms=as_of_ms, limit=limit,
+                         replay_tf=None, include_partial=include_partial,
+                         revision_stream=False, metadata_only=False)
+    finally:
+        if owned:
+            conn.rollback()
+
+
 def cached_current(conn, key, *, as_of_ms, limit, instrument_id=None, source=None,
                    include_partial=False, window_start_ms=None, loader=None, refill=None):
     """Cross-cycle cached current read. ``loader()`` performs the uncached read.
@@ -1424,9 +1496,10 @@ def cached_current(conn, key, *, as_of_ms, limit, instrument_id=None, source=Non
     ``cache_only()`` a miss never loads: it queues ``refill`` and reports
     'warming' (see ``last_reason``).
     """
-    loader = loader or (lambda: load(conn, key, as_of_ms=as_of_ms, limit=limit, instrument_id=instrument_id,
-                                      source=source, include_partial=include_partial,
-                                      window_start_ms=window_start_ms))
+    default_reader = load_current_candles if key.startswith('candle:') and window_start_ms is None else load
+    extra = {} if default_reader is load_current_candles else dict(window_start_ms=window_start_ms)
+    loader = loader or (lambda: default_reader(conn, key, as_of_ms=as_of_ms, limit=limit, instrument_id=instrument_id,
+                                      source=source, include_partial=include_partial, **extra))
     cut(as_of_ms)
     _REASON.set(None)
     only = _CACHE_ONLY.get()

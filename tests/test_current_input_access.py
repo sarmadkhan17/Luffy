@@ -695,3 +695,52 @@ def test_failed_metadata_seed_releases_its_transaction_before_retry(tmp_path):
     assert M.witness(conn, KEY) is not None
     assert not conn.in_transaction
     writer.close(); conn.close()
+
+
+@pytest.mark.parametrize('seed', range(12))
+def test_current_candle_candidates_equal_original_filtered_selection(tmp_path, seed):
+    rnd = random.Random(seed)
+    conn = sqlite3.connect(tmp_path / 'candle-selection.db')
+    M.init(conn); conn.commit()
+    key = 'candle:FIX/USDT:15m'
+    for step in range(18):
+        events = sorted(rnd.sample(range(1, 18), 4))
+        raw = frame([e * 1000 for e in events], [rnd.random() for _ in events])
+        receipt = M.annotate(raw, instrument_id=rnd.choice([IID, IID, 'other:futures:FIX']),
+                             source=rnd.choice(['provider', 'provider', 'other']),
+                             kind='derivative', received_ms=rnd.randint(10, 50) * 1000)
+        if step % 5 == 0:
+            receipt['bar_state'] = 'PARTIAL'; receipt = M.seal(receipt)
+        M.append(conn, key, receipt); conn.commit()
+        for partial in [False, True]:
+            at = rnd.randint(15, 60) * 1000
+            limit = rnd.choice([1, 5, 30])
+            original = M.load(conn, key, as_of_ms=at, limit=limit,
+                              instrument_id=IID, source='provider', include_partial=partial)
+            actual = M.load_current_candles(conn, key, as_of_ms=at, limit=limit,
+                                           instrument_id=IID, source='provider', include_partial=partial)
+            if original is None:
+                assert actual is None
+            else:
+                pd.testing.assert_frame_equal(actual, original)
+    assert not conn.in_transaction
+    conn.close()
+
+
+def test_current_candle_reader_decodes_only_winners_not_all_old_versions(tmp_path, monkeypatch):
+    conn = sqlite3.connect(tmp_path / 'many-revisions.db')
+    M.init(conn); conn.commit()
+    key = 'candle:FIX/USDT:15m'
+    for revision in range(25):
+        receipt = M.annotate(frame(list(range(1000, 101000, 1000))), instrument_id=IID,
+                             source='provider', kind='derivative', received_ms=200000 + revision)
+        M.append(conn, key, receipt)
+    conn.commit()
+    log = []; conn.set_trace_callback(log.append)
+    df = M.load_current_candles(conn, key, as_of_ms=300000, limit=30,
+                               instrument_id=IID, source='provider')
+    assert len(df) == 30
+    assert not any('json_extract' in q.lower() for q in log)
+    old = M.load(conn, key, as_of_ms=300000, limit=30, instrument_id=IID, source='provider')
+    pd.testing.assert_frame_equal(df, old)
+    conn.close()
