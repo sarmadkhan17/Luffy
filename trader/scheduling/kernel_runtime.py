@@ -486,7 +486,8 @@ class KernelRuntime:
 
     def references(self):
         from ..data.ref_sources import refresh_all
-        report = refresh_all(self.kernel.feed, list(self.kernel.cfg.get('references', {}).get('alts_members') or []))
+        report = refresh_all(self.kernel.feed, list(self.kernel.cfg.get('references', {}).get('alts_members') or []),
+                             current_window_ms=31 * 86_400_000)
         exports = self.kernel.cfg.get('references', {}).get('chart_exports') or []
         if exports:
             from ..data.chart_exports import ingest_exports
@@ -508,6 +509,11 @@ class KernelRuntime:
         waits on a scan beyond the bounded yield."""
         from ..data.ref_sources import rebuild_alts_cold, alts_cold_pending
         from ..data.references import RefStore
+        # Cold index history must not compete with initial current-data recovery.
+        stats = self.last_decision_stats or {}
+        if not stats.get('strategy_completed') or stats.get('strategy_blocked') or stats.get('snapshot_refusals'):
+            self.alts_cold_status = dict(state='deferred', reason='current_inputs_not_ready')
+            return
         members = list(self.kernel.cfg.get('references', {}).get('alts_members') or [])
         if not members:
             return
@@ -636,7 +642,7 @@ class KernelRuntime:
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in
-                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type', 'input_policy', 'shortlisted', 'no_strategy', 'eligible_strategies', 'requirement_errors', 'persisted_attempts', 'strategy_coverage', 'strategy_expected', 'strategy_blocked', 'strategy_regime_ineligible', 'strategy_ineligible_other', 'strategy_attempted', 'strategy_completed', 'strategy_completed_unreported', 'strategy_refused', 'strategy_not_invoked', 'blocked_reasons')}
+                ('admission', 'processing_boundaries', 'input_refusals', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type', 'input_policy', 'shortlisted', 'no_strategy', 'eligible_strategies', 'requirement_errors', 'persisted_attempts', 'strategy_coverage', 'strategy_expected', 'strategy_blocked', 'strategy_regime_ineligible', 'strategy_ineligible_other', 'strategy_attempted', 'strategy_completed', 'strategy_completed_unreported', 'strategy_refused', 'strategy_not_invoked', 'blocked_reasons')}
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),

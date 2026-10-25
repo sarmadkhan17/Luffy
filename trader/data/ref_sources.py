@@ -422,7 +422,8 @@ _ALT_SAVED: dict = {}
 
 def refresh_all(feed, members: list, store=None, get=get_json,
                 now_ms: int | None = None,
-                cg_every_ms: int | None = None, allow_cold_alts: bool = False) -> dict:
+                cg_every_ms: int | None = None, allow_cold_alts: bool = False,
+                current_window_ms: int | None = None) -> dict:
     """Bring every reference current. Each source is isolated: its failure
     is recorded as "error: …" and costs nothing else. Never raises."""
     from .references import HOUR, REFS, RefStore
@@ -435,6 +436,16 @@ def refresh_all(feed, members: list, store=None, get=get_json,
         try:
             started=store._clock_ms()
             frame=fn()
+            if current_window_ms is not None and frame is not None and len(frame):
+                # Current refresh observes new bars and a correction overlap.
+                # Historical retrieval retains the original default path.
+                last = store.last_ts(key)
+                period = TF_MS.get(REFS[key].tf, HOUR)
+                floor = now - current_window_ms
+                if last is not None:
+                    floor = max(floor, last - 2 * period)
+                from .market_provenance import ms
+                frame = frame.loc[ms(frame['ts']) >= floor].copy()
             frame.attrs['request_started_ms']=started
             out[key] = store.save(key, frame, now_ms=store._clock_ms())
         except Exception as e:

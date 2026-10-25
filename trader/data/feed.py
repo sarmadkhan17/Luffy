@@ -577,6 +577,8 @@ class DataFeed:
             prepared = mp.prepare(original)
             if not len(df):
                 with write_tx(self._local, self.db, "partial receipt") as conn:
+                    if not conn.in_transaction:
+                        conn.execute('BEGIN IMMEDIATE')
                     mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
                 return True
             # .value/.astype(int64) are ns-based only for datetime64[ns];
@@ -595,6 +597,8 @@ class DataFeed:
             # a failed commit must not leave this thread's connection holding
             # the lock (and the batch) open — see sqlite_tx
             with write_tx(self._local, self.db, "write") as conn:
+                if not conn.in_transaction:
+                    conn.execute('BEGIN IMMEDIATE')
                 mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
                 from .sqlite_tx import save_projection
                 save_projection(conn, 'candles', ('symbol','tf','ts','open','high','low','close','volume','taker_buy'), ('symbol','tf','ts'), rows)
