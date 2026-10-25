@@ -1483,6 +1483,22 @@ def cached_current(conn, key, *, as_of_ms, limit, instrument_id=None, source=Non
 
 # ── bounded, resumable metadata resolution (off the trading path) ───────────
 def resolve_pending(conn, *, budget_rows=20000, seed=True):
+    """Own metadata transactions completely, including a failed first INSERT."""
+    if conn.in_transaction:
+        raise ValueError('metadata_resolution_requires_idle_connection')
+    try:
+        return _resolve_pending(conn, budget_rows=budget_rows, seed=seed)
+    except BaseException:
+        # sqlite3 opens an implicit transaction before an INSERT that can fail
+        # with SQLITE_BUSY. Never retain that transaction across worker retries.
+        try:
+            conn.rollback()
+        except BaseException:
+            conn.close()
+        raise
+
+
+def _resolve_pending(conn, *, budget_rows=20000, seed=True):
     """Seed witnesses for series demanded of THIS database; resolve identity
     metadata for the demanded ones that need it, in bounded resumable steps.
 

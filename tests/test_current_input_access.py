@@ -676,3 +676,22 @@ def test_frontier_cap_includes_decoded_payload_and_growth(tmp_path, monkeypatch)
     save(feed, [3000], 5000)
     M.load_window_typed(feed.db, KEY, as_of_ms=6000, window_start_ms=0, instrument_id=IID)
     assert sum(f.nbytes() for f in M.FRONTIERS.values()) <= M.FRONTIER_MAX_BYTES
+
+
+def test_failed_metadata_seed_releases_its_transaction_before_retry(tmp_path):
+    path = tmp_path / 'locked.db'
+    conn = sqlite3.connect(path)
+    M.init(conn); conn.commit()
+    conn.execute('PRAGMA busy_timeout=0')
+    writer = sqlite3.connect(path)
+    writer.execute('BEGIN IMMEDIATE')
+    writer.execute("UPDATE market_meta_global SET gen=gen WHERE name='raw'")
+    M.demand(conn, KEY)
+    with pytest.raises(sqlite3.OperationalError):
+        M.resolve_pending(conn)
+    assert not conn.in_transaction
+    writer.rollback()
+    M.resolve_pending(conn)
+    assert M.witness(conn, KEY) is not None
+    assert not conn.in_transaction
+    writer.close(); conn.close()
