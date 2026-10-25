@@ -319,6 +319,36 @@ def prepare(df):
     return tuple(records)
 
 
+def _current_parents(conn, key, events, instrument, source):
+    """Same ancestry winners, reading identity/source only on newest candidates."""
+    events = tuple(events)
+    q = '''SELECT record_json,revision_id,event_ms,available_ms,observed_ms
+        FROM market_revisions WHERE rowid IN (SELECT selected_rowid FROM (
+          SELECT rowid AS selected_rowid,event_ms,
+            ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+          FROM market_revisions WHERE series_key=? AND event_ms IN ('''
+    q += ','.join('?' for _ in events) + ')) WHERE ordinal=1)'
+    result = {}
+    marker = text_reference(source) if isinstance(source, str) else None
+    rows = _selected_revision_rows(conn, q, (key, *events), batch=True)
+    for raw, rid, event, available, observed in rows:
+        physical = json.loads(raw)
+        if physical.get('instrument_id') == instrument and physical.get('source') in (source, marker):
+            result[event] = (rid, observed)
+        else:
+            # A newer row belonging to another feed must never hide this feed's
+            # parent. Only this exceptional event needs the original predicate.
+            prior = conn.execute('''SELECT revision_id,observed_ms FROM market_revisions
+                WHERE series_key=? AND event_ms=?
+                AND json_extract(record_json,'$.instrument_id') IS ?
+                AND (json_extract(record_json,'$.source') IS ? OR json_extract(record_json,'$.source') IS ?)
+                ORDER BY observed_ms DESC,rowid DESC LIMIT 1''',
+                (key, event, instrument, source, marker)).fetchone()
+            if prior is not None:
+                result[event] = prior
+    return result
+
+
 def append(conn, key, df=None, *, prepared=None):
     """Append/link exact retrievals atomically; ancestry stays inside the write."""
     iterator = iter(prepare(df) if prepared is None else prepared)
@@ -342,20 +372,8 @@ def append(conn, key, df=None, *, prepared=None):
             groups.setdefault((r['instrument_id'], r['source']), set()).add(r['event_time_ms'])
         parents = {}
         for (instrument, source), events in groups.items():
-            events = tuple(events)
-            query = '''SELECT revision_id,event_ms,observed_ms FROM (
-                SELECT revision_id,event_ms,observed_ms,ROW_NUMBER() OVER (
-                PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
-                FROM market_revisions WHERE series_key=? AND event_ms IN ('''
-            query += ','.join('?' for _ in events) + ''')
-                AND json_extract(record_json,'$.instrument_id') IS ?
-                AND (json_extract(record_json,'$.source') IS ? OR json_extract(record_json,'$.source') IS ?)) WHERE ordinal=1'''
-            # Aggregate bounded metadata in SQLite to avoid per-row cursor
-            # crossings under background CPU contention.
-            result = conn.execute('SELECT json_group_array(json_array(revision_id,event_ms,observed_ms)) '
-                                  'FROM (' + query + ')', (key, *events, instrument, source, text_reference(source) if isinstance(source, str) else None)).fetchone()[0]
-            for rid, event, observed in json.loads(result):
-                parents[(instrument, source, event)] = (rid, observed)
+            for event, prior in _current_parents(conn, key, events, instrument, source).items():
+                parents[(instrument, source, event)] = prior
         # Fetch shared content once per bounded batch, preserving append's
         # bounded SQLite crossings under acquisition-thread contention.
         source_cache = {text_reference(r[f])[len(TEXT_REF):]: None for r in batch

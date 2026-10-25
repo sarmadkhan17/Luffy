@@ -744,3 +744,40 @@ def test_current_candle_reader_decodes_only_winners_not_all_old_versions(tmp_pat
     old = M.load(conn, key, as_of_ms=300000, limit=30, instrument_id=IID, source='provider')
     pd.testing.assert_frame_equal(df, old)
     conn.close()
+
+
+@pytest.mark.parametrize('seed', range(6))
+def test_metadata_parent_lookup_matches_frozen_deployed_append(tmp_path, seed):
+    import subprocess, types
+    frozen = types.ModuleType('trader.data._frozen_parent_oracle')
+    frozen.__package__ = 'trader.data'
+    raw = subprocess.check_output(['git', 'show', '3def20134e724bc474c21fa6cd0f798ea6d154ba:trader/data/market_provenance.py']).decode()
+    exec(compile(raw, 'frozen_parent_oracle', 'exec'), frozen.__dict__)
+    old = sqlite3.connect(tmp_path / 'old.db'); frozen.init(old); old.commit()
+    new = sqlite3.connect(tmp_path / 'new.db'); M.init(new); new.commit()
+    rnd = random.Random(seed)
+    for step in range(15):
+        ev = sorted(rnd.sample(range(1, 30), 6))
+        receipt = M.annotate(frame([e * 1000 for e in ev], [rnd.random() for _ in ev]),
+                             instrument_id=rnd.choice([IID, None, 'other:spot:FIX']),
+                             source=rnd.choice(['provider', 'provider'*80, None, 'other']), kind='derivative',
+                             received_ms=rnd.choice([30000, 40000, 50000]))
+        frozen.append(old, KEY, receipt); old.commit()
+        M.append(new, KEY, receipt); new.commit()
+        assert old.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall() == new.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()
+    old.close(); new.close()
+
+
+def test_parent_lookup_does_not_parse_old_payloads_when_latest_identity_matches(tmp_path):
+    conn = sqlite3.connect(tmp_path / 'parent.db'); M.init(conn); conn.commit()
+    for i in range(20):
+        receipt = M.annotate(frame(list(range(1000, 101000, 1000))), instrument_id=IID,
+                             source='provider', kind='derivative', received_ms=200000 + i)
+        M.append(conn, KEY, receipt)
+    conn.commit()
+    trace = []; conn.set_trace_callback(trace.append)
+    parents = M._current_parents(conn, KEY, list(range(1000, 101000, 1000)), IID, 'provider')
+    assert len(parents) == 100
+    assert not any('json_extract' in q.lower() for q in trace)
+    assert all(value[1] == 200019 for value in parents.values())
+    conn.close()
