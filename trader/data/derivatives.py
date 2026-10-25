@@ -160,6 +160,25 @@ class DerivFeed:
             # read snapshot cannot upgrade after another producer commits.
             if not conn.in_transaction:
                 conn.execute('BEGIN IMMEDIATE')
+            if acquisition is not None and acquisition['mode'] == 'required_window':
+                # Keep proved unchanged history; append only gaps, corrections
+                # and two freshly observed tip events. Selection and writes
+                # share this writer transaction, so a concurrent correction
+                # cannot be lost between the comparison and the append.
+                expected = self.current_source(series)
+                instrument = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(symbol)).value
+                old = mp.load_current_candles(conn, 'derivative:'+symbol+':'+series,
+                    as_of_ms=self._clock_ms(), limit=len(df), instrument_id=instrument,
+                    source=expected, min_event_ms=int(df['event_time_ms'].min()))
+                prior = {} if old is None else {int(r.event_time_ms): r
+                    for r in old.itertuples() if r.quality == 'VALID'}
+                tip = sorted(set(int(t) for t in df['event_time_ms']))[-2:]
+                keep = [i for i, r in enumerate(df.itertuples())
+                    if int(r.event_time_ms) in tip or r.quality != 'VALID'
+                    or int(r.event_time_ms) not in prior
+                    or prior[int(r.event_time_ms)].value != r.value]
+                prepared = [prepared[i] for i in keep]
+                projection = [projection[i] for i in keep]
             mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
             save_projection(conn, 'derivs', ('symbol','series','ts','value'), ('symbol','series','ts'), projection)
             if claim is not None:

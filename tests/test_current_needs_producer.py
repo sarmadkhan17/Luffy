@@ -196,3 +196,40 @@ def test_broad_recorder_does_not_duplicate_current_required_pairs(tmp_path, monk
     f = D.DerivFeed(tmp_path / 'd.db', clock_ms=lambda: now)
     f.record_all(['ETH/USDT'], delay=0, exclude={('ETH/USDT','funding'),('ETH/USDT','oi')})
     assert not any(name in ('fundingRate','openInterestHist') for name, _ in calls)
+
+
+def test_current_window_reuses_proved_unchanged_history_but_keeps_corrections(tmp_path):
+    import pandas as pd
+    now = 1_790_000_000_000
+    f = D.DerivFeed(tmp_path / 'd.db', clock_ms=lambda: now)
+    key = 'derivative:ETH/USDT:oi'
+    events = [now - (20 - i) * 900_000 for i in range(20)]
+    def frame(clock, values):
+        return M.annotate(pd.DataFrame({'ts':pd.to_datetime(events,unit='ms',utc=True),'value':values}),
+            instrument_id='binance_usdm:futures:ETHUSDT', source=f.current_source('oi'),
+            kind='derivative', received_ms=clock, max_age_ms=2_700_000)
+    f.save('ETH/USDT', 'oi', frame(now,[1.] * 20), acquisition=dict(mode='required_window',now_ms=now))
+    count = lambda: f.db.execute('SELECT count(*) FROM market_revisions WHERE series_key=?',(key,)).fetchone()[0]
+    assert count() == 20
+    now += 1000
+    f.save('ETH/USDT', 'oi', frame(now,[1.] * 20), acquisition=dict(mode='required_window',now_ms=now))
+    assert count() == 22                              # only two tip observations, not 20 copies
+    now += 1000
+    f.save('ETH/USDT', 'oi', frame(now,[7.] + [1.] * 19), acquisition=dict(mode='required_window',now_ms=now))
+    assert count() == 25                              # old correction plus two tips
+    rows = f.load('ETH/USDT','oi',as_of_ms=now)
+    assert rows['value'].iloc[0] == 7.
+    assert rows['observed_at_ms'].iloc[1] == now - 2000 # original receipt not restamped
+
+
+def test_unknown_inventory_is_never_reused_as_current_history(tmp_path):
+    import pandas as pd
+    now=1_790_000_000_000
+    f=D.DerivFeed(tmp_path/'d.db',clock_ms=lambda:now)
+    events=[now-(10-i)*900_000 for i in range(10)]
+    plain=pd.DataFrame({'ts':pd.to_datetime(events,unit='ms',utc=True),'value':[1.]*10})
+    f.save('ETH/USDT','oi',plain)
+    qualified=M.annotate(plain,instrument_id='binance_usdm:futures:ETHUSDT',source=f.current_source('oi'),
+                         kind='derivative',received_ms=now,max_age_ms=2_700_000)
+    f.save('ETH/USDT','oi',qualified,acquisition=dict(mode='required_window',now_ms=now))
+    assert f.db.execute('SELECT count(*) FROM market_revisions').fetchone()[0]==20
