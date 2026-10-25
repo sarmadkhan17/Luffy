@@ -57,23 +57,50 @@ def dependency_store(frame, kind, supplied=None):
     return RefStore(db_path=path, retrospective=d)
 
 
+_DEFAULT_STORES = {}
+
+
+def _default_store(kind):
+    """One initialised store per data root: current lookups reuse its handles
+    instead of opening (and initialising) a fresh store on every call."""
+    from ..core.config import ROOT
+    key = (kind, str(ROOT))
+    store = _DEFAULT_STORES.get(key)
+    if store is None:
+        if kind == 'derivs':
+            store = DerivFeed(read_only=True)
+        else:
+            from ..data.references import RefStore
+            store = RefStore(read_only=True)
+        _DEFAULT_STORES[key] = store
+    return store
+
+
 def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None, frame=None) -> dict:
     """{feature-series-name: raw observation frame} for one symbol."""
     feed = dependency_store(frame, 'derivs', feed) if any(r in _SERIES_FOR for r in requires) else feed
-    feed = feed or DerivFeed()
+    feed = feed or _default_store('derivs')
     out = {}
     for req in requires:
         series = _SERIES_FOR.get(req)
         if series is None:                      # "ohlcv" and anything unknown
             continue
-        df = feed.load(symbol, series, as_of_ms=as_of_ms,
-                       **({'window_start_ms':window_start_ms} if window_start_ms is not None else {}))
+        extra = {}
+        start = window_start_ms.get(req) if isinstance(window_start_ms, dict) else window_start_ms
+        if start is not None:
+            extra['window_start_ms'] = start
+            if frame is None and as_of_ms is not None and isinstance(feed, DerivFeed):
+                from ..core.instrument_registry import InstrumentId
+                from ..core.types import MarketType
+                from ..data.derivatives import to_binance
+                extra['instrument_id'] = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(symbol)).value
+        df = feed.load(symbol, series, as_of_ms=as_of_ms, **extra)
         if df is not None and len(df):
             out[series] = df
     return out
 
 
-def load_refs(requires, store=None, *, as_of_ms=None, frame=None) -> dict:
+def load_refs(requires, store=None, *, as_of_ms=None, frame=None, window_start_ms=None) -> dict:
     """{reference key: frame} for every `ref:<key>` a spec requires."""
     keys = [r.split(":", 1)[1] for r in requires or ()
             if isinstance(r, str) and r.startswith("ref:")]
@@ -81,11 +108,11 @@ def load_refs(requires, store=None, *, as_of_ms=None, frame=None) -> dict:
         return {}
     store = dependency_store(frame, 'candles', store)
     if store is None:
-        from ..data.references import RefStore
-        store = RefStore()
+        store = _default_store('refs')
     out = {}
     for k in keys:
-        df = store.load(k, as_of_ms=as_of_ms)
+        start = window_start_ms.get('ref:' + k) if isinstance(window_start_ms, dict) else window_start_ms
+        df = store.load(k, as_of_ms=as_of_ms, **({'window_start_ms': start} if start is not None else {}))
         if df is not None and len(df):
             out[k] = df
     return out

@@ -132,6 +132,9 @@ class RefStore:
                 self._local.conn = conn
                 return conn
             conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+            if mp.initialised(conn, 'refs'):
+                self._local.conn = conn      # versioned: no setup statements, no writes
+                return conn
             try:
                 conn.execute(
                     "CREATE TABLE IF NOT EXISTS refs (key TEXT NOT NULL, "
@@ -208,9 +211,10 @@ class RefStore:
                                  (raw_hash, df['source'].iloc[0], raw_text))
                 mp.append(conn, "reference:"+key, prepared=prepared)
                 save_projection(conn, 'refs', ('key','ts','open','high','low','close','volume'), ('key','ts'), rows)
+            mp.refresh_entries(self.db, 'reference:'+key)
         return len(rows)
 
-    def load(self, key: str, since_ms: int = 0, *, as_of_ms=None):
+    def load(self, key: str, since_ms: int = 0, *, as_of_ms=None, window_start_ms=None):
         if self.retrospective is not None:
             d = self.retrospective
             if as_of_ms is not None:
@@ -240,7 +244,27 @@ class RefStore:
                             evidence_scope='retrospective_observation')
             return df.loc[to_ms(df['ts']) >= since_ms].copy()
         at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
-        df = mp.load(self.db, 'reference:'+key, as_of_ms=at, revision_stream=as_of_ms is None)
+        if as_of_ms is not None:
+            from ..scheduling.timing import stage_scope
+            series = 'reference:'+key
+            with stage_scope('input.reference_read'):
+                if window_start_ms is not None:
+                    # Strategy-owned current window: events from the start, the exact
+                    # alignment predecessor and the late-correction frontier only.
+                    start = min(at, mp.cut(window_start_ms))
+                    def loader():
+                        frame, _ = mp.load_window_typed(self.db, series, as_of_ms=at, window_start_ms=start,
+                                                        instrument_id=None, limit=200000)
+                        return frame
+                    df = mp.cached_current(self.db, series, as_of_ms=at, limit=200000, window_start_ms=start,
+                                           loader=loader,
+                                           refill=lambda: self.load(key, since_ms, as_of_ms=self._clock_ms(),
+                                                                    window_start_ms=window_start_ms))
+                else:
+                    df = mp.cached_current(self.db, series, as_of_ms=at, limit=200000,
+                                           refill=lambda: self.load(key, since_ms, as_of_ms=self._clock_ms()))
+        else:
+            df = mp.load(self.db, 'reference:'+key, as_of_ms=at, revision_stream=True)
         df = mp.eligible_frame(df, None, at)
         if as_of_ms is not None and df is not None and len(df):
             ref = REFS[key]

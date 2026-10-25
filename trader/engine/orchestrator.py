@@ -104,7 +104,7 @@ class Orchestrator:
     def decide(self, snap: Snapshot, population: list[tuple],
                entry_allowed: bool = True,
                blocked_reason: str = "", *, measurements: bool = True,
-               persist_cooldown: bool = True) -> Decision:
+               persist_cooldown: bool = True, observer=None) -> Decision:
         receipts = self._receipts_type(self.diagnostics_enabled, self.diagnostics_cap)
         cycle_id = new_id("cyc")
         regime_info = classify(snap.df("15m"), snap.df("1h"))
@@ -147,28 +147,35 @@ class Orchestrator:
             votes.append(v)
 
         sigs: list[StrategySignal] = []
+        # ``observer(strategy_id, reason, exc)`` is an optional in-memory tap on the
+        # existing per-strategy diagnostics (eligibility gates and evaluator
+        # reasons); it works whether or not attention diagnostics are enabled.
+        def note(sid, reason, exc=None):
+            receipts.add("strategy", sid, reason, exc)
+            if observer is not None:
+                observer(sid, reason, exc)
         for st, genome in population:
             if not st.is_trade_eligible:
-                receipts.add("strategy", st.id, "ineligible_state")
+                note(st.id, "ineligible_state")
                 continue
             if snap.market_type not in genome.markets:
-                receipts.add("strategy", st.id, "ineligible_market")
+                note(st.id, "ineligible_market")
                 continue
             if not regime_allows(genome, snap.regime):
-                receipts.add("strategy", st.id, "ineligible_regime")
+                note(st.id, "ineligible_regime")
                 continue
             # a strategy may only speak about the markets it was validated on
             if not symbol_allows(genome, snap.symbol):
-                receipts.add("strategy", st.id, "ineligible_symbol")
+                note(st.id, "ineligible_symbol")
                 continue
             try:
-                if receipts.enabled:
-                    sig = strat_lib.evaluate(genome, snap, diagnostic=lambda reason, exc=None:
-                                             receipts.add("strategy", st.id, reason, exc))
+                if receipts.enabled or observer is not None:
+                    sig = strat_lib.evaluate(genome, snap, diagnostic=lambda reason, exc=None, _id=st.id:
+                                             note(_id, reason, exc))
                 else:
                     sig = strat_lib.evaluate(genome, snap)
             except Exception as e:
-                receipts.add("strategy", st.id, "evaluation_failed", e)
+                note(st.id, "evaluation_failed", e)
                 log.warning(f"strategy {st.id} failed on {snap.symbol}: {e}")
                 continue
             if sig is not None:

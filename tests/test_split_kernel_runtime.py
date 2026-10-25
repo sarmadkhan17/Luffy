@@ -32,7 +32,8 @@ def test_complete_schedule_contract(tmp_path):
     assert {n:w.interval for n,w in r.jobs.items() if w.interval} == {
         'commands':1, 'account':30, 'positions':30, 'market':60, 'candles':15,
         'strategy_health':3600, 'health':10, 'learning_apply':60, 'learning_check':60, 'outcomes':60,
-        'reports':3600, 'postmortem':21600, 'derivatives':900, 'derivative_inputs':300, 'references':3600}
+        'reports':3600, 'postmortem':21600, 'derivatives':900, 'derivative_inputs':300, 'references':3600,
+        'input_metadata':30, 'input_warm':2, 'derivative_needs':60, 'alts_history':300}
     assert r.jobs['research'].calendar.hours == (9,21)
     assert r.jobs['validation'].calendar.hours == (3,)
     assert r.jobs['validation'].calendar.weekday == 6
@@ -178,16 +179,16 @@ def test_candle_pending_does_not_confuse_queue_acceptance_with_storage(tmp_path,
     k.cfg={'timeframes':{'context':['1h','4h']}}
     k._exposure_symbols=lambda:set()
     k.universe=NS(symbols=lambda:['BTC/USDT'])
-    k.feed=NS(latest_ohlcv=lambda *a:None,_queue_background_request=Mock(return_value=True))
+    stored={}
+    k.feed=NS(reobservation_due=lambda *a:False,tip_complete=lambda symbol,tf,expected:stored.get((symbol,tf),0)>=expected,
+              _queue_background_request=Mock(return_value=True))
     monkeypatch.setattr('trader.scheduling.kernel_runtime.time.time',lambda:1800000000.)
     r.candles()
     assert r.candle_stats['pending']==3 and r.candle_stats['confirmed_stored']==0
     assert r.candle_stats['queued']==3
     from trader.core.types import TF_MS
-    def frame(symbol, tf, limit):
-        expected=1800000000000//TF_MS[tf]*TF_MS[tf]-TF_MS[tf]
-        return pd.DataFrame({'ts':pd.to_datetime([expected],unit='ms',utc=True),'close':[1.],'quality':['VALID']})
-    k.feed.latest_ohlcv=frame
+    for tf in ('15m','1h','4h'):
+        stored[('BTC/USDT',tf)]=1800000000000//TF_MS[tf]*TF_MS[tf]-TF_MS[tf]
     r.candles()
     assert r.candle_stats['pending']==0 and r.candle_stats['confirmed_stored']==3
 
@@ -360,3 +361,62 @@ def test_scan_reservation_released_on_failure_or_discard(tmp_path, monkeypatch, 
             r.decisions()
     assert not r.scan_in_flight and r.pending_scan is None
     assert k._last_cycle_s == 123
+
+
+def test_completed_scans_busy_ticks_and_full_cycle_latency_are_reported_separately(tmp_path, monkeypatch):
+    import trader.scheduling.kernel_runtime as module
+    import trader.scheduling.lean_scan as lean
+    k,r = minimal(tmp_path)
+    k._last_cycle_s=None
+    modes=[]
+    from trader.data import market_provenance as mp
+    monkeypatch.setattr(lean,'prepare',lambda view:modes.append(mp._CACHE_ONLY.get()) or {})
+    def view():
+        v=NS(_refresh_btc_context=lambda:None,cfg={},_admission_plan=lambda:({},{}),
+             _symbol_roles=NS(peers=(),deep=('BTC/USDT',)),_model_generation=r.model[0],
+             cycle=lambda:modes.append(mp._CACHE_ONLY.get()) or {'decisions':0},feed=NS())
+        return v
+    monkeypatch.setattr(module,'analysis_context',lambda runtime:view())
+    r.market(); r.market()
+    assert r.scan_busy_ticks==1 and r.scans_completed==0 and r.shortlisted=={'BTC/USDT'}
+    r.decisions()
+    assert r.scans_completed==1 and r.scans_discarded==0
+    full=r.last_full_cycle
+    assert set(full)=={'preparation_s','queue_s','evaluation_s','total_s'} and full['total_s']>=full['evaluation_s']
+    assert modes==[True,True]               # preparation and evaluation are cache-only reads
+    snap=r.snapshot()
+    assert snap['scans_completed']==1 and snap['skipped_busy_scan_ticks']==1 and 'cache_hits' in snap['input_access']
+
+
+def test_candle_checks_prioritise_held_then_shortlist_then_remaining_coverage(tmp_path, monkeypatch):
+    k,r=minimal(tmp_path)
+    k.cfg={'timeframes':{'context':[]}}
+    k._exposure_symbols=lambda:{'HELD/USDT'}
+    names=[f'C{i}/USDT' for i in range(70)]
+    k.universe=NS(symbols=lambda:names+['SHORT/USDT'])
+    r.shortlisted={'SHORT/USDT'}
+    order=[]
+    k.feed=NS(reobservation_due=lambda *a:False,tip_complete=lambda s,tf,e:order.append(s) or False,_queue_background_request=Mock(return_value=True))
+    monkeypatch.setattr('trader.scheduling.kernel_runtime.time.time',lambda:1800000000.)
+    r.candles()
+    assert order[0]=='HELD/USDT' and 'SHORT/USDT' in order[:4] and len(order)==64
+    first_pass=set(order); order.clear()
+    r.candles()                                      # the rest of the coverage is not starved
+    assert set(order)-first_pass
+
+
+def test_history_work_yields_to_scan_and_position_cycles_at_boundaries(tmp_path, monkeypatch):
+    import trader.scheduling.kernel_runtime as module
+    k,r=minimal(tmp_path)
+    k.cfg={}
+    sleeps=[]
+    def sleep(seconds):
+        sleeps.append(seconds)
+        if len(sleeps)==3:
+            r.scan_in_flight=False
+    monkeypatch.setattr(module.time,'sleep',sleep)
+    r._history_yield()
+    assert sleeps==[] and r.history_yields==0                  # idle: no waiting
+    r.scan_in_flight=True
+    r._history_yield()
+    assert len(sleeps)==3 and r.history_yields==1              # current demand went first, then history resumed

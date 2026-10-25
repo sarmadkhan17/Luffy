@@ -53,6 +53,16 @@ class KernelRuntime:
         self.candle_stats = {}
         self.candle_events = {}
         self.held_symbols = set()
+        self.shortlisted = set()
+        self.derivative_needs = []
+        self.candle_active = {}
+        self.history_resume_index = 0
+        self.alts_cold_status = None
+        self.history_yields = 0
+        self.need_stats = {}
+        self.scans_completed = 0
+        self.scans_discarded = 0
+        self.last_full_cycle = None
         self.last_decision_stats = None
         self.execution_metrics = dict(status="idle", runs=0, submitted=0, failures=0,
             last_duration_s=None, max_duration_s=None, last_error_type=None)
@@ -71,11 +81,15 @@ class KernelRuntime:
             'research': Worker('research', self.research, calendar=Calendar((9, 21))),
             'validation': Worker('validation', self.validation, calendar=Calendar((3,), weekday=6)),
             'health': Worker('health', self.health, interval=10, immediate=True),
+            'input_metadata': Worker('input-metadata', self.input_metadata, interval=30, immediate=True),
+            'input_warm': Worker('input-warm', self.input_warm, interval=2, immediate=True),
             **self.maintenance.jobs,
         }
         cfg = kernel.cfg
         if cfg.get('derivatives', {}).get('enabled', True):
             self.jobs['derivatives'] = Worker('derivatives', self.derivatives, interval=900, immediate=True)
+            self.jobs['derivative_needs'] = Worker('derivative-needs', self.derivative_current_needs,
+                                                   interval=60, immediate=False)
             self.jobs['derivative_inputs'] = Worker('derivative-inputs', self.refresh_derivative_inputs,
                                                    interval=300, immediate=True)
             if cfg.get('derivatives', {}).get('backfill_on_start', True):
@@ -83,6 +97,7 @@ class KernelRuntime:
                                                          calendar=Calendar((3,), minute=30))
         if cfg.get('references', {}).get('enabled', True):
             self.jobs['references'] = Worker('references', self.references, interval=3600, immediate=True)
+            self.jobs['alts_history'] = Worker('alts-history', self.alts_history, interval=300, immediate=True)
         if cfg.get('scraper', {}).get('enabled', False):
             self.jobs['scraper'] = Worker('scraper', self.scraper, interval=4*3600)
         if cfg.get('crawler', {}).get('enabled', False):
@@ -198,16 +213,27 @@ class KernelRuntime:
                 self.scan_busy_ticks += int(self.scan_in_flight)
                 return
             self.scan_in_flight = True
+        cycle_started = time.monotonic()
         try:
             view = analysis_context(self)
             from .timing import stage_scope
             view._lean_scan = True
             with stage_scope("scan.shortlist"):
                 receipt, frames = view._admission_plan()
+            with self.lock:
+                self.shortlisted = set(getattr(getattr(view, '_symbol_roles', None), 'deep', ()) or ())
+            from ..data import market_provenance as mp
+            with self.lock:
+                held = set(self.held_symbols)
+            # Pin held positions and the current shortlist's windows against eviction.
+            mp.CURRENT.set_pins(symbols=held | set(self.shortlisted))
             from .lean_scan import prepare
-            peers = prepare(view)
+            from ..data import market_provenance as mp
+            with mp.cache_only():
+                peers = prepare(view)
             view._prepared_scan = (receipt, frames, peers, {}, {})
             view._prepared_at = time.monotonic()
+            view._cycle_started = cycle_started
             with self.lock:
                 self.pending_scan = view
             if not self.jobs['decisions'].trigger():
@@ -231,13 +257,23 @@ class KernelRuntime:
         try:
             with self.decision_lock:
                 if view._model_generation != self.model[0] or time.monotonic() - view._prepared_at > 60:
+                    with self.lock:
+                        self.scans_discarded += 1
                     self.jobs['market'].trigger()
                     return
-                stats = view.cycle()
+                from ..data import market_provenance as mp
+                with mp.cache_only():
+                    stats = view.cycle()
+            end = time.monotonic()
             with self.lock:
                 self.last_decision_stats = stats
-            # Discards are not completed scans.
-            self.kernel._last_cycle_s = time.monotonic() - start
+                # Only a finished evaluation is a completed scan; skipped busy
+                # ticks and discarded batches are counted separately.
+                self.scans_completed += 1
+                begun = getattr(view, '_cycle_started', start)
+                self.last_full_cycle = dict(preparation_s=view._prepared_at - begun,
+                    queue_s=start - view._prepared_at, evaluation_s=end - start, total_s=end - begun)
+            self.kernel._last_cycle_s = end - start
         finally:
             with self.lock:
                 self.scan_in_flight = False
@@ -396,15 +432,55 @@ class KernelRuntime:
         with self.lock:
             self.derivative_inputs = (funding, oi, deepcopy(view._market_aux))
 
+    def derivative_current_needs(self):
+        """Acquire exactly what the current shortlist's strategies require.
+
+        Held symbols first, then shortlist rank; bounded requests per pass. The
+        broad configured recorder (``derivatives``) keeps its own coverage and
+        cadence; this adds no optional series for any coin.
+        """
+        from ..data.derivatives import DerivFeed
+        with self.lock:
+            needs, held = list(self.derivative_needs), set(self.held_symbols)
+        needs.sort(key=lambda n: n[0] not in held)           # stable: shortlist rank otherwise
+        feed = getattr(self, '_needs_feed', None)
+        if feed is None:
+            feed = self._needs_feed = DerivFeed()
+        feed.cancelled = lambda: self.kernel._stop
+        cfg = self.kernel.cfg.get('derivatives', {})
+        result = feed.acquire_needs(needs, max_requests=int(cfg.get('needs_per_pass', 20)),
+                                    delay=float(cfg.get('request_delay_s', .3)))
+        with self.lock:
+            self.need_stats = dict(result, required=len(needs), at=time.time())
+
     def derivative_history(self):
         # Separate client/worker: multi-year history never delays current inputs.
         from ..brain.harvester import Harvester
         view = analysis_context(self)
         h = Harvester(view.journal, view.cfg, view.feed, view.notifier)
         h.deriv.cancelled = lambda: self.kernel._stop
+        h.deriv.history_yield = self._history_yield
+        h.deriv.backfill_start = self.history_resume_index
+        h.deriv.backfill_budget_s = float(view.cfg.get('derivatives', {}).get('history_slice_s', 600))
         result = h.harvest_once(backfill=True)
         if result.get('error'):
             raise RuntimeError('derivative_history_incomplete')
+        # Unfinished slices resume at the next symbol; a finished pass starts over tomorrow.
+        self.history_resume_index = h.deriv.history_resume or 0
+        if h.deriv.history_resume is not None and not self.kernel._stop:
+            self.jobs['derivative_history'].trigger()
+
+    def _history_yield(self):
+        """Cold/history work waits (bounded) while a scan, warm refill or position cycle runs."""
+        from ..data import market_provenance as mp
+        waited = 0
+        while (waited < 120 and not self.kernel._stop and not self.stop_event.is_set()
+               and (self.scan_in_flight or mp._WARM or self.jobs['positions'].snapshot().get('running_for_s'))):
+            time.sleep(1)
+            waited += 1
+        if waited:
+            with self.lock:
+                self.history_yields += 1
 
     def references(self):
         from ..data.ref_sources import refresh_all
@@ -421,6 +497,30 @@ class KernelRuntime:
 
         if any(isinstance(v, str) for v in report.values()):
             raise ValueError('reference_sources_incomplete')
+
+    def alts_history(self):
+        """Cold alt-index rebuild as budgeted history maintenance (own worker).
+
+        Separate from the hourly current reference refresh, yielding at every
+        member boundary; a scan never waits on it (cache-only reads), and it never
+        waits on a scan beyond the bounded yield."""
+        from ..data.ref_sources import rebuild_alts_cold, alts_cold_pending
+        from ..data.references import RefStore
+        members = list(self.kernel.cfg.get('references', {}).get('alts_members') or [])
+        if not members:
+            return
+        store = RefStore()
+        try:
+            if not alts_cold_pending(store, members):
+                return
+            result = rebuild_alts_cold(self.kernel.feed, members, store, int(time.time()*1000),
+                                       members_per_slice=int(self.kernel.cfg.get('references', {}).get('cold_members_per_slice', 8)),
+                                       yield_hook=self._history_yield)
+            self.alts_cold_status = result
+            if result.get('state') == 'in_progress' and not self.kernel._stop:
+                self.jobs['alts_history'].trigger()
+        finally:
+            store.db.close()
 
     def scraper(self):
         from ..brain.scraper import Scraper
@@ -474,23 +574,44 @@ class KernelRuntime:
                 for symbol in symbols:
                     self.candle_pending[(symbol, tf)] = expected
         checked = completed = queued = 0
-        # Fair rotation: held symbols lead at a new boundary, then every series
-        # gets a turn; neither queue saturation nor an unlisted symbol starves it.
-        for key in list(self.candle_pending)[:64]:
+        # Fair rotation within priority tiers: held positions, then the current
+        # shortlist, then the rest of the existing collection coverage. A failing
+        # series is re-queued at the back, so it cannot starve the others.
+        with self.lock:
+            shortlisted = set(self.shortlisted)
+        order = {key: i for i, key in enumerate(self.candle_pending)}
+        tier = lambda key: 0 if key[0] in required else 1 if key[0] in shortlisted else 2
+        for key in sorted(self.candle_pending, key=lambda k: (tier(k), order[k]))[:64]:
             expected = self.candle_pending.pop(key)
             symbol, tf = key
             checked += 1
-            frame = k.feed.latest_ohlcv(symbol, tf, 2)
-            frame = closed_bars(frame, tf, now_ms=now)
-            if frame is not None and len(frame) and int(ms(frame['ts'])[-1]) >= expected and (
-                'quality' not in frame or frame['quality'].eq('VALID').all()):
+            # Committed tip metadata decides completion; payload is decoded only
+            # when the series witness changed since the last confirmation.
+            if k.feed.tip_complete(symbol, tf, expected):
                 completed += 1
                 continue
+            # force extends the stored tail (small correction overlap); it does not
+            # re-download history, and a new close is acquired immediately.
             accepted = k.feed._queue_background_request(symbol, tf, 400, True, 30)
             queued += int(accepted)
             self.candle_pending[key] = expected
+        # Proactive re-observation: held positions and the shortlist's actual timeframes
+        # get a REAL tail observation before their original receipt budget expires,
+        # instead of waiting for a scan to miss. Broad coverage stays at close cadence.
+        active = {symbol: set(timeframes) for symbol in required}
+        with self.lock:
+            for symbol, tfs in self.candle_active.items():
+                active.setdefault(symbol, set()).update(tfs)
+        reobserved = 0
+        for symbol in sorted(active, key=lambda s: (s not in required, s)):
+            for tf in sorted(active[symbol]):
+                if (symbol, tf) in self.candle_pending or tf not in TF_MS or reobserved >= 64:
+                    continue
+                if k.feed.reobservation_due(symbol, tf, now):
+                    reobserved += int(bool(k.feed._queue_background_request(symbol, tf, 400, True, 30)))
         self.candle_stats = dict(pending=len(self.candle_pending), checked=checked,
-                                 confirmed_stored=completed, queued=queued)
+                                 confirmed_stored=completed, queued=queued, reobserved=reobserved,
+                                 active_symbols=len(active))
 
     def snapshot(self):
         # Read-only bounded stack locations for slow workers: no locals,
@@ -513,13 +634,36 @@ class KernelRuntime:
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in
-                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type', 'input_policy', 'shortlisted', 'no_strategy', 'eligible_strategies', 'requirement_errors', 'persisted_attempts')}
+                ('admission', 'processing_boundaries', 'snapshot_refusals', 'decisions', 'deep_processed', 'unchanged_inputs', 'learning_input_failures', 'learning_input_error_type', 'input_policy', 'shortlisted', 'no_strategy', 'eligible_strategies', 'requirement_errors', 'persisted_attempts', 'strategy_coverage', 'strategy_expected', 'strategy_blocked', 'strategy_regime_ineligible', 'strategy_ineligible_other', 'strategy_attempted', 'strategy_completed', 'strategy_completed_unreported', 'strategy_refused', 'strategy_not_invoked', 'blocked_reasons')}
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),
             replaced_scan_batches=self.scan_replaced,
             scan_in_flight=self.scan_in_flight, skipped_busy_scan_ticks=self.scan_busy_ticks,
-            candles=dict(self.candle_stats))
+            scans_completed=self.scans_completed, scans_discarded=self.scans_discarded,
+            last_full_cycle=deepcopy(self.last_full_cycle), input_access=self.input_access(),
+            candles=dict(self.candle_stats), derivative_needs=deepcopy(self.need_stats), history_yields=self.history_yields,
+            history_resume_index=self.history_resume_index, alts_cold=deepcopy(self.alts_cold_status))
+
+    def input_access(self):
+        from ..data import market_provenance as mp
+        return dict(mp.STATS, cache_entries=len(mp.CURRENT.entries), cache_rows=mp.CURRENT.rows,
+                    capacity=mp.CURRENT.capacity())
+
+    def input_metadata(self):
+        """Off-path: seed demanded witnesses, resolve identity metadata in bounded steps."""
+        from ..data import market_provenance as mp
+        from ..data.derivatives import DerivFeed
+        feed = getattr(self, '_deriv_meta_feed', None)
+        if feed is None:
+            feed = self._deriv_meta_feed = DerivFeed()
+        for conn in (self.kernel.feed.db, feed.db):
+            mp.resolve_pending(conn, budget_rows=20000)
+
+    def input_warm(self):
+        """Refill windows the cache-only scan reported as warming (off the trading path)."""
+        from ..data import market_provenance as mp
+        mp.run_warm(max_s=5.0)
 
     def publish(self):
         target = Path(self.kernel.journal.db_path).parent / 'cycle_runtime.json'

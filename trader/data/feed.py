@@ -132,6 +132,8 @@ class DataFeed:
         self._acquisition_inflight = None
         self._acquisition_outcomes = OrderedDict()
         self._trading_burst = 0
+        #: (symbol, tf) -> clock of the last committed observation of that series by this process
+        self._observed_at = {}
         self._acquisition_queue_counts = {
             'accepted': 0, 'coalesced': 0, 'completed': 0,
             'skipped_fresh': 0, 'failed': 0, 'refused_full': 0,
@@ -411,6 +413,9 @@ class DataFeed:
                 self._local.conn = conn
                 return conn
             conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+            if mp.initialised(conn, 'candles', 'candle_floor'):
+                self._local.conn = conn      # versioned: no setup statements, no writes
+                return conn
             try:
                 conn.execute(
                     "CREATE TABLE IF NOT EXISTS candles ("
@@ -593,6 +598,8 @@ class DataFeed:
                 mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
                 from .sqlite_tx import save_projection
                 save_projection(conn, 'candles', ('symbol','tf','ts','open','high','low','close','volume','taker_buy'), ('symbol','tf','ts'), rows)
+            self._observed_at[(symbol, tf)] = now_ms
+            mp.refresh_entries(self.db, self._series_key(symbol, tf))
             return True
         except Exception as e:
             import sqlite3
@@ -613,7 +620,11 @@ class DataFeed:
             # Never publish an uncommitted receipt or reread after a failed
             # write. Existing qualified observations can still be used.
             return mp.eligible_frame(stored, tf, self._clock_ms(), final=False)
-        retained = self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=size, include_partial=True)
+        # Keep the original forming-bar result through its own validated cache
+        # window; both final and partial windows refresh from committed deltas.
+        partial = 'bar_state' in fresh and fresh['bar_state'].eq('PARTIAL').any()
+        retained = self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=size,
+                                   include_partial=bool(partial) or stored is None, current=True)
         return retained
 
     @staticmethod
@@ -728,8 +739,12 @@ class DataFeed:
             del self._local.immutable_reads
 
     def ohlcv_asof(self, symbol, tf='15m', *, as_of_ms, limit=20000,
-                   include_partial=False):
-        """Offline historical read; never routes through latest or the network."""
+                   include_partial=False, current=False):
+        """Offline historical read; never routes through latest or the network.
+
+        ``current=True`` (latest_ohlcv only) may reuse a validated window across
+        scans; see market_provenance.CurrentCache for the exact invalidation.
+        """
         iid,source=self._identity(symbol)
         conn = self.db
         batch = getattr(self._local, 'immutable_reads', None)
@@ -737,8 +752,16 @@ class DataFeed:
                tf, as_of_ms, limit, include_partial)
         if batch is not None and key in batch:
             return deepcopy(batch[key])
-        df = mp.load(conn, self._series_key(symbol, tf), as_of_ms=as_of_ms,
-                     limit=limit, include_partial=include_partial, instrument_id=iid, source=source)
+        from ..scheduling.timing import stage_scope
+        with stage_scope('input.candle_read'):
+            if current:
+                df = mp.cached_current(conn, self._series_key(symbol, tf), as_of_ms=as_of_ms, limit=limit,
+                                       instrument_id=iid, source=source, include_partial=include_partial,
+                                       refill=lambda: self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(),
+                                                                      limit=limit, current=True, include_partial=include_partial))
+            else:
+                df = mp.load(conn, self._series_key(symbol, tf), as_of_ms=as_of_ms,
+                             limit=limit, include_partial=include_partial, instrument_id=iid, source=source)
         if df is not None:
             df.attrs['timeframe'] = tf
         result = mp.eligible_frame(df, tf, as_of_ms, final=not include_partial)
@@ -748,7 +771,61 @@ class DataFeed:
 
     def latest_ohlcv(self, symbol, tf='15m', limit=20000):
         """Explicit current offline view; unsuitable for historical decisions."""
-        return self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=limit)
+        return self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=limit, current=True)
+
+    #: re-observe an ACTIVE series once this fraction of its receipt budget (ttl) is spent
+    REOBSERVE_FRACTION = 0.5
+
+    def reobservation_due(self, symbol, tf, now_ms=None):
+        """Has the last real observation of this series used up part of its ORIGINAL
+        receipt budget? Only a new source observation (never a re-stamp of an old
+        receipt) renews freshness, so it must be requested before expiry."""
+        now_ms = self._clock_ms() if now_ms is None else now_ms
+        seen = self._observed_at.get((norm_symbol(symbol), tf))
+        return seen is None or now_ms - seen >= self.ttl.get(tf, 300) * 1000 * self.REOBSERVE_FRACTION
+
+    def series_witness(self, symbol, tf='15m'):
+        """Committed change witness of one candle series (None = unproven)."""
+        return mp.witness(self.db, self._series_key(symbol, tf))
+
+    def ohlcv_tail(self, symbol, tf, *, as_of_ms, min_event_ms):
+        """Exact current selection restricted to events >= ``min_event_ms`` (incremental reads)."""
+        iid, source = self._identity(symbol)
+        df = mp.load(self.db, self._series_key(symbol, tf), as_of_ms=as_of_ms, limit=40000,
+                     instrument_id=iid, source=source, min_event_ms=min_event_ms)
+        return mp.eligible_frame(df, tf, as_of_ms)
+
+    def committed_changes(self, symbol, tf, generation):
+        """(floor event, pure_inserts) of commits after ``generation``; None = unproven."""
+        return mp.changes_since(self.db, self._series_key(symbol, tf), generation)
+
+    def pending_ready(self, symbol, tf, as_of_ms):
+        """Earliest visibility time of an already-committed future-dated row, or None."""
+        return mp.next_ready(self.db, self._series_key(symbol, tf), 0, as_of_ms)
+
+    def tip_complete(self, symbol, tf, expected_ms):
+        """Is the closed bar opening at ``expected_ms`` stored, VALID and qualified?
+
+        The stored tip is read from the projection's primary key (written in the
+        same transaction as the receipts). The qualified two-bar read happens
+        only when the series witness differs from the last one that confirmed.
+        """
+        symbol = norm_symbol(symbol)
+        tip = self.db.execute('SELECT MAX(ts) FROM candles WHERE symbol=? AND tf=?', (symbol, tf)).fetchone()[0]
+        if tip is None or tip < expected_ms:
+            return False
+        wit = self.series_witness(symbol, tf)
+        memo = self.__dict__.setdefault('_tip_confirmed', {})
+        if wit is not None and memo.get((symbol, tf)) == (wit, expected_ms):
+            return True
+        frame = closed_bars(self.latest_ohlcv(symbol, tf, 2), tf, now_ms=self._clock_ms())
+        ok = (frame is not None and len(frame) and int(mp.ms(frame['ts'])[-1]) >= expected_ms
+              and ('quality' not in frame or bool(frame['quality'].eq('VALID').all())))
+        if ok and wit is not None:
+            if len(memo) > 4096:
+                memo.clear()
+            memo[(symbol, tf)] = (wit, expected_ms)
+        return bool(ok)
 
     def replay_metadata(self, symbol, tf='15m', limit=200000):
         """Exact replay timestamps/identities only; never return price frames.
@@ -948,6 +1025,10 @@ class DataFeed:
             raise RuntimeError('retrospective acquisition forbidden; use cached_ohlcv')
         if self.background_acquisition and not getattr(self._local, 'acquiring', False):
             current = self.latest_ohlcv(symbol, tf, limit)
+            if current is None and mp.last_reason() in ('warming', 'witness_unproven'):
+                # Cache-only trading read: the window is being warmed off-path.
+                self._local.frame_refusal = mp.last_reason()
+                return None
             now_ms = self._clock_ms()
             current = mp.usable_current(current, tf, now_ms, self.ttl.get(tf, 300))
             needs_data = (current is None or

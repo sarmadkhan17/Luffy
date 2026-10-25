@@ -342,14 +342,14 @@ def test_current_derivative_window_matches_full_alignment_with_late_revisions(tm
     feed=DerivFeed(tmp_path/'derivs.db',clock_ms=lambda:at)
     events=np.arange(5000)*1000
     raw=pd.DataFrame(dict(ts=pd.to_datetime(events,unit='ms',utc=True),value=np.sin(events)))
-    df=M.annotate(raw,instrument_id='binance_usdm:futures:BTCUSDT',source='offline:funding',kind='derivative',received_ms=at)
+    df=M.annotate(raw,instrument_id='binance_usdm:futures:BTCUSDT',source='https://fapi.binance.com/fapi/v1/fundingRate',kind='derivative',received_ms=at)
     # A real retained history with one acquisition clock for each observation,
     # plus late corrections that straddle the first consumer cut.
     df['available_at_ms']=events+500;df['observed_at_ms']=events+500
     feed.save('BTC/USDT','funding',df)
     for event,ready,value in [(0,start+100,90),(start-1000,start+1000,91),(start-2000,start+2000,92)]:
         correction=M.annotate(pd.DataFrame(dict(ts=pd.to_datetime([event],unit='ms',utc=True),value=[value])),
-            instrument_id='binance_usdm:futures:BTCUSDT',source='offline:funding',kind='derivative',received_ms=ready)
+            instrument_id='binance_usdm:futures:BTCUSDT',source='https://fapi.binance.com/fapi/v1/fundingRate',kind='derivative',received_ms=ready)
         feed.save('BTC/USDT','funding',correction)
     full=load_derivs('BTC/USDT',['funding'],feed,as_of_ms=at)['funding']
     window=load_derivs('BTC/USDT',['funding'],feed,as_of_ms=at,window_start_ms=start)['funding']

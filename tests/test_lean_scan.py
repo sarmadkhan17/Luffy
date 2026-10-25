@@ -365,3 +365,162 @@ def test_stop_request_ends_scan_between_coins(tmp_path,monkeypatch):
     k._split_runtime.kernel=NS(_stop=True)
     result=run(k)
     assert result['interrupted'] and result['decisions']==0 and not reads
+
+
+def _with_funding_strategy(tmp_path, monkeypatch, funding):
+    """30 coins; an OHLCV-only strategy plus a funding strategy; real evaluators."""
+    k, reads, _ = offline_scan(tmp_path, monkeypatch)
+    needy = _spec(id='needy', entry_long='funding > -1', filters=[], regime_filter=[])
+    pop, meta = population(needy)
+    assert 'funding' in meta[1]
+    k.population.append(pop); k._strategy_inputs[needy.id] = meta
+    from trader.strategy import spec_evidence
+    monkeypatch.setattr(spec_evidence, 'load_derivs', lambda sym, req, **kw: funding(sym))
+    prepare(k)
+    seen = []
+    from trader.strategy import library
+    real = library.evaluate
+    monkeypatch.setattr(library, 'evaluate', lambda g, snap, **kw: seen.append((g.strategy_id, snap.symbol)) or real(g, snap, **kw))
+    return k, seen
+
+
+def funding_frame(quality='VALID'):
+    cut = int(time.time()*1000)
+    ts = np.arange(cut - 40*8*3_600_000, cut, 8*3_600_000, dtype=np.int64)
+    raw = pd.DataFrame(dict(ts=pd.to_datetime(ts, unit='ms', utc=True), value=np.full(len(ts), .0001)))
+    df = mp.annotate(raw, instrument_id='offline:futures:AUSDT', source='offline:fixture', kind='derivative',
+                     received_ms=cut)
+    df['available_at_ms'] = ts + 1000          # point-in-time: each settlement known right after it happened
+    df['observed_at_ms'] = ts + 1000
+    df['quality'] = quality
+    return mp.seal(df) if quality == 'VALID' else df
+
+
+def test_coverage_distinguishes_fresh_candles_from_absent_funding_and_still_evaluates_the_other(tmp_path, monkeypatch):
+    k, seen = _with_funding_strategy(tmp_path, monkeypatch, lambda sym: {})          # funding absent
+    result = run(k)
+    cov = result['strategy_coverage']
+    assert result['deep_processed'] == 30                       # candles are fresh everywhere
+    assert cov['lean']['expected'] == 30 and cov['lean']['completed'] == 30 and cov['lean']['blocked'] == 0
+    assert cov['lean']['attempted'] == 30 and cov['lean']['refused'] == 0 and cov['lean']['reasons'] == {}
+    assert cov['needy']['blocked'] == 30 and cov['needy']['completed'] == 0 and cov['needy']['attempted'] == 0
+    assert cov['needy']['reasons'] == {'missing:funding': 30}
+    assert result['strategy_expected'] == 60 and result['strategy_completed'] == 30 and result['strategy_blocked'] == 30
+    assert {sid for sid, _ in seen} == {'lean'} and len(seen) == 30       # the ready strategy still ran on every coin
+    assert result['blocked_reasons'] == {'missing:funding': 30}
+
+
+def test_stale_funding_blocks_only_the_strategy_that_needs_it(tmp_path, monkeypatch):
+    k, seen = _with_funding_strategy(tmp_path, monkeypatch, lambda sym: {'funding': funding_frame('STALE')})
+    result = run(k)
+    assert result['strategy_coverage']['needy']['completed'] == 0 and len(seen) == 30
+
+
+def test_every_applicable_strategy_is_evaluated_when_funding_is_ready(tmp_path, monkeypatch):
+    k, seen = _with_funding_strategy(tmp_path, monkeypatch, lambda sym: {'funding': funding_frame()})
+    result = run(k)
+    assert result['strategy_expected'] == result['strategy_completed'] == result['strategy_attempted'] == 60 and result['strategy_blocked'] == 0
+    assert len(seen) == 60 and {sid for sid, _ in seen} == {'lean', 'needy'}
+    assert all(sum(c == s for _, c in seen) == 2 for s in k._symbol_roles.deep)
+
+
+def test_shortlist_requirements_are_published_exactly_to_the_producer(tmp_path, monkeypatch):
+    k, seen = _with_funding_strategy(tmp_path, monkeypatch, lambda sym: {})
+    k._split_runtime.lock = __import__('threading').RLock(); k._split_runtime.derivative_needs = []
+    from trader.scheduling.lean_scan import publish_needs
+    publish_needs(k)
+    assert [n[:2] for n in k._split_runtime.derivative_needs] == [(s, 'funding') for s in k._symbol_roles.deep]
+    assert all(n[2] > 0 and n[2] < 400 * 14_400_000 for n in k._split_runtime.derivative_needs)
+
+
+
+def test_valid_last_row_but_unaligned_funding_is_a_diagnosed_refusal_not_coverage(tmp_path, monkeypatch):
+    """The precheck passes (VALID funding frame) but the real compiled evaluator refuses:
+    that must be counted as an input refusal, never as a completed evaluation."""
+    def late(sym):
+        frame = funding_frame()
+        frame['available_at_ms'] = int(time.time()*1000)      # only published 'now': nothing aligns to history
+        return {'funding': mp.seal(frame)}
+    k, seen = _with_funding_strategy(tmp_path, monkeypatch, late)
+    result = run(k)
+    needy = result['strategy_coverage']['needy']
+    assert needy['attempted'] == 30 and needy['refused'] == 30 and needy['completed'] == 0
+    assert needy['reasons'] == {'required_input_missing:funding': 30}
+    assert result['strategy_coverage']['lean']['completed'] == 30
+    assert len(seen) == 60                                      # the evaluator really ran for both
+
+
+def test_regime_ineligible_strategy_is_never_counted_as_an_evaluator_call(tmp_path, monkeypatch):
+    k, reads, _ = offline_scan(tmp_path, monkeypatch)
+    never = _spec(id='never', entry_long='close > 0', filters=[], regime_filter=[])
+    pop, meta = population(never)
+    k.population.append(pop); k._strategy_inputs[never.id] = meta
+    prepare(k)
+    seen = []
+    from trader.strategy import library
+    real = library.evaluate
+    from trader.engine import orchestrator as orch
+    allows = orch.regime_allows
+    monkeypatch.setattr(orch, 'regime_allows', lambda g, regime: False if g.strategy_id == 'never' else allows(g, regime))
+    monkeypatch.setattr(library, 'evaluate', lambda g, snap, **kw: seen.append(g.strategy_id) or real(g, snap, **kw))
+    result = run(k)
+    row = result['strategy_coverage']['never']
+    assert row['expected'] == 30 and row['regime_ineligible'] == 30 and row['attempted'] == 0 and row['completed'] == 0
+    assert 'never' not in seen and result['strategy_coverage']['lean']['completed'] == 30
+
+
+def test_false_predicate_with_complete_data_is_a_completed_evaluation(tmp_path, monkeypatch):
+    k, reads, _ = offline_scan(tmp_path, monkeypatch)                  # lean: close < 0 never fires
+    result = run(k)
+    row = result['strategy_coverage']['lean']
+    assert row['attempted'] == row['completed'] == 30 and row['refused'] == 0 and result['entries'] == 0
+
+
+def test_declared_higher_timeframe_missing_is_blocked_by_name(tmp_path, monkeypatch):
+    k, reads, _ = offline_scan(tmp_path, monkeypatch)
+    htf = _spec(id='htf', entry_long='htf("4h", close) > 0', filters=[], regime_filter=[])
+    pop, meta = population(htf)
+    k.population.append(pop); k._strategy_inputs[htf.id] = meta
+    real = k.feed.fetch_ohlcv
+    k.feed.fetch_ohlcv = lambda sym, tf, limit=400: None if tf == '4h' else real(sym, tf, limit)
+    prepare(k)
+    result = run(k)
+    assert result['strategy_coverage']['htf']['completed'] == 0
+
+
+def test_derivative_window_follows_its_consumers_not_the_shared_4h_guard():
+    from trader.core.types import TF_MS
+    fast = _spec(id='fast', entry_long='funding > 0', filters=[], regime_filter=[])          # 15m
+    slow = _spec(id='slow', timeframe='4h', entry_long='funding > 0', filters=[], regime_filter=[])
+    plain = _spec(id='plain', entry_long='close > 0', filters=[], regime_filter=[])
+    v = view_for([fast], ['A/USDT']); plans, errors = build(v, ['A/USDT'])
+    plan = plans['A/USDT']
+    assert plan.limits['4h'] == 400                                  # retained execution/regime guard frame
+    span = plan.spans['funding']
+    assert span == max(b * TF_MS[t] for t, b in __import__('trader.strategy.fill_timing', fromlist=['x']).inference_limits([fast]).items())
+    assert span < 10 * 86_400_000 < 400 * TF_MS['4h']                # nowhere near the ~67-day guard
+    # a true 4h derivative strategy keeps its full 4h lookback; shared source = union of consumers once
+    v2 = view_for([fast, slow, plain], ['A/USDT']); plan2 = build(v2, ['A/USDT'])[0]['A/USDT']
+    assert plan2.spans['funding'] >= span and plan2.spans['funding'] == max(
+        b * TF_MS[t] for s_ in (fast, slow) for t, b in __import__('trader.strategy.fill_timing', fromlist=['x']).inference_limits([s_]).items())
+    # an OHLCV-only strategy never widens or creates an external window
+    v3 = view_for([fast, plain], ['A/USDT']); assert build(v3, ['A/USDT'])[0]['A/USDT'].spans == plan.spans
+    v4 = view_for([plain], ['A/USDT']); assert build(v4, ['A/USDT'])[0]['A/USDT'].spans == {}
+
+
+def test_kernel_snapshot_requests_each_source_only_its_own_span(tmp_path, monkeypatch):
+    k, reads, _ = offline_scan(tmp_path, monkeypatch)
+    needy = _spec(id='needy', entry_long='funding > -1', filters=[], regime_filter=[])
+    pop, meta = population(needy)
+    k.population.append(pop); k._strategy_inputs[needy.id] = meta
+    from trader.strategy import spec_evidence
+    captured = []
+    monkeypatch.setattr(spec_evidence, 'load_derivs', lambda sym, req, **kw: captured.append(kw) or {})
+    prepare(k)
+    run(k)
+    from trader.core.types import TF_MS
+    plan = next(iter(k._scan_plan.values()))
+    window = captured[0]['window_start_ms']
+    assert set(window) == {'funding'} or 'funding' in window
+    as_of = captured[0]['as_of_ms']
+    assert as_of - window['funding'] == plan.spans['funding'] and plan.spans['funding'] < 400 * TF_MS['4h']

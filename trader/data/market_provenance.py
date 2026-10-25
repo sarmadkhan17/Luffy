@@ -7,6 +7,16 @@ Provider publication time is never inferred from a historical event stamp.
 from __future__ import annotations
 
 import hashlib
+import contextvars
+import logging
+import os
+import random
+import sys
+import threading
+import time
+from collections import OrderedDict
+from contextlib import contextmanager
+from copy import deepcopy
 import json
 import math
 import uuid
@@ -84,7 +94,21 @@ def cut(value):
     return value
 
 
+def initialised(conn, *tables):
+    """One read-only probe: current witness schema version and the store's own tables."""
+    try:
+        row = conn.execute("SELECT gen FROM market_meta_global WHERE name='schema'").fetchone()
+        if row is None or row[0] < WITNESS_SCHEMA_VERSION:
+            return False
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        return {'market_revisions', 'market_raw_sources', *tables} <= names
+    except Exception:
+        return False
+
+
 def init(conn):
+    if initialised(conn):
+        return
     conn.execute("""CREATE TABLE IF NOT EXISTS market_raw_sources (
         content_hash TEXT PRIMARY KEY, source TEXT, raw_json TEXT NOT NULL)""")
     conn.execute('''CREATE TABLE IF NOT EXISTS market_revisions (
@@ -92,6 +116,7 @@ def init(conn):
         available_ms INTEGER, observed_ms INTEGER NOT NULL, record_json TEXT NOT NULL)''')
     conn.execute('''CREATE INDEX IF NOT EXISTS market_revision_cut
         ON market_revisions(series_key, event_ms, available_ms, observed_ms)''')
+    init_witness(conn)
 
 
 # Physical references only. Logical source/raw strings and receipt hashes are
@@ -380,7 +405,7 @@ def _selected_revision_rows(conn, query, args, *, batch=False):
             for kind,raw,rid,event,available,observed in json.loads(packet)]
 
 
-def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False):
+def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None, metadata_only=False, min_event_ms=None):
     """Last retained revision of EACH event eligible at the exact decision cut.
 
     Replay instead takes each event's FIRST eligible receipt, and requires it
@@ -400,13 +425,19 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
     if instrument_id is not None:
         clauses += " AND json_extract(record_json,'$.instrument_id')=?"
         args.append(instrument_id)
-    else:
+    elif not _single_identity_proven(conn, key):
         identities=conn.execute("SELECT DISTINCT json_extract(record_json,'$.instrument_id') FROM market_revisions WHERE series_key=? AND available_ms<=? AND observed_ms<=?",(key,as_of_ms,as_of_ms)).fetchall()
         if len({row[0] for row in identities if row[0] is not None})>1:
             return None  # an unqualified alias cannot choose a market
     if source is not None:
         clauses += " AND json_extract(record_json,'$.source') IN (?,?)"
         args.extend((source, text_reference(source)))
+    if min_event_ms is not None:
+        # Tail read for incremental refresh: exact selection among events >= floor.
+        if replay_tf or revision_stream or window_start_ms is not None:
+            raise ValueError('tail_read_requires_current_selection')
+        clauses += ' AND event_ms>=?'
+        args.append(cut(min_event_ms))
     if replay_tf:
         clauses += ' AND available_ms<=event_ms+?'
         args.append(replay_deadline_ms(0, replay_tf))
@@ -471,22 +502,38 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
     batch = (not revision_stream and not replay_tf and window_start_ms is None
              and type(limit) is int and 0 < limit <= 8192)
     rows = _selected_revision_rows(conn, query, args, batch=batch)
+    return _assemble(conn, rows, batch=batch, as_of_ms=as_of_ms, limit=limit, replay_tf=replay_tf,
+                     include_partial=include_partial, revision_stream=revision_stream,
+                     metadata_only=metadata_only)
+
+
+def _verify_row(conn, raw, rid, indexed_event, indexed_available, indexed_observed, text_cache):
+    """Decode and authenticate one retained revision against its indexed clocks."""
+    STATS['payload_rows_decoded'] += 1
+    r = read_record(conn, raw, text_cache=text_cache) if text_cache is not None else read_record(conn, raw)
+    value = {k: r[k] for k in VALUES if k in r}
+    body = {k: r[k] for k in META if k not in ('revision_id', 'supersedes')}
+    if r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value': value}) or r['revision_id'] != digest(body):
+        raise ValueError('market_revision_content_corrupt')
+    # Selection/ranking columns are outside the receipt hash. They must
+    # agree with the verified receipt before they can establish a cut.
+    if (rid, indexed_event, indexed_available, indexed_observed) != (
+            r['revision_id'], r['event_time_ms'], r['available_at_ms'], r['observed_at_ms']):
+        raise ValueError('market_revision_index_corrupt')
+    return r
+
+
+def _assemble(conn, rows, *, batch, as_of_ms, limit, replay_tf, include_partial,
+              revision_stream, metadata_only):
+    """Decode and authenticate selected revision rows (shared by every as-of reader)."""
     text_cache = {} if batch else None
     if not revision_stream:
         rows.reverse()
     selected = {}
     stream = []
     for raw, rid, indexed_event, indexed_available, indexed_observed in rows:
-        r = (read_record(conn, raw, text_cache=text_cache) if batch else read_record(conn, raw))
-        value = {k: r[k] for k in VALUES if k in r}
-        body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
-        if r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value':value}) or r['revision_id'] != digest(body):
-            raise ValueError('market_revision_content_corrupt')
-        # Selection/ranking columns are outside the receipt hash. They must
-        # agree with the verified receipt before they can establish a cut.
-        if (rid, indexed_event, indexed_available, indexed_observed) != (
-                r['revision_id'], r['event_time_ms'], r['available_at_ms'], r['observed_at_ms']):
-            raise ValueError('market_revision_index_corrupt')
+        r = _verify_row(conn, raw, rid, indexed_event, indexed_available, indexed_observed,
+                        text_cache if batch else None)
         event = r['event_time_ms']
         if replay_tf and r['available_at_ms'] > replay_deadline_ms(event, replay_tf):
             continue
@@ -692,3 +739,820 @@ def retrospective_load(conn, key, *, cut_ms, tf=None, start_ms=0,
                     timeframe=tf,timestamp_semantics='interval_open',
                     evidence_scope='retrospective_observation')
     return df
+
+
+# ── committed change witnesses ──────────────────────────────────────────────
+# Triggers keep one small row per series (and one global raw-source counter)
+# inside the SAME transaction as every change to market_revisions /
+# market_raw_sources, from any connection or process. A rolled-back write rolls
+# the witness back with it. Installing them is DDL only: no table is rebuilt and
+# no history is read. Series that have not been written since installation have
+# no witness row and are simply not cacheable until one is seeded.
+log = logging.getLogger(__name__)
+STATS = dict(frontier_rebuilds=0, frontier_deltas=0, incremental_refreshes=0, incremental_rows_read=0, warm_refills=0, warm_failures=0, commit_refreshes=0, warming_misses=0, cache_only_unproven=0,
+             cache_rejected_oversize=0, legacy_window_reads=0, cache_hits=0, cache_misses=0, cache_uncacheable=0, payload_rows_decoded=0,
+             window_reads=0, identity_unresolved=0, identity_refused=0,
+             resolver_rows_scanned=0, series_resolved=0)
+_DEMAND = {}            # series_key -> needs identity resolution (bounded)
+_DEMAND_LIMIT = 4096
+_IDENT = ("CASE WHEN typeof(NEW.record_json)='text' AND json_valid(NEW.record_json) "
+          "THEN json_quote(json_extract(NEW.record_json,'$.instrument_id')) ELSE json_quote('?unreadable') END")
+_PART = ("CASE WHEN typeof(NEW.record_json)='text' AND json_valid(NEW.record_json) "
+         "THEN COALESCE(json_extract(NEW.record_json,'$.bar_state')='PARTIAL',0) ELSE 1 END")
+
+
+WITNESS_SCHEMA_VERSION = 3
+
+
+def init_witness(conn):
+    """Versioned, once-per-database setup. An initialised database takes a
+    read-only path (one SELECT): no DDL, no writes, no trigger recreation, and no
+    change to any generation witness. Writer/producer opens perform the one
+    migration; scan lookups never do (they only reach here through stores that
+    are already initialised)."""
+    try:
+        row = conn.execute("SELECT gen FROM market_meta_global WHERE name='schema'").fetchone()
+    except Exception:
+        row = None
+    if row is not None and row[0] >= WITNESS_SCHEMA_VERSION:
+        return False
+    _migrate_witness(conn)
+    conn.execute("INSERT INTO market_meta_global VALUES ('schema',?) "
+                 "ON CONFLICT(name) DO UPDATE SET gen=excluded.gen", (WITNESS_SCHEMA_VERSION,))
+    return True
+
+
+def _migrate_witness(conn):
+    conn.execute('''CREATE TABLE IF NOT EXISTS market_series_meta (
+        series_key TEXT PRIMARY KEY, gen INTEGER NOT NULL, epoch INTEGER NOT NULL DEFAULT 0,
+        idents TEXT NOT NULL DEFAULT '|', partial INTEGER NOT NULL DEFAULT 0,
+        resolved INTEGER NOT NULL DEFAULT 0, scan_event INTEGER, scan_json TEXT)''')
+    conn.execute('CREATE TABLE IF NOT EXISTS market_meta_global (name TEXT PRIMARY KEY, gen INTEGER NOT NULL)')
+    if conn.execute("SELECT 1 FROM market_meta_global WHERE name='raw'").fetchone() is None:
+        conn.execute("INSERT OR IGNORE INTO market_meta_global VALUES ('raw',0)")
+    if conn.execute("SELECT 1 FROM market_meta_global WHERE name='epoch'").fetchone() is None:
+        # Lineage token of THIS database: a different database or a rebuilt one
+        # at the same path never shares a witness with it.
+        conn.execute("INSERT OR IGNORE INTO market_meta_global VALUES ('epoch',?)", (random.getrandbits(62),))
+    conn.execute('''CREATE TABLE IF NOT EXISTS market_change_log (
+        series_key TEXT NOT NULL, bucket INTEGER NOT NULL, floor_ms INTEGER NOT NULL, hi_ms INTEGER NOT NULL,
+        destructive INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (series_key, bucket))''')
+    # The trigger version is part of the name: older databases gain the log-aware
+    # triggers; the superseded ones are dropped in the same DDL step.
+    present = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='trigger'")}
+    for old in ('market_witness_ins', 'market_witness_upd', 'market_witness_del'):
+        if old in present:
+            conn.execute(f'DROP TRIGGER {old}')
+    log_insert = ("INSERT INTO market_change_log(series_key,bucket,floor_ms,hi_ms,destructive) "
+                  "SELECT {key},gen/16,{lo},{hi},{bad} FROM market_series_meta WHERE series_key={key} "
+                  "ON CONFLICT(series_key,bucket) DO UPDATE SET floor_ms=MIN(floor_ms,excluded.floor_ms),"
+                  "hi_ms=MAX(hi_ms,excluded.hi_ms),destructive=destructive OR excluded.destructive;")
+    conn.execute(f'''CREATE TRIGGER IF NOT EXISTS market_witness_ins2 AFTER INSERT ON market_revisions BEGIN
+        INSERT INTO market_series_meta(series_key,gen,idents,partial,resolved)
+        VALUES (NEW.series_key,1,'|'||{_IDENT}||'|',{_PART},
+                NOT EXISTS (SELECT 1 FROM market_revisions WHERE series_key=NEW.series_key AND rowid<>NEW.rowid))
+        ON CONFLICT(series_key) DO UPDATE SET gen=gen+1,
+            idents=CASE WHEN instr(idents,'|'||{_IDENT}||'|')>0 THEN idents ELSE idents||{_IDENT}||'|' END,
+            partial=partial OR {_PART};
+        {log_insert.format(key='NEW.series_key', lo='NEW.event_ms', hi='NEW.event_ms', bad=0)}
+        END''')
+    conn.execute(f'''CREATE TRIGGER IF NOT EXISTS market_witness_upd2 AFTER UPDATE ON market_revisions BEGIN
+        UPDATE market_series_meta SET gen=gen+1, epoch=epoch+1, resolved=0, scan_event=NULL, scan_json=NULL
+        WHERE series_key IN (OLD.series_key, NEW.series_key);
+        {log_insert.format(key='OLD.series_key', lo='MIN(OLD.event_ms,NEW.event_ms)', hi='MAX(OLD.event_ms,NEW.event_ms)', bad=1)}
+        {log_insert.format(key='NEW.series_key', lo='MIN(OLD.event_ms,NEW.event_ms)', hi='MAX(OLD.event_ms,NEW.event_ms)', bad=1)}
+        END''')
+    conn.execute(f'''CREATE TRIGGER IF NOT EXISTS market_witness_del2 AFTER DELETE ON market_revisions BEGIN
+        UPDATE market_series_meta SET gen=gen+1, epoch=epoch+1, scan_event=NULL, scan_json=NULL
+        WHERE series_key=OLD.series_key;
+        {log_insert.format(key='OLD.series_key', lo='OLD.event_ms', hi='OLD.event_ms', bad=1)}
+        END''')
+    # A raw body that is REPLACED (conflicting insert of an existing hash) is a
+    # change of already-referenced content even though no DELETE trigger fires.
+    conn.execute('''CREATE TRIGGER IF NOT EXISTS market_raw_witness_dup BEFORE INSERT ON market_raw_sources
+        WHEN EXISTS (SELECT 1 FROM market_raw_sources WHERE content_hash=NEW.content_hash)
+        BEGIN UPDATE market_meta_global SET gen=gen+1 WHERE name='raw'; END''')
+    for name, event in (('upd', 'UPDATE'), ('del', 'DELETE')):
+        conn.execute(f'''CREATE TRIGGER IF NOT EXISTS market_raw_witness_{name} AFTER {event} ON market_raw_sources
+            BEGIN UPDATE market_meta_global SET gen=gen+1 WHERE name='raw'; END''')
+
+
+def prune_change_log(conn, keep_buckets=512):
+    """Bounded: change buckets older than ``keep_buckets`` x 16 generations are dropped."""
+    try:
+        conn.execute('DELETE FROM market_change_log WHERE rowid IN (SELECT l.rowid FROM market_change_log l '
+                     'JOIN market_series_meta m USING(series_key) WHERE l.bucket < m.gen/16 - ? LIMIT 5000)',
+                     (keep_buckets,))
+    except Exception:
+        pass
+
+
+def changes_since(conn, key, gen0):
+    """What changed in ``key`` since generation ``gen0``?
+
+    -> (floor_event_ms, pure_inserts) or None when the log cannot prove it.
+    Conservative by construction: the oldest bucket may include changes older
+    than gen0, and buckets pruned or missing mean "unknown".
+    """
+    try:
+        gen = conn.execute('SELECT gen FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+        if gen is None or gen[0] < gen0:
+            return None
+        if gen[0] == gen0:
+            return None, True
+        lo, hi = gen0 // 16, gen[0] // 16
+        rows = conn.execute('SELECT MIN(floor_ms),MAX(destructive),COUNT(*) FROM market_change_log '
+                            'WHERE series_key=? AND bucket>=? AND bucket<=?', (key, lo, hi)).fetchone()
+    except Exception:
+        return None
+    if rows is None or rows[2] != hi - lo + 1 or rows[0] is None:
+        return None
+    return int(rows[0]), not rows[1]
+
+
+def demand(conn, key, identity=False):
+    """Record that ``key`` in THIS physical database needs a witness/identity proof."""
+    ident = (_db_id(conn), key)
+    if len(_DEMAND) < _DEMAND_LIMIT or ident in _DEMAND:
+        _DEMAND[ident] = _DEMAND.get(ident, False) or identity
+
+
+def witness(conn, key):
+    """(series generation, raw-source generation, database epoch), or None when unproven."""
+    try:
+        row = conn.execute('SELECT gen FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+        raw = conn.execute("SELECT gen FROM market_meta_global WHERE name='raw'").fetchone()
+        epoch = conn.execute("SELECT gen FROM market_meta_global WHERE name='epoch'").fetchone()
+    except Exception:
+        return None
+    if row is None or raw is None or epoch is None:
+        demand(conn, key)
+        return None
+    return (row[0], raw[0], epoch[0])
+
+
+def _meta(conn, key):
+    try:
+        return conn.execute('SELECT gen,idents,partial,resolved FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+    except Exception:
+        return None
+
+
+def _non_null_idents(idents):
+    return [i for i in idents.strip('|').split('|') if i and i != 'null']
+
+
+def _single_identity_proven(conn, key):
+    row = _meta(conn, key)
+    return bool(row and row[3] and len(_non_null_idents(row[1])) <= 1)
+
+
+def _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit):
+    """The original unqualified query plus the consumer's identity filter.
+
+    Exact prior semantics for series the maintained metadata cannot prove
+    (unresolved, partial rows, foreign identities). Payload-scanning: only ever
+    run by warm/producer threads, never by a cache-only trading read.
+    """
+    STATS['legacy_window_reads'] += 1
+    df = load(conn, key, as_of_ms=as_of_ms, limit=limit, window_start_ms=window_start_ms)
+    if df is None:
+        return None, 'missing'
+    if instrument_id is not None and not df['instrument_id'].eq(instrument_id).all():
+        STATS['identity_refused'] += 1
+        return None, 'identity_ambiguous'
+    return df, 'valid'
+
+
+# ── exact incremental frontier (RAM metadata only) ──────────────────────────
+class _Frontier:
+    """Compact index metadata of one series at a cut: the latest eligible revision
+    of every event (event, available, observed, rowid) plus committed rows that
+    become visible later. No payloads, no persistence; rebuilt from the covering
+    index after any destructive/unknown change."""
+    __slots__ = ('wit', 'cut', 'ev', 'av', 'ob', 'rid', 'pending', 'decoded', 'decoded_sizes', 'lock')
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.decoded = {}
+        self.decoded_sizes = {}
+
+    def nbytes(self):
+        return 32 * len(self.ev) + 384 * len(self.pending) + sum(self.decoded_sizes.values())
+
+
+FRONTIERS = OrderedDict()
+FRONTIER_MAX_BYTES = 128 << 20
+_FRONT_LOCK = threading.Lock()
+
+
+def _winners(ev, av, ob, rid):
+    """Latest (observed, rowid) per event among the given eligible rows, ordered by event."""
+    order = np.lexsort((rid, ob, ev))
+    ev, av, ob, rid = ev[order], av[order], ob[order], rid[order]
+    last = np.ones(len(ev), dtype=bool)
+    last[:-1] = ev[1:] != ev[:-1]
+    return ev[last], av[last], ob[last], rid[last]
+
+
+def _classify(state, rows, cut_ms):
+    """Merge index rows (rowid, event, available, observed) into state at its cut."""
+    if not len(rows):
+        return
+    arr = np.asarray(rows, dtype=np.int64).reshape(-1, 4)
+    rid, ev, av, ob = arr[:, 0], arr[:, 1], arr[:, 2], arr[:, 3]
+    known = av >= 0                                   # NULL availability is never visible
+    eligible = known & (av <= cut_ms) & (ob <= cut_ms)
+    waiting = known & ~eligible
+    if waiting.any():
+        for r in arr[waiting]:
+            state.pending[int(r[0])] = (int(r[1]), int(r[2]), int(r[3]))
+    if eligible.any():
+        e_ev, e_av, e_ob, e_rid = ev[eligible], av[eligible], ob[eligible], rid[eligible]
+        touched = np.isin(state.ev, e_ev)
+        ev2 = np.concatenate([state.ev[touched], e_ev])
+        av2 = np.concatenate([state.av[touched], e_av])
+        ob2 = np.concatenate([state.ob[touched], e_ob])
+        rid2 = np.concatenate([state.rid[touched], e_rid])
+        w_ev, w_av, w_ob, w_rid = _winners(ev2, av2, ob2, rid2)
+        ev3 = np.concatenate([state.ev[~touched], w_ev])
+        order = np.argsort(ev3, kind='stable')
+        state.ev = ev3[order]
+        state.av = np.concatenate([state.av[~touched], w_av])[order]
+        state.ob = np.concatenate([state.ob[~touched], w_ob])[order]
+        state.rid = np.concatenate([state.rid[~touched], w_rid])[order]
+
+
+_INDEX_ROWS = ("SELECT rowid,event_ms,COALESCE(available_ms,-1),observed_ms FROM market_revisions "
+               "WHERE series_key=?")
+
+
+def _rebuild_frontier(conn, key, cut_ms, wit):
+    STATS['frontier_rebuilds'] += 1
+    state = _Frontier()
+    z = np.zeros(0, dtype=np.int64)
+    state.wit, state.cut, state.ev, state.av, state.ob, state.rid, state.pending = wit, cut_ms, z, z, z, z, {}
+    _classify(state, conn.execute(_INDEX_ROWS, (key,)).fetchall(), cut_ms)
+    return state
+
+
+def _advance_frontier(conn, key, state, cut_ms, wit):
+    """Bring ``state`` to (wit, cut_ms); None when exactness needs a rebuild."""
+    if wit[1:] != state.wit[1:] or cut_ms < state.cut:
+        return None
+    if wit[0] != state.wit[0]:
+        change = changes_since(conn, key, state.wit[0])
+        if change is None or not change[1] or change[0] is None:
+            return None                                   # destructive / unproven change
+        STATS['frontier_deltas'] += 1
+        _classify(state, conn.execute(_INDEX_ROWS + ' AND event_ms>=?', (key, change[0])).fetchall(), state.cut)
+        # rows already pending were re-listed above: keep one copy, drop those now visible
+    if cut_ms > state.cut or state.pending:
+        due = [(r, *v) for r, v in state.pending.items() if max(v[1], v[2]) <= cut_ms]
+        state.cut = cut_ms
+        if due:
+            for r, *_ in due:
+                state.pending.pop(r)
+            _classify(state, due, cut_ms)
+    state.wit = wit
+    return state
+
+
+def _select_rowids(state, window_start_ms, limit):
+    """The old ranking recomputed in RAM: ready asc / event desc, running maximum."""
+    ev, av, ob, rid = state.ev, state.av, state.ob, state.rid
+    if not len(ev):
+        return []
+    ready = np.maximum(np.maximum(ev, av), ob)
+    order = np.lexsort((-ev, ready))
+    newest = np.maximum.accumulate(ev[order])
+    record = np.zeros(len(ev), dtype=bool)
+    record[order] = ev[order] == newest
+    before = ready < window_start_ms
+    keep = (ev >= window_start_ms) | ((ready >= window_start_ms) & record)
+    if before.any():
+        keep |= ev == ev[before].max()
+    chosen = np.nonzero(keep)[0]
+    chosen = chosen[np.argsort(-ev[chosen], kind='stable')][:limit]
+    return [int(x) for x in rid[chosen]]
+
+
+def _frontier_window(conn, key, as_of_ms, window_start_ms, limit, snapshot_owned=False):
+    """Exact current window from RAM metadata; payloads only for newly selected rows."""
+    wit = witness(conn, key)
+    dbid = _db_id(conn)
+    if wit is None or dbid is None or (conn.in_transaction and not snapshot_owned):
+        return _window_by_index(conn, key, as_of_ms, window_start_ms, limit)
+    fk = (dbid, key)
+    with _FRONT_LOCK:
+        state = FRONTIERS.get(fk)
+        if state is not None:
+            FRONTIERS.move_to_end(fk)
+    if state is None:
+        state = _rebuild_frontier(conn, key, as_of_ms, wit)
+        with _FRONT_LOCK:
+            FRONTIERS[fk] = state
+    with state.lock:
+        if state.wit != wit or as_of_ms != state.cut or state.pending:
+            if _advance_frontier(conn, key, state, as_of_ms, wit) is None:
+                fresh = _rebuild_frontier(conn, key, as_of_ms, wit)
+                for name in ('wit', 'cut', 'ev', 'av', 'ob', 'rid', 'pending'):
+                    setattr(state, name, getattr(fresh, name))
+                state.decoded = {}
+                state.decoded_sizes = {}
+        rids = _select_rowids(state, window_start_ms, limit)
+        if not rids:
+            return None
+        missing = [r for r in rids if r not in state.decoded]
+        if missing:
+            rows = conn.execute("SELECT rowid,record_json,revision_id,event_ms,available_ms,observed_ms FROM market_revisions "
+                                "WHERE rowid IN (SELECT value FROM json_each(?))", (json.dumps(missing),)).fetchall()
+            if len(rows) != len(missing):
+                state.decoded = {}
+                raise ValueError('market_revision_index_corrupt')
+            cache = {}
+            for rowid, raw, rev, event, available, observed in rows:
+                state.decoded[rowid] = _verify_row(conn, raw, rev, event, available, observed, cache)
+                state.decoded_sizes[rowid] = _owned_size(state.decoded[rowid]) + 128
+        records = [state.decoded[r] for r in rids]
+        state.decoded = {r: state.decoded[r] for r in rids}
+        state.decoded_sizes = {r: state.decoded_sizes[r] for r in rids}
+        records = sorted(records, key=lambda r: r['event_time_ms'])
+    with _FRONT_LOCK:
+        while FRONTIERS and sum(f.nbytes() for f in FRONTIERS.values()) > FRONTIER_MAX_BYTES:
+            FRONTIERS.popitem(last=False)
+    df = pd.DataFrame(records)
+    df['ts'] = pd.to_datetime(df['event_time_ms'], unit='ms', utc=True)
+    df.attrs.update(schema_version=SCHEMA, timeframe=None, timestamp_semantics='interval_open',
+                    as_of_ms=as_of_ms, read_mode='as_of')
+    return df
+
+
+def _window_by_index(conn, key, as_of_ms, window_start_ms, limit):
+    """Stateless exact path (uncached connection): same ranking, built fresh."""
+    state = _rebuild_frontier(conn, key, as_of_ms, (0, 0, 0))
+    rids = _select_rowids(state, window_start_ms, limit)
+    if not rids:
+        return None
+    rows = conn.execute("SELECT rowid,record_json,revision_id,event_ms,available_ms,observed_ms FROM market_revisions "
+                        "WHERE rowid IN (SELECT value FROM json_each(?))", (json.dumps(rids),)).fetchall()
+    cache = {}
+    records = sorted((_verify_row(conn, raw, rev, event, available, observed, cache)
+                      for _, raw, rev, event, available, observed in rows), key=lambda r: r['event_time_ms'])
+    df = pd.DataFrame(records)
+    df['ts'] = pd.to_datetime(df['event_time_ms'], unit='ms', utc=True)
+    df.attrs.update(schema_version=SCHEMA, timeframe=None, timestamp_semantics='interval_open',
+                    as_of_ms=as_of_ms, read_mode='as_of')
+    return df
+
+
+def _owned_size(value):
+    """Conservative owned Python payload size (shared keys may be counted twice)."""
+    size = sys.getsizeof(value)
+    if isinstance(value, dict):
+        size += sum(_owned_size(k) + _owned_size(v) for k, v in value.items())
+    elif isinstance(value, (list, tuple)):
+        size += sum(_owned_size(v) for v in value)
+    return size
+
+
+def load_window_typed(conn, key, *, as_of_ms, window_start_ms, instrument_id, limit=200000):
+    # Index selection, payload verification and witness reads must use ONE SQLite
+    # snapshot. Otherwise a concurrent edit can change the selected row between
+    # ranking and decoding. Never end a transaction owned by our caller.
+    owned = not conn.in_transaction
+    if owned:
+        conn.execute('BEGIN')
+    try:
+        return _load_window_typed(conn, key, as_of_ms=as_of_ms,
+                                  window_start_ms=window_start_ms,
+                                  instrument_id=instrument_id, limit=limit,
+                                  snapshot_owned=owned)
+    finally:
+        if owned:
+            conn.rollback()
+
+
+def _load_window_typed(conn, key, *, as_of_ms, window_start_ms, instrument_id, limit=200000, snapshot_owned=False):
+    """Current-window reader. -> (frame | None, reason).
+
+    Same selection as ``load(window_start_ms=...)`` (exact predecessor, late
+    older frontier events, exact availability cut, equal-clock rowid winner).
+    When maintained series metadata proves a single matching identity and no
+    partial rows, ranking uses the covering (series, event, available,
+    observed) index alone and only the selected rows' payloads are read and
+    authenticated. Otherwise the original query runs unchanged (see
+    ``_legacy_window``); nothing here ever selects another instrument.
+    """
+    cut(as_of_ms), cut(window_start_ms)
+    if window_start_ms > as_of_ms:
+        raise ValueError('current_window_requires_exact_asof_revision_selection')
+    meta = _meta(conn, key)
+    if meta is None or not meta[3]:
+        STATS['identity_unresolved'] += 1
+        demand(conn, key, True)
+        return _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit)
+    idents = _non_null_idents(meta[1])
+    if meta[2] or (idents != [json.dumps(instrument_id)] if instrument_id is not None else len(idents) > 1):
+        return _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit)
+    STATS['window_reads'] += 1
+    df = _frontier_window(conn, key, as_of_ms, window_start_ms, limit, snapshot_owned)
+    if df is None:
+        return None, 'missing'
+    # NULL-identity legacy rows may legitimately sit in a series; if one is
+    # actually selected the typed consumer must not receive the frame.
+    if instrument_id is not None and not df['instrument_id'].eq(instrument_id).all():
+        STATS['identity_refused'] += 1
+        return None, 'identity_ambiguous'
+    return df, 'valid'
+
+
+# ── cross-cycle current-input cache ─────────────────────────────────────────
+_CACHE_ONLY = contextvars.ContextVar('market_cache_only', default=False)
+_REASON = contextvars.ContextVar('market_cache_reason', default=None)
+_WARM = OrderedDict()           # cache key -> refill callable (bounded)
+_WARM_LIMIT = 1024
+WINDOW_SLACK_MS = 86_400_000
+_WARM_LOCK = threading.Lock()
+
+
+@contextmanager
+def cache_only():
+    """Trading-path reads: serve a valid cached window or report 'warming'.
+
+    A miss queues the refill for the warm/producer threads instead of loading
+    (or scanning history) inside the scan.
+    """
+    token = _CACHE_ONLY.set(True)
+    try:
+        yield
+    finally:
+        _CACHE_ONLY.reset(token)
+
+
+def last_reason():
+    return _REASON.get()
+
+
+def enqueue_warm(ck, refill):
+    if refill is None:
+        return
+    with _WARM_LOCK:
+        if ck in _WARM or len(_WARM) < _WARM_LIMIT:
+            _WARM[ck] = refill
+
+
+def run_warm(max_s=5.0, max_items=64):
+    """Execute queued refills on the CALLING (non-trading) thread. -> count done."""
+    start, done = time.monotonic(), 0
+    while done < max_items and time.monotonic() - start < max_s:
+        with _WARM_LOCK:
+            if not _WARM:
+                break
+            ck, refill = _WARM.popitem(last=False)
+        token = _CACHE_ONLY.set(False)
+        try:
+            refill()
+            STATS['warm_refills'] += 1
+        except Exception as exc:                   # reported, never raised into a cycle
+            STATS['warm_failures'] += 1
+            log.warning('input warm refill failed: %s', type(exc).__name__)
+        finally:
+            _CACHE_ONLY.reset(token)
+        done += 1
+    return done
+
+
+def refresh_entries(conn, key):
+    """After a producer commit: re-read cached windows of that series now.
+
+    Runs on the producer's thread, outside any transaction, so the next scan
+    finds a valid entry instead of a miss.
+    """
+    dbid = _db_id(conn)
+    if dbid is None or conn.in_transaction:
+        return 0
+    with CURRENT.lock:
+        refills = [e['refill'] for ck, e in CURRENT.entries.items()
+                   if ck[0] == dbid and ck[1] == key and e['refill'] is not None]
+    for refill in refills:
+        token = _CACHE_ONLY.set(False)
+        try:
+            refill()
+            STATS['commit_refreshes'] += 1
+        except Exception:
+            STATS['warm_failures'] += 1
+        finally:
+            _CACHE_ONLY.reset(token)
+    return len(refills)
+
+
+class CurrentCache:
+    """Validated current windows reused between scans.
+
+    An entry is reused only while (a) the series' committed generation, the
+    global raw-source generation and the database epoch are unchanged, (b) the
+    new cut is not earlier than the cut it was read at, and (c) no
+    already-committed row has a receipt clock inside (entry cut, new cut].
+    Receipts keep their ORIGINAL clocks and every consumer still applies
+    freshness at its own cut, so a hit never renews or hides anything.
+    Bounded by entries, rows and deep bytes; callers always receive an owned
+    deep copy. Entries are keyed by the physical database file identity.
+    """
+    def __init__(self, max_entries=256, max_rows=400_000, max_entry_rows=60_000,
+                 max_bytes=256 << 20, max_entry_bytes=48 << 20):
+        self.max_entries, self.max_rows, self.max_entry_rows = max_entries, max_rows, max_entry_rows
+        self.max_bytes, self.max_entry_bytes = max_bytes, max_entry_bytes
+        self.entries = {}
+        self.rows = 0
+        self.bytes = 0
+        self.lock = threading.Lock()
+        self.pin_symbols, self.pin_keys = frozenset(), frozenset()
+        self.evictions = self.pinned_evictions = 0
+
+    def set_pins(self, symbols=(), keys=()):
+        """Held and currently-required inputs: evicted only after every unpinned entry."""
+        with self.lock:
+            self.pin_symbols, self.pin_keys = frozenset(symbols), frozenset(keys)
+
+    def _pinned(self, ck):
+        key = ck[1] if len(ck) > 1 else None
+        if not isinstance(key, str):
+            return False
+        if key in self.pin_keys:
+            return True
+        parts = key.split(':')
+        return len(parts) > 2 and ':'.join(parts[1:-1]) in self.pin_symbols
+
+    def capacity(self):
+        with self.lock:
+            pinned = [e for ck, e in self.entries.items() if self._pinned(ck)]
+            return dict(entries=len(self.entries), max_entries=self.max_entries, rows=self.rows,
+                        max_rows=self.max_rows, bytes=self.bytes, max_bytes=self.max_bytes,
+                        pinned_entries=len(pinned), pinned_bytes=sum(e['bytes'] for e in pinned),
+                        evictions=self.evictions, pinned_evictions=self.pinned_evictions)
+
+    def clear(self):
+        with self.lock:
+            self.entries.clear()
+            self.rows = self.bytes = 0
+
+    def _drop(self, ck):
+        old = self.entries.pop(ck, None)
+        if old is not None:
+            self.rows -= old['n']
+            self.bytes -= old['bytes']
+        return old
+
+    def get(self, ck, wit, cut_ms, limit, window, wstart=None):
+        """-> (hit, frame, refill of a stale entry, the stale entry itself)."""
+        with self.lock:
+            e = self.entries.get(ck)
+            if e is None:
+                return False, None, None, None
+            ok = (e['wit'] == wit and cut_ms >= e['cut'] and (e['next'] is None or cut_ms < e['next'])
+                  and (limit == e['limit'] and e['wstart'] <= wstart <= e['wstart'] + WINDOW_SLACK_MS
+                       if window else (limit <= e['limit'] or not e['full'])))
+            if not ok:
+                self._drop(ck)
+                return False, None, e['refill'], e
+            self.entries[ck] = self.entries.pop(ck)         # LRU touch
+            frame = e['frame']
+            return True, (None if frame is None else _owned(frame, None if window else limit)), None, None
+
+    def put(self, ck, wit, cut_ms, limit, nxt, frame, refill=None, wstart=None):
+        n = 0 if frame is None else len(frame)
+        size = 0 if frame is None else int(frame.memory_usage(deep=True).sum())
+        if n > self.max_entry_rows or size > self.max_entry_bytes:
+            with self.lock:
+                self._drop(ck)
+            STATS['cache_rejected_oversize'] += 1
+            return
+        with self.lock:
+            self._drop(ck)
+            self.entries[ck] = dict(wit=wit, cut=cut_ms, limit=limit, next=nxt, n=n, bytes=size,
+                                    frame=None if frame is None else _owned(frame, None), refill=refill, wstart=wstart,
+                                    full=frame is not None and n >= limit)
+            self.rows += n
+            self.bytes += size
+            while self.entries and (len(self.entries) > self.max_entries or self.rows > self.max_rows
+                                    or self.bytes > self.max_bytes):
+                victim = next((k for k in self.entries if k != ck and not self._pinned(k)), None)
+                if victim is None:                       # only pinned entries remain: bounds still hold
+                    victim = next((k for k in self.entries if k != ck), ck)
+                    self.pinned_evictions += 1
+                self.evictions += 1
+                self._drop(victim)
+
+
+def _owned(frame, limit):
+    out = frame.iloc[-limit:] if limit else frame
+    attrs = deepcopy(frame.attrs)
+    out = out.copy(deep=True)
+    out.attrs = attrs
+    return out
+
+
+CURRENT = CurrentCache()
+
+
+def _db_id(conn):
+    """Physical identity (resolved path, device, inode); None for memory/unknown."""
+    try:
+        path = conn.execute('PRAGMA database_list').fetchone()[2]
+        if not path:
+            return None
+        st = os.stat(path)
+        return (os.path.realpath(path), st.st_dev, st.st_ino)
+    except Exception:
+        return None
+
+
+def next_ready(conn, key, floor_ms, cut_ms):
+    """Earliest time an already-committed row of ``key`` (events >= floor) becomes
+    visible after ``cut_ms``; None when nothing is pending. Index-only."""
+    return conn.execute('SELECT MIN(MAX(available_ms,observed_ms)) FROM market_revisions WHERE series_key=? '
+                        'AND event_ms>=? AND (available_ms>? OR observed_ms>?)',
+                        (key, floor_ms, cut_ms, cut_ms)).fetchone()[0]
+
+
+_NO_DELTA = object()
+
+
+def _incremental(conn, key, stale, wit, cut_ms, limit, instrument_id, source, include_partial=False):
+    """Refresh a stale candle-style window from committed change metadata.
+
+    Exact only for pure insertions: events below the changed floor keep their
+    winners, events at/above it are re-selected by the same query. Edits,
+    deletions, unknown/pruned log ranges, a different epoch/raw generation, a
+    crossed future-availability point or a different limit use the full
+    (off-path) read instead.
+    """
+    old = stale['wit']
+    if (old[1:] != wit[1:] or limit != stale['limit'] or cut_ms < stale['cut']
+            or (stale['next'] is not None and cut_ms >= stale['next'])):
+        return _NO_DELTA
+    change = changes_since(conn, key, old[0])
+    if change is None or not change[1] or change[0] is None:
+        return _NO_DELTA
+    floor = change[0]
+    delta = load(conn, key, as_of_ms=cut_ms, limit=limit, instrument_id=instrument_id, source=source,
+                 min_event_ms=floor, include_partial=include_partial)
+    kept = stale['frame']
+    kept = None if kept is None else kept[kept['event_time_ms'] < floor]
+    if delta is None:
+        merged = kept if kept is not None and len(kept) else None
+    elif kept is None or not len(kept):
+        merged = delta
+    else:
+        merged = pd.concat([kept, delta], ignore_index=True)
+    STATS['incremental_refreshes'] += 1
+    STATS['incremental_rows_read'] += 0 if delta is None else len(delta)
+    if merged is None:
+        return None
+    merged = merged.iloc[-limit:].reset_index(drop=True)
+    merged.attrs = deepcopy(stale['frame'].attrs if stale['frame'] is not None else delta.attrs)
+    merged.attrs['as_of_ms'] = cut_ms
+    return merged
+
+
+def cached_current(conn, key, *, as_of_ms, limit, instrument_id=None, source=None,
+                   include_partial=False, window_start_ms=None, loader=None, refill=None):
+    """Cross-cycle cached current read. ``loader()`` performs the uncached read.
+
+    ``refill`` re-runs the same read on a producer/warm thread. Inside
+    ``cache_only()`` a miss never loads: it queues ``refill`` and reports
+    'warming' (see ``last_reason``).
+    """
+    loader = loader or (lambda: load(conn, key, as_of_ms=as_of_ms, limit=limit, instrument_id=instrument_id,
+                                      source=source, include_partial=include_partial,
+                                      window_start_ms=window_start_ms))
+    cut(as_of_ms)
+    _REASON.set(None)
+    only = _CACHE_ONLY.get()
+    dbid = _db_id(conn)
+    # An open transaction on this connection may hold uncommitted rows that
+    # another connection can never see (and a rollback can reuse generations):
+    # such a read is neither served from nor stored in the shared cache.
+    wit = None if (dbid is None or conn.in_transaction) else witness(conn, key)
+    if wit is None:
+        if only:
+            STATS['cache_only_unproven'] += 1
+            _REASON.set('witness_unproven')
+            enqueue_warm((dbid, key, 'unproven'), refill)
+            return None
+        STATS['cache_uncacheable'] += 1
+        return loader()
+    window = window_start_ms is not None
+    # A window entry covers every start inside [its start, start + slack]: rows
+    # from an earlier start are a superset of what a later start needs.
+    ck = (dbid, key, instrument_id, source, include_partial, window)
+    hit, frame, stale_refill, stale = CURRENT.get(ck, wit, as_of_ms, limit, window, window_start_ms)
+    if hit:
+        STATS['cache_hits'] += 1
+        return frame
+    STATS['cache_misses'] += 1
+    if only:
+        STATS['warming_misses'] += 1
+        _REASON.set('warming')
+        enqueue_warm(ck, refill or stale_refill)
+        return None
+    # Candle delta selection and raw payload expansion share a read snapshot.
+    # Typed windows own their snapshot inside load_window_typed.
+    owned = not window
+    if owned:
+        conn.execute('BEGIN')
+    try:
+        if owned:
+            wit = witness(conn, key)
+        frame = None
+        if stale is not None and not window:
+            frame = _incremental(conn, key, stale, wit, as_of_ms, limit, instrument_id, source, include_partial)
+        if frame is _NO_DELTA or stale is None or window:
+            frame = loader()
+        floor = 0
+        if not window and frame is not None and len(frame) >= limit:
+            floor = int(frame['event_time_ms'].min())
+        nxt = next_ready(conn, key, floor, as_of_ms)
+    finally:
+        if owned:
+            conn.rollback()
+    CURRENT.put(ck, wit, as_of_ms, limit, nxt, frame, refill, window_start_ms)
+    return frame
+
+
+# ── bounded, resumable metadata resolution (off the trading path) ───────────
+def resolve_pending(conn, *, budget_rows=20000, seed=True):
+    """Seed witnesses for series demanded of THIS database; resolve identity
+    metadata for the demanded ones that need it, in bounded resumable steps.
+
+    Demand is scoped by physical database file. Only demanded series are
+    scanned (never the whole unresolved universe), and a series demanded for
+    identity is resolved before anything else. Writers keep maintaining the
+    identity set via triggers while a scan is in flight; a concurrent
+    UPDATE/DELETE bumps ``epoch`` and restarts that series' scan.
+    """
+    dbid = _db_id(conn)
+    demanded = {key: v for (d, key), v in list(_DEMAND.items()) if d == dbid}
+    if seed:
+        for key in demanded:
+            conn.execute('INSERT OR IGNORE INTO market_series_meta(series_key,gen) VALUES (?,0)', (key,))
+        conn.commit()
+    left, done = budget_rows, 0
+    for key in sorted(k for k, wants_identity in demanded.items() if wants_identity):
+        if left > 0:
+            row = _meta(conn, key)
+            if row is not None and not row[3]:
+                left -= _resolve_one(conn, key, left)
+                row = _meta(conn, key)
+        if row is not None and row[3]:
+            done += 1
+            _DEMAND.pop((dbid, key), None)
+    for key in [k for k, v in demanded.items() if not v]:
+        if _meta(conn, key) is not None:
+            _DEMAND.pop((dbid, key), None)     # witness seeded; nothing else was asked
+    prune_change_log(conn)
+    conn.commit()
+    return dict(resolved=done, budget_left=left, pending=len(demanded) - done)
+
+
+def _resolve_one(conn, key, budget):
+    epoch, cursor, state = conn.execute(
+        'SELECT epoch,scan_event,scan_json FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+    state = json.loads(state) if state else dict(idents=[], partial=0, epoch=epoch, rowid=-1)
+    if state['epoch'] != epoch:
+        state, cursor = dict(idents=[], partial=0, epoch=epoch, rowid=-1), None
+    event, rowid = (-1, -1) if cursor is None else (cursor, state['rowid'])
+    # Total order (event_ms, rowid): equal-event revisions can never be skipped
+    # or revisited across a budget boundary.
+    rows = conn.execute(
+        "SELECT event_ms,rowid,json_quote(json_extract(record_json,'$.instrument_id')),"
+        "json_extract(record_json,'$.bar_state')='PARTIAL' FROM market_revisions "
+        "WHERE series_key=? AND (event_ms>? OR (event_ms=? AND rowid>?)) ORDER BY event_ms,rowid LIMIT ?",
+        (key, event, event, rowid, budget)).fetchall()
+    STATS['resolver_rows_scanned'] += len(rows)
+    idents = set(state['idents'])
+    idents.update(r[2] for r in rows)
+    state.update(idents=sorted(idents), partial=int(state['partial'] or any(r[3] for r in rows)))
+    finished = len(rows) < budget
+    conn.execute('BEGIN IMMEDIATE')
+    try:
+        cur = conn.execute('SELECT epoch,idents,partial FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+        if cur is None or cur[0] != epoch:
+            conn.rollback()
+            return len(rows)
+        if finished:
+            seen = set(i for i in cur[1].strip('|').split('|') if i)
+            merged = sorted(seen | idents)
+            conn.execute('UPDATE market_series_meta SET idents=?,partial=?,resolved=1,scan_event=NULL,scan_json=NULL '
+                         'WHERE series_key=?', ('|' + '|'.join(merged) + '|', int(cur[2] or state['partial']), key))
+            STATS['series_resolved'] += 1
+        else:
+            state['rowid'] = rows[-1][1]
+            conn.execute('UPDATE market_series_meta SET scan_event=?,scan_json=? WHERE series_key=?',
+                         (rows[-1][0], json.dumps(state), key))
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    return len(rows)

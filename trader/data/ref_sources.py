@@ -198,8 +198,8 @@ def _alts_frame(grid, level, frames: dict, min_members: int) -> pd.DataFrame:
 def _constituents(frames: dict):
     """Constituent revision IDs per member, or None unless every member is receipt-qualified."""
     from . import market_provenance as mp
-    qualified = all(all(key in member for key in mp.META) for member in frames.values()
-                    if member is not None and len(member))
+    qualified = all(member.attrs.get('slim_qualified') or all(key in member for key in mp.META)
+                    for member in frames.values() if member is not None and len(member))
     if not qualified:
         return None
     return {sym: member['revision_id'].tolist()
@@ -227,42 +227,202 @@ def alts_index(frames: dict, min_members: int = 5) -> pd.DataFrame:
 BTCDOM_FROM_MS = 1_622_505_600_000
 
 
-def _refresh_alts(feed, members, store, now, out):
-    """Rebuild only what the constituents' committed closes/revisions require
-    (alt_index_state), isolated like every other source. Never raises."""
+def _alts_witness(feed, store, names):
+    """Committed change witnesses of every member series plus the stored output.
+
+    None unless every member is proven: an unproven member can never be skipped.
+    """
+    from . import market_provenance as mp
+    try:
+        parts = {s: feed.series_witness(s, '4h') for s in names}
+        out = mp.witness(store.db, 'reference:alts')
+    except Exception:
+        return None
+    if any(w is None for w in parts.values()):
+        return None
+    return dict(members=parts, output=out)
+
+
+def _slim(entry, sym):
+    """A member frame rebuilt from the committed index state (no store read)."""
+    ts, close = entry.series[sym]
+    rid = (entry.ancestry or {}).get(sym)
+    if rid is None or len(rid) != len(ts):
+        return None
+    return _slim_frame(pd.to_datetime(ts, utc=True), close, rid)
+
+
+def _slim_frame(ts, close, rid):
+    df = pd.DataFrame({'ts': ts, 'close': np.asarray(close, dtype=float), 'revision_id': list(rid)})
+    df.attrs['slim_qualified'] = True
+    return df
+
+
+def _member_frames(feed, names, now, entry, saved, witness, report):
+    """Per member: reuse committed state, read only the changed tail, or (cold /
+    unprovable change) read the member's full window. Never reads an unchanged
+    member, never rereads the unchanged part of a changed one."""
+    frames = {}
+    for sym in names:
+        old = saved['members'].get(sym) if saved and entry is not None else None
+        now_w = witness['members'][sym] if witness else None
+        pending = saved['next_ready'].get(sym) if saved else None
+        if old is not None and old == now_w and (pending is None or now < pending):
+            frame = _slim(entry, sym)
+            if frame is not None:
+                frames[sym] = frame
+                report['reused'] += 1
+                continue
+        if (old is not None and now_w is not None and old[1:] == now_w[1:]
+                and (pending is None or now < pending) and sym in entry.series):
+            change = feed.committed_changes(sym, '4h', old[0])
+            if change is not None and change[1] and change[0] is not None:
+                base = _slim(entry, sym)
+                tail = feed.ohlcv_tail(sym, '4h', as_of_ms=now, min_event_ms=change[0])
+                if base is not None:
+                    floor = pd.Timestamp(change[0], unit='ms', tz='UTC')
+                    kept = base[pd.to_datetime(base['ts'], utc=True) < floor]
+                    if tail is not None and len(tail):
+                        ts = list(pd.to_datetime(kept['ts'], utc=True)) + list(pd.to_datetime(tail['ts'], utc=True))
+                        close = list(kept['close']) + list(tail['close'])
+                        rid = list(kept['revision_id']) + list(tail['revision_id'])
+                    else:
+                        ts, close, rid = list(pd.to_datetime(kept['ts'], utc=True)), list(kept['close']), list(kept['revision_id'])
+                    frames[sym] = _slim_frame(pd.DatetimeIndex(ts), close, rid)
+                    report['tail'] += 1
+                    report['tail_rows'] += 0 if tail is None else len(tail)
+                    continue
+        frames[sym] = feed.cached_ohlcv(sym, "4h", limit=40000, as_of_ms=now)
+        report['full'] += 1
+    return frames
+
+
+def _save_alts(feed, names, store, now, frames, witness, key, report, out, started):
+    """Compute + commit the alt index from fully prepared member frames."""
     from .alt_index_state import CACHE
+    from . import market_provenance as mp
+    try:
+        last_before = store.last_ts("alts")
+    except Exception:
+        last_before = None
+    plan = CACHE.prepare(key, frames, 5, store_last_ts=last_before, allow_skip=False)
+    if plan.kind == 'unchanged':
+        out["alts"] = 0
+    else:
+        plan.frame.attrs['request_started_ms'] = started
+        saved_now = store._clock_ms()
+        out["alts"] = store.save("alts", plan.frame, now_ms=saved_now)
+        try:
+            last_after = store.last_ts("alts")
+        except Exception:
+            last_after = None
+        CACHE.commit(key, plan, out["alts"], saved_now, last_after)
+        after = mp.witness(store.db, 'reference:alts')
+        if witness is not None and after is not None and out["alts"] >= int(plan.frame['close'].notna().sum()):
+            # Members are the PRE-load witnesses: a commit during the load
+            # leaves the record unequal to the next read, forcing a refresh.
+            _ALT_SAVED[key] = dict(members=witness['members'], output=after,
+                                   next_ready={s: feed.pending_ready(s, '4h', now) for s in names})
+    out["alts_reuse"] = dict(plan.report(), members=report)
+
+
+def _refresh_alts(feed, members, store, now, out, *, allow_cold=False):
+    """Current reference refresh of the equal-weight alt index. Never raises.
+
+    Unchanged detection happens BEFORE any history is loaded. A changed member
+    is refreshed from its committed change metadata (tail only, exact for pure
+    insertions); an edit/deletion, an unproven log range or a crossed
+    future-availability point reads that member's full window. A COLD start
+    (no committed state) is history work: it is deferred to ``rebuild_alts_cold``
+    (budgeted, resumable, run by the maintenance job) unless ``allow_cold``.
+    """
+    from .alt_index_state import CACHE
+    from . import market_provenance as mp
     try:
         started = store._clock_ms()
         names = tuple(dict.fromkeys(members))
-        frames = {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in names}
         key = (getattr(store, '_db_path', None) or id(store), names, 5)
-        try:
-            last_before = store.last_ts("alts")
-        except Exception:
-            last_before = None
-        # No same-store committed-content witness exists (last_ts cannot show the
-        # stored history was not corrected/replaced), so never skip the save.
-        plan = CACHE.prepare(key, frames, 5, store_last_ts=last_before, allow_skip=False)
-        if plan.kind == 'unchanged':
+        witness = _alts_witness(feed, store, names)
+        saved = _ALT_SAVED.get(key)
+        pending_now = saved is not None and any(v is not None and now >= v for v in saved['next_ready'].values())
+        if (witness is not None and witness['output'] is not None and saved is not None and not pending_now
+                and saved['members'] == witness['members'] and saved['output'] == witness['output']):
             out["alts"] = 0
-        else:
-            plan.frame.attrs['request_started_ms'] = started
-            saved_now = store._clock_ms()
-            out["alts"] = store.save("alts", plan.frame, now_ms=saved_now)
-            try:
-                last_after = store.last_ts("alts")
-            except Exception:
-                last_after = None
-            CACHE.commit(key, plan, out["alts"], saved_now, last_after)
-        out["alts_reuse"] = plan.report()
+            out["alts_reuse"] = dict(kind='unchanged', reason='witness_unchanged_before_load', rows=0, recomputed=0)
+            return
+        with CACHE._lock:
+            entry = CACHE._entries.get(key)
+        entry = entry if entry is not None and entry.committed else None
+        if entry is None and not allow_cold:
+            out["alts"] = 0
+            out["alts_reuse"] = dict(kind='deferred', reason='cold_rebuild_is_history_maintenance', rows=0, recomputed=0)
+            return
+        report = dict(reused=0, tail=0, tail_rows=0, full=0)
+        frames = _member_frames(feed, names, now, entry, saved, witness, report)
+        _save_alts(feed, names, store, now, frames, witness, key, report, out, started)
     except Exception as e:
         out["alts"] = f"error: {e}"
         log.warning(f"reference alts: {e}")
 
 
+_COLD: dict = {}
+
+
+def alts_cold_pending(store, members):
+    from .alt_index_state import CACHE
+    names = tuple(dict.fromkeys(members))
+    key = (getattr(store, '_db_path', None) or id(store), names, 5)
+    with CACHE._lock:
+        entry = CACHE._entries.get(key)
+    return bool(names) and not (entry is not None and entry.committed)
+
+
+def rebuild_alts_cold(feed, members, store, now, *, members_per_slice=8, yield_hook=None):
+    """Budgeted, resumable cold rebuild of the alt index (history maintenance).
+
+    Loads at most ``members_per_slice`` members' full windows per call (yielding
+    at every member boundary) and keeps them as slim frames between calls; the
+    index is computed and committed once every member is in. Independent of the
+    current reference refresh and of any scan, so neither can wait on the other.
+    Returns a small status dict.
+    """
+    from . import market_provenance as mp
+    names = tuple(dict.fromkeys(members))
+    key = (getattr(store, '_db_path', None) or id(store), names, 5)
+    if not alts_cold_pending(store, members):
+        return dict(state='not_needed')
+    state = _COLD.setdefault(key, dict(frames={}, witness=_alts_witness(feed, store, names), started=store._clock_ms()))
+    loaded = 0
+    for sym in names:
+        if sym in state['frames']:
+            continue
+        if loaded >= members_per_slice:
+            return dict(state='in_progress', loaded=len(state['frames']), total=len(names))
+        if yield_hook is not None:
+            yield_hook()
+        frame = feed.cached_ohlcv(sym, "4h", limit=40000, as_of_ms=now)
+        if frame is not None and len(frame) >= 2 and all(k in frame for k in mp.META):
+            state['frames'][sym] = _slim_frame(pd.to_datetime(frame['ts'], utc=True), frame['close'],
+                                               frame['revision_id'])
+        else:
+            state['frames'][sym] = frame
+        loaded += 1
+    out, report = {}, dict(reused=0, tail=0, tail_rows=0, full=len(names))
+    try:
+        _save_alts(feed, names, store, now, state['frames'], state['witness'], key, report, out, state['started'])
+    finally:
+        _COLD.pop(key, None)
+    return dict(state='committed', rows=out.get('alts'))
+
+
+#: last witnesses recorded after a fully committed alts save (process memory;
+#: a restart can only mean one rebuild, never a stale skip)
+_ALT_SAVED: dict = {}
+
+
 def refresh_all(feed, members: list, store=None, get=get_json,
                 now_ms: int | None = None,
-                cg_every_ms: int | None = None) -> dict:
+                cg_every_ms: int | None = None, allow_cold_alts: bool = False) -> dict:
     """Bring every reference current. Each source is isolated: its failure
     is recorded as "error: …" and costs nothing else. Never raises."""
     from .references import HOUR, REFS, RefStore
@@ -299,7 +459,7 @@ def refresh_all(feed, members: list, store=None, get=get_json,
         elif ref.source == "defillama":
             run(key, lambda: defillama_stables(get))
 
-    _refresh_alts(feed, members, store, now, out)
+    _refresh_alts(feed, members, store, now, out, allow_cold=allow_cold_alts)
 
     last = store.last_ts("cg_btc_d")
     if last is None or now - last >= cg_every:

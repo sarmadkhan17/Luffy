@@ -1080,7 +1080,11 @@ class Kernel:
         window_start = min(int(mp.ms(frame['ts'])[0]) for frame in dfs.values())
         if plan is not None:
             from .strategy.spec_evidence import load_derivs
-            derivs = load_derivs(symbol, plan.requires, as_of_ms=as_of, window_start_ms=window_start) if any(r in ('funding','open_interest','taker_ratio','ls_ratio','ls_account_ratio','basis') for r in plan.requires) else {}
+            # Each external source spans only what ITS consumers declared; the
+            # shared execution/regime guard frames never widen it.
+            spans = getattr(plan, 'spans', {})
+            source_start = {r: (max(0, as_of - spans[r]) if r in spans else window_start) for r in plan.requires}
+            derivs = load_derivs(symbol, plan.requires, as_of_ms=as_of, window_start_ms=source_start) if any(r in ('funding','open_interest','taker_ratio','ls_ratio','ls_account_ratio','basis') for r in plan.requires) else {}
         else:
             derivs = self._derivs_for(symbol, as_of_ms=as_of, window_start_ms=window_start)
         derivs = {key: frame for key, frame in (derivs or {}).items() if frame['instrument_id'].eq(iid).all()}

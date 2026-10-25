@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from ..core.types import TF_MS
 from ..engine.orchestrator import symbol_allows
 from ..strategy import dsl, fill_timing
+from ..strategy.spec_evidence import _SERIES_FOR as _EXTERNAL
 
 
 @dataclass
@@ -20,6 +21,8 @@ class Inputs:
     peer_limits: dict = field(default_factory=dict)
     peers: bool = False
     world: bool = False
+    needs: dict = field(default_factory=dict)   # strategy id -> its own declared requirements
+    spans: dict = field(default_factory=dict)   # external requirement -> span (ms) its OWN consumers need
 
     def merge(self, other):
         self.population.extend(other.population)
@@ -32,6 +35,9 @@ class Inputs:
         self.requires.update(other.requires)
         self.peers |= other.peers
         self.world |= other.world
+        self.needs.update(other.needs)
+        for name, span in other.spans.items():
+            self.spans[name] = max(self.spans.get(name, 0), span)
 
 
 def _calls(spec):
@@ -96,6 +102,10 @@ def strategy_inputs(view, st, genome):
         for tf in out.limits:
             out.limits[tf] = max(out.limits[tf], min(2048, max(
                 CognitionConfig().window + 1, 604_800_000 // TF_MS[tf] + 1)))
+    # Dependency-specific contract, fixed BEFORE the shared execution/regime guards
+    # are added in build(): an external source only spans what its consumers declare.
+    span = max((bars * TF_MS[tf] for tf, bars in out.limits.items()), default=0)
+    out.spans = {r: span for r in out.requires if r in _EXTERNAL or r.startswith('ref:')}
     return out
 
 
@@ -115,6 +125,8 @@ def build(view, symbols):
                 continue
             inputs = resolved[st.id]
             inputs.population = [(st, genome)]
+            inputs.needs = {st.id: dict(requires=frozenset(inputs.requires), btc=dict(inputs.btc), peers=inputs.peers,
+                                        world=inputs.world, tfs=frozenset(inputs.limits) if genome is not None else frozenset())}
             combined.merge(inputs)
         if combined.population:
             # Orchestrator classify(15m,1h), htf_trend_score(4h), configured

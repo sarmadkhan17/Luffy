@@ -6,7 +6,7 @@ import datetime as dt
 import logging
 import time
 
-from ..core.types import Action, ControlState, MarketType, RiskError
+from ..core.types import Action, ControlState, MarketType, RiskError, TF_MS
 from .timing import stage_scope
 from .scan_plan import build
 
@@ -34,6 +34,21 @@ class BatchFeed:
                 if (frame := self.fetch_ohlcv(symbol, tf, limit=limit)) is not None}
 
 
+def publish_needs(view):
+    """Tell the current producer exactly which (symbol, derivative series) the
+    applicable strategies of the shortlisted coins require (strategy-owned,
+    ordered by shortlist rank). Nothing optional is added for any coin."""
+    from ..strategy.spec_evidence import _SERIES_FOR
+    needs = []
+    for symbol, plan in view._scan_plan.items():
+        needs += [(symbol, _SERIES_FOR[r], plan.spans.get(r, 0)) for r in sorted(plan.requires) if r in _SERIES_FOR]
+    runtime = getattr(view, '_split_runtime', None)
+    if runtime is not None and hasattr(runtime, 'derivative_needs'):
+        with runtime.lock:
+            runtime.derivative_needs = needs
+            runtime.candle_active = {symbol: set(plan.limits) for symbol, plan in view._scan_plan.items()}
+
+
 def prepare(view):
     with stage_scope('scan.requirements'):
         view._scan_plan, view._scan_requirement_errors = build(view, view._symbol_roles.deep)
@@ -56,10 +71,19 @@ def prepare(view):
         for tf, bars in limits.items():
             key = (symbol, tf)
             view.feed.limits[key] = max(view.feed.limits.get(key, 0), bars)
+    publish_needs(view)
     with stage_scope('scan.shared_collection'):
         if merged_refs:
             from ..strategy.spec_evidence import load_refs
-            view._scan_references = load_refs(sorted(merged_refs), as_of_ms=int(time.time()*1000))
+            now = int(time.time()*1000)
+            # Per reference: the span of the strategies that actually read it, not the
+            # longest frame of the shared guards.
+            spans = {}
+            for plan in view._scan_plan.values():
+                for name, span in plan.spans.items():
+                    spans[name] = max(spans.get(name, 0), span)
+            view._scan_references = load_refs(sorted(merged_refs), as_of_ms=now,
+                window_start_ms={name: max(0, now - spans.get(name, 0)) for name in merged_refs})
         for tf, bars in btc_limits.items():
             frame = view.feed.fetch_ohlcv('BTC/USDT', tf, limit=bars)
             if frame is not None:
@@ -72,6 +96,34 @@ def prepare(view):
                 if frame is not None:
                     peers[symbol][tf] = frame
     return peers
+
+
+def readiness(snap, need):
+    """Which of a strategy's OWN declared inputs are absent or not VALID in this snapshot?
+
+    Fresh candles never stand in for a missing funding/OI/reference/BTC input.
+    """
+    from ..strategy.spec_evidence import _SERIES_FOR
+    missing = []
+    def usable(frame):
+        return frame is not None and len(frame) and str(frame['quality'].iloc[-1]) == 'VALID'
+    for req in sorted(need['requires']):
+        if req in _SERIES_FOR:
+            if not usable((snap.derivs or {}).get(_SERIES_FOR[req])):
+                missing.append(req)
+        elif req.startswith('ref:'):
+            if not usable((snap.market or {}).get(req[4:])):
+                missing.append(req)
+    if need['btc']:
+        frames = getattr(snap, 'btc_frames', None) or {}
+        if any(tf not in frames for tf in need['btc']):
+            missing.append('btc')
+    if need['peers'] and not snap.universe:
+        missing.append('peers')
+    for tf in sorted(need.get('tfs', ())):
+        if tf not in snap.dfs:
+            missing.append('tf:' + tf)
+    return missing
 
 
 def evidence(view, snap, decision, stats):
@@ -112,6 +164,24 @@ def run(view):
         peer_cohort=len(peers), context_anchors=['BTC/USDT'] if view._scan_btc else [])
     stats['processing_boundaries'] = dict(discretionary_deep_admitted=stats['shortlisted'],
         execution_datafeed_available=0, snapshots_constructed=0)
+    stats['strategy_coverage'] = {}
+    stats['blocked_reasons'] = {}
+    totals = ('expected', 'blocked', 'regime_ineligible', 'ineligible_other', 'attempted', 'completed',
+              'completed_unreported', 'refused', 'not_invoked')
+    for name in totals:
+        stats['strategy_' + name] = 0
+    def row_of(st):
+        return stats['strategy_coverage'].setdefault(st.id, dict(
+            {name: 0 for name in totals}, reasons={}))
+    def note_reason(st, reason):
+        row = row_of(st)
+        row['reasons'][reason] = row['reasons'].get(reason, 0) + 1
+        stats['blocked_reasons'][reason] = stats['blocked_reasons'].get(reason, 0) + 1
+    def bump(st, name, reason=None):
+        row_of(st)[name] += 1
+        stats['strategy_' + name] += 1
+        if reason is not None:
+            note_reason(st, reason)
     stats['no_strategy'] = stats['shortlisted'] - len(view._scan_plan)
     stats['eligible_strategies'] = sorted({st.id for plan in view._scan_plan.values() for st, _ in plan.population})
     if not view._scan_plan:
@@ -145,13 +215,44 @@ def run(view):
         if snap is None:
             reason = getattr(view, '_last_snapshot_diagnostic', {}).get('reason', 'missing')
             stats['snapshot_refusals'][reason] = stats['snapshot_refusals'].get(reason, 0) + 1
+            for st, _ in plan.population:
+                bump(st, 'expected'); bump(st, 'blocked', 'no_snapshot:' + reason)
             continue
         stats['processing_boundaries']['execution_datafeed_available'] += 1
         stats['processing_boundaries']['snapshots_constructed'] += 1
         stats['deep_processed'] += 1
+        ready, events = [], {}
+        for st, genome in plan.population:
+            bump(st, 'expected')
+            missing = readiness(snap, plan.needs[st.id]) if st.id in plan.needs else []
+            if missing:
+                bump(st, 'blocked')
+                for m in missing:
+                    note_reason(st, 'missing:' + m)
+            else:
+                ready.append((st, genome))
+        if not ready:
+            continue            # every applicable strategy lacks its own inputs; nothing to evaluate
+        def observe(sid, reason, exc=None, _events=events):
+            _events.setdefault(sid, []).append(reason)
         with stage_scope('scan.strategies', symbol=symbol):
-            decision = view.orchestrator.decide(snap, plan.population, entry_allowed=allowed,
-                blocked_reason=blocked, measurements=False, persist_cooldown=False)
+            decision = view.orchestrator.decide(snap, ready, entry_allowed=allowed,
+                blocked_reason=blocked, measurements=False, persist_cooldown=False, observer=observe)
+        from ..strategy import library as strat_library
+        for st, genome in ready:
+            reasons = events.get(st.id, [])
+            capable = getattr(strat_library.EVALUATORS.get(genome.family), '_diagnostic_capable', False)
+            if not reasons:
+                bump(st, 'not_invoked', 'not_invoked')
+            elif reasons[0].startswith('ineligible_'):
+                bump(st, 'regime_ineligible' if reasons[0] == 'ineligible_regime' else 'ineligible_other', reasons[0])
+            else:
+                bump(st, 'attempted')
+                last = reasons[-1]
+                if last in ('emitted_signal', 'returned_none'):
+                    bump(st, 'completed' if capable or last == 'emitted_signal' else 'completed_unreported')
+                else:
+                    bump(st, 'refused', last)
         stats['decisions'] += 1
         # Runtime retains bounded exit-score/owner visibility, not full snapshots.
         runtime.decision_completed(symbol, None, decision)

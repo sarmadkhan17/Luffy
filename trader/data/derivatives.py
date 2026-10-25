@@ -106,6 +106,9 @@ class DerivFeed:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "derivs.db")
             conn = sqlite3.connect(self._db_path)
+            if mp.initialised(conn, 'derivs', 'deriv_acquisition_cursor'):
+                self._local.conn = conn      # versioned: no setup statements, no writes
+                return conn
             # Measured recorder transactions outlive bounded current readers.
             # WAL retains atomic revisions while readers see committed source
             # snapshots without waiting for an unrelated writer to commit.
@@ -164,6 +167,7 @@ class DerivFeed:
                                      claim['start_ms'])
                 if state is not None:
                     tail.write(conn, state)
+        mp.refresh_entries(self.db, 'derivative:'+symbol+':'+series)
 
     def _coverage_claim(self, symbol, series, df, acquisition):
         """What a retrieval may claim: only a fully VALID response from exactly
@@ -181,7 +185,7 @@ class DerivFeed:
                     identity=dict(cursor_key=key, series_key='derivative:'+symbol+':'+series,
                                   source=spec.source, instrument_id=instrument, period=spec.period))
 
-    def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
+    def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None, instrument_id=None):
         if self.retrospective is not None:
             d = self.retrospective
             if as_of_ms is not None:
@@ -211,7 +215,41 @@ class DerivFeed:
                             evidence_scope='retrospective_observation')
             return df
         at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
-        df = mp.load(self.db, 'derivative:'+symbol+':'+series, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None, window_start_ms=window_start_ms)
+        key = 'derivative:'+symbol+':'+series
+        if as_of_ms is not None and window_start_ms is not None and instrument_id is not None:
+            # Current typed consumer: bounded index-ranked window, cached across
+            # scans by committed witness. Missing proof is a reason, not a scan.
+            from ..scheduling.timing import stage_scope
+            reasons = self.__dict__.setdefault('input_reasons', {})
+            start = window_start_ms
+            def loader():
+                frame, reason = mp.load_window_typed(self.db, key, as_of_ms=at, window_start_ms=start,
+                                                     instrument_id=instrument_id, limit=limit)
+                reasons[key] = reason
+                return frame
+            with stage_scope('input.derivative_read'):
+                df = mp.cached_current(self.db, key, as_of_ms=at, limit=limit, instrument_id=instrument_id,
+                                       window_start_ms=start, loader=loader,
+                                       refill=lambda: self.load(symbol, series, limit, as_of_ms=self._clock_ms(),
+                                                                window_start_ms=window_start_ms,
+                                                                instrument_id=instrument_id))
+            if df is None and mp.last_reason():
+                reasons[key] = mp.last_reason()
+            expected = self.current_source(series)
+            if df is not None and expected is not None and not df['source'].eq(expected).all():
+                # A current typed input must come from its specified source; never
+                # silently accept another provider's rows for this series.
+                reasons[key] = 'source_mismatch'
+                return None
+            df = mp.eligible_frame(df, None, at)
+            if df is not None and len(df):
+                tail = df.iloc[-1]
+                age = tail.get('max_age_ms')
+                if age is not None and pd.notna(age) and at-int(tail.event_time_ms) > age:
+                    df['quality'] = 'STALE'
+                    df['value'] = float('nan')
+            return df
+        df = mp.load(self.db, key, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None, window_start_ms=window_start_ms)
         df = mp.eligible_frame(df, None, at)
         if as_of_ms is not None and df is not None and len(df):
             tail=df.iloc[-1]
@@ -220,6 +258,17 @@ class DerivFeed:
                 df['quality']='STALE'
                 df['value']=float('nan')
         return df
+
+    #: the exact provider endpoint each CURRENT series is specified to come from.
+    #: ``ls_account_ratio`` has no adapter here (Coinalyze only): unspecified, explicit.
+    FUNDING_SOURCE = FAPI + "/fapi/v1/fundingRate"
+
+    @classmethod
+    def current_source(cls, series):
+        if series == 'funding':
+            return cls.FUNDING_SOURCE
+        spec = tail.SPECS.get(series)
+        return spec.source if spec is not None else None
 
     def coverage(self) -> dict:
         """{(symbol, series): (rows, first_ts, last_ts)} — how much history
@@ -436,6 +485,10 @@ class DerivFeed:
     def _check_cancelled(self):
         if getattr(self, 'cancelled', lambda: False)():
             raise InterruptedError('derivative_acquisition_stopped')
+        # Batch boundary of a cold/history pass: let current demand go first.
+        hook = getattr(self, 'history_yield', None)
+        if hook is not None:
+            hook()
 
     def _basis_between(self, symbol: str, period: str,
                        start_ms: int) -> pd.DataFrame:
@@ -604,7 +657,18 @@ class DerivFeed:
             raise ValueError('retrospective dependency acquisition forbidden')
         counts: dict = {}
         since = since or {}
-        for sym in symbols:
+        # Resumable slices: stop at a symbol boundary once the budget is spent and
+        # leave the next index in ``history_resume`` (None = complete).
+        started = time.monotonic()
+        start = int(getattr(self, 'backfill_start', 0) or 0)
+        budget = getattr(self, 'backfill_budget_s', None)
+        self.history_resume = None
+        for index, sym in enumerate(symbols):
+            if index < start:
+                continue
+            if budget is not None and index > start and time.monotonic() - started >= budget:
+                self.history_resume = index
+                break
             self._check_cancelled()
             floor = since.get(sym)
             try:
@@ -656,6 +720,8 @@ class DerivFeed:
             self.last_pass.append(dict(symbol=sym, series=series, mode=tail.FULL,
                                        reason=tail.FULL_ONLY.get(series, 'incremental_disabled'),
                                        start_ms=None, rows=0 if df is None else len(df)))
+            if df is not None and len(df):
+                self._fetched_at[(sym, series)] = self._clock_ms()
             return df, None
         spec = tail.SPECS[series]
         now = self._clock_ms()
@@ -670,7 +736,112 @@ class DerivFeed:
             df = getattr(self, method)(sym)
         self.last_pass.append(dict(symbol=sym, series=series, mode=mode, reason=reason,
                                    start_ms=start, rows=0 if df is None else len(df)))
+        if df is not None and len(df):
+            self._fetched_at[(sym, series)] = now
         return df, dict(mode=mode, now_ms=now, start_ms=start)
+
+    #: refresh cadence of a REQUIRED series: the finest source period (15m) is the
+    #: sampling floor for oi/taker/ls; funding settles every 8h but is re-read at the
+    #: recorder's own cadence so a correction is observed; basis is hourly.
+    NEED_INTERVAL_MS = {'funding': 900_000, 'oi': 900_000, 'taker_ratio': 900_000,
+                        'ls_ratio': 900_000, 'basis': 3_600_000}
+    #: a boundary's value is requested only once the source has had this long to publish it
+    NEED_PUBLISH_LAG_MS = 20_000
+    _fetched_at: dict = {}      # (symbol, series) -> last completed acquisition, shared by all instances
+
+    def acquire_needs(self, needs, *, max_requests: int = 20, delay: float = 0.3, max_deepen: int = 4) -> dict:
+        """Acquire exactly the (symbol, series) pairs current strategies require.
+
+        Reuses the recorder's own bounded request (tail from a proven cursor,
+        otherwise the standard one-page window) and its receipt/cursor writes.
+        Never a multi-year backfill. Series already acquired within their
+        cadence (by this or the broad recorder) are skipped; unsupported ones
+        are reported, not guessed. ``needs`` is priority-ordered.
+        """
+        if self.read_only or self.retrospective is not None:
+            raise ValueError('retrospective dependency acquisition forbidden')
+        methods = dict(self._SERIES_FETCHERS)
+        out = dict(requested=0, fetched=0, skipped_fresh=0, unsupported=[], failed=0, deferred=0,
+                   deepened=0, deepen_deferred=0)
+        now = self._clock_ms()
+        spans = {}
+        order = []
+        for need in needs:
+            symbol, series = need[0], need[1]
+            if (symbol, series) not in spans:
+                order.append((symbol, series))
+            spans[(symbol, series)] = max(spans.get((symbol, series), 0), need[2] if len(need) > 2 else 0)
+        for symbol, series in order:
+            self._check_cancelled()
+            if series not in methods:
+                out['unsupported'].append(f'{symbol}:{series}')
+                continue
+            period = self.NEED_INTERVAL_MS[series]
+            boundary = (now - self.NEED_PUBLISH_LAG_MS) // period * period
+            if self._fetched_at.get((symbol, series), -10**18) >= boundary + self.NEED_PUBLISH_LAG_MS:
+                out['skipped_fresh'] += 1
+            elif out['requested'] >= max_requests:
+                out['deferred'] += 1
+            else:
+                out['requested'] += 1
+                try:
+                    df, acquisition = self._acquire_current(symbol, series, methods[series])
+                    if df is not None and len(df):
+                        self.save(symbol, series, df, acquisition=acquisition)
+                        out['fetched'] += 1
+                    else:
+                        out['failed'] += 1
+                except InterruptedError:
+                    raise
+                except Exception as exc:
+                    out['failed'] += 1
+                    log.warning(f'derivs need {symbol}/{series}: {exc}')
+                if delay:
+                    time.sleep(delay)
+            if spans[(symbol, series)]:
+                self._deepen_to(symbol, series, now - spans[(symbol, series)], out, max_deepen, delay)
+        return out
+
+    DEEPEN_RETRY_MS = 6 * 3_600_000
+    _deepened_at: dict = {}
+
+    def _deepen_to(self, symbol, series, start_ms, out, max_deepen, delay):
+        """Bounded required-lookback paging: reach ``start_ms`` for one (symbol, series).
+
+        Uses the existing adapters only (funding/basis history from ``start_ms``;
+        coarser periods for the 30-day-retention series, as ``backfill`` does) and
+        at most one attempt per DEEPEN_RETRY_MS, so a provider that cannot serve
+        that far back is not hammered. Coverage still short afterwards stays
+        visible as missing history; nothing is fabricated.
+        """
+        lo = self.db.execute('SELECT MIN(ts) FROM derivs WHERE symbol=? AND series=?', (symbol, series)).fetchone()[0]
+        period_ms = self.NEED_INTERVAL_MS[series]
+        if lo is not None and lo <= start_ms + 2 * period_ms:
+            return
+        now = self._clock_ms()
+        if now - self._deepened_at.get((symbol, series), -10**18) < self.DEEPEN_RETRY_MS:
+            return
+        if out['deepened'] >= max_deepen:
+            out['deepen_deferred'] += 1
+            return
+        self._deepened_at[(symbol, series)] = now
+        out['deepened'] += 1
+        try:
+            if series == 'funding':
+                df = self.funding_history(symbol, delay=delay, since_ms=int(start_ms))
+            elif series == 'basis':
+                df = self.basis_history(symbol, since_ms=int(start_ms), delay=delay)
+            else:
+                rows_15m = (now - start_ms) / 900_000
+                period = '15m' if rows_15m <= 500 else '1h' if rows_15m <= 2000 else '4h'
+                df = getattr(self, dict(self._SERIES_FETCHERS)[series])(symbol, period=period)
+            if df is not None and len(df):
+                self.save(symbol, series, df)
+        except InterruptedError:
+            raise
+        except Exception as exc:
+            out['failed'] += 1
+            log.warning(f'derivs deepen {symbol}/{series}: {exc}')
 
     def record_all(self, symbols: list, delay: float = 0.3) -> dict:
         """One pass over every symbol and series. Rows already stored are
