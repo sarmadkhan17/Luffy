@@ -767,7 +767,7 @@ def retrospective_load(conn, key, *, cut_ms, tf=None, start_ms=0,
 # no history is read. Series that have not been written since installation have
 # no witness row and are simply not cacheable until one is seeded.
 log = logging.getLogger(__name__)
-STATS = dict(frontier_rebuilds=0, frontier_deltas=0, incremental_refreshes=0, incremental_rows_read=0, warm_refills=0, warm_failures=0, commit_refreshes=0, warming_misses=0, cache_only_unproven=0,
+STATS = dict(frontier_index_rows=0, frontier_rebuilds=0, frontier_deltas=0, incremental_refreshes=0, incremental_rows_read=0, warm_refills=0, warm_failures=0, commit_refreshes=0, warming_misses=0, cache_only_unproven=0,
              cache_rejected_oversize=0, legacy_window_reads=0, cache_hits=0, cache_misses=0, cache_uncacheable=0, payload_rows_decoded=0,
              window_reads=0, identity_unresolved=0, identity_refused=0,
              resolver_rows_scanned=0, series_resolved=0)
@@ -1010,7 +1010,19 @@ def _rebuild_frontier(conn, key, cut_ms, wit):
     state = _Frontier()
     z = np.zeros(0, dtype=np.int64)
     state.wit, state.cut, state.ev, state.av, state.ob, state.rid, state.pending = wit, cut_ms, z, z, z, z, {}
-    _classify(state, conn.execute(_INDEX_ROWS, (key,)).fetchall(), cut_ms)
+    # Collapse repeated receipts to the winning indexed row INSIDE SQLite.
+    # Returning every historical revision to Python caused long GIL handoffs
+    # and large transient allocations, although only one row/event survives.
+    rows = conn.execute('''SELECT selected_rowid,event_ms,available_ms,observed_ms FROM (
+        SELECT rowid AS selected_rowid,event_ms,available_ms,observed_ms,
+            ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+        FROM market_revisions WHERE series_key=? AND available_ms>=0
+            AND available_ms<=? AND observed_ms<=?) WHERE ordinal=1''', (key,cut_ms,cut_ms)).fetchall()
+    pending = conn.execute(_INDEX_ROWS + ' AND available_ms>=0 AND (available_ms>? OR observed_ms>?)',
+                           (key,cut_ms,cut_ms)).fetchall()
+    STATS['frontier_index_rows'] += len(rows) + len(pending)
+    _classify(state, rows, cut_ms)
+    _classify(state, pending, cut_ms)
     return state
 
 
@@ -1156,27 +1168,42 @@ def _load_window_typed(conn, key, *, as_of_ms, window_start_ms, instrument_id, l
 
     Same selection as ``load(window_start_ms=...)`` (exact predecessor, late
     older frontier events, exact availability cut, equal-clock rowid winner).
-    When maintained series metadata proves a single matching identity and no
-    partial rows, ranking uses the covering (series, event, available,
-    observed) index alone and only the selected rows' payloads are read and
-    authenticated. Otherwise the original query runs unchanged (see
-    ``_legacy_window``); nothing here ever selects another instrument.
+    Rank the covering (series,event,available,observed) index and authenticate
+    every selected receipt against the requested instrument. Unresolved global
+    metadata does not force a payload scan of unrelated historical revisions.
+    Known conflicting aliases remain refused; exceptional partial-bar series
+    retain the original final-bar selection.
     """
     cut(as_of_ms), cut(window_start_ms)
     if window_start_ms > as_of_ms:
         raise ValueError('current_window_requires_exact_asof_revision_selection')
     meta = _meta(conn, key)
-    if meta is None or not meta[3]:
-        STATS['identity_unresolved'] += 1
+    idents = _non_null_idents(meta[1]) if meta is not None else []
+    if instrument_id is None and (meta is None or not meta[3]):
         demand(conn, key, True)
         return _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit)
-    idents = _non_null_idents(meta[1])
-    if meta[2] or (idents != [json.dumps(instrument_id)] if instrument_id is not None else len(idents) > 1):
+    # A known conflicting alias remains refused. A historical metadata scan
+    # is not needed to authenticate an explicitly named CURRENT instrument:
+    # index-rank the exact requested window, then verify every selected receipt.
+    if len(idents) > 1:
+        STATS['identity_refused'] += 1
+        return None, 'identity_ambiguous'
+    if meta is None or not meta[3]:
+        STATS['identity_unresolved'] += 1
+        # A typed current window proves its own instrument below. Seed only
+        # the commit witness; unqualified/history callers may request a global
+        # alias scan explicitly, independently of the trading input path.
+        demand(conn, key, False)
+    if meta is not None and meta[2]:
+        # Derivative observations are instantaneous/final. Preserve the older
+        # final-bar selection for any exceptional series containing partials.
         return _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit)
     STATS['window_reads'] += 1
     df = _frontier_window(conn, key, as_of_ms, window_start_ms, limit, snapshot_owned)
     if df is None:
         return None, 'missing'
+    if not df['bar_state'].eq('FINAL').all():
+        return _legacy_window(conn, key, as_of_ms, window_start_ms, instrument_id, limit)
     # NULL-identity legacy rows may legitimately sit in a series; if one is
     # actually selected the typed consumer must not receive the frame.
     if instrument_id is not None and not df['instrument_id'].eq(instrument_id).all():

@@ -91,14 +91,14 @@ def test_typed_reader_does_not_decode_unrelated_history(tmp_path):
     assert 'COVERING INDEX' in plan
 
 
-def test_unproven_series_use_exact_legacy_query_and_foreign_identity_is_never_selected(tmp_path):
+def test_unproven_series_validate_selected_receipts_without_scanning_history(tmp_path):
     feed = DerivFeed(tmp_path / 'd.db')
     key = 'derivative:BTC/USDT:funding'
     save(feed, [1000, 2000], 3000)
     feed.db.execute("UPDATE market_series_meta SET resolved=0")
     before = M.STATS['legacy_window_reads']
     df, reason = M.load_window_typed(feed.db, key, as_of_ms=5000, window_start_ms=0, instrument_id=IID)
-    assert reason == 'valid' and len(df) == 2 and M.STATS['legacy_window_reads'] == before + 1
+    assert reason == 'valid' and len(df) == 2 and M.STATS['legacy_window_reads'] == before
     save(feed, [3000], 4000, iid='binance_usdm:futures:ETHUSDT')
     df, reason = M.load_window_typed(feed.db, key, as_of_ms=5000, window_start_ms=0, instrument_id=IID)
     assert df is None            # the original query refuses an ambiguous series; nothing is chosen
@@ -446,6 +446,8 @@ def test_demand_is_scoped_to_physical_database_and_prioritised(tmp_path):
     before = M.STATS['resolver_rows_scanned']
     M.resolve_pending(derivs.db, budget_rows=1000)
     assert derivs.db.execute('SELECT resolved FROM market_series_meta WHERE series_key=?', (KEY,)).fetchone() is not None
+    assert M.STATS['resolver_rows_scanned'] == before
+    M.demand(derivs.db, KEY, True)                       # unqualified history asks explicitly
     M.resolve_pending(derivs.db, budget_rows=1000)
     assert derivs.db.execute('SELECT resolved FROM market_series_meta WHERE series_key=?', (KEY,)).fetchone()[0] == 1
     assert M.STATS['resolver_rows_scanned'] - before <= 3          # only the demanded series was scanned
@@ -784,3 +786,54 @@ def test_parent_lookup_does_not_parse_old_payloads_when_latest_identity_matches(
     assert not any('json_extract' in q.lower() for q in trace)
     assert all(value[1] == 200019 for value in parents.values())
     conn.close()
+
+
+def test_unresolved_identity_metadata_never_decodes_unrelated_payloads(tmp_path):
+    feed = DerivFeed(tmp_path / 'd.db')
+    key = 'derivative:BTC/USDT:funding'
+    save(feed, [i * 1000 for i in range(1000)], 1_000_000)
+    save(feed, [995_000,996_000,997_000,998_000,999_000], 2_000_000)
+    feed.db.execute("UPDATE market_revisions SET record_json='not json' WHERE event_ms<990000")
+    feed.db.execute("UPDATE market_series_meta SET resolved=0")
+    feed.db.commit()
+    before, legacy = M.STATS['payload_rows_decoded'], M.STATS['legacy_window_reads']
+    frame, reason = M.load_window_typed(feed.db,key,as_of_ms=2_000_000,
+                                      window_start_ms=995_000,instrument_id=IID)
+    assert reason == 'valid' and frame['instrument_id'].eq(IID).all()
+    assert M.STATS['legacy_window_reads'] == legacy
+    assert M.STATS['payload_rows_decoded'] - before <= 10
+
+
+def test_unresolved_metadata_still_refuses_selected_foreign_receipt(tmp_path):
+    feed=DerivFeed(tmp_path/'d.db')
+    key='derivative:BTC/USDT:funding'
+    save(feed,[1000],2000,iid='binance_usdm:futures:ETHUSDT')
+    feed.db.execute("UPDATE market_series_meta SET idents='|',resolved=0")
+    feed.db.commit()
+    frame,reason=M.load_window_typed(feed.db,key,as_of_ms=3000,window_start_ms=0,instrument_id=IID)
+    assert frame is None and reason=='identity_ambiguous'
+
+
+def test_frontier_transports_only_one_eligible_revision_per_event(tmp_path):
+    feed=DerivFeed(tmp_path/'d.db')
+    key='derivative:BTC/USDT:funding'
+    for clock in range(250_000,251_000,100):
+        save(feed, [i*1000 for i in range(100)], clock)
+    with M._FRONT_LOCK: M.FRONTIERS.clear()
+    before=M.STATS['frontier_index_rows']
+    frame,reason=M.load_window_typed(feed.db,key,as_of_ms=300_000,window_start_ms=99_000,instrument_id=IID)
+    assert reason=='valid'
+    assert M.STATS['frontier_index_rows']-before==100  # not all 1,000 revisions
+    old=old_window(feed,300_000,99_000)
+    assert frame['revision_id'].tolist()==old['revision_id'].tolist()
+
+
+def test_unqualified_current_reader_still_requires_global_identity_proof(tmp_path):
+    feed=DerivFeed(tmp_path/'d.db')
+    key='derivative:BTC/USDT:funding'
+    save(feed,[1000],2000,iid=IID)
+    save(feed,[3000],4000,iid='binance_usdm:futures:ETHUSDT')
+    feed.db.execute("UPDATE market_series_meta SET idents='|',resolved=0")
+    feed.db.commit()
+    frame,_=M.load_window_typed(feed.db,key,as_of_ms=5000,window_start_ms=3000,instrument_id=None)
+    assert frame is None
