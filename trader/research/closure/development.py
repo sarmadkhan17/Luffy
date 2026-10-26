@@ -498,8 +498,9 @@ def _develop_hedge(candidate, bundle, env, external, done):
         outcome, why = 'NEGATIVE_ECONOMICS', f'{n_sup}/{len(scored)} symbols improve the declared objective'
     return done(outcome, why, hedge=dict(spec_id=spec['spec_id'], purpose=spec['purpose'], objective=spec['objective'],
                                          per_symbol=per, qualification='closure.hedge_qualification: freeze_hedge_finalist -> qualify_hedge on sealed protected '
-                                         'data under the predeclared risk or relative-value return objective; statistical admission method NOT registered, '
-                                         'so no packet can be QUALIFIED and the Factory refuses it',
+                                         'data under the predeclared risk or relative-value return objective; qualification additionally requires '
+                                         'the configured registered objective method, approved search calibration, independent evidence and authority. '
+                                         'Development support alone grants no qualification or live permission',
                                          runtime_support=H.RUNTIME_SUPPORT, deployment=H.deployment_contract(spec)),
                 graph_fit=fit, requires=list(c.requires), combo=c.as_dict(), combo_hash=c.hash, metrics=dict(
                     supported_symbols=n_sup, scored_symbols=len(scored), trades=None, total_pct=None, consistency_p=None))

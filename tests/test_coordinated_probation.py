@@ -19,7 +19,7 @@ def setup(tmp_path,packet,*,funding=True,partial=False):
     cand=deepcopy(packet['candidate']);cand.pop('candidate_id');cand.pop('graph_id',None);cand['hedge']=hs
     cand=graph.make_candidate(cand);packet['candidate']=cand
     combo=graph.realize(cand,packet['envelope']['envelope_id'],entries_only=True)
-    per['effective_spec']=hs;per['comparators']['reduced']['fraction']=.4
+    per['effective_spec']=hs;per['comparators']['reduced']['fraction']=.8
     packet['result'].update(candidate_id=cand['candidate_id'],combo=combo.as_dict(),combo_hash=combo.hash)
     packet['result']['result_id']=digest({k:v for k,v in packet['result'].items() if k!='result_id'})
     packet['trial_id']=digest({k:v for k,v in packet.items() if k!='trial_id'})
@@ -28,8 +28,12 @@ def setup(tmp_path,packet,*,funding=True,partial=False):
     issued=F.create_version(j,cfg,dict(kind=T.KIND,packet=packet),at_ms=1)
     vid=issued['version_id'];installed=F.record_coordinated_paper_install(j,vid,at_ms=1)
     runner=CoordinatedPaper(j);step=14400000;first=installed['install']['first_bar_ms']
-    rng=np.random.default_rng(21);returns=rng.normal(-.0002,.01,512)
-    p=100*np.cumprod(1+returns);h=100*np.cumprod(1+2*returns)
+    # Fixed causal planted protection case: main loses first, hedge opens on
+    # the frozen trigger, then the correlated hedge falls AFTER its fill.
+    # Both controls lose over each full episode. Not a real-data edge claim.
+    phase=np.arange(512)%40
+    p=np.where(phase<2,100.,np.where(phase<4,97.,np.where(phase==4,94.,np.where(phase<=21,96.,100.))))
+    h=np.where(phase<4,100.,np.where(phase==4,90.,np.where(phase<=21,88.,100.)))
     for i in range(len(p)):
         state=runner.state(installed['book_id'])
         obs=dict(p=float(p[i]),h=float(h[i]),po=float(p[i]),ho=float(h[i]),

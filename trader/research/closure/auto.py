@@ -272,10 +272,19 @@ def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=No
     ok = [s for s in syms if manifest._coverage(inv[s], fit_start, dev_end - step, step, gap, 1, mode) is None]
     ok.sort(key=lambda s: digest(s))                                   # deterministic, not performance-ranked
     held_n = max(int(policy['min_heldout_symbols']), int(round(len(ok) * float(auto['heldout_frac']))))
+    if recent_development(auto):
+        # This NEW study explicitly has no independent test window. Reserve
+        # unused symbols where possible without blocking permitted development.
+        # make_envelope still enforces the original protected-evidence floors;
+        # no existing study, split or evidence reservation is changed here.
+        held_n = min(held_n, max(0, len(ok) - int(policy['min_discovery_symbols'])))
     disc_n = len(ok) - held_n
     if disc_n < int(policy['min_discovery_symbols']):
+        required = (f'{policy["min_discovery_symbols"]} discovery; independent test remains unassigned'
+                    if recent_development(auto) else
+                    f'{policy["min_discovery_symbols"]} discovery + {policy["min_heldout_symbols"]} held-out')
         return dict(blocked=f'insufficient_covered_symbols: {len(ok)} cover the fit window; need '
-                            f'{policy["min_discovery_symbols"]} discovery + {policy["min_heldout_symbols"]} held-out')
+                            f'{required}')
     risk = {k: v for k, v in ((cfg or {}).get('risk') or {}).items()
             if k in ('taker_fee_pct', 'slippage_atr_frac', 'funding_rate_8h', 'real_funding', 'risk_per_trade_pct', 'max_open_trades', 'max_open_positions')}
     spec = dict(snapshot_path=str(snapshot_path), tf=tf, discovery_symbols=ok[held_n:], heldout_symbols=ok[:held_n],

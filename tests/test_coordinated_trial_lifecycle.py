@@ -8,6 +8,7 @@ from trader.core.journal import Journal
 from trader.research.closure import ClosureRefused,digest
 from trader.research.closure import coordinated_trial as T
 from trader.research.compose import graph,hedge as H
+from trader.research.compose.managed_hedge import VERSION
 from trader.strategy import factory_handoff as F
 from trader.engine import coordinated_trials as runtime
 from trader.engine.coordinated_paper import CoordinatedPaper
@@ -19,7 +20,9 @@ def packet(monkeypatch):
     # re-derived by real assess(), not granted by the mock.
     monkeypatch.setattr(T.manifest,'verify_envelope',lambda e:None)
     hs=H.make_spec(purpose='protective_beta',primary={'symbol':'A/USDT'},hedge={'symbol':'B/USDT'},
-                   fee_bps=5.,ratio={'method':'fixed','value':1.})
+                   fee_bps=5.,ratio={'method':'fixed','value':1.},management=dict(version=VERSION,
+                       entry='PRIMARY_FIRST',pnl_basis='COMBINED_NET_EQUITY',
+                       activate=dict(kind='combined_loss_pct',value=2.),stop_loss_pct=15.,take_profit_pct=5.))
     c=graph.make_candidate(graph_spec(question='synthetic objective fixture',structure='hedged',hedge=hs,short=None))
     combo=graph.realize(c,'fixture-envelope',entries_only=True)
     per=numerical_fixture();per.update(effective_spec=hs,funding_basis='RETAINED_SIGNED_HISTORY',cost_model={'fee_bps':5.})
@@ -47,18 +50,23 @@ def test_objective_supported_paper_factory_restart_execution_does_not_authorize_
     seen=[]
     def reader(feed,j,v,stamp):
         seen.append(stamp)
-        return dict(p=100.,h=100.,po=100.,ho=100.,signal=1,exit=False,ratio=1.,corr=1.,
+        price=97. if stamp>=first+2*step else 100.
+        return dict(p=price,h=100.,po=price,ho=100.,signal=1,exit=False,ratio=1.,corr=1.,
                     funding={'primary':.0001,'hedge':.0001},primary_exit_observation=dict(
                         bar_ms=stamp,step_ms=step,open=100.,high=100.,low=100.,close=100.,atr=1.))
     assert runtime.run_once(journal,cfg,None,at_ms=first+step-1,reader=reader,allow_entry=True)==[]
     runtime.run_once(journal,cfg,None,at_ms=first+step,reader=reader,allow_entry=True)
     runtime.run_once(journal,cfg,None,at_ms=first+2*step,reader=reader,allow_entry=True)
     state=CoordinatedPaper(journal).state(install['book_id'])
-    assert state['book']['pos']['primary']>0 and state['book']['pos']['hedge']<0
-    assert seen==[first,first+step]
+    assert state['book']['pos']['primary']>0 and state['book']['pos']['hedge']==0
+    runtime.run_once(journal,cfg,None,at_ms=first+3*step,reader=reader,allow_entry=True)
+    runtime.run_once(journal,cfg,None,at_ms=first+4*step,reader=reader,allow_entry=True)
+    state=CoordinatedPaper(journal).state(install['book_id'])
+    assert state['book']['pos']['hedge']<0
+    assert seen==[first,first+step,first+2*step,first+3*step]
     assert not journal.query('SELECT * FROM trades')
     # Same timer cut does not replay an event or submit another fill.
-    assert runtime.run_once(journal,cfg,None,at_ms=first+2*step,reader=reader,allow_entry=True)==[]
+    assert runtime.run_once(journal,cfg,None,at_ms=first+4*step,reader=reader,allow_entry=True)==[]
 
 
 def test_test_only_or_false_support_or_missing_actual_costs_cannot_enter(packet):

@@ -353,8 +353,10 @@ class KernelRuntime:
 
     @_read_batch
     def coordinated_paper(self):
-        from ..engine.coordinated_trials import run_once,input_needs
+        from ..engine.coordinated_trials import admit,run_once,input_needs
         closure=(self.kernel.cfg.get('research') or {}).get('closure') or {}
+        if closure.get('enabled') and closure.get('paper_intake'):
+            admit(self.kernel.journal,self.kernel.cfg,at_ms=int(time.time()*1000))
         needs=input_needs(self.kernel.journal) if closure.get('enabled') and closure.get('paper_intake') else ({},[])
         with self.lock:
             self.coordinated_needs=needs

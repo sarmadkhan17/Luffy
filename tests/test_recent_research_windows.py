@@ -34,6 +34,40 @@ def test_recent_policy_cannot_relabel_replay_as_retrospective():
     assert not auto.recent_development(dict(development_mode='REPLAY'))
 
 
+@pytest.mark.parametrize('count,held',[(16,0),(19,3),(28,11)])
+def test_new_recent_study_keeps_development_floor_without_borrowing_independent_authority(tmp_path,count,held):
+    path=tmp_path/'snapshot.db'
+    S.write_snapshot(path,n_symbols=count,n_bars=32)
+    a=dict(auto.DEFAULTS,fit_bars=20,snapshot_dir=str(tmp_path),recent_retrospective_development=True)
+    out=auto.derive_spec(a,{},path,[])
+    spec=out['spec']
+    assert len(spec['discovery_symbols'])==count-held
+    assert len(spec['heldout_symbols'])==held
+    assert not set(spec['discovery_symbols']) & set(spec['heldout_symbols'])
+    # The same inputs deterministically choose the same split before results.
+    assert auto.derive_spec(a,{},path,[])['spec']==spec
+    assert spec['policy']['min_discovery_symbols']==16
+    assert spec['policy']['min_heldout_symbols']==4
+    store=Store(tmp_path/'closure.db')
+    sid=study.create_study(store,spec,now_ms=out['prepared_manifest']['as_of_ms'],prepared_manifest=out['prepared_manifest'])
+    import json
+    env=store.get_once('envelopes',json.loads(store.study(sid)['payload'])['envelope_id'])
+    assert env['development_status']=='ELIGIBLE'
+    assert env['protected_status']=='UNAVAILABLE'
+    assert not store.all_once('looks') and not store.all_once('qualifications')
+    assert any('independent_window_not_assigned' in r for r in env['protected_reasons'])
+    store.close()
+    # The ordinary independent-study path still needs all reserved symbols.
+    if count<20:
+        assert 'blocked' in auto.derive_spec(dict(a,recent_retrospective_development=False),{},path,[])
+
+
+def test_recent_development_cannot_reduce_discovery_floor(tmp_path):
+    path=tmp_path/'snapshot.db';S.write_snapshot(path,n_symbols=15,n_bars=32)
+    a=dict(auto.DEFAULTS,fit_bars=20,snapshot_dir=str(tmp_path),recent_retrospective_development=True)
+    assert 'blocked' in auto.derive_spec(a,{},path,[])
+
+
 def test_publication_has_no_old_final_test_reserve_in_explicit_recent_policy(tmp_path,monkeypatch):
     from trader.research.closure import publish
     captured={}

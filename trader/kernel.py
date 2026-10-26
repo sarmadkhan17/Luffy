@@ -742,8 +742,6 @@ class Kernel:
         cfg = (self.cfg.get('research') or {}).get('closure') or {}
         if not cfg.get('enabled') or not cfg.get('paper_intake', False):
             return []
-        from .engine.coordinated_trials import admit
-        admit(self.journal,self.cfg,at_ms=int(time.time()*1000))
         from .research.closure.paper_proposals import proposals
         from .strategy import factory_handoff as factory
         added = []

@@ -125,7 +125,7 @@ def test_index_first_revision_selection_matches_exact_prior_winners(cutoff):
         'WHERE series_key=? AND event_ms>=? AND event_ms<?) WHERE ordinal=1)) ORDER BY event_ms,observed_ms,rowid',
         ('k',10,40,cut,'k',10,cut)).fetchall()
     class SelectionProbe:
-        def take(self,source,sql,args):
+        def iterate(self,source,sql,args):
             self.actual=source.execute(sql,args).fetchall()
             return []  # selection check only; receipt validation has separate regressions
     probe=SelectionProbe()

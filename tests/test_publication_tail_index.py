@@ -3,6 +3,39 @@ import sqlite3,time
 from trader.research.closure.publish import _candle_tails
 
 
+def test_revision_transport_streams_batches_and_enforces_shared_limit():
+    import json
+    import pytest
+    from trader.data import market_provenance as mp
+    from trader.research.closure import ClosureRefused
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    # Physical transport fixture only, not qualified market evidence.
+    src=sqlite3.connect(':memory:');dst=sqlite3.connect(':memory:')
+    mp.init(src);mp.init(dst)
+    src.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',[
+        (str(i),'reference:fixture',i,i,i,json.dumps({'raw_json':'{}'})) for i in range(600)])
+    reads=[0];batches=[]
+    class TrackedBounds(Bounds):
+        def iterate(self,*a,**kw):
+            for row in super().iterate(*a,**kw):
+                reads[0]+=1
+                yield row
+        def take(self,*a,**kw):
+            pytest.fail('revision history must not materialize through take()')
+    class Destination:
+        def executemany(self,sql,rows):
+            batches.append((reads[0],len(rows)))
+            return dst.executemany(sql,rows)
+    count={'revisions':0}
+    _copy_revisions(src,Destination(),'reference:fixture',0,599,None,count,TrackedBounds(600,1000000,None))
+    assert batches==[(256,256),(512,256),(600,88)]
+    assert count=={'revisions':600}
+    assert dst.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()==src.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()
+    with pytest.raises(ClosureRefused,match='rows_exceed_bound'):
+        _copy_revisions(src,Destination(),'reference:fixture',0,599,None,{'revisions':0},TrackedBounds(599,1000000,None))
+    src.close();dst.close()
+
+
 def test_indexed_tails_preserve_global_cut_and_declared_universe():
     db=sqlite3.connect(':memory:')
     db.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,PRIMARY KEY(symbol,tf,ts))')

@@ -81,14 +81,18 @@ class Bounds:
         if self.used_bytes > self.size:
             raise ClosureRefused('publish_bytes_exceed_bound')
 
-    def take(self, db, sql, params=()):
+    def iterate(self, db, sql, params=()):
         _tick(self.deadline)
         cur = db.execute(sql + ' LIMIT ?', (*params, max(1, self.rows - self.used_rows + 1)))
-        out = []
-        for row in cur:
-            self.charge(row)                 # enforce before accumulating a large result or writing it
-            out.append(row)
-        return out
+        try:
+            for row in cur:
+                self.charge(row)             # enforce before retaining or writing a row
+                yield row
+        finally:
+            cur.close()
+
+    def take(self, db, sql, params=()):
+        return list(self.iterate(db, sql, params))
 
     def attach(self, db):
         db.set_progress_handler(lambda: int(self.deadline is not None and time.monotonic() > self.deadline), 2000)
@@ -167,8 +171,8 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
         sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
                'ORDER BY event_ms,observed_ms,rowid')
         params = (series_key, lo, hi)
-    rows = bound.take(src, sql, params)
-    for r in rows:
+    rows = []
+    for r in bound.iterate(src, sql, params):
         _tick(deadline)
         rec=json.loads(r[-1]);raw_marker=rec.get('raw_json')
         for field in ('source','raw_json'):
@@ -196,6 +200,11 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
             except (ValueError,AttributeError):raw_hash=None
             if parent_key is not None:bound.raw_parents[parent_key]=raw_hash
         if raw_hash:_raw(src,dst,raw_hash,bound)
+        rows.append(r)
+        if len(rows) == 256:
+            dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
+            counters['revisions'] += len(rows)
+            rows.clear()
     # Preserve physical references plus their checked immutable bodies; expanding every repeated
     # response into each receipt would make a bounded source into an enormous duplicated snapshot.
     dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
@@ -312,7 +321,10 @@ def publish_exact_cut(src_candles, dst_candles, *, tf, window_bars, symbols=None
                 out['coverage_filter'] = cohort
         out['derivs'] = None
         if deriv_src is not None and dst_derivs is not None:
-            deriv_last = min(as_of,latest_before) if development_derivatives_only else as_of
+            # Fit windows are [start,end); the derivative copier uses an
+            # inclusive SQL endpoint. Do not copy the first reserved event
+            # into a development-only snapshot.
+            deriv_last = min(as_of,latest_before)-1 if development_derivatives_only else as_of
             out['derivs'] = _publish_derivs(deriv_src, staged_derivs, syms, deriv_series, start, deriv_last, deadline, bound, retrospective, latest_before)
             out['derivs']['data_scope'] = 'DEVELOPMENT_ONLY' if development_derivatives_only else 'DEVELOPMENT_AND_PROTECTED'
             out['cross_source_atomic'] = False
@@ -386,6 +398,7 @@ def _publish_derivs(src_path, dst_path, symbols, series, lo, hi, deadline, bound
                     counters['rows'] += len(rows)
                     if _has(src, 'market_revisions'):
                         _copy_revisions(src, dst, f'derivative:{sym}:{name}', lo, hi, deadline, counters, bound, retrospective, latest_before)
+            actual_range = list(dst.execute('SELECT MIN(ts),MAX(ts) FROM derivs').fetchone())
             dst.commit()
         with closing(sqlite3.connect(tmp)) as chk:
             chk.execute('PRAGMA journal_mode=DELETE')
@@ -393,7 +406,7 @@ def _publish_derivs(src_path, dst_path, symbols, series, lo, hi, deadline, bound
             Path(str(tmp) + suffix).unlink(missing_ok=True)
         os.replace(tmp, dst_path)
         return dict(path=str(dst_path), rows=counters['rows'], revisions=counters['revisions'], bytes=dst_path.stat().st_size,
-                    event_range_ms=[lo, hi], consistency='SINGLE_READ_TRANSACTION')
+                    event_range_ms=actual_range, requested_event_range_ms=[lo, hi], consistency='SINGLE_READ_TRANSACTION')
     finally:
         for p in (tmp, Path(str(tmp) + '-wal'), Path(str(tmp) + '-shm'), Path(str(tmp) + '-journal')):
             p.unlink(missing_ok=True)

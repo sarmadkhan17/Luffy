@@ -41,6 +41,21 @@ def test_complete_schedule_contract(tmp_path):
     assert r.jobs['decisions'].interval is None
 
 
+@pytest.mark.parametrize('enabled',[True,False])
+def test_coordinated_paper_admission_runs_on_own_worker_before_input_demand(tmp_path,monkeypatch,enabled):
+    from trader.engine import coordinated_trials as trials
+    k,r=minimal(tmp_path)
+    k.cfg={'research':{'closure':{'enabled':enabled,'paper_intake':True}}}
+    k.state_machine.can_enter=lambda:False
+    calls=[]
+    monkeypatch.setattr(trials,'admit',lambda *a,**kw:calls.append('admit'))
+    monkeypatch.setattr(trials,'input_needs',lambda *a:(calls.append('needs') or ({'A/USDT':{}},[])))
+    monkeypatch.setattr(trials,'run_once',lambda *a,**kw:(calls.append(('run',kw['allow_entry'])) or []))
+    r.coordinated_paper()
+    assert calls==(['admit','needs',('run',False)] if enabled else [('run',False)])
+    assert r.coordinated_needs==({'A/USDT':{}},[]) if enabled else r.coordinated_needs==({},[])
+
+
 def test_slow_analysis_does_not_hold_position_worker():
     entered, release, serviced = threading.Event(), threading.Event(), threading.Event()
     market = Worker('market', lambda: (entered.set(), release.wait(3)), immediate=True)
