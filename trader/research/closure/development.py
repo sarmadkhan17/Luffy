@@ -412,6 +412,11 @@ def _develop_hedge(candidate, bundle, env, external, done):
     This is NOT the alpha referee policy and carries no qualification path."""
     from ..compose import hedge as H
     spec = candidate['hedge']
+    if env.get('policy_class')=='CONFIGURED':
+        from ..compose.managed_hedge import require_current
+        try:require_current(spec)
+        except ClosureRefused as exc:
+            return done('CODE_FAILURE','hedge strategy needs the current primary-first combined-position policy: '+exc.code)
     hsym = spec['hedge']['symbol']
     if hsym not in bundle.frames:
         return done('BLOCKED_DATA', f'hedge instrument {hsym} has no development frames', context_gaps=[

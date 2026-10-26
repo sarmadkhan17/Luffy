@@ -112,6 +112,9 @@ def verify_hedge_freeze(freeze: dict, env: dict) -> Combination:
         raise ClosureRefused('freeze_envelope_mismatch')
     families.verify_candidate(freeze['candidate'])
     spec = H.validate(freeze['hedge_spec'])
+    if env.get('policy_class')=='CONFIGURED':
+        from ..compose.managed_hedge import require_current
+        require_current(spec)
     r = spec['ratio']
     if freeze['refit_on_protected'] is not False:
         raise ClosureRefused('hedge_ratio_not_frozen')

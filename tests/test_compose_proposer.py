@@ -105,3 +105,22 @@ def test_missing_economic_observable_creates_requirement_without_indicator_subst
     assert first[2] is None and len(client.calls)==1
     assert not store.all_once('candidates')
     store.close()
+
+
+@pytest.mark.parametrize('managed',[False,True])
+def test_new_protective_proposal_requires_primary_first_combined_position_policy(tmp_path,managed):
+    from trader.research.compose.managed_hedge import VERSION
+    raw=proposal();declaration=dict(primary=dict(symbol='A/USDT'),hedge=dict(symbol='B/USDT'),
+        purpose='protective_beta',account_mode='netting',ratio=dict(method='fixed',value=.5))
+    if managed:
+        declaration['management']=dict(version=VERSION,entry='PRIMARY_FIRST',pnl_basis='COMBINED_NET_EQUITY',
+            activate=dict(kind='combined_loss_pct',value=2.),stop_loss_pct=10.,take_profit_pct=5.)
+    raw.update(structure='hedged',hedge=declaration)
+    store=Store(tmp_path/'new-protective.db')
+    try:
+        client=LLM([dict(proposal=raw)])
+        out=GraphProposer(client,store,tf='1h',max_attempts=1)(Q,'BRAIN',Q)
+        assert out[0]==('COMPILED' if managed else 'BLOCKED'),out
+        if not managed:assert 'hedge_primary_first_policy_required' in out[1]
+        else:assert out[2]['hedge']['management']==declaration['management']
+    finally:store.close()

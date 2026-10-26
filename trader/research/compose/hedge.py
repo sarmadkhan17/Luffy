@@ -23,8 +23,8 @@ from ..closure import ClosureRefused, digest
 from ...strategy.exit_policy import EXIT_SEMANTICS_ID as PRIMARY_EXIT_RULE
 
 SCHEMA = 'hedge-spec.v1'
-BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v1',primary_rule=PRIMARY_EXIT_RULE,
-    rule='frozen primary stop/target/trail/time/signal observed on completed native bars; either joint book limit can request unwind',
+BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v2',primary_rule=PRIMARY_EXIT_RULE,
+    rule='current protective management opens primary first; frozen combined net-PnL rules manage the whole trade; legacy frozen primary geometry remains historical',
     fill='both legs at next bar open under declared costs; no intrabar or venue fill claim',
     controls='unhedged/reduced use the identical exit decision procedure',
     missing='unknown declared exit evidence requests unwind and makes economics incomplete')
@@ -127,6 +127,9 @@ def validate(spec: dict) -> dict:
     allowed = ('net_return_pct',) if spec['purpose'] == 'relative_value' else ('max_drawdown_pct', 'cvar5_pct', 'worst_bar_pct', 'stress_loss_pct')
     if spec['objective']['metric'] not in allowed:
         raise HedgeRefused('risk_objective')
+    if spec.get('management') is not None:
+        from .managed_hedge import validate as validate_management
+        validate_management(spec['management'])
     return spec
 
 
@@ -200,6 +203,8 @@ class HedgeBook:
     primary_exit_definition: dict | None = None
     primary_exit_state: str | None = None
     exit_input_gaps: int = 0
+    management_entry_equity: float | None = None
+    management_activated: bool = False
 
     def _pside(self, leg_side):
         return 'BOTH' if self.spec['account_mode'] == 'netting' else ('LONG' if leg_side > 0 else 'SHORT')
@@ -263,7 +268,24 @@ class HedgeBook:
         """bar: p (primary px), h (hedge px, NaN = unavailable), signal (+1/-1/0), exit (bool),
         ratio (current hedge ratio >=0), corr (rolling corr or None), prim_c / hedge_c (Contract)."""
         out, sp = [], self.spec
-        bar=self._primary_exit(bar)
+        managed=sp.get('management') is not None
+        if managed and self.state=='FLAT':
+            self.management_entry_equity=None
+            self.management_activated=False
+        # A current protective overlay exits on the combined position. Legacy
+        # frozen joint-entry experiments remain readable under their old rule.
+        bar=dict(bar) if managed else self._primary_exit(bar)
+        combined_exit=None
+        if managed and self.management_entry_equity is not None:
+            from .managed_hedge import assess
+            gross=sum(bar[key].notional(self.pos[leg],bar[price]) if self.pos[leg] else 0.
+                      for leg,key,price in (('primary','prim_c','p'),('hedge','hedge_c','h')))
+            if np.isfinite(gross):
+                result=assess(sp['management'],entry_equity=self.management_entry_equity,
+                    equity=bar['equity'],gross=gross,maintenance_fraction=sp['maint_margin'])
+                combined_exit=result['exit_reason']
+                if any(self.pos.values()):self.management_activated |= result['activate']
+                bar['exit']=bool(bar.get('exit') or combined_exit)
         if bar['signal'] not in (-1, 0, 1):
             raise HedgeRefused('hedge_signal_invalid')
         if not np.isfinite(bar['ratio']):
@@ -286,14 +308,19 @@ class HedgeBook:
                 pq = pc.qty_for(notional, bar['p'])
                 hq = hc.qty_for(notional * bar['ratio'], bar['h'])
                 self._emit(out, 'ENTER', 'primary', self.direction, pq, 'signal', t)
-                self._emit(out, 'ENTER', 'hedge', -self.direction, hq, 'joint_entry', t)
+                if not managed:
+                    self._emit(out, 'ENTER', 'hedge', -self.direction, hq, 'joint_entry', t)
+                else:
+                    self.management_entry_equity=float(bar['equity'])
+                    self.management_activated=False
                 self.state, self.entry_bar, self.last_rebalance, self.leg_wait = 'OPENING', t, t, 0
+                if managed:self.last_rebalance=-10**9
             return out
         held = abs(self.pos['primary']) > 0 or abs(self.pos['hedge']) > 0
         if self.pending:
             return out                                    # one working order set at a time
         if self.state == 'OPENING':
-            self.state = 'HEDGED'
+            self.state = 'PRIMARY_OPEN' if managed else 'HEDGED'
         un = sp['unwind']
         if self.state == 'UNWINDING':
             if not held:
@@ -305,7 +332,7 @@ class HedgeBook:
             return out
         reason = None
         if bar.get('exit'):
-            reason = 'primary_exit'
+            reason = combined_exit or 'strategy_exit' if managed else 'primary_exit'
         elif t - self.entry_bar >= un['max_hold_bars']:
             reason = 'max_hold'
         elif un.get('min_corr') is not None and bar.get('corr') is not None and bar['corr'] < un['min_corr']:
@@ -322,7 +349,7 @@ class HedgeBook:
         if not ok:
             return out
         prim_n = pc.notional(self.pos['primary'], bar['p'])
-        want = prim_n * bar['ratio']
+        want = prim_n * bar['ratio'] if not managed or self.management_activated else 0.0
         have = hc.notional(self.pos['hedge'], bar['h'])
         side = -self.direction
         if prim_n == 0:
@@ -334,7 +361,10 @@ class HedgeBook:
             self.leg_wait = 0
         elif t - self.last_rebalance >= sp['rebalance']['min_interval_bars']:
             if want > have:
-                self._emit(out, 'REBALANCE', 'hedge', side, hc.qty_for(want - have, bar['h']), 'ratio_drift', t)
+                first_management=managed and have==0
+                self._emit(out, 'ENTER' if first_management else 'REBALANCE', 'hedge', side,
+                           hc.qty_for(want - have, bar['h']),
+                           'risk_management_activation' if first_management else 'ratio_drift', t)
             else:
                 self._emit(out, 'REBALANCE', 'hedge', -side, hc.qty_for(have - want, bar['h']), 'ratio_drift', t)
             self.last_rebalance = t

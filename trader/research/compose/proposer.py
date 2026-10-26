@@ -10,7 +10,7 @@ import json
 from . import catalog, graph
 from ..closure import ClosureRefused, canonical, digest
 
-PROMPT_VERSION = 'compositional-question.v6'
+PROMPT_VERSION = 'compositional-question.v7'
 
 
 class GraphProposer:
@@ -71,6 +71,8 @@ class GraphProposer:
                         declaration.pop('schema', None)
                         declaration.pop('spec_id', None)
                         spec['hedge'] = hedge.make_spec(**declaration)
+                        from .managed_hedge import require_current
+                        require_current(spec['hedge'])
                     spec['provenance'] = dict(binding, track='retained-question', attempt=attempt)
                     candidate = graph.make_candidate(spec)
                     prior = dict(binding, attempt=attempt, status='COMPILED', candidate=candidate, error=None)
@@ -113,6 +115,15 @@ rebalance:{trigger:"tolerance",tolerance:nonnegative_number,min_interval_bars:no
 unwind:{max_hold_bars:positive_integer,min_corr:null_or_number_between_minus1_and1,
 leg_timeout_bars:positive_integer,missing_data_bars:positive_integer}.
 Omitted optional cost/margin/sizing/ratio timing values use the validated research defaults.
+For protective_beta/protective_directional/stress_loss, management is REQUIRED:
+{version:"primary-first-combined-position.v1",entry:"PRIMARY_FIRST",pnl_basis:"COMBINED_NET_EQUITY",
+activate:{kind:"combined_loss_pct|maintenance_buffer_multiple",value:positive_number},
+stop_loss_pct:positive_number,take_profit_pct:positive_number}.
+Choose and justify these thresholds as part of the strategy BEFORE testing; no fixed default applies.
+Open only the primary initially. The opposite leg is conditional risk/liquidation-pressure management,
+never a second independent trade or automatic two-sided entry. Measure their COMBINED net PnL after
+both legs' fees/funding. A combined-loss trigger must precede the combined stop; margin multiple must exceed1.
+Do not claim that opening a hedge guarantees liquidation prevention or creates margin.
 No live multi-leg support is implied; use the exact instruments the hypothesis requires. Do not supply derived IDs.
 geo may be fixed, or provide an explicit supported exit contract.
 Expression nodes: {"f":factor_key}, {"lit":number}, {"op":"add|sub|mul|div", "a":node,"b":node},

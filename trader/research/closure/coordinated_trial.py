@@ -40,6 +40,8 @@ def verify(packet):
         raise ClosureRefused('paper_trial_exact_pair_required')
     symbol,per=next(iter(pairs.items()))
     spec=H.validate(per['effective_spec'])
+    from ..compose.managed_hedge import require_current
+    require_current(spec)
     if symbol!=spec['primary']['symbol'] or spec['ratio']['method'] not in ('fixed','rolling_beta'):
         raise ClosureRefused('paper_trial_ratio_not_frozen')
     expected=deepcopy(candidate['hedge'])
