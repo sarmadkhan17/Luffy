@@ -16,8 +16,10 @@ from __future__ import annotations
 import os
 import json
 import sqlite3
+import sys
 import time
 import uuid
+from collections import OrderedDict
 from contextlib import closing
 from pathlib import Path
 
@@ -67,9 +69,28 @@ class Bounds:
         self.rows, self.size, self.deadline = int(rows), int(size), deadline
         self.used_rows = self.used_bytes = 0
         self.raw_seen = set()
-        self.raw_texts = {}  # bounded by the same charged payload ceiling, scoped to this single source cut
+        self.raw_texts = OrderedDict()
+        # A disk publication allowance is not a RAM allowance. This also fits
+        # one maximum 8MiB UTF-8 body represented as a wide Python string.
+        self.text_cache_limit = 40 * 1024 * 1024
+        self.text_cache_bytes = 0
         self.checked_texts = {}
         self.raw_parents = {}
+
+    def remember_text(self,key,text):
+        old=self.raw_texts.pop(key,None)
+        if old is not None:self.text_cache_bytes-=sys.getsizeof(old)
+        self.raw_texts[key]=text
+        self.text_cache_bytes+=sys.getsizeof(text)
+        while len(self.raw_texts)>1 and self.text_cache_bytes>self.text_cache_limit:
+            evicted,value=self.raw_texts.popitem(last=False)
+            self.text_cache_bytes-=sys.getsizeof(value)
+            self.checked_texts.pop(evicted,None)
+
+    def clear_text_cache(self):
+        self.raw_texts.clear()
+        self.checked_texts.clear()
+        self.text_cache_bytes=0
 
     def charge(self, row):
         _tick(self.deadline)
@@ -98,15 +119,19 @@ class Bounds:
         db.set_progress_handler(lambda: int(self.deadline is not None and time.monotonic() > self.deadline), 2000)
 
 
-def _raw(src, dst, key, bound):
-    if not key or key in bound.raw_seen:
+def _raw(src, dst, key, bound, *, want_text=False):
+    if not key:return
+    seen=key in bound.raw_seen
+    if seen and not want_text:return
+    if seen and key in bound.raw_texts:
+        bound.raw_texts.move_to_end(key)
         return
     length = src.execute('SELECT length(CAST(raw_json AS BLOB)) FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
     if length and length[0] > min(8 * 1024 * 1024, bound.size - bound.used_bytes):
         raise ClosureRefused('publish_bytes_exceed_bound')
     for row in bound.take(src, 'SELECT * FROM market_raw_sources WHERE content_hash=?', (key,)):
-        dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', row)
-        bound.raw_texts[key] = row[-1]
+        if not seen:dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', row)
+        if want_text:bound.remember_text(key,row[-1])
     bound.raw_seen.add(key)
 
 
@@ -172,7 +197,14 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
                'ORDER BY event_ms,observed_ms,rowid')
         params = (series_key, lo, hi)
     rows = []
+    retained_bytes = 0
     for r in bound.iterate(src, sql, params):
+        row_bytes=sys.getsizeof(r)+sum(sys.getsizeof(value) for value in r)
+        if rows and retained_bytes+row_bytes>1024*1024:
+            dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
+            counters['revisions'] += len(rows)
+            rows.clear()
+            retained_bytes=0
         _tick(deadline)
         rec=json.loads(r[-1]);raw_marker=rec.get('raw_json')
         for field in ('source','raw_json'):
@@ -181,7 +213,7 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
             key=marker[len(mp.TEXT_REF):]
             if len(key)!=64 or any(c not in '0123456789abcdef' for c in key):
                 raise ValueError('market_source_reference_invalid')
-            _raw(src,dst,key,bound)
+            _raw(src,dst,key,bound,want_text=True)
             text=bound.raw_texts.get(key)
             # One pinned source transaction, immutable Python strings. A
             # unique body is checked once; replacing the cached object forces
@@ -201,10 +233,12 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
             if parent_key is not None:bound.raw_parents[parent_key]=raw_hash
         if raw_hash:_raw(src,dst,raw_hash,bound)
         rows.append(r)
-        if len(rows) == 256:
+        retained_bytes+=row_bytes
+        if len(rows) == 256 or retained_bytes>=1024*1024:
             dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
             counters['revisions'] += len(rows)
             rows.clear()
+            retained_bytes=0
     # Preserve physical references plus their checked immutable bodies; expanding every repeated
     # response into each receipt would make a bounded source into an enormous duplicated snapshot.
     dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
@@ -378,8 +412,7 @@ def _publish_derivs(src_path, dst_path, symbols, series, lo, hi, deadline, bound
             # Separate source transaction AND destination: even an identical
             # content key must be read, verified and written again here.
             bound.raw_seen.clear()
-            bound.raw_texts.clear()
-            bound.checked_texts.clear()
+            bound.clear_text_cache()
             bound.raw_parents.clear()
             bound.attach(src)
             bound.attach(dst)

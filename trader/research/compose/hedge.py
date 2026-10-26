@@ -33,7 +33,8 @@ PURPOSES = ('protective_beta', 'protective_directional', 'stress_loss', 'relativ
 RUNTIME_SUPPORT = dict(
     account_modes_in_executor=['netting(positionSide=BOTH)'], contracts_in_executor=['linear USDT-M'],
     multi_leg_orders=False, coin_m=False, hedge_mode=False,
-    note='replay + instruction adapter only; executor integration is an open delivery gap')
+    owned_delta_reductions=True, owned_delta_increases=True, whole_group_unwind=True,
+    note='owned delta transport and whole-group close recovery exist; coordinated primary/conditional hedge entry and combined venue valuation remain open')
 
 
 def deployment_contract(spec: dict, verified: dict | None = None) -> dict:
@@ -44,7 +45,7 @@ def deployment_contract(spec: dict, verified: dict | None = None) -> dict:
     v = dict(RUNTIME_SUPPORT, **(verified or {}))
     reasons = []
     if not v.get('multi_leg_orders'):
-        reasons.append('multi_leg_orders_not_wired: joint entry/adjust/unwind of two legs has no executor')
+        reasons.append('multi_leg_orders_not_wired: coordinated primary and conditional hedge entry are not wired; owned reductions and group-close recovery confer no entry authority')
     mode = 'netting(positionSide=BOTH)' if spec['account_mode'] == 'netting' else 'hedge(positionSide=LONG/SHORT)'
     if mode not in v['account_modes_in_executor']:
         reasons.append(f'account_mode_unverified: {mode}')

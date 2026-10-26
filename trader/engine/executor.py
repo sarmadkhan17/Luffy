@@ -526,6 +526,10 @@ class Executor:
     def close_partial(self, trade: dict, amount: float,
                       price_hint: float = 0.0, reason: str = "partial") -> bool:
         """Reduce-only partial close; journal amount shrinks, trade stays open."""
+        from .coordinated_unwind import owned_group
+        if owned_group(trade):
+            log.info('coordinated partial requires a group delta instruction: %s',trade['id'])
+            return False
         sym = trade["symbol"]
         context = getattr(self.ex, 'context', None)
         if context:
@@ -607,6 +611,16 @@ class Executor:
     def close(self, trade: dict, exit_price_hint: float = 0.0,
               reason: str = "signal_exit", *, exact_reduction: bool = False,
               requested_quantity: float | None = None) -> bool:
+        if not exact_reduction:
+            from .coordinated_unwind import owned_group,request_close
+            if owned_group(trade):
+                if requested_quantity is not None:
+                    raise ValueError('coordinated_partial_requires_group_delta')
+                try:
+                    return request_close(self,trade,reason)['status']=='CLOSED'
+                except Exception as exc:
+                    log.warning('combined position close unavailable: %s (%s)',trade['id'],type(exc).__name__)
+                    return False
         sym = trade["symbol"]
         context = getattr(self.ex, 'context', None)
         if context:

@@ -3,6 +3,36 @@ import sqlite3,time
 from trader.research.closure.publish import _candle_tails
 
 
+def test_text_cache_eviction_keeps_all_evidence_and_rechecks_reloaded_text():
+    import json,sys
+    import pytest
+    from trader.data import market_provenance as mp
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    src=sqlite3.connect(':memory:');dst=sqlite3.connect(':memory:')
+    mp.init(src);mp.init(dst)
+    texts=[str(i)+'x'*2048 for i in range(4)]
+    markers=[mp.text_reference(text) for text in texts]
+    for text,marker in zip(texts,markers):
+        src.execute('INSERT INTO market_raw_sources VALUES (?,?,?)',(marker[len(mp.TEXT_REF):],'immutable-text.v1',text))
+    for index in range(8):
+        src.execute('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+            (str(index),'reference:fixture',index,index,index,json.dumps({'source':markers[index%4],'raw_json':'{}'})))
+    bound=Bounds(100,100000,None);bound.text_cache_limit=4300
+    _copy_revisions(src,dst,'reference:fixture',0,7,None,{'revisions':0},bound)
+    actual=[mp.read_record(dst,r[0])['source'] for r in dst.execute('SELECT record_json FROM market_revisions ORDER BY event_ms')]
+    assert actual==texts*2
+    assert dst.execute('SELECT COUNT(*) FROM market_raw_sources').fetchone()[0]==4
+    assert len(bound.raw_texts)==len(bound.checked_texts)==2
+    assert bound.text_cache_bytes==sum(sys.getsizeof(text) for text in bound.raw_texts.values())<=bound.text_cache_limit
+    assert markers[0][len(mp.TEXT_REF):] not in bound.raw_texts
+    # An evicted body must be read and checked again, not trusted merely
+    # because a different source connection/cut once contained this key.
+    src.execute('UPDATE market_raw_sources SET raw_json=? WHERE content_hash=?',('tampered',markers[0][len(mp.TEXT_REF):]))
+    with pytest.raises(ValueError,match='missing_or_corrupt'):
+        _copy_revisions(src,dst,'reference:fixture',0,0,None,{'revisions':0},bound)
+    src.close();dst.close()
+
+
 def test_revision_transport_streams_batches_and_enforces_shared_limit():
     import json
     import pytest
@@ -33,6 +63,26 @@ def test_revision_transport_streams_batches_and_enforces_shared_limit():
     assert dst.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()==src.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()
     with pytest.raises(ClosureRefused,match='rows_exceed_bound'):
         _copy_revisions(src,Destination(),'reference:fixture',0,599,None,{'revisions':0},TrackedBounds(599,1000000,None))
+    src.close();dst.close()
+
+
+def test_large_physical_records_flush_by_bytes_before_reaching_row_limit():
+    import json
+    from trader.data import market_provenance as mp
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    src=sqlite3.connect(':memory:');dst=sqlite3.connect(':memory:')
+    mp.init(src);mp.init(dst)
+    body=json.dumps({'raw_json':'{}','transport_fixture':'x'*700000})
+    src.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+        ((str(i),'reference:fixture',i,i,i,body) for i in range(3)))
+    batches=[]
+    class Destination:
+        def executemany(self,sql,rows):
+            batches.append(len(rows));return dst.executemany(sql,rows)
+    counter={'revisions':0}
+    _copy_revisions(src,Destination(),'reference:fixture',0,2,None,counter,Bounds(10,4000000,None))
+    assert batches==[1,1,1] and counter=={'revisions':3}
+    assert dst.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()==src.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()
     src.close();dst.close()
 
 

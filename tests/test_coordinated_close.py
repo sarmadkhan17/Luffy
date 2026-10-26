@@ -11,14 +11,15 @@ def opened(setup,monkeypatch,*,fraction=1.):
     ex,j,e,d=setup;e.fill_retry_s=0
     create=ex.create_order
     def submit(symbol,type_,side,amount,params=None):
+        reduction=(params or {}).get('reduceOnly') and not (params or {}).get('stopLossPrice') and type_!='STOP_MARKET'
         try:order=create(symbol,type_,side,amount,params)
         except Exception:
             order=ex.orders.get((params or {}).get('newClientOrderId'))
-            if order is not None and (params or {}).get('reduceOnly'):
+            if order is not None and reduction:
                 order['reduceOnly']=True;order['filled']=amount*fraction
                 ex.positions=[] if fraction==1. else [dict(symbol=symbol,side='long',contracts=amount*(1-fraction),entryPrice=100.,markPrice=100.)]
             raise
-        if (params or {}).get('reduceOnly'):
+        if reduction:
             order['reduceOnly']=True;order['filled']=amount*fraction
             ex.positions=[] if fraction==1. else [dict(symbol=symbol,side='long',contracts=amount*(1-fraction),entryPrice=100.,markPrice=100.)]
         return order

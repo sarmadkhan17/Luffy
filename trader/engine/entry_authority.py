@@ -329,6 +329,9 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
     with manager._lock:
         cap = capability(manager.journal, decision.symbol, int(time.time()*1000), manager.leverage,
                          'LONG' if decision.action == Action.BUY else 'SHORT')
+        from .coordinated_unwind import entry_block as unwind_entry_block
+        blocked = unwind_entry_block(manager.journal, cap['instrument_id'], identity)
+        if blocked:raise ValueError(blocked)
         raw = intent(decision, requested, atr, stop, target, strategy_id, identity, reference, cap, trade_intent)
         if trade_intent:
             if not manager.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'"):
@@ -435,6 +438,9 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
         raise ValueError('control_intent_superseded')
     cap = capability(executor.journal, decision.symbol, int(time.time()*1000), executor.leverage,
                      'LONG' if decision.action == Action.BUY else 'SHORT')
+    from .coordinated_unwind import entry_block as unwind_entry_block
+    blocked = unwind_entry_block(executor.journal, cap['instrument_id'], identity)
+    if blocked:raise ValueError(blocked)
     trade_intent = None
     if raw['trade_intent']:
         from ..portfolio.trade_intent import TradeIntent

@@ -192,6 +192,18 @@ class KernelRuntime:
 
     @_read_batch
     def positions(self):
+        from ..engine.coordinated_unwind import resume
+        executor=getattr(self.kernel,'executor',None)
+        unwind_incomplete=False
+        if executor is not None:
+            with self.execution_lock:
+                try:
+                    self.coordinated_unwind_results=(resume(executor)
+                        if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
+                except Exception as exc:
+                    self.coordinated_unwind_results=[dict(group_id=None,status='UNAVAILABLE',reason=type(exc).__name__)]
+                unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
+                                      for r in self.coordinated_unwind_results)
         view = analysis_context(self)
         required = view._exposure_symbols()
         with self.lock:
@@ -204,7 +216,8 @@ class KernelRuntime:
                 raise ValueError('scheduled_exposure_incomplete')
         with self.lock:
             self.holdings_market = dict(view._portfolio_holdings_market)
-            self.positions_at = time.monotonic()
+            if not unwind_incomplete:self.positions_at = time.monotonic()
+        if unwind_incomplete:raise ValueError('scheduled_coordinated_unwind_incomplete')
 
     @timed_worker('market')
     @_read_batch

@@ -2307,6 +2307,12 @@ class Kernel:
     @coordinated
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""
+        from .engine.coordinated_unwind import active as group_unwind_active,owned_group
+        group=owned_group(t)
+        if group and group_unwind_active(self.journal,group):
+            # The position worker resumes the exact whole-group reduction.
+            # Individual logical exits must not race an ambiguous leg close.
+            return None
         from .strategy import factory_handoff as F
         # A terminal intent needs only the current execution price, even if
         # candle data is unavailable or the strategy has since retired.
@@ -2470,6 +2476,16 @@ class Kernel:
                 log.info(f"MANUAL CLOSE {sym} ({tid}) @~{px}")
                 self.notifier.send(f"✋ {sym} closed manually @~{px:.6g}")
             else:
+                from .engine.coordinated_unwind import owned_group,active as group_unwind_active
+                group=owned_group(t)
+                if group and group_unwind_active(self.journal,group):
+                    log.info('MANUAL GROUP CLOSE %s: durable close in progress',group)
+                    self.notifier.send(f'↪ {sym} combined position close is in progress')
+                    continue
+                if group:
+                    log.warning('MANUAL GROUP CLOSE %s unavailable',group)
+                    self.notifier.send(f'⚠️ {sym} combined position close is unavailable; check execution diagnostics')
+                    continue
                 log.error(f"MANUAL CLOSE FAILED {sym} ({tid}) — not retried")
                 self.notifier.send(
                     f"⚠️ {sym} manual close REJECTED by the venue — "
