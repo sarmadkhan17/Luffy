@@ -127,7 +127,10 @@ def _raw(src, dst, key, bound, *, want_text=False):
         bound.raw_texts.move_to_end(key)
         return
     length = src.execute('SELECT length(CAST(raw_json AS BLOB)) FROM market_raw_sources WHERE content_hash=?', (key,)).fetchone()
-    if length and length[0] > min(8 * 1024 * 1024, bound.size - bound.used_bytes):
+    if length is None:
+        bound.raw_seen.add(key)
+        return
+    if length[0] > min(8 * 1024 * 1024, bound.size - bound.used_bytes):
         raise ClosureRefused('publish_bytes_exceed_bound')
     for row in bound.take(src, 'SELECT * FROM market_raw_sources WHERE content_hash=?', (key,)):
         if not seen:dst.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)', row)
@@ -174,6 +177,34 @@ def _candle_tails(src, tf, cut, symbols, deadline):
     return names if symbols is None else list(symbols), tails
 
 
+def _revision_batches(iterator):
+    rows=[];retained_bytes=0
+    for row in iterator:
+        size=sys.getsizeof(row)+sum(sys.getsizeof(value) for value in row)
+        if rows and retained_bytes+size>1024*1024:
+            yield rows
+            rows=[];retained_bytes=0
+        rows.append(row);retained_bytes+=size
+        if len(rows)==256 or retained_bytes>=1024*1024:
+            yield rows
+            rows=[];retained_bytes=0
+    if rows:yield rows
+
+
+def _remember_absent_bodies(src,records,bound):
+    # Legacy receipts can use content_hash as a raw-body link. Preserve every
+    # such body, but prove missing keys in one bounded index lookup per batch
+    # instead of two independent misses per receipt. The source transaction is
+    # pinned, so an absent key stays absent for this publication.
+    keys={rec.get('content_hash') for rec in records
+          if isinstance(rec.get('content_hash'),str) and rec['content_hash'] and rec['content_hash'] not in bound.raw_seen}
+    if not keys:return
+    keys=sorted(keys)
+    found={row[0] for row in src.execute('SELECT content_hash FROM market_raw_sources WHERE content_hash IN ('+
+        ','.join('?' for _ in keys)+')',keys)}
+    bound.raw_seen.update(set(keys)-found)
+
+
 def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, retrospective=False, latest_before=None):
     if retrospective:
         # Match retrospective_load's exact per-event winner, including rowid
@@ -196,53 +227,40 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
         sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
                'ORDER BY event_ms,observed_ms,rowid')
         params = (series_key, lo, hi)
-    rows = []
-    retained_bytes = 0
-    for r in bound.iterate(src, sql, params):
-        row_bytes=sys.getsizeof(r)+sum(sys.getsizeof(value) for value in r)
-        if rows and retained_bytes+row_bytes>1024*1024:
-            dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
-            counters['revisions'] += len(rows)
-            rows.clear()
-            retained_bytes=0
-        _tick(deadline)
-        rec=json.loads(r[-1]);raw_marker=rec.get('raw_json')
-        for field in ('source','raw_json'):
-            marker=rec.get(field)
-            if not isinstance(marker,str) or not marker.startswith(mp.TEXT_REF):continue
-            key=marker[len(mp.TEXT_REF):]
-            if len(key)!=64 or any(c not in '0123456789abcdef' for c in key):
-                raise ValueError('market_source_reference_invalid')
-            _raw(src,dst,key,bound,want_text=True)
-            text=bound.raw_texts.get(key)
-            # One pinned source transaction, immutable Python strings. A
-            # unique body is checked once; replacing the cached object forces
-            # another check. Consumers still perform their normal full checks.
-            if bound.checked_texts.get(key) is not text or text is None:
-                if not isinstance(text,str) or mp.text_reference(text)!=marker:
-                    raise ValueError('market_source_reference_missing_or_corrupt')
-                bound.checked_texts[key]=text
-            rec[field]=text
-        _raw(src,dst,rec.get('content_hash'),bound)
-        parent_key=raw_marker if isinstance(raw_marker,str) and raw_marker.startswith(mp.TEXT_REF) else None
-        if parent_key is not None and parent_key in bound.raw_parents:
-            raw_hash=bound.raw_parents[parent_key]
-        else:
-            try:raw_hash=json.loads(rec.get('raw_json') or 'null').get('raw_source_hash')
-            except (ValueError,AttributeError):raw_hash=None
-            if parent_key is not None:bound.raw_parents[parent_key]=raw_hash
-        if raw_hash:_raw(src,dst,raw_hash,bound)
-        rows.append(r)
-        retained_bytes+=row_bytes
-        if len(rows) == 256 or retained_bytes>=1024*1024:
-            dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
-            counters['revisions'] += len(rows)
-            rows.clear()
-            retained_bytes=0
-    # Preserve physical references plus their checked immutable bodies; expanding every repeated
-    # response into each receipt would make a bounded source into an enormous duplicated snapshot.
-    dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
-    counters['revisions'] += len(rows)
+    for rows in _revision_batches(bound.iterate(src, sql, params)):
+        records=[json.loads(row[-1]) for row in rows]
+        _remember_absent_bodies(src,records,bound)
+        for r,rec in zip(rows,records):
+            _tick(deadline)
+            raw_marker=rec.get('raw_json')
+            for field in ('source','raw_json'):
+                marker=rec.get(field)
+                if not isinstance(marker,str) or not marker.startswith(mp.TEXT_REF):continue
+                key=marker[len(mp.TEXT_REF):]
+                if len(key)!=64 or any(c not in '0123456789abcdef' for c in key):
+                    raise ValueError('market_source_reference_invalid')
+                _raw(src,dst,key,bound,want_text=True)
+                text=bound.raw_texts.get(key)
+                # One pinned source transaction, immutable Python strings. A
+                # unique body is checked once; replacing the cached object forces
+                # another check. Consumers still perform their normal full checks.
+                if bound.checked_texts.get(key) is not text or text is None:
+                    if not isinstance(text,str) or mp.text_reference(text)!=marker:
+                        raise ValueError('market_source_reference_missing_or_corrupt')
+                    bound.checked_texts[key]=text
+                rec[field]=text
+            _raw(src,dst,rec.get('content_hash'),bound)
+            parent_key=raw_marker if isinstance(raw_marker,str) and raw_marker.startswith(mp.TEXT_REF) else None
+            if parent_key is not None and parent_key in bound.raw_parents:
+                raw_hash=bound.raw_parents[parent_key]
+            else:
+                try:raw_hash=json.loads(rec.get('raw_json') or 'null').get('raw_source_hash')
+                except (ValueError,AttributeError):raw_hash=None
+                if parent_key is not None:bound.raw_parents[parent_key]=raw_hash
+            if raw_hash:_raw(src,dst,raw_hash,bound)
+        # Physical references and every checked body remain in the output.
+        dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
+        counters['revisions'] += len(rows)
 
 
 def publish_exact_cut(src_candles, dst_candles, *, tf, window_bars, symbols=None, deriv_src=None, dst_derivs=None,

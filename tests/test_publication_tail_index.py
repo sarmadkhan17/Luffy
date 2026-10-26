@@ -86,6 +86,38 @@ def test_large_physical_records_flush_by_bytes_before_reaching_row_limit():
     src.close();dst.close()
 
 
+def test_missing_legacy_body_keys_use_one_query_per_batch_and_preserve_receipts():
+    import json
+    from trader.data import market_provenance as mp
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    src=sqlite3.connect(':memory:');dst=sqlite3.connect(':memory:')
+    mp.init(src);mp.init(dst)
+    src.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+        ((str(i),'reference:fixture',i,i,i,json.dumps({'content_hash':f'{i:064x}','raw_json':'{}'})) for i in range(600)))
+    queries=[];src.set_trace_callback(lambda sql:queries.append(sql) if 'FROM market_raw_sources' in sql else None)
+    counter={'revisions':0}
+    _copy_revisions(src,dst,'reference:fixture',0,599,None,counter,Bounds(1000,1000000,None))
+    assert len(queries)==3 and all('content_hash IN (' in sql for sql in queries)
+    assert counter=={'revisions':600}
+    assert dst.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()==src.execute('SELECT * FROM market_revisions ORDER BY rowid').fetchall()
+    src.close();dst.close()
+
+
+def test_legacy_content_hash_body_is_copied_even_without_a_text_marker():
+    import hashlib,json
+    from trader.data import market_provenance as mp
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    src=sqlite3.connect(':memory:');dst=sqlite3.connect(':memory:')
+    mp.init(src);mp.init(dst)
+    body='retained legacy raw body';key=hashlib.sha256(body.encode()).hexdigest()
+    src.execute('INSERT INTO market_raw_sources VALUES (?,?,?)',(key,'legacy',body))
+    src.execute('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+        ('r','reference:fixture',1,1,1,json.dumps({'content_hash':key,'raw_json':'{}'})))
+    _copy_revisions(src,dst,'reference:fixture',0,1,None,{'revisions':0},Bounds(10,10000,None))
+    assert dst.execute('SELECT * FROM market_raw_sources').fetchall()==src.execute('SELECT * FROM market_raw_sources').fetchall()
+    src.close();dst.close()
+
+
 def test_indexed_tails_preserve_global_cut_and_declared_universe():
     db=sqlite3.connect(':memory:')
     db.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,PRIMARY KEY(symbol,tf,ts))')
