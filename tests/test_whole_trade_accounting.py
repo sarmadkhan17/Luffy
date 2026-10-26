@@ -216,3 +216,65 @@ def test_saturated_parent_conflicts_with_child_refuse(monkeypatch):
     h['pages'][0]['rows'][0]['commission']=10
     with pytest.raises(ValueError,match='history_changed'):
         A.history_rows(h,'fills','BTCUSDT',1000,5000,5000)
+
+
+def increased_source_and_venue():
+    """Synthetic full entry -> increase -> reduction -> close cashflow stream."""
+    s, v = source(), Venue()
+    rs = s['receipts']
+    before = deepcopy(rs[0]['after'])
+    after = dict(before, amount=3)
+    evidence = dict(basis='recovered_aggregate_position_and_full_stop', order_id='2',
+                    confirmed_quantity=1, aggregate_quantity=3)
+    inc = seal(dict(schema_version='trade-booking.v1', trade_id='trade', kind='increase',
+                    observed_ms=1600, before=before, after=after, evidence=evidence,
+                    assessment=booking.assess(evidence)))
+    rs.insert(1, inc)
+    rs[2]['before'] = deepcopy(after)
+    rs[2]['after']['amount'] = 2
+    rs[2]['evidence']['order_id'] = '3'
+    rs[3]['before'] = deepcopy(rs[2]['after'])
+    rs[3]['after'].update(amount=2, realized_pnl=48)
+    rs[3]['evidence'].update(order_id='4', quantity=2)
+    for r in rs:
+        r['assessment'] = booking.assess(r['evidence'])
+        seal(r)
+    s['trade'] = deepcopy(rs[-1]['after'])
+    seal(s)
+    v.fills.insert(1, dict(v.fills[0], id=2, orderId=2, time=1500, qty=1))
+    v.fills[2].update(id=3, orderId=3)
+    v.fills[3].update(id=4, orderId=4, qty=2, realizedPnl=40)
+    return s, v
+
+
+def test_rebalance_increase_reconciles_all_fees_and_signed_funding(monkeypatch):
+    monkeypatch.setattr(A.time, 'time', lambda: 5)
+    s, v = increased_source_and_venue()
+    a = A.capture(s, v)
+    r = A.replay(a)
+    assert r['learning_eligible'], r['reasons']
+    assert [leg['entry'] for leg in A.legs(s)] == [True, True, False, False]
+    assert r['gross_realized_usdt'] == 50
+    assert r['fees_by_currency'] == {'USDT': 4}
+    assert r['funding_usdt'] == -2
+    assert r['net_trade_pnl_usdt'] == 44
+    assert A.verified_outcome(a, 6000)['actual_execution']['net_pnl'] == 44
+
+
+@pytest.mark.parametrize('change', ['quantity', 'aggregate', 'pnl', 'basis', 'side', 'entry_pnl'])
+def test_rebalance_increase_conflicts_remain_unavailable(monkeypatch, change):
+    monkeypatch.setattr(A.time, 'time', lambda: 5)
+    s, v = increased_source_and_venue()
+    inc = s['receipts'][1]
+    if change == 'quantity': inc['evidence']['confirmed_quantity'] = 2
+    elif change == 'aggregate': inc['evidence']['aggregate_quantity'] = 4
+    elif change == 'pnl': inc['after']['realized_pnl'] = 100
+    elif change == 'basis': inc['evidence']['basis'] = 'unattributed_journal_booking'
+    elif change == 'side': v.fills[1]['side'] = 'SELL'
+    elif change == 'entry_pnl': v.fills[1]['realizedPnl'] = 1
+    inc['assessment'] = booking.assess(inc['evidence'])
+    seal(inc); seal(s)
+    a = A.capture(s, v)
+    assert not A.replay(a)['learning_eligible']
+    with pytest.raises(ValueError, match='incomplete_accounting_retry'):
+        A.verified_outcome(a, 6000)

@@ -768,6 +768,26 @@ def validate_chain(body,sources,blobs):
             trade_id=receipt['source']['whole_trade_capture']['bookings']['trade']['id']
         if trade_id not in body['lineage']['trade_ids']:
             raise ValueError('realized_trade_binding_differs')
+        group=receipt['source'].get('coordinated_trade_capture')
+        if group:
+            from trader.engine.coordinated_accounting import accounting as group_accounting
+            account=group_accounting(group)
+            primary=next(p for p in group['components'] if p['capture']['bookings']['trade']['id']==trade_id)
+            from .producers import verify_trade_binding
+            verify_trade_binding(body['registration'],primary['identity'],primary['capture']['bookings']['trade'])
+            expected=dict(execution=group,trade=primary['capture']['bookings']['trade'],
+                cost=account,funding=account,
+                execution_reference=dict(trade_id=trade_id,timestamp_ms=primary['capture']['start_ms'],
+                    basis='exact component order identities',group=group),
+                position_basis=dict(trade_id=trade_id,timestamp_ms=group['observed_ms'],
+                    basis='closed economic membership',closure=group['closure']))
+            if any(sources.get(role)!=value for role,value in expected.items()):
+                raise ValueError('realized_group_source_binding_differs')
+            ids=[m['trade_id'] for m in group['closure']['plan']['members']]
+            orders=[p['identity']['execution_binding']['instrument_id']+':'+str(o['orderId'])
+                    for p in group['components'] for o in p['capture']['orders']]
+            if list(body['lineage']['trade_ids'])!=ids or list(body['lineage']['execution_ids'])!=orders:
+                raise ValueError('realized_group_lineage_differs')
         whole=receipt['source'].get('whole_trade_capture')
         if whole:
             from trader.engine.trade_accounting import replay as accounting_replay

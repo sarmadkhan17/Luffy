@@ -197,8 +197,41 @@ def deliver_accounting(journal_path, artifact):
             raise ValueError('original_registration_missing_no_backfill')
         _,reg=C.registration(src,C.trade_event(src,artifact['bookings']['trade']['decision_id'],artifact['bookings']['trade']['id']))
         row=src.execute('SELECT entry_identity_json FROM trades WHERE id=?',(artifact['bookings']['trade']['id'],)).fetchone()
+        if row and row[0] and json.loads(row[0]).get('coordinated'):
+            raise ValueError('coordinated_group_outcome_required')
         verify_trade_binding(reg,json.loads(row[0]) if row and row[0] else None,artifact['bookings']['trade'])
     with closing(sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=rw',uri=True,timeout=2)) as db, db:
         db.row_factory=sqlite3.Row
         C.ensure(db)
         return C.safely(db,'verified-trade:'+artifact['sha256'],verified_trade,receipt)
+
+
+def deliver_group_accounting(journal_path, source):
+    """Verify final journal membership, then retain exactly one group outcome."""
+    from pathlib import Path
+    import sqlite3
+    from trader.engine.coordinated_accounting import accounting
+    from trader.engine.entry_authority import canonical, digest
+    from .capture_runtime import verified_group
+    accounting(source)
+    plan=source['closure']['plan']
+    with closing(sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=rw',uri=True,timeout=2)) as db,db:
+        db.row_factory=sqlite3.Row
+        db.execute('BEGIN IMMEDIATE')
+        close=db.execute('SELECT * FROM coordinated_group_unwinds WHERE group_id=?',(plan['group_id'],)).fetchone()
+        if (not close or close['state']!='CLOSED' or close['plan_json']!=canonical(plan)
+                or close['plan_sha256']!=digest(plan)):
+            raise ValueError('coordinated_final_membership_differs')
+        rows=db.execute("SELECT id,entry_identity_json FROM trades WHERE json_extract("
+            "CASE WHEN json_valid(entry_identity_json) THEN entry_identity_json ELSE '{}' END,"
+            "'$.coordinated.group_id')=?",(plan['group_id'],)).fetchall()
+        if {r['id'] for r in rows}!={m['trade_id'] for m in plan['members']}:
+            raise ValueError('coordinated_final_membership_differs')
+        for part in source['components']:
+            trade=part['capture']['bookings']['trade']
+            row=db.execute('SELECT * FROM trades WHERE id=?',(trade['id'],)).fetchone()
+            if (not row or json.loads(row['entry_identity_json'])!=part['identity']
+                    or any(row[k]!=v for k,v in trade.items())):
+                raise ValueError('coordinated_final_trade_differs')
+        C.ensure(db)
+        return C.safely(db,'verified-group:'+plan['group_id'],verified_group,source)

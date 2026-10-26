@@ -184,3 +184,35 @@ def test_accepted_rollback_timeout_resolves_exact_action_before_size_reconciliat
     e.recover_entries() # prior protected quantity is now reconciled
     assert not e.recovery_pending() and j.open_trades()[0]['amount']==2.
     assert len(ex.sent)==count
+
+
+def test_recovered_increase_and_close_have_balanced_accounting_ownership(setup,monkeypatch):
+    from trader.engine import booking, trade_accounting
+    from trader.engine.coordinated_close import close_once
+    ex,j,e,tid,identity,d,p=prepared(setup,monkeypatch)
+    submit_fixture(ex,monkeypatch)
+    create=ex.create_order
+    def distinct_order(*args,**kwargs):
+        order=create(*args,**kwargs)
+        if order.get('clientOrderId'):
+            # The older transport fixture calls every entry order 'entry'.
+            # Venue IDs must differ for whole-trade ownership reconciliation.
+            order['id']=order['clientOrderId']
+            ex.orders[order['id']]=order
+        return order
+    monkeypatch.setattr(ex,'create_order',distinct_order)
+    def fills(symbol,**kwargs):
+        unique={order['id']:order for order in ex.orders.values()}
+        return [dict(id='fill-'+oid,order=oid,symbol=symbol,side=order['side'],
+            amount=order['filled'],price=100.,timestamp=int(time.time()*1000),
+            info=dict(symbol='BTCUSDT',realizedPnl='0',commission='0.1',commissionAsset='USDT'))
+            for oid,order in unique.items()]
+    monkeypatch.setattr(ex,'fetch_my_trades',fills,raising=False)
+    increase(e,tid,identity,d,p);e.recover_entries()
+    assert close_once(e,tid,'group-fixture','accounting-final-close')['status']=='BOOKED'
+    with j._tx() as db:
+        exported=booking.export(db,tid)
+    legs=trade_accounting.legs(exported)
+    assert [leg['entry'] for leg in legs]==[True,True,False]
+    assert [leg['quantity'] for leg in legs]==[2.,.5,2.5]
+    assert len({leg['order_id'] for leg in legs})==3

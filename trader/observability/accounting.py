@@ -172,16 +172,35 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
 def deliver_completed(db, journal):
     from trader.learning import producers
     db.execute('CREATE TABLE IF NOT EXISTS learning_deliveries(attempt_id TEXT PRIMARY KEY,outcome_id TEXT NOT NULL)')
+    db.execute('CREATE TABLE IF NOT EXISTS learning_delivery_waits(attempt_id TEXT PRIMARY KEY,due_ms INTEGER NOT NULL)')
     report=dict(delivered=0,retry=0,unbound=0)
-    rows=db.execute("SELECT id,path FROM attempts WHERE status='complete' AND id NOT IN (SELECT attempt_id FROM learning_deliveries) ORDER BY started_ms,id LIMIT 2").fetchall()
+    now=int(time.time()*1000)
+    groups={}
+    rows=db.execute("SELECT id,path FROM attempts WHERE status='complete' AND id NOT IN (SELECT attempt_id FROM learning_deliveries) "
+        "AND id NOT IN (SELECT attempt_id FROM learning_delivery_waits WHERE due_ms>?) ORDER BY started_ms,id LIMIT 2",(now,)).fetchall()
     for aid,path in rows:
         try:
-            oid=producers.deliver_accounting(journal,json.loads(Path(path).read_text()))
+            artifact=json.loads(Path(path).read_text())
+            grouped,source=group_source(db,journal,artifact)
+            if grouped and source is None:
+                # A still-open or not-yet-reconciled group must not sit at the
+                # head of the delivery queue and starve unrelated outcomes.
+                with db:db.execute('INSERT OR REPLACE INTO learning_delivery_waits VALUES (?,?)',(aid,now+BASE_RETRY_MS))
+                report['retry']+=1
+                continue
+            group_id=source['closure']['plan']['group_id'] if grouped else None
+            if group_id in groups:
+                with db:db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,groups[group_id]))
+                continue
+            oid=(producers.deliver_group_accounting(journal,source) if grouped
+                 else producers.deliver_accounting(journal,artifact))
             if oid is None:
                 report['retry']+=1
                 continue
             with db:
                 db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,oid))
+                db.execute('DELETE FROM learning_delivery_waits WHERE attempt_id=?',(aid,))
+            if grouped:groups[group_id]=oid
             report['delivered']+=1
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             # A corrupt artifact is terminal for delivery too, but its message
@@ -202,6 +221,39 @@ def deliver_completed(db, journal):
         except Exception:
             report['retry']+=1
     return report
+
+
+def group_source(queue,journal,artifact):
+    """Reuse completed captures; never fetch a second copy or learn per leg."""
+    from trader.engine.coordinated_accounting import VERSION
+    with closing(connect(journal)) as src,src:
+        src.row_factory=sqlite3.Row
+        trade_id=artifact['bookings']['trade']['id']
+        row=src.execute('SELECT entry_identity_json FROM trades WHERE id=?',(trade_id,)).fetchone()
+        identity=json.loads(row[0] or '{}') if row else {}
+        group=identity.get('coordinated')
+        if not group:return False,None
+        if not src.execute("SELECT 1 FROM sqlite_master WHERE name='coordinated_group_unwinds'").fetchone():
+            return True,None
+        row=src.execute('SELECT * FROM coordinated_group_unwinds WHERE group_id=?',(group['group_id'],)).fetchone()
+        if not row or row['state']!='CLOSED':return True,None
+        plan=json.loads(row['plan_json']);parts=[]
+        for member in plan['members']:
+            complete=queue.execute("SELECT path FROM attempts WHERE trade_id=? AND status='complete' "
+                "ORDER BY finished_ms,id LIMIT 1",(member['trade_id'],)).fetchone()
+            if not complete:return True,None
+            capture=json.loads(Path(complete[0]).read_text())
+            trade=src.execute('SELECT entry_identity_json FROM trades WHERE id=?',(member['trade_id'],)).fetchone()
+            if not trade:raise ValueError('coordinated_accounting_member_missing')
+            identity=json.loads(trade[0]);binding=identity['execution_binding']
+            request=src.execute('SELECT * FROM execution_requests WHERE logical_id=?',(binding['logical_id'],)).fetchone()
+            if not request:raise ValueError('coordinated_accounting_entry_missing')
+            parts.append(dict(capture=capture,identity=identity,entry_request=dict(
+                logical_id=request['logical_id'],intent=json.loads(request['intent_json']),
+                intent_hash=request['intent_hash'],state=request['state'],order_id=request['order_id'],
+                result=json.loads(request['result_json'] or '{}'))))
+        return True,dict(schema_version=VERSION,observed_ms=int(time.time()*1000),
+            closure=dict(plan=plan,plan_sha256=row['plan_sha256'],state=row['state']),components=parts)
 
 
 class Deadline(BaseException):

@@ -822,3 +822,48 @@ def failed_allocation_delivery(db, current, result):
             reason = 'terminal_source_delivery_failed_no_scan_fallback'
             if not C.read(db,'SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?',(event,reason)).fetchone():
                 db.execute('INSERT INTO learning_capture_failures VALUES (?,?)',(event,reason))
+
+
+def verified_group(db, source):
+    """One realized learning result for the closed economic position."""
+    from trader.engine.coordinated_accounting import verified_outcome, accounting
+    receipt = verified_outcome(source, source['observed_ms'])
+    account = accounting(source)
+    primary = next(p for p in source['components'] if p['capture']['bookings']['trade']['id'] == account['trade_id'])
+    trade = primary['capture']['bookings']['trade']
+    event = C.trade_event(db, trade['decision_id'], trade['id'])
+    _, reg = C.registration(db, event)
+    from .producers import verify_trade_binding
+    verify_trade_binding(reg, primary['identity'], trade)
+    key = 'verified-group:' + source['closure']['plan']['group_id']
+    previous = C.existing_outcome(db, key)
+    if previous: return previous
+    cut = receipt['available_ms']
+    fills = account['fills']
+    observation = dict(gross_pnl=sum(f['realized_pnl'] for f in fills),
+        fees=sum(f['commission'] for f in fills), funding=account['funding_net'],
+        monetary_status='VERIFIED', net_pnl=receipt['actual_execution']['net_pnl'],
+        currency='USDT', environment=account['environment'],
+        economic_group_id=source['closure']['plan']['group_id'],
+        trade_count=1, leg_count=len(source['components']),
+        holding_duration_ms=max(f['event_ms'] for f in fills)-min(f['event_ms'] for f in fills),
+        exit_reason=source['closure']['plan']['reason'], slippage='UNAVAILABLE')
+    deps = [freeze(db, 'outcome', dict(observation=observation,typed_receipt=receipt),cut,'verified economic position'),
+            freeze(db, 'execution',source,cut,'complete component accounting receipts'),
+            freeze(db, 'trade',trade,cut,'economic primary booking snapshot'),
+            freeze(db, 'cost',account,cut,'all component fill fees'),
+            freeze(db, 'funding',account,cut,'distinct instrument signed funding'),
+            freeze(db, 'execution_reference',dict(trade_id=trade['id'],timestamp_ms=primary['capture']['start_ms'],
+                basis='exact component order identities',group=source),cut,'exact component order identities'),
+            freeze(db, 'position_basis',dict(trade_id=trade['id'],timestamp_ms=source['observed_ms'],
+                basis='closed economic membership',closure=source['closure']),cut,'closed economic membership')]
+    actions = [json.loads(r[0])['dependency'] for r in db.execute(
+        'SELECT payload FROM learning_actions WHERE event_key=?',(event,))]
+    for role in ('action','risk_decision'):
+        candidates = [d for d in actions if d['role']==role and d['available_ms']<=cut]
+        if candidates: deps.append(max(candidates,key=lambda d:(d['available_ms'],d['sha256'])))
+    trade_ids = tuple(m['trade_id'] for m in source['closure']['plan']['members'])
+    execution_ids = tuple(p['identity']['execution_binding']['instrument_id']+':'+str(o['orderId'])
+                          for p in source['components'] for o in p['capture']['orders'])
+    return C.attach(db,event,key,L.Kind.EXECUTED.value,L.Boundary.REALIZED.value,
+        observation,cut,deps,post_lineage=dict(trade_ids=trade_ids,execution_ids=execution_ids))

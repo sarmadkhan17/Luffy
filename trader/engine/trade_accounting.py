@@ -43,6 +43,7 @@ def legs(source):
     identity = ('id', 'decision_id', 'symbol', 'side', 'strategy_id', 'opened_at', 'market_type', 'exec_mode')
     for i, r in enumerate(rs):
         after, before, e = r['after'], r['before'], r['evidence']
+        is_entry = i == 0 or r['kind'] == 'increase'
         if any(after.get(k) != trade.get(k) for k in identity):
             raise ValueError('booking_owner_conflict')
         if before != previous or (previous and previous['status'] != 'open'):
@@ -53,6 +54,15 @@ def legs(source):
             qty = number(after['amount'])
             if not close(qty, e.get('confirmed_quantity')):
                 raise ValueError('entry_quantity_conflict')
+        elif r['kind'] == 'increase':
+            if (e.get('basis') != 'recovered_aggregate_position_and_full_stop'
+                    or after['status'] != 'open'
+                    or not close(after['realized_pnl'], before['realized_pnl'])):
+                raise ValueError('increase_order_reference_or_balance_conflict')
+            qty = number(after['amount']) - number(before['amount'])
+            if (not close(qty, e.get('confirmed_quantity'))
+                    or not close(after['amount'], e.get('aggregate_quantity'))):
+                raise ValueError('increase_quantity_conflict')
         else:
             if e.get('basis') != 'venue_order_fills':
                 raise ValueError('exit_order_reference_missing_retry')
@@ -68,12 +78,14 @@ def legs(source):
         if not oid or oid in seen or qty <= 0:
             raise ValueError('missing_or_reused_order_identity')
         seen.add(oid)
-        result.append(dict(order_id=oid, quantity=qty, entry=i == 0,
+        result.append(dict(order_id=oid, quantity=qty, entry=is_entry,
                            receipt_ms=r['observed_ms']))
         previous = after
     if previous != trade:
         raise ValueError('booking_tail_gap_retry')
-    if trade['status'] != 'closed' or not close(result[0]['quantity'], sum(x['quantity'] for x in result[1:])):
+    if trade['status'] != 'closed' or not close(
+            sum(x['quantity'] for x in result if x['entry']),
+            sum(x['quantity'] for x in result if not x['entry'])):
         raise ValueError('whole_trade_not_closed_or_balanced_retry')
     return result
 

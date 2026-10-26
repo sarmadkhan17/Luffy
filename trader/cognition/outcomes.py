@@ -189,6 +189,9 @@ def replay(record):
     s, now, links = record['source'], record['imported_ms'], record['links']
     if record['kind'] in ('selected_forecast','ignored_forecast'):
         rebuilt = forecast(s,now,links)
+    elif 'coordinated_trade_capture' in s:
+        from trader.engine.coordinated_accounting import verified_outcome
+        rebuilt = verified_outcome(s['coordinated_trade_capture'], now)
     elif 'whole_trade_capture' in s:
         from trader.engine.trade_accounting import verified_outcome
         rebuilt = verified_outcome(s['whole_trade_capture'], now)
