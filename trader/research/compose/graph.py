@@ -305,7 +305,7 @@ def _check_exit(e: dict, tf: str) -> dict:
     if not isinstance(mb, int) or isinstance(mb, bool) or not 1 <= mb <= MAX_HOLD_BARS:
         _bad('BAD_EXIT', 'time.max_bars (holding horizon) is required')
     sig = ''
-    if e.get('signal_exit') is not None:
+    if e.get('signal_exit') not in (None, ''):
         if check(e['signal_exit'], tf) != 'bool':
             _bad('UNIT_MISMATCH', 'signal_exit must be a condition')
         sig = e['signal_exit']
@@ -345,6 +345,15 @@ def make_candidate(spec: dict) -> dict:
     for k, r in roles.items():
         if k not in catalog.BY_KEY or r not in ('feature', 'condition', 'exposure', 'stress'):
             _bad('BAD_ROLE', f'{k}:{r}')
+        if catalog.BY_KEY[k].provider_gap:
+            _bad('GAP_PROVIDER', k+':'+catalog.BY_KEY[k].provider_gap)
+    for field in ('question','rationale','expected'):
+        if not isinstance(spec[field],str) or not spec[field].strip() or len(spec[field])>8000:
+            _bad('HYPOTHESIS_TEXT_INVALID',field)
+    failure=spec['failure_conditions']
+    if not (isinstance(failure,str) and failure.strip() or isinstance(failure,list) and 1<=len(failure)<=20
+            and all(isinstance(x,str) and x.strip() for x in failure)) or len(_j(failure))>8000:
+        _bad('HYPOTHESIS_TEXT_INVALID','failure_conditions')
     body = dict(schema=GRAPH_SCHEMA, question=spec['question'], rationale=spec['rationale'],
                 expected=spec['expected'], failure_conditions=spec['failure_conditions'],
                 structure=spec['structure'], tf=tf, geo=spec.get('geo') or 'custom', exit=exit_decl, long=long_, short=short_,
@@ -545,6 +554,7 @@ def requires_of(c: dict) -> tuple:
             for v in n:
                 walk(v)
     walk(c.get('long')), walk(c.get('short'))
+    walk((c.get('exit') or {}).get('signal_exit'))
     for key, role in (c.get('roles') or {}).items():
         if role in ('exposure', 'stress'):
             req.update(catalog.BY_KEY[key].requires)

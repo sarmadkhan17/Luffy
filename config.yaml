@@ -144,6 +144,9 @@ research:                        # the search — docs/superpowers/specs/
     slot_budget_s: 3600
     budget_s: 3600
     world_live_enabled: true
+    proposal_provider_enabled: true # existing research token slice; other Brain consumers remain unchanged
+    paper_intake: true
+    max_coordinated_paper_books: 2
     auto:
       enabled: true
       interval_hours: 12
@@ -157,6 +160,10 @@ research:                        # the search — docs/superpowers/specs/
       references_path: /mnt/luffy-data/research/compositional/published-context.db
       development_mode: RETROSPECTIVE
       fit_bars: 1620
+      horizons:
+        - {tf: 4h, fit_bars: 1620}
+        - {tf: 1h, fit_bars: 2000}
+        - {tf: 15m, fit_bars: 1600}
       prep_timeout_s: 1800
       unit_timeout_s: 900
       prep_memory_mb: 3072

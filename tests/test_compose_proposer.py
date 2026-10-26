@@ -92,3 +92,16 @@ def test_generated_negative_fees_are_refused_instead_of_becoming_profit(tmp_path
     out=GraphProposer(llm,store,tf='1h',max_attempts=1)(Q,'BRAIN',Q)
     assert out[0]=='BLOCKED' and 'hedge_numeric_invalid' in out[1] and out[2] is None
     store.close()
+
+
+def test_missing_economic_observable_creates_requirement_without_indicator_substitution(tmp_path):
+    store=Store(tmp_path/'economic-gap.db')
+    raw=proposal();raw['roles']={'asset_size':'exposure'}
+    client=LLM([dict(proposal=raw)])
+    proposer=GraphProposer(client,store,tf='1h')
+    first=proposer(Q,'BRAIN',Q);second=proposer(Q,'BRAIN',Q)
+    assert first[0]==second[0]=='WAITING_DATA'
+    assert 'asset_size' in first[3]['required_data']
+    assert first[2] is None and len(client.calls)==1
+    assert not store.all_once('candidates')
+    store.close()

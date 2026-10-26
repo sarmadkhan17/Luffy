@@ -112,3 +112,15 @@ def test_unknown_ratio_is_never_a_fabricated_zero_hedge():
     r = np.r_[np.nan, np.random.default_rng(1).normal(0, .01, 10)]
     spec = dict(ratio=dict(method='rolling_beta', lookback=96, max_ratio=2.0))
     assert np.isnan(H.estimate_ratio(spec, r, r, 10))                                  # < 20 observations: unknown, not 0.0
+
+
+def test_declared_exit_and_unknown_exit_evidence_share_pair_clock():
+    from types import SimpleNamespace
+    from trader.research.compose import hedge as H
+    # The missing middle row and the unknown final exit both request unwind.
+    compiled=SimpleNamespace(spec=SimpleNamespace(exit=SimpleNamespace(signal_exit='rsi(14) > 70')),
+        exit_signal_detail=lambda frames,**kw:(np.array([False,True,False]),np.array([True,True,False])))
+    aligned=dict(bars=4,idx_p=np.array([0,2,3]))
+    assert H.aligned_exits(compiled,{},aligned).tolist()==[False,True,True,True]
+    compiled.spec.exit.signal_exit=''
+    assert not H.aligned_exits(compiled,{},aligned).any()

@@ -273,3 +273,8 @@ def test_genuine_silent_signal_comparison_can_measure_zero(monkeypatch):
     ev = a.redundancy(_spec('new', entry='close > 100000000'), '1h', [_spec('installed')])
     assert ev['status'] == 'MEASURED' and ev['max_overlap'] == 0.
     assert ev['comparisons'][0]['symbol'] == 'BTC/USDT'
+
+
+def test_btc_context_is_keyed_by_its_actual_native_timeframe(analyst):
+    _,btc,_,_=analyst._ctx('1h',_spec())
+    assert set(btc)=={'1h'}

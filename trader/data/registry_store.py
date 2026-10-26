@@ -23,6 +23,8 @@ first-seen rule.
 from __future__ import annotations
 
 import hashlib
+import base64
+import zlib
 import json
 import time
 
@@ -69,6 +71,12 @@ CREATE TABLE IF NOT EXISTS universe_revisions (
     recorded_ms INTEGER NOT NULL,
     PRIMARY KEY (environment, revision_id)
 );
+CREATE INDEX IF NOT EXISTS universe_revision_cut ON universe_revisions(environment,observed_at_ms);
+CREATE TABLE IF NOT EXISTS universe_selection_evidence (
+    revision_id TEXT NOT NULL, environment TEXT NOT NULL,
+    payload TEXT NOT NULL, sha256 TEXT NOT NULL,
+    PRIMARY KEY(environment, revision_id)
+);
 CREATE TABLE IF NOT EXISTS universe_untradeable (
     environment TEXT NOT NULL,
     symbol TEXT NOT NULL,
@@ -77,7 +85,7 @@ CREATE TABLE IF NOT EXISTS universe_untradeable (
     PRIMARY KEY (environment, symbol)
 );
 """
-_IMMUTABLE = ("registry_contents", "registry_snapshots", "registry_refreshes", "universe_revisions")
+_IMMUTABLE = ("registry_contents", "registry_snapshots", "registry_refreshes", "universe_revisions", "universe_selection_evidence")
 _GUARDS = "".join(
     f"CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t} "
     f"BEGIN SELECT RAISE(ABORT,'{t} is append-only'); END;"
@@ -185,6 +193,20 @@ def record_universe_revision(journal, receipt: dict, environment: str, *, record
                      "majors_unobserved": receipt.get("majors_unobserved", [])})
     with journal._tx() as c:
         ensure(c)
+        # New selections retain the full receipt needed for exact historical
+        # quote-volume eligibility replay. Older metadata rows stay explicitly
+        # incomplete; no past membership or ticker values are reconstructed.
+        if receipt.get('raw') is not None and receipt.get('volume_receipts') is not None:
+            raw_payload = _canon(receipt).encode()
+            if len(raw_payload)>8*1024*1024:
+                raise RegistryStoreError('selection_payload_exceeds_bound')
+            payload = 'zlib:' + base64.b64encode(zlib.compress(raw_payload,3)).decode()
+            prior = c.execute('SELECT payload,sha256 FROM universe_selection_evidence '
+                              'WHERE environment=? AND revision_id=?', (env,receipt['revision_id'])).fetchone()
+            if prior and tuple(prior) != (payload,_sha(payload)):
+                raise RegistryStoreError('selection_evidence_conflict')
+            c.execute('INSERT OR IGNORE INTO universe_selection_evidence VALUES(?,?,?,?)',
+                      (receipt['revision_id'],env,payload,_sha(payload)))
         old = c.execute("SELECT selection_version,source,observed_at_ms,members_json,exclusions_json,config_json "
                         "FROM universe_revisions "
                         "WHERE environment=? AND revision_id=?", (env, receipt["revision_id"])).fetchone()

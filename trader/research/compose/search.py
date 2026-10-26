@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from itertools import product
 
 import numpy as np
 
@@ -40,7 +41,8 @@ REGIME_GATES = ('regime_trend', 'regime_range', 'regime_highvol', 'regime_thin')
 DEFAULT_BUDGET = dict(max_attempts=24, max_fits=40, max_nodes=30, cpu_seconds=3600, dataset_reads=200, memory_mb=3072, symbols=1,
                       interaction_share=0.25, p_long=0.9, p_short=0.9, similarity_label_threshold=0.9,
                       domains={}, tf='4h', prediction_horizon=6,
-                      structures=['long_short', 'long_only', 'short_only'], factors=None, question=None)
+                      structures=['long_short', 'long_only', 'short_only'], factors=None, question=None,
+                      geometries=['fixed', 'trail'])
 
 
 def register_budget(store, study_id: str, budget: dict) -> dict:
@@ -83,6 +85,9 @@ def validate_budget(b):
     from ...core.types import TF_MS
     if b['tf'] not in TF_MS or not 1 <= b['prediction_horizon'] <= graph.MAX_WINDOW:
         raise ClosureRefused('search_horizon_invalid')
+    from ...strategy.geometries import GEOS
+    if not b['geometries'] or any(g not in GEOS for g in b['geometries']):
+        raise ClosureRefused('search_geometries_invalid')
     if not b['structures'] or any(x not in graph.ENTRY_STRUCTURES for x in b['structures']):
         raise ClosureRefused('search_structures_invalid')
     if b['factors'] is not None and (not b['factors'] or any(x not in catalog.BY_KEY for x in b['factors'])):
@@ -129,7 +134,8 @@ def reads_of(c, symbols: int = 1) -> int:
     refs = sum(1 for r in req if r.startswith('ref:'))
     world = 1 if 'world' in req else 0
     derivs = len(req) - refs - world
-    return int(symbols) * (1 + derivs) + refs + world
+    from .experiments import needs_btc
+    return int(symbols) * (1 + derivs) + refs + world + int(needs_btc(c))
 
 
 def _nodes(c) -> int:
@@ -310,9 +316,10 @@ def candidate_stream(budget: dict, status: dict) -> dict:
     out = {}
     for domain, templates in source.items():
         for template in templates:
-            for structure in budget['structures']:
+            for structure, geometry in product(budget['structures'], budget['geometries']):
                 proposal = deepcopy(template)
                 proposal['tf'] = budget['tf']
+                proposal['geo'] = geometry
                 proposal['structure'] = structure
                 if structure == 'long_only':
                     proposal['short'] = None
@@ -326,11 +333,11 @@ def candidate_stream(budget: dict, status: dict) -> dict:
                 out.setdefault(domain, []).append(proposal)
     # Interleave model types before direction variants. Otherwise the first
     # model can consume the whole fit budget before another model is considered.
-    for domain in ('learned', 'interaction'):
+    for domain in out:
         tracks = {}
         for proposal in out.get(domain, []):
             spec = next(_fit_specs(proposal), {})
-            key = (proposal['provenance']['track'], spec.get('model'))
+            key = (proposal['provenance']['track'], spec.get('model'), proposal['geo'])
             tracks.setdefault(key, []).append(proposal)
         ordered = []
         while any(tracks.values()):
@@ -357,8 +364,13 @@ def plan(store, study_id: str, budget: dict, status: dict, *, units=(), now_ms: 
     stream = candidate_stream(budget, status)
     reserve = int(budget['max_attempts'] * budget['interaction_share']) if stream.get('interaction') else 0
     admitted, why, fit_limited = [], None, []
-    queues = {d: list(v) for d, v in sorted(stream.items())}
-    order = [d for d in queues if d != 'interaction']
+    queues = {}
+    for domain, proposals in sorted(stream.items()):
+        for proposal in proposals:
+            track = proposal['provenance']['track']
+            queues.setdefault((track, domain), []).append(proposal)
+    order = sorted((key for key in queues if key[1] != 'interaction'),
+                   key=lambda key: (0 if key[0] == 'single' else 1 if key[0] == 'pair' else 2, key))
     caps = budget.get('domains') or {}
 
     def admit(spec, track_domain):
@@ -397,14 +409,18 @@ def plan(store, study_id: str, budget: dict, status: dict, *, units=(), now_ms: 
             why = why or 'BUDGET_EXHAUSTED:attempts'
             return False
         store.put_once('candidates', c['candidate_id'], c)
+        from .experiments import plan as experiment_plan
+        ep = experiment_plan(c, budget=budget)
+        store.put_once('experiment_plans', digest([study_id, c['candidate_id']]), dict(ep, study_id=study_id))
         store.put_once('attempts', aid, dict(study_id=study_id, candidate_id=c['candidate_id'], domain=dom,
-                                             track=spec['provenance']['track'], fits=_fits(c), nodes=_nodes(c), reads=reads_of(c, budget['symbols']),
+                                             track=spec['provenance']['track'], geometry=c['geo'], structure=c['structure'],
+                                             fits=_fits(c), nodes=_nodes(c), reads=reads_of(c, budget['symbols']),
                                              parent=None, change=None, at_ms=now_ms))
         admitted.append(c['candidate_id'])
         return True
 
     # reserved interaction track first
-    for spec in queues.get('interaction', []):
+    for spec in stream.get('interaction', []):
         if sum(1 for a in _attempts(store, study_id) if a['domain'] == 'interaction') >= reserve:
             break
         admit(spec, 'interaction')
@@ -414,7 +430,7 @@ def plan(store, study_id: str, budget: dict, status: dict, *, units=(), now_ms: 
         for d in order:
             while queues[d]:
                 spec = queues[d].pop(0)
-                if admit(spec, d):
+                if admit(spec, d[1]):
                     progress = True
                     break
         if why and why.startswith('BUDGET_EXHAUSTED'):
@@ -438,7 +454,16 @@ def _subst(node, a, b):
 def mutations(c: dict) -> list:
     """Every legal graph revision, fixed order: indicator substitution inside a
     comparable group, then a regime gate on both branches."""
-    out = []
+    from ...strategy.geometries import GEOS
+    from dataclasses import asdict
+    out = [dict(kind='exit_geometry', to=g) for g in GEOS if g != c['geo']]
+    current=(c.get('exit') or asdict(GEOS[c['geo']]))['time']['max_bars']
+    out.extend(dict(kind='holding_period',to=n) for n in (current*2,max(1,current//2))
+               if n!=current and n<=graph.MAX_HOLD_BARS)
+    for branch in ('long', 'short'):
+        node = c.get(branch)
+        if isinstance(node, dict) and len(node.get('all', [])) > 1:
+            out.extend(dict(kind='remove_condition', branch=branch, index=i) for i in range(len(node['all'])))
     present = {n['f'] for n in _walk_factors(c)}
     for gname, members in GROUPS.items():
         for a in sorted(present & set(members)):
@@ -455,18 +480,59 @@ def mutations(c: dict) -> list:
 def apply_change(c: dict, change: dict) -> dict:
     if change not in mutations(c):
         raise ClosureRefused('mutation_not_allowed', str(change))
+    long_, short_ = deepcopy(c['long']), deepcopy(c['short'])
     if change['kind'] == 'substitute':
         long_, short_ = (None if c[k] is None else _subst(c[k], change['from'], change['to']) for k in ('long', 'short'))
-    else:
+    elif change['kind'] == 'regime_gate':
         gate = {'f': change['to']}
         wrap = lambda n: None if n is None else {'all': [n, gate]}      # noqa: E731
         long_, short_ = wrap(c['long']), wrap(c['short'])
+    elif change['kind'] == 'remove_condition':
+        node = long_ if change['branch'] == 'long' else short_
+        rest = [n for i, n in enumerate(node['all']) if i != change['index']]
+        if change['branch'] == 'long':
+            long_ = rest[0] if len(rest) == 1 else {'all': rest}
+        else:
+            short_ = rest[0] if len(rest) == 1 else {'all': rest}
     spec = {k: c[k] for k in ('question', 'rationale', 'expected', 'failure_conditions', 'structure', 'tf', 'geo',
                               'target', 'hedge')}
     spec.update(long=long_, short=short_, roles=dict(c.get('roles') or {}),
+                exit=deepcopy(c.get('exit')),
                 provenance=dict(c.get('provenance') or {}, parent=c['candidate_id'], change=change,
                                 track='revision'))
+    if change['kind'] == 'holding_period':
+        from dataclasses import asdict
+        from ...strategy.geometries import GEOS
+        spec['exit']=deepcopy(c.get('exit') or asdict(GEOS[c['geo']]))
+        spec['exit']['time']=dict(max_bars=change['to'])
+    if change['kind'] == 'exit_geometry':
+        spec.update(geo=change['to'], exit=None)
     return graph.make_candidate(spec)
+
+
+def diagnosed_mutations(candidate, result):
+    """Choose a bounded DEVELOPMENT experiment from observed failure, never a verdict.
+
+    A disappointing result alone does not prove which cause is responsible.
+    The diagnosis states that uncertainty and proposes a discriminating test.
+    """
+    choices = mutations(candidate)
+    baseline = result.get('baselines') or {}
+    redundancy = any(b.get('candidate_earns_place') is False for b in baseline.values())
+    stress=(result.get('diagnostics') or {}).get('robustness') or {}
+    if stress.get('edge_disappears_at'):
+        priority=('holding_period','exit_geometry','remove_condition','substitute','regime_gate')
+        diagnosis='edge_disappears_under_declared_execution_stress: compare holding/turnover; cause not established'
+    elif redundancy:
+        priority = ('remove_condition', 'substitute', 'exit_geometry', 'holding_period','regime_gate')
+        diagnosis = 'component_did_not_earn_place: test removal or a comparable alternative'
+    elif (result.get('metrics') or {}).get('total_pct', 0) <= 0:
+        priority = ('exit_geometry', 'holding_period','remove_condition', 'substitute', 'regime_gate')
+        diagnosis = 'nonpositive_net_economics: compare exit/holding behavior; cause not established'
+    else:
+        priority = ('substitute', 'remove_condition', 'regime_gate', 'holding_period','exit_geometry')
+        diagnosis = 'weak_development_evidence: compare alternative predictor/context'
+    return sorted(choices, key=lambda c: priority.index(c['kind'])), diagnosis
 
 
 #: spec step D vocabulary over the closure outcomes

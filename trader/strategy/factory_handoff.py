@@ -734,6 +734,8 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
         _refuse("predictive_edge_not_established"
                 if rec.get("predictive_edge_established") is not True
                 else "not_a_referee_candidate")
+    if kind == 'coordinated_paper_research':
+        return _create_coordinated_trial(journal, cfg, source['packet'], at_ms=at_ms)
     if kind == Q.SOURCE_KIND:
         return _create_from_qualification(journal, cfg, source, at_ms=at_ms)
     if kind == HQ_KIND:
@@ -1242,6 +1244,13 @@ def verify_validation(journal, version: dict) -> dict:
     its Backtest PASS from the stored numbers, or its registered research look
     from the current ledger."""
     rec = verify_exit_binding(journal, version)
+    if version['source']['kind'] == 'coordinated_paper_research':
+        from ..research.closure.coordinated_trial import verify
+        packet=version['lineage']['research']['multi_leg']['packet']
+        verify(packet)
+        if packet['trial_id']!=version['source']['id'] or rec['evidence']!=version['evidence_ids']:
+            _refuse('paper_trial_evidence_changed')
+        return rec
     if version["source"]["kind"] == Q.SOURCE_KIND:
         return _verify_qualification(version, rec)
     if version["source"]["kind"] == HEDGE_HQ_KIND:
@@ -1361,6 +1370,11 @@ def verify_install(journal, version: dict, *, current: bool = True) -> dict:
     ) != (version["version_id"], version["spec_hash"],
           version["spec_hash"]):
         _refuse("install_wrong_version")
+    if version['source']['kind']=='coordinated_paper_research':
+        if (rec.get('execution')!='COORDINATED_PAPER_ONLY' or rec.get('mode')!='paper'
+                or rec.get('installed_spec')!=version['spec']):
+            _refuse('coordinated_install_differs')
+        return rec
     if current:
         inst = _installed(journal, version["strategy_id"])
         if inst is None:
@@ -2600,3 +2614,76 @@ def lifecycle_target(journal, version_id):
                 state=state_of(journal, version_id),
                 history_sha256=_jsha(dict(factory=events(journal, version_id),
                                          governor=governor_events(journal, version_id))))
+
+
+# Coordinated paper research shares the immutable Factory and lifecycle.
+# It does not use the single-leg strategies projection or live install path.
+def _create_coordinated_trial(journal, cfg, packet, *, at_ms):
+    from ..research.closure.coordinated_trial import verify, KIND
+    from .exit_policy import EXIT_SEMANTICS_ID
+    combo, hs=verify(packet)
+    spec=combo.to_spec()
+    spec.name=('Paper research: '+packet['candidate']['question'])[:100]
+    spec.universe={'include':[hs['primary']['symbol']],'exclude':[]}
+    sd,sh=_frozen_spec(spec)
+    ids=dict(exit_semantics_id=EXIT_SEMANTICS_ID,trial_id=packet['trial_id'],
+             development_result_id=packet['result']['result_id'])
+    research=dict(origin=KIND,multi_leg=dict(hedge_spec=hs,packet=packet,
+                  execution='COORDINATED_PAPER_ONLY',independent_qualification='NOT_ESTABLISHED'))
+    rec=_version_record(sd['id'],sd,sh,None,dict(kind=KIND,id=packet['trial_id']),ids,
+                        _lineage(sd,_jsha(cfg.get('risk')),research,ids,None))
+    ident=dict(schema=RECEIPT_SCHEMA,version_id=rec['version_id'],strategy_id=sd['id'],spec_hash=sh,evidence=ids)
+    receipt=dict(ident,receipt_id=_jsha(ident),semantics='Numerical development objective support for prospective paper research only; no independent qualification or live authority')
+    text=canonical(receipt)
+    with journal._tx() as db:
+        _begin(db)
+        outcome=_insert_version(db,rec,at_ms)
+        if outcome=='conflict':
+            _refuse('version_conflict')
+        status,_=_insert(db,'strategy_validation_receipts','receipt_id',dict(receipt_id=receipt['receipt_id'],
+            version_id=rec['version_id'],canonical_sha256=_sha(text),canonical_json=text,recorded_at_ms=int(at_ms)))
+        if status=='conflict':
+            _refuse('validation_receipt_conflict')
+        _transition(db,rec['version_id'],VALIDATED,'paper_research_objective_supported',receipt['receipt_id'],'factory',at_ms)
+    return dict(status=outcome,version_id=rec['version_id'],spec_hash=sh,strategy_id=sd['id'],validation_receipt_id=receipt['receipt_id'])
+
+
+def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
+    from ..engine.coordinated_paper import CoordinatedPaper
+    from ..core.types import TF_MS
+    ensure(journal)
+    version=load_version(journal,version_id)
+    if version['source']['kind']!='coordinated_paper_research':
+        _refuse('not_coordinated_paper_research')
+    validation=verify_validation(journal,version)
+    if not math.isfinite(equity) or equity<=0:
+        _refuse('paper_equity_invalid')
+    old=_install_record(journal,version_id)
+    if old is None:
+        if state_of(journal,version_id)!=VALIDATED:
+            _refuse('paper_trial_not_validated')
+        ident=dict(schema=INSTALL_SCHEMA,version_id=version_id,strategy_id=version['strategy_id'],
+                   spec_hash=version['spec_hash'],validation_receipt_id=validation['receipt_id'],
+                   mode='paper',exit_semantics_id=validation['evidence']['exit_semantics_id'])
+        # Begin only with future decisions after installation, never backfill
+        # historical paper fills before this trial existed.
+        step=TF_MS[version['spec']['timeframe']]
+        old=dict(ident,install_id=_jsha(ident),installed_at_ms=int(at_ms),starting_equity=equity,
+                 first_bar_ms=((int(at_ms)+step-1)//step)*step,installed_spec=version['spec'],
+                 installed_spec_hash=version['spec_hash'],execution='COORDINATED_PAPER_ONLY')
+        text=canonical(old)
+        with journal._tx() as db:
+            _begin(db)
+            status,_=_insert(db,'strategy_version_installs','install_id',dict(install_id=old['install_id'],
+                version_id=version_id,strategy_id=version['strategy_id'],spec_hash=version['spec_hash'],mode='paper',
+                canonical_sha256=_sha(text),canonical_json=text,recorded_at_ms=int(at_ms)))
+            if status=='conflict':
+                _refuse('install_conflict')
+            _transition(db,version_id,SHADOW,'coordinated_paper_installed',old['install_id'],'factory',at_ms)
+    else:
+        verify_install(journal,version,current=False)
+    identity=dict(exec_mode='paper',version_id=version_id,spec_hash=version['spec_hash'],
+                  install_id=old['install_id'],admission_id=validation['receipt_id'],first_bar_ms=old['first_bar_ms'])
+    book_id=CoordinatedPaper(journal).start(spec=version['lineage']['research']['multi_leg']['hedge_spec'],
+                                         identity=identity,equity=old['starting_equity'])
+    return dict(install=old,book_id=book_id,version_id=version_id)

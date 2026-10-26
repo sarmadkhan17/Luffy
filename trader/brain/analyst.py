@@ -114,7 +114,7 @@ class Analyst:
             frames = {**frames, "_market": market}
         btc = frames.get("_btc_1h")
         return (frames,
-                {"15m": btc} if btc is not None else None,
+                {tf: btc} if btc is not None else None,
                 lambda s: spec_evidence.load_derivs(s, spec.data_requires),
                 spec_evidence.risk_for(self.cfg["risk"], tf))
 
@@ -139,6 +139,8 @@ class Analyst:
         costs ~18.5% of the risk staked at 15m against ~7.8% at 4h, because
         ATR/price grows with horizon while the fee does not.
         """
+        if getattr(self, '_fixed_proposal_timeframe', None):
+            timeframes = (self._fixed_proposal_timeframe,)
         s = self._scfg()
         recent_days = float(s.get("select_recent_days", 90))
         min_trades = int(s.get("select_min_trades", 20))
@@ -422,7 +424,7 @@ class Analyst:
         return True, ev
 
     def qualify(self, spec: StrategySpec,
-                book: list) -> tuple[bool, dict, dict | None]:
+                book: list, *, fixed_timeframe=False) -> tuple[bool, dict, dict | None]:
         """The Backtest PASS for a created strategy.
 
         This is `admit` — the same recent-profitability gate, dependence-aware
@@ -438,6 +440,7 @@ class Analyst:
             return False, {"spec": spec.id, "untested": True,
                            "reason": f"unsupported_versioned_exit:{bad}"}, None
         self._exit_semantics_id = exit_policy.EXIT_SEMANTICS_ID
+        self._fixed_proposal_timeframe = spec.timeframe if fixed_timeframe else None
         try:
             ok, ev = self.admit(spec, book)
             if not ok:
@@ -464,6 +467,7 @@ class Analyst:
                            "untested": True}, None
         finally:
             self._exit_semantics_id = None
+            self._fixed_proposal_timeframe = None
 
     def _null_evidence(self, spec: StrategySpec, tf: str) -> dict:
         """One timing hypothesis, one common-calendar joint control receipt."""

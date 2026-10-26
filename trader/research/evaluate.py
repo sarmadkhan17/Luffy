@@ -81,6 +81,7 @@ class Bundle:
     requested: tuple = ()
     dropped: dict = field(default_factory=dict)
     evidence: dict = field(default_factory=dict)
+    entry_eligibility: dict = field(default_factory=dict)
 
 
 def is_transient_read_error(exc: BaseException) -> bool:
@@ -458,6 +459,11 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
                 universe=b.universe, market=b.market, symbol=sym, world=b.world)
+            if sym in b.entry_eligibility:
+                allow=np.asarray(b.entry_eligibility[sym],dtype=bool)
+                if allow.shape != np.asarray(lo).shape:
+                    raise ValueError('entry_eligibility_shape')
+                lo,sh=np.asarray(lo,dtype=bool)&allow,np.asarray(sh,dtype=bool)&allow
             ex, ex_available = compiled.exit_signal_detail(
                 sf, btc=b.btc, derivs=b.derivs.get(sym), universe=b.universe,
                 market=b.market, symbol=sym, world=b.world
@@ -500,7 +506,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
                 compiled, sf, b.risk, r.profit_factor, btc=b.btc,
                 derivs=b.derivs.get(sym), universe=b.universe, world=b.world,
                 market=b.market, symbol=sym, draws=int(draws), seed=seed,
-                split=None, funding=fund)
+                split=None, funding=fund,entry_eligibility=b.entry_eligibility.get(sym))
         except Exception as e:                          # noqa: BLE001
             log.debug(f"research null {c.hash} {sym}: {e}")
             rec["null_error"] = str(e)[:200]

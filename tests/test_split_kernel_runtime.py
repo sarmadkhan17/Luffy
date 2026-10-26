@@ -33,7 +33,7 @@ def test_complete_schedule_contract(tmp_path):
         'commands':1, 'account':30, 'positions':30, 'market':60, 'candles':15,
         'strategy_health':3600, 'health':10, 'learning_apply':60, 'learning_check':60, 'outcomes':60,
         'reports':3600, 'postmortem':21600, 'derivatives':900, 'derivative_inputs':300, 'references':3600,
-        'input_metadata':30, 'input_warm':2, 'derivative_needs':60, 'alts_history':300}
+        'input_metadata':30, 'input_warm':2, 'derivative_needs':60, 'alts_history':300, 'coordinated_paper':60}
     assert r.jobs['research'].calendar.hours == (9,21)
     assert r.jobs['validation'].calendar.hours == (3,)
     assert r.jobs['validation'].calendar.weekday == 6

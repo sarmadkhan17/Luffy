@@ -99,6 +99,9 @@ def main(argv=None):
         print(json.dumps(dict(status='REFUSED', reason_code=exc.code, detail=str(exc))))
         return 2
     print(json.dumps(out, sort_keys=True, default=str))
+    if a.cmd == 'scheduled' and out.get('status') in (
+            'PREP_FAILED', 'CONFIG_INVALID', 'ERROR', 'CHILD_OWNERSHIP_UNKNOWN', 'CREATE_FAILED'):
+        return 3
     return 0
 
 

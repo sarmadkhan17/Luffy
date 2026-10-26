@@ -43,6 +43,22 @@ def settings(cfg) -> dict | None:
     return out
 
 
+def horizon_for(auto, index):
+    """Predeclared horizon rotation; never choose from measured profitability.
+
+    A horizon may override fit_bars (the history required by its mechanism).
+    Publication reads cached rows only; missing coverage is a data task.
+    """
+    options = auto.get('horizons') or [dict(tf=auto['tf'], fit_bars=auto['fit_bars'])]
+    if not isinstance(options, list) or not options or len(options) > 8:
+        raise ClosureRefused('research_horizons_invalid')
+    for option in options:
+        if (not isinstance(option, dict) or option.get('tf') not in ('15m', '1h', '4h')
+                or type(option.get('fit_bars')) is not int or option['fit_bars'] < 400):
+            raise ClosureRefused('research_horizon_contract_invalid')
+    return dict(auto, **options[index % len(options)])
+
+
 # ── snapshot: filesystem copy only ─────────────────────────────────────────
 GIB = 1024 ** 3
 CHUNK = 8 * 1024 * 1024
@@ -170,10 +186,15 @@ def publish_job(payload: dict) -> dict:
         symbols=a.get('symbols'), now_ms=stamp, retrospective=a['development_mode'] == 'RETROSPECTIVE',
         development_derivatives_only=bool(a.get('development_derivatives_only', False)),
         deriv_src=payload.get('derivs_db'), dst_derivs=(d / f'derivs-{stamp}.db') if payload.get('derivs_db') else None)
+    universe=None
+    if a.get('source_journal_path'):
+        universe=publish.publish_universe(a['source_journal_path'],d/f'universe-{stamp}.db',
+            start_ms=int(out['as_of_ms'])-bars*TF_MS[a['tf']],end_ms=stamp,deadline=deadline,
+            max_bytes=min(512*1024*1024,max(0,int(a.get('max_snapshot_payload_bytes',512*1024*1024))-int(out['bytes'])-int((out.get('derivs') or {}).get('bytes',0)))))
     return dict(candles=dict(path=out['path'], bytes=out['bytes'], consistency=out['consistency'], rows=out['rows'],
                              revisions=out['revisions'], window_bars=bars, as_of_ms=out['as_of_ms'], coverage=out.get('coverage_filter'),
                              revision_scope=out['revision_scope']),
-                derivs=out['derivs'])
+                derivs=out['derivs'],universe=universe)
 
 
 def prune_snapshots(snapshot_dir, store, keep_unreferenced=0) -> list:
@@ -185,11 +206,11 @@ def prune_snapshots(snapshot_dir, store, keep_unreferenced=0) -> list:
     held = set()
     for row in store.studies():
         pl = json.loads(row['payload'])
-        held.update(str(pl.get(k)) for k in ('snapshot_path', 'derivs_path', 'world_path') if pl.get(k))
+        held.update(str(pl.get(k)) for k in ('snapshot_path', 'derivs_path', 'world_path','universe_path') if pl.get(k))
     for ev in _ready(store):
-        held.update(v for v in (ev['candles'], ev['derivs']) if v)
+        held.update(v for v in (ev['candles'], ev['derivs'],ev.get('universe')) if v)
     gone = []
-    stale = sorted((p for pat in ('candles-*.db', 'derivs-*.db', 'world-*.db') for p in d.glob(pat) if str(p) not in held),
+    stale = sorted((p for pat in ('candles-*.db', 'derivs-*.db', 'world-*.db','universe-*.db') for p in d.glob(pat) if str(p) not in held),
                    key=lambda p: p.stat().st_mtime)
     for p in stale[:max(len(stale) - int(keep_unreferenced), 0)]:
         p.unlink(missing_ok=True)
@@ -198,7 +219,7 @@ def prune_snapshots(snapshot_dir, store, keep_unreferenced=0) -> list:
 
 
 # ── spec derived from measured coverage ────────────────────────────────────
-def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=None) -> dict:
+def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=None,universe_snapshot=None) -> dict:
     """{spec} or {blocked: reason}. Only symbols whose retained coverage satisfies the policy enter; a window
     with too few of them is a data blockage, reported, never padded."""
     from . import manifest
@@ -231,11 +252,14 @@ def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=No
                 fit_start_ms=int(fit_start), dev_end_ms=int(dev_end), embargo_bars=embargo,
                 protected_start_ms=int(protected_start), protected_end_ms=int(protected_end), policy=policy, risk=risk,
                 development_mode=mode, search=dict(auto['search']), max_candidates=int(auto['max_candidates']),
+                max_revisions=int(auto.get('max_revisions', 4)),
                 unit_timeout_s=int(auto['unit_timeout_s']), workdir=str(Path(auto['snapshot_dir']) / 'workdir'),
                 origin='auto')
     for key in ('bank_path', 'references_path', 'world_path', 'source_journal_path', 'protected_derivs_path'):
         if auto.get(key):
             spec[key] = str(auto[key])
+    if universe_snapshot:
+        spec.update(universe_path=str(universe_snapshot),universe_environment=auto.get('universe_environment','demo'))
     if derivs_snapshot:                       # the derivatives COPY taken with the candles, never the live path
         spec['derivs_path'] = str(derivs_snapshot)
     elif auto.get('derivs_path'):
@@ -304,12 +328,14 @@ def create_job(payload: dict) -> dict:
     store = Store(payload['store_path'])
     try:
         out = derive_spec(payload['auto'], payload['cfg'], payload['snapshot_path'], exposure.events(store),
-                          derivs_snapshot=payload.get('derivs_snapshot'))
+                          derivs_snapshot=payload.get('derivs_snapshot'),universe_snapshot=payload.get('universe_snapshot'))
         if 'spec' not in out:
             return out
         try:
             world = produce_world(payload['auto'], out['spec'], payload['snapshot_path'], int(payload['now_ms']))
-        except Exception as exc:                  # noqa: BLE001 - a World fault must not block studies that do not use it
+        except Exception as exc:                  # noqa: BLE001 - independent studies may continue
+            store.log_schedule(int(payload['now_ms']),'WORLD_PREPARATION_FAILED',
+                               detail=dict(error=type(exc).__name__+': '+str(exc)[:200]))
             world = None
         if world is not None:
             out['spec']['world_path'] = world['path']
@@ -430,7 +456,23 @@ def _tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop
                                units_run=kw.get('units_run'), elapsed_s=round(time.monotonic() - t0, 2), detail=kw.get('detail'))
         return rec
 
-    ranked = [(row, kind) for row, _ in auto_studies(store) if (kind := runnable(store, row['study_id']))]
+    from .manifest import evaluator_id
+    current_evaluator = evaluator_id()
+    ranked = []
+    for row, definition in auto_studies(store):
+        env = store.get_once('envelopes', definition['envelope_id'])
+        if env is not None and env['evaluator_id'] != current_evaluator:
+            if row['status'] not in ('COMPLETED', 'SUPERSEDED'):
+                with store._tx() as db:
+                    db.execute("UPDATE studies SET status='SUPERSEDED',stop_reason='evaluator_changed',next_work=NULL WHERE study_id=?",
+                               (row['study_id'],))
+                store.log_schedule(now_ms,'STUDY_SUPERSEDED',study_id=row['study_id'],
+                    detail=dict(reason='evaluator_changed; retained evidence is historical, never rewritten',
+                                previous=env['evaluator_id'],current=current_evaluator))
+            continue
+        kind = runnable(store,row['study_id'])
+        if kind:
+            ranked.append((row,kind))
     data_first = [r for r, kind in ranked if kind == 'DATA']                # arrived data resumes its candidate first
     sid = (data_first or [r for r, _ in ranked] or [None])[-1]
     sid = sid['study_id'] if sid else None
@@ -442,10 +484,16 @@ def _tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop
                 return finish('IDLE', detail=why)
         if left() < MIN_PREP_S:
             return finish('DEFERRED_BUDGET', detail=f'{left():.0f}s left in the slot; preparation needs at least {MIN_PREP_S:.0f}s')
+        # Rotate attempted preparations too: missing one horizon must not
+        # permanently starve the others. Resume always uses the saved choice.
+        prep_count = len(_events(store, 'PREPARING'))
+        legacy_horizon = dict(tf=auto['tf'],fit_bars=auto['fit_bars'])
+        auto = horizon_for(auto, prep_count)
         base = dict(now_ms=now_ms, snapshot_dir=auto['snapshot_dir'], market_db=auto['market_db'], derivs_db=auto.get('derivs_db'),
                     min_free_gb=float(auto.get('min_free_gb', 2.0)))
         if ready:
             snap = ready[-1]
+            auto = dict(auto, **snap.get('horizon', legacy_horizon))
         else:
             job = snapshot_job if auto.get('snapshot_mode') == 'copy' else publish_job
             store.log_schedule(now_ms, 'PREPARING', detail=dict(
@@ -460,13 +508,15 @@ def _tick(cfg, store, auto, *, now_ms, budget_s, cycle_seconds=None, should_stop
                     return finish('CHILD_OWNERSHIP_UNKNOWN', detail=dict(stage='preparation'))
                 return finish('PREP_FAILED', detail=dict(stage='snapshot', error=str(res.error)[-200:], timed_out=res.timed_out))
             snap = dict(candles=res.value['candles']['path'], derivs=(res.value['derivs'] or {}).get('path'),
+                        universe=(res.value.get('universe') or {}).get('path'),
                         consistency=res.value['candles']['consistency'], bytes=res.value['candles']['bytes'],
-                        coverage=res.value['candles'].get('coverage'))
+                        coverage=res.value['candles'].get('coverage'),
+                        horizon=dict(tf=auto['tf'], fit_bars=auto['fit_bars']))
             store.log_schedule(now_ms, 'SNAPSHOT_READY', detail=snap)
         if left() < MIN_PREP_S:                      # copy done but no time to derive: resume from the copy next slot
             return finish('DEFERRED_BUDGET', detail=dict(reason='snapshot ready; study creation deferred', snapshot=snap['candles']))
         made = _run(create_job, dict(store_path=str(store.path), auto=auto, cfg=_slim(cfg), now_ms=now_ms,
-                                     snapshot_path=snap['candles'], derivs_snapshot=snap.get('derivs')),
+                                     snapshot_path=snap['candles'], derivs_snapshot=snap.get('derivs'),universe_snapshot=snap.get('universe')),
                     dict(timeout_s=min(float(auto['prep_timeout_s']), left()), memory_mb=auto['prep_memory_mb']), child,
                     should_stop=should_stop)
         if not made.ok:
@@ -552,7 +602,7 @@ def _prepare(job, base, auto, cfg, *, timeout_s, child, should_stop=None):
                 res.owned_pending = (str(staging),)
             return res
         value = dict(res.value)
-        for key in ('candles', 'derivs'):
+        for key in ('candles', 'derivs','universe'):
             if value.get(key) is None:
                 continue
             item = dict(value[key])
@@ -605,6 +655,7 @@ def _candidates(db, envelope_id, have, limit=8) -> list:
             question=(cand or {}).get('question'), structure=(cand or {}).get('structure'),
             graph=_clip({k: (cand or {}).get(k) for k in ('long', 'short', 'exit', 'roles', 'target')}) if cand else None,
             requires=r.get('requires'), metrics=r.get('metrics'), alternatives=r.get('baselines'),
+            validation_readiness=r.get('validation_readiness'),
             models=_clip(gf.get('models')), walk_forward=_clip(gf.get('walk_forward')),
             regimes=_clip(d.get('regime')), mtm=_clip(d.get('mtm')), contribution=_clip(d.get('contribution')),
             factor_roles=_clip(d.get('roles'), 4000),

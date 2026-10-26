@@ -156,12 +156,16 @@ def consume(store: Store, bank_path, *, now_ms: int, limit: int = 8, max_attempt
     for q in bank['questions']:
         if q.get('stage') != 'QUESTION' or q.get('authority') != 'QUESTION_ONLY':
             continue
-        item_id = digest(['question', q['question_id']])
+        item_id = digest(['question', q['question_id']] + ([study_id] if study_id is not None else []))
         store.claim_item(item_id, 'question', q['question_id'],
                          dict(schema=ITEM_SCHEMA, question_id=q['question_id'], source_bank_id=q.get('source_bank_id'),
                               **({'study_id': study_id} if study_id else {})),
                          now_ms)
         item = store.item(item_id)
+        if (item['status'] == 'WAITING_DATA' and item.get('reason', '').startswith('PROPOSER_UNAVAILABLE')
+                and getattr(getattr(proposer, 'llm', None), 'available', False)):
+            store.set_item(item_id, 'PENDING', 'provider_available_retry', now_ms)
+            item = store.item(item_id)
         if item['status'] != 'PENDING':
             counts['skipped'] += 1
             continue
@@ -195,6 +199,10 @@ def _finish(store, item_id, status, reason, candidate, provenance, now_ms):
     """Atomic: candidate row and item status commit together, so a crash can
     leave a PENDING item (retried to the same ids) but never a half child."""
     import json
+    if candidate is not None and candidate.get('schema') == 'closure-graph-candidate.v1':
+        from ..compose.experiments import plan
+        ep = plan(candidate)
+        store.put_once('experiment_plans', digest(['item', item_id]), ep)
     with store._tx() as c:
         if candidate is not None:
             old = c.execute('SELECT payload FROM candidates WHERE id=?', (candidate['candidate_id'],)).fetchone()
@@ -239,17 +247,22 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
         return item
     outcome = dev_result['outcome']
     child, change = None, None
-    if outcome == 'NEGATIVE_ECONOMICS':
+    stress=((dev_result.get('diagnostics') or {}).get('robustness') or {}).get('edge_disappears_at')
+    if outcome == 'NEGATIVE_ECONOMICS' or outcome=='DEVELOPMENT_POSITIVE' and stress:
         root_count = len(store.items(kind='revision', status='COMPILED', root=_root(store, parent_candidate_id)))
         if root_count >= max_revisions:
             status, reason = 'BLOCKED', 'REVISION_BUDGET_EXHAUSTED'
         else:
-            for change in families.mutations(parent):
+            choices, diagnosis = families.mutations(parent), 'bounded family experiment'
+            if parent.get('schema') == 'closure-graph-candidate.v1':
+                from ..compose.search import diagnosed_mutations
+                choices, diagnosis = diagnosed_mutations(parent, dev_result)
+            for change in choices:
                 cand = families.mutate(parent, change)
                 if store.get_once('candidates', cand['candidate_id']) is None:
                     child = cand
                     break
-            status, reason = ('COMPILED', 'bounded_economic_revision') if child else (
+            status, reason = ('COMPILED', 'bounded_economic_revision: ' + diagnosis) if child else (
                 'NO_CHANGE_JUSTIFIED', 'mutation_space_exhausted')
     elif outcome in ('INCONCLUSIVE_POWER', 'BLOCKED_DATA'):
         status, reason = 'WAITING_DATA', 'power_or_data_shortfall_is_not_negative_evidence; no rule change'

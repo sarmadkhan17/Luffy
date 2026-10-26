@@ -11,7 +11,7 @@ import math
 from . import foundation as L
 
 SCHEMA = 'adaptive-target-state.v1'
-PRODUCTION_RULES = MappingProxyType({})
+PRODUCTION_RULES = MappingProxyType({})  # populated with explicit policies after Rule is defined
 ADAPTIVE = frozenset(t for t in L.Target if t != L.Target.LIFECYCLE)
 
 
@@ -279,3 +279,8 @@ def priority_order(journal, target, items, context_for):
         state = read(journal, target, context_for(item))
         return order[(state['value'] or {}).get('priority', Priority.NORMAL.value)]
     return sorted(items, key=key)
+
+
+from .research_policy import rule as _research_rule
+_research_policy = _research_rule()
+PRODUCTION_RULES = MappingProxyType({_research_policy.rule_id: _research_policy})

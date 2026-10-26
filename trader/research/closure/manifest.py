@@ -352,7 +352,7 @@ def research_risk(risk) -> dict:
 
 def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout_symbols, fit_start_ms,
                   dev_end_ms, embargo_bars, protected_start_ms, protected_end_ms, risk,
-                  development_mode='REPLAY') -> dict:
+                  development_mode='REPLAY', search_contract_id=None) -> dict:
     """Freeze a study. Statuses are COMPUTED: development ELIGIBLE needs the
     policy's discovery floor; protected ELIGIBLE additionally needs REPLAY
     provenance over the whole window, a proven UNEXPOSED state, the held-out
@@ -421,6 +421,8 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
                 evaluator_id=evaluator_id(), cost_id=digest(risk_id), risk=risk_id, protected_fingerprint=None,
                 development_data_id=None, snapshot=manifest['snapshot'], exposure_events=manifest['exposure_events'],
                 authority='RESEARCH_ONLY')
+    if search_contract_id is not None:
+        body['search_contract_id'] = search_contract_id
     if not dev_reasons:
         body['development_data_id'] = development_data_id(path, body)
     if not prot_reasons:
@@ -504,6 +506,17 @@ def development_frames(snapshot_path, env) -> tuple:
     if data_id != env['development_data_id']:
         raise ClosureRefused('development_data_changed')
     return frames, data_id
+
+
+def development_reference(snapshot_path, env, symbol='BTC/USDT'):
+    """Read a reference instrument ONLY in the registered development era.
+
+    Reference inputs do not add target symbols or expose protected-era prices.
+    Its independent content identity joins the development cache identity.
+    """
+    verify_envelope(env)
+    require_unchanged(refuse_live(snapshot_path), env['snapshot'])
+    return _dev_frames(snapshot_path, dict(env, discovery_symbols=[symbol]))
 
 
 def freeze_window(snapshot_path, dest, env) -> str:

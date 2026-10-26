@@ -46,7 +46,7 @@ def source_versions(cfg):
     # Exact current evaluator and policies, not mutable 'latest' references.
     return dict(rule_version=L.digest(L.code_manifest()), risk_config=L.digest(cfg),
                 application_authority=L.digest({p:hashlib.sha256(Path(__file__).with_name(p).read_bytes()).hexdigest()
-                    for p in ('application.py','adaptive_application.py','targets.py')}))
+                    for p in ('application.py','adaptive_application.py','targets.py','research_policy.py')}))
 
 
 def request(evidence, proposal, target, versions):

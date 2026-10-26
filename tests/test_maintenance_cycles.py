@@ -118,3 +118,18 @@ def test_recovery_check_recovers_new_evidence_and_restart_without_payload_scan(m
     m.watermark._top = lambda j: 21
     m.learning_check()
     assert m.jobs['learning']._pending is not None
+
+
+def test_learning_backlog_cannot_retrigger_a_busy_loop(tmp_path,monkeypatch):
+    import trader.learning.dispatch as D
+    from trader.learning.research_policy import rule
+    monkeypatch.setattr(D,'production_registry',lambda:{rule().rule_id:rule()})
+    seen=[]
+    monkeypatch.setattr(D,'dispatch_pending',lambda *a,**kw:seen.append(kw) or [{}]*8)
+    clock=[10.0]
+    monkeypatch.setattr('trader.scheduling.maintenance.time.monotonic',lambda:clock[0])
+    m=Maintenance(Journal(tmp_path/'maintenance.db'),{},None)
+    assert len(m.learning())==8
+    assert m.learning()==[] and len(seen)==1
+    clock[0]+=60
+    assert len(m.learning())==8 and len(seen)==2

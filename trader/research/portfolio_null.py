@@ -55,6 +55,7 @@ class Leg:
     table: dict | None = field(default=None, repr=False)
     exit_sig: np.ndarray | None = None
     exit_sig_available: np.ndarray | None = None
+    entry_eligibility: np.ndarray | None = None
 
 
 def _mask(a, first_bar: int) -> np.ndarray:
@@ -96,6 +97,11 @@ def fills_for(legs, exit_spec, risk: dict, tf: str, offset: int = 0,
     for l in legs:
         lo = _mask(np.roll(l._long, offset), l.first_bar)
         sh = _mask(np.roll(l._short, offset), l.first_bar)
+        if l.entry_eligibility is not None:
+            allow=np.asarray(l.entry_eligibility,dtype=bool)
+            if allow.shape!=lo.shape:
+                raise ValueError('entry_eligibility_shape')
+            lo,sh=lo&allow,sh&allow
         for i, e, r in walk_table(l.table, lo, sh, risk):
             fills.append(Fill(entry_i=int(l._grid[i]),
                               exit_i=int(l._grid[e]), r_multiple=r,
@@ -194,5 +200,6 @@ def legs_for(compiled, bundle) -> list:
         legs.append(Leg(sym, np.asarray(lo, bool), np.asarray(sh, bool), df,
                         funding_for(sym, df, bundle.risk),
                         int(bundle.first_bars.get(sym, 0)),
-                        exit_sig=ex, exit_sig_available=ex_available))
+                        exit_sig=ex, exit_sig_available=ex_available,
+                        entry_eligibility=getattr(bundle,'entry_eligibility',{}).get(sym)))
     return legs

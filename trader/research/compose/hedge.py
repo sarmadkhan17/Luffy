@@ -241,7 +241,7 @@ class HedgeBook:
         ok = np.isfinite(bar['p']) and np.isfinite(bar['h']) and bar['p'] > 0 and bar['h'] > 0
         self.missing = 0 if ok else self.missing + 1
         if self.state == 'FLAT':
-            if bar['signal'] != 0 and ok and not self.pending:
+            if bar['signal'] != 0 and not bar.get('exit') and ok and not self.pending:
                 self.direction = int(bar['signal'])
                 notional = bar['equity'] * sp['sizing']['primary_notional_pct'] / 100.0
                 pq = pc.qty_for(notional, bar['p'])
@@ -664,4 +664,18 @@ def place(idx, arr, n: int):
     """Put a per-row series on the aligned clock; slots without a row are NaN (unknown), never zero."""
     out = np.full(n, np.nan)
     out[idx] = np.asarray(arr, dtype=float)
+    return out
+
+
+def aligned_exits(compiled, frames, alignment, **context):
+    """Declared closed-bar exit on the same two-leg clock as entries.
+
+    Unknown declared-exit evidence requests unwind and prevents new entry;
+    it must not silently become a hold. No declared exit means no signal exit.
+    """
+    out = np.zeros(alignment['bars'], dtype=bool)
+    if compiled.spec.exit.signal_exit.strip():
+        signal, available = compiled.exit_signal_detail(frames, **context)
+        out[:] = True
+        out[alignment['idx_p']] = np.asarray(signal, bool) | ~np.asarray(available, bool)
     return out

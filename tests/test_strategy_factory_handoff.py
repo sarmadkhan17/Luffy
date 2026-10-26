@@ -974,7 +974,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py'), pathlib.Path('trader/engine/coordinated_trials.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert not _factory_refs(f.read_text(), f.as_posix()), f
     # Postmortem delegates only to these existing read-only Factory readers.
     # No writer/alias escape is permitted by this exception.
@@ -1066,7 +1066,10 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                          and isinstance(g, ast.FunctionDef))}
     assert users == {"_research_handoff", "_install_version",
                      "_load_spec_population", "_try_enter", "_manage_one", "_mechanism_once",
-                     "_qualified_install", "_manage_paper", "_compile_population_spec"}, users
+                     "_qualified_install", "_manage_paper", "_compile_population_spec", "_compositional_paper_intake"}, users
+    intake=next(f for f in ast.walk(tree) if isinstance(f,ast.FunctionDef) and f.name=='_compositional_paper_intake')
+    assert set(re.findall(r"\bfactory\.(\w+)",ast.unparse(intake))) <= {
+        'ensure','load_version','state_of','VALIDATED','versioned'}
     for name in ("_load_spec_population", "_try_enter"):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)

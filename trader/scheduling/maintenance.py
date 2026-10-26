@@ -13,6 +13,7 @@ class Maintenance:
         self.journal, self.cfg, self.feed = journal, cfg, feed
         self.apply_learning = lambda: []  # runtime installs its coordinated checkpoint
         self._vault_lock = threading.Lock()
+        self._learning_next_at = 0.0
         from ..learning.dispatch import Watermark
         self.watermark = Watermark()
         self.jobs = {
@@ -81,11 +82,15 @@ class Maintenance:
         from ..learning.dispatch import dispatch_pending, production_registry, dispatchable
         if not any(dispatchable(rule) for rule in production_registry().values()):
             return
+        now = time.monotonic()
+        if now < self._learning_next_at:
+            return []
+        # One batch per minute, including during backlog recovery. A new
+        # policy must not turn retained history into a busy loop.
+        self._learning_next_at = now + 60
         rows = dispatch_pending(self.journal, self.cfg, at_ms=int(time.time() * 1000),
                                 max_work=8, watermark=self.watermark)
-        if len(rows) == 8:
-            # Bounded batches, but don't wait a minute with known backlog.
-            self.jobs['learning'].trigger()
+        return rows
 
     def reports(self):
         from ..knowledge.vault import Vault

@@ -41,7 +41,7 @@ def rotate_entries(a: np.ndarray, offset: int) -> np.ndarray:
 def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
              risk_cfg: dict, draws: int = 100, seed: int = 0,
              symbol: str = "BT", funding: np.ndarray | None = None,
-             score_from: int = 0, exit_sig=None, exit_sig_available=None) -> list[float]:
+             score_from: int = 0, exit_sig=None, exit_sig_available=None, entry_eligibility=None) -> list[float]:
     """Profit factors from `draws` rotations of the same signals.
 
     `funding` is the same signed per-bar series the actual result was charged.
@@ -80,7 +80,10 @@ def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
 
     out: list[float] = []
     for off in rng.integers(lo_off, hi_off, size=int(draws)):
-        r = simulate(rotated(long, off), rotated(short, off),
+        allow = np.ones(n,dtype=bool) if entry_eligibility is None else np.asarray(entry_eligibility,dtype=bool)
+        if allow.shape != (n,):
+            raise ValueError('entry_eligibility_shape')
+        r = simulate(rotated(long, off) & allow, rotated(short, off) & allow,
                      df, exit_spec, risk_cfg, symbol=symbol, funding=funding,
                      score_from=score_from, exit_sig=exit_sig, exit_sig_available=exit_sig_available)
         if r.trades > 0:
@@ -104,7 +107,7 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
            btc=None, derivs=None, universe=None, market=None,
            symbol: str = "BT", draws: int = 100, seed: int = 0,
            split: float | None = None, part: str = "test",
-           funding: np.ndarray | None = None, world=None) -> dict:
+           funding: np.ndarray | None = None, world=None, entry_eligibility=None) -> dict:
     """{null_median, null_p90, percentile, draws, bars} for one spec/symbol.
 
     `split`/`part` select the same slice the actual profit factor came from.
@@ -127,13 +130,15 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
                           else warm_window(0, cut))
         df = df.iloc[sl].reset_index(drop=True)
         lo, sh = lo[sl], sh[sl]
+        if entry_eligibility is not None:
+            entry_eligibility=np.asarray(entry_eligibility,dtype=bool)[sl]
         ex = None if ex is None else ex[sl]
         ex_available = None if ex_available is None else ex_available[sl]
         if funding is not None:
             funding = np.asarray(funding, dtype=float)[sl]
     pfs = null_pfs(lo, sh, df, compiled.spec.exit, risk_cfg,
                    draws=draws, seed=seed, symbol=symbol, funding=funding,
-                   score_from=score_from, exit_sig=ex, exit_sig_available=ex_available)
+                   score_from=score_from, exit_sig=ex, exit_sig_available=ex_available,entry_eligibility=entry_eligibility)
     if len(pfs) < MIN_DRAWS:
         return {"draws": len(pfs), "bars": len(df), "percentile": None,
                 "reason": f"only {len(pfs)} usable null draws"}

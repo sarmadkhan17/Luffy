@@ -231,13 +231,15 @@ class SpecWriter:
               data: str = "") -> tuple[StrategySpec | None, dict]:
         """Compose one spec. Returns (spec_or_None, trace)."""
         if not (self.llm and getattr(self.llm, "available", False)):
-            return None, {"reason": "no LLM available"}
+            return None, {"reason": "no LLM available", "deferred": True}
 
         prompt = _prompt(idea, doctrine, avoid or [], data)
         trace: dict = {"attempts": []}
         for attempt in range(MAX_REPAIRS + 1):
             raw = self.llm.chat_json(prompt, deep=(attempt == 0),
                                      purpose="strategist")
+            if raw is None:
+                return None, {**trace, "reason": "provider reply unavailable", "deferred": True}
             if not isinstance(raw, dict):
                 trace["attempts"].append({"error": "non-JSON reply"})
                 prompt = _prompt(idea, doctrine, avoid or [], data) + \

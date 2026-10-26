@@ -29,14 +29,15 @@ SPEC_KEYS = ('snapshot_path', 'tf', 'discovery_symbols', 'heldout_symbols', 'fit
              'protected_start_ms', 'protected_end_ms', 'policy', 'risk', 'development_mode', 'seed_families',
              'bank_path', 'max_candidates', 'max_revisions', 'workdir', 'journal_path', 'budget_journal_path',
              'source_journal_path', 'book', 'unit_timeout_s', 'derivs_path', 'world_path', 'seed_graphs', 'search', 'proposal_mode',
-             'references_path', 'origin', 'protected_derivs_path')
+             'references_path', 'origin', 'protected_derivs_path','universe_path','universe_environment')
 
 
 def develop_job(payload: dict) -> dict:
     """Child-process entry for one candidate's development (pure: returns the
     result, the parent writes it). Module level so `spawn` can import it."""
     return develop(payload['candidate'], payload['snapshot_path'], payload['env'], derivs_path=payload.get('derivs_path'), world_path=payload.get('world_path'),
-                   references_path=payload.get('references_path'), cache_path=payload.get('store_path'))
+                   references_path=payload.get('references_path'), cache_path=payload.get('store_path'),
+                   universe_path=payload.get('universe_path'),universe_environment=payload.get('universe_environment','demo'))
 
 
 def intake_job(payload: dict) -> dict:
@@ -51,7 +52,22 @@ def intake_job(payload: dict) -> dict:
         if payload.get('proposal_mode') == 'compositional':
             from ...brain.llm import BrainLLM
             from ..compose.proposer import GraphProposer
-            proposer = GraphProposer(BrainLLM(payload['cfg']), store, tf=payload['tf'])
+            learning_tasks = []
+            if payload.get('brain_source_path'):
+                from ...engine.protection_snapshot import ro_connect
+                from ...learning.research_policy import tasks
+                with closing(ro_connect(payload['brain_source_path'])) as db:
+                    class Reads:
+                        def query(self, sql, args=()):
+                            return [dict(r) for r in db.execute(sql, args)]
+                    learning_tasks = tasks(Reads(), at_ms=payload['now_ms'])
+            from copy import deepcopy
+            provider_cfg=deepcopy(payload['cfg'])
+            closure=(provider_cfg.get('research') or {}).get('closure') or {}
+            if closure.get('proposal_provider_enabled',False):
+                provider_cfg.setdefault('brain',{})['enabled']=True
+            proposer = GraphProposer(BrainLLM(provider_cfg), store, tf=payload['tf'], study_id=payload.get('study_id'),
+                                     learning_tasks=learning_tasks)
         result = consumer.consume(store, payload['bank_path'], now_ms=payload['now_ms'], proposer=proposer, study_id=payload.get('study_id'))
         if source_intake is not None:
             result['source_intake'] = source_intake
@@ -234,11 +250,14 @@ def create_study(store: Store, spec: dict, *, now_ms: int, prepared_manifest=Non
         body = {k: v for k, v in prepared_manifest.items() if k != 'manifest_id'}
         body['symbols'] = {s: prepared_manifest['symbols'][s] for s in sorted(set(syms))}
         m = dict(body, manifest_id=digest(body))
+    from .calibration import search_contract
+    contract = search_contract(search=spec['search'],max_candidates=spec['max_candidates'],
+                               max_revisions=spec['max_revisions'],tf=spec['tf'],intake=bool(spec.get('bank_path')))
     env = manifest.make_envelope(
         m, spec['snapshot_path'], policy=spec['policy'], discovery_symbols=spec['discovery_symbols'],
         heldout_symbols=spec['heldout_symbols'], fit_start_ms=spec['fit_start_ms'], dev_end_ms=spec['dev_end_ms'],
         embargo_bars=spec['embargo_bars'], protected_start_ms=spec['protected_start_ms'],
-        protected_end_ms=spec['protected_end_ms'], risk=spec['risk'], development_mode=spec['development_mode'])
+        protected_end_ms=spec['protected_end_ms'], risk=spec['risk'], development_mode=spec['development_mode'],search_contract_id=digest(contract))
     store.put_once('manifests', m['manifest_id'], m)
     store.put_once('envelopes', env['envelope_id'], env)
     study = dict(spec, spec_key=spec_key, envelope_id=env['envelope_id'], manifest_id=m['manifest_id'])
@@ -310,9 +329,15 @@ def _plan(store, study_id, study, env, now_ms):
             _ensure_unit(store, study_id, 'search', 'search', ['intake'] if study['bank_path'] else [])
         if any(u['unit_id'] == 'search' and u['status'] == 'DONE' for u in units):
             for attempt in store.attempts_for(study_id):
-                group = attempt.get('track') if attempt.get('domain') == 'learned' else attempt.get('domain', 'search')
+                track = str(attempt.get('track') or attempt.get('domain', 'search'))
+                if track.startswith('learned-') or track == 'equal-weight':
+                    track = 'learned'
+                group = ':'.join((track,
+                                  str(attempt.get('geometry') or 'fixed')))
                 queues.setdefault('search:' + str(group), []).append(attempt['candidate_id'])
-    queues['retained'] = [i['candidate_id'] for i in store.owned_items(study_id) if i['status'] == 'COMPILED' and i['candidate_id']]
+    owned = store.owned_items(study_id)
+    queues['retained'] = [i['candidate_id'] for i in owned if i['kind'] != 'revision'
+                          and i['status'] == 'COMPILED' and i['candidate_id']]
     seen = []
     # Round-robin source/track queues before applying the evaluation cap. A
     # large generated stream must not starve retained questions or model tracks.
@@ -330,6 +355,11 @@ def _plan(store, study_id, study, env, now_ms):
     if intake_done and search_done:
         for cid in seen[:study['max_candidates']]:
             _ensure_unit(store, study_id, f'develop:{cid}', 'develop', ['intake'] if study['bank_path'] else [])
+        # Revisions have their own bounded per-root count; they must not be
+        # stranded behind the already selected roots' evaluation cap.
+        for item in owned:
+            if item['kind'] == 'revision' and item['status'] == 'COMPILED' and item['candidate_id']:
+                _ensure_unit(store, study_id, f"develop:{item['candidate_id']}", 'develop')
     units = store.units(study_id)
     for u in units:
         if u['kind'] == 'develop' and u['status'] == 'DONE':
@@ -371,17 +401,19 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
         return res.value
     if kind == 'develop':
         cand = store.get_once('candidates', uid.split(':', 1)[1])
-        hit = None if graph.is_graph(cand) or env['risk'].get('real_funding', False) else next((r for r in store.runs_for(candidate_id=cand['candidate_id']) if r.get('candidate_id') == cand['candidate_id']
+        hit = None if graph.is_graph(cand) or env['risk'].get('real_funding', False) or study.get('universe_path') else next((r for r in store.runs_for(candidate_id=cand['candidate_id']) if r.get('candidate_id') == cand['candidate_id']
                     and r.get('envelope_id') == env['envelope_id'] and r.get('evaluator_id') == env['evaluator_id']
                     and r.get('data_id') == env.get('development_data_id')), None)
         if hit is None and env['development_status'] != 'ELIGIBLE':
             hit = develop(cand, study['snapshot_path'], env, store=store,       # records the BLOCKED result, no heavy work
+                          universe_path=study.get('universe_path'),universe_environment=study.get('universe_environment','demo'),
                           references_path=study.get('references_path'))
         if hit is None:
             res = _call(develop_job, dict(candidate=cand, snapshot_path=study['snapshot_path'], env=env,
                                           store_path=str(store.path),
                                           derivs_path=study.get('derivs_path'), world_path=study.get('world_path'),
-                                          references_path=study.get('references_path')), timeout_s, child, _limits(study), should_stop)
+                                          universe_path=study.get('universe_path'),universe_environment=study.get('universe_environment','demo'),
+                          references_path=study.get('references_path')), timeout_s, child, _limits(study), should_stop)
             if not getattr(res, 'terminated', True):
                 fence_child(store, res, study_id=study_id, unit_id=uid)
                 _set_unit(store, study_id, uid, 'RUNNING', now_ms, note='CHILD_NOT_REAPED')
@@ -397,7 +429,8 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
                 store.put_run(hit['cache_key'], hit)
         awaited, required = data_access.record(store, study_id, study, env, cand, hit, now_ms)
         out = dict({k: hit.get(k) for k in ('result_id', 'candidate_id', 'outcome', 'reason', 'cached', 'metrics',
-                                            'requires', 'context_gaps', 'context_provenance', 'evidence_scope')},
+                                            'requires', 'context_gaps', 'context_provenance', 'evidence_scope',
+                                            'validation_readiness')},
                    diagnosis=csearch.DIAGNOSIS.get(hit.get('outcome')))
         if awaited:
             out['waiting_data'] = awaited          # checkpoint: this candidate waits for the owner; others proceed

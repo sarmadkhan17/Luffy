@@ -66,11 +66,11 @@ def build_bundle(frames: dict, env: dict, external: dict | None = None) -> ev.Bu
     risk = cfg['risk']
     return ev.Bundle(
         tf=tf, frames=frames, sym_frames=sym_frames, universe={s: {tf: d} for s, d in frames.items()},
-        btc={tf: frames['BTC/USDT']} if 'BTC/USDT' in frames else None, market=external.get('market'),
+        btc=external.get('btc') or ({tf: frames['BTC/USDT']} if 'BTC/USDT' in frames else None), market=external.get('market'),
         derivs=external.get('derivs') or {s: {} for s in frames}, risk=spec_evidence.risk_for(risk, tf), cut=int(env['dev_end_ms']),
         heldout_bars=heldout_counts(env), equity=float(cfg['research']['equity']),
         risk_pct=float(risk.get('risk_per_trade_pct', 0.5)), max_open=int(risk.get('max_open_trades', 8)),
-        requested=tuple(frames), world=external.get('world'))
+        requested=tuple(frames), world=external.get('world'),entry_eligibility=external.get('entry_eligibility') or {})
 
 
 def fit_gauges(bundle: ev.Bundle, candidate: dict, env: dict) -> dict:
@@ -98,6 +98,9 @@ def run_symbols(c, bundle: ev.Bundle, *, delay_bars: int = 0, cost_mult: float =
         kw = dict(btc=bundle.btc, derivs=bundle.derivs.get(sym), universe=bundle.universe, market=bundle.market,
                   symbol=sym, world=bundle.world)
         lo, sh = compiled.entries(bundle.sym_frames[sym], **kw)
+        if sym in bundle.entry_eligibility:
+            allow=np.asarray(bundle.entry_eligibility[sym],dtype=bool)
+            lo,sh=np.asarray(lo,dtype=bool)&allow,np.asarray(sh,dtype=bool)&allow
         ex, avail = compiled.exit_signal_detail(bundle.sym_frames[sym], **kw) if spec.exit.signal_exit.strip() \
             else (None, None)
         fills, trace = [], ([] if traces else None)
@@ -108,14 +111,17 @@ def run_symbols(c, bundle: ev.Bundle, *, delay_bars: int = 0, cost_mult: float =
     return out
 
 
-def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P) -> tuple:
+def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P, *, development_only=False) -> tuple:
     """(outcome, reason). Power problems are never negative economics."""
     v = res.get('verdict')
     if v == 'error':
         return 'CODE_FAILURE', 'evaluation raised: ' + str(res.get('error'))[:160]
     if v == 'untested':
         return 'BLOCKED_DATA', 'required data absent: ' + canonical(res.get('context_gaps'))[:160]
-    if v in ('empty', 'untestable') or not res.get('testable'):
+    development_scored = (v == 'scored' and res.get('scored_symbols', 0) >= ev.MIN_PROJECTED_MARKETS
+                          and res.get('trades', 0) >= ev.MIN_SYMBOL_TRADES * ev.MIN_PROJECTED_MARKETS
+                          and res.get('consistency_p') is not None)
+    if v in ('empty', 'untestable') or (not res.get('testable') and not (development_only and development_scored)):
         return 'INCONCLUSIVE_POWER', f'verdict={v} testable={res.get("testable")} trades={res.get("trades")}'
     for key, b in baselines.items():
         if b.get('verdict') == 'error':
@@ -123,7 +129,9 @@ def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P) 
         if b.get('verdict') not in ('scored', 'empty'):
             return 'INCONCLUSIVE_POWER', f'baseline {key} could not be judged ({b.get("verdict")})'
     p, pct = res.get('consistency_p'), (res.get('portfolio') or {}).get('total_pct', 0.0)
-    if p is None or p > grow_max_p or pct <= 0:
+    if p is None or not np.isfinite(p) or not np.isfinite(pct):
+        return 'INCONCLUSIVE_POWER', 'nonfinite development economics'
+    if p > grow_max_p or pct <= 0:
         return 'NEGATIVE_ECONOMICS', f'p={p} total_pct={pct} (needs p<={grow_max_p} and positive return)'
     weak = [k for k, b in baselines.items() if not growth.earns_place(res, b)[0]]
     if weak:
@@ -141,7 +149,7 @@ def cache_key(candidate: dict, env: dict, data_id: str, external_id: str = '', *
 
 
 def develop(candidate: dict, snapshot_path, env: dict, *, store=None, draws: int | None = None,
-            derivs_path=None, world_path=None, references_path=None, cache_path=None) -> dict:
+            derivs_path=None, world_path=None, references_path=None, cache_path=None,universe_path=None,universe_environment='demo') -> dict:
     """Run (or recall) the development stage for one candidate.
 
     `references_path` names a detached reference store (e.g. a published CSV
@@ -166,6 +174,12 @@ def develop(candidate: dict, snapshot_path, env: dict, *, store=None, draws: int
     if graph.is_graph(candidate) or env['risk'].get('real_funding', False):
         external = _external(candidate, snapshot_path, derivs_path, frames, env, world_path, references_path)
         ext_id = external['data_id']
+    if universe_path:
+        from ..compose.universe_replay import entry_masks
+        masks,parity=entry_masks(universe_path,universe_environment,frames,env['tf'])
+        external=external or dict(gaps=[],provenance={})
+        external.update(entry_eligibility=masks,trading_parity=parity)
+        ext_id=digest([ext_id,parity])
     key = cache_key(candidate, env, data_id, ext_id, draws=draws)
     # Full consumed data/eligibility is rechecked above. Negative dependency and
     # transient failure reuse stays disabled until an absence witness exists.
@@ -227,6 +241,18 @@ def _external(candidate, snapshot_path, derivs_path, frames, env, world_path=Non
                                int(env['dev_end_ms']), world_path=world_path, references_path=references_path,
                                retrospective=retro, window_start_ms=int(env['fit_window'][0]),
                                warmup_ms=graph.MAX_WINDOW * TF_MS[env['tf']])
+    from ..compose.experiments import needs_btc
+    if graph.is_graph(candidate) and needs_btc(candidate) and 'BTC/USDT' not in frames:
+        reference, reference_id = manifest.development_reference(snapshot_path, env)
+        df = reference.get('BTC/USDT')
+        if df is None or not len(df):
+            result['gaps'].append(dict(requirement='btc', reason='BTC reference unavailable in development era'))
+        else:
+            result['btc'] = {env['tf']: df}
+            result['provenance']['btc'] = dict(data_id=reference_id, scope='DEVELOPMENT_REFERENCE_ONLY',
+                                              first_ms=int(manifest._ms(df['ts']).min()),
+                                              last_ms=int(manifest._ms(df['ts']).max()))
+            result['data_id'] = digest([result['data_id'], reference_id])
     if env['risk'].get('real_funding', False) and not result['gaps']:
         bind_funding(frames, result, env, 'retrospective_observation' if retro is not None else 'retained_point_in_time')
     return result
@@ -237,6 +263,8 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
                 envelope_id=env['envelope_id'], data_id=data_id, evaluator_id=env['evaluator_id'],
                 cost_id=env['cost_id'], data_mode=env['development_mode'], policy_class=env['policy_class'],
                 authority='RESEARCH_ONLY')
+    base['trading_parity']=(external or {}).get('trading_parity') or dict(
+        status='UNAVAILABLE',reason='no detached historical scanner-selection evidence supplied; unfiltered retrospective experiment')
     if external is not None and external.get('provenance'):
         # capture identity of every retained input read, kept even when no trade results
         base.update(context_provenance=external['provenance'])
@@ -277,16 +305,19 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
         res = ev.evaluate(c, bundle, draws=n_draws, seed=seed, min_symbol_trades=floor,
                           raw_runs=sims, traces=graph_fit is not None)
         variants = [s for _, s in _graph_baselines(resolved, env)] if graph_fit is not None else families.baselines(c)
-        sub = {s.keys[0] if s.k == 1 else ','.join(s.keys): ev.evaluate(s, bundle, draws=n_draws, seed=seed,
-                                                                         min_symbol_trades=floor)
-               for s in variants}
+        sub, baseline_runs = {}, {}
+        for s in variants:
+            label=s.keys[0] if s.k==1 else ','.join(s.keys)
+            baseline_runs[label]={}
+            sub[label]=ev.evaluate(s,bundle,draws=n_draws,seed=seed,min_symbol_trades=floor,
+                                   raw_runs=baseline_runs[label])
         if not sims:  # compile/dependency preflight returned before simulation
             sims = run_symbols(c, bundle, traces=graph_fit is not None)
         censored = sum(r['result'].censored_position_count for r in sims.values())
     except Exception as exc:                                  # noqa: BLE001
         return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200], combo=c.as_dict(), combo_hash=c.hash,
                     threshold_fit=fit)
-    outcome, reason = classify(res, sub, float(env['policy']['grow_max_p']))
+    outcome, reason = classify(res, sub, float(env['policy']['grow_max_p']), development_only=True)
     blocked_gaps = _structured_gaps(res.get('context_gaps')) if outcome == 'BLOCKED_DATA' else None
     pf = res.get('portfolio') or {}
     metrics = dict(consistency_p=res.get('consistency_p'), median_pf=res.get('median_pf'),
@@ -296,14 +327,20 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
     baseline_metrics = {k: dict(consistency_p=b.get('consistency_p'), total_pct=(b.get('portfolio') or {}).get('total_pct'),
                                 verdict=b.get('verdict'), trades=b.get('trades'),
                                 candidate_earns_place=growth.earns_place(res, b)[0]) for k, b in sub.items()}
-    extra = {}
+    extra = dict(validation_readiness=dict(
+        status='READY' if env['protected_status'] == 'ELIGIBLE' and res.get('testable') else 'UNAVAILABLE',
+        protected_status=env['protected_status'], projection=res.get('projection'),
+        projected_testable=bool(res.get('testable')), reasons=list(env.get('protected_reasons') or []),
+        authority='NO_ADMISSION: development economics do not establish qualification'))
     if graph_fit is not None and outcome == 'DEVELOPMENT_POSITIVE':
-        extra['diagnostics'] = _diagnostics(c, bundle, env, floor, sims=sims)
+        extra['diagnostics'] = _diagnostics(c, bundle, env, floor, sims=sims,controls=baseline_runs)
     if graph_fit is not None:
         from ..compose import diagnostics as dg
         ctxs = {x.symbol: x for x in job._ctxs(bundle)}
         diagnostics = extra.setdefault('diagnostics', {})
         diagnostics['roles'] = dg.role_report(candidate, ctxs, sims)
+        from ..compose.experiments import comparisons
+        diagnostics['indicator_comparison'] = comparisons(candidate, list(ctxs.values()))
         diagnostics.setdefault('regime', dg.regime_report({s: r['fills'] for s, r in sims.items()}, ctxs))
     if graph_fit is not None:
         extra.update(graph_fit=graph_fit, resolved_graph_id=resolved['candidate_id'],
@@ -328,9 +365,12 @@ def _structured_gaps(gaps) -> list:
     return list(out.values())
 
 
-def _diagnostics(c, bundle, env, floor, gated=False, sims=None) -> dict:
-    """Regimes, engine-trace mark-to-market and contribution against a declared incumbent book (the four registered
-    templates at their defaults: regression references, not the search boundary). Errors are reported, never silent."""
+def _diagnostics(c, bundle, env, floor, gated=False, sims=None,controls=None) -> dict:
+    """Regimes, marked exposure and already measured declared comparisons.
+
+    No unrelated template portfolio is manufactured as an incumbent book and
+    no baseline simulation is repeated just to produce a diagnostic.
+    """
     from ..compose import diagnostics as dg
     try:
         sims = sims if sims is not None else run_symbols(c, bundle, traces=True)
@@ -340,18 +380,15 @@ def _diagnostics(c, bundle, env, floor, gated=False, sims=None) -> dict:
         traces = [t for r in sims.values() for t in r['trace']]
         out = dict(regime=dg.regime_report(by_sym, ctxs, gated=gated),
                    mtm=dg.mtm_report(traces, bundle.frames, fills, bundle.equity, bundle.risk_pct, bundle.max_open))
-        book, names = [], []
-        for fid in families.FAMILIES:
-            try:
-                cand = families.make_candidate(fid)
-                bc = families.realize(cand, fit_gauges(bundle, cand, env), evaluation_scope=env['envelope_id'])
-                book += dg.common_fills({s: r['fills'] for s, r in run_symbols(bc, bundle).items()}, bundle.frames)
-                names.append(fid)
-            except Exception as exc:                            # noqa: BLE001 - omitted AND named
-                names.append(f'{fid}:OMITTED:{type(exc).__name__}')
-        out['contribution'] = dict(dg.contribution(book, fills, bundle.equity, bundle.risk_pct, bundle.max_open), book_members=names,
-                                   book_kind='REGISTERED_REGRESSION_TEMPLATES (named reference comparison only)',
-                                   actual_incumbent_contribution='NOT_ESTABLISHED: no declared historical book is bound to this study')
+        out['contribution'] = dict(
+            scope='DECLARED_COMPONENT_CONTROLS',
+            controls={name:dg.contribution(dg.common_fills({s:r['fills'] for s,r in runs.items()},bundle.frames),
+                                          fills,bundle.equity,bundle.risk_pct,bundle.max_open)
+                      for name,runs in (controls or {}).items()},
+            actual_incumbent_contribution='NOT_ESTABLISHED: no declared historical incumbent book bound',
+            cash_comparator=dict(net_return_pct=0.0,source='DECLARED_NO_EXPOSURE_CONTROL'))
+        from .robustness import report
+        out['robustness']=report(c,None,bundle,delays=(0,1),cost_mults=(1.0,2.0),shifts=(1,2),base_runs=sims)
         return out
     except Exception as exc:                                    # noqa: BLE001
         return dict(error=f'{type(exc).__name__}: {exc}'[:200])
@@ -360,7 +397,12 @@ def _diagnostics(c, bundle, env, floor, gated=False, sims=None) -> dict:
 def _graph_baselines(resolved, env) -> list:
     """A9 comparison for a graph: each top-level component removed. Realised
     under the same evaluation scope so identities cannot collide with the full rule."""
-    return [(name, graph.realize(v, evaluation_scope=env['envelope_id'])) for name, v in graph.component_removals(resolved)]
+    from ..compose.experiments import simple_control
+    variants=list(graph.component_removals(resolved))
+    control=simple_control(resolved)
+    if control is not None:
+        variants.append(('simple_direction_control',control))
+    return [(name, graph.realize(v, evaluation_scope=env['envelope_id'])) for name, v in variants]
 
 
 def _develop_hedge(candidate, bundle, env, external, done):
@@ -392,12 +434,16 @@ def _develop_hedge(candidate, bundle, env, external, done):
             kw = dict(btc=bundle.btc, derivs=bundle.derivs.get(sym), universe=bundle.universe, market=bundle.market,
                       symbol=sym, world=bundle.world)
             lo, sh = compiled.entries(bundle.sym_frames[sym], **kw)
+            if sym in bundle.entry_eligibility:
+                allow=np.asarray(bundle.entry_eligibility[sym],dtype=bool)
+                lo,sh=np.asarray(lo,dtype=bool)&allow,np.asarray(sh,dtype=bool)&allow
             from ...strategy import fill_timing
             need = fill_timing.history_requirements(compiled.spec)
             rr = spec['ratio']
             al = H.align_pair(df, hdf, lo, sh, TF_MS[env['tf']], p_window=need['base'],
                               h_window=(int(rr['lookback']) + 1) if rr['method'] == 'rolling_beta' else 1)
             pcl, hcl, popen, hopen, sig = al['p'], al['h'], al['po'], al['ho'], al['sig']
+            exits = H.aligned_exits(compiled, bundle.sym_frames[sym], al, **kw)
             half = len(pcl) // 2
             pr, hr = np.r_[np.nan, np.diff(pcl) / pcl[:-1]], np.r_[np.nan, np.diff(hcl) / hcl[:-1]]
             beta = H.estimate_ratio(dict(spec, ratio=dict(spec['ratio'], method='ols_beta', fit_end=half)), pr, hr, half - 1) \
@@ -422,7 +468,7 @@ def _develop_hedge(candidate, bundle, env, external, done):
             else:
                 funding = None
                 flat = abs(float(bundle.risk.get('funding_rate_8h', 0.0))) * cost
-            res = H.evaluate(sp, pcl[half:], hcl[half:], sig[half:], np.zeros(len(pcl) - half, bool),
+            res = H.evaluate(sp, pcl[half:], hcl[half:], sig[half:], exits[half:],
                              opens=(popen[half:], hopen[half:]), funding=funding, flat_funding_rate=flat)
             per[sym] = dict(verdict=res['verdict'], reason=res['reason'], ratio=beta,
                             comparators=res['comparators'], stress=res['stress'], return_sacrificed_pct=res['return_sacrificed_pct'],

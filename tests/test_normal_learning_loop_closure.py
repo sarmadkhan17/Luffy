@@ -1,8 +1,9 @@
 """Stage 7 normal learning loop closure.
 
 TEST-ONLY rules exist exclusively in this file. The production registries
-(``targets.PRODUCTION_RULES``, ``foundation.REGISTERED_RULES``) stay empty /
-lifecycle-only and nothing here can reach them from normal runtime.
+(``targets.PRODUCTION_RULES``, ``foundation.REGISTERED_RULES``) include only
+the explicit verified-loss research-priority policy and existing lifecycle rule.
+Test-only rules cannot reach them from normal runtime.
 """
 from copy import deepcopy
 from dataclasses import replace
@@ -290,16 +291,17 @@ def test_exit_semantics_are_bound_per_version_not_per_allocation(loop):
 
 
 # --------------------------------------------- 4/5/12/13. rule dispatch
-def test_empty_production_registry_yields_no_proposal_and_zero_mutation(isolated):
+def test_production_research_rule_refuses_unrelated_evidence_without_mutation(isolated):
     j, cfg, ev, o, v = isolated
-    assert not T.PRODUCTION_RULES and D.production_registry() is T.PRODUCTION_RULES
+    from trader.learning.research_policy import RULE_ID
+    assert set(T.PRODUCTION_RULES) == {RULE_ID} and D.production_registry() is T.PRODUCTION_RULES
     assert set(L.REGISTERED_RULES) == {L.DECAY_RULE}
     before = '\n'.join(j._conn().iterdump())
     receipt = D.dispatch_evidence(j, cfg, ev, at_ms=o.observed_ms, shadow=True)
-    assert [r['result'] for r in receipt['results']] == ['NO_PROPOSAL'] and receipt['results'][0]['reason'] == 'UNREGISTERED'
+    assert [r['result'] for r in receipt['results']] == ['NO_PROPOSAL'] and receipt['results'][0]['reason'] == 'EVIDENCE_TYPE_INCOMPATIBLE'
     assert '\n'.join(j._conn().iterdump()) == before
     written = D.dispatch_evidence(j, cfg, ev, at_ms=o.observed_ms)
-    assert written['written'] and written['results'][0]['reason'] == 'UNREGISTERED'
+    assert written['written'] and written['results'][0]['reason'] == 'EVIDENCE_TYPE_INCOMPATIBLE'
     assert not j.query('SELECT * FROM learning_runtime_proposals')
     assert D.dispatch_evidence(j, cfg, ev, at_ms=o.observed_ms + 5)['duplicate']
     for target in T.ADAPTIVE:
@@ -400,10 +402,12 @@ def test_generic_dispatch_accepts_real_replay_complete_evidence_of_each_producib
     assert outcome['EXECUTION'][:3] == ('EXECUTION_QUALITY', 'REPLAY_COMPLETE', 'PROPOSED')
     for name, kind in (('RISK_BLOCKED', 'RISK_BLOCKED_SIGNAL'), ('MISSED', 'MISSED_OPPORTUNITY'), ('DATA', 'DATA_QUALITY_INCIDENT')):
         assert outcome[name] == (kind, 'REPLAY_INCOMPLETE', 'NO_PROPOSAL', 'REPLAY_INCOMPLETE'), outcome[name]
-    # with the production registry nothing is proposed for any of them
-    for oid in found.values():
+    # The explicit loss policy accepts none of these other evidence classes.
+    for name, oid in found.items():
         raw, ev = evidence_of(j, oid)
-        assert D.dispatch_evidence(j, cfg, ev, at_ms=1, shadow=True)['results'][0]['reason'] == 'UNREGISTERED'
+        result=D.dispatch_evidence(j,cfg,ev,at_ms=1,shadow=True)['results'][0]
+        assert result['result']=='NO_PROPOSAL'
+        assert result['reason']==('EVIDENCE_TYPE_INCOMPATIBLE' if name in ('CASH','EXECUTION') else 'REPLAY_INCOMPLETE')
 
 
 # -------------------------------------- 10/12. the normal prospective loop
@@ -582,8 +586,8 @@ def test_recent_decay_still_retires_through_the_governor(isolated):
         frame['ts'] = pd.to_datetime(frame['ts'], utc=True)
     evidence, proposal, req = R.recent_decay(j, cfg, v['version_id'], frames, cutoff_ms=o.decision_ms, observed_ms=o.observed_ms)
     assert proposal.rule == L.DECAY_RULE and proposal.status == L.Status.APPLICABLE
-    # the new dispatcher does not touch lifecycle: production adaptive registry is empty
-    assert D.dispatch_evidence(j, cfg, evidence, at_ms=o.observed_ms, shadow=True)['results'][0]['reason'] == 'UNREGISTERED'
+    # Research priority policy does not consume lifecycle evidence.
+    assert D.dispatch_evidence(j, cfg, evidence, at_ms=o.observed_ms, shadow=True)['results'][0]['reason'] == 'EVIDENCE_TYPE_INCOMPATIBLE'
     results = R.checkpoint(j, cfg, at_ms=o.observed_ms, max_work=1)
     assert [r['result'] for r in results] == ['APPLIED']
     assert F.state_of(j, v['version_id']) == F.RETIRED

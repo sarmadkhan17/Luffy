@@ -39,14 +39,14 @@ EXACT = dict(numerics='EXACT_CONFIGURED', n_symbols=20, n_discovery=16, n_bars=9
 SMOKE = dict(SMALL, kind='DEVELOPMENT_SMOKE', replicates=2)
 
 PROTOCOL = dict(
-    schema='closure-calibration-protocol.v2',
+    schema='closure-calibration-protocol.v3',
     cases=[dict(name='null_independent', edge=0.0, common=0.0, sealed=True, truth='NO_EDGE'),
            dict(name='null_correlated', edge=0.0, common=0.8, sealed=True, truth='NO_EDGE'),
            dict(name='planted_weak', edge=0.002, common=0.0, sealed=True, truth='EDGE'),
            dict(name='planted_strong', edge=0.007, common=0.0, sealed=True, truth='EDGE'),
            dict(name='unsealed_exposure_unknown', edge=0.007, common=0.0, sealed=False, truth='UNAVAILABLE')],
     replicates=60, kind='FINAL', final_seed_base=910_000, development_seed_base=10_000, embargo_bars=10,
-    families=None, max_revisions=2, max_false_admission=0.10, min_power=0.50, confidence=0.95, **EXACT)
+    families=None, max_revisions=None, max_false_admission=0.10, min_power=0.50, confidence=0.95, **EXACT)
 
 
 def feasibility(protocol: dict, policy: dict | None = None) -> list:
@@ -141,7 +141,10 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
     st, step_ms = synthetic.EPOCH_MS, synthetic.TF_MS
     if case['sealed'] and not exposure.events(store):
         exposure.seal(store, 'SYNTHETIC_DECLARED', st, st + protocol['n_bars'] * step_ms, 1)
-    fams = protocol['families'] or sorted(__import__('trader.research.closure.families', fromlist=['x']).FAMILIES)
+    fams = list(protocol.get('families') or [])
+    search = None if fams else protocol.get('search')
+    if search is None and not fams:
+        raise ValueError('calibration_search_not_frozen')
     risk = dict(risk_per_trade_pct=.5, taker_fee_pct=.04, slippage_atr_frac=.015, funding_rate_8h=.0001,
                 real_funding=False, max_open_trades=8)
     pol = _policy(protocol)
@@ -150,7 +153,8 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
         heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
         embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
         protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
-        max_revisions=protocol['max_revisions'], workdir=str(d), max_candidates=len(fams) + protocol['max_revisions']),
+        search=search, max_revisions=protocol['max_revisions'], workdir=str(d),
+        max_candidates=(len(fams) + protocol['max_revisions']) if fams else protocol['max_candidates']),
         now_ms=2)
     for _ in range(50):
         out = S.step(store, sid, budget_s=10 ** 6, child=False)
@@ -173,6 +177,11 @@ def run_identity(protocol: dict, n: int) -> str:
                        policy=_policy(protocol)))
 
 
+def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=False):
+    return dict(search=search, max_candidates=int(max_candidates), max_revisions=int(max_revisions),
+                tf=tf, retained_question_intake=bool(intake))
+
+
 def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
     """May this retained report be the approval the configuration names? The
     report is produced in a TEST_ONLY context and grants nothing itself; the
@@ -180,6 +189,10 @@ def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
     the exact numeric policy and the current evaluator."""
     body = {k: v for k, v in rep.items() if k != 'report_id'}
     return (rep.get('report_id') == digest(body) == approval.get('report_id')
+            and rep.get('schema') == 'closure-calibration-report.v3'
+            and rep.get('search_scope') == 'COMPOSITIONAL_SEARCH'
+            and env.get('search_contract_id') is not None
+            and rep.get('search_contract_id') == env['search_contract_id']
             and rep.get('calibration_status') == 'CALIBRATED' and rep.get('kind') == 'FINAL'
             and rep.get('numerics') == 'EXACT_CONFIGURED' and rep.get('authority_granted') is False
             and rep.get('numeric_id') == env.get('numeric_id')
@@ -190,6 +203,18 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     """Run (or resume) the protocol. The run identity is bound into the
     directory: a changed protocol/policy/evaluator/generator is refused rather
     than reusing stale replicates, and an interrupted replicate resumes."""
+    from copy import deepcopy
+    protocol = deepcopy(protocol)
+    if not protocol.get('families') and protocol.get('search') is None:
+        from ...core.config import load_config
+        auto = load_config().get('research', {}).get('closure', {}).get('auto', {})
+        protocol['search'] = deepcopy(auto.get('search') or {})
+        protocol['max_candidates'] = int(protocol.get('max_candidates',auto.get('max_candidates', 8)))
+        # Same default root revision bound as an automatically created study.
+        if protocol.get('max_revisions') is None:
+            protocol['max_revisions'] = int(auto.get('max_revisions', 4))
+    if protocol.get('max_revisions') is None:
+        protocol['max_revisions'] = 4
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
     n = int(replicates or protocol['replicates'])
@@ -233,7 +258,11 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
         status = 'INCONCLUSIVE'
     else:
         status = 'CALIBRATED' if protocol['numerics'] == 'EXACT_CONFIGURED' else 'MACHINERY_CALIBRATED_SMALL_POLICY'
-    body = dict(schema='closure-calibration-report.v2', calibration_status=status, kind=kind, run_id=run_id,
+    body = dict(schema='closure-calibration-report.v3',
+                search_scope='EXPLICIT_LEGACY_FAMILIES' if protocol.get('families') else 'COMPOSITIONAL_SEARCH',
+                search_contract_id=digest(search_contract(search=protocol.get('search'), max_candidates=protocol.get('max_candidates',8),
+                                             max_revisions=protocol['max_revisions'])),
+                omitted_paths=['external LLM source intake and live multi-leg execution'], calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,
                 evaluator_id=manifest.evaluator_id(), replicates_per_case=n, min_replicates_for_null_resolution=need,

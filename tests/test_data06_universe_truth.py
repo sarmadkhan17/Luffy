@@ -327,3 +327,39 @@ def test_majors_stay_observable_but_absence_never_implies_tradable(monkeypatch, 
         EA.register_capability(journal, s, iid, execution_symbol='BTC/USDT:USDT',
                                leverage_evidence=None, valid_until_ms=s.as_of_ms + 1)
         EA.capability(journal, 'BTC/USDT:USDT', s.as_of_ms, 3, 'LONG')
+
+
+def test_retained_selection_replays_same_members_and_expires(monkeypatch,journal):
+    from trader.research.compose.universe_replay import selection_at
+    u,_=universe(monkeypatch,{'AAA/USDT':tk(900),'BBB/USDT':tk(800),'CCC/USDT':tk(700)})
+    u.attach_journal(journal);u._rescan()
+    r=u._selection_receipt
+    # Both receipt availability and durable recording must precede the cut.
+    with journal._tx() as db:
+        cut=max(r['available_at_ms'],db.execute('SELECT recorded_ms FROM universe_revisions').fetchone()[0])
+        assert selection_at(db,u.environment,cut)['members']==r['members']
+        assert selection_at(db,u.environment,r['available_at_ms']-1)['status']=='UNAVAILABLE'
+        assert selection_at(db,u.environment,cut+int(u.rescan_hours*3600000)+1)['status']=='UNAVAILABLE'
+        assert selection_at(db,'production' if u.environment=='demo' else 'demo',cut)['status']=='UNAVAILABLE'
+
+
+def test_bounded_selection_snapshot_drives_entry_eligibility(monkeypatch,journal,tmp_path):
+    import pandas as pd
+    from trader.research.closure.publish import publish_universe
+    from trader.research.compose.universe_replay import entry_masks
+    from trader.core.types import TF_MS
+    u,_=universe(monkeypatch,{'AAA/USDT':tk(900),'BBB/USDT':tk(800),'CCC/USDT':tk(700)})
+    u.attach_journal(journal);u._rescan()
+    with journal._tx() as db:
+        at=max(u._selection_receipt['available_at_ms'],db.execute('SELECT recorded_ms FROM universe_revisions').fetchone()[0])
+    target=tmp_path/'selection.db'
+    published=publish_universe(journal.db_path,target,start_ms=at-1,end_ms=at+1)
+    assert published['rows']==2
+    frames={s:pd.DataFrame({'ts':[pd.Timestamp(at-TF_MS['1h'],unit='ms',tz='UTC')]})
+            for s in ('AAA/USDT','BBB/USDT','CCC/USDT')}
+    masks,proof=entry_masks(target,u.environment,frames,'1h')
+    assert proof['status']=='EXACT_RECORDED_SELECTION'
+    assert masks['AAA/USDT'].tolist()==[True] and masks['CCC/USDT'].tolist()==[False]
+    for frame in frames.values():frame['ts']-=pd.Timedelta(days=1)
+    masks,proof=entry_masks(target,u.environment,frames,'1h')
+    assert not masks and proof['status']=='UNAVAILABLE'  # never apply today's membership to yesterday

@@ -15,6 +15,7 @@ import argparse
 import datetime as dt
 import json
 import logging
+import sqlite3
 import math
 import os
 from pathlib import Path
@@ -677,6 +678,8 @@ class Kernel:
         # Completed research may create a VALIDATED Factory version only.
         # It is not a book addition, install, probation or new statistical look.
         research_handoff = self._research_handoff(analyst, book)
+        closure_added = self._compositional_paper_intake(analyst, book, max_book=max_book, limit=per_cycle)
+        added.extend(closure_added)
         if len(book) < max_book:
             writer = SpecWriter(BrainLLM(self.cfg))
             # what the Strategist is allowed to build on: the firm's operating
@@ -696,6 +699,10 @@ class Kernel:
                     data=knowledge.get("data", ""),
                     avoid=[s.name for s in book])
                 if spec is None:
+                    if trace.get('deferred') or trace.get('reason') == 'no LLM available':
+                        self.journal.log_brain_event('spec_write_deferred', iid,
+                                                     {**trace, 'idea': iid})
+                        break
                     self.journal.log_brain_event("spec_write_failed", iid,
                                                  {**trace, "idea": iid})
                     if iid:
@@ -729,6 +736,57 @@ class Kernel:
                "ideas_pending": len(idea_queue.pending(self.journal))}
         log.info(f"mechanism: {rep}")
         return rep
+
+    def _compositional_paper_intake(self, analyst, book, *, max_book, limit):
+        """Research leads use the existing paper gate; never inherit a verdict."""
+        cfg = (self.cfg.get('research') or {}).get('closure') or {}
+        if not cfg.get('enabled') or not cfg.get('paper_intake', False):
+            return []
+        from .engine.coordinated_trials import admit
+        admit(self.journal,self.cfg,at_ms=int(time.time()*1000))
+        from .research.closure.paper_proposals import proposals
+        from .strategy import factory_handoff as factory
+        added = []
+        attempted = 0
+        factory.ensure(self.journal)
+        known = self.journal.query("SELECT version_id FROM strategy_versions WHERE source_kind='backtest_qualification'")
+        excluded = set()
+        for row in known:
+            version = factory.load_version(self.journal, row['version_id'])
+            provenance = version['spec'].get('provenance') or {}
+            cid = provenance.get('closure_candidate_id')
+            if not cid:
+                continue
+            excluded.add(cid)
+            present = any(s.id == version['strategy_id'] for s in book)
+            if (factory.state_of(self.journal, version['version_id']) == factory.VALIDATED
+                    and (present or len(book) < max_book)):
+                from .strategy.spec import StrategySpec
+                frozen = StrategySpec.from_dict(version['spec'])
+                if self._install_version(frozen, {'chosen_timeframe': frozen.timeframe}, analyst,
+                                         {'closure_result_id': provenance.get('closure_result_id'),
+                                          'recovered_validated_install': True}, version['version_id']):
+                    added.append(frozen.name)
+                    if not present:
+                        book.append(frozen)
+        for item in proposals(cfg['store_path'], limit=32, exclude=excluded):
+            if attempted >= limit or len(book) >= max_book:
+                break
+            spec = item['spec']
+            if factory.versioned(self.journal, spec.id):
+                continue
+            attempted += 1
+            ok, evidence, qualification = analyst.qualify(spec, book, fixed_timeframe=True)
+            if not ok:
+                self.journal.log_brain_event('closure_paper_refused', item['result_id'],
+                    dict(candidate_id=item['candidate_id'], evidence=evidence,
+                         authority='DEVELOPMENT_LEAD_NOT_ADMISSION'))
+                continue
+            if self._qualified_install(spec, evidence, qualification, analyst,
+                                       dict(closure_result_id=item['result_id'])):
+                added.append(spec.name)
+                book.append(spec)
+        return added
 
     def _qualified_install(self, spec, ev: dict, qualification: dict,
                            analyst, extra: dict) -> bool:
@@ -770,9 +828,9 @@ class Kernel:
         except Exception as e:
             self.journal.log_brain_event(
                 "spec_install_refused", spec.id,
-                {"name": spec.name, "reason_code": e.code, "evidence": ev,
+                {"name": spec.name, "reason_code": getattr(e, "code", type(e).__name__), "evidence": ev,
                  **extra})
-            log.warning(f"spec {spec.id} qualified but not versioned: {e.code}")
+            log.warning("spec %s qualified but not versioned: %s", spec.id, getattr(e, "code", type(e).__name__))
             return False
         return self._install_version(installed, ev, analyst, extra,
                                      ver["version_id"])
@@ -882,6 +940,13 @@ class Kernel:
                                     self.feed).brief_text()
         except Exception as e:
             log.debug(f"data brief unavailable: {e}")
+        try:
+            from .learning.research_policy import tasks
+            requests = tasks(self.journal, at_ms=int(time.time() * 1000))
+            if requests:
+                out['data'] = out.get('data', '') + '\nVerified outcome research priorities (not strategy verdicts):\n' + json.dumps(requests)
+        except (ValueError, KeyError, TypeError, sqlite3.Error) as exc:
+            log.warning('research priority evidence unavailable: %s', type(exc).__name__)
         return out
 
     def _harvest_loop(self) -> None:
@@ -1832,7 +1897,7 @@ class Kernel:
             v = fh.load_version(self.journal, version_id)
             fh.verify_validation(self.journal, v)
         except Exception as e:
-            return refuse(e.code)
+            return refuse(getattr(e, "code", type(e).__name__))
         if fh.state_of(self.journal, version_id) != fh.VALIDATED:
             return refuse("version_not_validated",
                           str(fh.state_of(self.journal, version_id)))
@@ -1855,8 +1920,8 @@ class Kernel:
         except Exception as e:
             # The row is only a projection of the same version authority.
             fh.retire_version(self.journal,version_id,fh.RETIRED,
-                reason_code='exact_install_refused:' + e.code,actor='strategy_governor',at_ms=int(time.time()*1000))
-            return refuse(e.code, "installed row retired")
+                reason_code='exact_install_refused:' + getattr(e, 'code', type(e).__name__),actor='strategy_governor',at_ms=int(time.time()*1000))
+            return refuse(getattr(e, "code", type(e).__name__), "installed row retired")
         self.journal.log_brain_event(
             "spec_admitted", spec.id,
             {"name": spec.name, "evidence": ev, "version_id": version_id,

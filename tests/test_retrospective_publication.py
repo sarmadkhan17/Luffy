@@ -105,3 +105,31 @@ def test_reserved_replay_preserves_valid_equal_observation_order(tmp_path):
     with sqlite3.connect(src) as a,sqlite3.connect(dst) as b:
         pd.testing.assert_frame_equal(mp.retrospective_load(a,'candle:A:4h',cut_ms=8*STEP,tf='4h'),
                                       mp.retrospective_load(b,'candle:A:4h',cut_ms=8*STEP,tf='4h'))
+
+
+@pytest.mark.parametrize('cutoff',[None,5,25,55])
+def test_index_first_revision_selection_matches_exact_prior_winners(cutoff):
+    """Include out-of-order observations, equal-clock ties and replay tail."""
+    import sqlite3
+    from trader.research.closure import publish as P
+    db=sqlite3.connect(':memory:')
+    db.execute('CREATE TABLE market_revisions(id TEXT,series_key TEXT,event_ms INTEGER,available_ms INTEGER,observed_ms INTEGER,record_json TEXT)')
+    rows=[('a','k',10,10,9,'{}'),('b','k',10,10,8,'{}'),('c','k',20,20,10,'{}'),
+          ('d','k',20,20,10,'{}'),('e','k',30,30,7,'{}'),('f','k',30,30,9,'{}'),
+          ('g','k',40,40,8,'{}'),('outside','other',20,20,90,'{}')]
+    db.executemany('INSERT INTO market_revisions VALUES(?,?,?,?,?,?)',rows)
+    cut=41 if cutoff is None else cutoff
+    expected=db.execute('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
+        'AND (event_ms>=? OR rowid IN (SELECT selected_rowid FROM (SELECT rowid selected_rowid,ROW_NUMBER() OVER '
+        '(PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) ordinal FROM market_revisions '
+        'WHERE series_key=? AND event_ms>=? AND event_ms<?) WHERE ordinal=1)) ORDER BY event_ms,observed_ms,rowid',
+        ('k',10,40,cut,'k',10,cut)).fetchall()
+    class SelectionProbe:
+        def take(self,source,sql,args):
+            self.actual=source.execute(sql,args).fetchall()
+            return []  # selection check only; receipt validation has separate regressions
+    probe=SelectionProbe()
+    dst=sqlite3.connect(':memory:')
+    dst.execute(db.execute("SELECT sql FROM sqlite_master WHERE name='market_revisions'").fetchone()[0])
+    P._copy_revisions(db,dst,'k',10,40,None,{'revisions':0},probe,True,cutoff)
+    assert probe.actual==expected

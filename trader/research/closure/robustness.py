@@ -48,7 +48,8 @@ def entry_sets(c, bundle):
     for sym in bundle.frames:
         lo, sh = compiled.entries(bundle.sym_frames[sym], btc=bundle.btc, derivs=bundle.derivs.get(sym),
                                   universe=bundle.universe, market=bundle.market, symbol=sym, world=bundle.world)
-        out[sym] = set(np.flatnonzero(np.asarray(lo, bool) | np.asarray(sh, bool)).tolist())
+        allowed=np.asarray(bundle.entry_eligibility.get(sym,np.ones(len(lo),dtype=bool)),dtype=bool)
+        out[sym] = set(np.flatnonzero((np.asarray(lo, bool) | np.asarray(sh, bool)) & allowed).tolist())
     return out
 
 
@@ -62,7 +63,7 @@ def _overlap(a: dict, b: dict, tol: int) -> float:
     return hit / total if total else 0.0
 
 
-def report(c, baseline, bundle, *, delays=DELAYS, cost_mults=COST_MULTS, shifts=SHIFTS, liquidity=None) -> dict:
+def report(c, baseline, bundle, *, delays=DELAYS, cost_mults=COST_MULTS, shifts=SHIFTS, liquidity=None,base_runs=None) -> dict:
     sample = dict(symbols=sorted(bundle.frames), bars={s: len(d) for s, d in bundle.frames.items()},
                   first={s: str(d['ts'].iloc[0]) for s, d in bundle.frames.items()},
                   equity=bundle.equity, risk_pct=bundle.risk_pct, max_open=bundle.max_open)
@@ -70,7 +71,8 @@ def report(c, baseline, bundle, *, delays=DELAYS, cost_mults=COST_MULTS, shifts=
     grid, n = [], 0
     for cm in cost_mults:
         for d in delays:
-            grid.append(dict(cost_mult=cm, delay_bars=d, **_book(run_symbols(c, bundle, delay_bars=d, cost_mult=cm), bundle)))
+            runs=base_runs if base_runs is not None and cm==1.0 and d==0 else run_symbols(c,bundle,delay_bars=d,cost_mult=cm)
+            grid.append(dict(cost_mult=cm,delay_bars=d,**_book(runs,bundle)))
             n += 1
     gone = next((g for g in grid if g['total_pct'] <= 0), None)
     paired = None

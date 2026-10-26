@@ -56,6 +56,7 @@ class KernelRuntime:
         self.shortlisted = set()
         self.derivative_needs = []
         self.candle_active = {}
+        self.coordinated_needs = ({}, [])
         self.history_resume_index = 0
         self.alts_cold_status = None
         self.history_yields = 0
@@ -78,6 +79,7 @@ class KernelRuntime:
             'decisions': Worker('decisions', self.decisions),
             'portfolio': Worker('portfolio', self.portfolio),
             'candles': Worker('candles', self.candles, interval=15, immediate=True, align_to_wall=True),
+            'coordinated_paper': Worker('coordinated-paper', self.coordinated_paper, interval=60),
             'strategy_health': Worker('strategy-health', self.strategy_health, interval=3600),
             'research': Worker('research', self.research, calendar=Calendar((9, 21))),
             'validation': Worker('validation', self.validation, calendar=Calendar((3,), weekday=6)),
@@ -349,6 +351,19 @@ class KernelRuntime:
             k.exits.genomes = {st.id: st.params for st, _ in k.population}
             self.model = (self.model[0] + 1, model_snapshot(k))
 
+    @_read_batch
+    def coordinated_paper(self):
+        from ..engine.coordinated_trials import run_once,input_needs
+        closure=(self.kernel.cfg.get('research') or {}).get('closure') or {}
+        needs=input_needs(self.kernel.journal) if closure.get('enabled') and closure.get('paper_intake') else ({},[])
+        with self.lock:
+            self.coordinated_needs=needs
+        result=run_once(self.kernel.journal,self.kernel.cfg,self.kernel.feed,
+                        allow_entry=self.kernel.state_machine.can_enter())
+        if result:
+            self.kernel.journal.log_brain_event('coordinated_paper_cycle','coordinated_paper',{'results':result})
+        return result
+
     def strategy_health(self):
         view = analysis_context(self)
         from ..strategy.promotion import evaluate_population
@@ -446,6 +461,7 @@ class KernelRuntime:
         from ..data.derivatives import DerivFeed
         with self.lock:
             needs, held = list(self.derivative_needs), set(self.held_symbols)
+            needs.extend(getattr(self,'coordinated_needs',({},[]))[1])
         needs.sort(key=lambda n: n[0] not in held)           # stable: shortlist rank otherwise
         feed = getattr(self, '_needs_feed', None)
         if feed is None:
@@ -571,7 +587,9 @@ class KernelRuntime:
         k = self.kernel
         now = int(time.time()*1000)
         required = set(k._exposure_symbols())
-        symbols = sorted(required) + sorted(set(k.universe.symbols()) - required)
+        with self.lock:
+            paper_needs=deepcopy(getattr(self,'coordinated_needs',({},[]))[0])
+        symbols = sorted(required) + sorted((set(k.universe.symbols()) | set(paper_needs)) - required)
         timeframes = set(k.cfg['timeframes'].get('context', [])) | {'15m', '1h', '4h'}
         # Each new close is queued once. Failed/missing series stay pending and
         # are retried every 15s through the bounded acquisition queue.
@@ -609,6 +627,8 @@ class KernelRuntime:
         # get a REAL tail observation before their original receipt budget expires,
         # instead of waiting for a scan to miss. Broad coverage stays at close cadence.
         active = {symbol: set(timeframes) for symbol in required}
+        for symbol,tfs in paper_needs.items():
+            active.setdefault(symbol,set()).update(tfs)
         with self.lock:
             for symbol, tfs in self.candle_active.items():
                 active.setdefault(symbol, set()).update(tfs)

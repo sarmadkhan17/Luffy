@@ -29,6 +29,38 @@ from ..predictive_experiment import readonly
 DERIV_SERIES = ('funding', 'oi', 'taker_ratio', 'ls_ratio', 'ls_account_ratio', 'basis')
 
 
+def publish_universe(source, destination, *, start_ms, end_ms, deadline=None, max_bytes=64*1024*1024):
+    """Bounded selection evidence only; never copy/open the whole Journal writable."""
+    from ...engine.protection_snapshot import ro_connect
+    target=Path(destination)
+    if target.exists():
+        raise ClosureRefused('universe_destination_exists')
+    bound=Bounds(5000,max_bytes,deadline)
+    try:
+        with closing(ro_connect(source)) as src, sqlite3.connect(target) as dst:
+            src.execute('BEGIN');bound.attach(src)
+            dst.execute('CREATE TABLE universe_revisions(revision_id TEXT,environment TEXT,selection_version TEXT,source TEXT,'
+                        'observed_at_ms INTEGER,members_json TEXT,exclusions_json TEXT,config_json TEXT,recorded_ms INTEGER)')
+            dst.execute('CREATE INDEX universe_revision_cut ON universe_revisions(environment,observed_at_ms)')
+            dst.execute('CREATE TABLE universe_selection_evidence(revision_id TEXT,environment TEXT,payload TEXT,sha256 TEXT,'
+                        'PRIMARY KEY(environment,revision_id))')
+            if _has(src,'universe_revisions'):
+                rows=bound.take(src,'SELECT * FROM universe_revisions WHERE observed_at_ms BETWEEN ? AND ? '
+                                'OR (environment,observed_at_ms) IN (SELECT environment,MAX(observed_at_ms) FROM universe_revisions WHERE observed_at_ms<? '
+                                'GROUP BY environment)',(start_ms,end_ms,start_ms))
+                for row in rows:
+                    dst.execute('INSERT INTO universe_revisions VALUES(?,?,?,?,?,?,?,?,?)',tuple(row))
+                    if _has(src,'universe_selection_evidence'):
+                        for ev in bound.take(src,'SELECT * FROM universe_selection_evidence WHERE revision_id=? AND environment=?',
+                                             (row[0],row[1])):
+                            dst.execute('INSERT OR IGNORE INTO universe_selection_evidence VALUES(?,?,?,?)',tuple(ev))
+        return dict(path=str(target),bytes=target.stat().st_size,rows=bound.used_rows,
+                    payload_bytes=bound.used_bytes,scope='RETAINED_SELECTION_INPUTS_ONLY')
+    except BaseException:
+        target.unlink(missing_ok=True)
+        raise
+
+
 class Bounds:
     """One shared input-work/payload ceiling across all source transactions and outputs."""
     def __init__(self, rows, size, deadline):
@@ -79,7 +111,10 @@ def _tick(deadline):
 
 def _ddl(src, names) -> list:
     return [r[0] for r in src.execute("SELECT sql FROM sqlite_master WHERE tbl_name IN (%s) AND sql IS NOT NULL "
-                                      "AND name NOT LIKE 'sqlite_%%' ORDER BY type DESC" % ','.join('?' * len(names)), names)]
+                                      "AND name NOT LIKE 'sqlite_%%' ORDER BY "
+                                      "CASE type WHEN 'table' THEN 0 WHEN 'index' THEN 1 "
+                                      "WHEN 'view' THEN 2 WHEN 'trigger' THEN 3 ELSE 4 END,name"
+                                      % ','.join('?' * len(names)), names)]
 
 
 def _has(src, name) -> bool:
@@ -114,13 +149,16 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
         # ties and invalid latest receipts. Older versions cannot affect that
         # reader; replay publications still retain the full revision history.
         cutoff = hi + 1 if latest_before is None else latest_before
-        sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
-               'AND (event_ms>=? OR rowid IN ('
-               'SELECT selected_rowid FROM (SELECT rowid AS selected_rowid,ROW_NUMBER() OVER ('
+        # Choose rowids through the covering index BEFORE reading bodies.
+        # The former outer event scan decoded every superseded revision even
+        # though retrospective readers consume only the final event winner.
+        sql = ('SELECT * FROM market_revisions WHERE rowid IN ('
+               'SELECT rowid FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
+               'UNION ALL SELECT selected_rowid FROM (SELECT rowid AS selected_rowid,ROW_NUMBER() OVER ('
                'PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) ordinal '
                'FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<?) '
-               'WHERE ordinal=1)) ORDER BY event_ms,observed_ms,rowid')
-        params = (series_key, lo, hi, cutoff, series_key, lo, cutoff)
+               'WHERE ordinal=1) ORDER BY event_ms,observed_ms,rowid')
+        params = (series_key, max(lo,cutoff), hi, series_key, lo, min(cutoff,hi+1))
     else:
         sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
                'ORDER BY event_ms,observed_ms,rowid')

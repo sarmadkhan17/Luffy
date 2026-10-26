@@ -258,7 +258,10 @@ def protected_evaluation(freeze: dict, env: dict, c: Combination, sealed: Path, 
         funding, flat = (H.place(al['idx_p'], pf, n) * cost, H.place(al['idx_h'], hf, n) * cost), 0.0
     else:
         funding, flat = None, abs(float(risk.get('funding_rate_8h', 0.0))) * cost
-    res = H.evaluate(spec, al['p'], al['h'], al['sig'], np.zeros(n, bool), opens=(al['po'], al['ho']), funding=funding,
+    exits = H.aligned_exits(compiled, sf, al, btc=btc, derivs=(ext.get('derivs') or {}).get(psym),
+                            universe={k: {env['tf']: v} for k, v in frames.items()},
+                            market=ext.get('market'), symbol=psym, world=ext.get('world'))
+    res = H.evaluate(spec, al['p'], al['h'], al['sig'], exits, opens=(al['po'], al['ho']), funding=funding,
                      flat_funding_rate=flat)
     res['funding_basis'] = 'RETAINED_SIGNED_HISTORY' if funding is not None else 'CONSERVATIVE_FLAT_EIGHT_HOUR'
     res['alignment'] = {k: al[k] for k in ('refused', 'bars', 'missing_primary', 'missing_hedge')}
