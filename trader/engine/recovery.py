@@ -101,7 +101,7 @@ class EntryRecovery:
             db.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)",
                        (KEY, "null"))
 
-    def begin(self, position, *, logical_id=None, conn=None):
+    def begin(self, position, *, logical_id=None, adjustment=None, conn=None):
         intent = {"id": uuid4().hex, "symbol": position.symbol,
                   "schema_version": 1, "code_hash": self.code_hash,
                   "position": position.as_dict(), "phase": "entry",
@@ -110,6 +110,8 @@ class EntryRecovery:
         if logical_id:
             intent['logical_id'] = logical_id
             intent['client_order_id'] = 'lr_' + hashlib.sha256(logical_id.encode()).hexdigest()[:28]
+        if adjustment is not None:
+            intent["adjustment"] = adjustment
         self.save(intent, "entry_intent_persisted", conn=conn)
         return intent
 
@@ -203,6 +205,10 @@ class EntryRecovery:
         positions = self.ex.fetch_positions()
         if not isinstance(positions, list):
             raise ValueError("position snapshot unavailable")
+        if intent.get('adjustment'):
+            from .coordinated_increase import recover
+            recover(self, intent, order, positions)
+            return
         matches = []
         for p in positions:
             if binding:

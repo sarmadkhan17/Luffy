@@ -23,13 +23,14 @@ from ..compose import catalog, graph, search as csearch
 from . import ClosureRefused, canonical, consumer, data_access, digest, exposure, families, hedge_qualification, manifest, qualification
 from .development import develop
 from .store import Store
+from ...core.types import TF_MS
 
 MAX_UNIT_ATTEMPTS = 3
 SPEC_KEYS = ('snapshot_path', 'tf', 'discovery_symbols', 'heldout_symbols', 'fit_start_ms', 'dev_end_ms', 'embargo_bars',
              'protected_start_ms', 'protected_end_ms', 'policy', 'risk', 'development_mode', 'seed_families',
              'bank_path', 'max_candidates', 'max_revisions', 'workdir', 'journal_path', 'budget_journal_path',
              'source_journal_path', 'book', 'unit_timeout_s', 'derivs_path', 'world_path', 'seed_graphs', 'search', 'proposal_mode',
-             'references_path', 'origin', 'protected_derivs_path','universe_path','universe_environment')
+             'references_path', 'origin', 'protected_derivs_path','universe_path','universe_environment','independent_window_assigned')
 
 
 def develop_job(payload: dict) -> dict:
@@ -252,12 +253,14 @@ def create_study(store: Store, spec: dict, *, now_ms: int, prepared_manifest=Non
         m = dict(body, manifest_id=digest(body))
     from .calibration import search_contract
     contract = search_contract(search=spec['search'],max_candidates=spec['max_candidates'],
-                               max_revisions=spec['max_revisions'],tf=spec['tf'],intake=bool(spec.get('bank_path')))
+                               max_revisions=spec['max_revisions'],tf=spec['tf'],intake=bool(spec.get('bank_path')),
+                               development_bars=(spec['dev_end_ms']-spec['fit_start_ms'])//TF_MS[spec['tf']])
     env = manifest.make_envelope(
         m, spec['snapshot_path'], policy=spec['policy'], discovery_symbols=spec['discovery_symbols'],
         heldout_symbols=spec['heldout_symbols'], fit_start_ms=spec['fit_start_ms'], dev_end_ms=spec['dev_end_ms'],
         embargo_bars=spec['embargo_bars'], protected_start_ms=spec['protected_start_ms'],
-        protected_end_ms=spec['protected_end_ms'], risk=spec['risk'], development_mode=spec['development_mode'],search_contract_id=digest(contract))
+        protected_end_ms=spec['protected_end_ms'], risk=spec['risk'], development_mode=spec['development_mode'],search_contract_id=digest(contract),
+        independent_window_assigned=spec.get('independent_window_assigned',True))
     store.put_once('manifests', m['manifest_id'], m)
     store.put_once('envelopes', env['envelope_id'], env)
     study = dict(spec, spec_key=spec_key, envelope_id=env['envelope_id'], manifest_id=m['manifest_id'])
@@ -467,7 +470,7 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
         if fz.get('schema') == hedge_qualification.FREEZE_SCHEMA:
             q = hedge_qualification.qualify_hedge(
                 store, fz, env, study['snapshot_path'], Path(study['workdir']) / 'qualification', now_ms=now_ms, cfg=cfg,
-                run=bounded, derivs_path=study.get('protected_derivs_path') or study.get('derivs_path'), world_path=study.get('world_path'))
+                run=bounded, source_journal=study.get('source_journal_path'),budget_journal=study.get('budget_journal_path'), derivs_path=study.get('protected_derivs_path') or study.get('derivs_path'), world_path=study.get('world_path'))
             return dict(status=q['status'], reason=q['reason'], qualification_id=q['qualification_id'],
                         evidence_id=q['evidence_id'], qualification_kind='hedge_protective', worker_timed_out=bool(timed))
         q = qualification.qualify(

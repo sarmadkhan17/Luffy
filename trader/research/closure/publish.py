@@ -68,6 +68,8 @@ class Bounds:
         self.used_rows = self.used_bytes = 0
         self.raw_seen = set()
         self.raw_texts = {}  # bounded by the same charged payload ceiling, scoped to this single source cut
+        self.checked_texts = {}
+        self.raw_parents = {}
 
     def charge(self, row):
         _tick(self.deadline)
@@ -149,16 +151,18 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
         # ties and invalid latest receipts. Older versions cannot affect that
         # reader; replay publications still retain the full revision history.
         cutoff = hi + 1 if latest_before is None else latest_before
-        # Choose rowids through the covering index BEFORE reading bodies.
-        # The former outer event scan decoded every superseded revision even
-        # though retrospective readers consume only the final event winner.
-        sql = ('SELECT * FROM market_revisions WHERE rowid IN ('
+        # Stream MAX(observed_ms) in event-index order, then choose the
+        # largest rowid at that exact maximum. The old window rank sorted
+        # every superseded revision. Only actual winners reach body decoding.
+        sql = ('WITH newest AS MATERIALIZED ('
+               'SELECT event_ms,MAX(observed_ms) AS observed FROM market_revisions '
+               'WHERE series_key=? AND event_ms>=? AND event_ms<? GROUP BY event_ms) '
+               'SELECT * FROM market_revisions WHERE rowid IN ('
                'SELECT rowid FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
-               'UNION ALL SELECT selected_rowid FROM (SELECT rowid AS selected_rowid,ROW_NUMBER() OVER ('
-               'PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) ordinal '
-               'FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<?) '
-               'WHERE ordinal=1) ORDER BY event_ms,observed_ms,rowid')
-        params = (series_key, max(lo,cutoff), hi, series_key, lo, min(cutoff,hi+1))
+               'UNION ALL SELECT (SELECT MAX(rowid) FROM market_revisions '
+               'WHERE series_key=? AND event_ms=newest.event_ms AND observed_ms=newest.observed) '
+               'FROM newest) ORDER BY event_ms,observed_ms,rowid')
+        params=(series_key,lo,min(cutoff,hi+1),series_key,max(lo,cutoff),hi,series_key)
     else:
         sql = ('SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? '
                'ORDER BY event_ms,observed_ms,rowid')
@@ -166,22 +170,32 @@ def _copy_revisions(src, dst, series_key, lo, hi, deadline, counters, bound, ret
     rows = bound.take(src, sql, params)
     for r in rows:
         _tick(deadline)
-        physical = json.loads(r[-1])
-        for field in ('source', 'raw_json'):
-            text = physical.get(field)
-            if isinstance(text, str) and text.startswith(mp.TEXT_REF):
-                _raw(src, dst, text[len(mp.TEXT_REF):], bound)
-        # Reuse shared bodies within this transaction. read_record still verifies
-        # each text reference/hash; the cache only removes repeated SQLite reads.
-        rec = mp.read_record(src, r[-1], text_cache=bound.raw_texts)
-        _raw(src, dst, rec.get('content_hash'), bound)
-        raw_hash = None
-        try:
-            raw_hash = json.loads(rec.get('raw_json') or 'null').get('raw_source_hash')   # reference receipts point at a retained response
-        except (ValueError, AttributeError):
-            pass
-        if raw_hash:
-            _raw(src, dst, raw_hash, bound)
+        rec=json.loads(r[-1]);raw_marker=rec.get('raw_json')
+        for field in ('source','raw_json'):
+            marker=rec.get(field)
+            if not isinstance(marker,str) or not marker.startswith(mp.TEXT_REF):continue
+            key=marker[len(mp.TEXT_REF):]
+            if len(key)!=64 or any(c not in '0123456789abcdef' for c in key):
+                raise ValueError('market_source_reference_invalid')
+            _raw(src,dst,key,bound)
+            text=bound.raw_texts.get(key)
+            # One pinned source transaction, immutable Python strings. A
+            # unique body is checked once; replacing the cached object forces
+            # another check. Consumers still perform their normal full checks.
+            if bound.checked_texts.get(key) is not text or text is None:
+                if not isinstance(text,str) or mp.text_reference(text)!=marker:
+                    raise ValueError('market_source_reference_missing_or_corrupt')
+                bound.checked_texts[key]=text
+            rec[field]=text
+        _raw(src,dst,rec.get('content_hash'),bound)
+        parent_key=raw_marker if isinstance(raw_marker,str) and raw_marker.startswith(mp.TEXT_REF) else None
+        if parent_key is not None and parent_key in bound.raw_parents:
+            raw_hash=bound.raw_parents[parent_key]
+        else:
+            try:raw_hash=json.loads(rec.get('raw_json') or 'null').get('raw_source_hash')
+            except (ValueError,AttributeError):raw_hash=None
+            if parent_key is not None:bound.raw_parents[parent_key]=raw_hash
+        if raw_hash:_raw(src,dst,raw_hash,bound)
     # Preserve physical references plus their checked immutable bodies; expanding every repeated
     # response into each receipt would make a bounded source into an enormous duplicated snapshot.
     dst.executemany('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)', rows)
@@ -298,7 +312,7 @@ def publish_exact_cut(src_candles, dst_candles, *, tf, window_bars, symbols=None
                 out['coverage_filter'] = cohort
         out['derivs'] = None
         if deriv_src is not None and dst_derivs is not None:
-            deriv_last = min(last, latest_before - step) if development_derivatives_only else last
+            deriv_last = min(as_of,latest_before) if development_derivatives_only else as_of
             out['derivs'] = _publish_derivs(deriv_src, staged_derivs, syms, deriv_series, start, deriv_last, deadline, bound, retrospective, latest_before)
             out['derivs']['data_scope'] = 'DEVELOPMENT_ONLY' if development_derivatives_only else 'DEVELOPMENT_AND_PROTECTED'
             out['cross_source_atomic'] = False
@@ -353,6 +367,8 @@ def _publish_derivs(src_path, dst_path, symbols, series, lo, hi, deadline, bound
             # content key must be read, verified and written again here.
             bound.raw_seen.clear()
             bound.raw_texts.clear()
+            bound.checked_texts.clear()
+            bound.raw_parents.clear()
             bound.attach(src)
             bound.attach(dst)
             src.execute('BEGIN')

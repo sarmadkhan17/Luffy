@@ -43,6 +43,14 @@ def settings(cfg) -> dict | None:
     return out
 
 
+def recent_development(auto):
+    """Explicit retrospective paper-research policy; never an independent look."""
+    enabled=auto.get('recent_retrospective_development',False)
+    if type(enabled) is not bool or (enabled and auto.get('development_mode')!='RETROSPECTIVE'):
+        raise ClosureRefused('recent_development_requires_retrospective_policy')
+    return enabled
+
+
 def horizon_for(auto, index):
     """Predeclared horizon rotation; never choose from measured profitability.
 
@@ -164,6 +172,19 @@ def snapshot_job(payload: dict) -> dict:
     return out
 
 
+def derivative_series_for(auto,cfg):
+    """Only series the declared search, proposer vocabulary or costs use."""
+    from ..compose import catalog
+    from ...strategy.spec_evidence import _SERIES_FOR
+    factors=(auto.get('search') or {}).get('factors')
+    if factors is None or auto.get('bank_path'):
+        factors=[f.key for f in catalog.FACTORS if auto['tf'] in f.horizons and not f.provider_gap]
+    required={need for key in factors if key in catalog.BY_KEY for need in catalog.BY_KEY[key].requires}
+    if (cfg.get('risk') or {}).get('real_funding',False) or auto.get('bank_path'):
+        required.add('funding')
+    return tuple(sorted({_SERIES_FOR[need] for need in required if need in _SERIES_FOR}))
+
+
 def publish_job(payload: dict) -> dict:
     """Child entry (default): publish the bounded exact-cut study snapshot through the reader contract instead of
     physically copying every timeframe of the cache. Same result shape as snapshot_job."""
@@ -174,16 +195,17 @@ def publish_job(payload: dict) -> dict:
     a = payload['auto']
     policy = manifest.configured_policy(payload['cfg'])
     warm = graph.MAX_WINDOW                       # rolling features need history before the fit window
-    bars = int(policy['min_protected_bars']) + int(a['protected_extra_bars']) + int(a['embargo_bars']) + int(a['fit_bars']) + warm + 16
+    reserve=0 if recent_development(a) else int(policy['min_protected_bars'])+int(a['protected_extra_bars'])+int(a['embargo_bars'])
+    bars=reserve+int(a['fit_bars'])+warm+16
     deadline = time.monotonic() + float(payload['deadline_s'])
     out = publish.publish_exact_cut(
         payload['market_db'], d / f'candles-{stamp}.db', tf=a['tf'], window_bars=bars, deadline=deadline,
         max_rows=int(a.get('max_rows', 5_000_000)),
         max_bytes=int(a.get('max_snapshot_payload_bytes', 512 * 1024 * 1024)),
         coverage_filter=dict(fit_bars=int(a['fit_bars']),
-                             reserve_bars=int(policy['min_protected_bars']) + int(a['protected_extra_bars']) + int(a['embargo_bars']),
+                             reserve_bars=reserve,
                              max_gap_bars=int(policy['max_gap_bars'])),
-        symbols=a.get('symbols'), now_ms=stamp, retrospective=a['development_mode'] == 'RETROSPECTIVE',
+        symbols=a.get('symbols'),deriv_series=derivative_series_for(a,payload['cfg']),now_ms=stamp,retrospective=a['development_mode'] == 'RETROSPECTIVE',
         development_derivatives_only=bool(a.get('development_derivatives_only', False)),
         deriv_src=payload.get('derivs_db'), dst_derivs=(d / f'derivs-{stamp}.db') if payload.get('derivs_db') else None)
     universe=None
@@ -237,6 +259,14 @@ def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=No
     protected_start = protected_end - (protected_bars - 1) * step
     embargo = int(auto['embargo_bars'])
     dev_end = protected_start - embargo * step
+    if recent_development(auto):
+        # Use the newest retained closed bars for retrospective development.
+        # The envelope format still requires ordered independent boundaries;
+        # these future placeholders are explicitly UNASSIGNED, not a promise
+        # to wait for this period or a claim it has been sealed.
+        dev_end=as_of
+        protected_start=dev_end+embargo*step
+        protected_end=protected_start+(protected_bars-1)*step
     fit_start = dev_end - int(auto['fit_bars']) * step
     inv, gap, mode = m['symbols'], policy['max_gap_bars'], auto['development_mode']
     ok = [s for s in syms if manifest._coverage(inv[s], fit_start, dev_end - step, step, gap, 1, mode) is None]
@@ -255,6 +285,8 @@ def derive_spec(auto: dict, cfg: dict, snapshot_path, events, derivs_snapshot=No
                 max_revisions=int(auto.get('max_revisions', 4)),
                 unit_timeout_s=int(auto['unit_timeout_s']), workdir=str(Path(auto['snapshot_dir']) / 'workdir'),
                 origin='auto')
+    if recent_development(auto):
+        spec['independent_window_assigned']=False
     for key in ('bank_path', 'references_path', 'world_path', 'source_journal_path', 'protected_derivs_path'):
         if auto.get(key):
             spec[key] = str(auto[key])

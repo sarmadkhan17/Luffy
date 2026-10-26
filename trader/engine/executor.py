@@ -138,6 +138,10 @@ class Executor:
         refused (there is no paper execution here, so a paper label on a
         venue order would be false), and so is a factory StrategyVersion
         that is not exact-version first-live eligible."""
+        from .entry_authority import EntryPermission
+        if isinstance(risk_permission, EntryPermission) and risk_permission.payload().get('adjustment'):
+            decision.skip_reason = 'increase_permission_requires_existing_position_path'
+            return None
         blocked, code = entry_block(persisted_state(self.journal))
         if blocked:
             decision.skip_reason = blocked
@@ -170,6 +174,44 @@ class Executor:
             return self._open_serialized(decision, amount, atr, stop_loss,
                                          take_profit, strategy_id, strategy_name, exec_mode,
                                          entry_identity, reference, risk_permission)
+
+    def increase(self, trade_id, decision, amount, atr, stop_loss, take_profit,
+                 strategy_id, entry_identity, reference, risk_permission):
+        """Submit only the permitted delta of one authenticated existing leg.
+
+        Uses the ordinary durable submission/recovery boundary. A timeout is
+        recovered by exact order identity; this method never retries an order.
+        """
+        from .entry_authority import EntryPermission, positive, submit
+        from .coordinated_increase import binding
+        if not isinstance(risk_permission, EntryPermission):
+            raise ValueError('exact_risk_permission_required')
+        raw = risk_permission.payload()
+        if raw.get('adjustment') != binding(self, trade_id, entry_identity,
+                decision.symbol, strategy_id, 'LONG' if decision.action == Action.BUY else 'SHORT'):
+            raise ValueError('increase_permission_binding_differs')
+        from ..strategy.owner_demo import venue_block
+        if venue_block(self.journal, strategy_id, self.ex):
+            raise ValueError('version_venue_not_authorized')
+        with self._entry_lock, self._lock_for(decision.symbol):
+            if self.recovery_pending():
+                raise ValueError('execution_recovery_pending')
+            rounded = quantize(self.ex, decision.symbol, amount)
+            if positive(rounded) > positive(amount):
+                raise ValueError('entry_quantization_enlarged_size')
+            row = self.journal.query('SELECT * FROM trades WHERE id=?', (trade_id,))[0]
+            template = Position(id=trade_id, symbol=row['symbol'], side=Side(row['side']),
+                amount=rounded, entry_price=0, notional_usdt=0, leverage=self.leverage,
+                stop_loss=stop_loss, take_profit=take_profit, strategy_id=strategy_id,
+                strategy_name=row['strategy_name'], decision_id=decision.id,
+                market_type=self.market_type.value, exec_mode='live',
+                confidence=decision.confidence, entry_identity=entry_identity)
+            _, intent, error, _, _ = submit(self, risk_permission, decision, rounded,
+                atr, stop_loss, take_profit, strategy_id, entry_identity, reference, template)
+            if error is None:
+                self.recovery.tick()
+            return dict(logical_id=intent['logical_id'],
+                status='RECOVERY_PENDING' if self.recovery_pending() else 'TERMINAL')
 
     def _open_serialized(self, decision, amount, atr, stop_loss, take_profit,
                          strategy_id, strategy_name, exec_mode,
@@ -563,7 +605,8 @@ class Executor:
 
     # ── exit ─────────────────────────────────────────────────────────────
     def close(self, trade: dict, exit_price_hint: float = 0.0,
-              reason: str = "signal_exit") -> bool:
+              reason: str = "signal_exit", *, exact_reduction: bool = False,
+              requested_quantity: float | None = None) -> bool:
         sym = trade["symbol"]
         context = getattr(self.ex, 'context', None)
         if context:
@@ -572,7 +615,10 @@ class Executor:
                 reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
                            'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
-        amount = quantize(self.ex, sym, float(trade["amount"]))
+        quantity = float(trade['amount']) if requested_quantity is None else float(requested_quantity)
+        if not 0 < quantity <= float(trade['amount']):
+            raise ValueError('close_quantity_outside_existing_position')
+        amount = quantize(self.ex, sym, quantity)
         if amount <= 0:
             log.warning(f"CLOSE {sym}: {trade['amount']} is below one lot — "
                         f"nothing the venue will accept")
@@ -608,7 +654,7 @@ class Executor:
             pnl = gross - fees
             requested = float(trade["amount"])
             residual = max(0.0, requested - amount)
-            if residual > max(requested * 0.01, 1e-9):
+            if residual > (1e-9 if exact_reduction else max(requested * 0.01,1e-9)):
                 leg_net = self._fills_net(fills) if fills else None
                 if leg_net is not None:
                     pnl = leg_net
@@ -639,6 +685,8 @@ class Executor:
             else:
                 self._book_estimate(trade, "venue fills unavailable at close"
                                     if not fills else "venue P&L unavailable")
+            if exact_reduction:
+                self.ex.confirm_flat(trade)
             if trade.get("sl_order_id"):
                 protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
             evidence = order_evidence(trade, order, fills, amount, sent_ms,

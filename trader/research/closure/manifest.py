@@ -352,7 +352,7 @@ def research_risk(risk) -> dict:
 
 def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout_symbols, fit_start_ms,
                   dev_end_ms, embargo_bars, protected_start_ms, protected_end_ms, risk,
-                  development_mode='REPLAY', search_contract_id=None) -> dict:
+                  development_mode='REPLAY', search_contract_id=None,independent_window_assigned=True) -> dict:
     """Freeze a study. Statuses are COMPUTED: development ELIGIBLE needs the
     policy's discovery floor; protected ELIGIBLE additionally needs REPLAY
     provenance over the whole window, a proven UNEXPOSED state, the held-out
@@ -378,7 +378,9 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
     covered = [s for s in disc if not any(r.startswith(s + ':') for r in dev_reasons)]
     if len(covered) < policy['min_discovery_symbols']:
         dev_reasons.append(f'covered_discovery_symbols_{len(covered)}_below_{policy["min_discovery_symbols"]}')
-    prot_reasons = []
+    if type(independent_window_assigned) is not bool or (not independent_window_assigned and development_mode!='RETROSPECTIVE'):
+        raise ClosureRefused('independent_window_assignment_invalid')
+    prot_reasons=[] if independent_window_assigned else ['independent_window_not_assigned: prospective paper is a separate lifecycle']
     if len(held) < policy['min_heldout_symbols']:
         prot_reasons.append('heldout_symbols_below_floor')
     if len(disc) < policy['min_discovery_symbols']:
@@ -421,6 +423,8 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
                 evaluator_id=evaluator_id(), cost_id=digest(risk_id), risk=risk_id, protected_fingerprint=None,
                 development_data_id=None, snapshot=manifest['snapshot'], exposure_events=manifest['exposure_events'],
                 authority='RESEARCH_ONLY')
+    if not independent_window_assigned:
+        body['independent_window_assigned']=False
     if search_contract_id is not None:
         body['search_contract_id'] = search_contract_id
     if not dev_reasons:
@@ -448,6 +452,9 @@ def verify_envelope(env, manifest=None):
     if env.get('schema') != ENVELOPE_SCHEMA or env.get('envelope_id') != digest(
             {k: v for k, v in env.items() if k != 'envelope_id'}):
         raise ClosureRefused('envelope_integrity')
+    if env.get('independent_window_assigned') is False and (env.get('development_mode')!='RETROSPECTIVE'
+            or env.get('protected_status')!='UNAVAILABLE' or env.get('protected_fingerprint') is not None):
+        raise ClosureRefused('unassigned_window_has_no_qualification_authority')
     if manifest is not None and env['manifest_id'] != verify_manifest(manifest)['manifest_id']:
         raise ClosureRefused('envelope_manifest_mismatch')
     return env

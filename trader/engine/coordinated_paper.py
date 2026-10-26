@@ -30,7 +30,7 @@ class CoordinatedPaper:
                     BEGIN SELECT RAISE(ABORT,'paper execution event is immutable'); END;
             ''')
 
-    def start(self, *, spec, identity, equity=10000.0):
+    def start(self, *, spec, identity, equity=10000.0,primary_exit=None):
         """Record an already authorized paper identity, never a venue order.
 
         The consumer binds version/install/qualification. This engine cannot
@@ -43,8 +43,9 @@ class CoordinatedPaper:
         if not math.isfinite(equity) or equity <= 0:
             raise ValueError('coordinated_paper_equity_invalid')
         ident = dict(spec=spec, identity=identity, starting_equity=equity)
+        if primary_exit is not None:ident['primary_exit']=primary_exit
         key = digest(ident)
-        state = dict(**ident, book_id=key, book=asdict(H.HedgeBook(spec)), bar=-1,
+        state = dict(**ident, book_id=key, book=asdict(H.HedgeBook(spec,primary_exit_definition=primary_exit)), bar=-1,
                      equity=equity, last_prices=None, costs=0.0, incomplete_marks=False,incomplete_funding=False,liquidated=False)
         with self.journal._tx() as db:
             db.execute('INSERT OR IGNORE INTO coordinated_paper_books VALUES(?,?,?)',
@@ -136,7 +137,8 @@ class CoordinatedPaper:
                 signal=observation['signal'] if allow_entry and not liquidated else 0,
                 exit=bool(observation.get('exit') or liquidated),
                 ratio=observation['ratio'] if observation['ratio'] is not None else float('nan'),corr=observation.get('corr'),
-                equity=max(state['equity'],1e-12),prim_c=contracts['primary'],hedge_c=contracts['hedge']))
+                equity=max(state['equity'],1e-12),prim_c=contracts['primary'],hedge_c=contracts['hedge'],
+                primary_exit_observation=observation.get('primary_exit_observation')))
             state.update(bar=bar,book=asdict(book),costs=state['costs']+cost)
             state['book']['log']=[]  # events retain intent history; recovery state stays bounded
             result=dict(book_id=key,bar=bar,request=request,fills=actual,intents=[asdict(x) for x in intents],
@@ -144,7 +146,8 @@ class CoordinatedPaper:
                         costs=cost,held=held,gross_notional=gross,liquidated=liquidated,incomplete_marks=state['incomplete_marks'],
                         fill_basis='SIMULATED_NEXT_BAR_OPEN',cost_basis='DECLARED_FEE_AND_SLIPPAGE_ESTIMATE',
                         funding_basis='SUPPLIED_SIGNED_RATES' if funding is not None else 'UNAVAILABLE',
-                        net_economics='UNAVAILABLE' if funding is None or state['incomplete_marks'] or state.get('incomplete_funding') else 'MODELLED_PAPER_ONLY',
+                        exit_input_gaps=book.exit_input_gaps,
+                        net_economics='UNAVAILABLE' if funding is None or state['incomplete_marks'] or state.get('incomplete_funding') or book.exit_input_gaps else 'MODELLED_PAPER_ONLY',
                         real_order_submissions=0)
             db.execute('INSERT INTO coordinated_paper_events VALUES(?,?,?,?)',(key,bar,canonical(result),digest(result)))
             db.execute('UPDATE coordinated_paper_books SET payload=?,sha256=? WHERE book_id=?',(canonical(state),digest(state),key))

@@ -288,6 +288,7 @@ def test_all_live_order_callers_have_classified_boundaries():
     from pathlib import Path
     expected={'trader/engine/entry_authority.py','trader/engine/executor.py',
               'trader/engine/recovery.py','trader/engine/protective.py',
+              'trader/engine/coordinated_close.py',
               'trader/engine/reconcile.py','trader/observability/prospective_execution.py'}
     found=set()
     for path in Path('trader').rglob('*.py'):

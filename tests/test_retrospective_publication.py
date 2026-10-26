@@ -133,3 +133,24 @@ def test_index_first_revision_selection_matches_exact_prior_winners(cutoff):
     dst.execute(db.execute("SELECT sql FROM sqlite_master WHERE name='market_revisions'").fetchone()[0])
     P._copy_revisions(db,dst,'k',10,40,None,{'revisions':0},probe,True,cutoff)
     assert probe.actual==expected
+
+
+def test_publisher_checks_shared_text_once_per_immutable_source_cut_and_rechecks_replacement(tmp_path,monkeypatch):
+    from trader.research.closure.publish import Bounds,_copy_revisions
+    src=tmp_path/'source.db';source(src)
+    with sqlite3.connect(src) as db:
+        # Same large immutable source string is shared by eight exact winners.
+        frame=pd.DataFrame(dict(ts=pd.to_datetime([i*STEP for i in range(8)],unit='ms',utc=True),
+            open=10.,high=12.,low=9.,close=11.,volume=100.))
+        mp.append(db,'candle:A:4h',mp.annotate(frame,instrument_id='fixture',source='s'*1024,
+            kind='candle',received_ms=40*STEP,timeframe='4h'))
+    original=mp.text_reference;calls=[]
+    def counted(text):calls.append(1);return original(text)
+    monkeypatch.setattr(mp,'text_reference',counted)
+    with sqlite3.connect(src) as db,sqlite3.connect(tmp_path/'target.db') as target:
+        mp.init(target);bound=Bounds(10000,10000000,None);counter={'revisions':0}
+        _copy_revisions(db,target,'candle:A:4h',0,7*STEP,None,counter,bound,True)
+        assert counter['revisions']==8 and len(calls)==1
+        key=next(iter(bound.checked_texts));bound.raw_texts[key]='tampered cache object'
+        with pytest.raises(ValueError,match='missing_or_corrupt'):
+            _copy_revisions(db,target,'candle:A:4h',0,7*STEP,None,counter,bound,True)

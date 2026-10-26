@@ -48,7 +48,8 @@ def test_objective_supported_paper_factory_restart_execution_does_not_authorize_
     def reader(feed,j,v,stamp):
         seen.append(stamp)
         return dict(p=100.,h=100.,po=100.,ho=100.,signal=1,exit=False,ratio=1.,corr=1.,
-                    funding={'primary':.0001,'hedge':.0001})
+                    funding={'primary':.0001,'hedge':.0001},primary_exit_observation=dict(
+                        bar_ms=stamp,step_ms=step,open=100.,high=100.,low=100.,close=100.,atr=1.))
     assert runtime.run_once(journal,cfg,None,at_ms=first+step-1,reader=reader,allow_entry=True)==[]
     runtime.run_once(journal,cfg,None,at_ms=first+step,reader=reader,allow_entry=True)
     runtime.run_once(journal,cfg,None,at_ms=first+2*step,reader=reader,allow_entry=True)
@@ -145,7 +146,27 @@ def test_coordinated_consumer_has_no_factory_approval_or_live_call():
     import ast,inspect
     tree=ast.parse(inspect.getsource(runtime))
     attributes={n.attr for n in ast.walk(tree) if isinstance(n,ast.Attribute) and isinstance(n.value,ast.Name) and n.value.id=='F'}
-    assert attributes=={'ensure','load_version','state_of','VALIDATED','SHADOW','record_coordinated_paper_install','create_version'}
+    assert attributes=={'ensure','load_version','state_of','VALIDATED','SHADOW','record_coordinated_paper_install','create_version','HEDGE_HQ_KIND','APPROVAL_REQUIRED','APPROVED_FIRST_LIVE','evaluate_probation','HandoffRefused'}
     # Venue order capability is absent; current inputs arrive through cache.
     imports={n.module for n in ast.walk(tree) if isinstance(n,ast.ImportFrom)}
     assert not imports.intersection({'ccxt','requests','executor','control_fence'})
+
+
+def test_probation_failure_cannot_rewrite_a_committed_paper_cut(tmp_path,packet,monkeypatch):
+    journal=Journal(tmp_path/'journal.db');cfg={'research':{'closure':{'enabled':True,'paper_intake':True}}}
+    issued=F.create_version(journal,cfg,dict(kind=T.KIND,packet=packet),at_ms=1)
+    installed=F.record_coordinated_paper_install(journal,issued['version_id'],at_ms=1)
+    first=installed['install']['first_bar_ms'];step=14_400_000
+    def reader(feed,j,v,stamp):
+        index=(stamp-first)//step
+        return dict(p=100.,h=100.,po=100.,ho=100.,signal=1 if index==0 else 0,
+            exit=index>=2,ratio=1.,corr=1.,funding={'primary':0.,'hedge':0.},signal_cut_ms=stamp+step,
+            primary_exit_observation=dict(bar_ms=stamp,step_ms=step,open=100.,high=100.,low=100.,close=100.,atr=1.))
+    def failed(*a,**kw):raise F.HandoffRefused('fixture_probation_unavailable')
+    monkeypatch.setattr(F,'evaluate_probation',failed)
+    for index in range(4):
+        result=runtime.run_once(journal,cfg,None,at_ms=first+(index+1)*step,reader=reader,allow_entry=True)
+    assert result[0]['status']=='PAPER_OBSERVATION' and result[0]['probation']=='UNAVAILABLE'
+    state=CoordinatedPaper(journal).state(installed['book_id'])
+    assert state['bar']==3 and not any(state['book']['pos'].values())
+    assert len(journal.query('SELECT * FROM coordinated_paper_events'))==4

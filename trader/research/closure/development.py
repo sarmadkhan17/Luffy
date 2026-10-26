@@ -444,6 +444,7 @@ def _develop_hedge(candidate, bundle, env, external, done):
                               h_window=(int(rr['lookback']) + 1) if rr['method'] == 'rolling_beta' else 1)
             pcl, hcl, popen, hopen, sig = al['p'], al['h'], al['po'], al['ho'], al['sig']
             exits = H.aligned_exits(compiled, bundle.sym_frames[sym], al, **kw)
+            primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al)
             half = len(pcl) // 2
             pr, hr = np.r_[np.nan, np.diff(pcl) / pcl[:-1]], np.r_[np.nan, np.diff(hcl) / hcl[:-1]]
             beta = H.estimate_ratio(dict(spec, ratio=dict(spec['ratio'], method='ols_beta', fit_end=half)), pr, hr, half - 1) \
@@ -469,7 +470,8 @@ def _develop_hedge(candidate, bundle, env, external, done):
                 funding = None
                 flat = abs(float(bundle.risk.get('funding_rate_8h', 0.0))) * cost
             res = H.evaluate(sp, pcl[half:], hcl[half:], sig[half:], exits[half:],
-                             opens=(popen[half:], hopen[half:]), funding=funding, flat_funding_rate=flat)
+                             opens=(popen[half:], hopen[half:]),funding=funding,flat_funding_rate=flat,
+                             primary_exit=primary_exit,decision_bars=decision_bars[half:])
             per[sym] = dict(verdict=res['verdict'], reason=res['reason'], ratio=beta,
                             comparators=res['comparators'], stress=res['stress'], return_sacrificed_pct=res['return_sacrificed_pct'],
                             effective_spec=sp, funding_basis='RETAINED_SIGNED_HISTORY' if funding is not None else 'CONSERVATIVE_FLAT_EIGHT_HOUR',

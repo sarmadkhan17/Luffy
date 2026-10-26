@@ -22,11 +22,12 @@ def symbols(n):
 
 
 def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
-                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60, lever=None):
+                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60, lever=None,tf='4h'):
     """Candles with an optional planted continuation `edge` (drift per bar in
     alternating regime blocks shared by all markets) and a `common` factor
     loading that makes the markets move together (correlated no-edge when
     edge == 0). Returns the symbol list."""
+    step=P.TF_MS[tf]
     path = Path(path)
     if path.exists():
         path.unlink()
@@ -51,7 +52,7 @@ def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
             rets[i][b] = ret
             px *= 1.0 + ret
             volume = 10.0 * (1.0 + abs(rng.normal(0, 0.3)))
-            rows.append((name, '4h', start_ms + b * TF_MS, px, px * 1.004, px * 0.996, px, volume, volume / 2))
+            rows.append((name, tf, start_ms + b * step, px, px * 1.004, px * 0.996, px, volume, volume / 2))
         con.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)', rows)
     con.commit()
     con.close()
@@ -65,7 +66,7 @@ def _receipts(path):
     feed = DataFeed(exchange=NoExchange(), db_path=path)
     db = feed.db
     rows = db.execute('SELECT symbol,tf,ts,open,high,low,close,volume,taker_buy FROM candles '
-                      'WHERE tf=? ORDER BY symbol,ts', ('4h',)).fetchall()
+                      'ORDER BY symbol,tf,ts').fetchall()
     records = []
     for symbol, timeframe, event, *numbers in rows:
         values = dict(zip(P.VALUES, numbers))

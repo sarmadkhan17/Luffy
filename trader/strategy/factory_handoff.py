@@ -856,7 +856,8 @@ def _verified_hedge(cfg: dict, packet) -> dict:
         _refuse("hq_research_handoff_gate_closed")
     if not rcfg.get("referee", False):
         _refuse("hq_research_referee_gate_closed")
-    if hq.registered_method(cfg) is None:
+    method=hq.registered_method(cfg)
+    if method is None or q['statistical_admission']['method']!={k:method[k] for k in ('method_id','version','calibration_id')}:
         _refuse("hq_hedge_admission_not_registered")
     if not cq.calibration_approved(cfg, env):
         _refuse("hq_calibration_not_approved")
@@ -882,18 +883,25 @@ def multi_leg_block(version: dict) -> str | None:
 
 
 def _create_from_hedge_historical(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
-    from ..research.closure import hedge_qualification as hq
     from ..research.combo import Combination
     from ..research.compose import hedge as H
-    from .exit_policy import EXIT_SEMANTICS_ID
     q = _verified_hedge(cfg, source.get("packet"))
+    proof=q['protected_result']['error_budget']
+    # A packet digest proves consistency, not that the canonical allowance
+    # was spent. Reauthenticate its exact prefix against the shared journal.
+    from ..research.ledger import Ledger
+    current=[dict(row) for row in Ledger(journal).tests()]
+    budget=journal.query('SELECT * FROM research_budget WHERE id=1')
+    if (not budget or dict(budget[0])!=proof['budget']
+            or current[:len(proof['sequence'])]!=proof['sequence']):
+        _refuse('hq_hedge_canonical_budget_differs')
     env, freeze = q["envelope"], q["freeze"]
     c = Combination.from_dict(freeze["combo"])
     spec = c.to_spec()
     hs = freeze["hedge_spec"]
     spec.universe = {"include": [hs["primary"]["symbol"]], "exclude": []}
     spec_d, spec_hash = _frozen_spec(spec)
-    ids = {"exit_semantics_id": EXIT_SEMANTICS_ID, "hedge_qualification_id": q["qualification_id"],
+    ids = {"exit_semantics_id": H.BOOK_EXIT_SEMANTICS_ID, "hedge_qualification_id": q["qualification_id"],
            "hedge_evidence_id": q["evidence_id"], "protected_fingerprint": env["protected_fingerprint"],
            "freeze_id": freeze["freeze_id"], "rule_id": q["rule_id"], "hedge_spec_id": hs["spec_id"]}
     research = {"origin": "historical_hedge_qualification", "envelope_id": env["envelope_id"],
@@ -1216,6 +1224,14 @@ def bind_installed_spec(journal, spec):
     return spec
 
 
+def _expected_exit_semantics(version):
+    if (version.get('lineage') or {}).get('research',{}).get('multi_leg'):
+        from ..research.compose.hedge import BOOK_EXIT_SEMANTICS_ID
+        return BOOK_EXIT_SEMANTICS_ID
+    from .exit_policy import EXIT_SEMANTICS_ID
+    return EXIT_SEMANTICS_ID
+
+
 def verify_exit_binding(journal, version: dict) -> dict:
     """Immutable validation binding for managing an already-open position."""
     row = _one(journal, "SELECT * FROM strategy_validation_receipts "
@@ -1231,8 +1247,7 @@ def verify_exit_binding(journal, version: dict) -> dict:
     if (rec["version_id"], rec["spec_hash"]) != (version["version_id"],
                                                  version["spec_hash"]):
         _refuse("validation_receipt_wrong_version")
-    from .exit_policy import EXIT_SEMANTICS_ID
-    if rec.get('evidence', {}).get('exit_semantics_id') != EXIT_SEMANTICS_ID:
+    if rec.get('evidence', {}).get('exit_semantics_id') != _expected_exit_semantics(version):
         _refuse('validation_exit_semantics_mismatch')
     if rec['evidence'] != version['evidence_ids']:
         _refuse('validation_evidence_changed')
@@ -1356,11 +1371,10 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
 def verify_install(journal, version: dict, *, current: bool = True) -> dict:
     """The version's install record, re-verified; with `current` the spec
     installed now must still be the exact version."""
-    from .exit_policy import EXIT_SEMANTICS_ID
     rec = _install_record(journal, version["version_id"])
     if rec is None:
         _refuse("install_missing")
-    if rec.get("exit_semantics_id") != EXIT_SEMANTICS_ID:
+    if rec.get("exit_semantics_id") != _expected_exit_semantics(version):
         _refuse("install_exit_semantics_mismatch")
     ident = {k: rec[k] for k in ("schema", "version_id", "strategy_id",
                                  "spec_hash", "validation_receipt_id",
@@ -1370,9 +1384,9 @@ def verify_install(journal, version: dict, *, current: bool = True) -> dict:
     ) != (version["version_id"], version["spec_hash"],
           version["spec_hash"]):
         _refuse("install_wrong_version")
-    if version['source']['kind']=='coordinated_paper_research':
+    if rec.get('execution')=='COORDINATED_PAPER_ONLY' and version['source']['kind'] in ('coordinated_paper_research',HEDGE_HQ_KIND):
         if (rec.get('execution')!='COORDINATED_PAPER_ONLY' or rec.get('mode')!='paper'
-                or rec.get('installed_spec')!=version['spec']):
+                or rec.get('installed_spec')!=version['spec'] or rec.get('primary_exit')!=version['spec']['exit']):
             _refuse('coordinated_install_differs')
         return rec
     if current:
@@ -1555,6 +1569,9 @@ def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
 
 def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
             check_install: bool = True) -> dict:
+    if (v.get('lineage') or {}).get('research',{}).get('multi_leg'):
+        from ..engine.coordinated_probation import assess
+        return assess(journal,cfg,v,since_ms,at_ms)
     from ..engine.paper import unsupported
     bad = unsupported(StrategySpec.from_dict(v["spec"]))
     policy = _policy(cfg)
@@ -1700,8 +1717,7 @@ def _verify_probation(journal, cfg, version: dict, receipt_id: str) -> dict:
     if row is None:
         _refuse("probation_receipt_missing")
     rec = _load(row)
-    from .exit_policy import EXIT_SEMANTICS_ID
-    if rec.get("exit_semantics_id") != EXIT_SEMANTICS_ID:
+    if rec.get("exit_semantics_id") != _expected_exit_semantics(version):
         _refuse("probation_exit_semantics_mismatch")
     ident = {k: rec[k] for k in ("schema", "version_id", "spec_hash",
                                  "validation_receipt_id", "install_id",
@@ -2620,13 +2636,13 @@ def lifecycle_target(journal, version_id):
 # It does not use the single-leg strategies projection or live install path.
 def _create_coordinated_trial(journal, cfg, packet, *, at_ms):
     from ..research.closure.coordinated_trial import verify, KIND
-    from .exit_policy import EXIT_SEMANTICS_ID
     combo, hs=verify(packet)
     spec=combo.to_spec()
     spec.name=('Paper research: '+packet['candidate']['question'])[:100]
     spec.universe={'include':[hs['primary']['symbol']],'exclude':[]}
     sd,sh=_frozen_spec(spec)
-    ids=dict(exit_semantics_id=EXIT_SEMANTICS_ID,trial_id=packet['trial_id'],
+    from ..research.compose.hedge import BOOK_EXIT_SEMANTICS_ID
+    ids=dict(exit_semantics_id=BOOK_EXIT_SEMANTICS_ID,trial_id=packet['trial_id'],
              development_result_id=packet['result']['result_id'])
     research=dict(origin=KIND,multi_leg=dict(hedge_spec=hs,packet=packet,
                   execution='COORDINATED_PAPER_ONLY',independent_qualification='NOT_ESTABLISHED'))
@@ -2653,9 +2669,12 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
     from ..core.types import TF_MS
     ensure(journal)
     version=load_version(journal,version_id)
-    if version['source']['kind']!='coordinated_paper_research':
+    if version['source']['kind'] not in ('coordinated_paper_research',HEDGE_HQ_KIND):
         _refuse('not_coordinated_paper_research')
     validation=verify_validation(journal,version)
+    from .exit_policy import unsupported
+    bad=unsupported(StrategySpec.from_dict(version['spec']).exit)
+    if bad:_refuse('coordinated_primary_exit_unsupported:'+bad)
     if not math.isfinite(equity) or equity<=0:
         _refuse('paper_equity_invalid')
     old=_install_record(journal,version_id)
@@ -2670,7 +2689,7 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
         step=TF_MS[version['spec']['timeframe']]
         old=dict(ident,install_id=_jsha(ident),installed_at_ms=int(at_ms),starting_equity=equity,
                  first_bar_ms=((int(at_ms)+step-1)//step)*step,installed_spec=version['spec'],
-                 installed_spec_hash=version['spec_hash'],execution='COORDINATED_PAPER_ONLY')
+                 installed_spec_hash=version['spec_hash'],execution='COORDINATED_PAPER_ONLY',primary_exit=version['spec']['exit'])
         text=canonical(old)
         with journal._tx() as db:
             _begin(db)
@@ -2685,5 +2704,5 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
     identity=dict(exec_mode='paper',version_id=version_id,spec_hash=version['spec_hash'],
                   install_id=old['install_id'],admission_id=validation['receipt_id'],first_bar_ms=old['first_bar_ms'])
     book_id=CoordinatedPaper(journal).start(spec=version['lineage']['research']['multi_leg']['hedge_spec'],
-                                         identity=identity,equity=old['starting_equity'])
+                                         identity=identity,equity=old['starting_equity'],primary_exit=old['primary_exit'])
     return dict(install=old,book_id=book_id,version_id=version_id)

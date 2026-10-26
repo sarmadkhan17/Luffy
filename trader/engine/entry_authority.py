@@ -317,7 +317,7 @@ def intent(decision, requested, atr, stop, target, strategy_id, identity, refere
                 target=exact_number(target, zero=True), reference=reference, trade_intent=lineage)
 
 
-def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, identity=None, reference=None, trade_intent=None):
+def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, identity=None, reference=None, trade_intent=None, increase_trade_id=None):
     from ..observability.safety import entry_refusal
     refusal = entry_refusal(manager.journal, probe=True)
     if refusal:
@@ -339,13 +339,27 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
             if len(versions) != 1 or versions[0]['strategy_id'] != strategy_id or versions[0]['spec_hash'] != lineage['spec_hash']:
                 raise ValueError('trade_intent_version_unverified')
         view, account_id, positions, available = authoritative_inputs(manager.journal, cap)
+        adjustment = None
+        if increase_trade_id is not None:
+            from .coordinated_increase import risk_binding
+            adjustment = risk_binding(manager.journal, cap, increase_trade_id, identity,
+                                      decision.symbol, strategy_id, raw['direction'])
+            raw['adjustment'] = adjustment
+            if positive(stop) != positive(adjustment['before']['stop_loss']):
+                raise ValueError('increase_stop_must_preserve_existing_geometry')
+            if positive(target,zero=True) != positive(adjustment['before']['take_profit'],zero=True):
+                raise ValueError('increase_target_must_preserve_existing_geometry')
         for row in positions:
+            if adjustment and row['id'] == adjustment['trade_id']:
+                continue
             binding = json.loads(row.get('entry_identity_json') or '{}').get('execution_binding', {})
             if binding.get('instrument_id') == cap['instrument_id']:
                 raise ValueError('risk_entry_refused:already_exposed_canonical_instrument')
         from ..core.types import Position, Side
         held = []
         for row in positions:
+            if adjustment and row['id'] == adjustment['trade_id']:
+                continue
             for name in ('amount','entry_price','notional_usdt','stop_loss'):
                 positive(row[name])
             fields = {k:row[k] for k in Position.__dataclass_fields__ if k in row}
@@ -355,8 +369,17 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
                 or latest_intent_event_id(manager.journal) != control_id):
             raise ValueError('control_entry_blocked')
         price = float(positive(reference['price']))
-        result = manager.check_entry(state, decision.symbol, price, float(positive(atr)),
-                    abs(price-float(positive(stop)))/price, held, view['equity'],
+        sizing_price = price
+        sizing_distance = abs(price-float(positive(stop)))
+        if adjustment:
+            # Quote the TOTAL replacement conservatively at both the old and
+            # current entry basis. A losing position cannot obtain a larger
+            # delta merely because its current mark moved nearer its stop.
+            old_entry = float(positive(adjustment['before']['entry_price']))
+            sizing_price = max(price, old_entry)
+            sizing_distance = max(sizing_distance, abs(old_entry-float(positive(stop))))
+        result = manager.check_entry(state, decision.symbol, sizing_price, float(positive(atr)),
+                    sizing_distance/sizing_price, held, view['equity'],
                     int(manager.journal.query("SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]['n']), 'futures')
         if not result.ok:
             raise ValueError('risk_entry_refused:' + result.reason)
@@ -367,10 +390,13 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
         limit = base if alloc is None else allocated(base, alloc['fraction'])
         if limit <= 0:
             raise ValueError('risk_entry_refused:allocation_rounds_to_zero')
-        allowed = min(positive(requested), limit)
+        before_qty = positive(adjustment['before']['amount']) if adjustment else positive(0, zero=True)
+        allowed = min(positive(requested), max(positive(0, zero=True), limit-before_qty))
+        if allowed <= 0:
+            raise ValueError('risk_increase_has_no_remaining_capacity')
         if alloc is not None and float(allowed) * price / manager.leverage < manager.min_notional:
             raise ValueError('risk_entry_refused:allocation_below_min_notional')
-        check_bracket(cap, allowed, reference['price'], manager.leverage)
+        check_bracket(cap, allowed+before_qty, reference['price'], manager.leverage)
         if allowed * positive(reference['price']) / positive(manager.leverage) > available:
             raise ValueError('risk_available_margin_exceeded')
         release = manager.release_check(view['equity'], authoritative=True)
@@ -415,6 +441,15 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
         lineage = raw['trade_intent']
         trade_intent = TradeIntent(lineage['intent_id'], canonical({k:v for k,v in lineage.items() if k!='intent_id'}))
     current = intent(decision, raw['requested'], atr, stop, target, strategy_id, identity, reference, cap, trade_intent)
+    adjustment = raw.get('adjustment')
+    before_qty = positive(0, zero=True)
+    if adjustment:
+        from .coordinated_increase import risk_binding
+        current['adjustment'] = risk_binding(executor.journal, cap, adjustment['trade_id'], identity,
+                                            decision.symbol, strategy_id, current['direction'])
+        before_qty = positive(adjustment['before']['amount'])
+        if positive(stop) != positive(adjustment['before']['stop_loss']):
+            raise ValueError('increase_stop_must_preserve_existing_geometry')
     for k in current:
         if current[k] != raw[k]:
             raise ValueError('risk_intent_or_capability_mismatch')
@@ -432,10 +467,10 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
         if (issued is None or issued['version_id'] != alloc['version_id']
                 or issued['ceiling'] != alloc['ceiling']):
             raise ValueError('allocation_binding_differs')
-        if positive(amount) > min(allocated(issued['base'], alloc['fraction']), positive(raw['allowed'])):
+        if positive(amount)+before_qty > min(allocated(issued['base'], alloc['fraction']), positive(raw['allowed'])+before_qty):
             raise ValueError('allocation_ceiling_exceeded')
     q = positive(amount); price = positive(reference['price']); positive(q*price)
-    check_bracket(cap, q, price, executor.leverage)
+    check_bracket(cap, q+before_qty, price, executor.leverage)
     constraints = cap['record']['constraints']
     if (q % positive(constraints['market_quantity_step']) or q < positive(constraints['market_minimum_quantity'])
             or q > positive(constraints['market_maximum_quantity']) or q*price < positive(constraints['minimum_notional'])):
@@ -520,13 +555,15 @@ def submit(executor, permission, decision, amount, atr, stop, target,
                 raise ValueError('execution_recovery_pending')
             raw = validate(executor, permission, decision, amount, atr, stop, target,
                            strategy_id, identity, reference, conn)
+            if raw.get('adjustment') and position.id != raw['adjustment']['trade_id']:
+                raise ValueError('increase_requires_existing_position_id')
             binding = {k:raw[k] for k in ('logical_id','instrument_id','capability',
                        'risk_policy_id','account_id','book_id','strategy_identity','trade_intent')}
             position = replace(position, entry_identity=dict(identity or {}, execution_binding=binding))
             client_id = 'lr_' + hashlib.sha256(logical_id.encode()).hexdigest()[:28]
             conn.execute('INSERT INTO execution_requests(logical_id,decision_id,intent_hash,intent_json,client_order_id,state) VALUES (?,?,?,?,?,?)',
                          (logical_id,decision.id,digest(raw),canonical(raw),client_id,'RISK_AUTHORIZED'))
-            recovery = executor.recovery.begin(position, logical_id=logical_id, conn=conn)
+            recovery = executor.recovery.begin(position, logical_id=logical_id, adjustment=raw.get('adjustment'), conn=conn)
         # Reservation is committed. A crash from here onward must reconcile.
         submitted_ms = int(time.time()*1000)
         order = error = None

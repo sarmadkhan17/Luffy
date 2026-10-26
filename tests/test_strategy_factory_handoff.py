@@ -974,8 +974,20 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py'), pathlib.Path('trader/engine/coordinated_trials.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py'), pathlib.Path('trader/engine/coordinated_trials.py'), pathlib.Path('trader/engine/coordinated_probation.py'), pathlib.Path('trader/strategy/owner_demo.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert not _factory_refs(f.read_text(), f.as_posix()), f
+    # These two scoped readers cannot use the allowlist to acquire writers.
+    owner_demo=__import__('ast').parse(pathlib.Path('trader/strategy/owner_demo.py').read_text())
+    ast=__import__('ast')
+    direct=[a.name for n in ast.walk(owner_demo) if isinstance(n,ast.ImportFrom)
+            and (n.module or '').endswith('factory_handoff') for a in n.names]
+    assert set(direct)=={'_frozen_spec','versioned'}
+    assert not any(isinstance(n,ast.Import) and any('factory_handoff' in a.name for a in n.names)
+                   or isinstance(n,ast.Attribute) and n.attr=='factory_handoff' for n in ast.walk(owner_demo))
+    probation=pathlib.Path('trader/engine/coordinated_probation.py').read_text()
+    assert set(re.findall(r"\bF\.(\w+)",probation))=={
+        '_policy','_jsha','verify_install','P_NO_POLICY','P_INSTALLED_DIFFERS',
+        'P_INSUFFICIENT','P_INCOMPLETE','P_COST_INCOMPLETE','P_SATISFIED','P_NOT_SATISFIED'}
     # Postmortem delegates only to these existing read-only Factory readers.
     # No writer/alias escape is permitted by this exception.
     import ast
@@ -1083,8 +1095,8 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= allowed
     cfg = load_config()
-    assert cfg["research"]["referee"] is False
-    assert cfg["research"]["handoff"] is False
+    # Owner-approved enablement is configuration, not a source-boundary rule.
+    assert all(type(cfg["research"][key]) is bool for key in ("referee","handoff"))
 
 
 # ── the real identity bridge (Trade Provenance x exact version) ──────────
@@ -1200,3 +1212,21 @@ def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
         book(i, v["spec_hash"], pnl, identity=(i != 3))
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=t0 + 30 * DAY)
     assert p["status"] == F.P_INCOMPLETE
+
+
+@pytest.mark.parametrize('gate,reason',[('referee','hq_research_referee_gate_closed'),('handoff','hq_research_handoff_gate_closed')])
+@pytest.mark.parametrize('source',['directional','hedge'])
+def test_configured_closed_research_gate_remains_a_refusal(monkeypatch,gate,reason,source):
+    # Only the already-verified packet stand-in is synthetic. This probe
+    # proves refusal before any Factory write or later eligibility check.
+    from trader.research.closure import qualification as Q,hedge_qualification as H
+    cfg=load_config();cfg['research']=dict(cfg['research'],referee=True,handoff=True)
+    cfg['research'][gate]=False
+    packet=dict(status='QUALIFIED',authority_class='CONFIGURED',envelope=dict(policy_class='CONFIGURED'))
+    if source=='directional':
+        monkeypatch.setattr(Q,'verify_qualification',lambda p:packet)
+        call=F._verified_historical
+    else:
+        monkeypatch.setattr(H,'verify_hedge_qualification',lambda p,c:packet)
+        call=F._verified_hedge
+    with pytest.raises(F.HandoffRefused,match=reason):call(cfg,packet)

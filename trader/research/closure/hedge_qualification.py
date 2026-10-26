@@ -10,17 +10,13 @@ Frozen inputs never refit on protected values: the hedge ratio is the developmen
 shared with the envelope's single look (`looks`), registered BEFORE any protected price is read; an interruption leaves the
 look spent and the result INCONCLUSIVE, never retried.
 
-What this module does NOT claim, by design (named gaps, not hidden):
-  * STATISTICAL ADMISSION. No drawdown/CVaR admission procedure with calibrated size has been registered
-    (see outputs/compositional-deployment/protective-qualification-method-constraints.txt: a stationary bootstrap is not an
-    assumption-free test and a variance theorem does not cover drawdown/tail objectives). `ADMISSION_METHODS` is therefore
-    EMPTY: a protected run ends ASSESSED_SUPPORTED / ASSESSED_NOT_SUPPORTED / DOMINATED_BY_CASH / INCONCLUSIVE / BLOCKED and
-    can never be QUALIFIED until a method with predeclared version, parameters and complete calibration is registered. No
-    dummy p-value is produced and nothing is lowered to manufacture a pass.
-  * RELATIVE VALUE is assessed on net return against cash, unhedged and reduced exposure, with the same combined-book
-    costs and chronology. This is return evidence, not statistical admission; the empty registry also blocks its qualification.
-  * CASH: reported beside hedged/unhedged/reduced. If cash has higher return and no greater risk, the hedge is DOMINATED_BY_CASH
-    unless its frozen spec carries an independently predeclared `primary_exposure_constraint` (never invented after a result).
+Statistical admission adds a frozen episode-reliability comparison against each
+control, using the same shared error-budget ledger. Its conditional-null
+assumption and limited claim are explicit in objective_admission.PROTOCOL.
+Full-window economics and cash dominance remain separate required checks.
+The numerical component calibration does not replace full-search calibration;
+CONFIGURED authority requires both current reports and genuine forward seals.
+
 """
 from __future__ import annotations
 
@@ -35,6 +31,7 @@ from ..combo import Combination
 from . import ClosureRefused, digest, exposure, families, manifest
 from . import development as D
 from .development import require_current
+from . import objective_admission as OA
 
 FREEZE_SCHEMA = 'closure-hedge-freeze.v1'
 QUAL_SCHEMA = 'closure-hedge-qualification.v1'
@@ -44,8 +41,8 @@ PROTECTIVE = ('protective_beta', 'protective_directional', 'stress_loss')
 STATUSES = ('QUALIFIED', 'ASSESSED_SUPPORTED', 'ASSESSED_NOT_SUPPORTED', 'DOMINATED_BY_CASH', 'INCONCLUSIVE', 'BLOCKED')
 MIN_ENTRIES = 3
 
-#: method_id -> callable(packet_core: dict) -> {'admitted': bool, 'evidence': dict}. EMPTY on purpose (see module docstring).
-ADMISSION_METHODS: dict = {}
+#: Registration alone grants no authority; current approved calibration is required.
+ADMISSION_METHODS: dict = {OA.METHOD_ID: OA.evaluate}
 
 
 def assessment_rule(spec):
@@ -57,8 +54,12 @@ def registered_method(cfg):
     r = (((cfg or {}).get('research') or {}).get('hedge_qualification'))
     if not isinstance(r, dict) or not r.get('approved') or not r.get('calibration_id'):
         return None
-    if r.get('method_id') not in ADMISSION_METHODS or not r.get('version'):
+    if r.get('method_id')!=OA.METHOD_ID or r.get('version')!=OA.PROTOCOL['version']:
         return None
+    try:
+        report=json.loads(Path(r['calibration_report_path']).read_text())
+        if not OA.report_valid(report,r['calibration_id']):return None
+    except (OSError,ValueError,KeyError,TypeError):return None
     return dict(r)
 
 
@@ -98,7 +99,7 @@ def freeze_hedge_finalist(store, env: dict, results: list):
                 search_history=dict(trials=len(mine), outcomes={o: sum(1 for r in mine if r['outcome'] == o)
                                                                  for o in sorted({r['outcome'] for r in mine})},
                                     result_ids=sorted(r['result_id'] for r in mine)),
-                authority='RESEARCH_ONLY')
+                authority='RESEARCH_ONLY',admission_protocol=dict(OA.PROTOCOL))
     freeze = dict(body, freeze_id=digest(body))
     store.put_once('freezes', freeze['freeze_id'], freeze)
     return freeze
@@ -261,8 +262,10 @@ def protected_evaluation(freeze: dict, env: dict, c: Combination, sealed: Path, 
     exits = H.aligned_exits(compiled, sf, al, btc=btc, derivs=(ext.get('derivs') or {}).get(psym),
                             universe={k: {env['tf']: v} for k, v in frames.items()},
                             market=ext.get('market'), symbol=psym, world=ext.get('world'))
+    primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al)
     res = H.evaluate(spec, al['p'], al['h'], al['sig'], exits, opens=(al['po'], al['ho']), funding=funding,
-                     flat_funding_rate=flat)
+                     flat_funding_rate=flat,assessment_episode_bars=(freeze.get('admission_protocol') or {}).get('episode_bars'),
+                     reduced_fraction=freeze['development_comparators']['reduced']['fraction'],primary_exit=primary_exit,decision_bars=decision_bars)
     res['funding_basis'] = 'RETAINED_SIGNED_HISTORY' if funding is not None else 'CONSERVATIVE_FLAT_EIGHT_HOUR'
     res['alignment'] = {k: al[k] for k in ('refused', 'bars', 'missing_primary', 'missing_hedge')}
     res['window_bars'] = int(n)
@@ -291,7 +294,7 @@ def protected_job(payload: dict) -> dict:
     return protected_evaluation(freeze, env, c, Path(payload['sealed']), external, payload.get('sealed_derivs'))
 
 
-def authority_blocks(env, cfg, source_journal=None) -> list:
+def authority_blocks(env, cfg, source_journal=None,budget_journal=None) -> list:
     """Why a CONFIGURED hedge look must not be taken yet (closed gates honoured, never routed around)."""
     from . import qualification as Q
     if env['policy_class'] != 'CONFIGURED':
@@ -303,6 +306,8 @@ def authority_blocks(env, cfg, source_journal=None) -> list:
         out.append('calibration_not_approved')
     if registered_method(cfg) is None:
         out.append('hedge_admission_method_not_registered')
+    if not source_journal or not budget_journal or Path(source_journal).resolve()!=Path(budget_journal).resolve():
+        out.append('canonical_shared_error_budget_required')
     if manifest.rederive_proofs(env) != env['exposure_proofs'] or set(env['exposure_proofs'].values()) != {'FORWARD_SEAL'}:
         out.append('exposure_proof_not_forward_seal')
     return out
@@ -330,7 +335,7 @@ def _funding_ready(sealed_derivs, symbols, window, step) -> list:
 
 
 def qualify_hedge(store, freeze: dict, env: dict, snapshot_path, workdir, *, now_ms: int, cfg=None, run=None,
-                  derivs_path=None, world_path=None, timeout_s: float = 900.0) -> dict:
+                  derivs_path=None, world_path=None, timeout_s: float = 900.0,source_journal=None,budget_journal=None) -> dict:
     """Run (or recall) the independent protected assessment. Idempotent: a recorded packet is returned unchanged and a
     spent look is never retaken, interrupted or not. The evaluator executes in the provided bounded `run` (or a killable
     child) AFTER the look is registered; a timeout or crash is a spent, INCONCLUSIVE look with no retry."""
@@ -347,10 +352,10 @@ def qualify_hedge(store, freeze: dict, env: dict, snapshot_path, workdir, *, now
 
     spec = freeze['hedge_spec']
     method = registered_method(cfg)
-    if spec['purpose'] not in PROTECTIVE:
+    if spec['purpose'] not in PROTECTIVE and method is None:
         return record(_packet('BLOCKED', 'relative_value_return_method_not_registered (no look spent)', env, freeze,
                               gaps=['return evidence method for relative-value pairs'], method=method))
-    gate = authority_blocks(env, cfg)
+    gate = authority_blocks(env, cfg,source_journal,budget_journal)
     if gate:
         return _packet('BLOCKED', 'authority_blocked: ' + ','.join(gate) + ' (no look spent)', env, freeze)   # not recorded: may open later
     if env['protected_status'] != 'ELIGIBLE':
@@ -426,6 +431,14 @@ def qualify_hedge(store, freeze: dict, env: dict, snapshot_path, workdir, *, now
         except ClosureRefused as exc:
             return _packet('BLOCKED', f'world_context_unavailable:{exc.code} (no look spent)', env, freeze)
     ctx_id = digest(ctx_ids) if ctx_ids else None
+    if method is not None:
+        if freeze.get('admission_protocol')!=OA.PROTOCOL:
+            return record(_packet('BLOCKED','admission_protocol_not_frozen (no look spent)',env,freeze,method=method))
+        payload=dict(freeze=freeze,env=env,sealed=str(sealed),requires=needs+(['world'] if 'world' in c.requires else []),
+                     sealed_derivs=str(sealed_derivs) if sealed_derivs.exists() else None,
+                     sealed_world=str(sealed_world) if sealed_world.exists() else None)
+        return _reserved_assessment(store,freeze,env,c,payload,method,record,run,timeout_s,now_ms,ctx_id,deployment,
+                                    Path(budget_journal) if budget_journal else workdir/'hedge-qualification.db')
     # the look is registered BEFORE any protected price is read or the child is dispatched, and is charged whatever follows
     store.put_once('looks', env['envelope_id'], dict(freeze_id=freeze['freeze_id'], kind='hedge_relative_value' if spec['purpose'] == 'relative_value' else 'hedge_protective', rule_id=assessment_rule(spec),
                                                     method=None if method is None else method.get('method_id')))
@@ -450,11 +463,6 @@ def qualify_hedge(store, freeze: dict, env: dict, snapshot_path, workdir, *, now
     res = out.value
     status, reason = assess(res, spec)
     admission = None
-    if status == 'ASSESSED_SUPPORTED' and method is not None:
-        adm = ADMISSION_METHODS[method['method_id']](dict(freeze_id=freeze['freeze_id'], result=res))
-        admission = adm.get('evidence')
-        if adm.get('admitted') is True:
-            status, reason = 'QUALIFIED', reason + '; admitted by registered method ' + method['method_id']
     return record(_packet(status, reason, env, freeze, result=dict(res, deployment=deployment), method=method,
                           admission=admission, context_id=ctx_id))
 
@@ -487,9 +495,83 @@ def verify_hedge_qualification(q: dict, cfg=None) -> dict:
         adm = q['statistical_admission']
         if adm['status'] != 'ADMITTED' or not adm.get('method') or adm['method']['method_id'] not in ADMISSION_METHODS:
             raise ClosureRefused('hedge_admission_not_registered')
-        again = ADMISSION_METHODS[adm['method']['method_id']](dict(freeze_id=freeze['freeze_id'], result={k: v for k, v in res.items() if k != 'deployment'}))
+        proof=(res or {}).get('error_budget') or {}
+        alpha=(adm.get('evidence') or {}).get('alpha')
+        _verify_budget(proof,env,freeze,adm['evidence'])
+        again = ADMISSION_METHODS[adm['method']['method_id']](dict(alpha=alpha,freeze_id=freeze['freeze_id'], result={k: v for k, v in res.items() if k not in ('deployment','error_budget')}))
         if again.get('admitted') is not True or again.get('evidence') != adm.get('evidence'):
             raise ClosureRefused('hedge_admission_not_rederivable')
         if env['policy_class'] == 'CONFIGURED' and set(env['exposure_proofs'].values()) != {'FORWARD_SEAL'}:
             raise ClosureRefused('configured_authority_requirements_unmet')
     return q
+
+
+def _reserved_assessment(store,freeze,env,combo,payload,method,record,run,timeout_s,now_ms,ctx_id,deployment,budget_path):
+    from ...core.journal import Journal
+    from ...core.child import run_child
+    from ..ledger import Ledger
+    import fcntl
+    budget_path.parent.mkdir(parents=True,exist_ok=True)
+    journal=Journal(budget_path);ledger=Ledger(journal);ledger.ensure()
+    key=digest(['objective-look',freeze['freeze_id']])
+    with open(str(budget_path)+'.reserve','a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        policy=env['policy']
+        budget=ledger.register_budget(policy['fdr_target'],policy['lord_w0'])
+        if budget!=(policy['fdr_target'],policy['lord_w0']):
+            return record(_packet('BLOCKED','registered_error_budget_differs_from_policy',env,freeze,method=method))
+        if ledger.spent(key) is not None:
+            return record(_packet('INCONCLUSIVE','canonical_look_already_spent; no retry',env,freeze,method=method))
+        number,alpha=ledger.next_alpha(*budget)
+        count=(env['split']['end_ms']-env['split']['start_ms'])//TF_MS[env['tf']]+1
+        if (count//OA.PROTOCOL['episode_bars'])*np.log1p(OA.PROTOCOL['bet']) < -np.log(alpha):
+            return record(_packet('INCONCLUSIVE','episode_window_cannot_resolve_registered_alpha (no look spent)',env,freeze,method=method))
+        detail=dict(cut_ms=int(env['split']['cut_ms']),evaluated=dict(combo_hash=combo.hash,freeze_id=freeze['freeze_id'],
+            admission_protocol_id=OA.protocol_id()),look_state='pending',envelope_id=env['envelope_id'],method_id=OA.METHOD_ID)
+        ledger.record_test(key,combo.tf,combo.geo,'gate1',1.,alpha,False,detail)
+        store.put_once('looks',env['envelope_id'],dict(freeze_id=freeze['freeze_id'],kind='objective',alpha_t=alpha,t=number,canonical_hash=key))
+        exposure.mark(store,'PROTECTED_EXPOSED',env['split']['start_ms'],env['split']['end_ms'],now_ms,'objective qualification '+key)
+        try:
+            outcome=run(protected_job,payload) if run else run_child(protected_job,payload,timeout_s=timeout_s,nice=19,memory_mb=3072)
+            if not getattr(outcome,'ok',False) or getattr(outcome,'timed_out',False) or not isinstance(getattr(outcome,'value',None),dict):
+                return record(_packet('INCONCLUSIVE','look_spent_evaluation_incomplete; no retry',env,freeze,method=method))
+            result=outcome.value;status,reason=assess(result,freeze['hedge_spec'])
+            admission=OA.evaluate(dict(result=result,alpha=alpha))
+            qualified=status=='ASSESSED_SUPPORTED' and admission['admitted']
+            p=admission['evidence'].get('p',1.) if qualified else 1.
+            complete=dict(detail,look_state='complete',reason=reason,objective_evidence=admission['evidence'])
+            ledger.complete_look(key,p,complete,'referee_passed' if qualified else 'gate1_fail')
+            proof=dict(budget=dict(journal.query('SELECT * FROM research_budget WHERE id=1')[0]),
+                       sequence=[dict(r) for r in ledger.tests()],canonical_hash=key)
+            if qualified:status,reason='QUALIFIED',reason+'; frozen episode objective reliability admitted'
+            return record(_packet(status,reason,env,freeze,result=dict(result,deployment=deployment,error_budget=proof),
+                method=method,admission=admission['evidence'],context_id=ctx_id))
+        except Exception as exc:
+            return record(_packet('INCONCLUSIVE','look_spent_'+type(exc).__name__+': '+str(exc)[:120]+'; no retry',env,freeze,method=method))
+
+
+def _verify_budget(proof,env,freeze,evidence):
+    from .. import fdr
+    rows=proof.get('sequence') or [];budget=proof.get('budget') or {}
+    key=digest(['objective-look',freeze['freeze_id']])
+    found=[(i,r) for i,r in enumerate(rows,1) if r['hash']==key and r['gate']=='gate1']
+    if len(found)!=1 or proof.get('canonical_hash')!=key:
+        raise ClosureRefused('objective_error_budget_missing')
+    i,row=found[0]
+    if (len({r['seq'] for r in rows})!=len(rows) or len({(r['hash'],r['gate']) for r in rows})!=len(rows)
+            or [r['seq'] for r in rows]!=sorted(r['seq'] for r in rows)
+            or any(not 0<=r['p']<=1 or not 0<r['alpha_t']<1 or bool(r['rejected'])!=(r['p']<=r['alpha_t']) for r in rows)):
+        raise ClosureRefused('objective_error_budget_sequence_invalid')
+    prior=[n for n,r in enumerate(rows[:i-1],1) if r['rejected']]
+    policy=env['policy']
+    if ((budget.get('alpha'),budget.get('w0'))!=(policy['fdr_target'],policy['lord_w0'])
+            or row['alpha_t']>fdr.alpha_at(i,prior,budget['alpha'],budget['w0'])+1e-12
+            or evidence.get('alpha')!=row['alpha_t'] or row['p']!=evidence.get('p') or not row['rejected']
+            or row['p']>row['alpha_t']):
+        raise ClosureRefused('objective_error_budget_invalid')
+    detail=json.loads(row['detail'])
+    if (detail.get('look_state')!='complete' or detail.get('evaluated',{}).get('freeze_id')!=freeze['freeze_id']
+            or detail.get('evaluated',{}).get('admission_protocol_id')!=OA.protocol_id()
+            or detail.get('cut_ms')!=env['split']['cut_ms'] or detail.get('envelope_id')!=env['envelope_id']
+            or detail.get('objective_evidence')!=evidence or freeze.get('admission_protocol')!=OA.PROTOCOL):
+        raise ClosureRefused('objective_error_budget_binding_differs')

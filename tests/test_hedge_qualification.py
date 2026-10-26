@@ -61,7 +61,7 @@ def test_a_verdict_its_own_numbers_do_not_support_is_refused():
 
 
 def test_no_admission_method_is_registered_so_nothing_can_be_qualified():
-    assert HQ.ADMISSION_METHODS == {} and HQ.registered_method({'research': {'hedge_qualification': dict(
+    assert set(HQ.ADMISSION_METHODS) == {'objective-episode-betting.v1'} and HQ.registered_method({'research': {'hedge_qualification': dict(
         approved=True, method_id='x', version='1', calibration_id='c')}}) is None
 
 
@@ -355,15 +355,17 @@ def test_held_leg_gap_leaves_an_unknown_mark_so_the_book_cannot_claim_a_risk_ben
     assert res['comparators']['hedged']['unknown_mark_bars'] >= 1 and res['verdict'] == 'INSUFFICIENT_EVIDENCE'
 
 
-def test_a_registered_test_method_can_qualify_only_a_test_only_packet_which_the_factory_refuses(planted, monkeypatch):
+def test_an_injected_uncalibrated_test_method_cannot_manufacture_qualification(planted, monkeypatch):
     b, fz = planted
     monkeypatch.setitem(HQ.ADMISSION_METHODS, 'test-method', lambda core: dict(admitted=True, evidence=dict(note='TEST ONLY')))
     cfg = {'research': {'hedge_qualification': dict(approved=True, method_id='test-method', version='1', calibration_id='c1')}}
-    q = HQ._packet('QUALIFIED', 'fixture admitted', b.env, fz, result=result(), method=HQ.registered_method(cfg),
+    assert HQ.registered_method(cfg) is None
+    q = HQ._packet('QUALIFIED', 'fixture invented admission', b.env, fz, result=result(), method=None,
                    admission=dict(note='TEST ONLY'))
-    HQ.verify_hedge_qualification(q)
+    with pytest.raises(ClosureRefused,match='hedge_admission_not_registered'):
+        HQ.verify_hedge_qualification(q)
     out = handoff.hand_off_hedge(_Journal(), cfg, q)
-    assert out['status'] == 'REFUSED' and out['reason_code'] == 'hq_test_only_policy_has_no_factory_authority'
+    assert out['status'] == 'REFUSED' and out['reason_code'] == 'hq_hedge_hedge_admission_not_registered'
     assert out['execution_authority'] == 'NONE'
 
 

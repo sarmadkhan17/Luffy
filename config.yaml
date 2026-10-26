@@ -159,9 +159,10 @@ research:                        # the search — docs/superpowers/specs/
       source_journal_path: /mnt/luffy-data/LUFFY/data/luffy.db
       references_path: /mnt/luffy-data/research/compositional/published-context.db
       development_mode: RETROSPECTIVE
-      fit_bars: 1620
+      recent_retrospective_development: true
+      fit_bars: 6570 # three years of 4h bars when retained coverage supports it
       horizons:
-        - {tf: 4h, fit_bars: 1620}
+        - {tf: 4h, fit_bars: 6570}
         - {tf: 1h, fit_bars: 2000}
         - {tf: 15m, fit_bars: 1600}
       prep_timeout_s: 1800

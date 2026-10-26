@@ -76,11 +76,26 @@ def feasibility(protocol: dict, policy: dict | None = None) -> list:
 
 def clopper_pearson(k: int, n: int, conf: float = 0.95) -> tuple:
     """Exact binomial interval (bisection on the CDF; no scipy dependency)."""
+    if type(n) is not int or type(k) is not int or not 0<=k<=n or not 0<conf<1:
+        raise ValueError('binomial_interval_input_invalid')
     if n == 0:
         return 0.0, 1.0
 
-    def cdf(x, p):                                   # P[X <= x]
-        return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(x + 1))
+    import numpy as np
+    # Log probabilities avoid overflow in comb(n,k) and underflow in tails
+    # when calibration uses tens of thousands of numerical replicates.
+    terms=min(k,n-k)+1
+    indices=np.arange(terms+1,dtype=float)
+    coefficients=np.array([math.lgamma(n+1)-math.lgamma(i+1)-math.lgamma(n-i+1) for i in range(terms+1)])
+    def cdf_lower(x,p):
+        if x<0:return 0.
+        if x>=n or p==0:return 1.
+        if p==1:return 0.
+        logs=coefficients[:x+1]+indices[:x+1]*math.log(p)+(n-indices[:x+1])*math.log1p(-p)
+        top=float(logs.max())
+        return min(1.,math.exp(top)*float(np.exp(logs-top).sum()))
+    def cdf(x,p):
+        return cdf_lower(x,p) if x<=n//2 else max(0.,1-cdf_lower(n-x-1,1-p))
 
     a = (1 - conf) / 2
 
@@ -135,10 +150,12 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
         names = synthetic.symbols(protocol['n_symbols'])
     else:
         names = synthetic.write_snapshot(snap, n_symbols=protocol['n_symbols'], n_bars=protocol['n_bars'], seed=seed,
-                                         edge=case['edge'], common=case['common'])
+                                         edge=case['edge'], common=case['common'],tf=protocol.get('tf','4h'))
         (d / 'snapshot.ok').write_text(run_id)
     store = Store(d / 'closure.db')
-    st, step_ms = synthetic.EPOCH_MS, synthetic.TF_MS
+    from ...core.types import TF_MS
+    tf=protocol.get('tf','4h')
+    st,step_ms=synthetic.EPOCH_MS,TF_MS[tf]
     if case['sealed'] and not exposure.events(store):
         exposure.seal(store, 'SYNTHETIC_DECLARED', st, st + protocol['n_bars'] * step_ms, 1)
     fams = list(protocol.get('families') or [])
@@ -149,7 +166,7 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
                 real_funding=False, max_open_trades=8)
     pol = _policy(protocol)
     sid = S.create_study(store, dict(
-        snapshot_path=str(snap), tf='4h', discovery_symbols=names[:protocol['n_discovery']],
+        snapshot_path=str(snap), tf=tf, discovery_symbols=names[:protocol['n_discovery']],
         heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
         embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
         protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
@@ -177,9 +194,13 @@ def run_identity(protocol: dict, n: int) -> str:
                        policy=_policy(protocol)))
 
 
-def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=False):
-    return dict(search=search, max_candidates=int(max_candidates), max_revisions=int(max_revisions),
-                tf=tf, retained_question_intake=bool(intake))
+def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=False,development_bars=None):
+    body=dict(search=search,max_candidates=int(max_candidates),max_revisions=int(max_revisions),
+              tf=tf,retained_question_intake=bool(intake))
+    if development_bars is not None:
+        if type(development_bars) is not int or development_bars<=0:raise ValueError('calibration_development_window_invalid')
+        body['development_bars']=development_bars
+    return body
 
 
 def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
@@ -261,7 +282,7 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     body = dict(schema='closure-calibration-report.v3',
                 search_scope='EXPLICIT_LEGACY_FAMILIES' if protocol.get('families') else 'COMPOSITIONAL_SEARCH',
                 search_contract_id=digest(search_contract(search=protocol.get('search'), max_candidates=protocol.get('max_candidates',8),
-                                             max_revisions=protocol['max_revisions'])),
+                                             max_revisions=protocol['max_revisions'],tf=protocol.get('tf','4h'),development_bars=protocol['dev_bars'])),
                 omitted_paths=['external LLM source intake and live multi-leg execution'], calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,

@@ -54,8 +54,8 @@ def hand_off(journal, cfg: dict, packet: dict, *, at_ms: int | None = None) -> d
 def hand_off_hedge(journal, cfg: dict, packet: dict, *, at_ms: int | None = None) -> dict:
     """A QUALIFIED hedge/relative-value packet -> one VALIDATED multi-leg Factory version, execution authority NONE.
 
-    There is no statistical admission method registered, so no packet is QUALIFIED today and this returns REFUSED with the
-    exact code (hq_hedge_status_not_qualified:<status> / hq_hedge_admission_not_registered ...). It never converts an
+    A method must have current registered component and full-search calibration before a CONFIGURED packet can qualify.
+    Otherwise this returns REFUSED with the exact code (hq_hedge_status_not_qualified:<status> / hq_hedge_admission_not_registered ...). It never converts an
     ASSESSED_* result, a TEST_ONLY packet or an uncalibrated run into a version, and it grants no paper/live authority: a
     version carrying a `multi_leg` block cannot be installed or live-authorized by the single-leg Factory path."""
     at_ms = int(time.time() * 1000) if at_ms is None else at_ms
