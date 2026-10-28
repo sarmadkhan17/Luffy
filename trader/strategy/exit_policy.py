@@ -14,6 +14,15 @@ import json
 import math
 from dataclasses import asdict, dataclass, replace
 
+
+class ExitObservationUnavailable(ValueError):
+    """A required closed bar is absent or incomplete; no transition occurred."""
+    def __init__(self, expected_ms, observed_ms, completed):
+        super().__init__('exit_observation_not_consecutive_closed_bar')
+        self.expected_ms = expected_ms
+        self.observed_ms = observed_ms
+        self.completed = completed
+
 CONTRACT = {
     'version': 'factory-exit.closed-bars.v2',
     'reference': 'signal_bar_close', 'atr': 'rolling_mean_true_range_14_through_signal_closed_bar',
@@ -167,7 +176,8 @@ def advance(policy, state, observation, remaining):
     if observation.bar_ms <= state.last_bar_ms:
         return Transition(state, False, None, 0, active_stop, policy.target)
     if not observation.completed or observation.bar_ms != state.last_bar_ms + policy.step_ms:
-        raise ValueError('exit_observation_not_consecutive_closed_bar')
+        raise ExitObservationUnavailable(state.last_bar_ms + policy.step_ms,
+                                         observation.bar_ms, observation.completed)
     o, h, l, c = observation.open, observation.high, observation.low, observation.close
     if not all(math.isfinite(v) and v > 0 for v in (o,h,l,c)) or not l <= min(o,c) <= max(o,c) <= h:
         raise ValueError('exit_observation_invalid_ohlc')

@@ -20,6 +20,13 @@ from .signal_occurrence import (ENTRY_SERIES_MISALIGNED, SIGNAL_BAR_CLOSE_UNAVAI
 
 log = logging.getLogger(__name__)
 
+
+class DependencyUnavailable(dsl.SpecError):
+    """A retrospective evaluator lacks declared inputs, rather than code."""
+    def __init__(self, requirements):
+        self.requirements = tuple(dict.fromkeys(requirements))
+        super().__init__('retrospective missing declared dependency: ' + ', '.join(self.requirements))
+
 #: context frames the snapshot keys by name rather than by timeframe
 _CTX_TF = {"BTC_1h": "1h"}
 
@@ -232,7 +239,7 @@ class CompiledStrategy:
                                          np.isfinite(observed.to_numpy()).mean() < MIN_COVERAGE):
                         missing.append('ref:' + key + ': insufficient trustworthy historical coverage')
             if missing:
-                raise dsl.SpecError('retrospective missing declared dependency: ' + ', '.join(dict.fromkeys(missing)))
+                raise DependencyUnavailable(missing)
         return ctx
 
     def _verify_spec(self):

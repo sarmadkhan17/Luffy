@@ -258,6 +258,22 @@ def _external(candidate, snapshot_path, derivs_path, frames, env, world_path=Non
     return result
 
 
+def _evaluation_failure(done, exc, tf, **detail):
+    """Preserve typed missing-input evidence without hiding unexpected failures."""
+    from ...strategy.compile import DependencyUnavailable
+    from ...strategy.exit_policy import ExitObservationUnavailable
+    if isinstance(exc, DependencyUnavailable):
+        gaps = [dict(requirement=item.split(': ',1)[0], reason=item)
+                for item in exc.requirements]
+    elif isinstance(exc, ExitObservationUnavailable):
+        gaps = [dict(requirement='candles:'+tf, reason='required completed consecutive bar unavailable',
+                     expected_ms=exc.expected_ms, observed_ms=exc.observed_ms,
+                     completed=exc.completed)]
+    else:
+        return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200], **detail)
+    return done('BLOCKED_DATA', f'{type(exc).__name__}: {exc}'[:200], context_gaps=gaps, **detail)
+
+
 def _develop(candidate, frames, data_id, env, draws, external=None):
     base = dict(schema=RESULT_SCHEMA, stage='DEVELOPMENT', candidate_id=candidate['candidate_id'],
                 envelope_id=env['envelope_id'], data_id=data_id, evaluator_id=env['evaluator_id'],
@@ -298,7 +314,7 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
             return done('BLOCKED_DATA', 'threshold fit unavailable: ' + str(exc))
         return done('CODE_FAILURE', 'candidate could not be realized: ' + str(exc))
     except Exception as exc:                                  # noqa: BLE001 - reported as code failure
-        return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200])
+        return _evaluation_failure(done, exc, env['tf'])
     fit = {e: {k: g.get(k) for k in ('p10', 'p25', 'p75', 'p90', 'n', 'usable')} for e, g in gauges.items()}
     try:
         sims = {}
@@ -315,8 +331,8 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
             sims = run_symbols(c, bundle, traces=graph_fit is not None)
         censored = sum(r['result'].censored_position_count for r in sims.values())
     except Exception as exc:                                  # noqa: BLE001
-        return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200], combo=c.as_dict(), combo_hash=c.hash,
-                    threshold_fit=fit)
+        return _evaluation_failure(done, exc, env['tf'], combo=c.as_dict(), combo_hash=c.hash,
+                                   threshold_fit=fit)
     outcome, reason = classify(res, sub, float(env['policy']['grow_max_p']), development_only=True)
     blocked_gaps = _structured_gaps(res.get('context_gaps')) if outcome == 'BLOCKED_DATA' else None
     pf = res.get('portfolio') or {}
@@ -487,7 +503,7 @@ def _develop_hedge(candidate, bundle, env, external, done):
     except ClosureRefused as exc:
         return done('CODE_FAILURE', 'hedge candidate could not be realized: ' + str(exc))
     except Exception as exc:                                    # noqa: BLE001
-        return done('CODE_FAILURE', f'{type(exc).__name__}: {exc}'[:200])
+        return _evaluation_failure(done, exc, env['tf'])
     n_sup = sum(v == 'HEDGE_SUPPORTED' for v in rows)
     scored = [v for v in rows if v != 'INSUFFICIENT_EVIDENCE']
     if not scored:
