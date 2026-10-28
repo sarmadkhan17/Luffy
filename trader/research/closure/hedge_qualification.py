@@ -179,9 +179,18 @@ def assess(res: dict, spec: dict) -> tuple:
     if verdict != 'HEDGE_SUPPORTED':
         return 'ASSESSED_NOT_SUPPORTED', res['reason']
     cash_dominates = spec['purpose'] in PROTECTIVE and mh['net_return_pct'] is not None and mh['net_return_pct'] < 0.0 and mh[m] >= 0.0   # cash: return 0, risk 0
-    if cash_dominates and not spec.get('primary_exposure_constraint'):
+    constraint=spec.get('primary_exposure_constraint')
+    measured=mh.get('minimum_retained_net_fraction')
+    minimum=constraint.get('min_net_exposure') if isinstance(constraint,dict) else None
+    constrained=(isinstance(constraint,dict) and set(constraint)=={'min_net_exposure'}
+        and type(minimum) in (int,float) and np.isfinite(minimum) and 0<minimum<=1
+        and res.get('spec_id')==spec.get('spec_id') and bool(spec.get('spec_id'))
+        and type(measured) in (int,float) and np.isfinite(measured) and measured+1e-12>=minimum
+        and type(mh.get('primary_active_bars')) is int and mh['primary_active_bars']>0
+        and mh.get('retained_exposure_basis')=='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY')
+    if cash_dominates and not constrained:
         return 'DOMINATED_BY_CASH', (f'cash has higher return (0 > {mh["net_return_pct"]:.3f}) and no greater {m}; '
-                                     'no independently predeclared primary-exposure constraint in the frozen spec')
+                                     'no verified feasible exposure constraint in the frozen spec and measured path')
     return 'ASSESSED_SUPPORTED', res['reason']
 
 

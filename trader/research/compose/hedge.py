@@ -93,6 +93,14 @@ def validate(spec: dict) -> dict:
         number(spec[key], key)
     number(spec['leverage'], 'leverage', positive=True)
     number(spec['sizing']['primary_notional_pct'], 'primary_notional_pct')  # zero is the valid reduced-to-cash comparator
+    constraint=spec.get('primary_exposure_constraint')
+    if constraint is not None:
+        if not isinstance(constraint,dict) or set(constraint)!={'min_net_exposure'}:
+            raise HedgeRefused('hedge_exposure_constraint_invalid')
+        minimum=constraint['min_net_exposure']
+        number(minimum,'min_net_exposure',positive=True)
+        if minimum>1:
+            raise HedgeRefused('hedge_exposure_constraint_invalid')
     if spec['maint_margin'] >= 1:
         raise HedgeRefused('hedge_numeric_invalid', 'maint_margin')
     for leg in ('primary', 'hedge'):
@@ -412,6 +420,8 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
     pr = np.r_[np.nan, np.diff(p) / p[:-1]]
     hr = np.r_[np.nan, np.diff(h) / h[:-1]]
     cash, eq_curve, gross, net, instr = float(equity), np.full(n, np.nan), np.zeros(n), np.zeros(n), []
+    primary_active=np.zeros(n,dtype=bool)
+    retained_net_fraction=np.full(n,np.nan)
     cost = dict(fees=0.0, slippage=0.0, funding=0.0)
     last_px = dict(primary=p[0], hedge=h[0])
     avg = dict(primary=p[0], hedge=h[0])
@@ -474,6 +484,9 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
         eq_curve[t] = cash
         if any(book.pos[k] != 0 and not np.isfinite(px[k]) for k in ('primary', 'hedge')):
             eq_curve[t] = gross[t] = net[t] = np.nan   # a held leg's missing mark is not zero exposure
+        primary_active[t]=book.pos['primary']!=0
+        if primary_active[t] and cash>0 and np.isfinite(net[t]):
+            retained_net_fraction[t]=np.sign(book.pos['primary'])*net[t]/cash
         if gross[t] > 0 and cash < spec['maint_margin'] * gross[t] and not liquidated:
             liquidated = True
             book.pos = dict(primary=0.0, hedge=0.0)
@@ -504,6 +517,7 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
         status = 'FLAT_AT_END'
     inverse_legs = [k for k in ('primary', 'hedge') if spec[k]['contract'] == 'inverse']
     return dict(equity=eq_curve, gross=gross, net=net, cost=cost,
+                primary_active=primary_active,retained_net_fraction=retained_net_fraction,
                 fill_price_basis='NEXT_BAR_OPEN' if opens is not None else 'NEXT_OBSERVATION_PRICE_MODEL_ONLY',
                 coin_collateral_exposure_usd=None if inverse_legs else 0.0, inverse_legs=inverse_legs,
                 collateral_nav_basis='NOT_ESTABLISHED_FOR_INVERSE: contract payoff only' if inverse_legs else 'quote_currency',
@@ -535,10 +549,16 @@ def risk_metrics(res: dict) -> dict:
     dd = (eq - peak) / np.where(peak > 0, peak, 1.0) * 100.0
     ret = np.diff(eq) / np.where(eq[:-1] > 0, eq[:-1], 1.0) * 100.0
     k = max(1, int(np.ceil(0.05 * len(ret))))
+    active=res.get('primary_active',np.zeros(len(res['equity']),dtype=bool))
+    retained=res.get('retained_net_fraction',np.full(len(active),np.nan))[active]
+    complete_exposure=bool(len(retained)) and bool(np.isfinite(retained).all())
     return dict(max_drawdown_pct=float(-dd.min()) if len(dd) else 0.0, worst_bar_pct=float(-ret.min()) if len(ret) else 0.0,
                 cvar5_pct=float(-np.sort(ret)[:k].mean()) if len(ret) else 0.0,
                 net_return_pct=float((eq[-1] / res['start_equity'] - 1) * 100) if not unknown else None, costs=res['cost'],
                 mean_gross=float(np.nanmean(res['gross'])), mean_abs_net=float(np.nanmean(np.abs(res['net']))),
+                primary_active_bars=int(np.count_nonzero(active)),
+                minimum_retained_net_fraction=float(retained.min()) if complete_exposure else None,
+                retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY',
                 unknown_mark_bars=unknown,exit_input_gaps=res.get('exit_input_gaps',0),risk_complete=unknown == 0 and not res.get('exit_input_gaps',0),
                 liquidated=res['liquidated'], entries=res['entries'], rebalances=res['rebalances'])
 

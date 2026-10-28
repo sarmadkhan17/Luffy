@@ -45,7 +45,38 @@ def test_rule_is_deterministic_and_reports_cash_beside_the_others():
 def test_cash_dominance_needs_an_independently_predeclared_exposure_constraint():
     losing = result(net=-2.0)                                     # hedge reduces risk but loses money: cash has higher return, no greater risk
     assert HQ.assess(losing, SPEC)[0] == 'DOMINATED_BY_CASH'
-    assert HQ.assess(losing, dict(SPEC, primary_exposure_constraint=dict(min_net_exposure=0.5)))[0] == 'ASSESSED_SUPPORTED'
+    constrained = dict(SPEC, spec_id='s', primary_exposure_constraint=dict(min_net_exposure=0.5))
+    assert HQ.assess(losing, constrained)[0] == 'DOMINATED_BY_CASH'
+    losing['comparators']['hedged'].update(
+        minimum_retained_net_fraction=0.6, primary_active_bars=100,
+        retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY')
+    assert HQ.assess(losing, constrained)[0] == 'ASSESSED_SUPPORTED'
+
+
+@pytest.mark.parametrize('change', [
+    {'minimum_retained_net_fraction': 0.49},
+    {'minimum_retained_net_fraction': float('nan')},
+    {'minimum_retained_net_fraction': None},
+    {'primary_active_bars': 0},
+    {'retained_exposure_basis': 'unverified'},
+])
+def test_cash_exemption_requires_complete_measured_feasibility(change):
+    losing = result(net=-2.0)
+    losing['comparators']['hedged'].update(
+        minimum_retained_net_fraction=0.6, primary_active_bars=100,
+        retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY')
+    losing['comparators']['hedged'].update(change)
+    constrained = dict(SPEC, spec_id='s', primary_exposure_constraint=dict(min_net_exposure=0.5))
+    assert HQ.assess(losing, constrained)[0] == 'DOMINATED_BY_CASH'
+
+
+def test_cash_exemption_cannot_reuse_measurement_from_another_frozen_spec():
+    losing = result(net=-2.0)
+    losing['comparators']['hedged'].update(
+        minimum_retained_net_fraction=0.6, primary_active_bars=100,
+        retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY')
+    constrained = dict(SPEC, spec_id='other', primary_exposure_constraint=dict(min_net_exposure=0.5))
+    assert HQ.assess(losing, constrained)[0] == 'DOMINATED_BY_CASH'
 
 
 def test_relative_value_is_not_judged_as_a_protective_hedge():
@@ -274,7 +305,9 @@ def test_missing_hedge_leg_bars_in_the_protected_window_stay_unknown_not_dropped
     r = q['protected_result']
     held_through_hole = r['comparators']['hedged']['unknown_mark_bars'] > 0
     if held_through_hole:                                                                # a held leg's missing price is UNKNOWN equity
-        assert q['status'] == 'INCONCLUSIVE' and 'held-leg marks are unknown' in q['reason']
+        assert q['status'] == 'INCONCLUSIVE'
+        assert not r['comparators']['hedged']['risk_complete']
+        assert 'held-leg marks' in q['reason'] and 'unknown' in q['reason']
     else:                                                                                # otherwise the book was flat across it
         assert r['comparators']['hedged']['risk_complete'] is True
 
