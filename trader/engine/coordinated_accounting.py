@@ -12,6 +12,36 @@ from .accounting import digest
 VERSION = 'coordinated-trade-accounting.v1'
 
 
+def entry_binding(part, member, group_id):
+    """Shared immutable order/version binding for marked and final accounting."""
+    capture, identity, request = part['capture'], part['identity'], part['entry_request']
+    trade = capture['bookings']['trade']
+    group = identity.get('coordinated') or {}
+    binding = identity.get('execution_binding') or {}
+    intent = request['intent']
+    if (A.digest(identity) != member['entry_identity_sha256']
+            or group.get('group_id') != group_id or group.get('leg') != member['leg']
+            or request['state'] != 'TERMINAL'
+            or A.digest(intent) != request['intent_hash']
+            or request['logical_id'] != binding.get('logical_id')
+            or intent.get('strategy_identity', {}).get('coordinated') != group
+            or any(intent.get('strategy_identity', {}).get(k) != identity.get(k)
+                   for k in ('status','strategy_id','version_id','spec_sha256','install_id'))
+            or intent.get('capability') != binding.get('capability')
+            or intent.get('instrument_id') != binding.get('instrument_id')
+            or intent.get('symbol') != trade['symbol']
+            or intent.get('strategy_id') != trade['strategy_id']
+            or request['result'].get('position_id') != trade['id']
+            or str(request['order_id']) != str(capture['orders'][0]['orderId'])
+            or member['symbol'] != trade['symbol']
+            or binding.get('instrument_id') != member['instrument_id']):
+        raise ValueError('coordinated_accounting_entry_ownership_differs')
+    version = (trade['strategy_id'], identity.get('version_id'),
+               identity.get('spec_sha256'), identity.get('install_id'),
+               binding.get('capability', {}).get('account_scope'))
+    return version
+
+
 def accounting(source):
     if source.get('schema_version') != VERSION:
         raise ValueError('coordinated_accounting_schema_differs')
@@ -40,29 +70,7 @@ def accounting(source):
         if not result['learning_eligible']:
             raise ValueError('coordinated_accounting_component_pending')
         trade = capture['bookings']['trade']
-        group = identity.get('coordinated') or {}
-        binding = identity.get('execution_binding') or {}
-        intent = request['intent']
-        if (A.digest(identity) != member['entry_identity_sha256']
-                or group.get('group_id') != plan['group_id'] or group.get('leg') != member['leg']
-                or request['state'] != 'TERMINAL'
-                or A.digest(intent) != request['intent_hash']
-                or request['logical_id'] != binding.get('logical_id')
-                or intent.get('strategy_identity', {}).get('coordinated') != group
-                or any(intent.get('strategy_identity', {}).get(k) != identity.get(k)
-                       for k in ('status','strategy_id','version_id','spec_sha256','install_id'))
-                or intent.get('capability') != binding.get('capability')
-                or intent.get('instrument_id') != binding.get('instrument_id')
-                or intent.get('symbol') != trade['symbol']
-                or intent.get('strategy_id') != trade['strategy_id']
-                or request['result'].get('position_id') != trade['id']
-                or str(request['order_id']) != str(capture['orders'][0]['orderId'])
-                or member['symbol'] != trade['symbol']
-                or binding.get('instrument_id') != member['instrument_id']):
-            raise ValueError('coordinated_accounting_entry_ownership_differs')
-        version = (trade['strategy_id'], identity.get('version_id'),
-                   identity.get('spec_sha256'), identity.get('install_id'),
-                   binding.get('capability', {}).get('account_scope'))
+        version = entry_binding(part, member, plan['group_id'])
         if not all(version) or identity.get('status') != 'VERIFIED' or (exact and exact != version):
             raise ValueError('coordinated_accounting_version_or_account_differs')
         exact = version

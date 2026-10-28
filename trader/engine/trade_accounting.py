@@ -29,7 +29,7 @@ def close(a, b):
     return math.isclose(number(a), number(b), rel_tol=1e-8, abs_tol=1e-8)
 
 
-def legs(source):
+def legs(source, *, closed=True):
     """Derive ownership from booking transitions, never a symbol/time subtotal."""
     booking.replay_export(source)
     rs, trade = source['receipts'], source['trade']
@@ -83,9 +83,11 @@ def legs(source):
         previous = after
     if previous != trade:
         raise ValueError('booking_tail_gap_retry')
-    if trade['status'] != 'closed' or not close(
-            sum(x['quantity'] for x in result if x['entry']),
-            sum(x['quantity'] for x in result if not x['entry'])):
+    remaining = (sum(x['quantity'] for x in result if x['entry'])
+                 - sum(x['quantity'] for x in result if not x['entry']))
+    expected = 0 if trade['status']=='closed' else number(trade['amount'])
+    if ((closed and trade['status'] != 'closed') or trade['status'] not in ('open','closed')
+            or (trade['status']=='open' and expected<=0) or not close(remaining,expected)):
         raise ValueError('whole_trade_not_closed_or_balanced_retry')
     return result
 
@@ -166,17 +168,19 @@ def history_rows(h, endpoint, symbol, start, end, observed):
     return sorted(rows, key=lambda r:(number(r.get('time', r.get('fundingTime'))), str(r.get('id', r.get('tranId')))))
 
 
-def assess(a):
+def assess(a, *, marked=False):
     result = dict(status='incomplete', reasons=[], learning_eligible=False,
                   fees_by_currency={}, funding_by_currency={}, gross_realized_usdt=None,
                   funding_usdt=None, net_trade_pnl_usdt=None, accounting=None,
                   retry_required=True, history_complete=False)
     try:
-        ls = legs(a['bookings'])
+        ls = legs(a['bookings'], closed=not marked)
         t, observed = a['bookings']['trade'], a['observed_ms']
+        if marked and t['status']!='open':
+            raise ValueError('marked_accounting_requires_open_trade')
         from ..cognition.outcomes import timestamp
         if (timestamp(t['opened_at']) > a['bookings']['receipts'][0]['observed_ms']
-                or timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms']):
+                or (not marked and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
             raise ValueError('journal_booking_clock_conflict')
         if a['environment'] != 'demo' or a['venue'] != 'binanceusdm':
             raise ValueError('unsupported_venue_environment')
@@ -190,6 +194,10 @@ def assess(a):
             raise ValueError('capture_clock_conflict')
         if end != observed or start < 0:
             raise ValueError('capture_clock_conflict')
+        if marked and not (type(a.get('position_observed_ms')) is int
+                and a['bookings']['receipts'][-1]['observed_ms']<=a['position_observed_ms']<=observed
+                and a['captured_ms']-a['position_observed_ms']<=30_000):
+            raise ValueError('marked_position_observation_stale_or_unbound')
         orders = {str(o['orderId']):o for o in a['orders']}
         if len(orders) != len(ls) or set(orders) != {l['order_id'] for l in ls}:
             raise ValueError('order_versions_missing_retry')
@@ -203,7 +211,7 @@ def assess(a):
             raise ValueError('fill_history_empty_retry')
         event_times = [number(e['fundingTime']) for e in events]
         if (not event_times or min(event_times) > min(number(f['time']) for f in fills)
-                or max(event_times) <= max(number(f['time']) for f in fills)):
+                or (not marked and max(event_times) <= max(number(f['time']) for f in fills))):
             raise ValueError('funding_publication_frontier_pending_retry')
         if a['overlapping_trade_ids']:
             raise ValueError('journal_ownership_overlap_retry')
@@ -211,8 +219,10 @@ def assess(a):
         # proves zero initial position within the captured interval. The position
         # is read before the history cutoff; any extra fills refuse ownership.
         position = a['position']
+        direction = 1 if t['side']=='long' else -1
+        expected_quantity = number(t['amount']) if marked else 0.
         if (position['symbol'] != symbol or position['positionSide'] != 'BOTH'
-                or number(position['positionAmt']) != 0):
+                or not close(number(position['positionAmt']),direction*expected_quantity)):
             raise ValueError('venue_flat_ownership_unproven_retry')
         if set(str(f['orderId']) for f in fills) != set(orders):
             raise ValueError('unowned_or_missing_fills_retry')
@@ -251,10 +261,17 @@ def assess(a):
             balance += number(f['qty'])*(1 if f['side'] == entry_side else -1)
             if balance < -1e-8:
                 raise ValueError('fill_sequence_ownership_conflict')
-        if not close(balance, 0):
+        if not close(balance, expected_quantity):
             raise ValueError('whole_trade_fill_balance_conflict')
         cash_gross = sum(number(f['qty'])*number(f['price'])*(1 if f['side'] == 'SELL' else -1) for f in fills)
-        if not close(gross, cash_gross):
+        unrealized = 0.
+        if marked:
+            mark,entry = number(position['markPrice']),number(position['entryPrice'])
+            unrealized = number(position['unRealizedProfit'])
+            if mark<=0 or entry<=0 or not close(unrealized,direction*expected_quantity*(mark-entry)):
+                raise ValueError('marked_price_pnl_conflict')
+            cash_gross += direction*expected_quantity*mark
+        if not close(gross+unrealized, cash_gross):
             raise ValueError('fill_price_pnl_conflict')
         result.update(fees_by_currency=fees, gross_realized_usdt=gross)
         currencies = {}
@@ -286,9 +303,17 @@ def assess(a):
         if set(fees)-{'USDT'} or set(currencies)-{'USDT'}:
             raise ValueError('currency_conversion_missing_retry')
         funding_net = currencies.get('USDT', 0.0)
-        net = gross-fees.get('USDT', 0.0)+funding_net
+        net = gross+unrealized-fees.get('USDT', 0.0)+funding_net
         if not all(math.isfinite(v) for v in (gross, funding_net, net, *fees.values())):
             raise ValueError('nonfinite_accounting_aggregate')
+        if marked:
+            result.update(status='marked_as_of_venue_history',funding_usdt=funding_net,
+                          marked_net_pnl_usdt=net,unrealized_usdt=unrealized,
+                          marked_notional_usdt=expected_quantity*mark,
+                          mark_observed_ms=a['position_observed_ms'],retry_required=False,
+                          basis='CURRENT_VENUE_MARK_AND_OBSERVED_FILL_FEES_AND_SIGNED_FUNDING',
+                          final_realized_outcome=False)
+            return result
         accounting = dict(schema_version='execution-accounting.v1', complete=True,
             trade_id=t['id'], symbol=t['symbol'], venue=a['venue'], environment=a['environment'],
             reconciliation_version=VERSION, fills=normalized, currency='USDT',
@@ -302,13 +327,13 @@ def assess(a):
     return result
 
 
-def capture(source, exchange, overlapping_trade_ids=()):
+def capture(source, exchange, overlapping_trade_ids=(), *, marked=False):
     """Bounded demo reads; no journal writes, trade submission or automatic retry."""
     a = dict(schema_version=VERSION, bookings=source, venue='binanceusdm', environment='demo',
              observed_ms=int(time.time()*1000), orders=[], position=None, errors=[],
              overlapping_trade_ids=list(overlapping_trade_ids))
     try:
-        ls = legs(source)
+        ls = legs(source, closed=not marked)
         symbol = source['trade']['symbol'].replace('/', '')
         a['venue_symbol'] = symbol
         for l in ls:
@@ -317,10 +342,13 @@ def capture(source, exchange, overlapping_trade_ids=()):
                                 'status','executedQty','time','updateTime')})
         a['start_ms'] = int(number(a['orders'][0]['time']))
         positions = exchange.fapiPrivateV2GetPositionRisk(dict(symbol=symbol))
+        if marked:a['position_observed_ms']=int(time.time()*1000)
         ps = [p for p in positions if p.get('symbol') == symbol]
         if len(ps) != 1:
             raise ValueError('one_way_position_snapshot_missing')
-        a['position'] = {k:scalar(ps[0].get(k)) for k in ('symbol','positionSide','positionAmt')}
+        fields = ('symbol','positionSide','positionAmt')
+        if marked:fields += ('entryPrice','markPrice','unRealizedProfit')
+        a['position'] = {k:scalar(ps[0].get(k)) for k in fields}
         a['observed_ms'] = int(time.time()*1000)
         a['end_ms'] = a['observed_ms']
         for key, endpoint in (('fill_history','fills'), ('funding_history','income'), ('funding_events','funding_events')):
@@ -329,7 +357,8 @@ def capture(source, exchange, overlapping_trade_ids=()):
     except Exception as exc:
         a['errors'].append('capture_failed:'+type(exc).__name__)
     a['captured_ms'] = int(time.time()*1000)
-    a['assessment'] = assess(a)
+    if marked:a['capture_kind']='OPEN_POSITION_MARKED_ONLY'
+    a['assessment'] = assess(a,marked=marked)
     a['sha256'] = digest(a)
     return a
 
@@ -337,7 +366,7 @@ def capture(source, exchange, overlapping_trade_ids=()):
 def replay(a):
     if a.get('schema_version') != VERSION or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
         raise ValueError('whole_trade_integrity')
-    expected = assess(a)
+    expected = assess(a,marked=a.get('capture_kind')=='OPEN_POSITION_MARKED_ONLY')
     if expected != a['assessment']:
         raise ValueError('whole_trade_replay_mismatch')
     return expected
