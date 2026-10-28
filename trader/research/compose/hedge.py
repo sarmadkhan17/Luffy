@@ -214,6 +214,7 @@ class HedgeBook:
     exit_input_gaps: int = 0
     management_entry_equity: float | None = None
     management_activated: bool = False
+    last_clock_bar: int = -1
 
     def _pside(self, leg_side):
         return 'BOTH' if self.spec['account_mode'] == 'netting' else ('LONG' if leg_side > 0 else 'SHORT')
@@ -276,6 +277,10 @@ class HedgeBook:
     def step(self, t: int, bar: dict) -> list:
         """bar: p (primary px), h (hedge px, NaN = unavailable), signal (+1/-1/0), exit (bool),
         ratio (current hedge ratio >=0), corr (rolling corr or None), prim_c / hedge_c (Contract)."""
+        if type(t) is not int or t<0 or t<self.last_clock_bar:
+            raise HedgeRefused('hedge_native_clock_invalid')
+        new_bar=t>self.last_clock_bar
+        self.last_clock_bar=t
         out, sp = [], self.spec
         managed=sp.get('management') is not None
         if managed and self.state=='FLAT':
@@ -300,7 +305,7 @@ class HedgeBook:
         if not np.isfinite(bar['ratio']):
             # UNKNOWN ratio (too few paired observations): no new entry; a held book keeps its last known ratio. One rule for the replay
             # and the runtime adapter, because both go through this method.
-            self.ratio_unknown += 1
+            self.ratio_unknown += int(new_bar)
             bar = dict(bar, ratio=self.last_ratio if self.last_ratio is not None else 0.0,
                        signal=0 if self.state == 'FLAT' else bar['signal'])
         elif bar['ratio'] >= 0:
@@ -309,7 +314,7 @@ class HedgeBook:
             raise HedgeRefused('hedge_equity_or_ratio_invalid')
         pc, hc = bar['prim_c'], bar['hedge_c']
         ok = np.isfinite(bar['p']) and np.isfinite(bar['h']) and bar['p'] > 0 and bar['h'] > 0
-        self.missing = 0 if ok else self.missing + 1
+        self.missing = 0 if ok else self.missing + int(new_bar or self.missing==0)
         if self.state == 'FLAT':
             if bar['signal'] != 0 and not bar.get('exit') and ok and not self.pending:
                 self.direction = int(bar['signal'])
@@ -377,7 +382,7 @@ class HedgeBook:
             else:
                 self._emit(out, 'REBALANCE', 'hedge', -side, hc.qty_for(have - want, bar['h']), 'ratio_drift', t)
             self.last_rebalance = t
-            self.leg_wait += 1
+            self.leg_wait += int(new_bar or self.leg_wait==0)
             if self.leg_wait > un['leg_timeout_bars'] and have < 0.5 * want:
                 # the hedge cannot be completed: cover only what is hedged, never carry the naked remainder
                 covered = have / bar['ratio'] if bar['ratio'] else 0.0
