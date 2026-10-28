@@ -627,12 +627,35 @@ def study_status(store: Store, study_id: str) -> dict:
     qual = next((json.loads(u['result']) for u in units if u['unit_id'] == 'qualify' and u['status'] == 'DONE'), None)
     frz = next((json.loads(u['result']) for u in units if u['unit_id'] == 'freeze' and u['status'] == 'DONE'), None)
     outcome = (qual or {}).get('status') or ('NO_FINALIST' if frz and not frz.get('freeze_id') else 'NOT_REACHED')
+    development = [json.loads(u['result']) for u in units
+                   if u['kind'] == 'develop' and u['status'] == 'DONE' and u.get('result')]
+    development_outcomes = {}
+    requirements = set()
+    for result in development:
+        label = result.get('outcome', 'UNKNOWN')
+        development_outcomes[label] = development_outcomes.get(label, 0) + 1
+        if label == 'BLOCKED_DATA':
+            requirements.update(g['requirement'] for g in (result.get('context_gaps') or [])
+                                if isinstance(g, dict) and isinstance(g.get('requirement'), str))
+    reason = (qual or {}).get('reason') or (frz or {}).get('reason')
+    blocked = development_outcomes.get('BLOCKED_DATA', 0)
+    failed = [dict(unit_id=u['unit_id'], reason=str(u.get('note') or 'worker failure')[:160])
+              for u in units if u['kind']=='develop' and u['status']=='FAILED']
+    if outcome == 'NO_FINALIST' and blocked:
+        reason = (f'NO_FINALIST: required data unavailable for {blocked}/{len(development)} evaluated candidates; '
+                  'these candidates have no economic verdict')
+    if outcome == 'NO_FINALIST' and failed:
+        reason = (f'NO_FINALIST: {len(failed)} development units failed to run; '
+                  f'{blocked} evaluated candidates lacked required data')
     return dict(study_id=study_id, process_status=row['status'], stop_reason=row['stop_reason'],
                 last_progress_ms=row['last_progress_ms'], next_work=row['next_work'], steps=row['steps'],
                 units=counts, research_outcome=outcome,
                 waiting_for_data=[dict(unit_id=u['unit_id'], request_ids=json.loads(u['result']).get('waiting_data'))
                                   for u in units if u['status'] == 'WAITING_DATA'],
-                research_reason=(qual or {}).get('reason') or (frz or {}).get('reason'),
+                research_reason=reason, development_outcomes=development_outcomes,
+                failed_development_units=failed[:16], failed_development_units_omitted=max(0,len(failed)-16),
+                blocked_requirements=sorted(requirements)[:32],
+                blocked_requirements_omitted=max(0,len(requirements)-32),
                 note='process_status says whether the job ran; research_outcome is the only evidence statement')
 
 

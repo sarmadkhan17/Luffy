@@ -125,11 +125,15 @@ def test_study_spec_and_create_are_idempotent(study):
         S.create_study(b.store, dict(spec_for(b), mystery=1), now_ms=1)
 
 
-def test_scheduler_hook_is_opt_in_and_gates_stay_closed():
+@pytest.mark.parametrize('gate_value',[False,True])
+def test_scheduler_opt_out_preserves_other_research_gates(gate_value):
     cfg = load_config()
-    assert (cfg['research'].get('closure') or {}).get('enabled', False) is False
-    assert cfg['research']['referee'] is False and cfg['research']['handoff'] is False
+    # Research is enabled in the deployed product configuration. Exercise
+    # the opt-out branch explicitly rather than assuming a historical default.
+    cfg['research']['closure']['enabled'] = False
+    cfg['research'].update(referee=gate_value,handoff=gate_value)
     assert S.scheduled(cfg) == {'status': 'NOT_ENABLED'}
+    assert cfg['research']['referee'] is gate_value and cfg['research']['handoff'] is gate_value
 
 
 def test_real_entrypoint_runs_actual_evaluation_and_reports_blocked_real_policy(tmp_path, capsys):
