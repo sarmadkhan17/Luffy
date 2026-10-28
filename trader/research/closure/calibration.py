@@ -142,6 +142,63 @@ def _policy(protocol):
     return manifest.test_policy(**protocol.get('policy', {}))
 
 
+def intake_provider_id(cfg=None):
+    """Bind proposal code and public provider settings, never credentials."""
+    from ...core.config import load_config
+    from ...brain import llm
+    from ..compose import proposer
+    cfg = load_config() if cfg is None else cfg
+    brain = cfg.get('brain') or {}
+    closure = (cfg.get('research') or {}).get('closure') or {}
+    fields = ('provider', 'base_url', 'model_fast', 'model_deep',
+              'max_tokens_per_call', 'max_tokens_deep', 'daily_token_budget', 'purpose_budgets')
+    import hashlib
+    return digest(dict(settings={k: brain.get(k) for k in fields},
+                       enabled=bool(closure.get('proposal_provider_enabled') or brain.get('enabled')),
+                       code={m.__name__: hashlib.sha256(Path(m.__file__).read_bytes()).hexdigest()
+                             for m in (llm, proposer)}))
+
+
+def _freeze_intake(protocol, workdir):
+    """Use a verified detached corpus; never refresh it from a live journal."""
+    from . import consumer
+    from .auto import copy_database
+    source = protocol.get('intake_bank_path')
+    if not source:
+        return
+    frozen = workdir / 'intake-bank.db'
+    if not frozen.exists():
+        copy_database(source, frozen)
+    bank = consumer.read_bank(frozen)
+    questions = bank['questions']
+    if not 1 <= len(questions) <= 8:
+        raise ValueError('calibration_intake_requires_one_to_eight_questions')
+    sources = {s['bank_id']: s for s in bank['sources']}
+    for question in questions:
+        if question.get('stage') != 'QUESTION' or question.get('authority') != 'QUESTION_ONLY':
+            raise ValueError('calibration_intake_question_not_eligible')
+        consumer.verify_source(question, sources)
+    corpus_id = digest(bank)
+    if protocol.get('intake_corpus_id', corpus_id) != corpus_id:
+        raise ValueError('calibration_intake_corpus_changed')
+    protocol.update(intake_bank_path=str(frozen.resolve()), intake_corpus_id=corpus_id,
+                    intake_provider_id=intake_provider_id())
+
+
+def _intake_observation(store, sid):
+    units = [u for u in store.units(sid) if u['kind'] == 'intake']
+    proposals = store.all_once('proposals')
+    unavailable = any(p.get('status') == 'DEFERRED' or
+                      str(p.get('error', '')).startswith(('PROVIDER_RESPONSE_UNAVAILABLE',
+                                                        'PROPOSAL_INTERRUPTED_AFTER_RESERVATION')) for p in proposals)
+    result = json.loads(units[0]['result']) if units and units[0].get('result') else {}
+    return dict(complete=bool(units and units[0]['status'] == 'DONE' and result.get('status') == 'OK'
+                             and result.get('seen', 0) > 0 and not result.get('deferred')
+                             and proposals and not unavailable),
+                unit_status=units[0]['status'] if units else 'NOT_RUN', provider_attempts=len(proposals),
+                provider_unavailable=unavailable, result=result)
+
+
 def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> dict:
     d = workdir / f'{case["name"]}-{idx}'
     d.mkdir(parents=True, exist_ok=True)
@@ -165,12 +222,19 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
     risk = dict(risk_per_trade_pct=.5, taker_fee_pct=.04, slippage_atr_frac=.015, funding_rate_8h=.0001,
                 real_funding=False, max_open_trades=8)
     pol = _policy(protocol)
+    intake = {}
+    if protocol.get('intake_bank_path'):
+        from .auto import copy_database
+        bank = d / 'intake-bank.db'
+        if not bank.exists():
+            copy_database(protocol['intake_bank_path'], bank)
+        intake = dict(bank_path=str(bank), proposal_mode='compositional')
     sid = S.create_study(store, dict(
         snapshot_path=str(snap), tf=tf, discovery_symbols=names[:protocol['n_discovery']],
         heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
         embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
         protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
-        search=search, max_revisions=protocol['max_revisions'], workdir=str(d),
+        search=search, max_revisions=protocol['max_revisions'], workdir=str(d), **intake,
         max_candidates=(len(fams) + protocol['max_revisions']) if fams else protocol['max_candidates']),
         now_ms=2)
     for _ in range(50):
@@ -179,11 +243,12 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
             break
     status = S.study_status(store, sid)
     runs = [r for r in store.all_once('runs') if r.get('stage') == 'DEVELOPMENT']
+    intake_observation = _intake_observation(store, sid) if intake else None
     store.close()
     return dict(run_id=run_id, case=case['name'], index=idx, seed=seed, outcome=status['research_outcome'], reason=status['research_reason'],
                 trials=len(runs), development_outcomes={o: sum(1 for r in runs if r['outcome'] == o)
                                                         for o in sorted({r['outcome'] for r in runs})},
-                process_status=status['process_status'])
+                process_status=status['process_status'], intake=intake_observation)
 
 
 def run_identity(protocol: dict, n: int) -> str:
@@ -197,6 +262,8 @@ def run_identity(protocol: dict, n: int) -> str:
 def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=False,development_bars=None):
     body=dict(search=search,max_candidates=int(max_candidates),max_revisions=int(max_revisions),
               tf=tf,retained_question_intake=bool(intake))
+    if intake:
+        body['intake_provider_id'] = intake_provider_id()
     if development_bars is not None:
         if type(development_bars) is not int or development_bars<=0:raise ValueError('calibration_development_window_invalid')
         body['development_bars']=development_bars
@@ -238,6 +305,7 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
         protocol['max_revisions'] = 4
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
+    _freeze_intake(protocol, workdir)
     n = int(replicates or protocol['replicates'])
     kind = protocol['kind']
     dev_lo, fin_lo = protocol['development_seed_base'], protocol['final_seed_base']
@@ -273,17 +341,20 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
         judged.append(judge(case, sum(1 for r in mine if r['outcome'] == 'QUALIFIED'), len(mine), protocol))
     need = min_replicates_for(protocol['max_false_admission'], protocol['confidence'])
     pol = _policy(protocol)
+    intake_complete = not protocol.get('intake_bank_path') or all((r.get('intake') or {}).get('complete') for r in reps)
     if any(j['verdict'] == 'FAIL' for j in judged):
         status = 'FAILED'
-    elif kind != 'FINAL' or n < need or any(j['verdict'] != 'OK' for j in judged):
+    elif not intake_complete or kind != 'FINAL' or n < need or any(j['verdict'] != 'OK' for j in judged):
         status = 'INCONCLUSIVE'
     else:
         status = 'CALIBRATED' if protocol['numerics'] == 'EXACT_CONFIGURED' else 'MACHINERY_CALIBRATED_SMALL_POLICY'
     body = dict(schema='closure-calibration-report.v3',
                 search_scope='EXPLICIT_LEGACY_FAMILIES' if protocol.get('families') else 'COMPOSITIONAL_SEARCH',
                 search_contract_id=digest(search_contract(search=protocol.get('search'), max_candidates=protocol.get('max_candidates',8),
-                                             max_revisions=protocol['max_revisions'],tf=protocol.get('tf','4h'),development_bars=protocol['dev_bars'])),
-                omitted_paths=['external LLM source intake and live multi-leg execution'], calibration_status=status, kind=kind, run_id=run_id,
+                                             max_revisions=protocol['max_revisions'],tf=protocol.get('tf','4h'),intake=bool(protocol.get('intake_bank_path')),development_bars=protocol['dev_bars'])),
+                omitted_paths=['live multi-leg execution'] + ([] if protocol.get('intake_bank_path') else ['external LLM source intake']),
+                intake_complete=intake_complete, intake_corpus_id=protocol.get('intake_corpus_id'),
+                calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,
                 evaluator_id=manifest.evaluator_id(), replicates_per_case=n, min_replicates_for_null_resolution=need,
