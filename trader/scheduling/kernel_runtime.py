@@ -200,10 +200,15 @@ class KernelRuntime:
                 try:
                     self.coordinated_unwind_results=(resume(executor)
                         if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
+                    from ..engine.coordinated_management import run_once as manage_groups
+                    self.coordinated_management_results=(manage_groups(executor)
+                        if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
                 except Exception as exc:
                     self.coordinated_unwind_results=[dict(group_id=None,status='UNAVAILABLE',reason=type(exc).__name__)]
                 unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
                                       for r in self.coordinated_unwind_results)
+                unwind_incomplete |= any(r['status'] in ('UNAVAILABLE','HEDGE_ENTRY_REQUIRED')
+                                         for r in getattr(self,'coordinated_management_results',[]))
         view = analysis_context(self)
         required = view._exposure_symbols()
         with self.lock:

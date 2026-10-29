@@ -176,11 +176,11 @@ def assess(a, *, marked=False):
     try:
         ls = legs(a['bookings'], closed=not marked)
         t, observed = a['bookings']['trade'], a['observed_ms']
-        if marked and t['status']!='open':
-            raise ValueError('marked_accounting_requires_open_trade')
+        if marked and t['status'] not in ('open', 'closed'):
+            raise ValueError('marked_accounting_requires_booked_trade')
         from ..cognition.outcomes import timestamp
         if (timestamp(t['opened_at']) > a['bookings']['receipts'][0]['observed_ms']
-                or (not marked and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
+                or (t['status']=='closed' and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
             raise ValueError('journal_booking_clock_conflict')
         if a['environment'] != 'demo' or a['venue'] != 'binanceusdm':
             raise ValueError('unsupported_venue_environment')
@@ -220,7 +220,7 @@ def assess(a, *, marked=False):
         # is read before the history cutoff; any extra fills refuse ownership.
         position = a['position']
         direction = 1 if t['side']=='long' else -1
-        expected_quantity = number(t['amount']) if marked else 0.
+        expected_quantity = number(t['amount']) if marked and t['status']=='open' else 0.
         if (position['symbol'] != symbol or position['positionSide'] != 'BOTH'
                 or not close(number(position['positionAmt']),direction*expected_quantity)):
             raise ValueError('venue_flat_ownership_unproven_retry')
@@ -268,7 +268,8 @@ def assess(a, *, marked=False):
         if marked:
             mark,entry = number(position['markPrice']),number(position['entryPrice'])
             unrealized = number(position['unRealizedProfit'])
-            if mark<=0 or entry<=0 or not close(unrealized,direction*expected_quantity*(mark-entry)):
+            if ((expected_quantity and (mark<=0 or entry<=0))
+                    or not close(unrealized,direction*expected_quantity*(mark-entry))):
                 raise ValueError('marked_price_pnl_conflict')
             cash_gross += direction*expected_quantity*mark
         if not close(gross+unrealized, cash_gross):

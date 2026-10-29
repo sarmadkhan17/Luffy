@@ -37,6 +37,20 @@ def test_actual_partial_exit_fee_and_funding_join_current_mark(monkeypatch):
         A.verified_outcome(artifact,6000)
 
 
+def test_closed_leg_remains_in_combined_marks_without_becoming_a_learning_outcome(monkeypatch):
+    s,v=source(),Venue()
+    # A closed hedge still contributes its realized fees/funding to the open group.
+    v.fapiPrivateV2GetPositionRisk=lambda _: [dict(symbol='BTCUSDT',positionSide='BOTH',
+        positionAmt=0,entryPrice=0.,markPrice=120.,unRealizedProfit=0.)]
+    monkeypatch.setattr(A.time,'time',lambda:5.)
+    v.events=v.events[:2]  # a current combined mark need not wait for a future settlement
+    marked=A.replay(A.capture(s,v,marked=True))
+    assert marked['marked_net_pnl_usdt']==25.
+    assert marked['marked_notional_usdt']==0.
+    assert not marked['learning_eligible'] and marked['accounting'] is None
+    assert A.replay(A.capture(s,v))['status']=='incomplete'
+
+
 def test_marking_does_not_wait_for_a_future_funding_settlement(monkeypatch):
     s,v=opened(monkeypatch,initial_only=True)
     r=A.replay(A.capture(s,v,marked=True))
