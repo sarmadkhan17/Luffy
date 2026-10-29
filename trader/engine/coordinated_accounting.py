@@ -47,6 +47,20 @@ def entry_binding(part, member, group_id):
     return version
 
 
+def claim_interval(seen,member,capture,code):
+    """A coin may be reused by the same leg after a proven closed interval.
+
+    Simultaneous net positions and aliases of one cashflow stream still refuse.
+    """
+    iid=member['instrument_id'];key=(capture['venue'],capture['environment'],capture['venue_symbol'])
+    role=member['leg'];lo,hi=capture['start_ms'],capture['end_ms']
+    for old_iid,old_key,old_role,start,end in seen:
+        if iid==old_iid or key==old_key:
+            if iid!=old_iid or key!=old_key or role!=old_role or not (hi<start or end<lo):
+                raise ValueError(code)
+    seen.append((iid,key,role,lo,hi))
+
+
 def accounting(source):
     if source.get('schema_version') != VERSION:
         raise ValueError('coordinated_accounting_schema_differs')
@@ -67,7 +81,7 @@ def accounting(source):
     primary_id = primary[0]['trade_id']
     root = by_id[primary_id]['capture']
     primary_confirmed = root['bookings']['receipts'][0]['observed_ms']
-    seen_instruments, seen_cashflows, exact, fills, funding = set(), set(), None, [], 0.
+    intervals, exact, fills, funding = [], None, [], 0.
     for member in members:
         part = by_id[member['trade_id']]
         capture, identity, request = part['capture'], part['identity'], part['entry_request']
@@ -79,13 +93,7 @@ def accounting(source):
         if not all(version) or identity.get('status') != 'VERIFIED' or (exact and exact != version):
             raise ValueError('coordinated_accounting_version_or_account_differs')
         exact = version
-        if member['instrument_id'] in seen_instruments:
-            raise ValueError('coordinated_accounting_shared_instrument_unsupported')
-        seen_instruments.add(member['instrument_id'])
-        cashflow_key=(capture['venue'],capture['environment'],capture['venue_symbol'])
-        if cashflow_key in seen_cashflows:
-            raise ValueError('coordinated_accounting_shared_instrument_unsupported')
-        seen_cashflows.add(cashflow_key)
+        claim_interval(intervals,member,capture,'coordinated_accounting_shared_instrument_unsupported')
         if member['leg'] == 'hedge' and capture['start_ms'] < primary_confirmed:
             raise ValueError('coordinated_accounting_primary_not_first')
         for fill in result['accounting']['fills']:

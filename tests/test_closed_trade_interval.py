@@ -61,3 +61,51 @@ def test_new_interval_schema_cannot_be_relabelled_as_legacy(monkeypatch):
     a['schema_version']=T.VERSION
     a['assessment']=T.assess(a)
     assert T.replay(seal(a))['reasons']==['capture_clock_conflict']
+
+
+def test_open_group_can_mark_closed_leg_without_claiming_final_funding(monkeypatch):
+    monkeypatch.setattr(T.time,'time',lambda:5.)
+    ex=Venue();ex.events=[r for r in ex.events if r['fundingTime']<=4000]
+    ex.fapiPrivateV2GetPositionRisk=lambda p:(_ for _ in ()).throw(AssertionError('no current position read'))
+    a=T.capture(source(),ex,terminal_flat=proof(),marked=True)
+    result=T.replay(a)
+    assert result['status']=='marked_as_of_venue_history',result
+    assert result['marked_net_pnl_usdt']==25. and result['marked_notional_usdt']==0.
+    assert not result['learning_eligible'] and not result['final_realized_outcome']
+    assert result['basis']=='CLOSED_INTERVAL_CURRENT_CASHFLOW_RECEIPTS'
+    assert result['mark_observed_ms']==5000
+    assert T.assess(a)['reasons']==['funding_publication_frontier_pending_retry']
+
+
+def test_complete_closed_component_is_reused_without_venue_reads(monkeypatch,tmp_path):
+    from types import SimpleNamespace as NS
+    from trader.core.journal import Journal
+    from trader.engine.coordinated_management import component_capture
+    monkeypatch.setattr(T.time,'time',lambda:5.)
+    j=Journal(tmp_path/'journal.db');s=source();ex=Venue()
+    first=component_capture(NS(journal=j,ex=ex),s,[],proof())
+    assert T.replay(first)['learning_eligible']
+    s['observed_ms']=6000  # a new export time does not rewrite the closed trade
+    def no_read(*a,**kw):raise AssertionError('closed history must be reused')
+    for method in ('fapiPrivateGetOrder','fapiPrivateV2GetPositionRisk','fapiPrivateGetUserTrades','fapiPrivateGetIncome','fapiPublicGetFundingRate'):
+        setattr(ex,method,no_read)
+    assert component_capture(NS(journal=j,ex=ex),s,[],proof())==first
+    assert len(j.query('SELECT * FROM coordinated_closed_captures'))==1
+    s['trade']=dict(s['trade'],entry_price=101.)
+    with pytest.raises(ValueError,match='closed_capture_binding_differs'):
+        component_capture(NS(journal=j,ex=ex),s,[],proof())
+
+
+def test_closed_component_is_not_cached_until_funding_is_final(monkeypatch,tmp_path):
+    from types import SimpleNamespace as NS
+    from trader.core.journal import Journal
+    from trader.engine.coordinated_management import component_capture
+    monkeypatch.setattr(T.time,'time',lambda:5.)
+    j=Journal(tmp_path/'journal.db');ex=Venue();later=ex.events.pop()
+    first=component_capture(NS(journal=j,ex=ex),source(),[],proof())
+    assert not T.replay(first)['learning_eligible']
+    assert not j.query("SELECT 1 FROM sqlite_master WHERE name='coordinated_closed_captures'")
+    ex.events.append(later)
+    second=component_capture(NS(journal=j,ex=ex),source(),[],proof())
+    assert T.replay(second)['learning_eligible']
+    assert len(j.query('SELECT * FROM coordinated_closed_captures'))==1

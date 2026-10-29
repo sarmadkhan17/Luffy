@@ -164,3 +164,20 @@ def test_pending_group_delivery_does_not_starve_an_unrelated_outcome(tmp_path,mo
     assert W.deliver_completed(queue,'unused')==dict(delivered=1,retry=0,unbound=0)
     assert queue.execute('SELECT * FROM learning_deliveries').fetchall()==[('2','unrelated-outcome')]
     queue.close()
+
+
+def test_previously_closed_and_later_hedge_receipts_remain_one_net_outcome(monkeypatch):
+    from tests.test_coordinated_marked import interval_part,reidentify
+    # Accounting is about already-booked facts; this fixture grants no entry.
+    primary=component(monkeypatch)
+    old=interval_part(component(monkeypatch,role='hedge',symbol='ETH/USDT',offset=1200))
+    later=reidentify(interval_part(component(monkeypatch,role='hedge',symbol='ETH/USDT',offset=1200,base=10000)),
+                     'hedge-next')
+    source=assembled([primary,old,later])
+    result=G.accounting(source)
+    assert sum(f['realized_pnl']-f['commission'] for f in result['fills'])+result['funding_net']==-45.
+    assert len(result['fills'])==len({f['id'] for f in result['fills']})==9
+    assert {f['trade_id'] for f in result['fills']}=={'primary-trade'}
+    outcome=G.verified_outcome(source,19000)
+    assert outcome['actual_execution']['net_pnl']==-45.
+    assert outcomes.replay(outcome)==outcome

@@ -8,13 +8,13 @@ from trader.engine import trade_accounting as T, coordinated_marked as G
 from trader.engine.entry_authority import digest
 
 
-def leg(monkeypatch,role,symbol,mark,offset):
-    part=component(monkeypatch,role=role,symbol=symbol,offset=offset)
+def leg(monkeypatch,role,symbol,mark,offset,base=0):
+    part=component(monkeypatch,role=role,symbol=symbol,offset=offset,base=base)
     s=deepcopy(part['capture']['bookings']);s['receipts']=s['receipts'][:2]
     s['trade']=deepcopy(s['receipts'][-1]['after']);seal(s)
     v=Venue();v.fills=v.fills[:2];v.events=v.events[:2]
     for rows,key in ((v.fills,'time'),(v.funding,'time'),(v.events,'fundingTime')):
-        for row in rows:row[key]+=offset;row['symbol']=symbol.replace('/','')
+        for row in rows:row[key]+=offset+base;row['symbol']=symbol.replace('/','')
     sign=1 if role=='primary' else -1
     if sign<0:
         for fill in v.fills:
@@ -135,3 +135,54 @@ def test_closed_interval_hedge_contributes_net_loss_without_a_current_position(m
     closed['capture']['terminal_flat']['account_scope']='different-account'
     closed['capture']['assessment']=T.assess(closed['capture']);seal(closed['capture'])
     with pytest.raises(ValueError,match='terminal_flat_scope_differs'):G.assess(s,now_ms=8000)
+
+
+def reidentify(part,new_id):
+    """A different synthetic venue order/fill stream for the next hedge entry."""
+    cap=part['capture'];s=cap['bookings'];s['trade']['id']=new_id
+    for receipt in s['receipts']:
+        receipt['trade_id']=new_id
+        for side in ('before','after'):
+            if receipt[side]:receipt[side]['id']=new_id
+        receipt['evidence']['order_id']='next-'+str(receipt['evidence']['order_id']);seal(receipt)
+    seal(s)
+    for order in cap['orders']:order['orderId']='next-'+str(order['orderId'])
+    for name in ('fill_history','funding_history'):
+        for page in cap[name]['pages']:
+            for row in page['rows']:
+                if name=='fill_history':
+                    row['id']='next-'+str(row['id']);row['orderId']='next-'+str(row['orderId'])
+                else:row['tranId']='next-'+str(row['tranId'])
+    binding=part['identity']['execution_binding'];binding['logical_id']='next-hedge-entry'
+    request=part['entry_request'];request['logical_id']=binding['logical_id'];request['order_id']='next-1'
+    request['result']['position_id']=new_id
+    request['intent']['strategy_identity']=deepcopy(part['identity']);request['intent_hash']=digest(request['intent'])
+    if cap.get('terminal_flat'):
+        cap['terminal_flat'].update(trade_id=new_id,order_id='next-'+str(cap['terminal_flat']['order_id']))
+    marked=cap.get('capture_kind') in ('OPEN_POSITION_MARKED_ONLY','CLOSED_INTERVAL_MARKED_ONLY')
+    cap['assessment']=T.assess(cap,marked=marked);seal(cap)
+    assert T.replay(cap)['status']==('marked_as_of_venue_history' if marked else 'complete_as_of_venue_history')
+    return part
+
+
+def test_reopened_hedge_keeps_prior_closed_loss_and_only_one_current_exposure(monkeypatch):
+    s=group(monkeypatch)
+    old=interval_part(component(monkeypatch,role='hedge',symbol='ETH/USDT',offset=1200))
+    new=reidentify(leg(monkeypatch,'hedge','ETH/USDT',100.,1200,base=10000),'hedge-next')
+    for part in (old,new):
+        part['identity']['coordinated']=deepcopy(s['components'][1]['identity']['coordinated'])
+        part['entry_request']['intent']['strategy_identity']=deepcopy(part['identity'])
+        part['entry_request']['intent_hash']=digest(part['entry_request']['intent'])
+    s['components']=[s['components'][0],old,new]
+    s['members']=assembled(s['components'])['closure']['plan']['members']
+    result=G.assess(s,now_ms=18000)
+    assert result['marked_net_pnl_usdt']==-23.  # +26 main, -35 old hedge, -14 new hedge
+    assert result['gross_notional_usdt']==220. and result['hedge_present']
+    assert not result['learning_eligible']  # one still-open economic trade
+    # A second hedge before the first closed is unsupported, even if net PnL looks good.
+    overlap=reidentify(leg(monkeypatch,'hedge','ETH/USDT',100.,1200),'hedge-next')
+    overlap['identity']['coordinated']=deepcopy(new['identity']['coordinated'])
+    overlap['entry_request']['intent']['strategy_identity']=deepcopy(overlap['identity'])
+    overlap['entry_request']['intent_hash']=digest(overlap['entry_request']['intent'])
+    s['components'][2]=overlap;s['members']=assembled(s['components'])['closure']['plan']['members']
+    with pytest.raises(ValueError,match='shared_instrument_unsupported'):G.assess(s,now_ms=18000)

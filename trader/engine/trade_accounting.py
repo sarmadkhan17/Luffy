@@ -196,9 +196,11 @@ def assess(a, *, marked=False):
         interval=a.get('schema_version')==INTERVAL_VERSION
         if start<0 or end>observed or end<start or (not interval and end!=observed):
             raise ValueError('capture_clock_conflict')
-        if interval and (marked or t['status']!='closed'):
+        if interval and t['status']!='closed':
             raise ValueError('closed_interval_requires_terminal_trade')
-        if marked and not (type(a.get('position_observed_ms')) is int
+        if marked and interval and a['captured_ms']-observed>30_000:
+            raise ValueError('marked_closed_cashflow_observation_stale')
+        if marked and not interval and not (type(a.get('position_observed_ms')) is int
                 and a['bookings']['receipts'][-1]['observed_ms']<=a['position_observed_ms']<=observed
                 and a['captured_ms']-a['position_observed_ms']<=30_000):
             raise ValueError('marked_position_observation_stale_or_unbound')
@@ -328,8 +330,9 @@ def assess(a, *, marked=False):
             result.update(status='marked_as_of_venue_history',funding_usdt=funding_net,
                           marked_net_pnl_usdt=net,unrealized_usdt=unrealized,
                           marked_notional_usdt=expected_quantity*mark,
-                          mark_observed_ms=a['position_observed_ms'],retry_required=False,
-                          basis='CURRENT_VENUE_MARK_AND_OBSERVED_FILL_FEES_AND_SIGNED_FUNDING',
+                          mark_observed_ms=observed if interval else a['position_observed_ms'],retry_required=False,
+                          basis=('CLOSED_INTERVAL_CURRENT_CASHFLOW_RECEIPTS' if interval else
+                                 'CURRENT_VENUE_MARK_AND_OBSERVED_FILL_FEES_AND_SIGNED_FUNDING'),
                           final_realized_outcome=False)
             return result
         accounting = dict(schema_version='execution-accounting.v1', complete=True,
@@ -369,10 +372,11 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
             if marked:fields += ('entryPrice','markPrice','unRealizedProfit')
             a['position'] = {k:scalar(ps[0].get(k)) for k in fields}
         else:
-            if marked or source['trade']['status']!='closed':
+            if source['trade']['status']!='closed':
                 raise ValueError('closed_interval_requires_terminal_trade')
             a.update(terminal_flat=terminal_flat,position_source='RETAINED_TERMINAL_FLAT_OBSERVATION',
-                position=dict(symbol=symbol,positionSide='BOTH',positionAmt=terminal_flat['quantity']))
+                position=dict(symbol=symbol,positionSide='BOTH',positionAmt=terminal_flat['quantity'],
+                              entryPrice=0.,markPrice=0.,unRealizedProfit=0.))
         a['observed_ms'] = int(time.time()*1000)
         a['end_ms'] = int(number(a['orders'][-1]['updateTime'])) if terminal_flat is not None else a['observed_ms']
         for key, endpoint in (('fill_history','fills'), ('funding_history','income'), ('funding_events','funding_events')):
@@ -382,7 +386,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
     except Exception as exc:
         a['errors'].append('capture_failed:'+type(exc).__name__)
     a['captured_ms'] = int(time.time()*1000)
-    if marked:a['capture_kind']='OPEN_POSITION_MARKED_ONLY'
+    if marked:a['capture_kind']='CLOSED_INTERVAL_MARKED_ONLY' if terminal_flat is not None else 'OPEN_POSITION_MARKED_ONLY'
     a['assessment'] = assess(a,marked=marked)
     a['sha256'] = digest(a)
     return a
@@ -391,7 +395,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
 def replay(a):
     if a.get('schema_version') not in (VERSION,INTERVAL_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
         raise ValueError('whole_trade_integrity')
-    expected = assess(a,marked=a.get('capture_kind')=='OPEN_POSITION_MARKED_ONLY')
+    expected = assess(a,marked=a.get('capture_kind') in ('OPEN_POSITION_MARKED_ONLY','CLOSED_INTERVAL_MARKED_ONLY'))
     if expected != a['assessment']:
         raise ValueError('whole_trade_replay_mismatch')
     return expected

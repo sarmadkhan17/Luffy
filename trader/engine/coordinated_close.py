@@ -23,6 +23,7 @@ def ensure(journal):
         db.execute('''CREATE TABLE IF NOT EXISTS coordinated_reductions(
             logical_id TEXT PRIMARY KEY,trade_id TEXT NOT NULL,group_id TEXT NOT NULL,
             request_json TEXT NOT NULL,state TEXT NOT NULL,order_json TEXT,result_json TEXT)''')
+        db.execute('CREATE INDEX IF NOT EXISTS coordinated_reductions_trade ON coordinated_reductions(trade_id,group_id,state)')
 
 
 def ownership(executor,trade,group_id):

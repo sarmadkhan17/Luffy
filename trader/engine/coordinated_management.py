@@ -5,6 +5,7 @@ reduce-only recovery. A protection activation is an explicit entry request
 gap until the separate exact-version/Risk coordinator can admit that leg.
 """
 from contextlib import closing
+from copy import deepcopy
 import json
 import time
 
@@ -30,6 +31,43 @@ def pending_exit(journal, group_id):
     return reason
 
 
+def component_capture(executor,exported,overlaps,flat):
+    """Reuse only a complete immutable closed result; open legs stay fresh."""
+    journal=executor.journal;closed=exported['trade']['status']=='closed'
+    fingerprint=digest(dict(trade=exported['trade'],receipts=exported['receipts']))
+    table='coordinated_closed_captures'
+    if closed and journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)):
+        rows=journal.query(f'SELECT * FROM {table} WHERE trade_id=?',(exported['trade']['id'],))
+        if rows:
+            row=rows[0];capture=json.loads(row['payload'])
+            if (row['booking_sha256']!=fingerprint or digest(capture)!=row['sha256']
+                    or not T.replay(capture)['learning_eligible']):
+                raise ValueError('coordinated_closed_capture_binding_differs')
+            return capture
+    capture=T.capture(exported,executor.ex,overlaps,marked=True,terminal_flat=flat)
+    if not closed or capture['schema_version']!=T.INTERVAL_VERSION:return capture
+    final=T.assess(capture)
+    if not final['learning_eligible']:return capture  # publication still pending
+    capture=deepcopy(capture)
+    capture.update(capture_kind='CLOSED_ECONOMIC_INTERVAL',assessment=final)
+    capture['sha256']=digest({k:v for k,v in capture.items() if k!='sha256'})
+    if not T.replay(capture)['learning_eligible']:raise ValueError('coordinated_closed_capture_incomplete')
+    with journal._tx() as db:
+        db.execute(f'CREATE TABLE IF NOT EXISTS {table}(trade_id TEXT PRIMARY KEY,booking_sha256 TEXT NOT NULL,'
+                   'payload TEXT NOT NULL,sha256 TEXT NOT NULL)')
+        db.execute(f"CREATE TRIGGER IF NOT EXISTS {table}_no_update BEFORE UPDATE ON {table} "
+                   "BEGIN SELECT RAISE(ABORT,'closed accounting evidence is immutable'); END")
+        db.execute(f"CREATE TRIGGER IF NOT EXISTS {table}_no_delete BEFORE DELETE ON {table} "
+                   "BEGIN SELECT RAISE(ABORT,'closed accounting evidence is immutable'); END")
+        db.execute(f'INSERT OR IGNORE INTO {table} VALUES(?,?,?,?)',
+                   (exported['trade']['id'],fingerprint,canonical(capture),digest(capture)))
+        row=db.execute(f'SELECT * FROM {table} WHERE trade_id=?',(exported['trade']['id'],)).fetchone()
+        saved=json.loads(row['payload'])
+        if row['booking_sha256']!=fingerprint or digest(saved)!=row['sha256'] or not T.replay(saved)['learning_eligible']:
+            raise ValueError('coordinated_closed_capture_binding_differs')
+    return saved
+
+
 def source(executor, group_id):
     """Fetch only the group's owned orders/cashflows and current positions."""
     from .protection_snapshot import ro_connect
@@ -37,7 +75,7 @@ def source(executor, group_id):
     if trading_source(executor.ex)[0] != 'demo':
         raise ValueError('coordinated_management_demo_only')
     members = U._members(executor, group_id)
-    if not 1 <= len(members) <= 2:
+    if not 1 <= len(members) <= M.MAX_MEMBERS:
         raise ValueError('coordinated_management_members_unsupported')
     parts = []
     for member in members:
@@ -61,7 +99,7 @@ def source(executor, group_id):
                          result=json.loads(request['result_json'] or '{}'))
         flat=(C.retained_terminal_flat(executor.journal,member['trade_id'],group_id,
                 T.legs(exported)[-1]['order_id']) if exported['trade']['status']=='closed' else None)
-        parts.append(dict(capture=T.capture(exported, executor.ex, overlaps,marked=flat is None,terminal_flat=flat),
+        parts.append(dict(capture=component_capture(executor,exported,overlaps,flat),
                           identity=identity, entry_request=entry))
     return dict(schema_version=M.VERSION, group_id=group_id, members=members, components=parts)
 
