@@ -100,3 +100,38 @@ def test_missing_or_unowned_inputs_never_produce_usable_equity(monkeypatch,chang
     elif change=='unknown_fee':s['components'][1]['capture']['fill_history']['pages'][0]['rows'][0]['commission']=None
     elif change=='missing_capital':s['components'][0]['identity']['coordinated'].pop('allocated_equity_usdt')
     with pytest.raises(ValueError):G.assess(s,now_ms=now)
+
+
+def interval_part(part):
+    """Seal a synthetic terminal observation from the fixture's owned close."""
+    cap=part['capture'];end=int(cap['orders'][-1]['updateTime'])
+    cap.update(schema_version=T.INTERVAL_VERSION,end_ms=end,
+        position_source='RETAINED_TERMINAL_FLAT_OBSERVATION',terminal_flat=dict(
+            schema='coordinated-terminal-flat.v1',trade_id=cap['bookings']['trade']['id'],
+            logical_id='owned-close',order_id=str(cap['orders'][-1]['orderId']),
+            symbol=cap['bookings']['trade']['symbol'],account_scope='demo-account',
+            instrument_id=part['identity']['execution_binding']['instrument_id'],
+            request_start_ms=end+1,observed_ms=end+50,flat=True,quantity=0.))
+    for name in ('fill_history','funding_history'):
+        stream=cap[name];stream['end_ms']=end
+        for page in stream['pages']:
+            page['end_ms']=end;page['rows']=[r for r in page['rows'] if r['time']<=end]
+    cap['assessment']=T.assess(cap);seal(cap)
+    assert T.replay(cap)['learning_eligible']
+    return part
+
+
+def test_closed_interval_hedge_contributes_net_loss_without_a_current_position(monkeypatch):
+    s=group(monkeypatch)
+    closed=interval_part(component(monkeypatch,role='hedge',symbol='ETH/USDT',offset=1200))
+    closed['identity']['coordinated']=deepcopy(s['components'][1]['identity']['coordinated'])
+    closed['entry_request']['intent']['strategy_identity']=deepcopy(closed['identity'])
+    closed['entry_request']['intent_hash']=digest(closed['entry_request']['intent'])
+    s['components'][1]=closed;s['members']=assembled(s['components'])['closure']['plan']['members']
+    result=G.assess(s,now_ms=8000)
+    assert result['marked_net_pnl_usdt']==-9. and result['gross_notional_usdt']==120.
+    assert not result['hedge_present'] and not result['learning_eligible']
+    # A flat observation from a different account must not be mixed in.
+    closed['capture']['terminal_flat']['account_scope']='different-account'
+    closed['capture']['assessment']=T.assess(closed['capture']);seal(closed['capture'])
+    with pytest.raises(ValueError,match='terminal_flat_scope_differs'):G.assess(s,now_ms=8000)

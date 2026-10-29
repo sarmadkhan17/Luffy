@@ -14,6 +14,7 @@ from . import booking
 from ..core.types import norm_symbol
 
 VERSION = 'whole-trade-accounting.v1'
+INTERVAL_VERSION = 'whole-trade-accounting.closed-interval.v2'
 DAY = 86_400_000
 LIMIT = 1000
 MAX_PAGES = 16
@@ -192,8 +193,11 @@ def assess(a, *, marked=False):
         if (type(observed) is not int or type(a['captured_ms']) is not int
                 or a['captured_ms'] < observed or a['bookings']['observed_ms'] > observed):
             raise ValueError('capture_clock_conflict')
-        if end != observed or start < 0:
+        interval=a.get('schema_version')==INTERVAL_VERSION
+        if start<0 or end>observed or end<start or (not interval and end!=observed):
             raise ValueError('capture_clock_conflict')
+        if interval and (marked or t['status']!='closed'):
+            raise ValueError('closed_interval_requires_terminal_trade')
         if marked and not (type(a.get('position_observed_ms')) is int
                 and a['bookings']['receipts'][-1]['observed_ms']<=a['position_observed_ms']<=observed
                 and a['captured_ms']-a['position_observed_ms']<=30_000):
@@ -201,11 +205,24 @@ def assess(a, *, marked=False):
         orders = {str(o['orderId']):o for o in a['orders']}
         if len(orders) != len(ls) or set(orders) != {l['order_id'] for l in ls}:
             raise ValueError('order_versions_missing_retry')
+        if interval:
+            proof=a['terminal_flat']
+            last=orders[ls[-1]['order_id']]
+            if (proof.get('schema')!='coordinated-terminal-flat.v1' or proof.get('trade_id')!=t['id']
+                    or proof.get('symbol')!=t['symbol'] or str(proof.get('order_id'))!=ls[-1]['order_id']
+                    or proof.get('flat') is not True or type(proof.get('quantity')) not in (int,float)
+                    or proof['quantity']!=0 or not proof.get('logical_id')
+                    or not proof.get('account_scope') or not proof.get('instrument_id')
+                    or type(proof.get('request_start_ms')) is not int or type(proof.get('observed_ms')) is not int
+                    or not end<=proof['request_start_ms']<=proof['observed_ms']<=ls[-1]['receipt_ms']<=observed
+                    or end!=number(last['updateTime'])
+                    or a.get('position_source')!='RETAINED_TERMINAL_FLAT_OBSERVATION'):
+                raise ValueError('closed_interval_flat_evidence_unbound')
         if start != number(orders[ls[0]['order_id']]['time']):
             raise ValueError('entry_history_start_conflict')
         fills = history_rows(a['fill_history'], 'fills', symbol, start, end, observed)
         funding = history_rows(a['funding_history'], 'income', symbol, start, end, observed)
-        events = history_rows(a['funding_events'], 'funding_events', symbol, max(0, start-6*DAY), end, observed)
+        events = history_rows(a['funding_events'], 'funding_events', symbol, max(0, start-6*DAY), observed if interval else end, observed)
         result['history_complete'] = True
         if not fills:
             raise ValueError('fill_history_empty_retry')
@@ -317,7 +334,7 @@ def assess(a, *, marked=False):
             return result
         accounting = dict(schema_version='execution-accounting.v1', complete=True,
             trade_id=t['id'], symbol=t['symbol'], venue=a['venue'], environment=a['environment'],
-            reconciliation_version=VERSION, fills=normalized, currency='USDT',
+            reconciliation_version=a['schema_version'], fills=normalized, currency='USDT',
             funding_complete=True, funding_net=funding_net, resolved_ms=a['captured_ms'],
             available_ms=a['captured_ms'])
         result.update(status='complete_as_of_venue_history', learning_eligible=True,
@@ -328,9 +345,9 @@ def assess(a, *, marked=False):
     return result
 
 
-def capture(source, exchange, overlapping_trade_ids=(), *, marked=False):
+def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal_flat=None):
     """Bounded demo reads; no journal writes, trade submission or automatic retry."""
-    a = dict(schema_version=VERSION, bookings=source, venue='binanceusdm', environment='demo',
+    a = dict(schema_version=INTERVAL_VERSION if terminal_flat is not None else VERSION, bookings=source, venue='binanceusdm', environment='demo',
              observed_ms=int(time.time()*1000), orders=[], position=None, errors=[],
              overlapping_trade_ids=list(overlapping_trade_ids))
     try:
@@ -342,19 +359,26 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False):
             a['orders'].append({k:scalar(raw.get(k)) for k in ('orderId','symbol','side','positionSide',
                                 'status','executedQty','time','updateTime')})
         a['start_ms'] = int(number(a['orders'][0]['time']))
-        positions = exchange.fapiPrivateV2GetPositionRisk(dict(symbol=symbol))
-        if marked:a['position_observed_ms']=int(time.time()*1000)
-        ps = [p for p in positions if p.get('symbol') == symbol]
-        if len(ps) != 1:
-            raise ValueError('one_way_position_snapshot_missing')
-        fields = ('symbol','positionSide','positionAmt')
-        if marked:fields += ('entryPrice','markPrice','unRealizedProfit')
-        a['position'] = {k:scalar(ps[0].get(k)) for k in fields}
+        if terminal_flat is None:
+            positions = exchange.fapiPrivateV2GetPositionRisk(dict(symbol=symbol))
+            if marked:a['position_observed_ms']=int(time.time()*1000)
+            ps = [p for p in positions if p.get('symbol') == symbol]
+            if len(ps) != 1:
+                raise ValueError('one_way_position_snapshot_missing')
+            fields = ('symbol','positionSide','positionAmt')
+            if marked:fields += ('entryPrice','markPrice','unRealizedProfit')
+            a['position'] = {k:scalar(ps[0].get(k)) for k in fields}
+        else:
+            if marked or source['trade']['status']!='closed':
+                raise ValueError('closed_interval_requires_terminal_trade')
+            a.update(terminal_flat=terminal_flat,position_source='RETAINED_TERMINAL_FLAT_OBSERVATION',
+                position=dict(symbol=symbol,positionSide='BOTH',positionAmt=terminal_flat['quantity']))
         a['observed_ms'] = int(time.time()*1000)
-        a['end_ms'] = a['observed_ms']
+        a['end_ms'] = int(number(a['orders'][-1]['updateTime'])) if terminal_flat is not None else a['observed_ms']
         for key, endpoint in (('fill_history','fills'), ('funding_history','income'), ('funding_events','funding_events')):
             history_start = max(0, a['start_ms']-6*DAY) if endpoint == 'funding_events' else a['start_ms']
-            a[key] = history(exchange, endpoint, symbol, history_start, a['end_ms'], a['observed_ms'])
+            history_end=a['observed_ms'] if terminal_flat is not None and endpoint=='funding_events' else a['end_ms']
+            a[key] = history(exchange, endpoint, symbol, history_start, history_end, a['observed_ms'])
     except Exception as exc:
         a['errors'].append('capture_failed:'+type(exc).__name__)
     a['captured_ms'] = int(time.time()*1000)
@@ -365,7 +389,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False):
 
 
 def replay(a):
-    if a.get('schema_version') != VERSION or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
+    if a.get('schema_version') not in (VERSION,INTERVAL_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
         raise ValueError('whole_trade_integrity')
     expected = assess(a,marked=a.get('capture_kind')=='OPEN_POSITION_MARKED_ONLY')
     if expected != a['assessment']:

@@ -36,6 +36,11 @@ def entry_binding(part, member, group_id):
             or member['symbol'] != trade['symbol']
             or binding.get('instrument_id') != member['instrument_id']):
         raise ValueError('coordinated_accounting_entry_ownership_differs')
+    if capture.get('schema_version')==T.INTERVAL_VERSION:
+        proof=capture.get('terminal_flat') or {}
+        if (proof.get('instrument_id')!=member['instrument_id']
+                or proof.get('account_scope')!=(binding.get('capability') or {}).get('account_scope')):
+            raise ValueError('coordinated_accounting_terminal_flat_scope_differs')
     version = (trade['strategy_id'], identity.get('version_id'),
                identity.get('spec_sha256'), identity.get('install_id'),
                binding.get('capability', {}).get('account_scope'))

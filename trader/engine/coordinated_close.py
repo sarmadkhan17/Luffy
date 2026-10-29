@@ -224,3 +224,21 @@ def _booked(journal,trade_id,order_id):
                 or receipt['evidence'].get('purpose')=='final_exit_partial_fill'):
             return True
     return False
+
+
+def retained_terminal_flat(journal,trade_id,group_id,order_id):
+    """Historical close proof only; never establishes current position truth."""
+    if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(TABLE,)):
+        return None
+    for row in journal.query('SELECT * FROM coordinated_reductions WHERE trade_id=? AND group_id=? AND state=?',
+                             (trade_id,group_id,'BOOKED')):
+        request=json.loads(row['request_json']);order=json.loads(row['order_json'] or '{}')
+        proof=json.loads(row['result_json'] or '{}').get('flat_evidence')
+        if str(order.get('id'))!=str(order_id):continue
+        if not proof or proof.get('schema')!='coordinated-terminal-flat.v1':return None
+        if (request['logical_id']!=row['logical_id'] or request['trade_id']!=trade_id or request['group_id']!=group_id
+                or proof.get('logical_id')!=row['logical_id'] or proof.get('trade_id')!=trade_id
+                or str(proof.get('order_id'))!=str(order_id) or proof.get('symbol')!=request['symbol']):
+            raise ValueError('coordinated_terminal_flat_receipt_differs')
+        return proof
+    return None

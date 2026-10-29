@@ -49,17 +49,21 @@ def assess(source, *, now_ms):
             raise ValueError('coordinated_marked_shared_instrument_unsupported')
         instruments.add(member['instrument_id']);cashflows.add(cashflow)
         result=T.replay(capture)
-        if result['status']!='marked_as_of_venue_history':
+        closed=(capture['bookings']['trade']['status']=='closed' and capture['schema_version']==T.INTERVAL_VERSION
+                and result['status']=='complete_as_of_venue_history')
+        if not closed and result['status']!='marked_as_of_venue_history':
             raise ValueError('coordinated_marked_component_incomplete')
+        observed=capture['captured_ms'] if closed else result['mark_observed_ms']
         if (type(now_ms) is not int or not capture['captured_ms']<=now_ms
-                or now_ms-result['mark_observed_ms']>30_000):
+                or now_ms-observed>30_000):
             raise ValueError('coordinated_marked_component_stale')
         if member['leg']=='hedge' and capture['start_ms']<first_confirmed:
             raise ValueError('coordinated_marked_primary_not_first')
         if member['leg']=='hedge' and capture['bookings']['trade']['side']==root['capture']['bookings']['trade']['side']:
             raise ValueError('coordinated_marked_protection_direction_differs')
-        net+=result['marked_net_pnl_usdt'];gross+=result['marked_notional_usdt']
-        marks.append(result['mark_observed_ms'])
+        net+=result['net_trade_pnl_usdt'] if closed else result['marked_net_pnl_usdt']
+        gross+=0. if closed else result['marked_notional_usdt']
+        marks.append(observed)
     equity=capital+net
     decision=M.assess(policy,entry_equity=capital,equity=equity,gross=gross,maintenance_fraction=maintenance)
     if root['capture']['bookings']['trade']['status']=='closed' and any(

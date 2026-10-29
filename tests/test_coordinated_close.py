@@ -152,4 +152,7 @@ def test_actual_terminal_flat_observation_survives_crash_after_booking(setup,mon
     ex.positions=[dict(symbol='BTC/USDT',side='long',contracts=7.)]
     assert close_once(e,tid,'group-fixture','retained-flat')['status']=='BOOKED'
     assert json.loads(j.query('SELECT result_json FROM coordinated_reductions')[0]['result_json'])['flat_evidence']==proof
+    from trader.engine.coordinated_close import retained_terminal_flat
+    assert retained_terminal_flat(j,tid,'group-fixture',proof['order_id'])==proof
+    assert retained_terminal_flat(j,tid,'group-fixture','different-order') is None
     assert len(ex.sent)==count

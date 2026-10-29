@@ -8,7 +8,7 @@ from contextlib import closing
 import json
 import time
 
-from . import booking, coordinated_marked as M, coordinated_unwind as U
+from . import booking, coordinated_marked as M, coordinated_unwind as U,coordinated_close as C
 from . import trade_accounting as T
 from ..research.closure import canonical, digest
 
@@ -52,12 +52,16 @@ def source(executor, group_id):
             if request is None:
                 raise ValueError('coordinated_management_entry_missing')
             overlaps = [r[0] for r in db.execute(
-                'SELECT id FROM trades WHERE symbol=? AND id<>? AND (closed_at IS NULL OR closed_at>=?)',
-                (member['symbol'], member['trade_id'], exported['trade']['opened_at']))]
+                'SELECT id FROM trades WHERE symbol=? AND id<>? AND (closed_at IS NULL OR closed_at>=?) '
+                'AND (? IS NULL OR opened_at<=?)',
+                (member['symbol'], member['trade_id'], exported['trade']['opened_at'],
+                 exported['trade']['closed_at'],exported['trade']['closed_at']))]
             entry = dict(logical_id=request['logical_id'], state=request['state'], order_id=request['order_id'],
                          intent_hash=request['intent_hash'], intent=json.loads(request['intent_json']),
                          result=json.loads(request['result_json'] or '{}'))
-        parts.append(dict(capture=T.capture(exported, executor.ex, overlaps, marked=True),
+        flat=(C.retained_terminal_flat(executor.journal,member['trade_id'],group_id,
+                T.legs(exported)[-1]['order_id']) if exported['trade']['status']=='closed' else None)
+        parts.append(dict(capture=T.capture(exported, executor.ex, overlaps,marked=flat is None,terminal_flat=flat),
                           identity=identity, entry_request=entry))
     return dict(schema_version=M.VERSION, group_id=group_id, members=members, components=parts)
 
