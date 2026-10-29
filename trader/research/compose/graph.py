@@ -279,7 +279,7 @@ REQUIRED = ('question', 'rationale', 'expected', 'failure_conditions', 'structur
 
 
 STOP_KINDS, TARGET_KINDS, TRAIL_KINDS = ('atr', 'pct', 'swing'), ('atr', 'rr', 'pct', 'none'), ('none', 'atr')
-MAX_HOLD_BARS = 5000
+from ...strategy.exit_policy import MAX_HOLD_BARS
 
 
 def _check_exit(e: dict, tf: str) -> dict:

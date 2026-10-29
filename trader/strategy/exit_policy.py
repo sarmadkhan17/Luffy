@@ -14,6 +14,9 @@ import json
 import math
 from dataclasses import asdict, dataclass, replace
 
+# Shared capability bound for compositional research, compilation and execution.
+MAX_HOLD_BARS = 5000
+
 
 class ExitObservationUnavailable(ValueError):
     """A required closed bar is absent or incomplete; no transition occurred."""
@@ -67,7 +70,7 @@ def unsupported(ex):
     if not isinstance(ex.signal_exit, str):
         return 'signal_exit:invalid_expression'
     t = ex.time
-    if not isinstance(t, dict) or set(t) != {'max_bars'} or type(t['max_bars']) is not int or not 1 <= t['max_bars'] <= 500:
+    if not isinstance(t, dict) or set(t) != {'max_bars'} or type(t['max_bars']) is not int or not 1 <= t['max_bars'] <= MAX_HOLD_BARS:
         return 'time:max_bars_unsupported'
     return None
 

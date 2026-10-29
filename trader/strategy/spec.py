@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import asdict, dataclass, field
+from .exit_policy import MAX_HOLD_BARS
 
 TIMEFRAMES = {"5m", "15m", "1h", "4h"}
 DIRECTIONS = {"long", "short", "both"}
@@ -136,8 +137,8 @@ def _validate_exit(e: ExitSpec) -> list[str]:
     if e.trail.get("kind") not in TRAIL_KINDS:
         errs.append(f"exit.trail kind must be one of {sorted(TRAIL_KINDS)}")
     mb = int(e.time.get("max_bars", 0) or 0)
-    if not (1 <= mb <= 500):
-        errs.append("exit.time.max_bars must be in [1, 500]")
+    if not (1 <= mb <= MAX_HOLD_BARS):
+        errs.append(f"exit.time.max_bars must be in [1, {MAX_HOLD_BARS}]")
     if e.target.get("kind") == "none" and e.trail.get("kind") == "none" \
             and mb > 200:
         errs.append("a spec with no target and no trail needs a tighter "
