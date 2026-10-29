@@ -110,3 +110,44 @@ def test_durable_paper_keeps_profitable_main_and_losing_hedge_as_one_losing_trad
     assert {i['reason'] for i in events[5]['intents']}=={'combined_target'}
     assert events[6]['positions']==dict(primary=0.,hedge=0.)
     assert all(e['real_order_submissions']==0 and e['net_economics']=='MODELLED_PAPER_ONLY' for e in events)
+
+
+@pytest.mark.parametrize('reason',['stop','target','time'])
+def test_main_strategy_exit_closes_whole_managed_position(reason):
+    from trader.strategy.spec import ExitSpec
+    book=H.HedgeBook(spec(management=policy(),ratio=dict(method='fixed',value=.5)),
+        primary_exit_definition=asdict(ExitSpec(stop={'kind':'pct','v':.10},
+            target={'kind':'rr','v':2.},time={'max_bars':2 if reason=='time' else 20})))
+    def observation(t,price=100.,low=100.,high=100.):
+        return dict(bar_ms=1000+t*1000,step_ms=1000,open=100.,high=high,low=low,close=price,atr=1.)
+    entry=book.step(0,dict(bar(signal=1),primary_exit_observation=observation(0)))
+    book.apply_fills({i.oid:i.qty for i in entry})
+    hedge=book.step(1,dict(bar(equity=970.),primary_exit_observation=observation(1)))
+    book.apply_fills({i.oid:i.qty for i in hedge})
+    assert book.pos['primary']>0 and book.pos['hedge']<0
+    prices={'stop':dict(low=89.),'target':dict(high=121.),'time':{}}[reason]
+    orders=book.step(2,dict(bar(equity=970.),primary_exit_observation=observation(2,**prices)))
+    assert {i.leg for i in orders}=={'primary','hedge'}
+    assert all(i.kind=='UNWIND' for i in orders)
+    from trader.strategy import exit_policy as E
+    assert E.decode(book.primary_exit_state)[1].reason==reason
+    assert book.exit_input_gaps==0
+
+
+def test_quote_main_exit_ignores_prefill_candle_extremes_and_checks_current_prices():
+    from trader.strategy.spec import ExitSpec
+    book=H.HedgeBook(spec(management=policy(),ratio=dict(method='fixed',value=.5)),
+        primary_exit_definition=asdict(ExitSpec(stop={'kind':'pct','v':.10},target={'kind':'rr','v':2.})))
+    def tick(t,price=100.,signal=0):
+        return dict(bar(p=price,signal=signal),paper_quote=True,
+            primary_exit_observation=dict(bar_ms=1000+t*1000,step_ms=1000,
+                open=100.,high=200.,low=1.,close=100.,atr=1.))
+    entry=book.step(0,tick(0,signal=1))
+    book.apply_fills({i.oid:i.qty for i in entry})
+    assert book.step(0,tick(0))==[]
+    assert book.step(1,tick(1))==[]
+    assert book.exit_input_gaps==0
+    exit_orders=book.step(1,tick(1,price=89.))
+    assert any(i.kind=='UNWIND' for i in exit_orders)
+    from trader.strategy import exit_policy as E
+    assert E.decode(book.primary_exit_state)[1].reason=='stop'

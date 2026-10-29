@@ -32,7 +32,7 @@ def protocol_id():
     return digest(PROTOCOL)
 
 
-def episode_values(equity, *, start_equity, gross, metric, episode_bars=64):
+def episode_values(equity, *, start_equity, gross, metric, episode_bars=64,native_bars=None):
     """Metrics on the continuous book, including the boundary mark; no refit/reset."""
     if type(episode_bars) is not int or episode_bars<=0:
         raise ValueError('objective_episode_clock_invalid')
@@ -42,10 +42,19 @@ def episode_values(equity, *, start_equity, gross, metric, episode_bars=64):
     if not np.isfinite(eq).all() or not np.isfinite(g).all() or (eq<=0).any():
         raise ValueError('objective_episode_marks_unknown')
     out=[]
-    for lo in range(0,len(eq)-episode_bars+1,episode_bars):
-        hi=lo+episode_bars
+    if native_bars is None:
+        bounds=[(lo,lo+episode_bars,None) for lo in range(0,len(eq)-episode_bars+1,episode_bars)]
+    else:
+        ids=np.asarray(native_bars)
+        if ids.ndim!=1 or len(ids)!=len(eq) or not np.issubdtype(ids.dtype,np.integer) or (np.diff(ids)<0).any():
+            raise ValueError('objective_episode_native_clock_invalid')
+        starts=np.r_[0,np.flatnonzero(ids[1:]!=ids[:-1])+1,len(ids)]
+        bounds=[(int(starts[i]),int(starts[i+episode_bars]),starts[i+1:i+episode_bars+1]-1)
+                for i in range(0,len(starts)-episode_bars,episode_bars)]
+    for lo,hi,native_closes in bounds:
         path=np.r_[start_equity if lo==0 else eq[lo-1],eq[lo:hi]]
-        returns=np.diff(path)/path[:-1]*100
+        return_path=path if native_closes is None else np.r_[path[0],eq[native_closes]]
+        returns=np.diff(return_path)/return_path[:-1]*100
         if metric=='net_return_pct':value=(path[-1]/path[0]-1)*100
         elif metric=='max_drawdown_pct':value=float(np.max((1-path/np.maximum.accumulate(path))*100))
         elif metric=='worst_bar_pct':value=float(-returns.min())

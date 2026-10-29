@@ -1286,7 +1286,7 @@ def _installed(journal, strategy_id: str):
     """(spec dict, spec_hash) of the spec the running population loads for
     this id (kind='spec', paper/active), or None when nothing is installed."""
     row = _one(journal, "SELECT spec_json FROM strategies WHERE id=? AND "
-               "kind='spec' AND state IN ('paper','active')", (strategy_id,))
+               "kind IN ('spec','coordinated_spec') AND state IN ('paper','active')", (strategy_id,))
     if row is None or not row["spec_json"]:
         return None
     try:
@@ -1386,8 +1386,13 @@ def verify_install(journal, version: dict, *, current: bool = True) -> dict:
         _refuse("install_wrong_version")
     if rec.get('execution')=='COORDINATED_PAPER_ONLY' and version['source']['kind'] in ('coordinated_paper_research',HEDGE_HQ_KIND):
         if (rec.get('execution')!='COORDINATED_PAPER_ONLY' or rec.get('mode')!='paper'
-                or rec.get('installed_spec')!=version['spec'] or rec.get('primary_exit')!=version['spec']['exit']):
+                or rec.get('installed_spec')!=version['spec'] or rec.get('primary_exit')!=version['spec']['exit']
+                or rec.get('paper_timing','NEXT_BAR_OPEN') not in ('NEXT_BAR_OPEN','PROSPECTIVE_QUOTE_V1')):
             _refuse('coordinated_install_differs')
+        if current:
+            row=_one(journal,'SELECT kind,spec_json FROM strategies WHERE id=?',(version['strategy_id'],))
+            if row is None or row['kind']!='coordinated_spec' or not row['spec_json'] or json.loads(row['spec_json'])!=version['spec']:
+                _refuse('coordinated_strategy_projection_conflict')
         return rec
     if current:
         inst = _installed(journal, version["strategy_id"])
@@ -2664,8 +2669,24 @@ def _create_coordinated_trial(journal, cfg, packet, *, at_ms):
     return dict(status=outcome,version_id=rec['version_id'],spec_hash=sh,strategy_id=sd['id'],validation_receipt_id=receipt['receipt_id'])
 
 
-def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
-    from ..engine.coordinated_paper import CoordinatedPaper
+def _project_coordinated_paper(db,version,install):
+    """One exact strategy-table projection; ordinary entry loaders exclude it."""
+    row=db.execute('SELECT kind,spec_json FROM strategies WHERE id=?',(version['strategy_id'],)).fetchone()
+    if row:
+        if row['kind']!='coordinated_spec' or not row['spec_json'] or json.loads(row['spec_json'])!=version['spec']:
+            _refuse('coordinated_strategy_projection_conflict')
+        return
+    spec=version['spec']
+    db.execute('INSERT INTO strategies(id,name,kind,params,state,description,origin,hypothesis,invalidation,'
+               'regime_filter,markets,created_at,spec_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+               (version['strategy_id'],spec['name'],'coordinated_spec','{}','paper',
+                str(spec.get('thesis',''))[:400],version['source']['kind'],spec.get('thesis',''),
+                spec.get('invalidation',''),canonical(spec.get('regime_filter',[])),canonical(spec.get('markets',[])),
+                datetime.fromtimestamp(install['installed_at_ms']/1000,timezone.utc).isoformat(),canonical(spec)))
+
+
+def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0,timing='PROSPECTIVE_QUOTE_V1'):
+    from ..engine.coordinated_paper import CoordinatedPaper,BAR_TIMING,QUOTE_TIMING
     from ..core.types import TF_MS
     ensure(journal)
     version=load_version(journal,version_id)
@@ -2677,6 +2698,8 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
     if bad:_refuse('coordinated_primary_exit_unsupported:'+bad)
     if not math.isfinite(equity) or equity<=0:
         _refuse('paper_equity_invalid')
+    if timing not in (BAR_TIMING,QUOTE_TIMING):
+        _refuse('coordinated_paper_timing_unsupported')
     old=_install_record(journal,version_id)
     if old is None:
         if state_of(journal,version_id)!=VALIDATED:
@@ -2689,7 +2712,8 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
         step=TF_MS[version['spec']['timeframe']]
         old=dict(ident,install_id=_jsha(ident),installed_at_ms=int(at_ms),starting_equity=equity,
                  first_bar_ms=((int(at_ms)+step-1)//step)*step,installed_spec=version['spec'],
-                 installed_spec_hash=version['spec_hash'],execution='COORDINATED_PAPER_ONLY',primary_exit=version['spec']['exit'])
+                 installed_spec_hash=version['spec_hash'],execution='COORDINATED_PAPER_ONLY',primary_exit=version['spec']['exit'],
+                 paper_timing=timing)
         text=canonical(old)
         with journal._tx() as db:
             _begin(db)
@@ -2699,10 +2723,17 @@ def record_coordinated_paper_install(journal,version_id,*,at_ms,equity=2000.0):
             if status=='conflict':
                 _refuse('install_conflict')
             _transition(db,version_id,SHADOW,'coordinated_paper_installed',old['install_id'],'factory',at_ms)
+            _project_coordinated_paper(db,version,old)
     else:
         verify_install(journal,version,current=False)
+        with journal._tx() as db:
+            _begin(db)
+            if state_of(journal,version_id) not in (SHADOW,APPROVAL_REQUIRED,APPROVED_FIRST_LIVE):
+                _refuse('coordinated_paper_lifecycle_not_installable')
+            _project_coordinated_paper(db,version,old)
     identity=dict(exec_mode='paper',version_id=version_id,spec_hash=version['spec_hash'],
                   install_id=old['install_id'],admission_id=validation['receipt_id'],first_bar_ms=old['first_bar_ms'])
     book_id=CoordinatedPaper(journal).start(spec=version['lineage']['research']['multi_leg']['hedge_spec'],
-                                         identity=identity,equity=old['starting_equity'],primary_exit=old['primary_exit'])
+                                         identity=identity,equity=old['starting_equity'],primary_exit=old['primary_exit'],
+                                         timing=old.get('paper_timing',BAR_TIMING))
     return dict(install=old,book_id=book_id,version_id=version_id)

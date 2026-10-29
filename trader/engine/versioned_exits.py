@@ -95,14 +95,28 @@ class LiveExitAdapter:
         from ..strategy import factory_handoff as F
         from ..strategy.spec import StrategySpec
         identity = json.loads(trade.get('entry_identity_json') or '{}')
-        if identity.get('status') != 'VERIFIED' or identity.get('exit_semantics_id') != E.EXIT_SEMANTICS_ID:
+        if identity.get('status') != 'VERIFIED':
             raise ValueError('live_exit_identity_unbound')
         version = F.load_version(self.journal, identity['version_id'])
+        if identity.get('exit_semantics_id') != F._expected_exit_semantics(version):
+            raise ValueError('live_exit_identity_unbound')
         F.verify_exit_binding(self.journal, version)
         install = F.verify_install(self.journal, version, current=False)
         if (trade['strategy_id'], identity.get('strategy_id'), identity.get('spec_sha256'), identity.get('install_id')) != (
                 version['strategy_id'], version['strategy_id'], version['spec_hash'], install['install_id']):
             raise ValueError('live_exit_identity_differs')
+        group=identity.get('coordinated')
+        if group:
+            from . import coordinated_close as C,coordinated_unwind as U
+            if not version.get('lineage',{}).get('research',{}).get('multi_leg'):
+                raise ValueError('live_exit_group_version_unbound')
+            owned=C.ownership(self.executor,trade,group.get('group_id'))
+            # The hedge belongs to the main economic position; applying the
+            # main strategy's target/time/stop to this opposite leg is wrong.
+            if owned['leg']=='hedge' or U.active(self.journal,owned['group_id']):
+                return None
+        elif version.get('lineage',{}).get('research',{}).get('multi_leg'):
+            raise ValueError('live_exit_group_identity_missing')
         spec = StrategySpec.from_dict(version['spec'])
         bad = E.unsupported(spec.exit)
         if bad:
@@ -139,6 +153,9 @@ class LiveExitAdapter:
                 'spec_hash': version['spec_hash'], 'intent': result.reason,
                 'intended_quantity': result.quantity, 'state': json.loads(E.encode(policy,state)),
             }
+            if group:
+                trade['_strategy_exit_evidence'].update(group_id=group['group_id'],
+                    group_exit_semantics_id=identity['exit_semantics_id'],scope='WHOLE_POSITION')
             if result.reason == 'signal':
                 # Intent is durable, but no D6 executable-price interface has
                 # been reconciled yet. Never submit at the signal close.

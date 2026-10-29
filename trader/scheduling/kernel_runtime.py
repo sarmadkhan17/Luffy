@@ -79,7 +79,7 @@ class KernelRuntime:
             'decisions': Worker('decisions', self.decisions),
             'portfolio': Worker('portfolio', self.portfolio),
             'candles': Worker('candles', self.candles, interval=15, immediate=True, align_to_wall=True),
-            'coordinated_paper': Worker('coordinated-paper', self.coordinated_paper, interval=60),
+            'coordinated_paper': Worker('coordinated-paper', self.coordinated_paper, interval=30),
             'strategy_health': Worker('strategy-health', self.strategy_health, interval=3600),
             'research': Worker('research', self.research, calendar=Calendar((9, 21))),
             'validation': Worker('validation', self.validation, calendar=Calendar((3,), weekday=6)),

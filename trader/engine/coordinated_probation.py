@@ -12,7 +12,30 @@ from ..research.closure import hedge_qualification as HQ
 from ..research.compose import hedge as H
 
 MAX_BARS=8192
+MAX_QUOTE_EVENTS=131072
 RULE='prospective-objective-paper-probation.v1'
+
+
+def replay_quote_events(hs,identity,install,events):
+    """Re-run exact receipt/timing validation in RAM, with no live writer."""
+    from contextlib import contextmanager,closing
+    import sqlite3
+    from types import SimpleNamespace
+    from .coordinated_paper import CoordinatedPaper,QUOTE_TIMING
+    with closing(sqlite3.connect(':memory:')) as db:
+        db.row_factory=sqlite3.Row
+        @contextmanager
+        def tx():
+            with db:yield db
+        journal=SimpleNamespace(_tx=tx,query=lambda sql,args=():[dict(r) for r in db.execute(sql,args)])
+        runner=CoordinatedPaper(journal)
+        key=runner.start(spec=hs,identity=identity,equity=install['starting_equity'],
+                         primary_exit=install['primary_exit'],timing=QUOTE_TIMING)
+        for event in events:
+            request=event['request']
+            actual=runner.advance(key,event['bar'],request['observation'],fills=request['fills'],allow_entry=request['allow_entry'])
+            if actual!=event:
+                raise ValueError('paper_quote_replay_differs')
 
 
 def assess(journal,cfg,version,since_ms,at_ms):
@@ -39,22 +62,29 @@ def assess(journal,cfg,version,since_ms,at_ms):
     base['policy']=policy
     identity=dict(exec_mode='paper',version_id=version['version_id'],spec_hash=version['spec_hash'],
         install_id=install['install_id'],admission_id=install['validation_receipt_id'],first_bar_ms=install['first_bar_ms'])
-    key=digest(dict(spec=hs,identity=identity,starting_equity=install['starting_equity'],primary_exit=install['primary_exit']))
+    from .coordinated_paper import QUOTE_TIMING,QUOTE_PROTOCOL_ID
+    prospective=install.get('paper_timing')==QUOTE_TIMING
+    ident=dict(spec=hs,identity=identity,starting_equity=install['starting_equity'],primary_exit=install['primary_exit'])
+    if prospective:ident['paper_execution_protocol']=QUOTE_PROTOCOL_ID
+    key=digest(ident)
     end_bar=(int(at_ms)-install['first_bar_ms'])//TF_MS[version['spec']['timeframe']]-1
-    rows=journal.query('SELECT bar,payload,sha256 FROM coordinated_paper_events WHERE book_id=? AND bar<=? ORDER BY bar LIMIT ?',
-                       (key,end_bar,MAX_BARS+1))
+    limit=MAX_QUOTE_EVENTS if prospective else MAX_BARS
+    clock="json_extract(payload,'$.decision_ms')" if prospective else 'bar'
+    rows=journal.query(f'SELECT bar,payload,sha256 FROM coordinated_paper_events WHERE book_id=? AND {clock}<=? ORDER BY bar LIMIT ?',
+                       (key,int(at_ms) if prospective else end_bar,limit+1))
     if not rows:return dict(base,status=F.P_INSUFFICIENT)
-    if len(rows)>MAX_BARS:return dict(base,status='PAPER_ASSESSMENT_BOUND_EXCEEDED')
+    if len(rows)>limit:return dict(base,status='PAPER_ASSESSMENT_BOUND_EXCEEDED')
     events=[];closed=[];was_held=False;start=0
     for index,row in enumerate(rows):
         event=json.loads(row['payload'])
         if row['bar']!=index or event['bar']!=index or event['book_id']!=key or digest(event)!=row['sha256']:
             return dict(base,status=F.P_INCOMPLETE,reason='paper_event_integrity_or_clock')
         obs=event['request']['observation']
-        expected_cut=install['first_bar_ms']+(index+1)*TF_MS[version['spec']['timeframe']]
+        expected_cut=install['first_bar_ms']+((event['native_bar'] if prospective else index)+1)*TF_MS[version['spec']['timeframe']]
         if obs.get('signal_cut_ms')!=expected_cut:
             return dict(base,status=F.P_INCOMPLETE,reason='paper_observation_cut_differs')
-        if (event['real_order_submissions']!=0 or event['fill_basis']!='SIMULATED_NEXT_BAR_OPEN'
+        fill_basis='SIMULATED_FIRST_SUBSEQUENT_BID_ASK' if prospective else 'SIMULATED_NEXT_BAR_OPEN'
+        if (event['real_order_submissions']!=0 or event['fill_basis']!=fill_basis
                 or obs.get('input_gap') or event.get('incomplete_marks') or event.get('liquidated')):
             return dict(base,status=F.P_COST_INCOMPLETE,reason='paper_marks_inputs_or_margin_incomplete')
         if obs.get('funding') is None or event['net_economics']!='MODELLED_PAPER_ONLY':
@@ -87,6 +117,13 @@ def assess(journal,cfg,version,since_ms,at_ms):
         entry_allowed=np.array([e['request']['allow_entry'] for e in events],bool),primary_exit=install['primary_exit'],
         decision_bars=[o.get('primary_exit_observation') for o in observations])
     try:
+        if prospective:
+            replay_quote_events(hs,identity,install,events)
+            kwargs.update(native_bars=np.array([e['native_bar'] for e in events],int),
+                quote_times=np.array([e['decision_ms'] for e in events],np.int64),
+                bid_ask={leg:tuple(np.array([o['quotes'][leg][side] for o in observations],float) for side in ('bid','ask'))
+                         for leg in ('primary','hedge')},
+                funding_time_weights=np.r_[0.,np.diff([e['decision_ms'] for e in events])]/TF_MS[version['spec']['timeframe']])
         actual=H.replay(hs,arr('p'),arr('h'),arr('signal').astype(int),arr('exit').astype(bool),venue=RecordedFills(),**kwargs)
         curve=np.array([e['equity'] for e in events],float)
         if (not np.isfinite(curve).all() or not np.allclose(actual['equity'],curve,rtol=1e-10,atol=1e-7)

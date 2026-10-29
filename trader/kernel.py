@@ -170,7 +170,7 @@ class Kernel:
         identities: dict = {}
         loaded_at = dt.datetime.now(dt.timezone.utc).isoformat()
         for row in self.journal.list_strategies(["paper", "active", "demoted"]):
-            if row.get("kind") == "spec":
+            if row.get("kind") in ("spec","coordinated_spec"):
                 # Specs enter through the compiled path below. Treating the
                 # same row as a legacy genome produces a second, evaluatorless
                 # entry and misleading missing-evaluator receipts.

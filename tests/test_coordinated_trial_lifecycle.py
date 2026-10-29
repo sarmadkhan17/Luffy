@@ -39,13 +39,19 @@ def test_objective_supported_paper_factory_restart_execution_does_not_authorize_
     version=F.load_version(journal,issued['version_id'])
     assert F.verify_validation(journal,version)['semantics'].startswith('Numerical development')
     assert F.state_of(journal,version['version_id'])==F.VALIDATED
-    install=F.record_coordinated_paper_install(journal,version['version_id'],at_ms=1)
+    install=F.record_coordinated_paper_install(journal,version['version_id'],at_ms=1,timing='NEXT_BAR_OPEN')
     assert F.state_of(journal,version['version_id'])==F.SHADOW
-    assert F.record_coordinated_paper_install(Journal(journal.db_path),version['version_id'],at_ms=900)==install
+    assert F.record_coordinated_paper_install(Journal(journal.db_path),version['version_id'],at_ms=900,timing='NEXT_BAR_OPEN')==install
     assert F.multi_leg_block(version)=='multi_leg_requires_coordinated_execution'
     with pytest.raises(F.HandoffRefused,match='multi_leg_requires_coordinated_execution'):
         F.record_exact_install(journal,version['version_id'],at_ms=3)
-    assert journal.query('SELECT * FROM strategies')==[]
+    projection=journal.query('SELECT * FROM strategies')
+    assert len(projection)==1 and projection[0]['kind']=='coordinated_spec' and projection[0]['state']=='paper'
+    assert F.resolve_current_install(journal,version['strategy_id'])['install_id']==install['install']['install_id']
+    from types import SimpleNamespace
+    from trader.kernel import Kernel
+    ordinary=SimpleNamespace(journal=journal,_load_spec_population=lambda:[])
+    assert Kernel._load_population(ordinary)==[]  # never load the primary as an independent Genome
     first=install['install']['first_bar_ms'];step=14_400_000
     seen=[]
     def reader(feed,j,v,stamp):
@@ -103,12 +109,24 @@ def test_real_cached_reader_uses_exact_cut_and_declared_native_frames(tmp_path,p
     assert obs['signal_cut_ms']==stamp+step and len(reads)==2
     assert all(r[2]<6000 and r[3]==stamp+step for r in reads)
     assert obs['funding']['primary']==pytest.approx(.00005)
+    # Ordinary REST delivery occurs after a candle closes. A prospective
+    # decision may use that received candle, then wait for a later quote;
+    # it cannot claim the already-passed candle open as a fill.
+    df.loc[df.index[-1],'available_at_ms']=stamp+step+1000
+    def late_cached(symbol,tf,limit,as_of_ms):
+        reads.append((symbol,tf,limit,as_of_ms))
+        return df[df['available_at_ms']<=as_of_ms].tail(limit).copy()
+    with pytest.raises(ClosureRefused,match='closed_cut_unavailable'):
+        runtime.observation(SimpleNamespace(cached_ohlcv=late_cached),j,version,stamp)
+    late=runtime.observation(SimpleNamespace(cached_ohlcv=late_cached),j,version,stamp,decision_ms=stamp+step+1001)
+    assert late['decision_basis']=='RECEIVED_INPUTS_BEFORE_QUOTE_DECISION'
+    assert reads[-1][3]==stamp+step+1001
 
 
 def test_input_gap_is_recorded_unknown_and_does_not_retry_one_cut_forever(tmp_path,packet):
     journal=Journal(tmp_path/'journal.db');cfg={'research':{'closure':{'enabled':True,'paper_intake':True}}}
     version=F.create_version(journal,cfg,dict(kind=T.KIND,packet=packet),at_ms=1)
-    install=F.record_coordinated_paper_install(journal,version['version_id'],at_ms=1)
+    install=F.record_coordinated_paper_install(journal,version['version_id'],at_ms=1,timing='NEXT_BAR_OPEN')
     first=install['install']['first_bar_ms'];step=14_400_000
     def unavailable(*args):raise ClosureRefused('required_data_unavailable')
     result=runtime.run_once(journal,cfg,None,at_ms=first+step,reader=unavailable)
@@ -163,7 +181,7 @@ def test_coordinated_consumer_has_no_factory_approval_or_live_call():
 def test_probation_failure_cannot_rewrite_a_committed_paper_cut(tmp_path,packet,monkeypatch):
     journal=Journal(tmp_path/'journal.db');cfg={'research':{'closure':{'enabled':True,'paper_intake':True}}}
     issued=F.create_version(journal,cfg,dict(kind=T.KIND,packet=packet),at_ms=1)
-    installed=F.record_coordinated_paper_install(journal,issued['version_id'],at_ms=1)
+    installed=F.record_coordinated_paper_install(journal,issued['version_id'],at_ms=1,timing='NEXT_BAR_OPEN')
     first=installed['install']['first_bar_ms'];step=14_400_000
     def reader(feed,j,v,stamp):
         index=(stamp-first)//step

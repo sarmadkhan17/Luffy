@@ -23,8 +23,9 @@ from ..closure import ClosureRefused, digest
 from ...strategy.exit_policy import EXIT_SEMANTICS_ID as PRIMARY_EXIT_RULE
 
 SCHEMA = 'hedge-spec.v1'
-BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v2',primary_rule=PRIMARY_EXIT_RULE,
-    rule='current protective management opens primary first; frozen combined net-PnL rules manage the whole trade; legacy frozen primary geometry remains historical',
+MAX_QUOTE_INCREASE_AGE_MS=60_000
+BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v3',primary_rule=PRIMARY_EXIT_RULE,
+    rule='primary first; main stop/target/trail/time/signal OR combined net-PnL exit closes the whole group',
     fill='both legs at next bar open under declared costs; no intrabar or venue fill claim',
     controls='unhedged/reduced use the identical exit decision procedure',
     missing='unknown declared exit evidence requests unwind and makes economics incomplete')
@@ -212,6 +213,7 @@ class HedgeBook:
     primary_exit_definition: dict | None = None
     primary_exit_state: str | None = None
     exit_input_gaps: int = 0
+    primary_quote_range: dict | None = None
     management_entry_equity: float | None = None
     management_activated: bool = False
     last_clock_bar: int = -1
@@ -260,13 +262,35 @@ class HedgeBook:
                 policy,state=E.initialize(ex,float(bar['p']),float(observation['atr']),
                     'long' if bar['signal']>0 else 'short',int(observation['bar_ms']),int(observation['step_ms']))
                 self.primary_exit_state=E.encode(policy,state)
+                self.primary_quote_range=None
             elif self.primary_exit_state and abs(self.pos['primary'])>0:
                 if observation is None:raise ValueError('primary_exit_observation_missing')
                 policy,state=E.decode(self.primary_exit_state)
+                quote_mode=bool(bar.get('paper_quote'))
+                # Completed candle ranges may predate the actual quote fill.
+                # Use only post-fill sampled prices for prospective paper.
+                prices=self.primary_quote_range if quote_mode else observation
+                if prices is None:
+                    prices={key:float(bar['p']) for key in ('open','high','low','close')}
                 transition=E.advance(policy,state,E.Observation(bar_ms=int(observation['bar_ms']),
-                    open=float(observation['open']),high=float(observation['high']),low=float(observation['low']),
-                    close=float(observation['close']),atr=observation.get('atr'),signal_exit=bool(bar.get('exit'))),
+                    open=float(prices['open']),high=float(prices['high']),low=float(prices['low']),
+                    close=float(prices['close']),atr=observation.get('atr'),signal_exit=bool(bar.get('exit'))),
                     abs(self.pos['primary']))
+                if quote_mode:
+                    if transition.state.last_bar_ms>state.last_bar_ms:
+                        self.primary_quote_range=None
+                    state=transition.state
+                    price=float(bar['p'])
+                    if not np.isfinite(price) or price<=0:raise ValueError('primary_quote_unavailable')
+                    stop=state.active_stop if state.active_stop is not None else policy.stop
+                    long=policy.side=='long'
+                    hit=(price<=stop if long else price>=stop) or bool(policy.target) and (price>=policy.target if long else price<=policy.target)
+                    if hit and not transition.due:
+                        transition=E.execute_open(policy,state,state.last_bar_ms+policy.step_ms,price,abs(self.pos['primary']))
+                    previous=self.primary_quote_range
+                    self.primary_quote_range=dict(open=previous['open'] if previous else price,
+                        high=max(previous['high'],price) if previous else price,
+                        low=min(previous['low'],price) if previous else price,close=price)
                 self.primary_exit_state=E.encode(policy,transition.state)
                 bar['exit']=bool(bar.get('exit') or transition.due)
         except (ValueError,TypeError,KeyError):
@@ -286,9 +310,8 @@ class HedgeBook:
         if managed and self.state=='FLAT':
             self.management_entry_equity=None
             self.management_activated=False
-        # A current protective overlay exits on the combined position. Legacy
-        # frozen joint-entry experiments remain readable under their old rule.
-        bar=dict(bar) if managed else self._primary_exit(bar)
+        # Main strategy exits and combined risk exits both close the group.
+        bar=self._primary_exit(bar)
         combined_exit=None
         if managed and self.management_entry_equity is not None:
             from .managed_hedge import assess
@@ -410,7 +433,8 @@ def _bar(spec, t, p, h, sig, exit_, ratio, corr, equity, pc, hc):
 def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits: np.ndarray, *, equity: float = 10000.0,
            venue: Venue | None = None, funding: tuple | None = None, ratio_override: float | None = None,
            slip_mult: float = 1.0, opens: tuple | None = None, flat_funding_rate: float = 0.0,
-           ratios=None, correlations=None, entry_allowed=None,primary_exit=None,decision_bars=None) -> dict:
+           ratios=None, correlations=None, entry_allowed=None,primary_exit=None,decision_bars=None,
+           native_bars=None,bid_ask=None,funding_time_weights=None,quote_times=None) -> dict:
     """Bar loop: fills execute at the NEXT bar's price (signal age = 1), costs per fill, funding per bar,
     mark-to-market equity every bar (not only at closes), liquidation test with maintenance margin."""
     validate(spec)
@@ -418,8 +442,21 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
     pc, hc = (Contract(spec[k]['contract'], spec[k]['multiplier']) for k in ('primary', 'hedge'))
     book = HedgeBook(spec,primary_exit_definition=primary_exit)
     n = len(p)
-    if any(a is not None and len(a)!=n for a in (ratios,correlations,entry_allowed,decision_bars)):
+    if any(a is not None and len(a)!=n for a in (ratios,correlations,entry_allowed,decision_bars,native_bars,funding_time_weights,quote_times)):
         raise HedgeRefused('hedge_recorded_decision_shape')
+    if native_bars is not None:
+        if (any(type(t) not in (int,np.int64,np.int32) or t<0 for t in native_bars)
+                or any(b<a for a,b in zip(native_bars,native_bars[1:]))
+                or ratios is None or correlations is None):
+            raise HedgeRefused('hedge_native_decisions_required')
+    if funding_time_weights is not None and (not np.isfinite(funding_time_weights).all() or (np.asarray(funding_time_weights)<0).any()):
+        raise HedgeRefused('hedge_funding_clock_invalid')
+    if quote_times is not None and (not np.issubdtype(np.asarray(quote_times).dtype,np.integer)
+            or (np.asarray(quote_times)<0).any() or (np.diff(quote_times)<=0).any()):
+        raise HedgeRefused('hedge_quote_clock_invalid')
+    if bid_ask is not None and (set(bid_ask)!={'primary','hedge'} or any(
+            len(pair)!=2 or any(len(a)!=n for a in pair) for pair in bid_ask.values())):
+        raise HedgeRefused('hedge_quote_price_shape')
     if opens is not None and (len(opens) != 2 or any(len(a) != n for a in opens)):
         raise HedgeRefused('hedge_open_price_shape')
     pr = np.r_[np.nan, np.diff(p) / p[:-1]]
@@ -431,10 +468,17 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
     last_px = dict(primary=p[0], hedge=h[0])
     avg = dict(primary=p[0], hedge=h[0])
     liquidated, pending_ins, realised = False, [], 0.0
+    observation_gaps=False
     fee, slip = spec['fee_bps'] / 1e4, spec['slip_bps'] / 1e4 * slip_mult
     for t in range(n):
+        expired_increase=bool(quote_times is not None and t and quote_times[t]-quote_times[t-1]>MAX_QUOTE_INCREASE_AGE_MS)
+        if expired_increase and any(book.pos.values()):observation_gaps=True
         px = dict(primary=p[t], hedge=h[t])
         fill_px = dict(primary=opens[0][t], hedge=opens[1][t]) if opens is not None else px
+        if bid_ask is not None:
+            fill_px=dict(px)
+            for i in pending_ins:
+                if i.kind!='ALERT':fill_px[i.leg]=bid_ask[i.leg][1 if i.side>0 else 0][t]
         # 1. mark open legs from the previous bar's mark to this bar's price
         for leg, c in (('primary', pc), ('hedge', hc)):
             if book.pos[leg] != 0 and np.isfinite(fill_px[leg]):
@@ -457,7 +501,7 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
         # 2. fills for orders issued on the previous bar execute at this bar's price
         if pending_ins:
             fills = venue.fill(pending_ins, t)
-            if entry_allowed is not None and not entry_allowed[t]:
+            if expired_increase or (entry_allowed is not None and not entry_allowed[t]):
                 for i in pending_ins:
                     if i.kind!='ALERT' and (book.pos[i.leg]==0 or book.pos[i.leg]*i.side>0):
                         fills[i.oid]=0.0
@@ -513,7 +557,8 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
                 corr=correlations[t]
             bar=_bar(spec,t,p[t],h[t],sig_t,bool(exits[t]),ratio,corr,cash,pc,hc)
             if decision_bars is not None:bar['primary_exit_observation']=decision_bars[t]
-            ins = book.step(t,bar)
+            if quote_times is not None:bar['paper_quote']=True
+            ins = book.step(int(native_bars[t]) if native_bars is not None else t,bar)
             instr += ins
             pending_ins = ins
     if book.pos['primary'] != 0 or book.pos['hedge'] != 0:
@@ -523,7 +568,9 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
     inverse_legs = [k for k in ('primary', 'hedge') if spec[k]['contract'] == 'inverse']
     return dict(equity=eq_curve, gross=gross, net=net, cost=cost,
                 primary_active=primary_active,retained_net_fraction=retained_net_fraction,
-                fill_price_basis='NEXT_BAR_OPEN' if opens is not None else 'NEXT_OBSERVATION_PRICE_MODEL_ONLY',
+                native_bars=native_bars,observation_gaps=observation_gaps,
+                fill_price_basis='SUBSEQUENT_BID_ASK_MODEL_ONLY' if bid_ask is not None else
+                                 'NEXT_BAR_OPEN' if opens is not None else 'NEXT_OBSERVATION_PRICE_MODEL_ONLY',
                 coin_collateral_exposure_usd=None if inverse_legs else 0.0, inverse_legs=inverse_legs,
                 collateral_nav_basis='NOT_ESTABLISHED_FOR_INVERSE: contract payoff only' if inverse_legs else 'quote_currency',
                 instructions=instr, liquidated=liquidated, ratio_unknown_bars=book.ratio_unknown,
@@ -552,7 +599,13 @@ def risk_metrics(res: dict) -> dict:
     eq = eq[np.isfinite(eq)]
     peak = np.maximum.accumulate(eq)
     dd = (eq - peak) / np.where(peak > 0, peak, 1.0) * 100.0
-    ret = np.diff(eq) / np.where(eq[:-1] > 0, eq[:-1], 1.0) * 100.0
+    native=res.get('native_bars')
+    sampled=eq
+    if native is not None and not unknown:
+        ids=np.asarray(native)
+        last=np.r_[np.flatnonzero(ids[1:]!=ids[:-1]),len(ids)-1]
+        sampled=np.r_[res['start_equity'],eq[last]]
+    ret = np.diff(sampled) / np.where(sampled[:-1] > 0, sampled[:-1], 1.0) * 100.0
     k = max(1, int(np.ceil(0.05 * len(ret))))
     active=res.get('primary_active',np.zeros(len(res['equity']),dtype=bool))
     retained=res.get('retained_net_fraction',np.full(len(active),np.nan))[active]
@@ -561,10 +614,11 @@ def risk_metrics(res: dict) -> dict:
                 cvar5_pct=float(-np.sort(ret)[:k].mean()) if len(ret) else 0.0,
                 net_return_pct=float((eq[-1] / res['start_equity'] - 1) * 100) if not unknown else None, costs=res['cost'],
                 mean_gross=float(np.nanmean(res['gross'])), mean_abs_net=float(np.nanmean(np.abs(res['net']))),
-                primary_active_bars=int(np.count_nonzero(active)),
+                primary_active_bars=(len(set(np.asarray(native)[active])) if native is not None else int(np.count_nonzero(active))),
                 minimum_retained_net_fraction=float(retained.min()) if complete_exposure else None,
                 retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY',
-                unknown_mark_bars=unknown,exit_input_gaps=res.get('exit_input_gaps',0),risk_complete=unknown == 0 and not res.get('exit_input_gaps',0),
+                unknown_mark_bars=unknown,exit_input_gaps=res.get('exit_input_gaps',0),
+                risk_complete=unknown == 0 and not res.get('exit_input_gaps',0) and not res.get('observation_gaps',False),
                 liquidated=res['liquidated'], entries=res['entries'], rebalances=res['rebalances'])
 
 
@@ -581,6 +635,8 @@ def stress_cases(spec, p, h, signals, exits, base_kwargs, *, episode_bars=None) 
         kw = dict(base_kwargs)
         if kw.get('opens') is not None:
             kw['opens'] = (kw['opens'][0], np.asarray(kw['opens'][1]) * new_h / h)
+        if kw.get('bid_ask') is not None:
+            kw['bid_ask']=dict(kw['bid_ask'],hedge=tuple(np.asarray(a)*new_h/h for a in kw['bid_ask']['hedge']))
         return kw
     out['correlation_break'] = replay(spec, p, h2, signals, exits, **scenario_prices(h2))
     # basis divergence: hedge price drifts away by 5% over the second half
@@ -588,6 +644,8 @@ def stress_cases(spec, p, h, signals, exits, base_kwargs, *, episode_bars=None) 
     out['basis_divergence'] = replay(spec, p, h3, signals, exits, **scenario_prices(h3))
     # funding spike on both legs
     spike = np.full(n, 0.0005)
+    if base_kwargs.get('funding_time_weights') is not None:
+        spike*=np.asarray(base_kwargs['funding_time_weights'])
     out['funding_spike'] = replay(spec, p, h, signals, exits, **dict(base_kwargs, funding=(spike, -spike)))
     # liquidity loss: slippage x10
     out['liquidity_loss'] = replay(spec, p, h, signals, exits, **dict(base_kwargs, slip_mult=10.0))
@@ -600,20 +658,22 @@ def stress_cases(spec, p, h, signals, exits, base_kwargs, *, episode_bars=None) 
         from ..closure.objective_admission import episode_values
         for key,value in out.items():
             metrics[key]['objective_episode_values']=episode_values(value['equity'],start_equity=value['start_equity'],
-                gross=value['gross'],metric='worst_bar_pct',episode_bars=episode_bars) if metrics[key]['risk_complete'] and (value['equity']>0).all() else None
+                gross=value['gross'],metric='worst_bar_pct',episode_bars=episode_bars,
+                native_bars=base_kwargs.get('native_bars')) if metrics[key]['risk_complete'] and (value['equity']>0).all() else None
     return metrics
 
 
 def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, folds=4, funding=None, opens=None,
              flat_funding_rate=0.0, assessment_episode_bars=None, reduced_fraction=None,
              ratios=None,correlations=None,entry_allowed=None,venue=None,continuous_folds=False,
-             primary_exit=None,decision_bars=None) -> dict:
+             primary_exit=None,decision_bars=None,native_bars=None,bid_ask=None,funding_time_weights=None,quote_times=None) -> dict:
     """Combined-portfolio comparison under ONE capital/margin convention:
     hedged vs unhedged vs reduced-size vs cash on the declared objective."""
     validate(spec)
     spec = dict(spec, ratio=dict(spec['ratio'], **({'fit_end': fit_end} if fit_end is not None else {})))
     kw = dict(equity=equity, funding=funding, opens=opens, flat_funding_rate=flat_funding_rate,
-              ratios=ratios,correlations=correlations,entry_allowed=entry_allowed,primary_exit=primary_exit,decision_bars=decision_bars)
+              ratios=ratios,correlations=correlations,entry_allowed=entry_allowed,primary_exit=primary_exit,decision_bars=decision_bars,
+              native_bars=native_bars,bid_ask=bid_ask,funding_time_weights=funding_time_weights,quote_times=quote_times)
     hedged = replay(spec, p, h, signals, exits, **dict(kw,**({"venue":venue} if venue is not None else {})))
     unhedged = replay(spec, p, h, signals, exits, ratio_override=0.0, **kw)
     mh, mu = risk_metrics(hedged), risk_metrics(unhedged)
@@ -630,14 +690,18 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
     metric = spec['objective']['metric']
     bounds = np.linspace(0, len(p), folds + 1).astype(int)
     fold_rows = []
-    for a, b in zip(bounds[:-1], bounds[1:]):
+    for a, b in (zip(bounds[:-1], bounds[1:]) if not continuous_folds else ()):
         sub = lambda arr: arr[a:b]                      # noqa: E731
         if signals[a:b].any():
             sub_kw = dict(equity=equity, opens=None if opens is None else (sub(opens[0]), sub(opens[1])),
                           funding=None if funding is None else (sub(funding[0]), sub(funding[1])), flat_funding_rate=flat_funding_rate,
                           ratios=None if ratios is None else sub(ratios),correlations=None if correlations is None else sub(correlations),
                           entry_allowed=None if entry_allowed is None else sub(entry_allowed),primary_exit=primary_exit,
-                          decision_bars=None if decision_bars is None else decision_bars[a:b])
+                          decision_bars=None if decision_bars is None else decision_bars[a:b],
+                          native_bars=None if native_bars is None else sub(native_bars),
+                          bid_ask=None if bid_ask is None else {leg:tuple(sub(x) for x in pair) for leg,pair in bid_ask.items()},
+                          funding_time_weights=None if funding_time_weights is None else sub(funding_time_weights),
+                          quote_times=None if quote_times is None else sub(quote_times))
             rh = risk_metrics(replay(spec, sub(p), sub(h), sub(signals), sub(exits), **sub_kw))
             ru = risk_metrics(replay(spec, sub(p), sub(h), sub(signals), sub(exits), ratio_override=0.0, **sub_kw))
             if metric == 'stress_loss_pct':
@@ -650,7 +714,8 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
                 fold_rows.append(dict(bars=[int(a), int(b)], hedged=rh[metric], unhedged=ru[metric], reduced=rr[metric], cash=0.0, better=better))
             else:
                 fold_rows.append(dict(bars=[int(a), int(b)], hedged=rh[metric], unhedged=ru[metric], better=rh[metric] < ru[metric]))
-    stress_episode_bars=(assessment_episode_bars or max(1,len(p)//folds)) if metric=='stress_loss_pct' and (assessment_episode_bars or continuous_folds) else None
+    native_count=len(set(native_bars)) if native_bars is not None else len(p)
+    stress_episode_bars=(assessment_episode_bars or max(1,native_count//folds)) if metric=='stress_loss_pct' and (assessment_episode_bars or continuous_folds) else None
     stress = stress_cases(spec, p, h, signals, exits, kw,episode_bars=stress_episode_bars)
     if metric == 'stress_loss_pct':
         mh['stress_loss_pct'] = max(v['worst_bar_pct'] for v in stress.values())
@@ -660,9 +725,9 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
         mr['stress_loss_pct']=max(v['worst_bar_pct'] for v in stress_reduced.values())
     if continuous_folds:
         from ..closure.objective_admission import episode_values
-        size=max(1,len(p)//folds)
+        size=max(1,(len(set(native_bars)) if native_bars is not None else len(p))//folds)
         paths={name:episode_values(run['equity'],start_equity=equity,gross=run['gross'],
-                metric='worst_bar_pct' if metric=='stress_loss_pct' else metric,episode_bars=size)
+                metric='worst_bar_pct' if metric=='stress_loss_pct' else metric,episode_bars=size,native_bars=native_bars)
                for name,run in (('hedged',hedged),('unhedged',unhedged),('reduced',reduced))}
         fold_rows=[]
         for index,ep in enumerate(paths['hedged']):
@@ -704,7 +769,7 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
         episodes=[]
         try:
             paths={name:OA.episode_values(run['equity'],start_equity=equity,gross=run['gross'],
-                    metric='worst_bar_pct' if metric=='stress_loss_pct' else metric,episode_bars=assessment_episode_bars)
+                    metric='worst_bar_pct' if metric=='stress_loss_pct' else metric,episode_bars=assessment_episode_bars,native_bars=native_bars)
                    for name,run in (('hedged',hedged),('unhedged',unhedged),('reduced',reduced))}
             if len(paths['hedged'])>OA.PROTOCOL['max_episodes']:
                 raise ValueError('objective_episode_budget_exceeded')
