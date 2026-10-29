@@ -342,9 +342,11 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     need = min_replicates_for(protocol['max_false_admission'], protocol['confidence'])
     pol = _policy(protocol)
     intake_complete = not protocol.get('intake_bank_path') or all((r.get('intake') or {}).get('complete') for r in reps)
-    if any(j['verdict'] == 'FAIL' for j in judged):
+    if not intake_complete:
+        status = 'INCONCLUSIVE'
+    elif any(j['verdict'] == 'FAIL' for j in judged):
         status = 'FAILED'
-    elif not intake_complete or kind != 'FINAL' or n < need or any(j['verdict'] != 'OK' for j in judged):
+    elif kind != 'FINAL' or n < need or any(j['verdict'] != 'OK' for j in judged):
         status = 'INCONCLUSIVE'
     else:
         status = 'CALIBRATED' if protocol['numerics'] == 'EXACT_CONFIGURED' else 'MACHINERY_CALIBRATED_SMALL_POLICY'
