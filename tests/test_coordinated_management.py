@@ -112,7 +112,7 @@ def test_position_worker_calls_manager_on_existing_thirty_second_clock(tmp_path,
     monkeypatch.setattr(C,'run_once',manage)
     view=NS(_exposure_symbols=lambda:set(),_portfolio_holdings_market={})
     monkeypatch.setattr(runtime,'analysis_context',lambda _:view)
-    with pytest.raises(ValueError,match='coordinated_unwind_incomplete'):
+    with pytest.raises(ValueError,match='coordinated_management_incomplete'):
         r.positions()
     manage.assert_called_once_with(k.executor)
     assert r.jobs['positions'].interval==30 and r.positions_at is None

@@ -195,6 +195,7 @@ class KernelRuntime:
         from ..engine.coordinated_unwind import resume
         executor=getattr(self.kernel,'executor',None)
         unwind_incomplete=False
+        management_incomplete=False
         if executor is not None:
             with self.execution_lock:
                 try:
@@ -207,8 +208,8 @@ class KernelRuntime:
                     self.coordinated_unwind_results=[dict(group_id=None,status='UNAVAILABLE',reason=type(exc).__name__)]
                 unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
                                       for r in self.coordinated_unwind_results)
-                unwind_incomplete |= any(r['status'] in ('UNAVAILABLE','HEDGE_ENTRY_REQUIRED')
-                                         for r in getattr(self,'coordinated_management_results',[]))
+                management_incomplete=any(r['status'] in ('UNAVAILABLE','HEDGE_ENTRY_REQUIRED')
+                                          for r in getattr(self,'coordinated_management_results',[]))
         view = analysis_context(self)
         required = view._exposure_symbols()
         with self.lock:
@@ -221,7 +222,8 @@ class KernelRuntime:
                 raise ValueError('scheduled_exposure_incomplete')
         with self.lock:
             self.holdings_market = dict(view._portfolio_holdings_market)
-            if not unwind_incomplete:self.positions_at = time.monotonic()
+            if not (unwind_incomplete or management_incomplete):self.positions_at = time.monotonic()
+        if management_incomplete:raise ValueError('scheduled_coordinated_management_incomplete')
         if unwind_incomplete:raise ValueError('scheduled_coordinated_unwind_incomplete')
 
     @timed_worker('market')

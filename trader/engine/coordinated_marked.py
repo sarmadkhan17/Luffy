@@ -62,8 +62,12 @@ def assess(source, *, now_ms):
         marks.append(result['mark_observed_ms'])
     equity=capital+net
     decision=M.assess(policy,entry_equity=capital,equity=equity,gross=gross,maintenance_fraction=maintenance)
+    if root['capture']['bookings']['trade']['status']=='closed' and any(
+            p['capture']['bookings']['trade']['status']=='open' for p in parts):
+        decision['exit_reason']='primary_closed'
     return dict(group_id=source['group_id'],marked_equity_usdt=equity,marked_net_pnl_usdt=net,
         allocated_equity_usdt=capital,gross_notional_usdt=gross,decision=decision,
-        hedge_present=any(m['leg']=='hedge' for m in members),mark_observed_ms=min(marks),
+        hedge_present=any(m['leg']=='hedge' and by_id[m['trade_id']]['capture']['bookings']['trade']['status']=='open'
+                          for m in members),mark_observed_ms=min(marks),
         basis='OWNED_COMBINED_MARKS_AND_OBSERVED_FEES_AND_SIGNED_FUNDING',
         learning_eligible=False,final_realized_outcome=False)

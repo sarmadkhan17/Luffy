@@ -71,7 +71,24 @@ def test_closed_hedge_loss_stays_in_open_primary_combined_equity(monkeypatch):
     s['members']=assembled(s['components'])['closure']['plan']['members']
     r=G.assess(s,now_ms=8000)
     assert r['marked_net_pnl_usdt']==-9.  # +26 current primary, -35 closed hedge
-    assert r['gross_notional_usdt']==120. and not r['learning_eligible']
+    assert r['gross_notional_usdt']==120. and not r['learning_eligible'] and not r['hedge_present']
+
+
+def test_closed_primary_cannot_leave_an_independent_hedge_running(monkeypatch):
+    s=group(monkeypatch)
+    closed=component(monkeypatch)
+    cap=closed['capture']
+    cap.update(capture_kind='OPEN_POSITION_MARKED_ONLY',position_observed_ms=cap['observed_ms'])
+    cap['position'].update(entryPrice=0.,markPrice=120.,unRealizedProfit=0.)
+    cap['assessment']=T.assess(cap,marked=True);seal(cap)
+    closed['identity']['coordinated']=deepcopy(s['components'][0]['identity']['coordinated'])
+    closed['entry_request']['intent']['strategy_identity']=deepcopy(closed['identity'])
+    closed['entry_request']['intent_hash']=digest(closed['entry_request']['intent'])
+    s['components'][0]=closed
+    s['members']=assembled(s['components'])['closure']['plan']['members']
+    r=G.assess(s,now_ms=8000)
+    assert r['decision']['exit_reason']=='primary_closed'
+    assert r['hedge_present'] and not r['learning_eligible']
 
 
 @pytest.mark.parametrize('change',['stale','missing_component','wrong_version','unknown_fee','missing_capital'])

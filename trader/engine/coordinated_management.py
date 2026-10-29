@@ -25,7 +25,7 @@ def pending_exit(journal, group_id):
     saved = json.loads(rows[0]['payload'])
     reason = saved['assessment']['decision']['exit_reason']
     if (digest(saved) != rows[0]['sha256'] or saved['source']['group_id'] != group_id
-            or saved['assessment']['group_id'] != group_id or reason not in ('combined_stop', 'combined_target')):
+            or saved['assessment']['group_id'] != group_id or reason not in ('combined_stop', 'combined_target', 'primary_closed')):
         raise ValueError('coordinated_management_exit_evidence_corrupt')
     return reason
 
@@ -91,10 +91,10 @@ def run_once(executor):
     if len(groups) > MAX_GROUPS:
         results.append(dict(group_id=None, status='UNAVAILABLE', reason='coordinated_management_group_bound'))
     for group_id in groups[:MAX_GROUPS]:
-        if U.active(executor.journal, group_id):
-            results.append(dict(group_id=group_id, status='UNWINDING'))
-            continue
         try:
+            if U.active(executor.journal, group_id):
+                results.append(dict(group_id=group_id, status='UNWINDING'))
+                continue
             reason = pending_exit(executor.journal, group_id)
             if reason:
                 results.append(dict(group_id=group_id, status='EXIT_REQUESTED', reduction=U.close_group_once(
