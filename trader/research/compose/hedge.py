@@ -259,7 +259,7 @@ class HedgeBook:
                 if not bar['signal'] or bar.get('exit'):return bar
                 if observation is None:raise ValueError('primary_exit_observation_missing')
                 ex=ExitSpec(**self.primary_exit_definition)
-                policy,state=E.initialize(ex,float(bar['p']),float(observation['atr']),
+                policy,state=E.initialize(ex,float(observation['close']),float(observation['atr']),
                     'long' if bar['signal']>0 else 'short',int(observation['bar_ms']),int(observation['step_ms']))
                 self.primary_exit_state=E.encode(policy,state)
                 self.primary_quote_range=None
@@ -783,7 +783,7 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
         except (ValueError,TypeError,IndexError):
             episodes=[] # unknown/bankrupt paths cannot provide inferential support
         result.update(objective_episodes=episodes,admission_protocol_id=OA.protocol_id(),
-                      inference_scope=OA.PROTOCOL['claim'],unassessed_tail_bars=len(p)%assessment_episode_bars)
+                      inference_scope=OA.PROTOCOL['claim'],unassessed_tail_bars=native_count%assessment_episode_bars)
     return result
 
 

@@ -151,3 +151,15 @@ def test_quote_main_exit_ignores_prefill_candle_extremes_and_checks_current_pric
     assert any(i.kind=='UNWIND' for i in exit_orders)
     from trader.strategy import exit_policy as E
     assert E.decode(book.primary_exit_state)[1].reason=='stop'
+
+
+def test_main_geometry_is_frozen_to_signal_close_not_later_quote():
+    from trader.strategy.spec import ExitSpec
+    from trader.strategy import exit_policy as E
+    book=H.HedgeBook(spec(management=policy(),ratio=dict(method='fixed',value=.5)),
+        primary_exit_definition=asdict(ExitSpec(stop={'kind':'pct','v':.10},target={'kind':'rr','v':2.})))
+    orders=book.step(0,dict(bar(p=110.,signal=1),paper_quote=True,
+        primary_exit_observation=dict(bar_ms=1000,step_ms=1000,open=100.,high=100.,low=100.,close=100.,atr=1.)))
+    assert orders and orders[0].leg=='primary'
+    p,_=E.decode(book.primary_exit_state)
+    assert p.reference==100. and p.stop==90. and p.target==120.

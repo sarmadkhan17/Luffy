@@ -13,6 +13,9 @@ from . import entry_authority as A
 from .recovery import exact_order_match,TERMINAL
 
 TABLE='coordinated_reductions'
+# Both historical and current hash spellings remain bound to the root entry.
+IDENTITY_FIELDS=('status','strategy_id','version_id','spec_hash','spec_sha256','install_id',
+                 'exit_semantics_id','exit_state','coordinated')
 
 
 def ensure(journal):
@@ -32,8 +35,10 @@ def ownership(executor,trade,group_id):
     rows=executor.journal.query('SELECT * FROM execution_requests WHERE logical_id=?',(binding['logical_id'],))
     if len(rows)!=1:raise ValueError('coordinated_entry_receipt_missing')
     row=rows[0];intent=json.loads(row['intent_json']);result=json.loads(row.get('result_json') or '{}')
+    original=intent.get('strategy_identity') or {}
     from ..data.feed import execution_account_scope
-    if (A.digest(intent)!=row['intent_hash'] or (intent.get('strategy_identity') or {}).get('coordinated')!=group
+    if (A.digest(intent)!=row['intent_hash']
+            or any(identity.get(k)!=original.get(k) for k in IDENTITY_FIELDS)
             or intent.get('symbol')!=trade['symbol'] or intent.get('strategy_id')!=trade['strategy_id']
             or result.get('position_id')!=trade['id'] or row['state']!='TERMINAL'
             or execution_account_scope(executor.ex)!=(binding.get('capability') or {}).get('account_scope')
@@ -57,6 +62,10 @@ class _Transport:
     def _save(self,state,order=None,result=None):
         if result is None and getattr(self,'flat_evidence',None):result={'flat_evidence':self.flat_evidence}
         with self.journal._tx() as db:
+            if result is None:
+                old=db.execute('SELECT result_json FROM coordinated_reductions WHERE logical_id=?',
+                               (self.request['logical_id'],)).fetchone()
+                if old and old[0]:result=json.loads(old[0])
             db.execute('UPDATE coordinated_reductions SET state=?,order_json=?,result_json=? WHERE logical_id=?',
                 (state,A.canonical(_receipt(order)) if order is not None else None,
                  A.canonical(result) if result is not None else None,self.request['logical_id']))
@@ -81,7 +90,9 @@ class _Transport:
         raw=json.loads(trade['entry_identity_json'])['execution_binding']['capability']
         if execution_account_scope(self.ex)!=raw['account_scope']:
             raise ValueError('coordinated_close_account_changed')
+        request_start_ms=int(time.time()*1000)
         positions=self.ex.fetch_positions()
+        observed_ms=int(time.time()*1000)
         if not isinstance(positions,list):raise ValueError('coordinated_flat_position_unknown')
         for position in positions:
             if norm_symbol(position.get('symbol',''))!=norm_symbol(trade['symbol']):continue
@@ -91,8 +102,14 @@ class _Transport:
             quantity=float(position['contracts'])
             if not math.isfinite(quantity) or quantity!=0:
                 raise ValueError('coordinated_flat_position_not_proven')
-        self.flat_evidence=dict(account_scope=raw['account_scope'],instrument_id=raw['instrument_id'],
-            observed_ms=int(time.time()*1000),flat=True,source='fresh complete venue position read')
+        self.flat_evidence=dict(schema='coordinated-terminal-flat.v1',trade_id=trade['id'],
+            logical_id=self.request['logical_id'],order_id=str(self.order['id']),symbol=trade['symbol'],
+            account_scope=raw['account_scope'],instrument_id=raw['instrument_id'],
+            request_start_ms=request_start_ms,observed_ms=observed_ms,flat=True,quantity=0.,
+            source='fresh complete venue position read')
+        # Retain the actual flat observation before booking. A crash after the
+        # booking must not erase it or substitute a later reused instrument.
+        self._save(self.state,order=self.order,result={'flat_evidence':self.flat_evidence})
 
     def fetch_my_trades(self,*args,**kwargs):
         kwargs['since']=min(kwargs.get('since',self.request['created_ms']-60000),self.request['created_ms']-60000)

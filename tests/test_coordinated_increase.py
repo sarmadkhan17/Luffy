@@ -216,3 +216,17 @@ def test_recovered_increase_and_close_have_balanced_accounting_ownership(setup,m
     assert [leg['entry'] for leg in legs]==[True,True,False]
     assert [leg['quantity'] for leg in legs]==[2.,.5,2.5]
     assert len({leg['order_id'] for leg in legs})==3
+
+
+@pytest.mark.parametrize('field',['version_id','spec_hash','spec_sha256','install_id','exit_semantics_id','exit_state'])
+def test_resize_cannot_replace_any_frozen_root_identity_field(setup,monkeypatch,field):
+    from trader.engine.coordinated_increase import binding
+    ex,j,e,tid,identity,d,p=prepared(setup,monkeypatch)
+    identity[field]='different-frozen-value'
+    count=len(ex.sent)
+    with pytest.raises(ValueError,match='increase_position_identity_differs'):
+        binding(e,tid,identity,d.symbol,'strategy','LONG')
+    with pytest.raises(ValueError,match='increase_position_identity_differs'):
+        e.risk_manager.authorize_entry(d,.5,2.,95.,110.,'strategy',identity=identity,
+            reference=dict(price=100.),increase_trade_id=tid)
+    assert len(ex.sent)==count

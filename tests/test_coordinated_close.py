@@ -119,3 +119,37 @@ def test_delta_reduction_quantization_cannot_increase_the_requested_rebalance(se
     with pytest.raises(ValueError,match='reduce_quantity_invalid'):
         close_once(e,tid,'group-fixture','oversized-rebalance',quantity=.5)
     assert len(ex.sent)==count
+
+
+@pytest.mark.parametrize('field',['version_id','spec_hash','spec_sha256','install_id','exit_semantics_id','exit_state'])
+def test_changed_caller_identity_does_not_match_original_entry_receipt(setup,monkeypatch,field):
+    ex,j,e,tid=opened(setup,monkeypatch);count=len(ex.sent)
+    root=json.loads(j.open_trades()[0]['entry_identity_json']);root[field]='changed'
+    from trader.engine.coordinated_close import ownership
+    trade=dict(j.open_trades()[0],entry_identity_json=json.dumps(root))
+    with pytest.raises(ValueError,match='coordinated_entry_receipt_differs'):
+        ownership(e,trade,'group-fixture')
+    assert len(ex.sent)==count
+
+
+def test_actual_terminal_flat_observation_survives_crash_after_booking(setup,monkeypatch):
+    ex,j,e,tid=opened(setup,monkeypatch)
+    save=_Transport._save
+    def crash(self,state,*args,**kwargs):
+        if state=='BOOKED':raise RuntimeError('after booking')
+        return save(self,state,*args,**kwargs)
+    monkeypatch.setattr(_Transport,'_save',crash)
+    with pytest.raises(RuntimeError,match='after booking'):close_once(e,tid,'group-fixture','retained-flat')
+    row=j.query('SELECT * FROM coordinated_reductions')[0]
+    proof=json.loads(row['result_json'])['flat_evidence']
+    assert proof['trade_id']==tid and proof['logical_id']=='retained-flat'
+    assert proof['order_id']==str(json.loads(row['order_json'])['id'])
+    assert proof['flat'] is True and proof['quantity']==0.
+    assert proof['request_start_ms']<=proof['observed_ms']
+    count=len(ex.sent)
+    monkeypatch.setattr(_Transport,'_save',save)
+    # Recovery uses the retained booking; no later position claim is invented.
+    ex.positions=[dict(symbol='BTC/USDT',side='long',contracts=7.)]
+    assert close_once(e,tid,'group-fixture','retained-flat')['status']=='BOOKED'
+    assert json.loads(j.query('SELECT result_json FROM coordinated_reductions')[0]['result_json'])['flat_evidence']==proof
+    assert len(ex.sent)==count

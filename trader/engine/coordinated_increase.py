@@ -7,6 +7,7 @@ import json
 import math
 from . import entry_authority as A
 from . import protective
+from .coordinated_close import IDENTITY_FIELDS
 
 FIELDS=('id','symbol','side','amount','entry_price','notional_usdt','leverage','stop_loss','take_profit','sl_order_id',
         'strategy_id','status','entry_identity_json')
@@ -25,7 +26,7 @@ def binding(executor,trade_id,identity,symbol,strategy_id,direction):
     ownership(executor,row,group.get('group_id'))
     if (group!=root.get('coordinated') or symbol!=row['symbol'] or strategy_id!=row['strategy_id']
             or direction.lower()!=row['side']
-            or any((identity or {}).get(k)!=root.get(k) for k in ('version_id','spec_hash'))):
+            or any((identity or {}).get(k)!=root.get(k) for k in IDENTITY_FIELDS)):
         raise ValueError('increase_position_identity_differs')
     return dict(trade_id=trade_id,before=before(row),before_sha256=A.digest(before(row)))
 
@@ -39,7 +40,7 @@ def risk_binding(journal,cap,trade_id,identity,symbol,strategy_id,direction):
             or group!=root.get('coordinated') or row['symbol']!=symbol or row['strategy_id']!=strategy_id
             or row['side']!=direction.lower() or bound.get('instrument_id')!=cap['instrument_id']
             or (bound.get('capability') or {}).get('account_scope')!=cap['account_scope']
-            or any((identity or {}).get(k)!=root.get(k) for k in ('version_id','spec_hash'))):
+            or any((identity or {}).get(k)!=root.get(k) for k in IDENTITY_FIELDS)):
         raise ValueError('increase_position_identity_differs')
     requests=journal.query('SELECT * FROM execution_requests WHERE logical_id=?',(bound.get('logical_id'),))
     if len(requests)!=1:raise ValueError('increase_root_receipt_missing')

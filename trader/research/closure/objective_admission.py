@@ -51,7 +51,7 @@ def episode_values(equity, *, start_equity, gross, metric, episode_bars=64,nativ
         starts=np.r_[0,np.flatnonzero(ids[1:]!=ids[:-1])+1,len(ids)]
         bounds=[(int(starts[i]),int(starts[i+episode_bars]),starts[i+1:i+episode_bars+1]-1)
                 for i in range(0,len(starts)-episode_bars,episode_bars)]
-    for lo,hi,native_closes in bounds:
+    for episode_index,(lo,hi,native_closes) in enumerate(bounds):
         path=np.r_[start_equity if lo==0 else eq[lo-1],eq[lo:hi]]
         return_path=path if native_closes is None else np.r_[path[0],eq[native_closes]]
         returns=np.diff(return_path)/return_path[:-1]*100
@@ -60,7 +60,11 @@ def episode_values(equity, *, start_equity, gross, metric, episode_bars=64,nativ
         elif metric=='worst_bar_pct':value=float(-returns.min())
         elif metric=='cvar5_pct':value=float(-np.sort(returns)[:max(1,math.ceil(len(returns)*.05))].mean())
         else:raise ValueError('objective_episode_metric_unknown')
-        out.append(dict(start=lo,end=hi,value=float(value),active=bool((g[lo:hi]>0).any())))
+        item=dict(start=lo,end=hi,value=float(value),active=bool((g[lo:hi]>0).any()))
+        if native_bars is not None:
+            item.update(start=episode_index*episode_bars,end=(episode_index+1)*episode_bars,
+                        sample_start=lo,sample_end=hi)
+        out.append(item)
     return out
 
 

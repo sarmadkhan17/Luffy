@@ -152,3 +152,18 @@ def test_durable_quote_main_exit_closes_both_legs_as_one_trade(tmp_path,reason):
     r.advance(key,5,tick(6100,**prices),allow_entry=False)
     assert not any(r.state(key)['book']['pos'].values())
     assert not j.query('SELECT * FROM trades')
+
+
+def test_quote_episodes_keep_native_bounds_for_statistical_consumer():
+    import numpy as np
+    from trader.research.closure import objective_admission as OA
+    native=np.repeat(np.arange(128),2)
+    values=OA.episode_values(np.linspace(100.,110.,256),start_equity=100.,gross=np.ones(256),
+        metric='net_return_pct',native_bars=native)
+    assert [(v['start'],v['end']) for v in values]==[(0,64),(64,128)]
+    assert [(v['sample_start'],v['sample_end']) for v in values]==[(0,128),(128,256)]
+    episodes=[dict(start=v['start'],end=v['end'],hedged=v['value'],unhedged=0.,reduced=0.,cash=0.,active=True) for v in values]
+    # This must be understood as two native episodes, not 256 independent bets.
+    result=OA.evaluate(dict(alpha=.1,result=dict(objective='net_return_pct',
+        objective_episodes=episodes,admission_protocol_id=OA.protocol_id())))
+    assert not result['admitted']
