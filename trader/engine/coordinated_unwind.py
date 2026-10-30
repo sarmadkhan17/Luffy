@@ -84,7 +84,7 @@ def _members(executor,group_id):
     return sorted(members,key=lambda m:(m['leg']!='primary',m['trade_id']))
 
 
-def _positions(executor):
+def _position_observation(executor):
     from ..observability.portfolio_observation import observe_positions,trading_source
     from ..core.types import MarketType
     start=int(time.time()*1000)
@@ -94,6 +94,11 @@ def _positions(executor):
     environment,source=trading_source(executor.ex)
     obs=observe_positions(rows,exchange_id=executor.ex.id,market_type=MarketType.FUTURES,
         environment=environment,source_ref=source,request_start_ms=start,response_received_ms=end)
+    return obs
+
+
+def _positions(executor):
+    obs=_position_observation(executor)
     return {r.instrument_id.value:r.absolute_quantity for r in obs.positions if r.position_present}
 
 

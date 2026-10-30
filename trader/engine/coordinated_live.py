@@ -109,6 +109,10 @@ class LiveBooks:
             # This is the same sampled-price path as prospective paper, but
             # every quantity change below must come from a real receipt.
             bar['paper_quote']=True
+            if state.pop('hedge_reentry_cooldown_pending',False):
+                # The stop receipt has no strategy-bar index. Start the
+                # declared cooldown at the next verified native observation.
+                book.last_rebalance=native_bar
             book.step(native_bar,bar)
             pending=set(book.pending)
             book.log=[x for x in book.log if (asdict(x) if is_dataclass(x) else x)['oid'] in pending][-8:]
@@ -128,7 +132,8 @@ class LiveBooks:
                 "CASE WHEN json_valid(entry_identity_json) THEN entry_identity_json ELSE '{}' END,"
                 "'$.coordinated.group_id')=? ORDER BY id LIMIT 65",(gid,))
             if len(closed)>64:raise ValueError('coordinated_live_group_bound')
-            if not closed or any(row['status']!='closed' for row in closed):return None
+            if not closed:return None
+            if any(row['status']!='closed' for row in closed):return self._reconcile_hedge_closed(before,closed)
             expected=before['identity']
             if any(any(json.loads(row['entry_identity_json']).get(k)!=expected.get(k)
                        for k in ('version_id','spec_hash','install_id')) for row in closed):
@@ -154,6 +159,84 @@ class LiveBooks:
             unwind_plan_sha256=rows[0]['plan_sha256'],fill_claim=False,financial_result=None)
         self._save(before,after,event)
         return dict(status='CLOSED',group_id=gid,reconciliation=event)
+
+    def _reconcile_hedge_closed(self,before,rows):
+        """Adopt owned hedge absence, never a synthetic close fill or PnL.
+
+        Submitted model actions must first recover their original receipt.
+        A later open hedge supersedes historical closures. Fresh complete
+        account evidence, rather than a closed journal row, proves absence.
+        """
+        if not before['book']['pos']['hedge']:return None
+        gid=before['group_id']
+        with self.executor._entry_lock:
+            if self.load(gid)!=before:raise ValueError('coordinated_live_book_changed')
+            members=U._members(self.executor,gid)
+            primary=[r for r in rows if C.ownership(self.executor,r,gid)['leg']=='primary' and r['status']=='open']
+            hedges=[r for r in rows if C.ownership(self.executor,r,gid)['leg']=='hedge']
+            if len(primary)!=1 or not hedges or any(r['status']=='open' for r in hedges):return None
+            from ..research.compose import managed_hedge as M
+            policy=before['book']['spec'].get('management') or {}
+            if policy.get('version')!=M.CURRENT_VERSION:return None
+            M.validate(policy)
+            for row in rows:
+                root=json.loads(row['entry_identity_json'])
+                if any(root.get(k)!=before['identity'].get(k) for k in ('version_id','spec_hash','install_id')):
+                    raise ValueError('coordinated_live_closed_version_differs')
+                if root['coordinated'].get('management_policy')!=before['book']['spec'].get('management'):
+                    raise ValueError('coordinated_live_closed_management_differs')
+            response=U._hedge_closure_response(self.executor,primary[0],gid)
+            if response is not None:return response
+            # Even terminal-but-unadopted submissions must be consumed by
+            # drain first; otherwise their later adoption resurrects a hedge.
+            for oid in before['book']['pending']:
+                aid='cg_'+V.A.digest([gid,before['identity']['version_id'],oid])
+                for table in ('execution_requests','coordinated_reductions'):
+                    if (self.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,))
+                            and self.journal.query('SELECT 1 FROM '+table+' WHERE logical_id=?',(aid,))):
+                        return None
+            unresolved=self.journal.query("SELECT 1 FROM execution_requests WHERE state!='TERMINAL' AND "
+                "json_extract(intent_json,'$.strategy_identity.coordinated.group_id')=? LIMIT 1",(gid,))
+            if unresolved:raise ValueError('coordinated_live_hedge_closure_action_unresolved')
+            if (self.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(C.TABLE,))
+                    and self.journal.query("SELECT 1 FROM coordinated_reductions WHERE group_id=? "
+                                           "AND state NOT IN ('BOOKED','REFUSED') LIMIT 1",(gid,))):
+                raise ValueError('coordinated_live_hedge_closure_reduction_unresolved')
+            obs=U._position_observation(self.executor)
+            positions={p.instrument_id.value:p for p in obs.positions if p.position_present}
+            hm=[m for m in members if m['leg']=='hedge']
+            if any(m['instrument_id'] in positions for m in hm):
+                raise ValueError('coordinated_live_closed_hedge_has_venue_residual')
+            pm=next(m for m in members if m['trade_id']==primary[0]['id'])
+            actual=positions.get(pm['instrument_id']);qty=float(primary[0]['amount'])
+            if (actual is None or actual.side!=primary[0]['side']
+                    or not math.isclose(actual.absolute_quantity,qty,rel_tol=1e-9,abs_tol=1e-12)
+                    or (before['book']['pos']['primary']>0)!=(actual.side=='long')
+                    or not math.isclose(abs(before['book']['pos']['primary']),qty,rel_tol=1e-9,abs_tol=1e-12)):
+                raise ValueError('coordinated_live_primary_quantity_differs')
+            after=deepcopy(before);book=after['book']
+            dropped=[oid for oid,p in book['pending'].items() if p[0]=='hedge']
+            book['pending']={oid:p for oid,p in book['pending'].items() if oid not in dropped}
+            book['log']=[p for p in book['log'] if p['oid'] in book['pending']]
+            book.update(pos=dict(book['pos'],hedge=0.),hedge_exit_state=None,hedge_quote_range=None,
+                        management_activated=False,last_rebalance=before['native_bar'])
+            if book['state']!='UNWINDING':book['state']='PRIMARY_OPEN'
+            event=dict(oid='reconciled-hedge-close:'+digest(sorted(r['id'] for r in hedges)),
+                kind='OWNED_HEDGE_CLOSE_RECONCILIATION',members=hm,discarded_unsubmitted_intents=dropped,
+                observation=dict(observation_id=obs.observation_id,source=obs.source,source_ref=obs.source_ref,
+                    environment=obs.environment,request_start_ms=obs.request_start_ms,
+                    response_received_ms=obs.response_received_ms,complete=obs.complete,
+                    owned_positions=[dict(instrument_id=i,position_present=i in positions,
+                        side=positions[i].side if i in positions else None,
+                        absolute_quantity=positions[i].absolute_quantity if i in positions else 0.)
+                        for i in sorted({m['instrument_id'] for m in members})]),
+                fill_claim=False,financial_result=None)
+            from ..data.feed import execution_account_scope
+            event['observation']['account_scope']=execution_account_scope(self.executor.ex)
+            after['last_result']=dict(status='HEDGE_CLOSED_RECONCILED',group_id=gid)
+            after['hedge_reentry_cooldown_pending']=True
+            self._save(before,after,event)
+            return dict(after['last_result'],reconciliation=event)
 
     def drain(self,group_id,*,references,atrs):
         """One pending action per tick; adopt only an exact terminal quantity."""

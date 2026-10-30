@@ -218,11 +218,11 @@ class KernelRuntime:
                 unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
                                       for r in self.coordinated_unwind_results)
                 successful_live={r['group_id'] for r in self.coordinated_live_results
-                    if r['status'] in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED')}
+                    if r['status'] in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED','HEDGE_CLOSED_RECONCILED')}
                 management_incomplete=any(r['status']=='UNAVAILABLE' or
                     r['status']=='HEDGE_ENTRY_REQUIRED' and r['group_id'] not in successful_live
                     for r in getattr(self,'coordinated_management_results',[])) or any(
-                        r['status'] not in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED','INTENT_REFUSED')
+                        r['status'] not in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED','INTENT_REFUSED','HEDGE_CLOSED_RECONCILED')
                         for r in self.coordinated_live_results)
         view = analysis_context(self)
         required = view._exposure_symbols()

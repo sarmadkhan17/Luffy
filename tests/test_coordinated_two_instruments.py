@@ -63,8 +63,8 @@ def snapshot(ex,j):
     record_snapshot(j,position_snapshot(observed,raw,account_scope=execution_account_scope(ex)),at_ms=now)
 
 
-def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.):
-    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch,leverage=leverage,sizing_pct=sizing_pct,ratio=ratio)
+def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.,management=None):
+    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch,leverage=leverage,sizing_pct=sizing_pct,ratio=ratio,management=management)
     bind(j,ex,e.cfg,'ETH/USDT');transport(ex,monkeypatch)
     primary=V.dispatch(e,book,ins,identity=identity,reference=ref,atr=2.)
     assert 0<primary['filled_quantity']<=2.
