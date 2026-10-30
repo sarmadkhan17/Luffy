@@ -111,3 +111,14 @@ def test_live_hedge_adapter_uses_strategy_hedge_stop_and_declared_action(tmp_pat
         reduce.assert_not_called()
         assert executor.close.call_args.kwargs['reason']=='stop'
         assert t['_strategy_exit_evidence']['scope']=='WHOLE_POSITION'
+
+
+def test_missing_snapshot_quote_does_not_block_an_evidenced_main_stop(tmp_path,packet,monkeypatch):
+    j,v,t,identity,policy,state,executor,start,step=fixture(tmp_path,packet,monkeypatch)
+    frame=pd.DataFrame([dict(ts=pd.Timestamp(start+step,unit='ms',tz='UTC'),open=100.,
+        high=100.,low=policy.stop-1.,close=policy.stop-1.,volume=10.)])
+    snap=Snapshot(t['symbol'],pd.Timestamp(start+2*step,unit='ms',tz='UTC').isoformat(),None,
+        {v['spec']['timeframe']:frame},market_type='futures')
+    assert LiveExitAdapter(j,executor).manage(t,snap) is None
+    evidence=executor.close.call_args.args[0]['_strategy_exit_evidence']
+    assert evidence['intent']=='stop' and 'decision_reference' not in evidence

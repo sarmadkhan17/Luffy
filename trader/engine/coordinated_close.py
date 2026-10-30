@@ -152,7 +152,7 @@ class _Transport:
         return order
 
 
-def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coordinated_unwind',quantity=None):
+def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coordinated_unwind',quantity=None,exit_decision=None):
     """Close one existing leg once. Unknown outcomes remain pending.
 
     A confirmed partial fill gets a new logical reduction only after its exact
@@ -182,6 +182,7 @@ def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coo
                     symbol=trade['symbol'],side='sell' if trade['side']=='long' else 'buy',quantity=quantity,
                     before_quantity=float(trade['amount']),client_order_id='lc_'+A.digest(logical_id)[:28],
                     created_ms=int(time.time()*1000),reason=reason)
+                if exit_decision is not None:request['strategy_exit_decision']=exit_decision
                 db.execute('INSERT INTO coordinated_reductions VALUES(?,?,?,?,?,?,?)',
                     (logical_id,trade_id,group_id,A.canonical(request),'RESERVED',None,None))
                 state='RESERVED';order=None
@@ -198,6 +199,13 @@ def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coo
             return dict(status='BOOKED',submitted=False)
         if trade['status']!='open':return dict(status='EXTERNAL_CLOSE_REQUIRES_RECONCILIATION',submitted=False)
         transport=_Transport(executor,request,state,order)
+        if request.get('strategy_exit_decision') is not None:
+            decision=request['strategy_exit_decision'];trade['_strategy_exit_evidence']=decision
+            # The initiating leg's benchmark is not the other leg's price.
+            reference=decision.get('decision_reference')
+            if decision.get('source_trade_id')==trade_id and reference is not None:
+                price_hint=float(A.positive(reference['price']))
+                trade['_execution_reference']=reference
         scoped=copy(executor);scoped.ex=transport
         def complete_fills(symbol,order_id,since):
             rows=scoped.__class__._order_fills(scoped,symbol,order_id,since)
@@ -245,9 +253,9 @@ def retained_terminal_flat(journal,trade_id,group_id,order_id):
     return None
 
 
-def close_hedge_once(executor,trade_id,group_id,namespace,*,reason='strategy_hedge_stop'):
+def close_hedge_once(executor,trade_id,group_id,namespace,*,reason='strategy_hedge_stop',exit_evidence=None):
     """One owned hedge reduction per tick, including partial/unknown recovery."""
-    from .coordinated_unwind import active
+    from .coordinated_unwind import active,_exit_decision
     ensure(executor.journal)
     with executor._entry_lock,executor._lock_for('coordinated-hedge:'+trade_id):
         rows=executor.journal.query('SELECT * FROM trades WHERE id=?',(trade_id,))
@@ -264,10 +272,11 @@ def close_hedge_once(executor,trade_id,group_id,namespace,*,reason='strategy_hed
             proved=any((json.loads(r['result_json'] or '{}').get('flat_evidence') or {}).get('trade_id')==trade_id
                        for r in own if r['state']=='BOOKED')
             return dict(status='CLOSED' if proved else 'ALREADY_CLOSED',trade_id=trade_id)
+        decision=_exit_decision(trade,exit_evidence,group_id,reason,scope='HEDGE_ONLY')
         pending=[r for r in previous if r['state'] not in ('BOOKED','REFUSED')]
         if len(pending)>1:raise ValueError('coordinated_multiple_pending_reductions')
         logical=pending[0]['logical_id'] if pending else prefix+str(len(own))
-        reduction=close_once(executor,trade_id,group_id,logical,reason=reason)
+        reduction=close_once(executor,trade_id,group_id,logical,reason=reason,exit_decision=decision)
         closed=executor.journal.query('SELECT status FROM trades WHERE id=?',(trade_id,))[0]['status']=='closed'
         return dict(status=('CLOSED' if closed and reduction['status']=='BOOKED' else
                             'REDUCING' if reduction['status']=='BOOKED' else reduction['status']),

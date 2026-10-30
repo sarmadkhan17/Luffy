@@ -6,6 +6,7 @@ observations. These receipts record STRATEGY intent, never simulated fills.
 from __future__ import annotations
 
 import json
+import math
 
 from ..core.types import TF_MS, closed_bars
 from ..strategy import exit_policy as E
@@ -161,13 +162,16 @@ class LiveExitAdapter:
                 'spec_hash': version['spec_hash'], 'intent': result.reason,
                 'intended_quantity': result.quantity, 'state': json.loads(E.encode(policy,state)),
             }
+            if isinstance(snap.price,(int,float)) and math.isfinite(snap.price) and snap.price>0:
+                trade['_strategy_exit_evidence']['decision_reference']=trade['_execution_reference']
             if group:
                 trade['_strategy_exit_evidence'].update(group_id=group['group_id'],
                     group_exit_semantics_id=identity['exit_semantics_id'],scope='WHOLE_POSITION')
             if hedge_policy and hedge_policy['hedge_stop']['on_hit']=='close_hedge':
                 trade['_strategy_exit_evidence']['scope']='HEDGE_ONLY'
                 reduced=C.close_hedge_once(self.executor,trade['id'],group['group_id'],
-                    ['strategy-hedge-stop',version['version_id'],install['install_id'],trade['id']],reason=result.reason)
+                    ['strategy-hedge-stop',version['version_id'],install['install_id'],trade['id']],reason=result.reason,
+                    exit_evidence=trade['_strategy_exit_evidence'])
                 return result.reason if reduced['status']=='CLOSED' else None
             if result.reason == 'signal':
                 # Intent is durable, but no D6 executable-price interface has

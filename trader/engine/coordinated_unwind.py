@@ -150,7 +150,7 @@ def _adopt_late_members(executor,plan,current):
     return updated
 
 
-def close_group_once(executor,group_id,logical_id,*,reason='combined_position_exit'):
+def close_group_once(executor,group_id,logical_id,*,reason='combined_position_exit',exit_decision=None):
     """At most one leg reduction per tick; exact retries survive restart.
 
     A terminal partial fill gets a new child only on a later tick, after its
@@ -172,6 +172,7 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
             else:
                 plan=dict(group_id=group_id,logical_id=logical_id,reason=reason,
                           started_ms=int(time.time()*1000),members=_members(executor,group_id))
+                if exit_decision is not None:plan['strategy_exit_decision']=exit_decision
                 db.execute('INSERT INTO coordinated_group_unwinds VALUES(?,?,?,?,?)',
                     (group_id,logical_id,A.canonical(plan),A.digest(plan),'UNWINDING'))
         # The instrument reservation is now durable, even when entry recovery
@@ -195,7 +196,8 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
                 A.digest(['coordinated-group-close',logical_id,member['trade_id'],len(history)]))
             if history and history[-1]['state']=='REFUSED':
                 return dict(group_id=group_id,status='LEG_REDUCTION_REFUSED',leg=member['leg'])
-            result=C.close_once(executor,member['trade_id'],group_id,child,reason=reason)
+            result=C.close_once(executor,member['trade_id'],group_id,child,reason=reason,
+                                exit_decision=plan.get('strategy_exit_decision'))
             return dict(group_id=group_id,status='UNWINDING',leg=member['leg'],reduction=result)
         with executor.journal._tx() as db:
             db.execute("UPDATE coordinated_group_unwinds SET state='CLOSED' WHERE group_id=?",(group_id,))
@@ -216,7 +218,41 @@ def request_close(executor,trade,reason):
         if trade['id'] not in {m['trade_id'] for m in plan['members']}:
             raise ValueError('coordinated_unwind_members_changed')
         return close_group_once(executor,group,plan['logical_id'],reason=plan['reason'])
-    return close_group_once(executor,group,A.digest(['coordinated-position-close',group]),reason=reason)
+    decision=_exit_decision(rows[0],trade.get('_strategy_exit_evidence'),group,reason)
+    return close_group_once(executor,group,A.digest(['coordinated-position-close',group]),reason=reason,
+                            exit_decision=decision)
+
+
+def _exit_decision(owned,evidence,group,reason,*,scope='WHOLE_POSITION'):
+    """Retain a caller's frozen strategy intent, never assert a market fill.
+
+    Missing source receipts remain explicit. This is evidence attached to an
+    already-owned reduction, not additional authority to enter or close.
+    """
+    if evidence is None:return None
+    from ..strategy import exit_policy as E
+    root=json.loads(owned['entry_identity_json'])
+    if (not isinstance(evidence,dict) or evidence.get('authority')!='STRATEGY'
+            or evidence.get('scope')!=scope or evidence.get('group_id')!=group
+            or evidence.get('intent')!=reason or evidence.get('exit_semantics_id')!=E.EXIT_SEMANTICS_ID
+            or evidence.get('group_exit_semantics_id')!=root.get('exit_semantics_id')
+            or any(evidence.get(k)!=root.get(k) for k in ('version_id','install_id'))
+            or evidence.get('spec_hash')!=root.get('spec_sha256')):
+        raise ValueError('coordinated_strategy_exit_decision_differs')
+    if scope=='HEDGE_ONLY' or root['coordinated']['leg']=='hedge':
+        response=((root['coordinated'].get('management_policy') or {}).get('hedge_stop') or {}).get('on_hit')
+        if (root['coordinated']['leg']!='hedge'
+                or response!=('close_hedge' if scope=='HEDGE_ONLY' else 'close_group')):
+            raise ValueError('coordinated_strategy_exit_scope_differs')
+    key='hedge_exit_state' if root['coordinated']['leg']=='hedge' else 'exit_state'
+    policy,state=E.decode(A.canonical(evidence['state']))
+    expected,_=E.decode(root[key])
+    if policy!=expected or state.reason!=reason or A.positive(evidence.get('intended_quantity'))!=A.positive(owned['amount']):
+        raise ValueError('coordinated_strategy_exit_policy_differs')
+    retained=dict(evidence,source_trade_id=owned['id'],entry_identity_sha256=A.digest(root),
+        evidence_scope='STRATEGY_INTENT_NOT_FILL',source_receipt_status='NOT_RETAINED_BY_ADAPTER')
+    if len(A.canonical(retained).encode())>32768:raise ValueError('coordinated_strategy_exit_decision_too_large')
+    return retained
 
 
 def _planned_hedge_close(journal,trade_id,group_id):
