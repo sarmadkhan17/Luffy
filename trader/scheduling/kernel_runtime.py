@@ -58,6 +58,9 @@ class KernelRuntime:
         self.candle_active = {}
         self.coordinated_needs = ({}, [])
         self.held_coordinated_needs = ({}, [])
+        self.active_coordinated_needs = ({}, [])
+        self.active_coordinated_input_errors = {}
+        self.coordinated_intake_results = []
         self.coordinated_live_results = []
         self.history_resume_index = 0
         self.alts_cold_status = None
@@ -258,8 +261,15 @@ class KernelRuntime:
             view._lean_scan = True
             with stage_scope("scan.shortlist"):
                 receipt, frames = view._admission_plan()
+            from ..engine.coordinated_inputs import active_plans,collector_needs
+            try:
+                plans,errors=active_plans(self.kernel.journal,receipt,at_ms=int(time.time()*1000))
+            except Exception as exc:
+                plans,errors={},dict(intake=type(exc).__name__)
             with self.lock:
                 self.shortlisted = set(getattr(getattr(view, '_symbol_roles', None), 'deep', ()) or ())
+                self.active_coordinated_needs=collector_needs(plans)
+                self.active_coordinated_input_errors=errors
             from ..data import market_provenance as mp
             with self.lock:
                 held = set(self.held_symbols)
@@ -302,6 +312,17 @@ class KernelRuntime:
                 from ..data import market_provenance as mp
                 with mp.cache_only():
                     stats = view.cycle()
+                if not stats.get('interrupted') and getattr(self.kernel,'executor',None) is not None:
+                    from ..engine.coordinated_intake import run_once as intake
+                    from .timing import stage_scope
+                    with self.execution_lock:
+                        try:
+                            with stage_scope('scan.coordinated_entry'):
+                                self.coordinated_intake_results=intake(self.kernel.executor,self.kernel.feed,
+                                    getattr(view,'_admission_receipt',None))
+                        except Exception as exc:
+                            self.coordinated_intake_results=[dict(status='UNAVAILABLE',reason=type(exc).__name__)]
+                    if self.coordinated_intake_results:self.jobs['positions'].trigger()
             end = time.monotonic()
             with self.lock:
                 self.last_decision_stats = stats
@@ -500,6 +521,7 @@ class KernelRuntime:
             needs, held = list(self.derivative_needs), set(self.held_symbols)
             needs.extend(getattr(self,'coordinated_needs',({},[]))[1])
             needs.extend(getattr(self,'held_coordinated_needs',({},[]))[1])
+            needs.extend(getattr(self,'active_coordinated_needs',({},[]))[1])
         needs.sort(key=lambda n: n[0] not in held)           # stable: shortlist rank otherwise
         feed = getattr(self, '_needs_feed', None)
         if feed is None:
@@ -628,6 +650,8 @@ class KernelRuntime:
         with self.lock:
             paper_needs=deepcopy(getattr(self,'coordinated_needs',({},[]))[0])
             held_needs=deepcopy(getattr(self,'held_coordinated_needs',({},[]))[0])
+            active_needs=deepcopy(getattr(self,'active_coordinated_needs',({},[]))[0])
+        for symbol,tfs in active_needs.items():paper_needs.setdefault(symbol,set()).update(tfs)
         for symbol,tfs in held_needs.items():paper_needs.setdefault(symbol,set()).update(tfs)
         symbols = sorted(required) + sorted((set(k.universe.symbols()) | set(paper_needs)) - required)
         timeframes = set(k.cfg['timeframes'].get('context', [])) | {'15m', '1h', '4h'}
@@ -721,6 +745,8 @@ class KernelRuntime:
                 if self.last_decision_stats is not None else None),
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),
+            coordinated_intake=deepcopy(self.coordinated_intake_results),
+            coordinated_input_errors=deepcopy(self.active_coordinated_input_errors),
             replaced_scan_batches=self.scan_replaced,
             scan_in_flight=self.scan_in_flight, skipped_busy_scan_ticks=self.scan_busy_ticks,
             scans_completed=self.scans_completed, scans_discarded=self.scans_discarded,

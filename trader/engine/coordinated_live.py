@@ -52,7 +52,7 @@ class LiveBooks:
             db.execute('UPDATE coordinated_live_books SET payload=?,sha256=? WHERE group_id=?',
                        (canonical(after),digest(after),after['group_id']))
 
-    def register(self,book,identity,*,prepared_ms):
+    def register(self,book,identity,*,prepared_ms,native_observation=None):
         """Persist before dispatch; rechecks existing exact live eligibility."""
         group=identity.get('coordinated') or {};gid=group.get('group_id');vid=identity.get('version_id')
         if (not gid or not vid or group.get('leg')!='primary' or not isinstance(book,H.HedgeBook)
@@ -69,6 +69,10 @@ class LiveBooks:
                 state=dict(schema='coordinated-live-book.v1',group_id=gid,identity=deepcopy(identity),
                     exit_semantics_id=H.BOOK_EXIT_SEMANTICS_ID,book=asdict(book),prepared_ms=prepared_ms,
                     native_bar=book.last_clock_bar,observed_ms=prepared_ms,status='OPEN',last_result=None)
+                if native_observation is not None:
+                    if native_observation.get('signal_cut_ms')!=identity.get('signal_cut_ms'):
+                        raise ValueError('coordinated_live_native_observation_differs')
+                    state['native_observation']=deepcopy(native_observation)
                 with self.journal._tx() as db:
                     old=db.execute('SELECT payload,sha256 FROM coordinated_live_books WHERE group_id=?',(gid,)).fetchone()
                     if old:

@@ -14,6 +14,24 @@ from ..scheduling.scan_plan import Inputs,declared_inputs
 from ..research.compose import managed_hedge as M
 
 
+def management_plans(version):
+    from ..strategy import fill_timing
+    from ..research.compose.experiments import needs_btc
+    hs=version['lineage']['research']['multi_leg']['hedge_spec']
+    spec=StrategySpec.from_dict(version['spec']);compiled=compile_spec(spec)
+    primary=declared_inputs(spec,compiled.data_requires)
+    bars=max(primary.limits[spec.timeframe],int(hs['ratio']['lookback'])+2)
+    if bars>fill_timing.INFERENCE_HISTORY_MAX:raise ValueError('coordinated_active_history_bound')
+    primary.limits[spec.timeframe]=bars
+    packet=version['lineage']['research']['multi_leg']['packet']
+    if needs_btc(packet.get('candidate') or packet['freeze']['candidate']):
+        primary.btc[spec.timeframe]=bars
+    hedge_spec=replace(spec,entry_long='',entry_short='',filters=[],exit=M.hedge_exit_spec(hs['management']))
+    hedge=declared_inputs(hedge_spec,set())
+    hedge.limits[spec.timeframe]=max(hedge.limits[spec.timeframe],bars)
+    return {hs['primary']['symbol']:primary,hs['hedge']['symbol']:hedge}
+
+
 def plans(journal):
     out={};errors={};versions={}
     rows=journal.query("SELECT * FROM trades WHERE status='open' AND "
@@ -40,6 +58,12 @@ def plans(journal):
             install=F.verify_install(journal,version,current=False)
             if identity.get('install_id')!=install['install_id']:
                 raise ValueError('coordinated_held_input_install_differs')
+            if leg=='primary' and (hs.get('management') or {}).get('version')==M.CURRENT_VERSION:
+                # Even without an open hedge, the held main position needs
+                # both native series to evaluate conditional management.
+                for symbol,demand in management_plans(version).items():
+                    out.setdefault(symbol,Inputs()).merge(demand)
+                continue
             spec=StrategySpec.from_dict(version['spec'])
             if leg=='hedge':
                 policy=hs.get('management')
@@ -68,3 +92,27 @@ def collector_needs(input_plans):
                 span=plan.spans.get(name,max((bars*TF_MS[tf] for tf,bars in plan.limits.items()),default=0))
                 derivs.append((symbol,_SERIES_FOR[name],span))
     return candles,derivs
+
+
+def active_plans(journal,receipt,*,at_ms):
+    """Warm only exact active shortlisted books, before a first position exists.
+
+    Collector demand confers no entry authority. Ratio history is finite and
+    shared by both legs; primary feature dependencies remain primary-owned.
+    """
+    from .coordinated_intake import candidates,admission
+    versions=candidates(journal)
+    if not versions:return {},{}
+    admitted=admission(receipt,at_ms);out={};errors={};count=0
+    for version in versions:
+        hs=version['lineage']['research']['multi_leg']['hedge_spec']
+        if hs['primary']['symbol'] not in admitted['admitted_symbols']:continue
+        count+=1
+        if count>2:break
+        try:
+            F.verify_install(journal,version)
+            for symbol,demand in management_plans(version).items():
+                out.setdefault(symbol,Inputs()).merge(demand)
+        except Exception as exc:
+            errors[version['version_id']]=str(exc) if isinstance(exc,ValueError) else type(exc).__name__
+    return out,errors
