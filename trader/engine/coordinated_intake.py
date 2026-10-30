@@ -92,7 +92,10 @@ def run_once(executor,feed,receipt):
             with executor._entry_lock:
                 active=executor.journal.query("SELECT payload FROM "+TABLE+
                     " WHERE json_extract(payload,'$.status')='OPEN' ORDER BY group_id LIMIT 3")
-                if len(active)>=2:break
+                groups={json.loads(row['payload'])['group_id'] for row in active}
+                groups.update(gid for row in executor.journal.open_trades() if (gid:=U.owned_group(row)))
+                if len(groups)>=2:break
+                if executor.recovery_pending():break
                 if any(json.loads(row['payload'])['identity']['version_id']==vid for row in active):continue
                 # Native cut is part of the durable identity: a close/retry
                 # cannot turn the same signal into another economic position.

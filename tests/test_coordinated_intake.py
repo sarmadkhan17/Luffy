@@ -117,6 +117,17 @@ def test_slow_input_read_cannot_revive_expired_shortlist(setup,monkeypatch):
     assert not j.query('SELECT * FROM coordinated_live_books') and not ex.sent
 
 
+def test_existing_groups_without_new_model_rows_also_consume_management_capacity(setup,monkeypatch):
+    from trader.core.types import Position,Side
+    ex,j,e,v,bar,r,reader=ready(setup,monkeypatch)
+    for i in range(2):
+        j.add_trade(Position('old-'+str(i),'OLD'+str(i)+'/USDT',Side.LONG,1.,100.,100.,
+            strategy_id='strategy',entry_identity={'coordinated':{'group_id':'old-group-'+str(i),'leg':'primary'}}))
+    assert I.run_once(e,None,r)==[]
+    reader.assert_not_called()
+    assert not j.query('SELECT * FROM coordinated_live_books') and not ex.sent
+
+
 def test_durable_closed_cut_cannot_be_reopened_by_same_signal(setup,monkeypatch):
     ex,j,e,v,bar,r,reader=ready(setup,monkeypatch)
     result=I.run_once(e,None,r);assert result[0]['status']=='INTENT_REGISTERED',result
