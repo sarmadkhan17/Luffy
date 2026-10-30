@@ -353,7 +353,7 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
                 raise ValueError('increase_stop_must_preserve_existing_geometry')
             if positive(target,zero=True) != positive(adjustment['before']['take_profit'],zero=True):
                 raise ValueError('increase_target_must_preserve_existing_geometry')
-        validate_identity(manager.journal,strategy_id,identity,decision.symbol)
+        validate_identity(manager.journal,strategy_id,identity,decision.symbol,requested=requested,reference=reference)
         for row in positions:
             if adjustment and row['id'] == adjustment['trade_id']:
                 continue
@@ -432,7 +432,7 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
     if manager is None or not isinstance(permission, EntryPermission):
         raise ValueError('exact_risk_permission_required')
     from .coordinated_authority import validate_identity
-    validate_identity(executor.journal,strategy_id,identity,decision.symbol)
+    validate_identity(executor.journal,strategy_id,identity,decision.symbol,requested=amount,reference=reference)
     raw = permission.payload()
     if getattr(manager, '_entry_permissions', {}).get(digest(raw)) is not permission:
         raise ValueError('risk_permission_not_issued')

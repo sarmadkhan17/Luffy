@@ -47,6 +47,8 @@ def transport(ex,monkeypatch):
         if oid in ex.orders:ex.orders[oid]['status']='canceled'
         return {}
     monkeypatch.setattr(ex,'cancel_order',cancel)
+    from tests.coordinated_cashflow_fixture import attach
+    attach(ex,monkeypatch)
 
 
 def snapshot(ex,j):
@@ -61,13 +63,16 @@ def snapshot(ex,j):
     record_snapshot(j,position_snapshot(observed,raw,account_scope=execution_account_scope(ex)),at_ms=now)
 
 
-def pair(setup,monkeypatch):
-    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch)
+def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.):
+    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch,leverage=leverage,sizing_pct=sizing_pct,ratio=ratio)
     bind(j,ex,e.cfg,'ETH/USDT');transport(ex,monkeypatch)
     primary=V.dispatch(e,book,ins,identity=identity,reference=ref,atr=2.)
-    assert primary['filled_quantity']==2.
-    book.apply_fills({ins.oid:primary['filled_quantity']});snapshot(ex,j)
-    emitted=book.step(1,observed(1,p=97.,h=50.,equity=194.))
+    assert 0<primary['filled_quantity']<=2.
+    book.apply_fills({ins.oid:primary['filled_quantity']})
+    ex.positions[0]['markPrice']=price;snapshot(ex,j)
+    equity=200.+primary['filled_quantity']*(price-100.)-sum(f['commission'] for f in ex.cashflow_fills)
+    value=observed(1,p=price,h=50.,equity=equity);value['ratio']=ratio
+    emitted=book.step(1,value)
     assert len(emitted)==1 and emitted[0].leg=='hedge' and emitted[0].reason=='risk_management_activation'
     root=deepcopy(identity);root['coordinated']['leg']='hedge';root['hedge_exit_state']=book.hedge_exit_state
     cap=json.loads(V.A.proposal_binding(j,'ETH/USDT'))

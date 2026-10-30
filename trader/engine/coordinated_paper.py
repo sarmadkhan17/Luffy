@@ -55,6 +55,7 @@ class CoordinatedPaper:
         if timing not in (BAR_TIMING,QUOTE_TIMING):
             raise ValueError('coordinated_paper_timing_unsupported')
         ident = dict(spec=spec, identity=identity, starting_equity=equity)
+        if H.capital_enabled(spec):ident['capital_policy_id']=H.K.POLICY_ID
         if timing==QUOTE_TIMING:
             ident.update(paper_execution_protocol=QUOTE_PROTOCOL_ID)
         if primary_exit is not None:ident['primary_exit']=primary_exit
@@ -96,6 +97,8 @@ class CoordinatedPaper:
             if type(bar) is not int or bar!=state['bar']+1:
                 raise ValueError('coordinated_paper_clock_gap')
             spec=state['spec'];book=H.HedgeBook(**state['book'])
+            if H.capital_enabled(spec) and state.get('capital_policy_id')!=H.K.POLICY_ID:
+                raise ValueError('coordinated_paper_capital_protocol_differs')
             quote_mode=state.get('paper_execution_protocol')==QUOTE_PROTOCOL_ID
             if bool(observation.get('paper_quote'))!=quote_mode:
                 raise ValueError('coordinated_paper_execution_protocol_differs')
@@ -143,13 +146,26 @@ class CoordinatedPaper:
                     opens[leg]=quotes[leg]['ask' if side>0 else 'bid']
             actual={} if fills is None else dict(fills)
             if fills is None:
-                actual={oid:qty if known else 0.0 for oid,(leg,side,qty,_) in book.pending.items()}
+                actual={oid:qty if known or (H.capital_enabled(spec) and book.pos[leg]*side<0 and valid(opens[leg]))
+                        else 0.0 for oid,(leg,side,qty,_) in book.pending.items()}
             # A hold prevents an already queued increase from filling too.
             for oid,(leg,side,qty,_) in book.pending.items():
                 if (not allow_entry or expired_increase) and (book.pos[leg]==0 or book.pos[leg]*side>0):
                     actual[oid]=0.0
-            if not known and any(actual.values()):
+            if not known and any(qty and not (H.capital_enabled(spec) and oid in book.pending
+                    and book.pos[book.pending[oid][0]]*book.pending[oid][1]<0
+                    and valid(opens[book.pending[oid][0]])) for oid,qty in actual.items()):
                 raise ValueError('coordinated_paper_fill_price_missing')
+            funding=observation.get('funding')
+            carry=0.
+            if funding is not None:
+                if not known or set(funding)!={'primary','hedge'} or not all(math.isfinite(v) for v in funding.values()):
+                    raise ValueError('coordinated_paper_funding_invalid')
+                carry=sum(-math.copysign(1,before[leg])*contracts[leg].notional(before[leg],opens[leg])*funding[leg]
+                          for leg in ('primary','hedge') if before[leg])
+            gap=(sum(contracts[leg].pnl_usd(before[leg],(state['last_prices'] or {}).get(leg,opens[leg]),opens[leg])
+                     for leg in ('primary','hedge')) if known else 0.)
+            filling=dict(before)
             for oid,qty in actual.items():
                 if oid not in book.pending:
                     raise ValueError('coordinated_paper_late_or_unknown_fill')
@@ -158,7 +174,15 @@ class CoordinatedPaper:
                 if not clock_ok or not isinstance(qty,(int,float)) or not math.isfinite(qty) or not 0<=qty<=requested:
                     raise ValueError('coordinated_paper_fill_invalid')
                 if qty:
+                    if (H.capital_enabled(spec) and before[leg]*side>=0 and (not known or state['incomplete_marks']
+                            or state.get('incomplete_funding') or funding is None and any(before.values()))):
+                        qty=0.  # unknown carry is not additional buying power
+                    else:
+                        qty=H.affordable_fill(spec,filling,opens,state['equity']+gap+carry-cost,leg,side,qty,
+                                              (spec['fee_bps']+spec['slip_bps'])/10000)
+                    actual[oid]=qty
                     cost+=contracts[leg].notional(qty,opens[leg])*(spec['fee_bps']+spec['slip_bps'])/10000
+                    filling[leg]+=side*qty
             book.apply_fills(actual)
             pnl=0.0
             if known:
@@ -170,13 +194,8 @@ class CoordinatedPaper:
                 state['last_prices']=closes
             elif any(before.values()):
                 state['incomplete_marks']=True
-            funding=observation.get('funding')
             if funding is not None:
-                if not known or set(funding)!={'primary','hedge'} or not all(math.isfinite(v) for v in funding.values()):
-                    raise ValueError('coordinated_paper_funding_invalid')
-                for leg in ('primary','hedge'):
-                    carry=-math.copysign(1,before[leg])*contracts[leg].notional(before[leg],opens[leg])*funding[leg] if before[leg] else 0.0
-                    state['equity']+=carry
+                state['equity']+=carry
             if funding is None and (any(before.values()) or any(book.pos.values())):
                 state['incomplete_funding']=True
             held=any(book.pos.values())
@@ -199,6 +218,7 @@ class CoordinatedPaper:
                              native_observation=observation['native_observation'])
             state['book']['log']=[]  # events retain intent history; recovery state stays bounded
             result=dict(book_id=key,bar=bar,request=request,fills=actual,intents=[asdict(x) for x in intents],
+                        capital_policy_id=state.get('capital_policy_id'),
                         positions=book.pos,equity=state['equity'] if known else None,
                         costs=cost,held=held,gross_notional=gross,liquidated=liquidated,incomplete_marks=state['incomplete_marks'],
                         fill_basis='SIMULATED_FIRST_SUBSEQUENT_BID_ASK' if quote_mode else 'SIMULATED_NEXT_BAR_OPEN',

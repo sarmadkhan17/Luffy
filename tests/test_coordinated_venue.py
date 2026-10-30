@@ -18,10 +18,19 @@ from trader.strategy import factory_handoff as F
 from trader.strategy.spec import ExitSpec
 
 
-def prepared(setup,monkeypatch,*,ready=True):
+def prepared(setup,monkeypatch,*,ready=True,leverage=None,sizing_pct=100.,ratio=.5):
     ex,j,e,_=setup;e.fill_retry_s=0
-    hs=H.make_spec(purpose='protective_beta',account_mode='netting',leverage=1.,
-        primary={'symbol':'BTC/USDT'},hedge={'symbol':'ETH/USDT'},ratio={'method':'fixed','value':.5},management=current())
+    if leverage is not None:
+        from tests.entry_authority_fixtures import bind
+        from trader.engine.executor import Executor
+        cfg=deepcopy(e.cfg);cfg['risk']['leverage']=leverage
+        risk,_cap=bind(j,ex,cfg)
+        e=Executor(ex,j,cfg,e.market_type,risk_manager=risk);e.fill_retry_s=0
+    from tests.coordinated_cashflow_fixture import attach
+    attach(ex,monkeypatch)
+    hs=H.make_spec(purpose='protective_beta',account_mode='netting',leverage=e.risk_manager.leverage,
+        primary={'symbol':'BTC/USDT'},hedge={'symbol':'ETH/USDT'},ratio={'method':'fixed','value':ratio},
+        sizing={'primary_notional_pct':sizing_pct},management=current())
     definition=asdict(ExitSpec(stop={'kind':'pct','v':.05},target={'kind':'rr','v':2.},time={'max_bars':100}))
     book=H.HedgeBook(hs,primary_exit_definition=definition)
     ins=book.step(0,dict(p=100.,h=50.,signal=1,exit=False,ratio=.5,corr=1.,equity=200.,

@@ -21,13 +21,14 @@ import numpy as np
 
 from ..closure import ClosureRefused, digest
 from ...strategy.exit_policy import EXIT_SEMANTICS_ID as PRIMARY_EXIT_RULE
+from . import capital as K
 
 SCHEMA = 'hedge-spec.v1'
 MAX_QUOTE_INCREASE_AGE_MS=60_000
-BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v4',primary_rule=PRIMARY_EXIT_RULE,
+BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v5',primary_rule=PRIMARY_EXIT_RULE,capital_policy=K.POLICY_ID,
     rule='primary first; main stop/target/trail/time/signal OR combined net-PnL exit closes the whole group',
     hedge_rule='v2 strategy freezes own hedge stop, trail and close_group/close_hedge response before testing; no numerical defaults',
-    fill='both legs at next bar open under declared costs; no intrabar or venue fill claim',
+    fill='pending instructions at causal next-bar open or subsequent received bid/ask under declared costs; actual execution uses venue receipts',
     controls='unhedged/reduced use the identical exit decision procedure',
     missing='unknown declared exit evidence requests unwind and makes economics incomplete')
 BOOK_EXIT_SEMANTICS_ID=BOOK_EXIT_CONTRACT['version']+':'+digest(BOOK_EXIT_CONTRACT)
@@ -81,6 +82,27 @@ class Contract:
         if self.kind == 'linear':
             return qty * (p1 - p0)
         return qty * self.multiplier * (1.0 / p0 - 1.0 / p1) * p1
+
+
+def capital_enabled(spec):
+    from .managed_hedge import CURRENT_VERSION
+    return (spec.get('management') or {}).get('version')==CURRENT_VERSION
+
+
+def affordable_fill(spec,positions,prices,equity,leg,side,quantity,cost_rate):
+    """Cap a simulated increase at its fill price; old v1 replay is retained."""
+    if not capital_enabled(spec) or positions[leg]*side<0:return quantity
+    contracts={k:Contract(spec[k]['contract'],spec[k]['multiplier']) for k in ('primary','hedge')}
+    gross=0.
+    for k,c in contracts.items():
+        if positions[k]:
+            if not np.isfinite(prices[k]) or prices[k]<=0:return 0.
+            gross+=c.notional(positions[k],prices[k])
+    if not np.isfinite(prices[leg]) or prices[leg]<=0:return 0.
+    cap=K.capacity(equity=float(equity),gross=float(gross),leverage=spec['leverage'],
+        unit_notional=contracts[leg].notional(1.,prices[leg]),requested=float(quantity),cost_rate=cost_rate)
+    allowed=cap['quantity']
+    return float(np.floor(allowed)) if contracts[leg].kind=='inverse' else allowed
 
 
 def validate(spec: dict) -> dict:
@@ -499,8 +521,7 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
     retained_net_fraction=np.full(n,np.nan)
     cost = dict(fees=0.0, slippage=0.0, funding=0.0)
     last_px = dict(primary=p[0], hedge=h[0])
-    avg = dict(primary=p[0], hedge=h[0])
-    liquidated, pending_ins, realised = False, [], 0.0
+    liquidated, pending_ins = False, []
     observation_gaps=False
     fee, slip = spec['fee_bps'] / 1e4, spec['slip_bps'] / 1e4 * slip_mult
     for t in range(n):
@@ -538,16 +559,22 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
                 for i in pending_ins:
                     if i.kind!='ALERT' and (book.pos[i.leg]==0 or book.pos[i.leg]*i.side>0):
                         fills[i.oid]=0.0
+            filling=dict(book.pos)
             for i in pending_ins:
                 if i.kind == 'ALERT':
                     continue
                 c = pc if i.leg == 'primary' else hc
-                f = min(fills.get(i.oid, 0.0), i.qty)
+                f = fills.get(i.oid, 0.0)
+                if not np.isfinite(f) or not 0<=f<=i.qty:
+                    raise HedgeRefused('hedge_fill_outside_authorized_quantity')
                 if f > 0 and np.isfinite(fill_px[i.leg]) and fill_px[i.leg] > 0:
+                    f=affordable_fill(spec,filling,fill_px,cash,i.leg,i.side,f,fee+slip)
+                    fills[i.oid]=f
                     notional = c.notional(f, fill_px[i.leg])
                     cash -= notional * (fee + slip)
                     cost['fees'] += notional * fee
                     cost['slippage'] += notional * slip
+                    filling[i.leg]+=i.side*f
                 else:
                     fills[i.oid] = 0.0
             book.apply_fills({k: v for k, v in fills.items() if k in book.pending})
@@ -600,6 +627,7 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
         status = 'FLAT_AT_END'
     inverse_legs = [k for k in ('primary', 'hedge') if spec[k]['contract'] == 'inverse']
     return dict(equity=eq_curve, gross=gross, net=net, cost=cost,
+                capital_policy_id=K.POLICY_ID if capital_enabled(spec) else None,
                 primary_active=primary_active,retained_net_fraction=retained_net_fraction,
                 native_bars=native_bars,observation_gaps=observation_gaps,
                 fill_price_basis='SUBSEQUENT_BID_ASK_MODEL_ONLY' if bid_ask is not None else
@@ -809,6 +837,7 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
         verdict, why = 'ECONOMIC_UNSUPPORTED', (f'{metric}: hedged {mh[metric]:.3f} unhedged {mu[metric]:.3f} reduced {mr[metric]:.3f}; '
                                                  f'folds {wins}/{len(fold_rows)}')
     result = dict(spec_id=spec['spec_id'], verdict=verdict, reason=why, objective=metric,
+                capital_policy_id=K.POLICY_ID if capital_enabled(spec) else None,
                 comparators=dict(hedged=mh, unhedged=mu, reduced=dict(mr, fraction=frac), cash=dict(net_return_pct=0.0, max_drawdown_pct=0.0)),
                 return_sacrificed_pct=mu['net_return_pct'] - mh['net_return_pct'] if mu['net_return_pct'] is not None and mh['net_return_pct'] is not None else None,
                 carry_cost=hedged['cost'], rebalances=mh['rebalances'], residual_exposure=dict(

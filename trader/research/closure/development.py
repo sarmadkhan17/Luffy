@@ -145,6 +145,8 @@ def cache_key(candidate: dict, env: dict, data_id: str, external_id: str = '', *
                 cache_schema='development-cache.v2', draws=int(draws or env['policy']['draws']))
     if external_id:
         body['external'] = external_id          # absent for legacy candidates: their keys are unchanged
+    from ..compose import hedge as H,capital as K
+    if H.capital_enabled(candidate.get('hedge') or {}):body['capital_policy_id']=K.POLICY_ID
     return digest(body)
 
 

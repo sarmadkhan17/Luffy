@@ -201,7 +201,9 @@ class LiveBooks:
                 book.apply_fills({ins.oid:filled});book.pending.update(other)
                 book.log=[x for x in book.log if (asdict(x) if is_dataclass(x) else x)['oid'] in book.pending]
                 state['book']=asdict(book);state['last_result']=result
-                self._save(before,state,dict(oid=ins.oid,kind='ACTUAL_ACTION_ADOPTED',instruction=asdict(ins),
+                if (ins.kind=='ENTER' and ins.leg=='primary' and not any(before['book']['pos'].values())
+                        and not book.pending and not any(book.pos.values())):state['status']='ABANDONED'
+                self._save(before,state,dict(oid=ins.oid,kind='INTENT_REFUSED' if result['status']=='INTENT_REFUSED' else 'ACTUAL_ACTION_ADOPTED',instruction=asdict(ins),
                     execution=result,book_after=asdict(book),financial_result=None))
             elif state.get('last_result')!=result:
                 state['last_result']=result;self._save(before,state)

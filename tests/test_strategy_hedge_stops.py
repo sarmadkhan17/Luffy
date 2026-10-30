@@ -85,7 +85,9 @@ def packet_with_stop(packet,action):
     candidate=graph.make_candidate(dict({k:v for k,v in packet['candidate'].items() if k not in ('candidate_id','graph_id')},hedge=hs))
     result=packet['result'];combo=graph.realize(candidate,packet['envelope']['envelope_id'],entries_only=True)
     result.update(candidate_id=candidate['candidate_id'],combo=combo.as_dict(),combo_hash=combo.hash)
-    next(iter(result['hedge']['per_symbol'].values()))['effective_spec']=hs
+    per=next(iter(result['hedge']['per_symbol'].values()))
+    per['effective_spec']=hs
+    per['capital_policy_id']=H.K.POLICY_ID  # explicit synthetic numerical fixture, not requalified history
     result['result_id']=digest({k:v for k,v in result.items() if k!='result_id'})
     return T.make(candidate,packet['envelope'],result)
 

@@ -70,7 +70,7 @@ def execution_scope(journal,cfg,version_id,*,group_id,leg,action_id):
     finally:_CONTEXT.reset(token)
 
 
-def validate_identity(journal,strategy_id,identity,symbol):
+def validate_identity(journal,strategy_id,identity,symbol,*,requested=None,reference=None):
     """Rechecked both when Risk issues and when Execution consumes permission."""
     if not isinstance(identity,dict) or not identity.get('coordinated') or not identity.get('version_id'):
         return  # existing non-Factory/grandfather rules remain at their boundary
@@ -89,3 +89,6 @@ def validate_identity(journal,strategy_id,identity,symbol):
             or group.get('group_id')!=scope.group_id or group.get('leg')!=scope.leg
             or identity.get('coordinated_action_id')!=scope.action_id):
         raise ValueError('coordinated_execution_scope_mismatch')
+    if requested is not None:
+        from .coordinated_budget import verify
+        verify(journal,version,identity,requested,reference)

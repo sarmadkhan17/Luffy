@@ -108,7 +108,7 @@ def test_position_worker_calls_manager_on_existing_thirty_second_clock(tmp_path,
     k,r=minimal(tmp_path)
     k.executor=NS();k._manages_exits=lambda:True
     monkeypatch.setattr(C.U,'resume',lambda e:[])
-    manage=Mock(return_value=[dict(status='HEDGE_ENTRY_REQUIRED')])
+    manage=Mock(return_value=[dict(group_id='fixture',status='HEDGE_ENTRY_REQUIRED')])
     monkeypatch.setattr(C,'run_once',manage)
     view=NS(_exposure_symbols=lambda:set(),_portfolio_holdings_market={})
     monkeypatch.setattr(runtime,'analysis_context',lambda _:view)

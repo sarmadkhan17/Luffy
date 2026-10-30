@@ -222,7 +222,7 @@ class KernelRuntime:
                 management_incomplete=any(r['status']=='UNAVAILABLE' or
                     r['status']=='HEDGE_ENTRY_REQUIRED' and r['group_id'] not in successful_live
                     for r in getattr(self,'coordinated_management_results',[])) or any(
-                        r['status'] not in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED')
+                        r['status'] not in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED','INTENT_REFUSED')
                         for r in self.coordinated_live_results)
         view = analysis_context(self)
         required = view._exposure_symbols()

@@ -16,6 +16,14 @@ from ..research.compose import hedge as H
 from ..strategy import factory_handoff as F,exit_policy as E
 
 
+def _lot_quantity(cap,quantity,price):
+    step=A.positive(cap['record']['constraints']['market_quantity_step'])
+    q=A.positive(quantity,zero=True)//step*step
+    limits=cap['record']['constraints']
+    if q<A.positive(limits['market_minimum_quantity']) or q*A.positive(price)<A.positive(limits['minimum_notional']):return 0.
+    return float(q)
+
+
 def _receipt(journal,action_id,group_id,leg,version_id,instruction):
     if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_requests'"):
         return None
@@ -194,16 +202,29 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
             proposed=json.loads(decision.instrument_binding_json or '{}')
             if not proposed or (reference or {}).get('instrument_id')!=proposed.get('instrument_id') or not (reference or {}).get('source'):
                 raise ValueError('coordinated_action_quote_identity_differs')
+            from . import coordinated_budget as B
+            key,budget=B.prepare(executor,book,asdict(ins),identity,reference)
+            quantity=_lot_quantity(proposed,budget['quantity'],reference['price']);identity['coordinated_capital_receipt']=key
+            if quantity<=0:
+                return dict(action_id=action_id,status='INTENT_REFUSED',filled_quantity=0.,
+                    reason=budget.get('reason') or ('coordinated_capital_exhausted' if budget['quantity']<=0
+                        else 'coordinated_capital_below_venue_lot'),capital_receipt=key,
+                    submission='NONE',financial_result=None)
             with executor.journal._tx() as db:
                 db.execute('INSERT OR IGNORE INTO cycles(id,ts,symbol) VALUES(?,?,?)',
                            (decision.cycle_id,decision.ts,symbol))
             executor.journal.log_decision(decision)
-            permission=executor.risk_manager.authorize_entry(decision,ins.qty,atr,stop,target,version['strategy_id'],
+            permission=executor.risk_manager.authorize_entry(decision,quantity,atr,stop,target,version['strategy_id'],
                 identity=identity,reference=reference,increase_trade_id=row['id'] if row else None)
+            quantity=_lot_quantity(proposed,min(quantity,float(permission.payload()['allowed'])),reference['price'])
+            if quantity<=0:
+                return dict(action_id=action_id,status='INTENT_REFUSED',filled_quantity=0.,
+                    reason='coordinated_capital_below_venue_lot',capital_receipt=key,
+                    submission='NONE',financial_result=None)
             if row:
-                executor.increase(row['id'],decision,ins.qty,atr,stop,target,version['strategy_id'],identity,reference,permission)
+                executor.increase(row['id'],decision,quantity,atr,stop,target,version['strategy_id'],identity,reference,permission)
             else:
-                executor.open(decision,ins.qty,atr,stop,target,version['strategy_id'],version['strategy_id'],
+                executor.open(decision,quantity,atr,stop,target,version['strategy_id'],version['strategy_id'],
                     entry_identity=identity,reference=reference,risk_permission=permission)
             return _receipt(executor.journal,action_id,gid,ins.leg,vid,asdict(ins)) or dict(
                 action_id=action_id,status='ENTRY_REFUSED',filled_quantity=None,reason=decision.skip_reason)

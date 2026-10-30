@@ -87,7 +87,10 @@ def freeze_hedge_finalist(store, env: dict, results: list):
     best = max(ok, key=lambda r: (_margin(r), r['candidate_id']))
     sym, per = next(iter(best['hedge']['per_symbol'].items()))
     spec = per['effective_spec']
+    if H.capital_enabled(spec) and per.get('capital_policy_id')!=H.K.POLICY_ID:
+        raise ClosureRefused('hedge_development_capital_policy_differs')
     body = dict(schema=FREEZE_SCHEMA, envelope_id=env['envelope_id'], candidate=store.get_once('candidates', best['candidate_id']),
+                capital_policy_id=H.K.POLICY_ID if H.capital_enabled(spec) else None,
                 development_result_id=best['result_id'], combo=best['combo'], combo_hash=best['combo_hash'],
                 hedge_spec=spec, primary_symbol=sym,
                 # a fixed/ols ratio is frozen as ONE development-estimated number; rolling_beta freezes the estimation PROCEDURE
@@ -112,6 +115,8 @@ def verify_hedge_freeze(freeze: dict, env: dict) -> Combination:
         raise ClosureRefused('freeze_envelope_mismatch')
     families.verify_candidate(freeze['candidate'])
     spec = H.validate(freeze['hedge_spec'])
+    if H.capital_enabled(spec) and freeze.get('capital_policy_id')!=H.K.POLICY_ID:
+        raise ClosureRefused('hedge_frozen_capital_policy_differs')
     if env.get('policy_class')=='CONFIGURED':
         from ..compose.managed_hedge import require_current
         require_current(spec)
@@ -165,6 +170,8 @@ def rederive_verdict(res: dict, spec: dict) -> tuple:
 
 def assess(res: dict, spec: dict) -> tuple:
     """(status, reason) from one protected combined-book result under the frozen spec. Deterministic; no tuning."""
+    if H.capital_enabled(spec) and res.get('capital_policy_id')!=H.K.POLICY_ID:
+        raise ClosureRefused('hedge_assessment_capital_policy_differs')
     if spec['purpose'] not in (*PROTECTIVE, 'relative_value'):
         raise ClosureRefused('hedge_purpose')
     if spec['purpose'] == 'relative_value' and spec['objective']['metric'] != 'net_return_pct':
