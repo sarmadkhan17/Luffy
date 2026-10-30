@@ -57,6 +57,7 @@ class KernelRuntime:
         self.derivative_needs = []
         self.candle_active = {}
         self.coordinated_needs = ({}, [])
+        self.held_coordinated_needs = ({}, [])
         self.history_resume_index = 0
         self.alts_cold_status = None
         self.history_yields = 0
@@ -218,10 +219,14 @@ class KernelRuntime:
             view._refresh_btc_context()
             peers = view._peer_frames(tuple(required))
             count = view._service_exposure(set(), peers)
+            from ..engine.coordinated_inputs import collector_needs
+            with self.lock:
+                self.held_coordinated_needs=collector_needs(getattr(view,'_held_input_plans',{}))
             if count < len(required) or getattr(view, '_exposure_errors', []):
                 raise ValueError('scheduled_exposure_incomplete')
         with self.lock:
             self.holdings_market = dict(view._portfolio_holdings_market)
+            if not required:self.held_coordinated_needs=({},[])
             if not (unwind_incomplete or management_incomplete):self.positions_at = time.monotonic()
         if management_incomplete:raise ValueError('scheduled_coordinated_management_incomplete')
         if unwind_incomplete:raise ValueError('scheduled_coordinated_unwind_incomplete')
@@ -484,6 +489,7 @@ class KernelRuntime:
         with self.lock:
             needs, held = list(self.derivative_needs), set(self.held_symbols)
             needs.extend(getattr(self,'coordinated_needs',({},[]))[1])
+            needs.extend(getattr(self,'held_coordinated_needs',({},[]))[1])
         needs.sort(key=lambda n: n[0] not in held)           # stable: shortlist rank otherwise
         feed = getattr(self, '_needs_feed', None)
         if feed is None:
@@ -611,6 +617,8 @@ class KernelRuntime:
         required = set(k._exposure_symbols())
         with self.lock:
             paper_needs=deepcopy(getattr(self,'coordinated_needs',({},[]))[0])
+            held_needs=deepcopy(getattr(self,'held_coordinated_needs',({},[]))[0])
+        for symbol,tfs in held_needs.items():paper_needs.setdefault(symbol,set()).update(tfs)
         symbols = sorted(required) + sorted((set(k.universe.symbols()) | set(paper_needs)) - required)
         timeframes = set(k.cfg['timeframes'].get('context', [])) | {'15m', '1h', '4h'}
         # Each new close is queued once. Failed/missing series stay pending and
@@ -623,6 +631,12 @@ class KernelRuntime:
                 self.candle_boundaries[tf] = expected
                 for symbol in symbols:
                     self.candle_pending[(symbol, tf)] = expected
+        # Extra frozen held/paper timeframes apply only to their consumers;
+        # they never widen collection for the whole exchange universe.
+        for symbol,tfs in paper_needs.items():
+            for tf in tfs-timeframes:
+                if tf in TF_MS:
+                    self.candle_pending.setdefault((symbol,tf),(now//TF_MS[tf])*TF_MS[tf]-TF_MS[tf])
         checked = completed = queued = 0
         # Fair rotation within priority tiers: held positions, then the current
         # shortlist, then the rest of the existing collection coverage. A failing

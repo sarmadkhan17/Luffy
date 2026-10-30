@@ -274,3 +274,70 @@ def test_group_failure_still_services_unrelated_positions_without_refreshing_hea
     with pytest.raises(ValueError,match='scheduled_coordinated_unwind_incomplete'):r.positions()
     service.assert_called_once()
     assert r.positions_at is None and r.coordinated_unwind_results[0]['status']=='UNAVAILABLE'
+
+
+@pytest.mark.parametrize('quantity,expected',[(1.,'UNWINDING'),(2.,'CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')])
+def test_group_close_can_pass_old_hedge_to_its_exact_owned_replacement(tmp_path,monkeypatch,quantity,expected):
+    e,rows,calls,close=protocol(tmp_path,monkeypatch)
+    members=G._members(e,'g')
+    members.insert(1,dict(trade_id='h-old',leg='hedge',instrument_id='H',symbol='H/USDT',entry_identity_sha256='old'))
+    rows['p']['status']='closed'
+    rows['h-old']=dict(id='h-old',status='closed',closed_at='2026-10-29T00:00:00+00:00')
+    rows['h'].update(amount=quantity,opened_at='2026-10-29T00:01:00+00:00')
+    monkeypatch.setattr(G,'_members',lambda *a:deepcopy(members))
+    positions={'H':1.}
+    monkeypatch.setattr(G,'_positions',lambda *a:dict(positions))
+    result=G.close_group_once(e,'g','close-reopened')
+    assert result['status']==expected
+    if quantity==1.:
+        assert calls[0][0]=='h'  # close the current owned hedge, never repeat old close
+        positions.clear()
+        assert G.resume(e)[0]['status']=='CLOSED'
+    else:assert calls==[]
+
+
+@pytest.mark.parametrize('action,planned,replacement,expected',[
+    ('close_group',False,False,True),
+    ('close_hedge',False,False,False),
+    ('close_group',True,False,False),
+    ('close_group',False,True,False),
+])
+def test_frozen_strategy_response_to_reconciled_hedge_closure(tmp_path,monkeypatch,action,planned,replacement,expected):
+    from trader.core.types import Position,Side
+    from tests.test_strategy_hedge_stops import current
+    j=Journal(tmp_path/'hedge-closed.db')
+    for tid,leg in [('p','primary'),('h','hedge')]+([('replacement','hedge')] if replacement else []):
+        identity=dict(coordinated=dict(group_id='g',leg=leg,management_policy=current(action=action)),
+                      execution_binding=dict(instrument_id=tid))
+        j.add_trade(Position(tid,tid+'/USDT',Side.LONG if leg=='primary' else Side.SHORT,
+            1.,100.,100.,strategy_id='fixture',entry_identity=identity))
+    j.close_trade('h',100.,0.,'reconciled_ghost')
+    e=NS(journal=j)
+    monkeypatch.setattr(C,'ownership',lambda ex,trade,group:json.loads(trade['entry_identity_json'])['coordinated'])
+    monkeypatch.setattr(G,'_planned_hedge_close',lambda *a:planned)
+    request=Mock(return_value={'group_id':'g','status':'UNWINDING'})
+    monkeypatch.setattr(G,'request_close',request)
+    assert bool(G.resume(e))==expected
+    assert request.call_count==int(expected)
+    if expected:
+        assert request.call_args.args[2]=='hedge_closed_unexpectedly'
+        # An observed closure is sufficient for the strategy response, but is
+        # not presented as proof of a venue stop or a financial result.
+        assert request.call_args.args[1]['id']=='p'
+
+
+def test_planned_hedge_close_requires_exact_terminal_flat_receipt(tmp_path,monkeypatch):
+    from trader.core.types import Position,Side
+    j=Journal(tmp_path/'planned-hedge.db')
+    j.add_trade(Position('h','ETH/USDT',Side.SHORT,1.,100.,100.,strategy_id='fixture'))
+    j.close_trade('h',100.,0.,'ratio_drift')
+    proof=Mock(return_value=None)
+    monkeypatch.setattr(C,'retained_terminal_flat',proof)
+    assert not G._planned_hedge_close(j,'h','g')
+    proof.assert_called_once()
+    proof.return_value={'schema':'coordinated-terminal-flat.v1'}
+    assert G._planned_hedge_close(j,'h','g')
+    # An unexpected close cannot be relabelled intentional using a flat proof.
+    j.add_trade(Position('h2','ETH/USDT',Side.SHORT,1.,100.,100.,strategy_id='fixture'))
+    j.close_trade('h2',100.,0.,'reconciled_ghost')
+    assert not G._planned_hedge_close(j,'h2','g')

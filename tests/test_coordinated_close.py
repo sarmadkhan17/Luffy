@@ -7,7 +7,7 @@ from tests.test_entry_recovery import setup
 from trader.engine.coordinated_close import close_once,_Transport
 
 
-def opened(setup,monkeypatch,*,fraction=1.):
+def opened(setup,monkeypatch,*,fraction=1.,leg='primary'):
     ex,j,e,d=setup;e.fill_retry_s=0
     create=ex.create_order
     def submit(symbol,type_,side,amount,params=None):
@@ -29,7 +29,7 @@ def opened(setup,monkeypatch,*,fraction=1.):
         if oid=='stop':ex.stops.clear();return {}
         return cancel(oid,symbol)
     monkeypatch.setattr(ex,'cancel_order',cancel_)
-    identity=dict(coordinated=dict(group_id='group-fixture',leg='primary'))
+    identity=dict(coordinated=dict(group_id='group-fixture',leg=leg))
     reference=dict(price=100.)
     permission=e.risk_manager.authorize_entry(d,2.,2.,95.,110.,'strategy',identity=identity,reference=reference)
     position=e.open(d,2.,2.,95.,110.,'strategy','strategy',entry_identity=identity,reference=reference,risk_permission=permission)

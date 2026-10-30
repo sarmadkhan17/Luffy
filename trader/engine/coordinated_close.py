@@ -15,7 +15,7 @@ from .recovery import exact_order_match,TERMINAL
 TABLE='coordinated_reductions'
 # Both historical and current hash spellings remain bound to the root entry.
 IDENTITY_FIELDS=('status','strategy_id','version_id','spec_hash','spec_sha256','install_id',
-                 'exit_semantics_id','exit_state','coordinated')
+                 'exit_semantics_id','exit_state','hedge_exit_state','coordinated')
 
 
 def ensure(journal):
@@ -243,3 +243,32 @@ def retained_terminal_flat(journal,trade_id,group_id,order_id):
             raise ValueError('coordinated_terminal_flat_receipt_differs')
         return proof
     return None
+
+
+def close_hedge_once(executor,trade_id,group_id,namespace,*,reason='strategy_hedge_stop'):
+    """One owned hedge reduction per tick, including partial/unknown recovery."""
+    from .coordinated_unwind import active
+    ensure(executor.journal)
+    with executor._entry_lock,executor._lock_for('coordinated-hedge:'+trade_id):
+        rows=executor.journal.query('SELECT * FROM trades WHERE id=?',(trade_id,))
+        if len(rows)!=1:raise ValueError('coordinated_trade_missing')
+        trade=rows[0]
+        if ownership(executor,trade,group_id)['leg']!='hedge':
+            raise ValueError('coordinated_hedge_only_close_required')
+        if active(executor.journal,group_id):return dict(status='GROUP_UNWINDING',trade_id=trade_id)
+        previous=executor.journal.query('SELECT * FROM coordinated_reductions WHERE trade_id=? AND group_id=?',
+                                        (trade_id,group_id))
+        prefix='hs_'+A.digest(namespace)[:24]+'_'
+        own=[r for r in previous if r['logical_id'].startswith(prefix)]
+        if trade['status']!='open':
+            proved=any((json.loads(r['result_json'] or '{}').get('flat_evidence') or {}).get('trade_id')==trade_id
+                       for r in own if r['state']=='BOOKED')
+            return dict(status='CLOSED' if proved else 'ALREADY_CLOSED',trade_id=trade_id)
+        pending=[r for r in previous if r['state'] not in ('BOOKED','REFUSED')]
+        if len(pending)>1:raise ValueError('coordinated_multiple_pending_reductions')
+        logical=pending[0]['logical_id'] if pending else prefix+str(len(own))
+        reduction=close_once(executor,trade_id,group_id,logical,reason=reason)
+        closed=executor.journal.query('SELECT status FROM trades WHERE id=?',(trade_id,))[0]['status']=='closed'
+        return dict(status=('CLOSED' if closed and reduction['status']=='BOOKED' else
+                            'REDUCING' if reduction['status']=='BOOKED' else reduction['status']),
+                    trade_id=trade_id,reduction=reduction)

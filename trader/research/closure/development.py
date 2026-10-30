@@ -465,7 +465,7 @@ def _develop_hedge(candidate, bundle, env, external, done):
                               h_window=(int(rr['lookback']) + 1) if rr['method'] == 'rolling_beta' else 1)
             pcl, hcl, popen, hopen, sig = al['p'], al['h'], al['po'], al['ho'], al['sig']
             exits = H.aligned_exits(compiled, bundle.sym_frames[sym], al, **kw)
-            primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al)
+            primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al,hedge_frame=hdf)
             half = len(pcl) // 2
             pr, hr = np.r_[np.nan, np.diff(pcl) / pcl[:-1]], np.r_[np.nan, np.diff(hcl) / hcl[:-1]]
             beta = H.estimate_ratio(dict(spec, ratio=dict(spec['ratio'], method='ols_beta', fit_end=half)), pr, hr, half - 1) \

@@ -135,6 +135,10 @@ def observation(feed,journal,version,stamp,*,decision_ms=None):
         decision_basis='RECEIVED_INPUTS_BEFORE_QUOTE_DECISION' if decision_ms is not None else 'CLOSED_CUT_POINT_IN_TIME',
         primary_exit_observation=dict(bar_ms=stamp,step_ms=step,**{k:float(primary[k].iloc[-1]) for k in ('open','high','low','close')},
                                      atr=float(atr) if np.isfinite(atr) else None))
+    hatr=trail_atr_series(hedge,step).iloc[-1]
+    result['primary_exit_observation']['hedge']=dict(bar_ms=stamp,step_ms=step,
+        **{k:float(hedge[k].iloc[-1]) for k in ('open','high','low','close')},
+        atr=float(hatr) if np.isfinite(hatr) else None)
     return result
 
 

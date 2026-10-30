@@ -332,6 +332,7 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
         from .coordinated_unwind import entry_block as unwind_entry_block
         blocked = unwind_entry_block(manager.journal, cap['instrument_id'], identity)
         if blocked:raise ValueError(blocked)
+        from .coordinated_authority import validate_identity
         raw = intent(decision, requested, atr, stop, target, strategy_id, identity, reference, cap, trade_intent)
         if trade_intent:
             if not manager.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'"):
@@ -352,6 +353,7 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
                 raise ValueError('increase_stop_must_preserve_existing_geometry')
             if positive(target,zero=True) != positive(adjustment['before']['take_profit'],zero=True):
                 raise ValueError('increase_target_must_preserve_existing_geometry')
+        validate_identity(manager.journal,strategy_id,identity,decision.symbol)
         for row in positions:
             if adjustment and row['id'] == adjustment['trade_id']:
                 continue
@@ -429,6 +431,8 @@ def validate(executor, permission, decision, amount, atr, stop, target, strategy
     manager = executor.risk_manager
     if manager is None or not isinstance(permission, EntryPermission):
         raise ValueError('exact_risk_permission_required')
+    from .coordinated_authority import validate_identity
+    validate_identity(executor.journal,strategy_id,identity,decision.symbol)
     raw = permission.payload()
     if getattr(manager, '_entry_permissions', {}).get(digest(raw)) is not permission:
         raise ValueError('risk_permission_not_issued')

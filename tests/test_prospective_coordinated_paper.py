@@ -8,10 +8,10 @@ from trader.research.compose import hedge as H
 from tests.test_managed_hedge import policy
 
 
-def setup(tmp_path,primary_exit=None):
+def setup(tmp_path,primary_exit=None,management=None):
     j=Journal(tmp_path/'paper.db')
     spec=H.make_spec(purpose='protective_beta',primary={'symbol':'A/USDT'},hedge={'symbol':'B/USDT'},
-        ratio={'method':'fixed','value':1.,'lookback':20,'max_ratio':2.},management=policy())
+        ratio={'method':'fixed','value':1.,'lookback':20,'max_ratio':2.},management=management or policy())
     runner=CoordinatedPaper(j)
     key=runner.start(spec=spec,identity=dict(exec_mode='paper',version_id='v',spec_hash='s',
         install_id='i',admission_id='a'),timing=QUOTE_TIMING,primary_exit=primary_exit)
@@ -167,3 +167,35 @@ def test_quote_episodes_keep_native_bounds_for_statistical_consumer():
     result=OA.evaluate(dict(alpha=.1,result=dict(objective='net_return_pct',
         objective_episodes=episodes,admission_protocol_id=OA.protocol_id())))
     assert not result['admitted']
+
+
+@pytest.mark.parametrize('action,main_remains',[('close_group',False),('close_hedge',True)])
+def test_strategy_hedge_stop_persists_and_executes_on_subsequent_quotes(tmp_path,action,main_remains):
+    from dataclasses import asdict
+    from tests.test_strategy_hedge_stops import current
+    from trader.strategy.spec import ExitSpec
+    management=dict(current(action=action),stop_loss_pct=80.)
+    j,r,key=setup(tmp_path,asdict(ExitSpec(stop={'kind':'pct','v':.20},
+        target={'kind':'none'},trail={'kind':'none'},time={'max_bars':100})),management=management)
+    def tick(at,*,signal=0,pm=90.,hm=100.):
+        value=obs(at,signal=signal,pm=pm,hm=hm)
+        value['primary_exit_observation']=dict(bar_ms=1000,step_ms=1000,open=100.,high=100.,low=100.,
+            close=100.,atr=1.,hedge=dict(bar_ms=1000,step_ms=1000,open=100.,high=100.,low=100.,close=100.,atr=1.))
+        return value
+    r.advance(key,0,tick(1100,signal=1,pm=100.),allow_entry=True)
+    r.advance(key,1,tick(2100,pm=100.),allow_entry=True)
+    r.advance(key,2,tick(3100),allow_entry=True)
+    r.advance(key,3,tick(4100),allow_entry=True)
+    assert all(r.state(key)['book']['pos'].values())
+    r=CoordinatedPaper(Journal(j.db_path))
+    result=r.advance(key,4,tick(5100,hm=112.),allow_entry=True)
+    assert {i['reason'] for i in result['intents']}=={'strategy_hedge_stop'}
+    expected={'hedge'} if main_remains else {'primary','hedge'}
+    assert {i['leg'] for i in result['intents']}==expected
+    # Exit intent at this quote has not become a past-price fill.
+    assert result['positions']['hedge']<0
+    filled=r.advance(key,5,tick(6100,hm=112.),allow_entry=False)
+    assert filled['positions']['hedge']==0
+    assert bool(filled['positions']['primary'])==main_remains
+    assert filled['native_bar']==0
+    assert not j.query('SELECT * FROM trades')

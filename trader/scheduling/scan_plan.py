@@ -80,6 +80,11 @@ def strategy_inputs(view, st, genome):
             out.btc['1h'] = max(400, int(genome.params.get('lag_lookback', 0)) + 1)
         return out
     spec, requires = metadata
+    return declared_inputs(spec,requires)
+
+
+def declared_inputs(spec,requires):
+    """Finite inference inputs shared by candidate scans and owned exits."""
     need = fill_timing.history_requirements(spec)
     if need['exceeds_bound']:
         raise ValueError('history_exceeds_bound')

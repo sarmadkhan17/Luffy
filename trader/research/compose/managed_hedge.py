@@ -9,11 +9,12 @@ import math
 from ..closure import ClosureRefused
 
 VERSION='primary-first-combined-position.v1'
+CURRENT_VERSION='primary-first-combined-position.v2'
 PROTECTIVE=('protective_beta','protective_directional','stress_loss')
 
 
 def validate(policy):
-    if not isinstance(policy,dict) or policy.get('version')!=VERSION or policy.get('entry')!='PRIMARY_FIRST':
+    if not isinstance(policy,dict) or policy.get('version') not in (VERSION,CURRENT_VERSION) or policy.get('entry')!='PRIMARY_FIRST':
         raise ClosureRefused('hedge_primary_first_policy_required')
     if policy.get('pnl_basis')!='COMBINED_NET_EQUITY':
         raise ClosureRefused('hedge_combined_net_pnl_required')
@@ -28,7 +29,26 @@ def validate(policy):
         raise ClosureRefused('hedge_management_must_trigger_before_model_liquidation')
     if trigger['kind']=='combined_loss_pct' and trigger['value']>=policy['stop_loss_pct']:
         raise ClosureRefused('hedge_management_trigger_after_combined_stop')
+    if policy['version']==CURRENT_VERSION:
+        hedge_exit_spec(policy)
     return policy
+
+
+def hedge_exit_spec(policy):
+    """Strategy-declared hedge protection; no invented numerical stop."""
+    from ...strategy.spec import ExitSpec
+    from ...strategy import exit_policy as E
+    if not isinstance(policy,dict) or policy.get('version')!=CURRENT_VERSION:
+        raise ClosureRefused('hedge_strategy_stop_not_declared')
+    value=policy.get('hedge_stop')
+    if not isinstance(value,dict) or set(value)!={'stop','trail','on_hit'} or value['on_hit'] not in ('close_group','close_hedge'):
+        raise ClosureRefused('hedge_strategy_stop_not_declared')
+    ex=ExitSpec(stop=value['stop'],target={'kind':'none'},trail=value['trail'],
+                time={'max_bars':E.MAX_HOLD_BARS},signal_exit='')
+    bad=E.unsupported(ex)
+    if bad or ex.stop['kind']=='pct' and ex.stop['v']>=1:
+        raise ClosureRefused('hedge_strategy_stop_unsupported',bad or 'nonpositive_long_stop')
+    return ex
 
 
 def require_current(spec):

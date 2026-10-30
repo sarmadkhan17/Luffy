@@ -274,7 +274,7 @@ def protected_evaluation(freeze: dict, env: dict, c: Combination, sealed: Path, 
     exits = H.aligned_exits(compiled, sf, al, btc=btc, derivs=(ext.get('derivs') or {}).get(psym),
                             universe={k: {env['tf']: v} for k, v in frames.items()},
                             market=ext.get('market'), symbol=psym, world=ext.get('world'))
-    primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al)
+    primary_exit,decision_bars=H.primary_exit_inputs(compiled,df,al,hedge_frame=hdf)
     res = H.evaluate(spec, al['p'], al['h'], al['sig'], exits, opens=(al['po'], al['ho']), funding=funding,
                      flat_funding_rate=flat,assessment_episode_bars=(freeze.get('admission_protocol') or {}).get('episode_bars'),
                      reduced_fraction=freeze['development_comparators']['reduced']['fraction'],primary_exit=primary_exit,decision_bars=decision_bars)

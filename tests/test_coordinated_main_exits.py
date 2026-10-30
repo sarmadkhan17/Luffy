@@ -80,3 +80,34 @@ def test_group_exit_cannot_accept_primary_only_semantics(tmp_path,packet,monkeyp
     snap=NS(price=100.,ts='2026-10-29T00:00:00+00:00')
     with pytest.raises(ValueError,match='live_exit_identity_unbound'):LiveExitAdapter(j,executor).manage(t,snap)
     executor.close.assert_not_called()
+
+
+@pytest.mark.parametrize('action',['close_group','close_hedge'])
+def test_live_hedge_adapter_uses_strategy_hedge_stop_and_declared_action(tmp_path,packet,monkeypatch,action):
+    from tests.test_strategy_hedge_stops import packet_with_stop
+    from trader.research.compose import managed_hedge as M
+    packet=packet_with_stop(packet,action)
+    j,v,t,identity,primary_policy,state,executor,start,step=fixture(tmp_path,packet,monkeypatch,'hedge')
+    hp=packet['candidate']['hedge']['management']
+    policy,state=E.initialize(M.hedge_exit_spec(hp),100.,1.,'short',start,step)
+    identity['hedge_exit_state']=E.encode(policy,state);t['entry_identity_json']=json.dumps(identity)
+    price=111.
+    frame=pd.DataFrame([dict(ts=pd.Timestamp(start+step,unit='ms',tz='UTC'),open=100.,high=price,low=100.,close=price,volume=10.)])
+    snap=Snapshot(t['symbol'],pd.Timestamp(start+2*step,unit='ms',tz='UTC').isoformat(),price,
+                  {v['spec']['timeframe']:frame},market_type='futures')
+    reduce=Mock(return_value={'status':'REDUCING'})
+    monkeypatch.setattr(C,'close_hedge_once',reduce)
+    adapter=LiveExitAdapter(j,executor)
+    assert adapter.manage(t,snap) is None
+    saved=E.decode(j.query('SELECT state_json FROM versioned_live_exit_states')[0]['state_json'])
+    assert saved[0].side=='short' and saved[0].stop==110. and saved[1].reason=='stop'
+    if action=='close_hedge':
+        executor.close.assert_not_called()
+        assert reduce.call_args.args[1:3]==(t['id'],'g')
+        reduce.return_value={'status':'CLOSED'}
+        assert LiveExitAdapter(Journal(j.db_path),executor).manage(t,snap)=='stop'
+        assert t['_strategy_exit_evidence']['scope']=='HEDGE_ONLY'
+    else:
+        reduce.assert_not_called()
+        assert executor.close.call_args.kwargs['reason']=='stop'
+        assert t['_strategy_exit_evidence']['scope']=='WHOLE_POSITION'

@@ -24,8 +24,9 @@ from ...strategy.exit_policy import EXIT_SEMANTICS_ID as PRIMARY_EXIT_RULE
 
 SCHEMA = 'hedge-spec.v1'
 MAX_QUOTE_INCREASE_AGE_MS=60_000
-BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v3',primary_rule=PRIMARY_EXIT_RULE,
+BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v4',primary_rule=PRIMARY_EXIT_RULE,
     rule='primary first; main stop/target/trail/time/signal OR combined net-PnL exit closes the whole group',
+    hedge_rule='v2 strategy freezes own hedge stop, trail and close_group/close_hedge response before testing; no numerical defaults',
     fill='both legs at next bar open under declared costs; no intrabar or venue fill claim',
     controls='unhedged/reduced use the identical exit decision procedure',
     missing='unknown declared exit evidence requests unwind and makes economics incomplete')
@@ -214,6 +215,8 @@ class HedgeBook:
     primary_exit_state: str | None = None
     exit_input_gaps: int = 0
     primary_quote_range: dict | None = None
+    hedge_exit_state: str | None = None
+    hedge_quote_range: dict | None = None
     management_entry_equity: float | None = None
     management_activated: bool = False
     last_clock_bar: int = -1
@@ -298,6 +301,24 @@ class HedgeBook:
             bar.update(signal=0,exit=True)
         return bar
 
+    def _hedge_stop(self,bar,*,prepare=False):
+        """Use the same pure exit transitions with this leg's own frozen rule."""
+        from dataclasses import asdict,replace
+        from . import managed_hedge as M
+        policy=self.spec.get('management') or {}
+        if policy.get('version')!=M.CURRENT_VERSION:return False
+        ex=M.hedge_exit_spec(policy)
+        proxy=dict(bar,p=bar['h'],signal=-self.direction if prepare else 0,exit=False,
+            primary_exit_observation=(bar.get('primary_exit_observation') or {}).get('hedge'))
+        shadow=replace(self,state='FLAT' if prepare else 'HEDGED',pos=dict(primary=self.pos['hedge']),
+            primary_exit_definition=asdict(ex),primary_exit_state=None if prepare else self.hedge_exit_state,
+            primary_quote_range=None if prepare else self.hedge_quote_range,exit_input_gaps=0)
+        result=shadow._primary_exit(proxy)
+        self.hedge_exit_state=shadow.primary_exit_state;self.hedge_quote_range=shadow.primary_quote_range
+        self.exit_input_gaps+=shadow.exit_input_gaps
+        return bool(result.get('exit'))
+
+
     def step(self, t: int, bar: dict) -> list:
         """bar: p (primary px), h (hedge px, NaN = unavailable), signal (+1/-1/0), exit (bool),
         ratio (current hedge ratio >=0), corr (rolling corr or None), prim_c / hedge_c (Contract)."""
@@ -368,6 +389,14 @@ class HedgeBook:
                     self._emit(out, 'UNWIND', leg, -int(np.sign(q)), abs(q), 'unwind_remainder', t)
             return out
         reason = None
+        gaps_before=self.exit_input_gaps
+        if not bar.get('exit') and self.pos['hedge'] and self._hedge_stop(bar):
+            unknown=self.exit_input_gaps>gaps_before
+            if not unknown and sp['management']['hedge_stop']['on_hit']=='close_hedge':
+                self._emit(out,'UNWIND','hedge',-int(np.sign(self.pos['hedge'])),abs(self.pos['hedge']),'strategy_hedge_stop',t)
+                self.state='PRIMARY_OPEN';self.management_activated=False;self.last_rebalance=t
+                return out
+            bar=dict(bar,exit=True);combined_exit='hedge_stop_evidence_unavailable' if unknown else 'strategy_hedge_stop'
         if bar.get('exit'):
             reason = combined_exit or 'strategy_exit' if managed else 'primary_exit'
         elif t - self.entry_bar >= un['max_hold_bars']:
@@ -399,6 +428,10 @@ class HedgeBook:
         elif t - self.last_rebalance >= sp['rebalance']['min_interval_bars']:
             if want > have:
                 first_management=managed and have==0
+                if first_management and self._hedge_stop(bar,prepare=True):
+                    self._emit(out,'UNWIND','primary',-self.direction,abs(self.pos['primary']),'hedge_stop_evidence_unavailable',t)
+                    self.state='UNWINDING'
+                    return out
                 self._emit(out, 'ENTER' if first_management else 'REBALANCE', 'hedge', side,
                            hc.qty_for(want - have, bar['h']),
                            'risk_management_activation' if first_management else 'ratio_drift', t)
@@ -637,6 +670,25 @@ def stress_cases(spec, p, h, signals, exits, base_kwargs, *, episode_bars=None) 
             kw['opens'] = (kw['opens'][0], np.asarray(kw['opens'][1]) * new_h / h)
         if kw.get('bid_ask') is not None:
             kw['bid_ask']=dict(kw['bid_ask'],hedge=tuple(np.asarray(a)*new_h/h for a in kw['bid_ask']['hedge']))
+        elif kw.get('decision_bars') is not None and any((b or {}).get('hedge') for b in kw['decision_bars']):
+            from copy import deepcopy
+            import pandas as pd
+            from ...strategy.exit_policy import trail_atr_series
+            bars=deepcopy(kw['decision_bars']);factor=new_h/h
+            changed=np.flatnonzero(~np.isclose(factor,1.,rtol=0.,atol=1e-14))
+            if len(changed):
+                rows=[]
+                for i,bar in enumerate(bars):
+                    hedge=(bar or {}).get('hedge') or {}
+                    for key in ('open','high','low','close'):
+                        if key in hedge:hedge[key]*=float(factor[i])
+                    rows.append(dict(ts=hedge.get('bar_ms',i*(bars[0] or {}).get('step_ms',1)),
+                        **{key:hedge.get(key,float('nan')) for key in ('open','high','low','close')}))
+                atr=trail_atr_series(pd.DataFrame(rows),bars[0]['step_ms']).to_numpy(float)
+                for i in range(int(changed[0]),len(bars)):
+                    if (bars[i] or {}).get('hedge') is not None:
+                        bars[i]['hedge']['atr']=float(atr[i]) if np.isfinite(atr[i]) else None
+                kw['decision_bars']=bars
         return kw
     out['correlation_break'] = replay(spec, p, h2, signals, exits, **scenario_prices(h2))
     # basis divergence: hedge price drifts away by 5% over the second half
@@ -910,7 +962,7 @@ def aligned_exits(compiled, frames, alignment, **context):
     return out
 
 
-def primary_exit_inputs(compiled,frame,alignment):
+def primary_exit_inputs(compiled,frame,alignment,hedge_frame=None):
     """Version-bound geometry and observations on the same complete pair clock."""
     from dataclasses import asdict
     from ...strategy.exit_policy import trail_atr_series
@@ -920,4 +972,11 @@ def primary_exit_inputs(compiled,frame,alignment):
     atr=place(alignment['idx_p'],trail_atr_series(frame,step),n)
     bars=[dict(bar_ms=int(stamp),step_ms=step,**{key:float(value[i]) for key,value in values.items()},
                atr=float(atr[i]) if np.isfinite(atr[i]) else None) for i,stamp in enumerate(alignment['grid_ms'])]
+    if hedge_frame is not None:
+        values={key:place(alignment['idx_h'],hedge_frame[key],n) for key in ('open','high','low','close')}
+        atr=place(alignment['idx_h'],trail_atr_series(hedge_frame,step),n)
+        for i,bar in enumerate(bars):
+            bar['hedge']=dict(bar_ms=bar['bar_ms'],step_ms=step,
+                **{key:float(value[i]) for key,value in values.items()},
+                atr=float(atr[i]) if np.isfinite(atr[i]) else None)
     return asdict(compiled.spec.exit),bars

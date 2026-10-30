@@ -97,6 +97,22 @@ def _positions(executor):
     return {r.instrument_id.value:r.absolute_quantity for r in obs.positions if r.position_present}
 
 
+def _owned_replacement(executor,closed,members,positions):
+    """A later owned hedge may reuse a closed hedge's net instrument."""
+    from ..cognition.outcomes import timestamp
+    old=executor.journal.query('SELECT * FROM trades WHERE id=?',(closed['trade_id'],))[0]
+    replacements=[]
+    for member in members:
+        if member['trade_id']==closed['trade_id'] or member['instrument_id']!=closed['instrument_id']:continue
+        row=executor.journal.query('SELECT * FROM trades WHERE id=?',(member['trade_id'],))[0]
+        if row['status']=='open':replacements.append((member,row))
+    if len(replacements)!=1:return False
+    member,row=replacements[0]
+    if member['leg']!=closed['leg'] or not old.get('closed_at') or not row.get('opened_at'):return False
+    return (timestamp(old['closed_at'])<timestamp(row['opened_at'])
+            and A.positive(row['amount'])==A.positive(positions[closed['instrument_id']]))
+
+
 def close_group_once(executor,group_id,logical_id,*,reason='combined_position_exit'):
     """At most one leg reduction per tick; exact retries survive restart.
 
@@ -129,7 +145,7 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
         for member in plan['members']:
             row=executor.journal.query('SELECT * FROM trades WHERE id=?',(member['trade_id'],))[0]
             if row['status']=='closed':
-                if member['instrument_id'] in positions:
+                if member['instrument_id'] in positions and not _owned_replacement(executor,member,plan['members'],positions):
                     return dict(group_id=group_id,status='CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED',leg=member['leg'])
                 continue
             C.ensure(executor.journal)
@@ -165,6 +181,43 @@ def request_close(executor,trade,reason):
     return close_group_once(executor,group,A.digest(['coordinated-position-close',group]),reason=reason)
 
 
+def _planned_hedge_close(journal,trade_id,group_id):
+    """Only an exact booked reduction proves a deliberate hedge removal."""
+    from . import booking
+    if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='trade_accounting_bookings'"):
+        return False
+    rows=journal.query('SELECT payload FROM trade_accounting_bookings WHERE trade_id=? ORDER BY id DESC LIMIT 1',(trade_id,))
+    if not rows:return False
+    receipt=json.loads(rows[0]['payload']);booking.replay(receipt)
+    if receipt['after']['status']!='closed':return False
+    if receipt['kind'] not in ('close:ratio_drift','close:coordinated_delta','close:strategy_hedge_stop'):
+        return False
+    return bool(C.retained_terminal_flat(journal,trade_id,group_id,receipt['evidence'].get('order_id')))
+
+
+def _hedge_closure_response(executor,primary,group):
+    """Apply the frozen strategy response without guessing the close cause.
+
+    A current replacement hedge supersedes old closed legs. Planned exact
+    reductions do not masquerade as protective-stop events. Missing financial
+    history cannot postpone a required protective reduction.
+    """
+    from ..research.compose import managed_hedge as M
+    identity=json.loads(primary['entry_identity_json'])
+    policy=identity['coordinated'].get('management_policy')
+    if not isinstance(policy,dict) or policy.get('version')!=M.CURRENT_VERSION:return None
+    M.validate(policy)
+    if policy['hedge_stop']['on_hit']!='close_group':return None
+    members=_members(executor,group)
+    rows=[executor.journal.query('SELECT * FROM trades WHERE id=?',(m['trade_id'],))[0]
+          for m in members if m['leg']=='hedge']
+    if not rows or any(row['status']=='open' for row in rows):return None
+    from ..cognition.outcomes import timestamp
+    latest=max(rows,key=lambda row:(timestamp(row['opened_at']),row['id']))
+    if _planned_hedge_close(executor.journal,latest['id'],group):return None
+    return request_close(executor,primary,'hedge_closed_unexpectedly')
+
+
 def resume(executor):
     """Existing 30-second position worker; no new parallel execution loop."""
     out=[];handled=set()
@@ -196,6 +249,20 @@ def resume(executor):
             if any(executor.journal.query('SELECT status FROM trades WHERE id=?',(m['trade_id'],))[0]['status']!='closed' for m in primary):
                 continue
             out.append(request_close(executor,hedge,'primary_position_closed'))
+        except Exception as exc:
+            out.append(_unavailable(group,exc))
+    primaries=executor.journal.query("SELECT * FROM trades WHERE status='open' AND "
+        "json_extract(CASE WHEN json_valid(entry_identity_json) THEN entry_identity_json ELSE '{}' END,"
+        "'$.coordinated.leg')='primary' ORDER BY id LIMIT 33")
+    if len(primaries)>32:raise ValueError('coordinated_unwind_active_group_bound_exceeded')
+    for primary in primaries:
+        group=owned_group(primary)
+        if not group or group in handled:continue
+        if len(out)==32:raise ValueError('coordinated_unwind_active_group_bound_exceeded')
+        handled.add(group)
+        try:
+            result=_hedge_closure_response(executor,primary,group)
+            if result is not None:out.append(result)
         except Exception as exc:
             out.append(_unavailable(group,exc))
     return out

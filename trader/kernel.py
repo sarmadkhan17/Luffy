@@ -1055,6 +1055,15 @@ class Kernel:
             self.feed.bind_instrument(symbol,bound_iid)
         try:
             plan = getattr(self, '_scan_plan', {}).get(symbol)
+            held_plan=getattr(self,'_held_input_plans',{}).get(symbol)
+            if symbol in getattr(self,'_held_input_errors',{}):
+                raise ValueError('coordinated_held_input_unavailable')
+            if held_plan is not None:
+                from copy import deepcopy
+                combined=deepcopy(held_plan)
+                if plan is not None:combined.merge(plan)
+                combined.limits[exec_tf]=max(combined.limits.get(exec_tf,0),400)
+                plan=combined
             limits = plan.limits if plan is not None else (getattr(self, '_history_limits', {}) or {})
             # configured frames PLUS the timeframes the admitted specs themselves name (their own and htf sources); only the selected symbol
             tfs_all = sorted(limits) if plan is not None else list(dict.fromkeys(self.cfg['timeframes']['context'] + [exec_tf] + sorted(limits)))
@@ -2268,6 +2277,8 @@ class Kernel:
         receive exit evaluation, unlike the historical first-orphan shortcut.
         """
         self._exposure_errors = []
+        from .engine.coordinated_inputs import plans as held_input_plans
+        self._held_input_plans,self._held_input_errors=held_input_plans(self.journal)
         serviced = set(serviced)
         trades = self.journal.open_trades()
         paper = self._paper.open_positions() if hasattr(self,'_paper') else []

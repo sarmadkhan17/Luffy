@@ -105,6 +105,7 @@ class LiveExitAdapter:
         if (trade['strategy_id'], identity.get('strategy_id'), identity.get('spec_sha256'), identity.get('install_id')) != (
                 version['strategy_id'], version['strategy_id'], version['spec_hash'], install['install_id']):
             raise ValueError('live_exit_identity_differs')
+        hedge_policy=None
         group=identity.get('coordinated')
         if group:
             from . import coordinated_close as C,coordinated_unwind as U
@@ -113,18 +114,25 @@ class LiveExitAdapter:
             owned=C.ownership(self.executor,trade,group.get('group_id'))
             # The hedge belongs to the main economic position; applying the
             # main strategy's target/time/stop to this opposite leg is wrong.
-            if owned['leg']=='hedge' or U.active(self.journal,owned['group_id']):
-                return None
+            if U.active(self.journal,owned['group_id']):return None
+            if owned['leg']=='hedge':
+                from ..research.compose import managed_hedge as M
+                hedge_policy=version['lineage']['research']['multi_leg']['hedge_spec'].get('management')
+                if (hedge_policy or {}).get('version')!=M.CURRENT_VERSION:return None
+                M.validate(hedge_policy)
         elif version.get('lineage',{}).get('research',{}).get('multi_leg'):
             raise ValueError('live_exit_group_identity_missing')
         spec = StrategySpec.from_dict(version['spec'])
+        if hedge_policy:
+            from dataclasses import replace
+            spec=replace(spec,exit=M.hedge_exit_spec(hedge_policy))
         bad = E.unsupported(spec.exit)
         if bad:
             raise ValueError('unsupported_versioned_exit:' + bad)
         with self.journal._tx() as c:
             c.execute('BEGIN IMMEDIATE')
             row = c.execute('SELECT * FROM versioned_live_exit_states WHERE trade_id=?', (trade['id'],)).fetchone()
-            initial = identity.get('exit_state')
+            initial = identity.get('hedge_exit_state' if hedge_policy else 'exit_state')
             if not initial:
                 raise ValueError('live_exit_state_missing')
             policy, state = E.decode(row['state_json'] if row else initial)
@@ -156,6 +164,11 @@ class LiveExitAdapter:
             if group:
                 trade['_strategy_exit_evidence'].update(group_id=group['group_id'],
                     group_exit_semantics_id=identity['exit_semantics_id'],scope='WHOLE_POSITION')
+            if hedge_policy and hedge_policy['hedge_stop']['on_hit']=='close_hedge':
+                trade['_strategy_exit_evidence']['scope']='HEDGE_ONLY'
+                reduced=C.close_hedge_once(self.executor,trade['id'],group['group_id'],
+                    ['strategy-hedge-stop',version['version_id'],install['install_id'],trade['id']],reason=result.reason)
+                return result.reason if reduced['status']=='CLOSED' else None
             if result.reason == 'signal':
                 # Intent is durable, but no D6 executable-price interface has
                 # been reconciled yet. Never submit at the signal close.

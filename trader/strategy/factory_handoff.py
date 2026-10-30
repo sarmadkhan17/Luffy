@@ -878,7 +878,8 @@ def multi_leg_block(version: dict) -> str | None:
     lineage = version.get("lineage") if isinstance(version.get("lineage"), dict) else {}
     research = lineage.get("research") if isinstance(lineage.get("research"), dict) else {}
     if research.get("multi_leg"):
-        return "multi_leg_requires_coordinated_execution"
+        from ..engine.coordinated_authority import matches
+        if not matches(version):return "multi_leg_requires_coordinated_execution"
     return None
 
 
@@ -1974,8 +1975,9 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                                     CAPACITY)
     if not isinstance(v.get("lineage"), dict):
         reasons.append("version_lineage_absent")
-    if multi_leg_block(v):
-        reasons.append(multi_leg_block(v))
+    from ..engine.coordinated_authority import support_block
+    if support_block(v):
+        reasons.append(support_block(v))
     reached = [e["to_state"] for e in events(journal, version_id)]
     for bad in (DEGRADED, RETIRED, REJECTED):
         if bad in reached:
