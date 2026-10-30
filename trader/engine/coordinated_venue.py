@@ -112,7 +112,8 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
     with executor._entry_lock:
         version=F.load_version(executor.journal,vid)
         hs=version['lineage']['research']['multi_leg']['hedge_spec']
-        if book.spec!=hs:raise ValueError('coordinated_book_version_differs')
+        if book.spec!=hs or book.primary_exit_definition!=version['spec']['exit']:
+            raise ValueError('coordinated_book_version_differs')
         if (group.get('management_policy')!=hs.get('management')
                 or group.get('maintenance_fraction')!=hs['maint_margin']
                 or A.positive(group.get('allocated_equity_usdt'))!=A.positive(book.management_entry_equity)):
@@ -190,6 +191,9 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
             decision=Decision(action_id,'cycle_'+action_id,symbol,Action.BUY if ins.side>0 else Action.SELL,
                               1.,1.,1.,[],[],ts=now_utc().isoformat())
             decision.instrument_binding_json=A.proposal_binding(executor.journal,symbol)
+            proposed=json.loads(decision.instrument_binding_json or '{}')
+            if not proposed or (reference or {}).get('instrument_id')!=proposed.get('instrument_id') or not (reference or {}).get('source'):
+                raise ValueError('coordinated_action_quote_identity_differs')
             with executor.journal._tx() as db:
                 db.execute('INSERT OR IGNORE INTO cycles(id,ts,symbol) VALUES(?,?,?)',
                            (decision.cycle_id,decision.ts,symbol))

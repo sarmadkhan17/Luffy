@@ -27,7 +27,7 @@ def prepared(setup,monkeypatch,*,ready=True):
     ins=book.step(0,dict(p=100.,h=50.,signal=1,exit=False,ratio=.5,corr=1.,equity=200.,
         prim_c=H.Contract(),hedge_c=H.Contract(),primary_exit_observation=dict(
             bar_ms=0,step_ms=1000,open=100.,high=100.,low=100.,close=100.,atr=2.)))[0]
-    version=dict(version_id='v',spec_hash='s',strategy_id='strategy',source={'kind':F.HEDGE_HQ_KIND},
+    version=dict(version_id='v',spec_hash='s',strategy_id='strategy',source={'kind':F.HEDGE_HQ_KIND},spec={'exit':definition},
                  lineage=dict(research=dict(multi_leg=dict(hedge_spec=hs))))
     monkeypatch.setattr(F,'load_version',lambda *a:version)
     monkeypatch.setattr(F,'verify_validation',Mock())
@@ -38,7 +38,8 @@ def prepared(setup,monkeypatch,*,ready=True):
         coordinated_instruction_observed_ms=int(time.time()*1000),
         coordinated=dict(group_id='g',leg='primary',management_policy=hs['management'],
             allocated_equity_usdt=200.,maintenance_fraction=hs['maint_margin']))
-    reference=dict(price=100.,observed_ms=int(time.time()*1000),basis='synthetic_current_quote')
+    reference=dict(price=100.,observed_ms=int(time.time()*1000),basis='synthetic_current_quote',
+        instrument_id=json.loads(_.instrument_binding_json)['instrument_id'],source='synthetic-public-quote')
     return ex,j,e,book,ins,identity,reference
 
 

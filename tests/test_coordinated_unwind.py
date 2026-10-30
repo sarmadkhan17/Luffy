@@ -341,3 +341,33 @@ def test_planned_hedge_close_requires_exact_terminal_flat_receipt(tmp_path,monke
     j.add_trade(Position('h2','ETH/USDT',Side.SHORT,1.,100.,100.,strategy_id='fixture'))
     j.close_trade('h2',100.,0.,'reconciled_ghost')
     assert not G._planned_hedge_close(j,'h2','g')
+
+
+@pytest.mark.parametrize('created,allowed',[(99,True),(101,False),(None,False)])
+def test_unwind_adopts_only_an_owned_hedge_requested_before_unwind(tmp_path,monkeypatch,created,allowed):
+    e,rows,calls,close=protocol(tmp_path,monkeypatch)
+    members=G._members(e,'g')
+    plan=dict(group_id='g',logical_id='close',reason='fixture',started_ms=100,members=[members[0]])
+    G.ensure(e.journal)
+    with e.journal._tx() as db:
+        db.execute('INSERT INTO coordinated_group_unwinds VALUES(?,?,?,?,?)',
+                   ('g','close',A.canonical(plan),A.digest(plan),'UNWINDING'))
+    original=e.journal.query
+    def query(sql,params=()):
+        if sql=='SELECT entry_identity_json FROM trades WHERE id=?':
+            return [{'entry_identity_json':json.dumps(dict(execution_binding=dict(logical_id='already-submitted')))}]
+        if sql=='SELECT recovery_json FROM execution_requests WHERE logical_id=?':
+            return [{'recovery_json':json.dumps(dict(created_ms=created))}]
+        return original(sql,params)
+    monkeypatch.setattr(e.journal,'query',query)
+    if allowed:
+        updated=G._adopt_late_members(e,plan,members)
+        assert updated['members']==members
+        saved=e.journal.query('SELECT * FROM coordinated_group_unwinds')[0]
+        assert G._plan(saved)==updated
+        assert G.entry_block(e.journal,'H')=='coordinated_instrument_unwind_pending'
+    else:
+        with pytest.raises(ValueError,match='late_entry_unproven'):
+            G._adopt_late_members(e,plan,members)
+        assert G._plan(e.journal.query('SELECT * FROM coordinated_group_unwinds')[0])==plan
+    assert not calls

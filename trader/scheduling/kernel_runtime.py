@@ -58,6 +58,7 @@ class KernelRuntime:
         self.candle_active = {}
         self.coordinated_needs = ({}, [])
         self.held_coordinated_needs = ({}, [])
+        self.coordinated_live_results = []
         self.history_resume_index = 0
         self.alts_cold_status = None
         self.history_yields = 0
@@ -197,6 +198,7 @@ class KernelRuntime:
         executor=getattr(self.kernel,'executor',None)
         unwind_incomplete=False
         management_incomplete=False
+        self.coordinated_live_results=[]
         if executor is not None:
             with self.execution_lock:
                 try:
@@ -205,12 +207,20 @@ class KernelRuntime:
                     from ..engine.coordinated_management import run_once as manage_groups
                     self.coordinated_management_results=(manage_groups(executor)
                         if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
+                    from ..engine.coordinated_live import run_once as manage_live
+                    self.coordinated_live_results=(manage_live(executor,self.kernel.feed,self.coordinated_management_results)
+                        if getattr(self.kernel,'_manages_exits',lambda:False)() and getattr(executor,'journal',None) is not None else [])
                 except Exception as exc:
                     self.coordinated_unwind_results=[dict(group_id=None,status='UNAVAILABLE',reason=type(exc).__name__)]
                 unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
                                       for r in self.coordinated_unwind_results)
-                management_incomplete=any(r['status'] in ('UNAVAILABLE','HEDGE_ENTRY_REQUIRED')
-                                          for r in getattr(self,'coordinated_management_results',[]))
+                successful_live={r['group_id'] for r in self.coordinated_live_results
+                    if r['status'] in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED')}
+                management_incomplete=any(r['status']=='UNAVAILABLE' or
+                    r['status']=='HEDGE_ENTRY_REQUIRED' and r['group_id'] not in successful_live
+                    for r in getattr(self,'coordinated_management_results',[])) or any(
+                        r['status'] not in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED')
+                        for r in self.coordinated_live_results)
         view = analysis_context(self)
         required = view._exposure_symbols()
         with self.lock:

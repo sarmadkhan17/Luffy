@@ -113,6 +113,38 @@ def _owned_replacement(executor,closed,members,positions):
             and A.positive(row['amount'])==A.positive(positions[closed['instrument_id']]))
 
 
+def _adopt_late_members(executor,plan,current):
+    """An already-submitted hedge can finish entry recovery after close starts.
+
+    Only additions from an authenticated pre-existing Risk request qualify.
+    Existing members cannot disappear or change, and a later new intent cannot
+    expand a closing economic position.
+    """
+    old={m['trade_id']:m for m in plan['members']};actual={m['trade_id']:m for m in current}
+    started=plan.get('started_ms')
+    if type(started) is not int or any(actual.get(tid)!=m for tid,m in old.items()):
+        raise ValueError('coordinated_unwind_members_changed')
+    added=[m for m in current if m['trade_id'] not in old]
+    if not added or any(m['leg']!='hedge' for m in added):
+        raise ValueError('coordinated_unwind_members_changed')
+    for member in added:
+        row=executor.journal.query('SELECT entry_identity_json FROM trades WHERE id=?',(member['trade_id'],))[0]
+        root=json.loads(row['entry_identity_json'])
+        request=executor.journal.query('SELECT recovery_json FROM execution_requests WHERE logical_id=?',
+                                      (root['execution_binding']['logical_id'],))
+        recovery=json.loads(request[0]['recovery_json'] or '{}') if len(request)==1 else {}
+        created=recovery.get('created_ms')
+        if type(created) is not int or not 0<=created<=started:
+            raise ValueError('coordinated_unwind_late_entry_unproven')
+    updated=dict(plan,members=current)
+    with executor.journal._tx() as db:
+        changed=db.execute("UPDATE coordinated_group_unwinds SET plan_json=?,plan_sha256=? "
+            "WHERE group_id=? AND plan_sha256=? AND state='UNWINDING'",
+            (A.canonical(updated),A.digest(updated),plan['group_id'],A.digest(plan))).rowcount
+        if changed!=1:raise ValueError('coordinated_unwind_plan_changed')
+    return updated
+
+
 def close_group_once(executor,group_id,logical_id,*,reason='combined_position_exit'):
     """At most one leg reduction per tick; exact retries survive restart.
 
@@ -133,14 +165,15 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
                     raise ValueError('coordinated_unwind_identity_differs')
                 if rows[0]['state']=='CLOSED':return dict(group_id=group_id,status='CLOSED')
             else:
-                plan=dict(group_id=group_id,logical_id=logical_id,reason=reason,members=_members(executor,group_id))
+                plan=dict(group_id=group_id,logical_id=logical_id,reason=reason,
+                          started_ms=int(time.time()*1000),members=_members(executor,group_id))
                 db.execute('INSERT INTO coordinated_group_unwinds VALUES(?,?,?,?,?)',
                     (group_id,logical_id,A.canonical(plan),A.digest(plan),'UNWINDING'))
         # The instrument reservation is now durable, even when entry recovery
         # or a failed read prevents a reduction on this attempt.
         if executor.recovery_pending():return dict(group_id=group_id,status='ENTRY_RECOVERY_PENDING')
         current=_members(executor,group_id)
-        if current!=plan['members']:raise ValueError('coordinated_unwind_members_changed')
+        if current!=plan['members']:plan=_adopt_late_members(executor,plan,current)
         positions=_positions(executor)
         for member in plan['members']:
             row=executor.journal.query('SELECT * FROM trades WHERE id=?',(member['trade_id'],))[0]
