@@ -13,13 +13,15 @@ from trader.engine.risk import RiskManager
 def bind(journal, exchange, cfg, symbol='BTC/USDT'):
     journal.kv_set('control_state', 'ACTIVE')  # explicit isolated-test control intent
     now = int(time.time()*1000)
-    iid = InstrumentId('binance_usdm', MarketType.FUTURES, 'BTCUSDT')
+    base,quote=symbol.split('/')
+    venue_symbol=base+quote
+    iid = InstrumentId('binance_usdm', MarketType.FUTURES, venue_symbol)
     exchange.id = 'binanceusdm'
     exchange.apiKey = 'TEST-ONLY-key'
     exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3'}}
     from trader.data.feed import execution_account_scope
     scope = execution_account_scope(exchange)
-    record = InstrumentRecord(iid, AssetClass.UNKNOWN, 'PERPETUAL', 'BTC','USDT','USDT','1',None,
+    record = InstrumentRecord(iid, AssetClass.UNKNOWN, 'PERPETUAL', base,quote,quote,'1',None,
         Presence.PRESENT,'TRADING',None,
         OrderConstraints(price_tick='0.01', quantity_step='0.001',minimum_quantity='0.001',
                         minimum_notional='5',market_minimum_quantity='0.001',
@@ -30,10 +32,10 @@ def bind(journal, exchange, cfg, symbol='BTC/USDT'):
     snapshot = RegistrySnapshot(now,scope,AccountTrading.ENABLED,(record,),'TEST-ONLY-fixture')
     leverage = cfg['risk']['leverage']
     cap = register_capability(journal,snapshot,iid.value,execution_symbol=symbol,
-        venue_market=dict(id='BTCUSDT',base='BTC',quote='USDT',settle='USDT',linear=True,contract=True,contractSize=1),
+        venue_market=dict(id=venue_symbol,base=base,quote=quote,settle=quote,linear=True,contract=True,contractSize=1),
         leverage_evidence=observe_leverage(instrument_id=iid.value,account_scope=scope,snapshot_id=snapshot.snapshot_id,
-            symbol_config={'symbol':'BTCUSDT','leverage':leverage,'marginType':'CROSSED'},
-            leverage_brackets={'symbol':'BTCUSDT','brackets':[{'notionalFloor':'0','notionalCap':'100000','initialLeverage':leverage}]},
+            symbol_config={'symbol':venue_symbol,'leverage':leverage,'marginType':'CROSSED'},
+            leverage_brackets={'symbol':venue_symbol,'brackets':[{'notionalFloor':'0','notionalCap':'100000','initialLeverage':leverage}]},
             observed_at_ms=now,valid_until_ms=now+300000,source='TEST-ONLY-fixture'),valid_until_ms=now+300000)
     ts = datetime.now(timezone.utc).isoformat()
     journal.kv_set('account_observation',json.dumps(dict(status='FRESH',value=10000.,
@@ -43,7 +45,7 @@ def bind(journal, exchange, cfg, symbol='BTC/USDT'):
     exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3'}}
     exchange.id = 'binanceusdm'
     exchange.entry_account_scope = scope
-    exchange.market = lambda s: dict(id='BTCUSDT',base='BTC',quote='USDT',settle='USDT',
+    exchange.market = lambda s: dict(id=s.split(':')[0].replace('/',''),base=s.split('/')[0],quote='USDT',settle='USDT',
                                    linear=True,contract=True,contractSize=1)
     from trader.observability.portfolio_observation import observe_positions
     from trader.engine.evidence_capture import position_snapshot, record_snapshot, margin_observation, record_margin
