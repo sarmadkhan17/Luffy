@@ -26,7 +26,10 @@ def test_return_pair_is_assessed_using_real_two_leg_accounting():
     assert Q.rederive_verdict(res,spec)==res['verdict']
     assert Q.assess(res,spec)[0]=='ASSESSED_SUPPORTED'
     assert res['comparators']['hedged']['net_return_pct']>max(0.,res['comparators']['unhedged']['net_return_pct'],res['comparators']['reduced']['net_return_pct'])
-    assert Q.ADMISSION_METHODS=={} # independent statistical qualification remains unavailable
+    # Registering a statistical method does not approve it or qualify this
+    # development-only result for live trading.
+    assert Q.ADMISSION_METHODS
+    assert Q.registered_method({}) is None
 
 
 @pytest.mark.parametrize('drift,fee',[(0.0003,4.),(-0.001,500.)])
