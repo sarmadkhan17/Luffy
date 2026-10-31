@@ -14,9 +14,9 @@ from trader.strategy import exit_policy as E
 from trader.strategy.spec import ExitSpec
 
 
-def opened(setup,monkeypatch,*,fraction=1.):
+def opened(setup,monkeypatch,*,fraction=1.,exit_spec=None,step_ms=1000,last_bar_ms=0):
     ex,j,e,d=setup;e.fill_retry_s=0
-    p,s=E.initialize(ExitSpec(signal_exit='close < 100'),100.,2.,'long',0,1000)
+    p,s=E.initialize(exit_spec or ExitSpec(signal_exit='close < 100'),100.,2.,'long',last_bar_ms,step_ms)
     identity=dict(status='VERIFIED',strategy_id='strategy',version_id='TEST_ONLY_v',install_id='TEST_ONLY_i',
         spec_hash='TEST_ONLY_s',spec_sha256='TEST_ONLY_s',exit_semantics_id=E.EXIT_SEMANTICS_ID,exit_state=E.encode(p,s))
     create=ex.create_order

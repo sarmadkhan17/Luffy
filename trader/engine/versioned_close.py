@@ -71,6 +71,13 @@ def decision(trade,root,evidence,reason):
     return result
 
 
+def new_plan(trade,root,reason,evidence):
+    frozen=decision(trade,root,evidence,reason)
+    return dict(schema='versioned-whole-close.v1',trade_id=trade['id'],reason=reason,
+        instrument_id=root['execution_binding']['instrument_id'],entry_identity_sha256=A.digest(root),
+        started_ms=int(time.time()*1000),decision=frozen)
+
+
 def _positions(executor,trade,plan):
     observation=U._position_observation(executor)
     actual=next((p for p in observation.positions if p.instrument_id.value==plan['instrument_id'] and p.position_present),None)
@@ -95,10 +102,7 @@ def request_close(executor,trade,reason,*,evidence=None):
             if old[0]['state']=='CLOSED':return dict(trade_id=trade['id'],status='CLOSED')
         else:
             if current['status']!='open':return dict(trade_id=trade['id'],status='ALREADY_CLOSED')
-            frozen=decision(current,root,evidence,reason)
-            plan=dict(schema='versioned-whole-close.v1',trade_id=trade['id'],reason=reason,
-                instrument_id=root['execution_binding']['instrument_id'],entry_identity_sha256=A.digest(root),
-                started_ms=int(time.time()*1000),decision=frozen)
+            plan=new_plan(current,root,reason,evidence)
             with executor.journal._tx() as db:
                 db.execute('INSERT INTO '+TABLE+' VALUES(?,?,?,?)',
                            (trade['id'],A.canonical(plan),A.digest(plan),'CLOSING'))

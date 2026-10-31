@@ -155,3 +155,38 @@ def replay(body,bar_ms):
     i=selected[0]
     return dict(signal=bool(signal[i]) if signal is not None else False,
                 available=bool(available[i]) if available is not None else False)
+
+
+def verify_sources(body,bar_ms):
+    """Replay using only intact retained market receipts.
+
+    An unused unavailable context need not block an exit. Removing a damaged
+    source must leave the original signal explicitly available and true.
+    This proves retained-source integrity, not provider authenticity.
+    """
+    from ..data import market_provenance as P
+    groups=unpack(body['groups']);cut=body['as_of_ms'];manifest=[]
+    if type(cut) is not int:raise ValueError('signal_source_cut_unknown')
+    def qualified(frame,path):
+        if frame is None:return None
+        try:
+            if frame.empty or frame.attrs.get('read_mode')=='retrospective':return None
+            if not all(k in frame for k in (*P.META,'ts')):return None
+            if any(not pd.to_numeric(frame[k],errors='coerce').le(cut).all()
+                   for k in ('event_time_ms','available_at_ms','observed_at_ms')):return None
+            if not np.array_equal(P.ms(frame['ts']),frame['event_time_ms'].to_numpy()):return None
+            sealed=P.seal(frame)
+            if any(not sealed[k].equals(frame[k]) for k in ('content_hash','revision_id')):return None
+            manifest.append(dict(path=path,rows=len(frame),revisions_sha256=P.digest(list(frame['revision_id']))))
+            return frame
+        except (ValueError,KeyError,TypeError,OverflowError):return None
+    for kind in ('frames','btc','derivs','market'):
+        groups[kind]={k:qualified(f,[kind,k]) for k,f in (groups[kind] or {}).items()}
+    groups['universe']={s:{k:qualified(f,['universe',s,k]) for k,f in frames.items()}
+                        for s,frames in (groups['universe'] or {}).items()}
+    verified=dict(body,groups=pack(groups))
+    try:result=replay(verified,bar_ms)
+    except (ValueError,KeyError,TypeError,AttributeError):raise ValueError('signal_retained_sources_unavailable') from None
+    if result!={'signal':True,'available':True}:raise ValueError('signal_retained_sources_unavailable')
+    return dict(schema='exit-source-integrity.v1',as_of_ms=cut,frames=manifest,
+                scope='RETAINED_RECEIPT_INTEGRITY_AND_AVAILABLE_REPLAY_NOT_PROVIDER_AUTHENTICATION')

@@ -204,7 +204,14 @@ class LiveExitAdapter:
                 return result.reason
         if pending_error:raise ValueError(pending_error)
         if pending_signal and not (result and result.due):
-            # Protection has advanced and committed, but an unexecutable
-            # strategy exit must remain visible as an operational blocker.
+            if not group and getattr(self.executor,'ex',None) is not None:
+                from .live_signal_execution import execute
+                reduced=execute(self.executor,trade,spec,snap,policy,state)
+                if reduced is not None:
+                    if reduced['status']=='CLOSED':
+                        return V.load(self.journal.query('SELECT * FROM '+V.TABLE+' WHERE trade_id=?',(trade['id'],))[0])['reason']
+                    return None # the existing position worker owns recovery
+            # Missing/legacy inputs and unsupported grouped signal execution
+            # remain visible after continuing protective state commits.
             raise ValueError('live_signal_exit_execution_pending_D6')
         return None
