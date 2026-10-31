@@ -85,6 +85,16 @@ def test_positive_funding_is_income(artifact):
     assert reassess(artifact)['net_trade_pnl_usdt']==29
 
 
+def test_uniform_foreign_cashflows_do_not_become_usdt(artifact):
+    for page in artifact['fill_history']['pages']:
+        for fill in page['rows']:fill['commissionAsset']='BTC'
+    for page in artifact['funding_history']['pages']:
+        for row in page['rows']:row['asset']='BTC'
+    result=reassess(artifact)
+    assert not result['learning_eligible']
+    assert 'currency_conversion_missing_retry' in result['reasons']
+
+
 def test_zero_funding_requires_complete_event_and_income_history(artifact):
     artifact['funding_history']['pages'][0]['rows']=[]
     assert not reassess(artifact)['learning_eligible']

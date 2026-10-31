@@ -101,7 +101,7 @@ def evaluator_id() -> str:
     root = Path(__file__).parents[2]
     files = {f'closure.{p.stem}': hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(here.glob('*.py'))}
     # Fingerprint inputs only (file CONTENT is hashed; nothing is imported or called here).
-    for rel in ('strategy/fill_timing.py', 'strategy/spec_evidence.py', 'strategy/compile.py', 'strategy/dsl.py',
+    for rel in ('core/contract_values.py', 'strategy/fill_timing.py', 'strategy/spec_evidence.py', 'strategy/compile.py', 'strategy/dsl.py',
                 'strategy/geometries.py', 'data/market_provenance.py', 'data/feed.py', 'research/factory_transfer.py',
                 'strategy/factory_handoff.py'):
         files[rel] = hashlib.sha256((root / rel).read_bytes()).hexdigest()
@@ -462,7 +462,6 @@ def verify_envelope(env, manifest=None):
 
 # ── data views ───────────────────────────────────────────────────────────
 def _dev_frames(snapshot_path, env):
-    import pandas as pd
     path = refuse_live(snapshot_path)
     step = TF_MS[env['tf']]
     lo, hi = env['fit_window'][0], env['dev_end_ms']

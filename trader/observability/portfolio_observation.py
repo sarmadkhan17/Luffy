@@ -22,15 +22,26 @@ _TRADING_SOURCES = {
     "https://demo-fapi.binance.com/fapi/v3": ("demo", "https://demo-fapi.binance.com"),
     "https://fapi.binance.com/fapi/v3": ("production", "https://fapi.binance.com"),
 }
+_COIN_TRADING_SOURCES = {
+    'https://demo-dapi.binance.com/dapi/v1': ('demo', 'https://demo-dapi.binance.com'),
+    'https://dapi.binance.com/dapi/v1': ('production', 'https://dapi.binance.com'),
+}
 _VENUE_SYMBOL = re.compile(r"[A-Z0-9]+USDT")
 
 
 def trading_source(exchange: object) -> tuple[str, str]:
-    """Read the private USD-M REST venue already resolved by make_exchange()."""
+    """Identify the already-resolved REST venue; this grants no capability."""
     urls = getattr(exchange, "urls", None)
     api = urls.get("api") if isinstance(urls, dict) else None
-    private_url = api.get("fapiPrivateV3") if isinstance(api, dict) else None
+    coin = getattr(exchange, 'id', None) == 'binancecoinm'
+    private_url = api.get('dapiPrivate' if coin else 'fapiPrivateV3') if isinstance(api, dict) else None
     try:
+        if coin:
+            result = _COIN_TRADING_SOURCES[private_url]
+            for name, suffix in (('dapiPublic', '/dapi/v1'), ('dapiPrivateV2', '/dapi/v2')):
+                if name in api and api[name] != result[1] + suffix:
+                    raise ValueError('mixed COIN-M trading REST venues')
+            return result
         return _TRADING_SOURCES[private_url]
     except (KeyError, TypeError) as exc:
         raise ValueError("unsupported or ambiguous trading REST venue") from exc

@@ -66,22 +66,8 @@ class HedgeRefused(ClosureRefused):
     pass
 
 
-@dataclass(frozen=True)
-class Contract:
-    kind: str = 'linear'          # linear (USDT-M) | inverse (COIN-M)
-    multiplier: float = 1.0       # inverse: USD per contract
-
-    def qty_for(self, notional_usd: float, price: float) -> float:
-        return notional_usd / price if self.kind == 'linear' else float(np.floor(notional_usd / self.multiplier))
-
-    def notional(self, qty: float, price: float) -> float:
-        return abs(qty) * price if self.kind == 'linear' else abs(qty) * self.multiplier
-
-    def pnl_usd(self, qty: float, p0: float, p1: float) -> float:
-        """Signed qty (+long). Inverse P&L accrues in the base coin and is marked to USD at p1."""
-        if self.kind == 'linear':
-            return qty * (p1 - p0)
-        return qty * self.multiplier * (1.0 / p0 - 1.0 / p1) * p1
+# Public import retained for frozen callers and historical replay code.
+from ...core.contract_values import Contract  # noqa: E402,F401
 
 
 def capital_enabled(spec):

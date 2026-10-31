@@ -1,7 +1,8 @@
 """Whole-trade reconciliation from immutable bookings and bounded venue reads.
 
-Only demo USDT linear, one-way positions are supported. Currency subtotals are
-kept separate; no invented FX rates, funding rates or journal P&L substitutes.
+Demo USDT linear and native-coin inverse perpetual one-way captures are
+supported. Native coin results do not enter USDT learning without conversion.
+Currency subtotals stay separate; no invented FX, funding or journal P&L.
 Capture is manual/off-path. Every retry creates a new self-contained artifact.
 """
 from __future__ import annotations
@@ -12,9 +13,12 @@ import time
 from .accounting import digest, number
 from . import booking
 from ..core.types import norm_symbol
+from ..core.contract_values import Contract
 
 VERSION = 'whole-trade-accounting.v1'
 INTERVAL_VERSION = 'whole-trade-accounting.closed-interval.v2'
+NATIVE_VERSION = 'whole-trade-accounting.native-coin.v1'
+NATIVE_INTERVAL_VERSION = 'whole-trade-accounting.native-coin.closed-interval.v1'
 DAY = 86_400_000
 LIMIT = 1000
 MAX_PAGES = 16
@@ -93,7 +97,7 @@ def legs(source, *, closed=True):
     return result
 
 
-def history(exchange, endpoint, symbol, start, end, observed):
+def history(exchange, endpoint, symbol, start, end, observed, *, coin=False):
     """Split saturated time windows instead of skipping equal-timestamp rows.
 
     A short response proves endpoint enumeration only, not publication finality.
@@ -113,6 +117,8 @@ def history(exchange, endpoint, symbol, start, end, observed):
         try:
             method = {'fills': 'fapiPrivateGetUserTrades', 'income': 'fapiPrivateGetIncome',
                       'funding_events': 'fapiPublicGetFundingRate'}[endpoint]
+            if coin:
+                method = method.replace('fapi', 'dapi', 1)
             raw = getattr(exchange, method)(params)
             if not isinstance(raw, list) or any(not isinstance(r, dict) for r in raw):
                 raise ValueError('invalid_history_response')
@@ -183,17 +189,40 @@ def assess(a, *, marked=False):
         if (timestamp(t['opened_at']) > a['bookings']['receipts'][0]['observed_ms']
                 or (t['status']=='closed' and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
             raise ValueError('journal_booking_clock_conflict')
-        if a['environment'] != 'demo' or a['venue'] != 'binanceusdm':
+        native = a.get('schema_version') in (NATIVE_VERSION,NATIVE_INTERVAL_VERSION)
+        contract, currency = Contract('linear'), 'USDT'
+        if native:
+            binding = a['contract_binding']
+            market = binding['market']
+            size = number(market.get('contractSize'))
+            from ..core.instrument_registry import InstrumentId
+            from ..core.types import MarketType
+            iid = InstrumentId('binancecoinm', MarketType.FUTURES, market['id']).value
+            if (a['venue'] != 'binancecoinm' or binding.get('instrument_id') != iid
+                    or binding.get('quantity_unit') != 'contracts'
+                    or binding.get('bookings_sha256') != a['bookings']['sha256']
+                    or market.get('symbol') != t['symbol'] or market.get('id') != a['venue_symbol']
+                    or not market.get('contract') or market.get('inverse') is not True
+                    or market.get('linear') is not False or market.get('quote') != 'USD'
+                    or market.get('swap') is not True
+                    or not isinstance(market.get('base'), str) or not market['base']
+                    or market.get('settle') != market['base'] or size <= 0
+                    or not a.get('account_scope')):
+                raise ValueError('native_contract_binding_invalid')
+            contract, currency = Contract('inverse', size), market['settle']
+            result.update(native_currency=currency, native_complete=False,
+                          gross_realized_native=None, funding_native=None, net_pnl_native=None)
+        if a['environment'] != 'demo' or a['venue'] != ('binancecoinm' if native else 'binanceusdm'):
             raise ValueError('unsupported_venue_environment')
         if a['errors']:
             raise ValueError('capture_inputs_missing_retry')
         symbol, start, end = a['venue_symbol'], a['start_ms'], a['end_ms']
-        if symbol != norm_symbol(t['symbol']).replace('/', '') or not t['symbol'].endswith('/USDT'):
+        if not native and (symbol != norm_symbol(t['symbol']).replace('/', '') or not t['symbol'].endswith('/USDT')):
             raise ValueError('unsupported_settlement_currency')
         if (type(observed) is not int or type(a['captured_ms']) is not int
                 or a['captured_ms'] < observed or a['bookings']['observed_ms'] > observed):
             raise ValueError('capture_clock_conflict')
-        interval=a.get('schema_version')==INTERVAL_VERSION
+        interval=a.get('schema_version') in (INTERVAL_VERSION,NATIVE_INTERVAL_VERSION)
         if start<0 or end>observed or end<start or (not interval and end!=observed):
             raise ValueError('capture_clock_conflict')
         if interval and t['status']!='closed':
@@ -220,6 +249,9 @@ def assess(a, *, marked=False):
                     or end!=number(last['updateTime'])
                     or a.get('position_source')!='RETAINED_TERMINAL_FLAT_OBSERVATION'):
                 raise ValueError('closed_interval_flat_evidence_unbound')
+            if native and (proof['account_scope']!=a['account_scope']
+                           or proof['instrument_id']!=a['contract_binding']['instrument_id']):
+                raise ValueError('native_closed_interval_scope_differs')
         if start != number(orders[ls[0]['order_id']]['time']):
             raise ValueError('entry_history_start_conflict')
         fills = history_rows(a['fill_history'], 'fills', symbol, start, end, observed)
@@ -262,18 +294,18 @@ def assess(a, *, marked=False):
             for f in fs:
                 qty, price = number(f['qty']), number(f['price'])
                 pnl, fee = number(f['realizedPnl']), number(f['commission'])
-                currency = f['commissionAsset']
+                fee_currency = f['commissionAsset']
                 if (qty <= 0 or price <= 0 or f['side'] != side or f['positionSide'] != 'BOTH'
                         or not number(o['time']) <= number(f['time']) <= number(o['updateTime'])
-                        or not isinstance(currency, str) or not currency):
+                        or not isinstance(fee_currency, str) or not fee_currency):
                     raise ValueError('fill_fields_or_currency_missing_retry')
                 if l['entry'] and pnl != 0:
                     raise ValueError('entry_realized_pnl_ownership_conflict')
                 gross += pnl
-                fees[currency] = fees.get(currency, 0.0)+fee
+                fees[fee_currency] = fees.get(fee_currency, 0.0)+fee
                 normalized.append(dict(id=str(f['id']), version=digest(f), trade_id=t['id'],
                     event_ms=int(f['time']), available_ms=a['captured_ms'], realized_pnl=pnl,
-                    commission=fee, currency=currency))
+                    commission=fee, currency=fee_currency))
         # Refuse exits preceding entry, over-closes and funding at an ambiguous
         # fill timestamp. Actual signed income is a cashflow, never a rate estimate.
         for f in fills:
@@ -282,18 +314,19 @@ def assess(a, *, marked=False):
                 raise ValueError('fill_sequence_ownership_conflict')
         if not close(balance, expected_quantity):
             raise ValueError('whole_trade_fill_balance_conflict')
-        cash_gross = sum(number(f['qty'])*number(f['price'])*(1 if f['side'] == 'SELL' else -1) for f in fills)
+        cash_gross = sum(contract.cashflow_native(number(f['qty']),number(f['price']),f['side']) for f in fills)
         unrealized = 0.
         if marked:
             mark,entry = number(position['markPrice']),number(position['entryPrice'])
             unrealized = number(position['unRealizedProfit'])
             if ((expected_quantity and (mark<=0 or entry<=0))
-                    or not close(unrealized,direction*expected_quantity*(mark-entry))):
+                    or not close(unrealized,contract.pnl_native(direction*expected_quantity,entry,mark))):
                 raise ValueError('marked_price_pnl_conflict')
-            cash_gross += direction*expected_quantity*mark
+            cash_gross += contract.cashflow_native(expected_quantity,mark,'SELL' if direction>0 else 'BUY')
         if not close(gross+unrealized, cash_gross):
             raise ValueError('fill_price_pnl_conflict')
-        result.update(fees_by_currency=fees, gross_realized_usdt=gross)
+        result.update(fees_by_currency=fees)
+        result['gross_realized_native' if native else 'gross_realized_usdt'] = gross
         currencies = {}
         for r in funding:
             if r['incomeType'] != 'FUNDING_FEE' or not isinstance(r['asset'], str) or not r['asset']:
@@ -320,12 +353,25 @@ def assess(a, *, marked=False):
         actual_times = [number(r['time']) for r in funding]
         if set(actual_times) != expected_times or len(actual_times) != len(expected_times):
             raise ValueError('funding_event_cashflow_missing_or_ambiguous_retry')
-        if set(fees)-{'USDT'} or set(currencies)-{'USDT'}:
+        if set(fees)-{currency} or set(currencies)-{currency}:
             raise ValueError('currency_conversion_missing_retry')
-        funding_net = currencies.get('USDT', 0.0)
-        net = gross+unrealized-fees.get('USDT', 0.0)+funding_net
+        funding_net = currencies.get(currency, 0.0)
+        net = gross+unrealized-fees.get(currency, 0.0)+funding_net
         if not all(math.isfinite(v) for v in (gross, funding_net, net, *fees.values())):
             raise ValueError('nonfinite_accounting_aggregate')
+        if native:
+            # Currency-aware facts are usable by the native book adapter, not
+            # by the USDT learning adapter without a verified conversion.
+            result.update(status='marked_native_venue_history' if marked else 'complete_native_venue_history',
+                          native_complete=True, funding_native=funding_net, net_pnl_native=net,
+                          unrealized_native=unrealized, retry_required=False,
+                          final_realized_outcome=not marked, learning_eligible=False,
+                          reasons=['reporting_currency_conversion_required'])
+            if marked:
+                result.update(marked_notional_native=contract.settlement_notional(expected_quantity,mark)
+                              if expected_quantity else 0.,
+                              mark_observed_ms=observed if interval else a['position_observed_ms'])
+            return result
         if marked:
             result.update(status='marked_as_of_venue_history',funding_usdt=funding_net,
                           marked_net_pnl_usdt=net,unrealized_usdt=unrealized,
@@ -355,15 +401,38 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
              overlapping_trade_ids=list(overlapping_trade_ids))
     try:
         ls = legs(source, closed=not marked)
-        symbol = source['trade']['symbol'].replace('/', '')
+        coin = getattr(exchange, 'id', None) == 'binancecoinm'
+        if coin:
+            from ..observability.portfolio_observation import trading_source
+            from ..data.feed import execution_account_scope
+            from ..core.instrument_registry import InstrumentId
+            from ..core.types import MarketType
+            environment, _ = trading_source(exchange)
+            if environment != 'demo':
+                raise ValueError('native_capture_demo_only')
+            market = exchange.market(source['trade']['symbol'])
+            symbol = market['id']
+            a.update(schema_version=NATIVE_INTERVAL_VERSION if terminal_flat is not None else NATIVE_VERSION,
+                     venue='binancecoinm',environment=environment,
+                     account_scope=execution_account_scope(exchange),contract_binding=dict(
+                         market={k:market.get(k) for k in ('symbol','id','base','quote','settle','contract','inverse','linear','contractSize','swap')},
+                         instrument_id=InstrumentId('binancecoinm',MarketType.FUTURES,symbol).value,
+                         quantity_unit='contracts',bookings_sha256=source['sha256']))
+            if not a['account_scope']:
+                raise ValueError('native_account_scope_unavailable')
+            if market.get('swap') is not True:
+                raise ValueError('native_perpetual_contract_required')
+        else:
+            symbol = source['trade']['symbol'].replace('/', '')
         a['venue_symbol'] = symbol
         for l in ls:
-            raw = exchange.fapiPrivateGetOrder(dict(symbol=symbol, orderId=l['order_id']))
+            raw = getattr(exchange,'dapiPrivateGetOrder' if coin else 'fapiPrivateGetOrder')(dict(symbol=symbol, orderId=l['order_id']))
             a['orders'].append({k:scalar(raw.get(k)) for k in ('orderId','symbol','side','positionSide',
                                 'status','executedQty','time','updateTime')})
         a['start_ms'] = int(number(a['orders'][0]['time']))
         if terminal_flat is None:
-            positions = exchange.fapiPrivateV2GetPositionRisk(dict(symbol=symbol))
+            params = dict(pair=market['base']+market['quote']) if coin else dict(symbol=symbol)
+            positions = getattr(exchange,'dapiPrivateGetPositionRisk' if coin else 'fapiPrivateV2GetPositionRisk')(params)
             if marked:a['position_observed_ms']=int(time.time()*1000)
             ps = [p for p in positions if p.get('symbol') == symbol]
             if len(ps) != 1:
@@ -382,7 +451,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
         for key, endpoint in (('fill_history','fills'), ('funding_history','income'), ('funding_events','funding_events')):
             history_start = max(0, a['start_ms']-6*DAY) if endpoint == 'funding_events' else a['start_ms']
             history_end=a['observed_ms'] if terminal_flat is not None and endpoint=='funding_events' else a['end_ms']
-            a[key] = history(exchange, endpoint, symbol, history_start, history_end, a['observed_ms'])
+            a[key] = history(exchange, endpoint, symbol, history_start, history_end, a['observed_ms'],coin=coin)
     except Exception as exc:
         a['errors'].append('capture_failed:'+type(exc).__name__)
     a['captured_ms'] = int(time.time()*1000)
@@ -393,7 +462,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
 
 
 def replay(a):
-    if a.get('schema_version') not in (VERSION,INTERVAL_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
+    if a.get('schema_version') not in (VERSION,INTERVAL_VERSION,NATIVE_VERSION,NATIVE_INTERVAL_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
         raise ValueError('whole_trade_integrity')
     expected = assess(a,marked=a.get('capture_kind') in ('OPEN_POSITION_MARKED_ONLY','CLOSED_INTERVAL_MARKED_ONLY'))
     if expected != a['assessment']:

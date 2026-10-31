@@ -60,7 +60,7 @@ def execution_account_scope(exchange):
     import hashlib
     from ..observability.portfolio_observation import trading_source
     key = getattr(exchange, 'apiKey', None)
-    if getattr(exchange, 'id', None) != 'binanceusdm' or not isinstance(key, str) or not key:
+    if getattr(exchange, 'id', None) not in ('binanceusdm', 'binancecoinm') or not isinstance(key, str) or not key:
         return None
     try:
         environment, source = trading_source(exchange)
