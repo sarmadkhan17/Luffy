@@ -1,9 +1,8 @@
-import copy
 import pytest
 from trader.research.compose.proposer import GraphProposer
 from trader.research.compose import graph, search
 from trader.research.closure.store import Store
-from trader.research.closure import consumer, digest, ClosureRefused
+from trader.research.closure import consumer, ClosureRefused
 
 
 def proposal():
@@ -43,6 +42,24 @@ def test_bad_proposal_has_bounded_repair_no_family_fallback(tmp_path):
     assert r[0]=='COMPILED' and len(llm.calls)==2
     assert 'proposal_horizon_differs_from_study' in llm.calls[1][0]
     store.close()
+
+
+def test_geometry_object_gets_typed_refusal_and_custom_exit_repair(tmp_path):
+    bad=proposal();bad['geo']={'stop':{'kind':'atr','mult':2}}
+    with pytest.raises(ClosureRefused,match='UNKNOWN_GEOMETRY'):
+        graph.make_candidate(bad)
+    fixed=proposal();fixed.pop('geo')
+    fixed['exit']=dict(stop={'kind':'atr','mult':2},target={'kind':'none'},
+                       trail={'kind':'none'},time={'max_bars':24})
+    store=Store(tmp_path/'exit-repair.db')
+    try:
+        llm=LLM([dict(proposal=bad),dict(proposal=fixed)])
+        result=GraphProposer(llm,store,tf='1h')(Q,'BRAIN',Q)
+        assert result[0]=='COMPILED' and result[2]['exit']['time']['max_bars']==24
+        assert 'UNKNOWN_GEOMETRY' in llm.calls[1][0]
+        assert 'unhashable type' not in llm.calls[1][0]
+        assert 'Never put this exit object inside geo' in llm.calls[0][0]
+    finally:store.close()
 
 
 def test_unavailable_proposer_never_substitutes_old_family(tmp_path):

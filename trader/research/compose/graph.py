@@ -29,7 +29,6 @@ import json
 import numpy as np
 
 from ...strategy import dsl, fitted
-from ...strategy.features import FeatureCtx
 from ..closure import ClosureRefused, digest
 from . import catalog, models
 
@@ -325,7 +324,7 @@ def make_candidate(spec: dict) -> dict:
     exit_decl = spec.get('exit')
     if exit_decl is not None:
         exit_decl = _check_exit(exit_decl, spec['tf'])
-    elif spec.get('geo') not in GEOS:
+    elif not isinstance(spec.get('geo'), str) or spec['geo'] not in GEOS:
         _bad('UNKNOWN_GEOMETRY', str(spec.get('geo')))
     tf = spec['tf']
     long_, short_ = spec.get('long'), spec.get('short')
