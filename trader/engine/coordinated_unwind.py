@@ -52,6 +52,9 @@ def active(journal,group_id):
 
 
 def entry_block(journal,instrument_id,identity=None):
+    from .versioned_close import entry_block as versioned_entry_block
+    blocked=versioned_entry_block(journal,instrument_id)
+    if blocked:return blocked
     if not _exists(journal):return None
     group=(identity or {}).get('coordinated') if isinstance(identity,dict) else None
     group_id=group.get('group_id') if isinstance(group,dict) else None

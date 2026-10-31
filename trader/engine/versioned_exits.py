@@ -125,6 +125,13 @@ class LiveExitAdapter:
                 M.validate(hedge_policy)
         elif version.get('lineage',{}).get('research',{}).get('multi_leg'):
             raise ValueError('live_exit_group_identity_missing')
+        else:
+            from . import versioned_close as V
+            if V.registered(self.journal,trade['id'],identity):
+                # The existing position worker owns the original close plan.
+                # It must recover even without new candles or signal inputs;
+                # a submitted signal is never legacy-unsubmitted state.
+                return None
         spec = StrategySpec.from_dict(version['spec'])
         if hedge_policy:
             from dataclasses import replace

@@ -62,6 +62,7 @@ class KernelRuntime:
         self.active_coordinated_input_errors = {}
         self.coordinated_intake_results = []
         self.coordinated_live_results = []
+        self.versioned_close_results = []
         self.history_resume_index = 0
         self.alts_cold_status = None
         self.history_yields = 0
@@ -201,12 +202,17 @@ class KernelRuntime:
         executor=getattr(self.kernel,'executor',None)
         unwind_incomplete=False
         management_incomplete=False
+        versioned_incomplete=False
         self.coordinated_live_results=[]
+        self.versioned_close_results=[]
         if executor is not None:
             with self.execution_lock:
                 try:
                     self.coordinated_unwind_results=(resume(executor)
                         if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
+                    from ..engine.versioned_close import resume as resume_versioned
+                    self.versioned_close_results=(resume_versioned(executor)
+                        if getattr(self.kernel,'_manages_exits',lambda:False)() and getattr(executor,'journal',None) is not None else [])
                     from ..engine.coordinated_management import run_once as manage_groups
                     self.coordinated_management_results=(manage_groups(executor)
                         if getattr(self.kernel,'_manages_exits',lambda:False)() else [])
@@ -217,6 +223,8 @@ class KernelRuntime:
                     self.coordinated_unwind_results=[dict(group_id=None,status='UNAVAILABLE',reason=type(exc).__name__)]
                 unwind_incomplete=any(r['status'] in ('UNAVAILABLE','LEG_REDUCTION_REFUSED','CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED')
                                       for r in self.coordinated_unwind_results)
+                versioned_incomplete=any(r['status'] in ('UNAVAILABLE','REDUCTION_REFUSED','EXTERNAL_CLOSE_RECONCILIATION_REQUIRED')
+                                         for r in self.versioned_close_results)
                 successful_live={r['group_id'] for r in self.coordinated_live_results
                     if r['status'] in ('IDLE','TERMINAL','BOOKED','CLOSED','UNWINDING','UNSUBMITTED_INTENT_EXPIRED','HEDGE_CLOSED_RECONCILED')}
                 management_incomplete=any(r['status']=='UNAVAILABLE' or
@@ -240,7 +248,8 @@ class KernelRuntime:
         with self.lock:
             self.holdings_market = dict(view._portfolio_holdings_market)
             if not required:self.held_coordinated_needs=({},[])
-            if not (unwind_incomplete or management_incomplete):self.positions_at = time.monotonic()
+            if not (unwind_incomplete or management_incomplete or versioned_incomplete):self.positions_at = time.monotonic()
+        if versioned_incomplete:raise ValueError('scheduled_versioned_close_incomplete')
         if management_incomplete:raise ValueError('scheduled_coordinated_management_incomplete')
         if unwind_incomplete:raise ValueError('scheduled_coordinated_unwind_incomplete')
 
@@ -746,6 +755,7 @@ class KernelRuntime:
             execution=dict(self.execution_metrics),
             research_managed=deepcopy(getattr(self, '_research_managed_status', None)),
             coordinated_intake=deepcopy(self.coordinated_intake_results),
+            versioned_closes=deepcopy(self.versioned_close_results),
             coordinated_input_errors=deepcopy(self.active_coordinated_input_errors),
             replaced_scan_batches=self.scan_replaced,
             scan_in_flight=self.scan_in_flight, skipped_busy_scan_ticks=self.scan_busy_ticks,

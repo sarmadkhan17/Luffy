@@ -13,6 +13,7 @@ from . import entry_authority as A
 from .recovery import exact_order_match,TERMINAL
 
 TABLE='coordinated_reductions'
+VERSIONED_TABLE='versioned_exit_reductions'
 # Both historical and current hash spellings remain bound to the root entry.
 IDENTITY_FIELDS=('status','strategy_id','version_id','spec_hash','spec_sha256','install_id',
                  'exit_semantics_id','exit_state','hedge_exit_state','coordinated')
@@ -33,6 +34,12 @@ def ownership(executor,trade,group_id):
     if (group.get('group_id')!=group_id or group.get('leg') not in ('primary','hedge')
             or not binding.get('logical_id')):
         raise ValueError('coordinated_trade_ownership_unproven')
+    _entry_receipt(executor,trade,identity,binding)
+    return group
+
+
+def _entry_receipt(executor,trade,identity,binding):
+    if not binding.get('logical_id'):raise ValueError('owned_entry_binding_missing')
     rows=executor.journal.query('SELECT * FROM execution_requests WHERE logical_id=?',(binding['logical_id'],))
     if len(rows)!=1:raise ValueError('coordinated_entry_receipt_missing')
     row=rows[0];intent=json.loads(row['intent_json']);result=json.loads(row.get('result_json') or '{}')
@@ -45,7 +52,30 @@ def ownership(executor,trade,group_id):
             or execution_account_scope(executor.ex)!=(binding.get('capability') or {}).get('account_scope')
             or getattr(executor.ex,'id',None)!='binanceusdm'):
         raise ValueError('coordinated_entry_receipt_differs')
-    return group
+    return intent
+
+
+
+def single_ownership(executor,trade):
+    """An existing ungrouped versioned entry, never fresh entry authority."""
+    identity=json.loads(trade.get('entry_identity_json') or '{}')
+    binding=identity.get('execution_binding') or {}
+    if (identity.get('coordinated') or identity.get('status')!='VERIFIED'
+            or any(not identity.get(k) for k in ('version_id','install_id','spec_sha256','exit_semantics_id'))):
+        raise ValueError('versioned_close_entry_identity_missing')
+    intent=_entry_receipt(executor,trade,identity,binding)
+    if binding.get('instrument_id')!=intent.get('instrument_id') or binding.get('capability')!=intent.get('capability'):
+        raise ValueError('versioned_close_entry_binding_differs')
+    return identity
+
+
+def ensure_versioned(journal):
+    with journal._tx() as db:
+        db.execute("""CREATE TABLE IF NOT EXISTS versioned_exit_reductions(
+            logical_id TEXT PRIMARY KEY,trade_id TEXT NOT NULL,group_id TEXT,
+            request_json TEXT NOT NULL,state TEXT NOT NULL,order_json TEXT,result_json TEXT)""")
+        db.execute('CREATE INDEX IF NOT EXISTS versioned_exit_reductions_trade ON versioned_exit_reductions(trade_id,state)')
+        db.execute("CREATE INDEX IF NOT EXISTS versioned_exit_reductions_instrument ON versioned_exit_reductions(json_extract(request_json,'$.instrument_id'),state,trade_id)")
 
 
 def _receipt(order):
@@ -54,7 +84,9 @@ def _receipt(order):
 
 
 class _Transport:
-    def __init__(self,executor,request,state,order):
+    def __init__(self,executor,request,state,order,*,table=TABLE):
+        if table not in (TABLE,VERSIONED_TABLE):raise ValueError('owned_reduction_table_invalid')
+        self.table=table
         self.executor=executor;self.journal=executor.journal;self.ex=executor.ex
         self.request=request;self.state=state;self.order=order
 
@@ -64,10 +96,10 @@ class _Transport:
         if result is None and getattr(self,'flat_evidence',None):result={'flat_evidence':self.flat_evidence}
         with self.journal._tx() as db:
             if result is None:
-                old=db.execute('SELECT result_json FROM coordinated_reductions WHERE logical_id=?',
+                old=db.execute('SELECT result_json FROM '+self.table+' WHERE logical_id=?',
                                (self.request['logical_id'],)).fetchone()
                 if old and old[0]:result=json.loads(old[0])
-            db.execute('UPDATE coordinated_reductions SET state=?,order_json=?,result_json=? WHERE logical_id=?',
+            db.execute('UPDATE '+self.table+' SET state=?,order_json=?,result_json=? WHERE logical_id=?',
                 (state,A.canonical(_receipt(order)) if order is not None else None,
                  A.canonical(result) if result is not None else None,self.request['logical_id']))
         self.state=state;self.order=order
@@ -92,8 +124,17 @@ class _Transport:
         if execution_account_scope(self.ex)!=raw['account_scope']:
             raise ValueError('coordinated_close_account_changed')
         request_start_ms=int(time.time()*1000)
-        positions=self.ex.fetch_positions()
-        observed_ms=int(time.time()*1000)
+        observation=None
+        if self.table==VERSIONED_TABLE:
+            from .coordinated_unwind import _position_observation
+            observation=_position_observation(self.executor)
+            if any(p.instrument_id.value==raw['instrument_id'] and p.position_present for p in observation.positions):
+                raise ValueError('versioned_close_flat_position_not_proven')
+            positions=[]
+            request_start_ms=observation.request_start_ms;observed_ms=observation.response_received_ms
+        else:
+            positions=self.ex.fetch_positions()
+            observed_ms=int(time.time()*1000)
         if not isinstance(positions,list):raise ValueError('coordinated_flat_position_unknown')
         for position in positions:
             if norm_symbol(position.get('symbol',''))!=norm_symbol(trade['symbol']):continue
@@ -103,11 +144,12 @@ class _Transport:
             quantity=float(position['contracts'])
             if not math.isfinite(quantity) or quantity!=0:
                 raise ValueError('coordinated_flat_position_not_proven')
-        self.flat_evidence=dict(schema='coordinated-terminal-flat.v1',trade_id=trade['id'],
+        self.flat_evidence=dict(schema='coordinated-terminal-flat.v1' if self.table==TABLE else 'versioned-terminal-flat.v1',trade_id=trade['id'],
             logical_id=self.request['logical_id'],order_id=str(self.order['id']),symbol=trade['symbol'],
             account_scope=raw['account_scope'],instrument_id=raw['instrument_id'],
             request_start_ms=request_start_ms,observed_ms=observed_ms,flat=True,quantity=0.,
             source='fresh complete venue position read')
+        if observation is not None:self.flat_evidence['observation_id']=observation.observation_id
         # Retain the actual flat observation before booking. A crash after the
         # booking must not erase it or substitute a later reused instrument.
         self._save(self.state,order=self.order,result={'flat_evidence':self.flat_evidence})
@@ -126,7 +168,7 @@ class _Transport:
             # but it cannot submit this logical reduction a second time.
             with self.journal._tx() as db:
                 db.execute('BEGIN IMMEDIATE')
-                changed=db.execute("UPDATE coordinated_reductions SET state='ATTEMPTED' WHERE logical_id=? AND state='RESERVED'",
+                changed=db.execute("UPDATE "+self.table+" SET state='ATTEMPTED' WHERE logical_id=? AND state='RESERVED'",
                     (r['logical_id'],)).rowcount
             if changed:
                 self.state='ATTEMPTED'
@@ -143,6 +185,11 @@ class _Transport:
                 self._save('ACKNOWLEDGED',order=order)
             else:self.state='ATTEMPTED'
         if self.state=='REFUSED':raise ValueError('coordinated_reduce_definitively_refused')
+        return self.resolve()
+
+    def resolve(self):
+        """Read the original order only; never submit a recovery order."""
+        r=self.request;symbol=r['symbol']
         # A fresh create response is not necessarily terminal. The same exact
         # order is read on this and every later attempt until facts are known.
         order=self.ex.fetch_order((self.order or {}).get('id'),symbol,
@@ -153,23 +200,37 @@ class _Transport:
 
 
 def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coordinated_unwind',quantity=None,exit_decision=None):
+    return _close_owned(executor,trade_id,group_id,logical_id,price_hint=price_hint,reason=reason,
+                        quantity=quantity,exit_decision=exit_decision)
+
+
+def close_versioned_once(executor,trade_id,logical_id,*,reason,exit_decision):
+    return _close_owned(executor,trade_id,None,logical_id,reason=reason,exit_decision=exit_decision,
+                        table=VERSIONED_TABLE)
+
+
+def _close_owned(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coordinated_unwind',quantity=None,exit_decision=None,table=TABLE):
     """Close one existing leg once. Unknown outcomes remain pending.
 
     A confirmed partial fill gets a new logical reduction only after its exact
     booking is proven; callers cannot turn a timeout into a fresh request.
     """
-    ensure(executor.journal)
+    if table==TABLE:ensure(executor.journal)
+    elif table==VERSIONED_TABLE:ensure_versioned(executor.journal)
+    else:raise ValueError('owned_reduction_table_invalid')
     with executor._entry_lock,executor._lock_for('coordinated:'+trade_id):
         rows=executor.journal.query('SELECT * FROM trades WHERE id=?',(trade_id,))
         if len(rows)!=1:raise ValueError('coordinated_trade_missing')
-        trade=dict(rows[0]);ownership(executor,trade,group_id)
+        trade=dict(rows[0])
+        if table==TABLE:ownership(executor,trade,group_id)
+        else:single_ownership(executor,trade)
         with executor.journal._tx() as db:
             db.execute('BEGIN IMMEDIATE')
-            old=db.execute('SELECT * FROM coordinated_reductions WHERE logical_id=?',(logical_id,)).fetchone()
+            old=db.execute('SELECT * FROM '+table+' WHERE logical_id=?',(logical_id,)).fetchone()
             if old is None:
                 if trade['status']!='open':return dict(status='ALREADY_CLOSED',submitted=False)
                 # No renamed retry can bypass an earlier ambiguous reduction.
-                pending=db.execute("SELECT logical_id FROM coordinated_reductions WHERE trade_id=? AND state NOT IN ('BOOKED','REFUSED') LIMIT 1",(trade_id,)).fetchone()
+                pending=db.execute("SELECT logical_id FROM "+table+" WHERE trade_id=? AND state NOT IN ('BOOKED','REFUSED','NO_FILL') LIMIT 1",(trade_id,)).fetchone()
                 if pending:raise ValueError('coordinated_previous_reduction_pending')
                 from .executor import quantize
                 requested=float(trade['amount']) if quantity is None else float(quantity)
@@ -178,27 +239,39 @@ def close_once(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='coo
                 quantity=quantize(executor.ex,trade['symbol'],requested)
                 if not math.isfinite(quantity) or not 0<quantity<=requested:
                     raise ValueError('coordinated_reduce_quantity_invalid')
-                request=dict(schema='coordinated-reduce.v1',logical_id=logical_id,group_id=group_id,trade_id=trade_id,
+                request=dict(schema='coordinated-reduce.v1' if table==TABLE else 'versioned-owned-reduce.v1',logical_id=logical_id,group_id=group_id,trade_id=trade_id,
                     symbol=trade['symbol'],side='sell' if trade['side']=='long' else 'buy',quantity=quantity,
-                    before_quantity=float(trade['amount']),client_order_id='lc_'+A.digest(logical_id)[:28],
+                    before_quantity=float(trade['amount']),client_order_id=('lc_' if table==TABLE else 'lv_')+A.digest(logical_id)[:28],
                     created_ms=int(time.time()*1000),reason=reason)
+                if table==VERSIONED_TABLE:
+                    request['instrument_id']=json.loads(trade['entry_identity_json'])['execution_binding']['instrument_id']
                 if exit_decision is not None:request['strategy_exit_decision']=exit_decision
-                db.execute('INSERT INTO coordinated_reductions VALUES(?,?,?,?,?,?,?)',
+                db.execute('INSERT INTO '+table+' VALUES(?,?,?,?,?,?,?)',
                     (logical_id,trade_id,group_id,A.canonical(request),'RESERVED',None,None))
                 state='RESERVED';order=None
             else:
                 if old['trade_id']!=trade_id or old['group_id']!=group_id:
                     raise ValueError('coordinated_reduce_identity_conflict')
                 request=json.loads(old['request_json']);state=old['state'];order=json.loads(old['order_json']) if old['order_json'] else None
-                if state in ('BOOKED','REFUSED'):
+                if table==VERSIONED_TABLE and (request.get('reason')!=reason
+                        or request.get('strategy_exit_decision')!=exit_decision):
+                    raise ValueError('versioned_reduce_decision_conflict')
+                if state in ('BOOKED','REFUSED','NO_FILL'):
                     return dict(status=state,submitted=False)
+        transport=_Transport(executor,request,state,order,table=table)
+        if table==VERSIONED_TABLE and state!='RESERVED':
+            order=transport.resolve()
+            if order['filled']==0:
+                transport._save('NO_FILL',order=order,result={'fill_claim':False})
+                return dict(status='NO_FILL',submitted=False)
         # Accounting receipts, not a changed amount alone, prove booking if
         # the process died after Executor committed but before BOOKED here.
         if order and _booked(executor.journal,trade_id,str(order.get('id') or '')):
-            transport=_Transport(executor,request,state,order);transport._save('BOOKED',order=order)
+            transport=_Transport(executor,request,state,order,table=table);transport._save('BOOKED',order=order)
             return dict(status='BOOKED',submitted=False)
         if trade['status']!='open':return dict(status='EXTERNAL_CLOSE_REQUIRES_RECONCILIATION',submitted=False)
-        transport=_Transport(executor,request,state,order)
+        if table==VERSIONED_TABLE and not math.isclose(float(trade['amount']),request['before_quantity'],rel_tol=1e-9,abs_tol=1e-12):
+            return dict(status='EXTERNAL_CLOSE_REQUIRES_RECONCILIATION',submitted=False)
         if request.get('strategy_exit_decision') is not None:
             decision=request['strategy_exit_decision'];trade['_strategy_exit_evidence']=decision
             # The initiating leg's benchmark is not the other leg's price.

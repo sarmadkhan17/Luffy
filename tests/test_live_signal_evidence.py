@@ -150,3 +150,19 @@ def test_legacy_signal_cannot_postpone_an_already_due_holding_limit(tmp_path):
     state=E.decode(j.query('SELECT state_json FROM versioned_live_exit_states')[0]['state_json'])[1]
     assert state.reason=='time' and state.reference_exit is None  # no invented historical fill price
     assert pending(j,trade)['signal_decision']['availability']=='UNAVAILABLE_LEGACY_DECISION_RECEIPTS'
+
+
+@pytest.mark.parametrize('state',['CLOSING','CLOSED'])
+def test_registered_actual_close_is_not_reclassified_as_an_old_unsubmitted_signal(tmp_path,state):
+    # Adapter routing fixture only. Actual owned-plan registration and venue
+    # recovery have separate Risk/Executor transport tests.
+    from trader.engine import versioned_close as V,entry_authority as A
+    j,trade,executor,adapter,first,start=position(tmp_path)
+    root=json.loads(trade['entry_identity_json'])
+    V.ensure(j)
+    plan=dict(trade_id=trade['id'],entry_identity_sha256=A.digest(root))
+    with j._tx() as db:
+        db.execute('INSERT INTO '+V.TABLE+' VALUES(?,?,?,?)',(trade['id'],A.canonical(plan),A.digest(plan),state))
+    assert adapter.manage(trade,first) is None
+    executor.close.assert_not_called()
+    assert not j.query('SELECT * FROM '+S.TABLE)

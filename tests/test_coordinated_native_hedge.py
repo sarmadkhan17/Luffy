@@ -158,7 +158,7 @@ def test_position_worker_recognizes_reconciliation_without_hiding_failure(tmp_pa
     from tests.test_split_kernel_runtime import minimal
     import trader.scheduling.kernel_runtime as runtime
     from trader.engine import coordinated_management as M,coordinated_unwind as U,coordinated_live as L
-    k,r=minimal(tmp_path);k.executor=NS(journal=object());k._manages_exits=lambda:True
+    k,r=minimal(tmp_path);k.executor=NS(journal=NS(query=lambda *a:[]));k._manages_exits=lambda:True
     monkeypatch.setattr(U,'resume',lambda e:[])
     monkeypatch.setattr(M,'run_once',lambda e:[dict(group_id='g',status='HEDGE_ENTRY_REQUIRED')])
     monkeypatch.setattr(L,'run_once',lambda *a:[dict(group_id='g',status=status)])

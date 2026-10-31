@@ -676,7 +676,7 @@ class Executor:
                     self._book_estimate(trade, "partial final-close accounting unavailable")
                 leg = order_evidence(trade, order, fills, amount, sent_ms,
                                      "venue_order_fills" if fills else "estimated_order_booking")
-                if trade.get("_strategy_exit_evidence", {}).get("intent") == reason and reason in ("stop", "target", "time"):
+                if trade.get("_strategy_exit_evidence", {}).get("intent") == reason and reason in ("stop", "target", "time", "signal"):
                     leg["strategy_exit"] = trade["_strategy_exit_evidence"]
                 leg.update(purpose="final_exit_partial_fill", requested_quantity=requested_qty,
                            reference=_hint_reference(exit_price_hint, submitted_ms, trade.get('_execution_reference')))
@@ -705,7 +705,7 @@ class Executor:
                 protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
             evidence = order_evidence(trade, order, fills, amount, sent_ms,
                                       "venue_order_fills" if fills else "estimated_order_booking")
-            if trade.get('_strategy_exit_evidence', {}).get('intent') == reason and reason in ('stop', 'target', 'time'):
+            if trade.get('_strategy_exit_evidence', {}).get('intent') == reason and reason in ('stop', 'target', 'time', 'signal'):
                 evidence['strategy_exit'] = trade['_strategy_exit_evidence']
             evidence['booked_pnl_basis'] = "symbol_time_window_subtotal_unattributed" if venue is not None else "estimated"
             evidence['venue_window_net_excluding_funding'] = venue
