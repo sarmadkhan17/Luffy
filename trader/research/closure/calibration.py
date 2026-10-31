@@ -21,7 +21,7 @@ import json
 import math
 from pathlib import Path
 
-from . import canonical, digest, exposure, manifest, study as S, synthetic
+from . import ClosureRefused, canonical, digest, exposure, manifest, study as S, synthetic
 from .store import Store
 
 #: Predeclared presets. SMOKE is for exercising the harness (never a verdict);
@@ -47,6 +47,45 @@ PROTOCOL = dict(
            dict(name='unsealed_exposure_unknown', edge=0.007, common=0.0, sealed=False, truth='UNAVAILABLE')],
     replicates=60, kind='FINAL', final_seed_base=910_000, development_seed_base=10_000, embargo_bars=10,
     families=None, max_revisions=None, max_false_admission=0.10, min_power=0.50, confidence=0.95, **EXACT)
+
+
+def configured_protocol(cfg: dict, tf: str, *, intake_bank_path=None) -> dict:
+    """Freeze a configured horizon for calibration, without starting any work.
+
+    Keep the predeclared synthetic protected-window budget when extending the
+    development window. A default 2,200-bar study does not calibrate a
+    configured 6,570-bar search. Retained intake must be named explicitly so
+    preparing a protocol cannot silently omit the configured proposal path.
+    """
+    from copy import deepcopy
+    from . import auto
+    settings = auto.settings(cfg)
+    if settings is None:
+        raise ClosureRefused('calibration_auto_not_configured')
+    options = settings.get('horizons') or [dict(tf=settings['tf'], fit_bars=settings['fit_bars'])]
+    # Use the same validation and overrides as the scheduler.
+    auto.horizon_for(settings, 0)
+    choices = [auto.horizon_for(settings, i) for i in range(len(options))]
+    matches = [choice for choice in choices if choice['tf'] == tf]
+    if len(matches) != 1:
+        raise ClosureRefused('calibration_horizon_not_unique', str(tf))
+    selected = matches[0]
+    if bool(selected.get('bank_path')) != bool(intake_bank_path):
+        raise ClosureRefused('calibration_intake_contract_mismatch',
+                             'name an intake bank exactly when configured research uses one')
+    protocol = deepcopy(PROTOCOL)
+    protected_bars = PROTOCOL['n_bars'] - PROTOCOL['dev_bars'] - 101
+    protocol.update(tf=tf, dev_bars=selected['fit_bars'],
+                    n_bars=max(PROTOCOL['n_bars'], selected['fit_bars'] + 101 + protected_bars),
+                    search=deepcopy(selected['search']), max_candidates=int(selected['max_candidates']),
+                    max_revisions=int(selected.get('max_revisions', 4)),
+                    embargo_bars=int(selected['embargo_bars']))
+    if intake_bank_path:
+        protocol['intake_bank_path'] = str(intake_bank_path)
+    reasons = feasibility(protocol, manifest.exact_numeric_policy(cfg))
+    if reasons:
+        raise ClosureRefused('calibration_structurally_infeasible', ','.join(reasons))
+    return protocol
 
 
 def feasibility(protocol: dict, policy: dict | None = None) -> list:

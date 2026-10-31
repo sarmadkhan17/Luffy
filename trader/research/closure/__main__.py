@@ -43,6 +43,9 @@ def main(argv=None):
     sub = ap.add_subparsers(dest='cmd', required=True)
     scheduled_parser = sub.add_parser('scheduled')
     scheduled_parser.add_argument('--expected-revision', required=True)
+    protocol_parser = sub.add_parser('calibration-protocol', help='Print a configured protocol; start no research/provider work')
+    protocol_parser.add_argument('--horizon', required=True, choices=('15m', '1h', '4h'))
+    protocol_parser.add_argument('--intake-bank', help='Explicit retained question bank copied when calibration runs')
     for name in ('status', 'seal', 'create', 'step'):
         p = sub.add_parser(name)
         p.add_argument('--store', required=True)
@@ -75,6 +78,10 @@ def main(argv=None):
             finally:
                 for sig, handler in prior.items():
                     signal.signal(sig, handler)
+        elif a.cmd == 'calibration-protocol':
+            from ...core.config import load_config
+            from . import calibration
+            out = calibration.configured_protocol(load_config(), a.horizon, intake_bank_path=a.intake_bank)
         elif a.cmd == 'calibrate':
             from . import calibration
             if a.protocol:
