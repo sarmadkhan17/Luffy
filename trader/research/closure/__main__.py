@@ -58,7 +58,9 @@ def main(argv=None):
     cal = sub.add_parser('calibrate')
     cal.add_argument('--workdir', required=True)
     cal.add_argument('--replicates', type=int)
-    cal.add_argument('--preset', default='smoke', choices=('smoke', 'final'))
+    mode=cal.add_mutually_exclusive_group()
+    mode.add_argument('--preset', choices=('smoke', 'final'))
+    mode.add_argument('--protocol', help='Frozen calibration protocol JSON, including exact search/window/intake settings')
     a = ap.parse_args(argv)
     try:
         if a.cmd == 'scheduled':
@@ -75,7 +77,15 @@ def main(argv=None):
                     signal.signal(sig, handler)
         elif a.cmd == 'calibrate':
             from . import calibration
-            proto = dict(calibration.PROTOCOL, **(calibration.SMOKE if a.preset == 'smoke' else {}))
+            if a.protocol:
+                try:
+                    with open(a.protocol) as source:proto=json.load(source)
+                except (OSError,ValueError):
+                    raise ClosureRefused('calibration_protocol_invalid','unreadable protocol JSON') from None
+                if not isinstance(proto,dict) or proto.get('schema')!=calibration.PROTOCOL['schema']:
+                    raise ClosureRefused('calibration_protocol_invalid','wrong protocol schema')
+            else:
+                proto = dict(calibration.PROTOCOL, **(calibration.SMOKE if (a.preset or 'smoke') == 'smoke' else {}))
             out = calibration.run(proto, a.workdir, replicates=a.replicates)
         else:
             from . import exposure, manifest, study
