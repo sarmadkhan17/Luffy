@@ -459,6 +459,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
                 universe=b.universe, market=b.market, symbol=sym, world=b.world)
+            raw_entries = (lo, sh)
             if sym in b.entry_eligibility:
                 allow=np.asarray(b.entry_eligibility[sym],dtype=bool)
                 if allow.shape != np.asarray(lo).shape:
@@ -506,7 +507,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
                 compiled, sf, b.risk, r.profit_factor, btc=b.btc,
                 derivs=b.derivs.get(sym), universe=b.universe, world=b.world,
                 market=b.market, symbol=sym, draws=int(draws), seed=seed,
-                split=None, funding=fund,entry_eligibility=b.entry_eligibility.get(sym))
+                split=None, funding=fund,entry_eligibility=b.entry_eligibility.get(sym),
+                raw_entries=raw_entries, exit_details=(ex, ex_available))
         except Exception as e:                          # noqa: BLE001
             log.debug(f"research null {c.hash} {sym}: {e}")
             rec["null_error"] = str(e)[:200]

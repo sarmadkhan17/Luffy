@@ -82,7 +82,11 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
     if step > duration or duration % step:
         raise ValueError('cannot aggregate a finer interval from coarse bars')
     records = []
-    for bucket, group in df.assign(_bucket=opens//duration*duration).groupby('_bucket'):
+    # Bucket arithmetic needs values, not a fresh metadata copy per column.
+    # Keep authoritative attrs on the input and restore them on the output.
+    values = df.copy(deep=False)
+    values.attrs = {}
+    for bucket, group in values.assign(_bucket=opens//duration*duration).groupby('_bucket'):
         stamps = mp.ms(group['ts'])
         complete = np.array_equal(stamps, np.arange(bucket, bucket+duration, step))
         if df.attrs.get('read_mode') == 'retrospective' and not complete:
@@ -101,8 +105,9 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
             known = int(available.max()) if available.notna().all() else None
             received = int(receipts.max())
             ids = group['revision_id'].tolist()
+            states = {state for state in group['quality'] if isinstance(state, str)}
             quality=next((state for state in ('INVALID','UNKNOWN','MISSING','STALE','SUSPECT','REPAIRED','UNSUPPORTED','INCOMPLETE')
-                          if group['quality'].eq(state).any()),'VALID')
+                          if state in states),'VALID')
             if group['instrument_id'].nunique(dropna=False)!=1 or group['source'].nunique(dropna=False)!=1:
                 quality='INVALID'
             elif quality=='VALID' and (not complete or known is None):

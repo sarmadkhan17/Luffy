@@ -107,7 +107,8 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
            btc=None, derivs=None, universe=None, market=None,
            symbol: str = "BT", draws: int = 100, seed: int = 0,
            split: float | None = None, part: str = "test",
-           funding: np.ndarray | None = None, world=None, entry_eligibility=None) -> dict:
+           funding: np.ndarray | None = None, world=None, entry_eligibility=None,
+           raw_entries=None, exit_details=None) -> dict:
     """{null_median, null_p90, percentile, draws, bars} for one spec/symbol.
 
     `split`/`part` select the same slice the actual profit factor came from.
@@ -117,11 +118,19 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
     """
     tf = compiled.spec.timeframe
     df = frames[tf]
-    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
-                              universe=universe, market=market, symbol=symbol, world=world)
-    ex, ex_available = compiled.exit_signal_detail(
-        frames, btc=btc, derivs=derivs, universe=universe, market=market, symbol=symbol, world=world
-    ) if compiled.spec.exit.signal_exit.strip() else (None, None)
+    # The evaluator may already have computed these exact full-window signals.
+    # Reuse RAW entries: scanner eligibility is applied AFTER null rotation,
+    # so pre-masking these arrays would change the statistical comparison.
+    lo, sh = raw_entries if raw_entries is not None else compiled.entries(
+        frames, btc=btc, derivs=derivs, universe=universe, market=market, symbol=symbol, world=world)
+    ex, ex_available = exit_details if exit_details is not None else (
+        compiled.exit_signal_detail(frames, btc=btc, derivs=derivs, universe=universe,
+                                    market=market, symbol=symbol, world=world)
+        if compiled.spec.exit.signal_exit.strip() else (None, None))
+    if np.shape(lo) != (len(df),) or np.shape(sh) != (len(df),):
+        raise ValueError('null_entry_signals_shape')
+    if any(v is not None and np.shape(v) != (len(df),) for v in (ex, ex_available)):
+        raise ValueError('null_exit_signals_shape')
     score_from = 0
     if split is not None:
         cut = int(len(df) * float(split))
