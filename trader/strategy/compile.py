@@ -121,7 +121,7 @@ class CompiledStrategy:
         return self.exit_signal_detail(frames, btc, derivs, universe, market, symbol, world)[0]
 
     def exit_signal_detail(self, frames: dict, btc=None, derivs=None,
-                           universe=None, market=None, symbol: str | None = None, world=None):
+                           universe=None, market=None, symbol: str | None = None, world=None,*,context_out=None):
         """The declared exit plus evidence availability; UNKNOWN cannot mean hold."""
         if self._exit is None:
             return None, None
@@ -138,6 +138,7 @@ class CompiledStrategy:
             available &= ctx._world_valid
         if len(available) and self.missing_inputs(ctx):
             available[-1] = False
+        if context_out is not None:context_out.append(ctx)
         return np.where(available, values, 0).astype(bool), available
 
     def _ctx(self, frames, btc, derivs, universe=None,

@@ -16,7 +16,7 @@ def bar_ms(ts):
     return int(ts.timestamp()*1000) if hasattr(ts, 'timestamp') else int(ts)
 
 
-def observations(spec, snap, state, *, signal_pending=False):
+def observations(spec, snap, state, *, signal_pending=False,contexts=None):
     from datetime import datetime
     at = int(datetime.fromisoformat(snap.ts).timestamp()*1000)
     frame = closed_bars(snap.df(spec.timeframe), spec.timeframe, at)
@@ -43,7 +43,7 @@ def observations(spec, snap, state, *, signal_pending=False):
             btc={'15m': frames['BTC_1h']} if 'BTC_1h' in frames else None,
             derivs=getattr(snap, 'derivs', None), universe=getattr(snap, 'universe', None),
             market=getattr(snap, 'market', None), symbol=snap.symbol,
-            world=getattr(snap, 'world', None))
+            world=getattr(snap, 'world', None),context_out=contexts)
     atr = (E.trail_atr_series(frame, TF_MS[spec.timeframe]).to_numpy(float)
            if spec.exit.trail.get('kind') == 'atr' else None)
     for i, (_, row) in enumerate(frame.iterrows()):
@@ -90,6 +90,8 @@ class LiveExitAdapter:
                       'trade_id TEXT PRIMARY KEY, version_id TEXT NOT NULL, '
                       'install_id TEXT NOT NULL, spec_hash TEXT NOT NULL, '
                       'exit_semantics_id TEXT NOT NULL, state_json TEXT NOT NULL)')
+            from . import live_signal_evidence as S
+            S.ensure(c)
 
     def manage(self, trade, snap):
         trade['_execution_reference'] = dict(price=snap.price,observed_at=snap.ts,basis='exit_decision_snapshot_price')
@@ -144,11 +146,29 @@ class LiveExitAdapter:
                     version['version_id'], install['install_id'], version['spec_hash'], E.EXIT_SEMANTICS_ID):
                 raise ValueError('live_exit_state_identity_differs')
             result = None
+            from . import live_signal_evidence as S
+            pending_signal=None;pending_error=None
+            try:
+                pending_signal=S.load(c,trade['id'],identity)
+            except (ValueError,KeyError,TypeError):
+                # Corrupt signal evidence cannot authorize a signal close,
+                # but must not suspend independent protective transitions.
+                pending_error='live_signal_evidence_unavailable'
+            if state.reason=='signal':
+                if pending_signal is None and pending_error is None:
+                    pending_signal=S.retain(c,trade,identity,spec,snap,policy,state,
+                        E.Observation(state.last_bar_ms,0,0,0,0),legacy=True)
+                state=S.legacy_continuing_state(policy,state)
             if state.reason:
                 result = E.advance(policy, state, E.Observation(state.last_bar_ms,0,0,0,0), float(trade['amount']))
             else:
-                for observation in observations(spec, snap, state):
-                    result = E.advance(policy, state, observation, float(trade['amount']))
+                contexts=[]
+                for observation in observations(spec, snap, state,signal_pending=bool(pending_signal or pending_error),contexts=contexts):
+                    result,decided=S.advance(policy,state,observation,float(trade['amount']),
+                                             pending=bool(pending_signal or pending_error))
+                    if decided:
+                        pending_signal=S.retain(c,trade,identity,spec,snap,policy,state,observation,
+                                                context=contexts[0] if contexts else None)
                     state = result.state
                     if result.due:
                         break
@@ -173,10 +193,11 @@ class LiveExitAdapter:
                     ['strategy-hedge-stop',version['version_id'],install['install_id'],trade['id']],reason=result.reason,
                     exit_evidence=trade['_strategy_exit_evidence'])
                 return result.reason if reduced['status']=='CLOSED' else None
-            if result.reason == 'signal':
-                # Intent is durable, but no D6 executable-price interface has
-                # been reconciled yet. Never submit at the signal close.
-                raise ValueError('signal_exit_execution_timing_requires_D6')
             if self.executor.close(trade, exit_price_hint=snap.price, reason=result.reason):
                 return result.reason
+        if pending_error:raise ValueError(pending_error)
+        if pending_signal and not (result and result.due):
+            # Protection has advanced and committed, but an unexecutable
+            # strategy exit must remain visible as an operational blocker.
+            raise ValueError('live_signal_exit_execution_pending_D6')
         return None

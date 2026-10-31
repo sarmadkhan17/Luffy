@@ -103,7 +103,12 @@ def test_factory_paper_and_live_adapter_persist_intent_until_D6_fill_contract(tm
         def close(self,*a,**kw):
             pytest.fail('signal-close fill was invented before D6 reconciliation')
     adapter=LiveExitAdapter(j,NoVenue())
-    with pytest.raises(ValueError,match='signal_exit_execution_timing_requires_D6'):
+    with pytest.raises(ValueError,match='live_signal_exit_execution_pending_D6'):
         adapter.manage(dict(initial),final_snap)
     state=j.query('SELECT state_json FROM versioned_live_exit_states WHERE trade_id=?',(tid,))[0]['state_json']
-    assert E.decode(state)[1].reason=='signal'
+    assert E.decode(state)[1].reason is None  # pending intent cannot suspend protection
+    from trader.engine import live_signal_evidence as S
+    with j._tx() as db:
+        pending=S.load(db,tid,json.loads(initial['entry_identity_json']))
+    assert pending['signal_decision']['bar_ms']==E.decode(state)[1].last_bar_ms
+    assert pending['fill_claim'] is False and not pending['signal_execution_ready']
