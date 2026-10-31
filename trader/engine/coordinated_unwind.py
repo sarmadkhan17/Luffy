@@ -153,6 +153,14 @@ def _adopt_late_members(executor,plan,current):
     return updated
 
 
+
+def new_plan(executor,group_id,logical_id,reason,exit_decision=None):
+    plan=dict(group_id=group_id,logical_id=logical_id,reason=reason,
+              started_ms=int(time.time()*1000),members=_members(executor,group_id))
+    if exit_decision is not None:plan['strategy_exit_decision']=exit_decision
+    return plan
+
+
 def close_group_once(executor,group_id,logical_id,*,reason='combined_position_exit',exit_decision=None):
     """At most one leg reduction per tick; exact retries survive restart.
 
@@ -173,9 +181,7 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
                     raise ValueError('coordinated_unwind_identity_differs')
                 if rows[0]['state']=='CLOSED':return dict(group_id=group_id,status='CLOSED')
             else:
-                plan=dict(group_id=group_id,logical_id=logical_id,reason=reason,
-                          started_ms=int(time.time()*1000),members=_members(executor,group_id))
-                if exit_decision is not None:plan['strategy_exit_decision']=exit_decision
+                plan=new_plan(executor,group_id,logical_id,reason,exit_decision)
                 db.execute('INSERT INTO coordinated_group_unwinds VALUES(?,?,?,?,?)',
                     (group_id,logical_id,A.canonical(plan),A.digest(plan),'UNWINDING'))
         # The instrument reservation is now durable, even when entry recovery
@@ -253,7 +259,8 @@ def _exit_decision(owned,evidence,group,reason,*,scope='WHOLE_POSITION'):
     if policy!=expected or state.reason!=reason or A.positive(evidence.get('intended_quantity'))!=A.positive(owned['amount']):
         raise ValueError('coordinated_strategy_exit_policy_differs')
     retained=dict(evidence,source_trade_id=owned['id'],entry_identity_sha256=A.digest(root),
-        evidence_scope='STRATEGY_INTENT_NOT_FILL',source_receipt_status='NOT_RETAINED_BY_ADAPTER')
+        evidence_scope='STRATEGY_INTENT_NOT_FILL',source_receipt_status=('LINKED_SIGNAL_ELIGIBILITY_NOT_REPLAYED_HERE'
+            if evidence.get('signal_eligibility_sha256') else 'NOT_RETAINED_BY_ADAPTER'))
     if len(A.canonical(retained).encode())>32768:raise ValueError('coordinated_strategy_exit_decision_too_large')
     return retained
 

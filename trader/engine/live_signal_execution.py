@@ -1,4 +1,4 @@
-"""Execute an already-owned single-position signal after retained D6 evidence.
+"""Execute an already-owned position signal after retained D6 evidence.
 
 The retained open is a timing benchmark, the later received quote is an
 execution reference, and only Executor's actual order/fill books the exit.
@@ -11,7 +11,7 @@ from datetime import datetime,timezone
 from types import SimpleNamespace
 
 from . import live_signal_evidence as S,paper_exit_evidence as X,exit_signal_context as K
-from . import versioned_close as V,coordinated_close as C,entry_authority as A
+from . import versioned_close as V,coordinated_close as C,entry_authority as A,coordinated_unwind as U
 from ..strategy import exit_policy as E
 from ..data import market_provenance as P
 
@@ -34,13 +34,21 @@ def execute(executor,trade,spec,snap,policy,state,*,quote_reader=None):
         rows=executor.journal.query('SELECT * FROM trades WHERE id=?',(trade['id'],))
         if len(rows)!=1:raise ValueError('signal_owned_trade_missing')
         current=rows[0];identity=json.loads(current['entry_identity_json'])
-        if V.registered(executor.journal,current['id'],identity):
+        group=U.owned_group(current)
+        if group and U._exists(executor.journal) and executor.journal.query('SELECT 1 FROM '+U.TABLE+' WHERE group_id=?',(group,)):
+            return U.request_close(executor,current,'signal')
+        if not group and V.registered(executor.journal,current['id'],identity):
             return V.request_close(executor,current,'signal')
         return _execute(executor,current,spec,snap,policy,state,quote_reader=quote_reader)
 
 
 def _execute(executor,trade,spec,snap,policy,state,*,quote_reader=None):
-    root=C.single_ownership(executor,trade)
+    group=U.owned_group(trade)
+    if group:
+        owned=C.ownership(executor,trade,group)
+        if owned['leg']!='primary':raise ValueError('signal_group_primary_required')
+        root=json.loads(trade['entry_identity_json'])
+    else:root=C.single_ownership(executor,trade)
     with executor.journal._tx() as db:
         body=S.load(db,trade['id'],root)
         row=db.execute('SELECT sha256 FROM '+S.TABLE+' WHERE trade_id=?',(trade['id'],)).fetchone()
@@ -97,13 +105,16 @@ def _execute(executor,trade,spec,snap,policy,state,*,quote_reader=None):
     reference=dict(price=price,basis='received_executable_bid_ask_not_fill',
         observed_at=datetime.fromtimestamp(quote['received_ms']/1000,timezone.utc).isoformat())
     evidence=dict(authority='STRATEGY',version_id=root['version_id'],install_id=root['install_id'],
-        spec_hash=root['spec_sha256'],exit_semantics_id=root['exit_semantics_id'],intent=result.reason,
+        spec_hash=root['spec_sha256'],exit_semantics_id=E.EXIT_SEMANTICS_ID,intent=result.reason,
         intended_quantity=result.quantity,state=json.loads(E.encode(policy,result.state)),decision_reference=reference)
+    if group:evidence.update(group_id=group,group_exit_semantics_id=root['exit_semantics_id'],scope='WHOLE_POSITION')
     proof=dict(schema='live-signal-eligibility.v1',trade_id=trade['id'],decision_sha256=row['sha256'],
         decision_id=pending['decision_id'],execution_policy=LIVE_POLICY_ID,benchmark=benchmark,sources=sources,committed_read_ms=committed_read_ms,
         quote=quote,decision=evidence,fill_claim=False,financial_result=None)
     if len(A.canonical(proof).encode())>S.MAX_BYTES:raise ValueError('signal_eligibility_bound')
-    ensure(executor.journal);V.ensure(executor.journal)
+    ensure(executor.journal)
+    if group:U.ensure(executor.journal)
+    else:V.ensure(executor.journal)
     with executor.journal._tx() as db:
         old=db.execute('SELECT * FROM '+TABLE+' WHERE trade_id=?',(trade['id'],)).fetchone()
         if old:
@@ -116,10 +127,22 @@ def _execute(executor,trade,spec,snap,policy,state,*,quote_reader=None):
         evidence=dict(evidence,signal_eligibility_sha256=A.digest(proof))
         # Commit eligibility and the recoverable close plan together. A crash
         # before the order must not leave an orphan proof needing new candles.
-        registered=db.execute('SELECT * FROM '+V.TABLE+' WHERE trade_id=?',(trade['id'],)).fetchone()
-        if registered is None:
-            plan=V.new_plan(trade,root,evidence['intent'],evidence)
-            db.execute('INSERT INTO '+V.TABLE+' VALUES(?,?,?,?)',(trade['id'],A.canonical(plan),A.digest(plan),'CLOSING'))
-        elif V.load(registered)['entry_identity_sha256']!=A.digest(root):
-            raise ValueError('versioned_close_entry_differs')
+        if group:
+            registered=db.execute('SELECT * FROM '+U.TABLE+' WHERE group_id=?',(group,)).fetchone()
+            if registered is None:
+                decision=U._exit_decision(trade,evidence,group,evidence['intent'])
+                plan=U.new_plan(executor,group,A.digest(['coordinated-position-close',group]),evidence['intent'],decision)
+                db.execute('INSERT INTO '+U.TABLE+' VALUES(?,?,?,?,?)',
+                    (group,plan['logical_id'],A.canonical(plan),A.digest(plan),'UNWINDING'))
+            elif not any(m['trade_id']==trade['id'] and m['entry_identity_sha256']==A.digest(root)
+                         for m in U._plan(registered)['members']):
+                raise ValueError('coordinated_unwind_members_changed')
+        else:
+            registered=db.execute('SELECT * FROM '+V.TABLE+' WHERE trade_id=?',(trade['id'],)).fetchone()
+            if registered is None:
+                plan=V.new_plan(trade,root,evidence['intent'],evidence)
+                db.execute('INSERT INTO '+V.TABLE+' VALUES(?,?,?,?)',(trade['id'],A.canonical(plan),A.digest(plan),'CLOSING'))
+            elif V.load(registered)['entry_identity_sha256']!=A.digest(root):
+                raise ValueError('versioned_close_entry_differs')
+    if group:return U.request_close(executor,dict(trade,_strategy_exit_evidence=evidence),evidence['intent'])
     return V.request_close(executor,trade,evidence['intent'],evidence=evidence)

@@ -204,14 +204,16 @@ class LiveExitAdapter:
                 return result.reason
         if pending_error:raise ValueError(pending_error)
         if pending_signal and not (result and result.due):
-            if not group and getattr(self.executor,'ex',None) is not None:
+            if (not group or group.get('leg')=='primary') and getattr(self.executor,'ex',None) is not None:
                 from .live_signal_execution import execute
                 reduced=execute(self.executor,trade,spec,snap,policy,state)
                 if reduced is not None:
+                    if reduced['status']=='CLOSED' and group:
+                        return U._plan(self.journal.query('SELECT * FROM '+U.TABLE+' WHERE group_id=?',(group['group_id'],))[0])['reason']
                     if reduced['status']=='CLOSED':
                         return V.load(self.journal.query('SELECT * FROM '+V.TABLE+' WHERE trade_id=?',(trade['id'],))[0])['reason']
                     return None # the existing position worker owns recovery
-            # Missing/legacy inputs and unsupported grouped signal execution
+            # Missing/legacy inputs and unsupported hedge-leg signal execution
             # remain visible after continuing protective state commits.
             raise ValueError('live_signal_exit_execution_pending_D6')
         return None

@@ -63,8 +63,8 @@ def snapshot(ex,j):
     record_snapshot(j,position_snapshot(observed,raw,account_scope=execution_account_scope(ex)),at_ms=now)
 
 
-def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.,management=None):
-    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch,leverage=leverage,sizing_pct=sizing_pct,ratio=ratio,management=management)
+def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.,management=None,exit_definition=None,entry_bar_ms=0,step_ms=1000):
+    ex,j,e,book,ins,identity,ref=prepared(setup,monkeypatch,leverage=leverage,sizing_pct=sizing_pct,ratio=ratio,management=management,exit_definition=exit_definition,entry_bar_ms=entry_bar_ms,step_ms=step_ms)
     bind(j,ex,e.cfg,'ETH/USDT');transport(ex,monkeypatch)
     primary=V.dispatch(e,book,ins,identity=identity,reference=ref,atr=2.)
     assert 0<primary['filled_quantity']<=2.
@@ -72,6 +72,9 @@ def pair(setup,monkeypatch,*,leverage=None,sizing_pct=100.,ratio=.5,price=97.,ma
     ex.positions[0]['markPrice']=price;snapshot(ex,j)
     equity=200.+primary['filled_quantity']*(price-100.)-sum(f['commission'] for f in ex.cashflow_fills)
     value=observed(1,p=price,h=50.,equity=equity);value['ratio']=ratio
+    if step_ms!=1000 or entry_bar_ms:
+        value['primary_exit_observation'].update(bar_ms=entry_bar_ms+step_ms,step_ms=step_ms)
+        value['primary_exit_observation']['hedge'].update(bar_ms=entry_bar_ms+step_ms,step_ms=step_ms)
     emitted=book.step(1,value)
     assert len(emitted)==1 and emitted[0].leg=='hedge' and emitted[0].reason=='risk_management_activation'
     root=deepcopy(identity);root['coordinated']['leg']='hedge';root['hedge_exit_state']=book.hedge_exit_state
