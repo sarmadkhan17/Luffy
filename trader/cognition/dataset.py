@@ -51,6 +51,7 @@ from trader.cognition import forecast_protocol as L
 from trader.cognition import outcomes as O
 
 SCHEMA = 'pit-dataset.v1'
+ECONOMIC_OUTCOME_POLICY = 'combined-position-outcomes.v1'
 DECLARATION_SCHEMA = 'pit-dataset-declaration.v1'
 FREEZE_SCHEMA = 'pit-dataset-freeze.v1'
 CAPTURE_SCHEMA = 'pit-dataset-capture.v1'
@@ -279,7 +280,7 @@ def _producer(record):
         return 'journal'
     if 'decision' in s:
         return 'journal_unlinked'
-    if 'accounting' in s or 'whole_trade_capture' in s:
+    if 'accounting' in s or 'whole_trade_capture' in s or 'coordinated_trade_capture' in s:
         return 'verified_execution'
     if 'registration' in s and 'target' in s:
         return 'counterfactual'
@@ -388,6 +389,7 @@ def _counterfactual_row(record):
 
 def _execution_row(record):
     source = record['source']
+    cohort=()
     if 'whole_trade_capture' in source:
         from trader.engine.trade_accounting import verified_outcome
         capture = source['whole_trade_capture']
@@ -398,6 +400,10 @@ def _execution_row(record):
                  environment=capture['environment'], registered_ms=capture['start_ms'])
     else:
         r = source['registration']
+    group=source.get('coordinated_trade_capture')
+    if group:
+        # Membership is outcome/dependence information, not entry-time features.
+        cohort=tuple(sorted({m['symbol'] for m in group['closure']['plan']['members']}))
     features = dict(as_of_ms=r['registered_ms'], symbol=r['symbol'], venue=r['venue'],
                     feature_availability='frozen_execution_registration_receipt',
                     environment=r['environment'], trade_id=r['trade_id'],
@@ -405,7 +411,9 @@ def _execution_row(record):
     label = dict(available_ms=record['available_ms'], resolved_ms=record['resolved_ms'],
                  case_kind=record['kind'], measurement='venue_attributed_accounting',
                  simulated=False, **_actual(record))
-    return r['symbol'], r['trade_id'], (), features, label
+    if group:
+        label['economic_group_id']=group['closure']['plan']['group_id']
+    return r['symbol'], r['trade_id'], cohort, features, label
 
 
 BUILDERS = {'forecast': _forecast_row, 'investigation_case': _case_row,
@@ -445,8 +453,11 @@ class _Groups:
             self.parent[max(ra, rb)] = min(ra, rb)
 
 
-def build(declaration, freeze_receipt, capture, receipts, source_meta=None):
+def build(declaration, freeze_receipt, capture, receipts, source_meta=None, *,
+          economic_outcome_policy=ECONOMIC_OUTCOME_POLICY):
     """Assemble the declared point-in-time dataset. Deterministic and self-contained."""
+    if economic_outcome_policy not in (None,ECONOMIC_OUTCOME_POLICY):
+        raise ValueError('dataset_economic_outcome_policy_unknown')
     decl = validate_declaration(declaration)
     dv = digest(decl)
     frozen = validate_freeze(freeze_receipt, decl)
@@ -483,6 +494,8 @@ def build(declaration, freeze_receipt, capture, receipts, source_meta=None):
             drop('local_import_precedes_source_import')
             continue
         producer = _producer(record)
+        if economic_outcome_policy is None and 'coordinated_trade_capture' in record['source']:
+            producer=None  # Exact replay of frozen datasets from the older builder.
         if producer is None or record['kind'] not in ROW_TYPES:
             drop('unsupported_record_kind', record['kind'])
             continue
@@ -516,6 +529,9 @@ def build(declaration, freeze_receipt, capture, receipts, source_meta=None):
             continue
         if symbol not in universe:
             drop('outside_declared_universe', symbol)
+            continue
+        if 'coordinated_trade_capture' in record['source'] and not set(cohort)<=universe:
+            drop('outside_declared_universe',sorted(set(cohort)-universe))
             continue
         if record['case_id'] in seen_case:
             drop('duplicate_case_id', seen_case[record['case_id']])
@@ -551,6 +567,30 @@ def build(declaration, freeze_receipt, capture, receipts, source_meta=None):
             'features': features, 'labels': label,
         })
 
+    # Prefer a complete economic outcome over retained individual-leg receipts,
+    # but only AFTER that group passed this dataset's clocks and universe checks.
+    # A future/unavailable group must not erase information known before the cut.
+    sources={i['source_key']:i['record'].get('source',{}) for i in items}
+    combined={}
+    for row in rows:
+        group=sources[row['source_key']].get('coordinated_trade_capture')
+        if group:
+            for part in group['components']:
+                c=part['capture'];t=c['bookings']['trade']
+                combined[(c['venue'],c['environment'],t['symbol'],t['id'])]=row['row_id']
+    kept=[];underlying={}
+    for row in rows:
+        f=row['features']
+        identity=(f.get('venue'),f.get('environment'),row['symbol'],row['underlying_id'])
+        if (row['producer']=='verified_execution' and identity in combined
+                and 'coordinated_trade_capture' not in sources[row['source_key']]):
+            excluded.append(dict(source_key=row['source_key'],reason='component_of_combined_economic_outcome',
+                                 detail=combined[identity]))
+            continue
+        first=underlying.setdefault((row['producer'],row['underlying_id']),row['row_id'])
+        row['shared_underlying_row_id']=None if first==row['row_id'] else first
+        kept.append(row)
+    rows=kept
     rows.sort(key=lambda r: (r['features']['as_of_ms'], r['row_id']))
     # The cap covers the whole table: sequence rows consume what base rows leave.
     sequences, gaps = _sequences(rows, decl, dv, max_rows - len(rows))
@@ -573,6 +613,8 @@ def build(declaration, freeze_receipt, capture, receipts, source_meta=None):
         'receipts': [{'source_key': i['source_key'], 'local_imported_ms': i['local_imported_ms'],
                       'record': i['record']} for i in ordered],
     }
+    if economic_outcome_policy is not None:
+        body['economic_outcome_policy']=economic_outcome_policy
     if len(L.encode(body).encode()) > LIMITS['max_payload_bytes']:
         raise ValueError('dataset_payload_capacity')
     return json.loads(L.encode(dict(body, dataset_version=digest(body))))
@@ -839,7 +881,8 @@ def replay(dataset):
                                      'capture': body['capture']['code_manifest']}:
         raise ValueError('dataset_code_manifest_mismatch')
     if build(body['declaration'], body['freeze'], body['capture'],
-             body['receipts'], body['source_meta']) != dataset:
+             body['receipts'], body['source_meta'],
+             economic_outcome_policy=body.get('economic_outcome_policy')) != dataset:
         raise ValueError('dataset_replay_mismatch')
     return dataset
 

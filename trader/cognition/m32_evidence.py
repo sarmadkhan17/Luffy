@@ -173,11 +173,20 @@ def eligible_actuals(rows, envelopes, declaration):
             capture = record['source'].get('whole_trade_capture')
             if capture and str(capture['bookings']['trade'].get('strategy_id', '')).startswith('diagnostic:'):
                 raise ValueError('diagnostic_execution_excluded')
+            group=record['source'].get('coordinated_trade_capture')
+            if group:
+                trades=[p['capture']['bookings']['trade'] for p in group['components']]
+                if any(str(t.get('strategy_id','')).startswith('diagnostic:') for t in trades):
+                    raise ValueError('diagnostic_execution_excluded')
+                if any(t['symbol'] not in declaration['universe'] for t in trades):
+                    raise ValueError('accounting_outside_declaration')
             matches = [r for r in rows if r.get('row_type') != 'sequence'
                        and r.get('point_in_time_features') is True
                        and r.get('producer') == 'verified_execution'
                        and (r.get('features', {}).get('venue'), r.get('features', {}).get('environment'),
                             r.get('symbol'), r.get('underlying_id')) == identity
+                       and r.get('labels',{}).get('economic_group_id') == (
+                           group['closure']['plan']['group_id'] if group else None)
                        and r.get('clocks', {}).get('registered_ms') == record['registered_ms']
                        and r.get('clocks', {}).get('known_ms', declaration['discovery_cut_ms']) < declaration['discovery_cut_ms']]
             if not matches:
