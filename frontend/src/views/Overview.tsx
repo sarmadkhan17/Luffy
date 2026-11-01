@@ -406,6 +406,17 @@ function RealizedChart({ desk, loading, error }: { desk?: Desk; loading: boolean
   );
 }
 
+export function scanResult(c: DeskCoin): string {
+  if (c.executed) return "Order sent";
+  if (c.evaluated === false) return c.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable";
+  if (c.action !== "HOLD" || c.score !== 0) return c.action;
+  const reasons = (c.strategy_checks ?? []).flatMap(check => check.reasons);
+  if (!reasons.length) return "Checks unavailable";
+  if (reasons.every(reason => reason.startsWith("ineligible_"))) return "Not applicable";
+  if (reasons.some(reason => reason !== "returned_none" && !reason.startsWith("ineligible_"))) return "Checks incomplete";
+  return "No signal";
+}
+
 export function SignalsCard({ desk, loading, now = Date.now() }: { desk?: Desk; loading: boolean; now?: number }) {
   const scan = desk?.scan;
   const coins = scan?.coins ?? [];
@@ -427,7 +438,7 @@ export function SignalsCard({ desk, loading, now = Date.now() }: { desk?: Desk; 
               <tbody>{coins.map(c => {
                 const skipped = c.evaluated === false;
                 const noSignal = !skipped && c.action === "HOLD" && c.score === 0;
-                const result = skipped ? (c.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable") : c.executed ? "Order sent" : noSignal ? "No signal" : c.action;
+                const result = scanResult(c);
                 return <tr key={c.decision_id} style={{ borderTop: "1px solid #ffffff10" }}>
                   <td style={{ padding: "8px" }}><button type="button" onClick={() => setOpen(c)} aria-label={`${base(c.symbol)} decision detail`} style={{ background: "none", border: 0, color: "#c9d4df", cursor: "pointer", padding: 0 }}>{base(c.symbol)}</button></td>
                   <td style={{ padding: "8px", color: c.executed ? OK : GREY }}>{result}</td>

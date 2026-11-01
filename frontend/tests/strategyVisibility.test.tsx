@@ -1,0 +1,35 @@
+import { render, screen, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { it, expect, vi } from 'vitest';
+import { PreviewProvider } from '../src/context';
+import { fixtureAdapter } from '../src/adapters/fixture';
+import Strategies from '../src/views/Strategies';
+import { scanResult } from '../src/views/Overview';
+it('keeps both active strategies on the first page ahead of retired rows without Factory versions', async () => {
+ const row=(id:string,state:string)=>({id,name:id,state,kind:'spec',description:'Entry rules',curve:[],closed_trades:0,wins:0,open_trades:0,pnl_30d:null});
+ const strategies=[...Array.from({length:30},(_,i)=>row(`Retired ${i}`,'retired')),row('Donchian Breakout Trail','active'),row('Funding Filtered Trend Pullback','active')];
+ const adapter={...fixtureAdapter,mode:'LIVE' as const,overview:vi.fn(async()=>({control:'ACTIVE'})),ownerRead:vi.fn(async()=>({strategies,versions:[],authority_errors:{}}))};
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={client}><PreviewProvider adapter={adapter as any}><Strategies/></PreviewProvider></QueryClientProvider>);
+ const table=await screen.findByRole('table',{name:'Strategy registry'});
+ expect(await within(table).findByText('Donchian Breakout Trail')).toBeVisible();
+ expect(within(table).getByText('Funding Filtered Trend Pullback')).toBeVisible();
+ const rows=within(table).getAllByRole('row');
+ expect(rows[1]).toHaveTextContent('Registry: Active');expect(rows[2]).toHaveTextContent('Registry: Active');
+ expect(within(table).queryByText(/LEGACY \/ NO VERSIONED AUTHORITY/)).not.toBeInTheDocument();
+ expect(screen.getByText(/No Factory strategy versions recorded/)).toBeVisible();
+});
+it('distinguishes no entry from regime skips and failed or missing checks',()=>{
+ const c:any={action:'HOLD',score:0,evaluated:true,executed:false};
+ const checks=(...reasons:string[])=>({...c,strategy_checks:reasons.map(reason=>({strategy:reason,reasons:[reason]}))});
+ expect(scanResult(checks('returned_none'))).toBe('No signal');
+ expect(scanResult(checks('ineligible_regime'))).toBe('Not applicable');
+ expect(scanResult(checks('ineligible_state'))).toBe('Not applicable');
+ expect(scanResult(checks('ineligible_market'))).toBe('Not applicable');
+ expect(scanResult(checks('ineligible_symbol'))).toBe('Not applicable');
+ expect(scanResult(checks('returned_none','ineligible_state'))).toBe('No signal');
+ expect(scanResult(checks('returned_none','ineligible_regime'))).toBe('No signal');
+ expect(scanResult(checks('evaluation_failed'))).toBe('Checks incomplete');
+ expect(scanResult(checks('returned_none','required_input_missing:funding'))).toBe('Checks incomplete');
+ expect(scanResult(c)).toBe('Checks unavailable');
+});

@@ -31,7 +31,7 @@ for (const name of routes) {
       await expect(page.getByTestId("runtime-labels")).toContainText("READ_ONLY_GUI");
     }
     if (name === "Trades") for (const label of ["Resume", "Freeze", "Halt", "PANIC"]) await expect(page.getByRole("button", { name: label, exact: true })).toBeDisabled();
-    if (name === "Strategies") await expect(page.getByRole("heading", { name: "Versioned strategy authority" })).toBeVisible();
+    if (name === "Strategies") await expect(page.getByRole("heading", { name: "Factory strategy versions" })).toBeVisible();
     if (name === "LUFFY") await expect(page.getByTestId("provider-state")).toContainText("Provider: DISABLED");
     if (name === "Operations") await expect(page.getByTestId("operations-disclosure")).toContainText("counted, not listed");
     if (name === "Live System") {

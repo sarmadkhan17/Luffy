@@ -18,8 +18,8 @@ export function StrategyAuthority({ versions, errors }: { versions: unknown; err
   const v = rec(selected?.version), spec = rec(v?.spec), approval = rec(selected?.approval), governor = rec(selected?.governor);
   return <>
     <Card className="pad" label="Versioned strategy authority">
-      <CardHead icon={<Layers size={16} />} title="Versioned strategy authority" sub="Strategy → StrategyVersion → validation → install → probation → owner approval → Strategy Governor" />
-      {Array.isArray(versions) ? <DataTable label="Strategy versions" rows={rows(versions)} cols={cols} rowId={r => String(r.version_id)} onOpen={setSelected} empty="No StrategyVersions recorded." /> : <p className="gl-empty">Versioned authority UNAVAILABLE.</p>}
+      <CardHead icon={<Layers size={16} />} title="Factory strategy versions" sub="Strategy → StrategyVersion → validation → install → probation → owner approval → Strategy Governor" />
+      {Array.isArray(versions) ? <DataTable label="Strategy versions" rows={rows(versions)} cols={cols} rowId={r => String(r.version_id)} onOpen={setSelected} empty="No Factory strategy versions recorded. Active registry strategies are listed above." /> : <p className="gl-empty">Versioned authority UNAVAILABLE.</p>}
       {!!errors && Object.keys(errors).length > 0 && <p className="gl-note">Authority read: {value(errors)}</p>}
       <p className="gl-note">Exact-version authority is separate from journal performance. Registry labels and ACTIVE lifecycle alone never authorize an order. Risk has final entry authority; execution permission fails closed.</p>
     </Card>
