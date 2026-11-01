@@ -13,9 +13,11 @@ TRADE_FIELDS = ('id', 'decision_id', 'symbol', 'side', 'amount', 'entry_price',
                 'market_type', 'opened_at', 'closed_at')
 
 
-def monetary_total(fills):
-    """Strict USDT numeric subtotal; does not establish trade ownership/coverage."""
+def monetary_total(fills, *, currency='USDT'):
+    """Explicit-currency subtotal; does not establish ownership or conversion."""
     if not fills:
+        return None
+    if not isinstance(currency,str) or not currency:
         return None
     try:
         unique = {}
@@ -25,7 +27,7 @@ def monetary_total(fills):
                 return None
             unique[str(key)] = fill
         fills = list(unique.values())
-        if any(f.get('commission_asset') != 'USDT' for f in fills):
+        if any(f.get('commission_asset') != currency for f in fills):
             return None
         total = sum(number(f.get('realized_pnl')) - number(f.get('commission')) for f in fills)
         return total if math.isfinite(total) else None
@@ -48,7 +50,32 @@ def assess(evidence):
         return result
     reasons = result['reasons']
     fs = evidence.get('fills') or []
-    total = monetary_total(fs)
+    binding=evidence.get('execution_binding') or {}
+    try:
+        record=(binding.get('capability') or {}).get('record') or {}
+        instrument=record.get('instrument_id') or {}
+        if not all(isinstance(x,dict) for x in (binding,record,instrument)):
+            raise ValueError
+    except (AttributeError,TypeError,ValueError):
+        result['reasons']=['missing_or_conflicting_order_fill_evidence','funding_unattributed']
+        return result
+    native=instrument.get('venue')=='binancecoinm'
+    currency=record.get('settlement_asset') if native else 'USDT'
+    if native:
+        from .protective import venue_key
+        try:
+            if (instrument.get('market_type')!='futures' or record.get('quote_asset')!='USD'
+                    or not isinstance(currency,str) or not currency
+                    or record.get('base_asset')!=currency
+                    or number(record.get('contract_multiplier'))<=0
+                    or binding.get('instrument_id')!='binancecoinm:futures:'+instrument['venue_symbol']
+                    or venue_key(evidence['symbol'])!=instrument['venue_symbol']):
+                raise ValueError('native_booking_contract_binding_invalid')
+        except (ValueError,KeyError,TypeError):
+            result['reasons']=['native_booking_contract_binding_invalid','funding_unattributed']
+            return result
+        result.update(native_currency=currency,leg_fill_net_excluding_funding_native=None)
+    total = monetary_total(fs,currency=currency)
     if total is None:
         reasons.append('missing_or_invalid_pnl_fee_currency')
     seen = set()
@@ -64,8 +91,9 @@ def assess(evidence):
             if not f.get('id') or str(f['id']) in seen:
                 raise ValueError('missing_or_duplicate_fill_identity')
             seen.add(str(f['id']))
+            same_symbol=(f['symbol']==evidence['symbol']) if native else norm_symbol(f['symbol'])==evidence['symbol']
             if (str(f.get('order')) != evidence['order_id'] or
-                    norm_symbol(f['symbol']) != evidence['symbol'] or f['side'] != evidence['side']):
+                    not same_symbol or f['side'] != evidence['side']):
                 raise ValueError('fill_attribution_mismatch')
             if not evidence['since_ms'] <= number(f['timestamp']) <= evidence['observed_ms']:
                 raise ValueError('fill_clock_mismatch')
@@ -78,7 +106,8 @@ def assess(evidence):
     except (ValueError, KeyError, TypeError, AttributeError):
         reasons.append('missing_or_conflicting_order_fill_evidence')
     if not reasons:
-        result.update(status='verified_leg_fills_only', leg_fill_net_excluding_funding_usdt=total)
+        result['status']='verified_leg_fills_only'
+        result['leg_fill_net_excluding_funding_native' if native else 'leg_fill_net_excluding_funding_usdt']=total
     reasons.append('funding_unattributed')
     return result
 
