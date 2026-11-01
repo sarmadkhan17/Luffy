@@ -123,6 +123,31 @@ def test_approval_is_conditional_on_the_matching_batch_not_only_search_limits():
     assert not C.report_authorizes(report,approval,env)
 
 
+def test_partial_batch_retries_only_unresolved_question_and_offline_replays_both_attempts(setup,tmp_path,monkeypatch):  # noqa: F811
+    from trader.core.config import load_config
+    bank=_bank(setup,[('one',VOLUME)])
+    p=dict(C.PROTOCOL,**C.SMOKE,tf='1h',intake_bank_path=str(bank),
+           intake_mode='FROZEN_PROPOSAL_BATCH',unit_timeout_s=33)
+    client=LLM([None,{'proposal':proposal()}])
+    monkeypatch.setattr('trader.brain.llm.BrainLLM',lambda cfg:client)
+    monkeypatch.setattr(S,'_call',lambda fn,payload,*args:SimpleNamespace(ok=True,value=fn(payload),terminated=True))
+    C._freeze_intake(p,tmp_path)
+    with pytest.raises(ClosureRefused,match='calibration_batch_intake_incomplete'):
+        C._freeze_proposals(p,tmp_path)
+    C._freeze_proposals(p,tmp_path)
+    assert len(client.calls)==2
+    client.available=False
+    result=S.intake_job(dict(store_path=str(tmp_path/'offline.db'),bank_path=p['intake_bank_path'],now_ms=2,tf='1h',
+        study_id='offline',proposal_mode='compositional',cfg=load_config(),
+        proposal_cache_path=p['proposal_cache_path'],proposal_batch_id=p['proposal_batch_id']))
+    assert result['compiled']==1 and result['waiting']==0 and len(client.calls)==2
+    store=Store(tmp_path/'offline.db')
+    try:
+        assert len(store.all_once('proposals'))==2
+        assert C._intake_observation(store,'offline')['provider_unavailable'] is False
+    finally:store.close()
+
+
 def test_batch_receipt_cannot_be_edited_or_empty():
     body=dict(schema=PC.SCHEMA,tf='1h',provider_id='provider',member_ids=['member'])
     batch=dict(body,batch_id=digest(body))

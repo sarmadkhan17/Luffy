@@ -81,8 +81,23 @@ def intake_job(payload: dict) -> dict:
         if proposer is not None:
             from ..compose import proposal_cache
             batch = proposal_cache.batch(store, payload.get('study_id'), tf=payload['tf'], provider_id=proposer.provider_id)
-            result['proposal_batch'] = batch
             expected = payload.get('proposal_batch_id')
+            # A frozen batch can include a failed first response followed by
+            # a successful bounded retry. Replay those retained attempts with
+            # cache reads only, even without a currently available provider.
+            for _ in range(proposer.max_attempts - 1):
+                if not expected or batch and batch['batch_id'] == expected:
+                    break
+                for item in store.owned_items(payload.get('study_id')):
+                    if item['status'] == 'WAITING_DATA' and item['reason'].startswith('PROPOSER_UNAVAILABLE'):
+                        store.set_item(item['item_id'], 'PENDING', 'frozen_cached_attempt_retry', payload['now_ms'])
+                consumer.consume(store, payload['bank_path'], now_ms=payload['now_ms'], proposer=proposer,
+                                 study_id=payload.get('study_id'))
+                items = store.owned_items(payload.get('study_id'))
+                result.update(compiled=sum(i['status']=='COMPILED' for i in items),
+                              waiting=sum(i['status']=='WAITING_DATA' for i in items))
+                batch = proposal_cache.batch(store, payload.get('study_id'), tf=payload['tf'], provider_id=proposer.provider_id)
+            result['proposal_batch'] = batch
             if expected and (not batch or batch['batch_id'] != expected):
                 raise ClosureRefused('frozen_proposal_batch_differs')
         if source_intake is not None:

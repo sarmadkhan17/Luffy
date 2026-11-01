@@ -248,6 +248,11 @@ def _intake_observation(store, sid):
     unavailable = any(p.get('status') == 'DEFERRED' or
                       str(p.get('error', '')).startswith(('PROVIDER_RESPONSE_UNAVAILABLE',
                                                         'PROPOSAL_INTERRUPTED_AFTER_RESERVATION')) for p in proposals)
+    if unavailable and hasattr(store, 'owned_items'):
+        resolved = {i['question_id'] for i in store.owned_items(sid) if i['status'] == 'COMPILED'}
+        unavailable = any((p.get('status') == 'DEFERRED' or str(p.get('error','')).startswith(
+            ('PROVIDER_RESPONSE_UNAVAILABLE','PROPOSAL_INTERRUPTED_AFTER_RESERVATION')))
+            and p.get('question_id') not in resolved for p in proposals)
     result = json.loads(units[0]['result']) if units and units[0].get('result') else {}
     return dict(complete=bool(units and units[0]['status'] == 'DONE' and result.get('status') == 'OK'
                              and result.get('seen', 0) > 0 and not result.get('deferred')
