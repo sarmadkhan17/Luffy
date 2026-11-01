@@ -292,7 +292,7 @@ def detect_tf(df) -> str | None:
     return None
 
 
-def frames_for(df, timeframe: str) -> dict:
+def frames_for(df, timeframe: str, *, context_timeframes=None) -> dict:
     """Frames a spec of `timeframe` needs.
 
     If `df` is already at that timeframe it is used as-is; otherwise it is
@@ -316,7 +316,7 @@ def frames_for(df, timeframe: str) -> dict:
             raise KeyError(f"cannot build '{timeframe}' frame from '{own}'")
         out[timeframe] = r
     # context frames a spec may reach for with htf(), never finer than base
-    for tf in ("1h", "4h"):
+    for tf in (("1h", "4h") if context_timeframes is None else context_timeframes):
         if tf not in out and _TF_MINUTES[tf] > _TF_MINUTES.get(own, 15):
             r = resample(df, tf)
             if r is not None and len(r):
@@ -368,7 +368,6 @@ def load_frames(cfg: dict, timeframe: str = "15m", feed=None,
     timeframes testable: 4h has ~11000 stored bars (5 years) against the
     ~2200 a resample of the 15m store could produce.
     """
-    from ..data.feed import DataFeed
     from .evidence import backtest_bars, backtest_symbols
     feed = feed or offline_feed(cfg)
     syms = symbols or backtest_symbols(cfg)

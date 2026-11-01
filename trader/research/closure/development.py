@@ -24,7 +24,7 @@ from ...core.types import TF_MS
 from ...strategy import spec_evidence
 from ...strategy.compile import compile_spec
 from ...strategy.vector_backtest import funding_for, simulate
-from .. import evaluate as ev, growth, job, slices, thresholds
+from .. import evaluate as ev, growth, job, thresholds
 from ..compose import data as cdata, graph
 from . import ClosureRefused, canonical, digest, families, manifest
 
@@ -58,11 +58,49 @@ def heldout_counts(env: dict) -> dict:
     return {k: dict(v) for k, v in env['projection_counts'].items()}
 
 
-def build_bundle(frames: dict, env: dict, external: dict | None = None) -> ev.Bundle:
+def _context_timeframes(candidate):
+    """Prepare only graph dependencies, including inputs needed BEFORE model fitting.
+
+    Legacy families retain their existing context preparation. Unknown fitted
+    inputs raise rather than silently discarding a required timeframe.
+    """
+    if candidate is None or not graph.is_graph(candidate):
+        return None
+    from ...strategy import dsl, fill_timing
+    needed = {}
+
+    def expression(text):
+        fill_timing._span(dsl.parse(text), needed, candidate['tf'])
+
+    def walk(node):
+        if isinstance(node, dict):
+            if node.get('op') == 'htf':
+                needed[node['tf']] = 1
+            if 'd' in node:
+                expression(node['d'])
+            for key in ('fit', 'fit_pass'):
+                if key in node:
+                    expression(f'{"fitted" if key == "fit" else "fitted_pass"}("{node[key]}")')
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    body = graph.identity(candidate)
+    walk(body)
+    signal = (candidate.get('exit') or {}).get('signal_exit')
+    if isinstance(signal, str) and signal.strip():
+        expression(signal)
+    return tuple(sorted(tf for tf in needed if tf != '__external__'))
+
+
+def build_bundle(frames: dict, env: dict, external: dict | None = None, *, candidate=None) -> ev.Bundle:
     cfg = research_cfg(env)
     external = external or {}
     tf = env['tf']
-    sym_frames = {s: spec_evidence.frames_for(df, tf) for s, df in frames.items()}
+    contexts = _context_timeframes(candidate)
+    sym_frames = {s: spec_evidence.frames_for(df, tf, context_timeframes=contexts) for s, df in frames.items()}
     risk = cfg['risk']
     return ev.Bundle(
         tf=tf, frames=frames, sym_frames=sym_frames, universe={s: {tf: d} for s, d in frames.items()},
@@ -297,7 +335,10 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
     if external is not None and external['gaps']:
         return done('BLOCKED_DATA', 'required context absent: ' + canonical(external['gaps'])[:240],
                     context_gaps=external['gaps'])
-    bundle = build_bundle(frames, env, external)
+    try:
+        bundle = build_bundle(frames, env, external, candidate=candidate)
+    except Exception as exc:  # noqa: BLE001 - retain a typed development failure
+        return _evaluation_failure(done, exc, env['tf'])
     n_draws = int(draws or env['policy']['draws'])
     seed, floor = int(env['policy']['seed']), int(env['policy']['min_symbol_trades'])
     graph_fit = None
