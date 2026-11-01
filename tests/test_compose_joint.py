@@ -1,5 +1,9 @@
-"""A4 / P2 / N4: a planted joint-only effect (drift +e when the S&P and dollar 30-day signs AGREE, -e otherwise;
-each context alone has zero marginal effect). SYNTHETIC mechanism proof, not market evidence."""
+"""A planted interaction can be measured without earning strategy admission.
+
+The population mechanism is joint-only, but this finite synthetic sample is
+not balanced. A simpler strategy can outperform the fitted interaction.
+These are mechanism checks, never market evidence.
+"""
 import pytest
 
 from tests import compose_fixtures as C
@@ -31,15 +35,17 @@ def dev(b, spec):
     return D.develop(graph.make_candidate(spec), b.snap, b.env, draws=100)
 
 
-def test_weak_standalone_components_do_not_pass_but_the_joint_interaction_model_does(xor):
+def test_joint_effect_is_measured_but_rejected_when_a_simple_control_is_better(xor):
     alone = [dev(xor, one(r)) for r in ('spx', 'dxy')]
     assert all(r['outcome'] != 'DEVELOPMENT_POSITIVE' for r in alone), [r['reason'] for r in alone]
     both = dev(xor, joint('ridge', product=True))                            # interaction expression a*b
-    assert both['outcome'] == 'DEVELOPMENT_POSITIVE', both['reason']
+    assert both['metrics']['total_pct'] > 0 and both['metrics']['consistency_p'] <= xor.env['policy']['grow_max_p']
+    assert both['outcome'] == 'NEGATIVE_ECONOMICS', both['reason']
+    assert 'does not beat its own baseline' in both['reason']
+    assert any(b['total_pct'] > both['metrics']['total_pct'] and not b['candidate_earns_place']
+               for b in both['baselines'].values())
     assert both['graph_fit']['models'][0]['model'] == 'ridge' and both['graph_fit']['models'][0]['n_fit_final'] > 1000
     assert sorted(both['requires']) == ['ohlcv', 'ref:dxy', 'ref:spx']
 
-# NOTE: a plain ridge over (spx, dxy) ALSO scored DEVELOPMENT_POSITIVE on this fixture (measured, not asserted away): a
-# linear score's top-quantile corner selects half of the parity structure. The fixture therefore proves that joint-only
-# effects are reachable, not that only one model class can reach them.
-
+# The fitted model must still use the declared interaction and point-in-time
+# inputs. Positive returns alone cannot establish its value over a control.

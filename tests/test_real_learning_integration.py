@@ -240,7 +240,9 @@ def test_owner_refuses_raw_writes_and_test_rule_has_no_runtime_entry(isolated):
     req=A.request(ev,p,current,A.source_versions(cfg))
     with pytest.raises(ValueError,match='isolated_test_registry_required'):
         A.apply(unflagged,cfg,ev,p,req,at_ms=o.observed_ms,test_registry=rules)
-    assert not T.PRODUCTION_RULES and not T.read(j,L.Target.CONFIDENCE,ctx)['value']
+    # Production feedback can prioritize research; it cannot change confidence.
+    assert all(r.target == L.Target.RESEARCH for r in T.PRODUCTION_RULES.values())
+    assert not T.read(j,L.Target.CONFIDENCE,ctx)['value']
 
 def test_attention_retains_exact_priority_for_later_replay(isolated):
     j,cfg,ev,o,v=isolated
