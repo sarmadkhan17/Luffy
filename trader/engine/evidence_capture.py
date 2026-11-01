@@ -30,6 +30,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from decimal import Decimal, InvalidOperation
 
 MARGIN_SCHEMA = "account-margin-observation.v1"
@@ -80,12 +81,18 @@ def _is_ms(v) -> bool:
 
 # ── available margin, from the existing account response ────────────────
 def margin_observation(body, *, request_url: str | None, request_start_ms,
-                       received_ms, account_scope=None) -> dict:
+                       received_ms, account_scope=None, asset=None) -> dict:
     """One `account-margin-observation.v1` from the raw bytes of the account
     response the Kernel already read. `body=None` means no response exists
     this cycle. Never raises on venue content: absence or malformation is a
     reason, not a guess."""
     from urllib.parse import urlsplit
+    try:
+        native=urlsplit(request_url or '').path=='/dapi/v1/account'
+    except ValueError:native=False
+    if native:
+        return _native_margin_observation(body,request_url=request_url,
+            request_start_ms=request_start_ms,received_ms=received_ms,account_scope=account_scope,asset=asset)
     try:
         u = urlsplit(request_url or "")
         env = ACCOUNT_HOSTS.get(f"{u.scheme}://{u.netloc}") \
@@ -118,6 +125,8 @@ def margin_observation(body, *, request_url: str | None, request_start_ms,
             rec["reason"] = "ACCOUNT_RESPONSE_MALFORMED"
         elif env is None:
             rec["reason"] = "ACCOUNT_REQUEST_URL_UNRECOGNISED"
+        elif asset not in (None,'USDT'):
+            rec['reason']='SETTLEMENT_ASSET_UNSUPPORTED'
         elif not (_is_ms(rec["request_start_ms"]) and _is_ms(rec["received_at_ms"])
                   and rec["received_at_ms"] >= rec["request_start_ms"]):
             rec["reason"] = "ACCOUNT_RESPONSE_TIME_INVALID"
@@ -138,6 +147,61 @@ def margin_observation(body, *, request_url: str | None, request_start_ms,
     if account_scope is not None:
         rec["account_scope"] = account_scope
     rec["observation_id"] = _sha(canonical(rec))
+    return rec
+
+
+def _native_margin_observation(body,*,request_url,request_start_ms,received_ms,account_scope,asset):
+    """A single named collateral asset, never a sum of BTC/ETH/USD balances."""
+    from urllib.parse import urlsplit
+    u=urlsplit(request_url)
+    env={'https://demo-dapi.binance.com':'demo','https://dapi.binance.com':'production'}.get(
+        f'{u.scheme}://{u.netloc}')
+    rec=dict(schema=MARGIN_SCHEMA,venue='binancecoinm',market_type='futures',environment=env,
+        endpoint='/dapi/v1/account',field='availableBalance',asset=asset,
+        denomination='native settlement asset units; not a USDT conversion',
+        request_start_ms=request_start_ms if _is_ms(request_start_ms) else None,
+        received_at_ms=received_ms if _is_ms(received_ms) else None,observed_at_ms=None,
+        observed_at_basis='local receipt of complete account response',
+        source='CCXT COIN-M GET /dapi/v1/account asset row',response_sha256=None,response_bytes=None,
+        equity_field='marginBalance',equity_value_text=None,initial_margin_text=None,
+        value_text=None,value=None,status=UNAVAILABLE,reason=None,account_scope=account_scope,
+        can_trade=None)
+    def refuse(reason):rec['reason']=reason
+    if not isinstance(body,(bytes,bytearray)):
+        refuse(NO_RESPONSE)
+    else:
+        raw=bytes(body);rec.update(response_sha256=_sha(raw),response_bytes=len(raw))
+        try:payload=json.loads(raw.decode('utf-8'))
+        except (UnicodeDecodeError,ValueError):payload=None
+        if not isinstance(payload,dict):refuse('ACCOUNT_RESPONSE_MALFORMED')
+        elif env is None:refuse('ACCOUNT_REQUEST_URL_UNRECOGNISED')
+        elif not (_is_ms(request_start_ms) and _is_ms(received_ms) and request_start_ms<=received_ms):
+            refuse('ACCOUNT_RESPONSE_TIME_INVALID')
+        elif not isinstance(asset,str) or re.fullmatch(r'[A-Z0-9]{1,32}',asset) is None:
+            refuse('NATIVE_SETTLEMENT_ASSET_REQUIRED')
+        else:
+            try:snapshot_storage_key(dict(venue='binancecoinm',account_scope=account_scope))
+            except ValueError:refuse('NATIVE_ACCOUNT_SCOPE_REQUIRED')
+            if rec['reason'] is None:
+                rec['observed_at_ms']=received_ms
+                rec['can_trade']=payload.get('canTrade') if type(payload.get('canTrade')) is bool else None
+                assets=payload.get('assets')
+                rows=[r for r in assets if isinstance(r,dict) and r.get('asset')==asset] if isinstance(assets,list) else []
+                if not rows:refuse('NATIVE_ASSET_NOT_PRESENT')
+                elif len(rows)!=1:refuse('NATIVE_ASSET_ROW_AMBIGUOUS')
+                else:
+                    row=rows[0];available=_venue_decimal(row.get('availableBalance'))
+                    equity=_venue_decimal(row.get('marginBalance'))
+                    if available is None or not math.isfinite(float(Decimal(available))):
+                        refuse('AVAILABLE_BALANCE_MALFORMED')
+                    elif equity is None or not math.isfinite(float(Decimal(equity))):
+                        refuse('NATIVE_EQUITY_MALFORMED')
+                    else:
+                        rec.update(status=AVAILABLE,value_text=available,value=float(Decimal(available)),
+                            equity_value_text=equity,initial_margin_text=_venue_decimal(row.get('initialMargin')),
+                            maintenance_margin_text=_venue_decimal(row.get('maintMargin')),
+                            wallet_balance_text=_venue_decimal(row.get('walletBalance')))
+    rec['observation_id']=_sha(canonical(rec))
     return rec
 
 
@@ -284,7 +348,15 @@ BEGIN SELECT RAISE(ABORT, '{SNAPSHOT_TABLE} is immutable'); END;
 
 
 def record_margin(journal, rec: dict) -> None:
-    journal.kv_set(MARGIN_KV, canonical(rec))
+    key=MARGIN_KV
+    if rec.get('venue')=='binancecoinm':
+        scope_key=snapshot_storage_key(rec)
+        asset=rec.get('asset')
+        if not isinstance(asset,str) or re.fullmatch(r'[A-Z0-9]{1,32}',asset) is None:
+            raise ValueError('native margin settlement asset required')
+        if verify_margin(rec) is None:raise ValueError('native margin identity does not verify')
+        key=MARGIN_KV+scope_key[len(SNAPSHOT_KV):]+':'+asset
+    journal.kv_set(key, canonical(rec))
 
 
 def record_snapshot(journal, snap: dict, *, at_ms: int) -> str:
