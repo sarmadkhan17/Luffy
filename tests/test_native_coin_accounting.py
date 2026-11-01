@@ -146,3 +146,38 @@ def test_closed_native_interval_uses_owned_flat_receipt_not_a_later_position(mon
         refused=T.assess(changed,marked=marked)
         assert not refused['native_complete']
         assert 'native_closed_interval_scope_differs' in refused['reasons']
+
+
+def test_many_rounded_native_fills_use_observed_settlement_precision(monkeypatch):
+    from decimal import Decimal,ROUND_DOWN
+    monkeypatch.setattr(T.time,'time',lambda:5.)
+    s=sources();n=100
+    for receipt in s['receipts']:
+        for trade in (receipt['before'],receipt['after']):
+            if trade and trade['amount']==2:trade['amount']=n+1
+        if receipt['kind']=='entry':receipt['evidence']['confirmed_quantity']=n+1
+        elif receipt['kind']=='align_delta':receipt['evidence']['quantity']=n
+        receipt['assessment']=T.booking.assess(receipt['evidence']);seal(receipt)
+    s['trade']=deepcopy(s['receipts'][-1]['after']);seal(s)
+    v=Venue();old_market=v.market
+    v.market=lambda symbol:dict(old_market(symbol),info={'baseAssetPrecision':8})
+    first,partial,last=v.fills
+    first['qty']=n+1
+    v.fills=[first]+[dict(partial,id=1000+i) for i in range(n)]+[last]
+    for fill in v.fills:
+        fill['realizedPnl']=str(Decimal(str(fill['realizedPnl'])).quantize(Decimal('.00000001'),rounding=ROUND_DOWN))
+    def order(params):
+        fs=[f for f in v.fills if str(f['orderId'])==str(params['orderId'])]
+        f=fs[0]
+        return dict(orderId=f['orderId'],symbol=f['symbol'],side=f['side'],positionSide='BOTH',
+            status='FILLED',executedQty=sum(r['qty'] for r in fs),time=f['time'],updateTime=fs[-1]['time'])
+    v.dapiPrivateGetOrder=order
+    captured=T.capture(s,v);r=T.replay(captured)
+    assert r['native_complete'],r
+    assert captured['contract_binding']['settlement_precision']==8
+    assert r['pnl_reconciliation_tolerance_native']==pytest.approx((n+1)*1e-8)
+    # Missing precision retains the old strict behavior, never guessed metadata.
+    old=deepcopy(captured);old['contract_binding'].pop('settlement_precision')
+    assert 'fill_price_pnl_conflict' in T.assess(old)['reasons']
+    wrong=deepcopy(captured);wrong['fill_history']['pages'][0]['rows'][-1]['realizedPnl']=1.
+    assert 'fill_price_pnl_conflict' in T.assess(wrong)['reasons']

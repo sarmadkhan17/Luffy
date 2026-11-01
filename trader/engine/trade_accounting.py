@@ -190,7 +190,7 @@ def assess(a, *, marked=False):
                 or (t['status']=='closed' and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
             raise ValueError('journal_booking_clock_conflict')
         native = a.get('schema_version') in (NATIVE_VERSION,NATIVE_INTERVAL_VERSION)
-        contract, currency = Contract('linear'), 'USDT'
+        contract, currency, settlement_precision = Contract('linear'), 'USDT', None
         if native:
             binding = a['contract_binding']
             market = binding['market']
@@ -210,6 +210,10 @@ def assess(a, *, marked=False):
                     or not a.get('account_scope')):
                 raise ValueError('native_contract_binding_invalid')
             contract, currency = Contract('inverse', size), market['settle']
+            if 'settlement_precision' in binding:
+                settlement_precision=binding['settlement_precision']
+                if type(settlement_precision) is not int or not 0<=settlement_precision<=18:
+                    raise ValueError('native_settlement_precision_invalid')
             result.update(native_currency=currency, native_complete=False,
                           gross_realized_native=None, funding_native=None, net_pnl_native=None)
         if a['environment'] != 'demo' or a['venue'] != ('binancecoinm' if native else 'binanceusdm'):
@@ -316,15 +320,25 @@ def assess(a, *, marked=False):
             raise ValueError('whole_trade_fill_balance_conflict')
         cash_gross = sum(contract.cashflow_native(number(f['qty']),number(f['price']),f['side']) for f in fills)
         unrealized = 0.
+        def pnl_close(actual,expected,count=1):
+            if settlement_precision is None:return close(actual,expected)
+            # Each venue-reported subtotal can lose at most one declared
+            # settlement unit through rounding/truncation. Do not treat many
+            # individually rounded fills as one unrounded wallet value.
+            return math.isclose(number(actual),number(expected),rel_tol=1e-8,
+                                abs_tol=count*10.**(-settlement_precision))
         if marked:
             mark,entry = number(position['markPrice']),number(position['entryPrice'])
             unrealized = number(position['unRealizedProfit'])
             if ((expected_quantity and (mark<=0 or entry<=0))
-                    or not close(unrealized,contract.pnl_native(direction*expected_quantity,entry,mark))):
+                    or not pnl_close(unrealized,contract.pnl_native(direction*expected_quantity,entry,mark))):
                 raise ValueError('marked_price_pnl_conflict')
             cash_gross += contract.cashflow_native(expected_quantity,mark,'SELL' if direction>0 else 'BUY')
-        if not close(gross+unrealized, cash_gross):
+        pnl_count=sum(f['side']!=entry_side for f in fills)+int(marked and bool(expected_quantity))
+        if not pnl_close(gross+unrealized, cash_gross,max(1,pnl_count)):
             raise ValueError('fill_price_pnl_conflict')
+        if settlement_precision is not None:
+            result['pnl_reconciliation_tolerance_native']=max(1,pnl_count)*10.**(-settlement_precision)
         result.update(fees_by_currency=fees)
         result['gross_realized_native' if native else 'gross_realized_usdt'] = gross
         currencies = {}
@@ -420,6 +434,12 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
                          quantity_unit='contracts',bookings_sha256=source['sha256']))
             if not a['account_scope']:
                 raise ValueError('native_account_scope_unavailable')
+            info=market.get('info') or {}
+            if 'baseAssetPrecision' in info:
+                precision=info['baseAssetPrecision']
+                if type(precision) is not int or not 0<=precision<=18:
+                    raise ValueError('native_settlement_precision_invalid')
+                a['contract_binding']['settlement_precision']=precision
             if market.get('swap') is not True:
                 raise ValueError('native_perpetual_contract_required')
         else:
