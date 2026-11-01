@@ -9,7 +9,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _CONTEXT=ContextVar('coordinated_execution_scope',default=None)
-RUNTIME_READY=False  # Enabled only with the integrated, verified caller.
+# The scan registers durable intents; the positions worker dispatches them.
+# Only the supported distinct linear/netting book can use that caller. This
+# code capability supplies no qualification, installation or live authority.
+RUNTIME_READY=True
 
 
 @dataclass(frozen=True)

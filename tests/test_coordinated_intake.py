@@ -91,7 +91,7 @@ def test_no_supported_active_version_needs_no_schema_quote_or_account(setup,monk
     monkeypatch.setattr(I,'candidates',lambda journal:[])
     assert I.run_once(e,None,None)==[]
     assert not j.query("SELECT 1 FROM sqlite_master WHERE name='coordinated_live_books'")
-    assert not CA.RUNTIME_READY
+    assert CA.RUNTIME_READY  # no active versions still means no work
 
 
 @pytest.mark.parametrize('runtime_ready',[False,True])

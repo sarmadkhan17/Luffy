@@ -42,7 +42,7 @@ def prepared(setup,monkeypatch,*,ready=True,leverage=None,sizing_pct=100.,ratio=
     monkeypatch.setattr(F,'load_version',lambda *a:version)
     monkeypatch.setattr(F,'verify_validation',Mock())
     monkeypatch.setattr(F,'verify_install',lambda *a,**kw:{'install_id':'i'})
-    monkeypatch.setattr(CA,'RUNTIME_READY',ready)
+    if not ready:monkeypatch.setattr(CA,'RUNTIME_READY',False)
     identity=dict(status='VERIFIED',strategy_id='strategy',version_id='v',spec_hash='s',spec_sha256='s',
         install_id='i',exit_semantics_id=H.BOOK_EXIT_SEMANTICS_ID,exit_state=book.primary_exit_state,
         coordinated_instruction_observed_ms=int(time.time()*1000),

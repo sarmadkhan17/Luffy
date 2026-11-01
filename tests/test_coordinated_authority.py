@@ -24,7 +24,6 @@ def identity(leg='primary'):
 
 def scoped(tmp_path,monkeypatch):
     j=NS(db_path=str(tmp_path/'j.db'));v=version()
-    monkeypatch.setattr(C,'RUNTIME_READY',True)  # caller plumbing only, never production admission
     load=Mock(return_value=v);validation=Mock();install=Mock(return_value={'install_id':'i'})
     live=Mock(return_value=None)
     monkeypatch.setattr(F,'load_version',load)
@@ -34,10 +33,23 @@ def scoped(tmp_path,monkeypatch):
     return j,v,validation,install,live
 
 
-def test_unintegrated_runtime_keeps_multileg_refusal():
-    assert not C.RUNTIME_READY
-    assert C.support_block(version())=='multi_leg_requires_coordinated_execution'
+def test_integrated_runtime_still_requires_the_exact_coordinated_caller():
+    assert C.RUNTIME_READY
+    assert C.support_block(version()) is None
     assert F.multi_leg_block(version())=='multi_leg_requires_coordinated_execution'
+
+
+def test_integrated_caller_checks_real_validation_before_install_or_entry(tmp_path,monkeypatch):
+    from trader.core.journal import Journal
+    j=Journal(tmp_path/'unqualified.db');F.ensure(j)
+    v=version()
+    monkeypatch.setattr(F,'load_version',lambda *a:v)
+    # Keep the real receipt verifier: a supported contract is not admission.
+    with pytest.raises(F.HandoffRefused,match='validation_receipt_missing'):
+        with C.execution_scope(j,{},'v',group_id='g',leg='primary',action_id='a'):
+            pytest.fail('missing validation cannot reach the caller')
+    assert not C.matches(v)
+    assert not j.query('SELECT * FROM trades')
 
 
 def test_ordinary_derived_version_with_no_research_has_no_multileg_block():
