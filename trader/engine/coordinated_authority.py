@@ -28,7 +28,7 @@ class _Scope:
 def support_block(version):
     from ..strategy import factory_handoff as F
     from ..research.compose import managed_hedge as M
-    multi=(version.get('lineage') or {}).get('research',{}).get('multi_leg')
+    multi=((version.get('lineage') or {}).get('research') or {}).get('multi_leg')
     if not multi:return None
     if not RUNTIME_READY or version.get('source',{}).get('kind')!=F.HEDGE_HQ_KIND:
         return 'multi_leg_requires_coordinated_execution'

@@ -11,7 +11,7 @@ from tests.test_strategy_hedge_stops import current
 
 def version():
     return dict(version_id='v',spec_hash='s',strategy_id='strategy',source=dict(kind=F.HEDGE_HQ_KIND),
-        lineage=dict(research=dict(multi_leg=dict(hedge_spec=dict(account_mode='netting',
+        lineage=dict(research=dict(multi_leg=dict(hedge_spec=dict(account_mode='netting',purpose='protective_beta',
             primary=dict(symbol='A/USDT',contract='linear'),hedge=dict(symbol='B/USDT',contract='linear'),
             management=current())))))
 
@@ -38,6 +38,10 @@ def test_unintegrated_runtime_keeps_multileg_refusal():
     assert not C.RUNTIME_READY
     assert C.support_block(version())=='multi_leg_requires_coordinated_execution'
     assert F.multi_leg_block(version())=='multi_leg_requires_coordinated_execution'
+
+
+def test_ordinary_derived_version_with_no_research_has_no_multileg_block():
+    assert C.support_block(dict(lineage=dict(research=None))) is None
 
 
 def test_exact_scope_reauthenticates_and_resets_after_exception(tmp_path,monkeypatch):
@@ -92,7 +96,6 @@ def test_development_only_and_unsupported_modes_never_gain_scope(tmp_path,monkey
     v['source']['kind']='development-only'
     assert C.support_block(v)=='multi_leg_requires_coordinated_execution'
     v['source']['kind']=F.HEDGE_HQ_KIND
-    hs=v['lineage']['research']['multi_leg']['hedge_spec']
     for key in ('account_mode','inverse','same_symbol','missing_stop'):
         bad=deepcopy(v);h=bad['lineage']['research']['multi_leg']['hedge_spec']
         if key=='account_mode':h['account_mode']='hedge'
