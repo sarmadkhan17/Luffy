@@ -1,4 +1,10 @@
-"""Isolated entrypoint. Never touches production: every path is explicit.
+"""Isolated experiments: data paths are explicit; no trading/service controls.
+
+Provider calls still use the normal shared usage ledger. Set
+LUFFY_BRAIN_USAGE_PATH to its installed absolute path when using a separate
+checkout. Generated calibration snapshots can be released after each completed
+result with retain_generated_snapshots=false in a NEW protocol; failed inputs,
+study evidence and results remain. Existing frozen runs are unchanged.
 
   python -m trader.research.closure status  --store S [--study ID]
   python -m trader.research.closure seal    --store S --start-ms A --end-ms B   (FORWARD_SEAL; the clock is the trusted local clock, never an argument)

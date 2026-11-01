@@ -19,6 +19,9 @@ from __future__ import annotations
 
 import json
 import math
+import fcntl
+import hashlib
+import os
 from pathlib import Path
 
 from . import ClosureRefused, canonical, digest, exposure, manifest, study as S, synthetic
@@ -76,6 +79,7 @@ def configured_protocol(cfg: dict, tf: str, *, intake_bank_path=None) -> dict:
     protocol = deepcopy(PROTOCOL)
     protected_bars = PROTOCOL['n_bars'] - PROTOCOL['dev_bars'] - 101
     protocol.update(tf=tf, dev_bars=selected['fit_bars'],
+                    include_btc_reference=True,
                     n_bars=max(PROTOCOL['n_bars'], selected['fit_bars'] + 101 + protected_bars),
                     search=deepcopy(selected['search']), max_candidates=int(selected['max_candidates']),
                     max_revisions=int(selected.get('max_revisions', 4)),
@@ -259,7 +263,8 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
         names = synthetic.symbols(protocol['n_symbols'])
     else:
         names = synthetic.write_snapshot(snap, n_symbols=protocol['n_symbols'], n_bars=protocol['n_bars'], seed=seed,
-                                         edge=case['edge'], common=case['common'],tf=protocol.get('tf','4h'))
+                                         edge=case['edge'], common=case['common'],tf=protocol.get('tf','4h'),
+                                         include_btc_reference=protocol.get('include_btc_reference',False))
         (d / 'snapshot.ok').write_text(run_id)
     store = Store(d / 'closure.db')
     try:
@@ -359,12 +364,74 @@ def _require_completed_replicate(result):
             f"{result.get('process_status')}:{result.get('stop_reason')}")
 
 
+def _save_record(path, value):
+    pending = path.with_suffix('.pending')
+    with pending.open('w') as stream:
+        stream.write(canonical(value))
+        stream.flush()
+        os.fsync(stream.fileno())
+    pending.replace(path)
+    directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+
+
+def _release_snapshot(workdir, case, index, result):
+    """Release only generated input of a durably completed replicate.
+
+    Results, study evidence, generator identity and seeds remain. Regeneration
+    reproduces simulated observations, not the original inode/cache epoch.
+    Interrupted or failed inputs are retained for diagnosis and exact resume.
+    """
+    _require_completed_replicate(result)
+    directory = Path(workdir) / f'{case["name"]}-{index}'
+    snapshot = directory / 'snapshot.db'
+    receipt = directory / 'snapshot-release.json'
+    if not snapshot.exists():
+        if receipt.exists() and json.loads(receipt.read_text()).get('run_id') == result['run_id']:
+            return
+        raise ValueError('calibration_generated_snapshot_missing')
+    if directory.is_symlink() or snapshot.is_symlink() or not directory.resolve().is_relative_to(Path(workdir).resolve()):
+        raise ValueError('calibration_generated_snapshot_not_owned')
+    # A live SQLite sidecar means the input is not ready to release. Never
+    # remove a database while a worker may still own its writes.
+    if any(Path(str(snapshot) + suffix).exists() for suffix in ('-wal', '-journal')):
+        raise ValueError('calibration_generated_snapshot_still_open')
+    with snapshot.open('rb') as stream:
+        identity = hashlib.file_digest(stream, 'sha256').hexdigest()
+    body = dict(run_id=result['run_id'], seed=result['seed'], case=case,
+                snapshot_sha256=identity, snapshot_bytes=snapshot.stat().st_size,
+                reproduction='Generated observations: bound generator and seed. Original file identity/cache epoch is not recreated.')
+    _save_record(receipt, body)
+    snapshot.unlink()
+
+
 def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
+    """One calibration producer per work directory, including data generation."""
+    directory = Path(workdir)
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / '.calibration.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ClosureRefused('calibration_already_running') from None
+        try:
+            return _run(protocol, directory, replicates=replicates)
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
+def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     """Run (or resume) the protocol. The run identity is bound into the
     directory: a changed protocol/policy/evaluator/generator is refused rather
     than reusing stale replicates, and an interrupted replicate resumes."""
     from copy import deepcopy
     protocol = deepcopy(protocol)
+    retain = protocol.get('retain_generated_snapshots', True)
+    if type(retain) is not bool:
+        raise ValueError('calibration_snapshot_retention_must_be_boolean')
     # Freeze the actual cost/position block before the run identity. Resume
     # cannot silently substitute today's configuration for a declared one.
     protocol['risk'] = _risk(protocol)
@@ -407,11 +474,15 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 if r.get('run_id') != run_id:
                     raise ValueError('calibration_replicate_identity_mismatch')
                 _require_completed_replicate(r)
+                if not retain:
+                    _release_snapshot(workdir, case, i, r)
                 reps.append(r)
                 continue
             r = _replicate(protocol, case, i, base + ci * 10_000 + i, workdir, run_id)
             _require_completed_replicate(r)
-            f.write_text(canonical(r))
+            _save_record(f, r)
+            if not retain:
+                _release_snapshot(workdir, case, i, r)
             reps.append(r)
     judged = []
     for case in protocol['cases']:
@@ -434,6 +505,7 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                                              max_revisions=protocol['max_revisions'],tf=protocol.get('tf','4h'),intake=bool(protocol.get('intake_bank_path')),development_bars=protocol['dev_bars'])),
                 omitted_paths=['live multi-leg execution'] + ([] if protocol.get('intake_bank_path') else ['external LLM source intake']),
                 intake_complete=intake_complete, intake_corpus_id=protocol.get('intake_corpus_id'),
+                generated_snapshot_retention='RETAINED' if retain else 'RELEASED_AFTER_COMPLETED_RESULT',
                 calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,

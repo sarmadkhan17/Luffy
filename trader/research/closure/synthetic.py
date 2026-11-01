@@ -22,7 +22,7 @@ def symbols(n):
 
 
 def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
-                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60, lever=None,tf='4h'):
+                   common=0.0, vol=0.009, start_ms=EPOCH_MS, block=60, lever=None,tf='4h', include_btc_reference=False):
     """Candles with an optional planted continuation `edge` (drift per bar in
     alternating regime blocks shared by all markets) and a `common` factor
     loading that makes the markets move together (correlated no-edge when
@@ -40,7 +40,10 @@ def write_snapshot(path, *, n_symbols=8, n_bars=3600, seed=1, edge=0.0,
     factor = rng0.normal(0.0, vol, n_bars)
     names = symbols(n_symbols)
     rets = {}                      # `lever={i: (j, m)}`: symbol i follows symbol j's returns times m (a leveraged twin), planted
-    for i, name in enumerate(names):
+    # The reference is additional context, never an extra discovery/held-out
+    # target. Existing market seeds and values stay identical.
+    generated = names + (['BTC/USDT'] if include_btc_reference and 'BTC/USDT' not in names else [])
+    for i, name in enumerate(generated):
         rng = np.random.default_rng(seed * 1009 + i)
         px, rows = 100.0, []
         rets[i] = np.zeros(n_bars)
