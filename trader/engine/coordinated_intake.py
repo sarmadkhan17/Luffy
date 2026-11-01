@@ -27,7 +27,7 @@ def candidates(journal):
         install=F.resolve_current_install(journal,row['id'])
         version=F.load_version(journal,install['version_id'])
         if version['strategy_id']!=row['id']:raise ValueError('coordinated_active_projection_differs')
-        if CA.support_block(version) is None:out.append(version)
+        out.append(version)
     return out
 
 
@@ -82,10 +82,17 @@ def run_once(executor,feed,receipt):
     """Called after a completed scan, within the existing execution lock."""
     versions=candidates(executor.journal)
     if not versions:return []  # no schema writes, quotes or account reads
-    admitted=admission(receipt,int(time.time()*1000));out=[]
+    supported=[];out=[]
+    for version in versions:
+        reason=CA.support_block(version)
+        if reason:
+            out.append(dict(version_id=version['version_id'],status='UNAVAILABLE',reason=reason))
+        else:supported.append(version)
+    if not supported:return out
+    admitted=admission(receipt,int(time.time()*1000))
     from . import coordinated_trials as inputs
     live=LiveBooks(executor)
-    for version in versions:
+    for version in supported:
         vid=version['version_id'];hs=version['lineage']['research']['multi_leg']['hedge_spec']
         if hs['primary']['symbol'] not in admitted['admitted_symbols']:continue
         try:

@@ -331,7 +331,8 @@ class KernelRuntime:
                                     getattr(view,'_admission_receipt',None))
                         except Exception as exc:
                             self.coordinated_intake_results=[dict(status='UNAVAILABLE',reason=type(exc).__name__)]
-                    if self.coordinated_intake_results:self.jobs['positions'].trigger()
+                    if any(r.get('status')=='INTENT_REGISTERED' for r in self.coordinated_intake_results):
+                        self.jobs['positions'].trigger()
             end = time.monotonic()
             with self.lock:
                 self.last_decision_stats = stats

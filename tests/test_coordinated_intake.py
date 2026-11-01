@@ -94,6 +94,24 @@ def test_no_supported_active_version_needs_no_schema_quote_or_account(setup,monk
     assert not CA.RUNTIME_READY
 
 
+@pytest.mark.parametrize('runtime_ready',[False,True])
+def test_unsupported_active_version_reports_exact_block_without_quotes_or_account(monkeypatch,runtime_ready):
+    from types import SimpleNamespace as NS
+    from tests.test_coordinated_authority import version
+    v=version()
+    v['lineage']['research']['multi_leg']['hedge_spec']['primary']['contract']='inverse'
+    query=Mock(side_effect=[[{'present':1}],[{'id':'strategy'}]])
+    journal=NS(query=query)
+    monkeypatch.setattr(CA,'RUNTIME_READY',runtime_ready)
+    monkeypatch.setattr(F,'resolve_current_install',Mock(return_value={'version_id':'v'}))
+    monkeypatch.setattr(F,'load_version',Mock(return_value=v))
+    # Deliberately no exchange, account, risk manager or mutation methods.
+    result=I.run_once(NS(journal=journal),None,None)
+    assert result==[dict(version_id='v',status='UNAVAILABLE',reason=(
+        'coordinated_account_or_contract_unsupported' if runtime_ready else 'multi_leg_requires_coordinated_execution'))]
+    assert query.call_count==2
+
+
 def test_allocated_model_size_cannot_exceed_existing_risk_share(setup,monkeypatch):
     ex,j,e,v,bar,r,reader=ready(setup,monkeypatch)
     full=I.capital(e,v,bar)
@@ -151,4 +169,19 @@ def test_finished_scan_passes_its_exact_receipt_to_intake_without_breaking_scan_
     I.run_once.assert_called_once_with(k.executor,k.feed,receipt_token)
     assert r.scans_completed==1 and not r.scan_in_flight
     assert r.coordinated_intake_results[0]['status']==('UNAVAILABLE' if fail else 'INTENT_REGISTERED')
-    r.jobs['positions'].trigger.assert_called_once()
+    if fail:r.jobs['positions'].trigger.assert_not_called()
+    else:r.jobs['positions'].trigger.assert_called_once()
+
+
+def test_unsupported_scan_result_does_not_wake_position_worker(tmp_path,monkeypatch):
+    from types import SimpleNamespace as NS
+    from tests.test_split_kernel_runtime import minimal
+    k,r=minimal(tmp_path);k.executor=NS()
+    r.pending_scan=NS(_model_generation=0,_prepared_at=time.monotonic(),
+                     _admission_receipt=None,cycle=lambda:{'decisions':0})
+    blocked=dict(version_id='v',status='UNAVAILABLE',reason='coordinated_account_or_contract_unsupported')
+    monkeypatch.setattr(I,'run_once',Mock(return_value=[blocked]))
+    r.jobs['positions'].trigger=Mock()
+    r.decisions()
+    assert r.coordinated_intake_results==[blocked] and r.scans_completed==1 and not r.scan_in_flight
+    r.jobs['positions'].trigger.assert_not_called()
