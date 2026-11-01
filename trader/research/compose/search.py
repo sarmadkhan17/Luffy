@@ -542,6 +542,13 @@ DIAGNOSIS = {'BLOCKED_DATA': 'DATA_BLOCKED', 'CODE_FAILURE': 'IMPLEMENTATION_FAI
 
 
 # ── similarity is evidence, not a deletion rule ──────────────────────────
+def _correlation(a, b):
+    if len(a) <= 3 or a.std() <= 0 or b.std() <= 0:
+        return None
+    value = float(np.corrcoef(a, b)[0, 1])
+    return value if np.isfinite(value) else None
+
+
 def factor_matrix(keys, ctxs) -> dict:
     """Matched-sample comparison of catalogued factors on the SAME rows."""
     cols = {k: np.concatenate([graph._values(catalog.BY_KEY[k].formula, c) for c in ctxs]) for k in keys}
@@ -553,8 +560,8 @@ def factor_matrix(keys, ctxs) -> dict:
         for b in keys[i + 1:]:
             va, vb = cols[a][matched], cols[b][matched]
             both = np.isfinite(cols[a]) & np.isfinite(cols[b])
-            corr = float(np.corrcoef(va, vb)[0, 1]) if matched.sum() > 3 and va.std() > 0 and vb.std() > 0 else None
-            corr_pair = float(np.corrcoef(cols[a][both], cols[b][both])[0, 1]) if both.sum() > 3 else None
+            corr = _correlation(va, vb)
+            corr_pair = _correlation(cols[a][both], cols[b][both])
             out['pairs'].append(dict(a=a, b=b, numeric_corr_matched=corr, numeric_corr_pairwise=corr_pair,
                                      n_pair=int(both.sum())))
     return out
