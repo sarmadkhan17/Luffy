@@ -68,7 +68,7 @@ def hand_off_hedge(journal, cfg: dict, packet: dict, *, at_ms: int | None = None
         return dict(status='REFUSED', reason_code='packet_malformed:' + type(exc).__name__, execution_authority='NONE')
     out = dict(status='VALIDATED', qualification_id=packet['qualification_id'], version_id=ver['version_id'],
                validation_receipt_id=ver['validation_receipt_id'], outcome=ver['status'], execution_authority='NONE',
-               multi_leg=True, execution='NOT_EXECUTABLE: coordinated multi-leg execution integration absent')
+               multi_leg=True, execution='coordinated caller required; code support is not qualification, installation or owner/Risk authority')
     if ver['status'] != 'duplicate':
         journal.log_brain_event('research_factory_validated_hedge', packet['qualification_id'], out)
     return out

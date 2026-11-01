@@ -910,7 +910,7 @@ def _create_from_hedge_historical(journal, cfg: dict, source: dict, *, at_ms: in
                 "protected_fingerprint": env["protected_fingerprint"], "development_mode": env["development_mode"],
                 "multi_leg": {"hedge_spec": hs, "ratio_frozen": freeze["ratio_frozen"], "objective": freeze["objective"],
                               "deployment": H.deployment_contract(hs), "packet": q,
-                              "execution": "NOT_EXECUTABLE: single-leg entries compile; the hedge leg has no coordinated execution path"}}
+                              "execution": "coordinated caller required; code support is not qualification, installation or owner/Risk authority"}}
     quant = {**ids, "cut_ms": env["split"]["cut_ms"]}
     rec = _version_record(spec_d["id"], spec_d, spec_hash, None, {"kind": HEDGE_HQ_KIND, "id": q["qualification_id"]}, ids,
                           _lineage(spec_d, _jsha(cfg.get("risk")), research, quant, None))

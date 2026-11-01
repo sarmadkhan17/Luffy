@@ -30,18 +30,12 @@ class _Scope:
 
 def support_block(version):
     from ..strategy import factory_handoff as F
-    from ..research.compose import managed_hedge as M
+    from ..research.compose import hedge as H
     multi=((version.get('lineage') or {}).get('research') or {}).get('multi_leg')
     if not multi:return None
     if not RUNTIME_READY or version.get('source',{}).get('kind')!=F.HEDGE_HQ_KIND:
         return 'multi_leg_requires_coordinated_execution'
-    hs=multi['hedge_spec']
-    if (hs.get('account_mode')!='netting' or hs['primary']['symbol']==hs['hedge']['symbol']
-            or any(hs[leg].get('contract','linear')!='linear' for leg in ('primary','hedge'))):
-        return 'coordinated_account_or_contract_unsupported'
-    try:M.execution_policy(hs)
-    except (ValueError,TypeError,KeyError):return 'coordinated_strategy_stop_unavailable'
-    return None
+    return H.execution_support_block(multi['hedge_spec'])
 
 
 def matches(version):

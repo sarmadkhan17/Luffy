@@ -4,10 +4,10 @@ driver and the incremental `RuntimeAdapter` both call it, so replay and the
 instruction stream a runtime would receive cannot diverge (tested bar-by-bar).
 
 Scope and limits (recorded, not hidden)
-  * Instructions are INTENTS. The production executor handles positionSide
-    BOTH and linear USDT-M only, with no multi-leg book: hedge-mode and COIN-M
-    execution, and joint-leg order management, are NOT wired. `RUNTIME_SUPPORT`
-    states this; nothing here can place an order or grants authority.
+  * Instructions are INTENTS. The coordinated caller supports distinct linear
+    USDT-M instruments in netting mode with an explicit management/stop policy.
+    Same-instrument hedge-mode and COIN-M execution are not wired. Code support
+    does not establish qualification, deployment, account state or authority.
   * Accounting is explicit per contract kind (linear USDT-M, inverse COIN-M
     with coin collateral) and per account mode (hedge vs netting). In netting
     mode an opposite order on the SAME symbol closes exposure, so a same-symbol
@@ -35,20 +35,39 @@ BOOK_EXIT_SEMANTICS_ID=BOOK_EXIT_CONTRACT['version']+':'+digest(BOOK_EXIT_CONTRA
 PURPOSES = ('protective_beta', 'protective_directional', 'stress_loss', 'relative_value')
 RUNTIME_SUPPORT = dict(
     account_modes_in_executor=['netting(positionSide=BOTH)'], contracts_in_executor=['linear USDT-M'],
-    multi_leg_orders=False, coin_m=False, hedge_mode=False,
+    multi_leg_orders=True, coin_m=False, hedge_mode=False, same_instrument=False,
     owned_delta_reductions=True, owned_delta_increases=True, whole_group_unwind=True,
-    note='owned delta transport and whole-group close recovery exist; coordinated primary/conditional hedge entry and combined venue valuation remain open')
+    note='coordinated primary/conditional hedge entry, owned deltas, combined venue valuation and group close exist for distinct linear USDT instruments in netting mode; qualification and current owner/Risk authority remain separate')
+
+
+def execution_support_block(spec: dict) -> str | None:
+    """The exact code capability shared by research reporting and the caller.
+
+    This predicate checks no venue or owner state and grants no authority.
+    """
+    if (spec.get('account_mode') != 'netting'
+            or spec['primary']['symbol'] == spec['hedge']['symbol']
+            or any(spec[leg].get('contract', 'linear') != 'linear' for leg in ('primary', 'hedge'))):
+        return 'coordinated_account_or_contract_unsupported'
+    from . import managed_hedge as M
+    try:
+        M.execution_policy(spec)
+    except (ValueError, TypeError, KeyError):
+        return 'coordinated_strategy_stop_unavailable'
+    return None
 
 
 def deployment_contract(spec: dict, verified: dict | None = None) -> dict:
-    """Can this hedge be EXECUTED, in the account and contract modes it declares? Replay agreement is not execution
-    support: every mode the executor does not verifiably handle is an explicit refusal of the candidate (never a
-    silent downgrade to single-leg or linear). `verified` defaults to RUNTIME_SUPPORT; a mode becomes deployable only
-    when an owner-verified record names it. This function grants no authority and places nothing."""
+    """Report code capability, not qualification or current deployment readiness.
+
+    A supplied verification record may narrow the installed capability, but
+    cannot claim support for an account/contract or stop policy the caller
+    does not implement. No venue, control or account setting is changed.
+    """
     v = dict(RUNTIME_SUPPORT, **(verified or {}))
     reasons = []
     if not v.get('multi_leg_orders'):
-        reasons.append('multi_leg_orders_not_wired: coordinated primary and conditional hedge entry are not wired; owned reductions and group-close recovery confer no entry authority')
+        reasons.append('multi_leg_orders_not_wired: supplied runtime record has no coordinated caller')
     mode = 'netting(positionSide=BOTH)' if spec['account_mode'] == 'netting' else 'hedge(positionSide=LONG/SHORT)'
     if mode not in v['account_modes_in_executor']:
         reasons.append(f'account_mode_unverified: {mode}')
@@ -56,10 +75,14 @@ def deployment_contract(spec: dict, verified: dict | None = None) -> dict:
         kind = 'linear USDT-M' if spec[leg].get('contract', 'linear') == 'linear' else 'inverse COIN-M'
         if kind not in v['contracts_in_executor']:
             reasons.append(f'contract_unverified: {leg} leg is {kind}')
+    blocked = execution_support_block(spec)
+    if blocked:
+        reasons.append(blocked)
     return dict(status='DEPLOYABLE' if not reasons else 'REFUSED_UNSUPPORTED_VENUE_MODE', reasons=reasons,
                 replay_only=bool(reasons), spec_id=spec.get('spec_id'),
-                claim='replay and instruction adapters only; no live multi-leg support is claimed' if reasons else
-                      'every declared mode is in the verified executor record')
+                execution_authority='NONE', readiness='NOT_ASSESSED',
+                claim='no live multi-leg support for this declared contract' if reasons else
+                      'supported coordinated code path only; qualification, installation, owner, venue and Risk checks still required')
 
 
 class HedgeRefused(ClosureRefused):

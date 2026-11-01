@@ -196,11 +196,12 @@ def test_hedge_deployment_contract_refuses_unverified_venue_modes_explicitly():
     s = H.make_spec(primary=dict(symbol='ALT/USDT'), hedge=dict(symbol='BTC/USDT'), purpose='protective_beta', account_mode='hedge')
     d = H.deployment_contract(s)
     assert d['status'] == 'REFUSED_UNSUPPORTED_VENUE_MODE' and d['replay_only'] and 'no live multi-leg support' in d['claim']
-    assert any('multi_leg_orders_not_wired' in r for r in d['reasons']) and any('account_mode_unverified' in r for r in d['reasons'])
+    assert any('coordinated_account_or_contract_unsupported' in r for r in d['reasons']) and any('account_mode_unverified' in r for r in d['reasons'])
     inv = H.make_spec(primary=dict(symbol='ALT/USD_PERP', contract='inverse', multiplier=10.0), hedge=dict(symbol='BTC/USDT'),
                       purpose='protective_beta', account_mode='netting')
     assert any('inverse COIN-M' in r for r in H.deployment_contract(inv)['reasons'])
-    # only an explicit verified record can make a mode deployable; replay agreement alone never does
+    # Report only the implemented caller with the same exact strategy policy.
+    from tests.test_strategy_hedge_stops import current
     ok = H.deployment_contract(H.make_spec(primary=dict(symbol='ALT/USDT'), hedge=dict(symbol='BTC/USDT'),
-                                           purpose='protective_beta', account_mode='netting'), verified=dict(multi_leg_orders=True))
+                                           purpose='protective_beta', account_mode='netting', management=current()))
     assert ok['status'] == 'DEPLOYABLE' and not ok['reasons']
