@@ -121,7 +121,7 @@ class LiveExitAdapter:
             if owned['leg']=='hedge':
                 from ..research.compose import managed_hedge as M
                 hedge_policy=version['lineage']['research']['multi_leg']['hedge_spec'].get('management')
-                if (hedge_policy or {}).get('version')!=M.CURRENT_VERSION:return None
+                if (hedge_policy or {}).get('version') not in (M.CURRENT_VERSION,M.PAIR_VERSION):return None
                 M.validate(hedge_policy)
         elif version.get('lineage',{}).get('research',{}).get('multi_leg'):
             raise ValueError('live_exit_group_identity_missing')

@@ -36,7 +36,7 @@ def support_block(version):
     if (hs.get('account_mode')!='netting' or hs['primary']['symbol']==hs['hedge']['symbol']
             or any(hs[leg].get('contract','linear')!='linear' for leg in ('primary','hedge'))):
         return 'coordinated_account_or_contract_unsupported'
-    try:M.validate(hs.get('management'));M.hedge_exit_spec(hs['management'])
+    try:M.execution_policy(hs)
     except (ValueError,TypeError,KeyError):return 'coordinated_strategy_stop_unavailable'
     return None
 

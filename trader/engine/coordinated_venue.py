@@ -173,10 +173,13 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
             if ins.leg=='primary' and not row and (ins.kind!='ENTER' or ins.reason!='signal' or ins.side!=book.direction):
                 raise ValueError('coordinated_primary_signal_required')
             if ins.leg=='hedge' and not row:
+                from ..research.compose import managed_hedge as M
+                pair=M.is_pair(hs.get('management')) and hs['purpose']=='relative_value'
                 primary=[r for r,o in owned if o['leg']=='primary']
                 if (len(primary)!=1 or book.direction*ins.side>=0
                         or primary[0]['side']!=('long' if book.direction>0 else 'short')
-                        or not book.management_activated or ins.reason!='risk_management_activation'):
+                        or not book.management_activated
+                        or ins.reason!=('joint_entry' if pair else 'risk_management_activation')):
                     raise ValueError('coordinated_conditional_hedge_required')
             observed=(reference or {}).get('observed_ms');now=int(time.time()*1000)
             if type(observed) is not int or not 0<=now-observed<=30_000:

@@ -289,7 +289,7 @@ def _hedge_closure_response(executor,primary,group):
     from ..research.compose import managed_hedge as M
     identity=json.loads(primary['entry_identity_json'])
     policy=identity['coordinated'].get('management_policy')
-    if not isinstance(policy,dict) or policy.get('version')!=M.CURRENT_VERSION:return None
+    if not isinstance(policy,dict) or policy.get('version') not in (M.CURRENT_VERSION,M.PAIR_VERSION):return None
     M.validate(policy)
     if policy['hedge_stop']['on_hit']!='close_group':return None
     members=_members(executor,group)

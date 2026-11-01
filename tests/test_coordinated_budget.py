@@ -106,6 +106,8 @@ def test_no_entry_is_normal_but_a_required_unfilled_hedge_remains_visible(tmp_pa
     from trader.scheduling import kernel_runtime as R
     k,r=minimal(tmp_path);k.executor=NS(journal=NS());k._manages_exits=lambda:True
     monkeypatch.setattr(M.U,'resume',lambda e:[])
+    from trader.engine import versioned_close
+    monkeypatch.setattr(versioned_close,'resume',lambda e:[])  # unrelated close worker; journal here is a stub
     monkeypatch.setattr(M,'run_once',lambda e:[dict(group_id='g',status='HEDGE_ENTRY_REQUIRED')] if hedge_required else [])
     monkeypatch.setattr(L,'run_once',lambda *a:[dict(group_id='g',status='INTENT_REFUSED')])
     monkeypatch.setattr(R,'analysis_context',lambda r:NS(_exposure_symbols=lambda:set(),_portfolio_holdings_market={}))

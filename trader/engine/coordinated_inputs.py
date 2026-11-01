@@ -58,7 +58,7 @@ def plans(journal):
             install=F.verify_install(journal,version,current=False)
             if identity.get('install_id')!=install['install_id']:
                 raise ValueError('coordinated_held_input_install_differs')
-            if leg=='primary' and (hs.get('management') or {}).get('version')==M.CURRENT_VERSION:
+            if leg=='primary' and (hs.get('management') or {}).get('version') in (M.CURRENT_VERSION,M.PAIR_VERSION):
                 # Even without an open hedge, the held main position needs
                 # both native series to evaluate conditional management.
                 for symbol,demand in management_plans(version).items():
@@ -67,7 +67,7 @@ def plans(journal):
             spec=StrategySpec.from_dict(version['spec'])
             if leg=='hedge':
                 policy=hs.get('management')
-                if (policy or {}).get('version')!=M.CURRENT_VERSION:continue
+                if (policy or {}).get('version') not in (M.CURRENT_VERSION,M.PAIR_VERSION):continue
                 # This opposite leg owns its own stop; the primary entry rule
                 # and its external inputs do not become hedge stop inputs.
                 spec=replace(spec,entry_long='',entry_short='',filters=[],exit=M.hedge_exit_spec(policy))

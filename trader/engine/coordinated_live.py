@@ -177,7 +177,7 @@ class LiveBooks:
             if len(primary)!=1 or not hedges or any(r['status']=='open' for r in hedges):return None
             from ..research.compose import managed_hedge as M
             policy=before['book']['spec'].get('management') or {}
-            if policy.get('version')!=M.CURRENT_VERSION:return None
+            if policy.get('version') not in (M.CURRENT_VERSION,M.PAIR_VERSION):return None
             M.validate(policy)
             for row in rows:
                 root=json.loads(row['entry_identity_json'])

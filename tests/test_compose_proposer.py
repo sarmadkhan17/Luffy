@@ -91,8 +91,9 @@ def test_search_honours_declared_factor_timeframe_horizon_and_direction():
 
 def test_relative_value_question_gets_a_validated_two_leg_declaration(tmp_path):
     from trader.research.compose import hedge
+    from tests.test_joint_pair_execution import policy
     spec=proposal();spec.update(structure='pair',hedge=dict(primary={'symbol':'A/USDT'},hedge={'symbol':'B/USDT'},
-        purpose='relative_value',account_mode='netting',ratio={'method':'fixed','value':1.},spec_id='untrusted-derived-id'))
+        purpose='relative_value',account_mode='netting',ratio={'method':'fixed','value':1.},management=policy(),spec_id='untrusted-derived-id'))
     store=Store(tmp_path/'r.db');llm=LLM([{'proposal':spec}])
     out=GraphProposer(llm,store,tf='1h',max_attempts=1)(Q,'BRAIN',Q)
     assert out[0]=='COMPILED',out
@@ -100,6 +101,15 @@ def test_relative_value_question_gets_a_validated_two_leg_declaration(tmp_path):
     assert declared['purpose']=='relative_value' and declared['objective']['metric']=='net_return_pct'
     assert declared['spec_id']!='untrusted-derived-id' and hedge.validate(declared)==declared
     assert 'net_return_pct' in llm.calls[0][0]
+    store.close()
+
+
+def test_pair_proposal_cannot_omit_its_position_exit_policy(tmp_path):
+    spec=proposal();spec.update(structure='pair',hedge=dict(primary={'symbol':'A/USDT'},hedge={'symbol':'B/USDT'},
+        purpose='relative_value',account_mode='netting',ratio={'method':'fixed','value':1.}))
+    store=Store(tmp_path/'r.db')
+    out=GraphProposer(LLM([{'proposal':spec}]),store,tf='1h',max_attempts=1)(Q,'BRAIN',Q)
+    assert out[0]=='BLOCKED' and 'policy_required' in out[1]
     store.close()
 
 

@@ -46,8 +46,9 @@ def calculate(proof,*,now_ms=None):
         raise ValueError('coordinated_capital_owned_quantity_differs')
     leg=ins['leg'];price=float(A.positive(proof['reference']['price']))
     if positions[leg]:gross+=abs(positions[leg])*max(0.,price-marks[leg])
+    quantity=H.pair_increase_quantity(hs,positions,dict(marks,**{leg:price}),leg,ins['qty'],proof.get('ratio'))
     return K.capacity(equity=equity,gross=gross,leverage=hs['leverage'],
-        unit_notional=price,requested=ins['qty'],cost_rate=(hs['fee_bps']+hs['slip_bps'])/10000.)
+        unit_notional=price,requested=quantity,cost_rate=(hs['fee_bps']+hs['slip_bps'])/10000.)
 
 
 def prepare(executor,book,instruction,identity,reference):
@@ -65,6 +66,8 @@ def prepare(executor,book,instruction,identity,reference):
     proof=dict(policy_id=K.POLICY_ID,observed_ms=int(time.time()*1000),
         identity={k:identity[k] for k in ('version_id','spec_hash','install_id','coordinated','coordinated_action_id')},
         hedge_spec=book.spec,positions=book.pos,instruction=instruction,reference=reference,source=source)
+    from ..research.compose.managed_hedge import is_pair
+    if is_pair(book.spec.get('management')):proof['ratio']=book.last_ratio
     assessment=calculate(proof);proof['assessment']=assessment
     text=canonical(proof).encode()
     if len(text)>MAX_BYTES:raise ValueError('coordinated_capital_evidence_bound')

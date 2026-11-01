@@ -138,6 +138,43 @@ def test_input_gap_is_recorded_unknown_and_does_not_retry_one_cut_forever(tmp_pa
     assert CoordinatedPaper(journal).state(install['book_id'])['bar']==1
 
 
+def test_joint_pair_packet_reaches_factory_and_off_scan_paper_execution(tmp_path,packet):
+    from tests.test_joint_pair_execution import policy
+    p=deepcopy(packet);per=p['result']['hedge']['per_symbol']['A/USDT']
+    hs=H.make_spec(**{k:v for k,v in per['effective_spec'].items()
+        if k not in ('purpose','objective','management','spec_id')},
+        purpose='relative_value',management=policy())
+    per.update(effective_spec=hs,objective='net_return_pct',capital_policy_id=H.K.POLICY_ID)
+    for key,value in [('hedged',3.),('unhedged',2.),('reduced',1.)]:
+        per['comparators'][key]['net_return_pct']=value
+    per['folds']=[dict(hedged=3.,unhedged=2.,reduced=1.)]*4
+    c=graph.make_candidate(dict(p['candidate'],structure='pair',hedge=hs))
+    combo=graph.realize(c,p['envelope']['envelope_id'],entries_only=True)
+    r=p['result'];r.update(candidate_id=c['candidate_id'],combo=combo.as_dict(),combo_hash=combo.hash)
+    r['result_id']=digest({k:v for k,v in r.items() if k!='result_id'})
+    p=T.make(c,p['envelope'],r)  # synthetic support fixture, never live qualification
+    j=Journal(tmp_path/'pair-factory.db')
+    cfg={'research':{'closure':{'enabled':True,'paper_intake':True}}}
+    version=F.create_version(j,cfg,dict(kind=T.KIND,packet=p),at_ms=1)
+    installed=F.record_coordinated_paper_install(j,version['version_id'],at_ms=1,timing='NEXT_BAR_OPEN')
+    first=installed['install']['first_bar_ms'];step=14_400_000
+
+    def reader(feed,journal,v,stamp):
+        return dict(p=100.,h=50.,po=100.,ho=50.,signal=1 if stamp==first else 0,
+            exit=False,ratio=1.,corr=1.,funding={'primary':0.,'hedge':0.},
+            primary_exit_observation=dict(bar_ms=stamp,step_ms=step,open=100.,high=100.,low=100.,close=100.,atr=1.,
+                hedge=dict(bar_ms=stamp,step_ms=step,open=50.,high=50.,low=50.,close=50.,atr=1.)))
+
+    runtime.run_once(j,cfg,None,at_ms=first+step,reader=reader,allow_entry=True)
+    runtime.run_once(j,cfg,None,at_ms=first+2*step,reader=reader,allow_entry=True)
+    state=CoordinatedPaper(j).state(installed['book_id'])
+    assert state['book']['pos']['primary']>0 and state['book']['pos']['hedge']<0
+    rows=j.query('SELECT * FROM strategies')
+    assert len(rows)==1 and rows[0]['state']=='paper'
+    assert F.multi_leg_block(F.load_version(j,version['version_id']))=='multi_leg_requires_coordinated_execution'
+    assert not j.query('SELECT * FROM trades')
+
+
 def test_relative_value_uses_return_objective_not_risk_label(packet):
     p=deepcopy(packet);per=p['result']['hedge']['per_symbol']['A/USDT']
     hs=H.make_spec(**{k:v for k,v in per['effective_spec'].items() if k not in ('purpose','objective')},purpose='relative_value')

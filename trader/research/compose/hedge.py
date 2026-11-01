@@ -71,13 +71,27 @@ from ...core.contract_values import Contract  # noqa: E402,F401
 
 
 def capital_enabled(spec):
-    from .managed_hedge import CURRENT_VERSION
-    return (spec.get('management') or {}).get('version')==CURRENT_VERSION
+    from .managed_hedge import CURRENT_VERSION,PAIR_VERSION
+    return (spec.get('management') or {}).get('version') in (CURRENT_VERSION,PAIR_VERSION)
 
 
-def affordable_fill(spec,positions,prices,equity,leg,side,quantity,cost_rate):
+def pair_increase_quantity(spec,positions,prices,leg,quantity,ratio):
+    """A partial primary fill cannot open an oversized second pair leg."""
+    from .managed_hedge import is_pair
+    if not is_pair(spec.get('management')) or leg!='hedge':return quantity
+    if ratio is None or not np.isfinite(ratio) or ratio<0:return 0.
+    if any(not np.isfinite(prices.get(k,np.nan)) or prices[k]<=0 for k in ('primary','hedge')):return 0.
+    pc=Contract(spec['primary']['contract'],spec['primary']['multiplier'])
+    hc=Contract(spec['hedge']['contract'],spec['hedge']['multiplier'])
+    target=pc.notional(positions['primary'],prices['primary'])*ratio
+    have=hc.notional(positions['hedge'],prices['hedge'])
+    return min(quantity,hc.qty_for(max(0.,target-have),prices['hedge']))
+
+
+def affordable_fill(spec,positions,prices,equity,leg,side,quantity,cost_rate,*,ratio=None):
     """Cap a simulated increase at its fill price; old v1 replay is retained."""
     if not capital_enabled(spec) or positions[leg]*side<0:return quantity
+    quantity=pair_increase_quantity(spec,positions,prices,leg,quantity,ratio)
     contracts={k:Contract(spec[k]['contract'],spec[k]['multiplier']) for k in ('primary','hedge')}
     gross=0.
     for k,c in contracts.items():
@@ -147,8 +161,12 @@ def validate(spec: dict) -> dict:
     if spec['objective']['metric'] not in allowed:
         raise HedgeRefused('risk_objective')
     if spec.get('management') is not None:
-        from .managed_hedge import validate as validate_management
+        from .managed_hedge import validate as validate_management, is_pair
         validate_management(spec['management'])
+        if is_pair(spec['management']) and spec['purpose']!='relative_value':
+            raise HedgeRefused('position_purpose_entry_policy_mismatch')
+        if is_pair(spec['management']) and spec['primary']['symbol']==spec['hedge']['symbol']:
+            raise HedgeRefused('pair_distinct_instruments_required')
     return spec
 
 
@@ -314,7 +332,7 @@ class HedgeBook:
         from dataclasses import asdict,replace
         from . import managed_hedge as M
         policy=self.spec.get('management') or {}
-        if policy.get('version')!=M.CURRENT_VERSION:return False
+        if policy.get('version') not in (M.CURRENT_VERSION,M.PAIR_VERSION):return False
         ex=M.hedge_exit_spec(policy)
         proxy=dict(bar,p=bar['h'],signal=-self.direction if prepare else 0,exit=False,
             primary_exit_observation=(bar.get('primary_exit_observation') or {}).get('hedge'))
@@ -336,6 +354,9 @@ class HedgeBook:
         self.last_clock_bar=t
         out, sp = [], self.spec
         managed=sp.get('management') is not None
+        from .managed_hedge import is_pair
+        joint_pair=is_pair(sp.get('management'))
+        conditional=managed and not joint_pair
         if managed and self.state=='FLAT':
             self.management_entry_equity=None
             self.management_activated=False
@@ -373,20 +394,22 @@ class HedgeBook:
                 notional = bar['equity'] * sp['sizing']['primary_notional_pct'] / 100.0
                 pq = pc.qty_for(notional, bar['p'])
                 hq = hc.qty_for(notional * bar['ratio'], bar['h'])
+                if joint_pair and (hq<=0 or self._hedge_stop(bar,prepare=True)):
+                    return out
                 self._emit(out, 'ENTER', 'primary', self.direction, pq, 'signal', t)
-                if not managed:
+                if not conditional:
                     self._emit(out, 'ENTER', 'hedge', -self.direction, hq, 'joint_entry', t)
-                else:
+                if managed:
                     self.management_entry_equity=float(bar['equity'])
-                    self.management_activated=False
+                    self.management_activated=joint_pair
                 self.state, self.entry_bar, self.last_rebalance, self.leg_wait = 'OPENING', t, t, 0
-                if managed:self.last_rebalance=-10**9
+                if conditional:self.last_rebalance=-10**9
             return out
         held = abs(self.pos['primary']) > 0 or abs(self.pos['hedge']) > 0
         if self.pending:
             return out                                    # one working order set at a time
         if self.state == 'OPENING':
-            self.state = 'PRIMARY_OPEN' if managed else 'HEDGED'
+            self.state = 'PRIMARY_OPEN' if conditional else 'HEDGED'
         un = sp['unwind']
         if self.state == 'UNWINDING':
             if not held:
@@ -423,7 +446,7 @@ class HedgeBook:
         if not ok:
             return out
         prim_n = pc.notional(self.pos['primary'], bar['p'])
-        want = prim_n * bar['ratio'] if not managed or self.management_activated else 0.0
+        want = prim_n * bar['ratio'] if not conditional or self.management_activated else 0.0
         have = hc.notional(self.pos['hedge'], bar['h'])
         side = -self.direction
         if prim_n == 0:
@@ -435,7 +458,7 @@ class HedgeBook:
             self.leg_wait = 0
         elif t - self.last_rebalance >= sp['rebalance']['min_interval_bars']:
             if want > have:
-                first_management=managed and have==0
+                first_management=conditional and have==0
                 if first_management and self._hedge_stop(bar,prepare=True):
                     self._emit(out,'UNWIND','primary',-self.direction,abs(self.pos['primary']),'hedge_stop_evidence_unavailable',t)
                     self.state='UNWINDING'
@@ -554,7 +577,7 @@ def replay(spec: dict, p: np.ndarray, h: np.ndarray, signals: np.ndarray, exits:
                 if not np.isfinite(f) or not 0<=f<=i.qty:
                     raise HedgeRefused('hedge_fill_outside_authorized_quantity')
                 if f > 0 and np.isfinite(fill_px[i.leg]) and fill_px[i.leg] > 0:
-                    f=affordable_fill(spec,filling,fill_px,cash,i.leg,i.side,f,fee+slip)
+                    f=affordable_fill(spec,filling,fill_px,cash,i.leg,i.side,f,fee+slip,ratio=book.last_ratio)
                     fills[i.oid]=f
                     notional = c.notional(f, fill_px[i.leg])
                     cash -= notional * (fee + slip)

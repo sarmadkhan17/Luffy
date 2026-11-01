@@ -179,7 +179,7 @@ class CoordinatedPaper:
                         qty=0.  # unknown carry is not additional buying power
                     else:
                         qty=H.affordable_fill(spec,filling,opens,state['equity']+gap+carry-cost,leg,side,qty,
-                                              (spec['fee_bps']+spec['slip_bps'])/10000)
+                                              (spec['fee_bps']+spec['slip_bps'])/10000,ratio=book.last_ratio)
                     actual[oid]=qty
                     cost+=contracts[leg].notional(qty,opens[leg])*(spec['fee_bps']+spec['slip_bps'])/10000
                     filling[leg]+=side*qty
