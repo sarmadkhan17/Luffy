@@ -10,7 +10,7 @@ import json
 from . import catalog, graph
 from ..closure import ClosureRefused, canonical, digest
 
-PROMPT_VERSION = 'compositional-question.v8'
+PROMPT_VERSION = 'compositional-question.v9'
 
 
 class GraphProposer:

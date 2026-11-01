@@ -333,11 +333,7 @@ def _plan(store, study_id, study, env, now_ms):
         if any(u['unit_id'] == 'search' and u['status'] == 'DONE' for u in units):
             for attempt in store.attempts_for(study_id):
                 track = str(attempt.get('track') or attempt.get('domain', 'search'))
-                if track.startswith('learned-') or track == 'equal-weight':
-                    track = 'learned'
-                group = ':'.join((track,
-                                  str(attempt.get('geometry') or 'fixed')))
-                queues.setdefault('search:' + str(group), []).append(attempt['candidate_id'])
+                queues.setdefault('search:' + track, []).append(attempt['candidate_id'])
     owned = store.owned_items(study_id)
     queues['retained'] = [i['candidate_id'] for i in owned if i['kind'] != 'revision'
                           and i['status'] == 'COMPILED' and i['candidate_id']]

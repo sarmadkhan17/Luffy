@@ -89,3 +89,22 @@ def test_evaluation_cap_includes_retained_tree_models_and_matched_baseline(tmp_p
         assert {'ridge','lasso','tree'}<={s['model'] for c in candidates for s in search._fit_specs(c)}
         assert 'equal-weight' in {c['provenance']['track'] for c in candidates}
     finally:store.close()
+
+
+def test_tight_evaluation_cap_honors_reserved_tracks_with_geometry_suffixes(tmp_path):
+    store=Store(tmp_path/'reserved-tracks.db');sid='reserved'
+    try:
+        ids={}
+        for i,track in enumerate(('single','pair','interaction','learned-ridge')):
+            c=graph.make_candidate(search._spec('Synthetic scheduling fixture',
+                {'top':{'a':{'f':'ret24'},'p':.6+i/100,'dir':'above'}},None,
+                track=track,structure='long_only'))
+            ids[track]=c['candidate_id'];store.put_once('candidates',c['candidate_id'],c)
+            store.put_once('attempts',str(i),dict(study_id=sid,candidate_id=c['candidate_id'],
+                domain='interaction' if track=='interaction' else 'momentum',track=track,geometry='fixed'))
+        spec=dict(bank_path=None,seed_families=[],seed_graphs=[],search={},max_candidates=2,journal_path=None)
+        study._ensure_unit(store,sid,'search','search');study._set_unit(store,sid,'search','DONE',1,result={})
+        study._plan(store,sid,spec,{},1)
+        selected={u['unit_id'] for u in store.units(sid) if u['kind']=='develop'}
+        assert selected=={'develop:'+ids['interaction'],'develop:'+ids['learned-ridge']}
+    finally:store.close()

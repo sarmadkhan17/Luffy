@@ -35,6 +35,22 @@ def test_proposal_is_graph_with_exact_source_and_restart_reuses_reply(tmp_path):
     store.close()
 
 
+def test_changed_prompt_policy_does_not_reuse_an_older_compiled_reply(tmp_path,monkeypatch):
+    from trader.research.compose import proposer as P
+    store=Store(tmp_path/'policy-version.db')
+    client=LLM([dict(proposal=proposal()),dict(proposal=proposal())])
+    current=P.PROMPT_VERSION
+    monkeypatch.setattr(P,'PROMPT_VERSION','compositional-question.v8')
+    old=P.GraphProposer(client,store,tf='1h')(Q,'BRAIN',Q)
+    monkeypatch.setattr(P,'PROMPT_VERSION',current)
+    new=P.GraphProposer(client,store,tf='1h')(Q,'BRAIN',Q)
+    assert old[0]==new[0]=='COMPILED' and len(client.calls)==2
+    assert old[3]['context_id']!=new[3]['context_id']
+    assert len(store.all_once('proposals'))==2
+    assert P.GraphProposer(client,store,tf='1h')(Q,'BRAIN',Q)==new
+    store.close()
+
+
 def test_bad_proposal_has_bounded_repair_no_family_fallback(tmp_path):
     store=Store(tmp_path/'research.db'); bad=proposal();bad['tf']='4h'
     llm=LLM([dict(proposal=bad),dict(proposal=proposal())])

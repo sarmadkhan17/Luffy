@@ -337,7 +337,7 @@ def candidate_stream(budget: dict, status: dict) -> dict:
         tracks = {}
         for proposal in out.get(domain, []):
             spec = next(_fit_specs(proposal), {})
-            key = (proposal['provenance']['track'], spec.get('model'), proposal['geo'])
+            key = (proposal['provenance']['track'], spec.get('model'))
             tracks.setdefault(key, []).append(proposal)
         ordered = []
         while any(tracks.values()):
