@@ -47,6 +47,28 @@ def test_inverse_contract_pnl_is_in_coin_and_differs_from_linear():
     assert inv.pnl_usd(-10, 100.0, 110.0) == pytest.approx(-inv.pnl_usd(10, 100.0, 110.0))
 
 
+def test_inverse_contract_payoff_does_not_establish_coin_collateral_portfolio_risk():
+    p=np.linspace(10000.,11000.,20);h=np.linspace(10000.,10500.,20)
+    s=np.zeros(20,int);s[0]=1;x=np.zeros(20,bool)
+    native=H.make_spec(primary=dict(symbol='BTC/USD:BTC',contract='inverse',multiplier=100.),
+        hedge=dict(symbol='ETH/USD:ETH',contract='inverse',multiplier=10.),
+        purpose='protective_beta',account_mode='netting',ratio=dict(method='fixed',value=1.))
+    result=H.replay(native,p,h,s,x)
+    assert np.isfinite(result['equity']).all()
+    assert result['coin_collateral_exposure_usd'] is None
+    metrics=H.risk_metrics(result)
+    assert not metrics['collateral_nav_established'] and not metrics['risk_complete']
+    # The linear quote-currency model has no omitted native collateral exposure.
+    linear=H.replay(spec(ratio=dict(method='fixed',value=1.)),p,h,s,x)
+    assert H.risk_metrics(linear)['collateral_nav_established']
+    assert H.risk_metrics(linear)['risk_complete']
+    evaluated=H.evaluate(native,p,h,s,x,fit_end=10)
+    assert evaluated['verdict']=='INSUFFICIENT_EVIDENCE'
+    assert 'collateral NAV' in evaluated['reason']
+    from trader.research.closure import hedge_qualification as HQ
+    assert HQ.assess(evaluated,native)[0]=='INCONCLUSIVE'
+
+
 def test_next_open_fill_does_not_capture_a_gap_before_the_position_exists():
     p = np.array([100., 130., 140.])
     h = np.array([100., 100., 100.])

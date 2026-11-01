@@ -657,6 +657,7 @@ def risk_metrics(res: dict) -> dict:
     active=res.get('primary_active',np.zeros(len(res['equity']),dtype=bool))
     retained=res.get('retained_net_fraction',np.full(len(active),np.nan))[active]
     complete_exposure=bool(len(retained)) and bool(np.isfinite(retained).all())
+    collateral_known=not bool(res.get('inverse_legs'))
     return dict(max_drawdown_pct=float(-dd.min()) if len(dd) else 0.0, worst_bar_pct=float(-ret.min()) if len(ret) else 0.0,
                 cvar5_pct=float(-np.sort(ret)[:k].mean()) if len(ret) else 0.0,
                 net_return_pct=float((eq[-1] / res['start_equity'] - 1) * 100) if not unknown else None, costs=res['cost'],
@@ -665,7 +666,8 @@ def risk_metrics(res: dict) -> dict:
                 minimum_retained_net_fraction=float(retained.min()) if complete_exposure else None,
                 retained_exposure_basis='PRIMARY_DIRECTION_NET_NOTIONAL_OVER_CURRENT_COMBINED_EQUITY',
                 unknown_mark_bars=unknown,exit_input_gaps=res.get('exit_input_gaps',0),
-                risk_complete=unknown == 0 and not res.get('exit_input_gaps',0) and not res.get('observation_gaps',False),
+                collateral_nav_established=collateral_known,
+                risk_complete=collateral_known and unknown == 0 and not res.get('exit_input_gaps',0) and not res.get('observation_gaps',False),
                 liquidated=res['liquidated'], entries=res['entries'], rebalances=res['rebalances'])
 
 
@@ -811,7 +813,10 @@ def evaluate(spec: dict, p, h, signals, exits, *, equity=10000.0, fit_end=None, 
     wins = sum(f['better'] for f in fold_rows)
     majority = bool(fold_rows) and wins > len(fold_rows) / 2
     if not complete:
-        verdict, why = 'INSUFFICIENT_EVIDENCE', 'held-leg marks or declared exit inputs are unknown; risk benefit cannot be established'
+        verdict='INSUFFICIENT_EVIDENCE'
+        why=('native coin collateral NAV is not established; contract payoff alone is not complete portfolio risk'
+             if any(not m.get('collateral_nav_established',True) for m in (mh,mu,mr)) else
+             'held-leg marks or declared exit inputs are unknown; risk benefit cannot be established')
     elif mh['entries'] < 3:
         verdict, why = 'INSUFFICIENT_EVIDENCE', f'{mh["entries"]} hedged entries'
     elif mh['liquidated']:
