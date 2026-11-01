@@ -29,7 +29,6 @@ import hashlib
 import json
 import math
 import time
-from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -823,7 +822,7 @@ def _verified_historical(cfg: dict, packet) -> dict:
         _refuse("hq_research_handoff_gate_closed")
     if not rcfg.get("referee", False):
         _refuse("hq_research_referee_gate_closed")
-    if not cq.calibration_approved(cfg, env):
+    if not cq.calibration_approved(cfg, env, q['freeze'].get('proposal_batch')):
         _refuse("hq_calibration_not_approved")
     if cm.not_weaker(env["policy"], cm.configured_policy(cfg)):
         _refuse("hq_policy_weaker_than_configured")
@@ -859,7 +858,7 @@ def _verified_hedge(cfg: dict, packet) -> dict:
     method=hq.registered_method(cfg)
     if method is None or q['statistical_admission']['method']!={k:method[k] for k in ('method_id','version','calibration_id')}:
         _refuse("hq_hedge_admission_not_registered")
-    if not cq.calibration_approved(cfg, env):
+    if not cq.calibration_approved(cfg, env, q['freeze'].get('proposal_batch')):
         _refuse("hq_calibration_not_approved")
     if cm.not_weaker(env["policy"], cm.configured_policy(cfg)):
         _refuse("hq_policy_weaker_than_configured")

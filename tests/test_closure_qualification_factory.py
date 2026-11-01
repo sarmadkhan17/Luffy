@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from tests.closure_fixtures import (approval, build, fixture_freeze, gated_cfg, incumbent_book, lowered_cfg,
+from tests.closure_fixtures import (approval, build, fixture_freeze, gated_cfg, incumbent_book,
                                     scripted_referee, source_journal)
 from trader.core.config import load_config
 from trader.core.journal import Journal
@@ -73,7 +73,9 @@ def test_closed_production_gates_block_configured_qualification_without_spending
     f = fixture_freeze(b)
     auth = authority(tmp_path, b)
     calls = []
-    for cfg, want in ((load_config(), 'production_referee_gate_closed'),
+    closed = load_config()
+    closed['research'].update(referee=False,handoff=False)
+    for cfg, want in ((closed, 'production_referee_gate_closed'),
                       (gated_cfg(None), 'calibration_not_approved'),
                       (gated_cfg(approval(tmp_path, b.env, calibration_status='INCONCLUSIVE')), 'calibration_not_approved'),
                       (gated_cfg(approval(tmp_path, b.env, numeric_id='other')), 'calibration_not_approved'),
@@ -120,7 +122,6 @@ def test_cumulative_budget_across_studies_and_an_independent_runner(good, tmp_pa
 
 def test_test_only_import_path_refuses_divergent_sources(good, tmp_path):
     """Independent (TEST_ONLY) copies: a source that disagrees is refused, never reset."""
-    cfg = gated_cfg(None)
     for name, edit, want in (('badbudget', 'budget', 'error_budget_differs'), ('diverged', 'prior', 'budget_sequence_diverged')):
         b = build(tmp_path, name=name, seed=13, seal='SYNTHETIC')
         canonical = tmp_path / f'{name}-canon.db'
@@ -233,7 +234,9 @@ def test_interrupted_handoff_retries_without_duplicates(good, tmp_path, monkeypa
 
 def test_production_gates_and_strictness_are_honoured_by_the_new_source(good, tmp_path):
     j = Journal(tmp_path / 'j.db')
-    real = handoff.hand_off(j, load_config(), good.packet)                       # real config: gates closed
+    closed = load_config()
+    closed['research'].update(referee=False,handoff=False)                      # explicit gate fixture
+    real = handoff.hand_off(j, closed, good.packet)
     assert real['status'] == 'REFUSED' and real['reason_code'] == 'hq_research_handoff_gate_closed'
     open_cfg = copy.deepcopy(load_config())
     open_cfg['research'].update(referee=True, handoff=True, closure=dict(approved_calibration=good.auth['cfg']['research']['closure']['approved_calibration']))

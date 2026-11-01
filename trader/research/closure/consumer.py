@@ -210,7 +210,13 @@ def _finish(store, item_id, status, reason, candidate, provenance, now_ms):
             if old is None:
                 c.execute('INSERT INTO candidates VALUES (?,?)', (candidate['candidate_id'], canonical(candidate)))
             elif old[0] != canonical(candidate):
-                raise ClosureRefused('record_conflict', 'candidates')
+                from ..compose import graph
+                retained = json.loads(old[0])
+                if not (graph.is_graph(candidate) and graph.is_graph(retained)
+                        and graph.identity(graph.verify(retained)) == graph.identity(graph.verify(candidate))):
+                    raise ClosureRefused('record_conflict', 'candidates')
+                # The economic definition is shared; this item's provenance
+                # records its own source/study. Preserve the first definition.
         payload = json.loads(c.execute('SELECT payload FROM items WHERE item_id=?', (item_id,)).fetchone()[0])
         payload['provenance'] = provenance
         from . import canonical
@@ -230,7 +236,6 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
            max_revisions: int = MAX_REVISIONS, max_repairs: int = MAX_REPAIRS, study_id=None) -> dict:
     """The next step after one DEVELOPMENT result. Returns the work item."""
     import json
-    from . import canonical
     if dev_result.get('stage') != 'DEVELOPMENT':
         raise ClosureRefused('final_test_feedback_barred', str(dev_result.get('stage')))
     if dev_result.get('candidate_id') != parent_candidate_id or dev_result.get('result_id') is None:
@@ -249,7 +254,10 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
     child, change = None, None
     stress=((dev_result.get('diagnostics') or {}).get('robustness') or {}).get('edge_disappears_at')
     if outcome == 'NEGATIVE_ECONOMICS' or outcome=='DEVELOPMENT_POSITIVE' and stress:
-        root_count = len(store.items(kind='revision', status='COMPILED', root=_root(store, parent_candidate_id)))
+        root = _root(store, parent_candidate_id, study_id)
+        owned = store.owned_items(study_id) if study_id is not None else store.items()
+        root_count = sum(i['kind']=='revision' and i['status']=='COMPILED'
+                         and json.loads(i['payload']).get('provenance',{}).get('root')==root for i in owned)
         if root_count >= max_revisions:
             status, reason = 'BLOCKED', 'REVISION_BUDGET_EXHAUSTED'
         else:
@@ -259,7 +267,11 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
                 choices, diagnosis = diagnosed_mutations(parent, dev_result)
             for change in choices:
                 cand = families.mutate(parent, change)
-                if store.get_once('candidates', cand['candidate_id']) is None:
+                used = {i['candidate_id'] for i in owned if i.get('candidate_id')}
+                if study_id is not None:
+                    used.update(u['unit_id'].split(':',1)[1] for u in store.units(study_id) if u['kind']=='develop')
+                if (cand['candidate_id'] not in used if study_id is not None else
+                        store.get_once('candidates', cand['candidate_id']) is None):
                     child = cand
                     break
             status, reason = ('COMPILED', 'bounded_economic_revision: ' + diagnosis) if child else (
@@ -267,26 +279,28 @@ def revise(store: Store, parent_candidate_id: str, dev_result: dict, *, now_ms: 
     elif outcome in ('INCONCLUSIVE_POWER', 'BLOCKED_DATA'):
         status, reason = 'WAITING_DATA', 'power_or_data_shortfall_is_not_negative_evidence; no rule change'
     elif outcome == 'CODE_FAILURE':
-        repairs = len(store.items(kind='revision', parent_candidate_id=parent_candidate_id, outcome='CODE_FAILURE'))
+        repairs = sum(study_id is None or json.loads(i['payload']).get('study_id')==study_id
+                      for i in store.items(kind='revision', parent_candidate_id=parent_candidate_id, outcome='CODE_FAILURE'))
         status, reason = ('BLOCKED', 'CODE_REPAIR_BUDGET_EXHAUSTED') if repairs > max_repairs else (
             'BLOCKED', 'NEEDS_CODE_REPAIR')              # economic identity unchanged
     else:
         status, reason = 'NO_CHANGE_JUSTIFIED', 'development_positive_eligible_for_freeze'
     prov = dict(parent_candidate_id=parent_candidate_id, result_id=dev_result['result_id'],
-                change=change if child else None, root=_root(store, parent_candidate_id),
+                change=change if child else None, root=_root(store, parent_candidate_id, study_id),
                 source_authority='DEVELOPMENT_RESULT', intent='REVISION')
     _finish(store, item_id, status, reason, child, prov, now_ms)
     return store.item(item_id)
 
 
-def _root(store, candidate_id):
+def _root(store, candidate_id, study_id=None):
     """Root of the revision chain (first candidate with no revision parent)."""
     import json
     seen = set()
     while candidate_id not in seen:
         seen.add(candidate_id)
         parent = next((json.loads(i['payload']).get('provenance', {}).get('parent_candidate_id')
-                       for i in store.items(kind='revision', candidate_id=candidate_id)), None)
+                       for i in store.items(kind='revision', candidate_id=candidate_id)
+                       if study_id is None or json.loads(i['payload']).get('study_id')==study_id), None)
         if not parent:
             return candidate_id
         candidate_id = parent

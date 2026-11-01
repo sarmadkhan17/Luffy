@@ -370,7 +370,7 @@ def test_unknown_candidate_and_other_sources_are_refused(tmp_path, cfg):
         assert e.value.code == code
 
 
-def test_investigation_research_result_never_qualifies(tmp_path, cfg, paths):
+def test_investigation_research_result_never_qualifies(tmp_path, cfg, paths):  # noqa: F811
     """A real SUPPORTED investigation_volume_anomaly result."""
     from tests.test_investigation_research_family import measured
     from trader.observability import investigation_research as R
@@ -972,8 +972,21 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
                 "create_order", "executor", "orchestrator", "notifier"):
         assert bad not in code, bad
-    # the executor reads only the paper/live fence predicate
+    # Coordinated runtime consumers are readers of exact versions/authority.
+    # Pin each reader's API surface: admitting an import is not permission to
+    # create, install, approve or mutate a version from a trading callback.
+    readers={
+        'trader/engine/coordinated_authority.py':{'HEDGE_HQ_KIND','live_entry_block','load_version','verify_install','verify_validation'},
+        'trader/engine/coordinated_live.py':{'load_version','verify_install'},
+        'trader/engine/coordinated_venue.py':{'load_version'},
+        'trader/engine/coordinated_inputs.py':{'_expected_exit_semantics','load_version','verify_install'},
+        'trader/engine/coordinated_intake.py':{'live_allocation','load_version','resolve_current_install','verify_install'},
+    }
+    for path,allowed in readers.items():
+        assert set(re.findall(r'\bF\.(\w+)',pathlib.Path(path).read_text()))==allowed
     for f in pathlib.Path("trader").rglob("*.py"):
+        if f.as_posix() in readers:
+            continue
         if f not in (pathlib.Path('trader/dashboard/glacier_truth.py'), pathlib.Path('trader/brain/postmortem.py'), pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py'), pathlib.Path('trader/research/closure/handoff.py'), pathlib.Path('trader/strategy/compile.py'), pathlib.Path('trader/engine/paper_cost_evidence.py'), pathlib.Path('trader/engine/coordinated_trials.py'), pathlib.Path('trader/engine/coordinated_probation.py'), pathlib.Path('trader/strategy/owner_demo.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert not _factory_refs(f.read_text(), f.as_posix()), f
     # These two scoped readers cannot use the allowlist to acquire writers.
@@ -1158,7 +1171,6 @@ def test_legacy_compiler_provenance_without_factory_identity_is_incomplete(tmp_p
 
 def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
     from types import SimpleNamespace
-    import pandas as pd
     from tests.test_trade_provenance import decision
     from trader.core.types import Position, Side
     j, h = _journal(tmp_path, state="reason_passed")

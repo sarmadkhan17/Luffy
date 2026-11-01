@@ -15,7 +15,8 @@ import time
 from . import ClosureRefused, canonical
 
 ONCE_TABLES = ('candidates', 'runs', 'freezes', 'qualifications', 'looks', 'manifests', 'envelopes', 'exposure',
-                'budgets', 'attempts', 'requirements', 'proposals', 'proposal_reservations', 'experiment_plans', 'proposal_contexts')
+                'budgets', 'attempts', 'requirements', 'proposals', 'proposal_reservations', 'experiment_plans', 'proposal_contexts',
+                'proposal_cache', 'proposal_cache_reservations')
 
 
 def read_cached_run(path, key):

@@ -31,7 +31,8 @@ SPEC_KEYS = ('snapshot_path', 'tf', 'discovery_symbols', 'heldout_symbols', 'fit
              'protected_start_ms', 'protected_end_ms', 'policy', 'risk', 'development_mode', 'seed_families',
              'bank_path', 'max_candidates', 'max_revisions', 'workdir', 'journal_path', 'budget_journal_path',
              'source_journal_path', 'book', 'unit_timeout_s', 'derivs_path', 'world_path', 'seed_graphs', 'search', 'proposal_mode',
-             'references_path', 'origin', 'protected_derivs_path','universe_path','universe_environment','independent_window_assigned')
+             'references_path', 'origin', 'protected_derivs_path','universe_path','universe_environment','independent_window_assigned',
+             'proposal_cache_path', 'proposal_batch_id')
 
 
 def develop_job(payload: dict) -> dict:
@@ -45,6 +46,7 @@ def develop_job(payload: dict) -> dict:
 def intake_job(payload: dict) -> dict:
     """Child entry for question intake; opens its own Store connection (WAL) and writes through it."""
     store = Store(payload['store_path'])
+    cache = None
     try:
         source_intake = None
         if payload.get('brain_source_path'):
@@ -68,13 +70,27 @@ def intake_job(payload: dict) -> dict:
             closure=(provider_cfg.get('research') or {}).get('closure') or {}
             if closure.get('proposal_provider_enabled',False):
                 provider_cfg.setdefault('brain',{})['enabled']=True
+            from .calibration import intake_provider_id
+            if payload.get('proposal_cache_path'):
+                cache = Store(payload['proposal_cache_path'])
             proposer = GraphProposer(BrainLLM(provider_cfg), store, tf=payload['tf'], study_id=payload.get('study_id'),
-                                     learning_tasks=learning_tasks)
+                                     learning_tasks=learning_tasks, cache_store=cache,
+                                     allow_provider_calls=not bool(payload.get('proposal_batch_id')),
+                                     provider_id=intake_provider_id(provider_cfg))
         result = consumer.consume(store, payload['bank_path'], now_ms=payload['now_ms'], proposer=proposer, study_id=payload.get('study_id'))
+        if proposer is not None:
+            from ..compose import proposal_cache
+            batch = proposal_cache.batch(store, payload.get('study_id'), tf=payload['tf'], provider_id=proposer.provider_id)
+            result['proposal_batch'] = batch
+            expected = payload.get('proposal_batch_id')
+            if expected and (not batch or batch['batch_id'] != expected):
+                raise ClosureRefused('frozen_proposal_batch_differs')
         if source_intake is not None:
             result['source_intake'] = source_intake
         return result
     finally:
+        if cache is not None:
+            cache.close()
         store.close()
 
 
@@ -386,6 +402,7 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
     if kind in ('intake', 'search'):
         job, body = (intake_job, dict(store_path=str(store.path), bank_path=study['bank_path'], now_ms=now_ms, tf=study['tf'],
                                       proposal_mode=study.get('proposal_mode'), cfg=cfg, study_id=study_id,
+                                      proposal_cache_path=study.get('proposal_cache_path'), proposal_batch_id=study.get('proposal_batch_id'),
                                       brain_source_path=study.get('source_journal_path'),
                                       source_paths=[str(store.path), study['snapshot_path'], study.get('derivs_path')])) if kind == 'intake' else \
             (search_job, dict(store_path=str(store.path), study=study, study_id=study_id, now_ms=now_ms))

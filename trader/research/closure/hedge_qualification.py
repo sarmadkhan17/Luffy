@@ -103,6 +103,10 @@ def freeze_hedge_finalist(store, env: dict, results: list):
                                                                  for o in sorted({r['outcome'] for r in mine})},
                                     result_ids=sorted(r['result_id'] for r in mine)),
                 authority='RESEARCH_ONLY',admission_protocol=dict(OA.PROTOCOL))
+    from ..compose import proposal_cache
+    batch = proposal_cache.for_envelope(store, env)
+    if batch is not None:
+        body['proposal_batch'] = proposal_cache.verify(batch)
     freeze = dict(body, freeze_id=digest(body))
     store.put_once('freezes', freeze['freeze_id'], freeze)
     return freeze
@@ -114,6 +118,9 @@ def verify_hedge_freeze(freeze: dict, env: dict) -> Combination:
     if freeze['envelope_id'] != env['envelope_id']:
         raise ClosureRefused('freeze_envelope_mismatch')
     families.verify_candidate(freeze['candidate'])
+    if 'proposal_batch' in freeze:
+        from ..compose import proposal_cache
+        proposal_cache.verify(freeze['proposal_batch'])
     spec = H.validate(freeze['hedge_spec'])
     if H.capital_enabled(spec) and freeze.get('capital_policy_id')!=H.K.POLICY_ID:
         raise ClosureRefused('hedge_frozen_capital_policy_differs')
@@ -313,7 +320,7 @@ def protected_job(payload: dict) -> dict:
     return protected_evaluation(freeze, env, c, Path(payload['sealed']), external, payload.get('sealed_derivs'))
 
 
-def authority_blocks(env, cfg, source_journal=None,budget_journal=None) -> list:
+def authority_blocks(env, cfg, source_journal=None,budget_journal=None, proposal_batch=None) -> list:
     """Why a CONFIGURED hedge look must not be taken yet (closed gates honoured, never routed around)."""
     from . import qualification as Q
     if env['policy_class'] != 'CONFIGURED':
@@ -321,7 +328,7 @@ def authority_blocks(env, cfg, source_journal=None,budget_journal=None) -> list:
     out = []
     if not ((cfg or {}).get('research') or {}).get('referee', False):
         out.append('production_referee_gate_closed')
-    if not Q.calibration_approved(cfg, env):
+    if not Q.calibration_approved(cfg, env, proposal_batch):
         out.append('calibration_not_approved')
     if registered_method(cfg) is None:
         out.append('hedge_admission_method_not_registered')
@@ -374,7 +381,7 @@ def qualify_hedge(store, freeze: dict, env: dict, snapshot_path, workdir, *, now
     if spec['purpose'] not in PROTECTIVE and method is None:
         return record(_packet('BLOCKED', 'relative_value_return_method_not_registered (no look spent)', env, freeze,
                               gaps=['return evidence method for relative-value pairs'], method=method))
-    gate = authority_blocks(env, cfg,source_journal,budget_journal)
+    gate = authority_blocks(env, cfg,source_journal,budget_journal, freeze.get('proposal_batch'))
     if gate:
         return _packet('BLOCKED', 'authority_blocked: ' + ','.join(gate) + ' (no look spent)', env, freeze)   # not recorded: may open later
     if env['protected_status'] != 'ELIGIBLE':

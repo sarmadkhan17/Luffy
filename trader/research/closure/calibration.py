@@ -88,6 +88,7 @@ def configured_protocol(cfg: dict, tf: str, *, intake_bank_path=None) -> dict:
                     embargo_bars=int(selected['embargo_bars']))
     if intake_bank_path:
         protocol['intake_bank_path'] = str(intake_bank_path)
+        protocol['intake_mode'] = 'FROZEN_PROPOSAL_BATCH'
     reasons = feasibility(protocol, manifest.exact_numeric_policy(cfg))
     if reasons:
         raise ClosureRefused('calibration_structurally_infeasible', ','.join(reasons))
@@ -255,6 +256,67 @@ def _intake_observation(store, sid):
                 provider_unavailable=unavailable, result=result)
 
 
+def _freeze_proposals(protocol, workdir):
+    """Prepare once, before any generated final market is evaluated."""
+    if not protocol.get('intake_bank_path') or protocol.get('intake_mode') != 'FROZEN_PROPOSAL_BATCH':
+        return
+    from ...core.config import load_config
+    from ..compose import proposal_cache
+    cfg = load_config()
+    provider_id = intake_provider_id(cfg)
+    code_id = manifest.evaluator_id()
+    receipt = workdir / 'proposal-batch.json'
+    cache = workdir / 'proposal-batch.db'
+    if receipt.exists():
+        saved = json.loads(receipt.read_text())
+        if (saved.get('evaluator_id') != code_id or saved.get('provider_id') != provider_id
+                or saved.get('intake_corpus_id') != protocol['intake_corpus_id']
+                or saved.get('tf') != protocol.get('tf', '4h')):
+            raise ValueError('calibration_proposal_batch_contract_changed')
+        batch = proposal_cache.verify(saved['batch'])
+        if not cache.is_file():
+            raise ValueError('calibration_proposal_batch_cache_missing')
+    else:
+        sid = 'proposal-batch:' + digest([protocol['intake_corpus_id'], protocol.get('tf','4h'), provider_id])
+        if Path(str(cache) + '.child-unreaped').exists():
+            owner = Store(cache)
+            try:
+                if not S.reconcile_child(owner):
+                    raise ClosureRefused('calibration_batch_child_ownership_unknown')
+            finally:
+                owner.close()
+        payload = dict(store_path=str(cache), bank_path=protocol['intake_bank_path'], now_ms=2,
+                       tf=protocol.get('tf','4h'), study_id=sid, proposal_mode='compositional', cfg=cfg)
+        result = S._call(S.intake_job, payload, protocol['unit_timeout_s'], True, S._limits(protocol))
+        if not getattr(result, 'terminated', True):
+            owner = Store(cache)
+            try:
+                S.fence_child(owner, result)
+            finally:
+                owner.close()
+            raise ClosureRefused('calibration_batch_child_ownership_unknown')
+        if not result.ok:
+            raise ClosureRefused('calibration_batch_worker_incomplete', str(result.error)[-200:])
+        prepared = Store(cache)
+        try:
+            observation = _intake_observation(prepared, sid)
+            # Preparation runs before there is a study/unit. The bounded job's
+            # result supplies execution status; retained attempts supply coverage.
+            batch = result.value.get('proposal_batch')
+            if (not batch or observation['provider_unavailable']
+                    or result.value.get('status') != 'OK' or result.value.get('deferred')):
+                raise ClosureRefused('calibration_batch_intake_incomplete')
+            proposal_cache.verify(batch)
+        finally:
+            prepared.close()
+        saved = dict(batch=batch, tf=protocol.get('tf','4h'), provider_id=provider_id,
+                     evaluator_id=code_id, intake_corpus_id=protocol['intake_corpus_id'])
+        _save_record(receipt, saved)
+    if protocol.get('proposal_batch_id') not in (None, batch['batch_id']):
+        raise ValueError('calibration_proposal_batch_identity_changed')
+    protocol.update(proposal_batch_id=batch['batch_id'], proposal_cache_path=str(cache.resolve()))
+
+
 def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> dict:
     d = workdir / f'{case["name"]}-{idx}'
     d.mkdir(parents=True, exist_ok=True)
@@ -286,6 +348,11 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
             if not bank.exists():
                 copy_database(protocol['intake_bank_path'], bank)
             intake = dict(bank_path=str(bank), proposal_mode='compositional')
+            if protocol.get('proposal_batch_id'):
+                local_cache = d / 'proposal-cache.db'
+                if not local_cache.exists():
+                    copy_database(protocol['proposal_cache_path'], local_cache)
+                intake.update(proposal_cache_path=str(local_cache), proposal_batch_id=protocol['proposal_batch_id'])
         sid = S.create_study(store, dict(
             snapshot_path=str(snap), tf=tf, discovery_symbols=names[:protocol['n_discovery']],
             heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
@@ -327,18 +394,24 @@ def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=Fa
               tf=tf,retained_question_intake=bool(intake))
     if intake:
         body['intake_provider_id'] = intake_provider_id()
+        body['intake_policy'] = 'semantic-frozen-batch.v1'
     if development_bars is not None:
         if type(development_bars) is not int or development_bars<=0:raise ValueError('calibration_development_window_invalid')
         body['development_bars']=development_bars
     return body
 
 
-def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
+def report_authorizes(rep: dict, approval: dict, env: dict, *, proposal_batch_id=None) -> bool:
     """May this retained report be the approval the configuration names? The
     report is produced in a TEST_ONLY context and grants nothing itself; the
     approval is an explicit, separate configuration act bound to the report id,
     the exact numeric policy and the current evaluator."""
     body = {k: v for k, v in rep.items() if k != 'report_id'}
+    if rep.get('intake_mode') == 'FROZEN_PROPOSAL_BATCH':
+        if not proposal_batch_id or rep.get('proposal_batch_id') != proposal_batch_id:
+            return False
+    elif rep.get('intake_corpus_id'):
+        return False  # A fresh-proposal report cannot authorize cached-batch research.
     return (rep.get('report_id') == digest(body) == approval.get('report_id')
             and rep.get('schema') == 'closure-calibration-report.v3'
             and rep.get('search_scope') == 'COMPOSITIONAL_SEARCH'
@@ -457,6 +530,7 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     impossible = feasibility(protocol)
     if impossible:
         raise ValueError('calibration_structurally_infeasible: ' + ','.join(impossible))
+    _freeze_proposals(protocol, workdir)
     run_id = run_identity(protocol, n)
     pf = workdir / 'protocol.json'
     if pf.exists():
@@ -505,6 +579,8 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                                              max_revisions=protocol['max_revisions'],tf=protocol.get('tf','4h'),intake=bool(protocol.get('intake_bank_path')),development_bars=protocol['dev_bars'])),
                 omitted_paths=['live multi-leg execution'] + ([] if protocol.get('intake_bank_path') else ['external LLM source intake']),
                 intake_complete=intake_complete, intake_corpus_id=protocol.get('intake_corpus_id'),
+                intake_mode=protocol.get('intake_mode'), proposal_batch_id=protocol.get('proposal_batch_id'),
+                evidence_scope='CONDITIONAL_ON_FROZEN_PROPOSAL_BATCH' if protocol.get('proposal_batch_id') else 'DECLARED_PROCEDURE',
                 generated_snapshot_retention='RETAINED' if retain else 'RELEASED_AFTER_COMPLETED_RESULT',
                 calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],

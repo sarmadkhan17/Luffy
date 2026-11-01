@@ -50,6 +50,10 @@ def freeze_finalist(store, env: dict, results: list):
                 search_history=dict(trials=len(mine), outcomes={o: sum(1 for r in mine if r['outcome'] == o)
                                                                  for o in sorted({r['outcome'] for r in mine})},
                                     result_ids=sorted(r['result_id'] for r in mine)))
+    from ..compose import proposal_cache
+    batch = proposal_cache.for_envelope(store, env)
+    if batch is not None:
+        body['proposal_batch'] = proposal_cache.verify(batch)
     freeze = dict(body, freeze_id=digest(body))
     store.put_once('freezes', freeze['freeze_id'], freeze)
     return freeze
@@ -62,6 +66,9 @@ def verify_freeze(freeze: dict, env: dict) -> Combination:
     if freeze['envelope_id'] != env['envelope_id']:
         raise ClosureRefused('freeze_envelope_mismatch')
     families.verify_candidate(freeze['candidate'])
+    if 'proposal_batch' in freeze:
+        from ..compose import proposal_cache
+        proposal_cache.verify(freeze['proposal_batch'])
     c = Combination.from_dict(freeze['combo'])
     if (c.hash != freeze['combo_hash'] or c.evaluation_scope != env['envelope_id']
             or c.trigger != freeze['candidate']['candidate_id']):
@@ -83,7 +90,7 @@ def _packet(status, reason, env, freeze, ledger=None, extra=None, book=None, seq
     return dict(body, evidence_id=digest(body))
 
 
-def calibration_approved(cfg, env) -> bool:
+def calibration_approved(cfg, env, proposal_batch=None) -> bool:
     """A retained FINAL calibration report, run under a CONFIGURED policy and
     the CURRENT evaluator, that the configuration explicitly approves."""
     a = (((cfg or {}).get('research') or {}).get('closure') or {}).get('approved_calibration')
@@ -92,12 +99,16 @@ def calibration_approved(cfg, env) -> bool:
     try:
         from . import calibration
         rep = json.loads(Path(a['report_path']).read_text())
-        return calibration.report_authorizes(rep, a, env)
+        if proposal_batch is not None:
+            from ..compose import proposal_cache
+            proposal_cache.verify(proposal_batch)
+        return calibration.report_authorizes(rep, a, env,
+            proposal_batch_id=proposal_batch['batch_id'] if proposal_batch else None)
     except (OSError, ValueError, KeyError, TypeError):
         return False
 
 
-def authority_blocks(env, cfg, book, source_journal, budget_journal) -> list:
+def authority_blocks(env, cfg, book, source_journal, budget_journal, proposal_batch=None) -> list:
     """Why a CONFIGURED-class look must not be taken yet. Closed production
     gates are honoured, not routed around; TEST_ONLY probes are unaffected."""
     if env['policy_class'] != 'CONFIGURED':
@@ -105,7 +116,7 @@ def authority_blocks(env, cfg, book, source_journal, budget_journal) -> list:
     out = []
     if not ((cfg or {}).get('research') or {}).get('referee', False):
         out.append('production_referee_gate_closed')
-    if not calibration_approved(cfg, env):
+    if not calibration_approved(cfg, env, proposal_batch):
         out.append('calibration_not_approved')
     if not book:
         out.append('incumbent_book_not_declared')
@@ -172,7 +183,7 @@ def qualify(store, freeze: dict, env: dict, snapshot_path, workdir, *, now_ms: i
         return p
 
     book = list(book or [])
-    gate = authority_blocks(env, cfg, book, source_journal, budget_journal)
+    gate = authority_blocks(env, cfg, book, source_journal, budget_journal, freeze.get('proposal_batch'))
     if gate:
         # not recorded: gates may open later, and nothing was spent
         return _packet('BLOCKED', 'authority_blocked: ' + ','.join(gate) + ' (no look spent)', env, freeze)

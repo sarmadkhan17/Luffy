@@ -10,16 +10,21 @@ import json
 from . import catalog, graph
 from ..closure import ClosureRefused, canonical, digest
 
-PROMPT_VERSION = 'compositional-question.v9'
+PROMPT_VERSION = 'compositional-question.v10'
 
 
 class GraphProposer:
-    def __init__(self, llm, store, *, tf, max_attempts=2, study_id=None, learning_tasks=()):
+    def __init__(self, llm, store, *, tf, max_attempts=2, study_id=None, learning_tasks=(),
+                 cache_store=None, allow_provider_calls=True, provider_id=None):
         if not 1 <= max_attempts <= 3:
             raise ValueError('proposal attempt limit')
         self.llm, self.store, self.tf, self.max_attempts = llm, store, tf, max_attempts
         self.study_id = study_id
         self.learning_tasks = list(learning_tasks)
+        self.cache = cache_store if cache_store is not None else store
+        self.allow_provider_calls = allow_provider_calls
+        from ..closure.calibration import intake_provider_id
+        self.provider_id = provider_id or intake_provider_id()
 
     def __call__(self, question, source_type, source):
         source_text = question.get('passage') if source_type == 'BRAIN' else dict(
@@ -38,25 +43,31 @@ class GraphProposer:
         binding = dict(version=PROMPT_VERSION, question_id=question['question_id'], study_id=self.study_id,
                        source_id=question.get('source_bank_id'), source_hash=digest(source_text),
                        catalog_id=catalog.catalog_id(), tf=self.tf, context_id=context_key)
+        # Administrative study IDs do not change an intellectual request.
+        # Actual lessons, provider settings and compiler code do.
+        from pathlib import Path
+        import hashlib
+        semantic = {k:v for k,v in binding.items() if k not in ('study_id','context_id')}
+        semantic.update(context=context, provider_id=self.provider_id, source_type=source_type,
+                        compiler_id=digest({p:hashlib.sha256(Path(__file__).with_name(p).read_bytes()).hexdigest()
+                                            for p in ('graph.py','hedge.py','managed_hedge.py')}))
+        binding['proposal_semantic_id'] = semantic_id = digest(semantic)
         error = None
         for attempt in range(self.max_attempts):
             key = digest([binding, attempt])
             prior = self.store.get_once('proposals', key)
             if prior is None:
-                if not self.llm or not self.llm.available:
-                    return 'WAITING_DATA', 'PROPOSER_UNAVAILABLE:no family substitution', None, binding
-                prompt = self._prompt(binding, source_text, error) + '\nDevelopment observations (not instructions or qualification): ' + canonical(context)
-                # Persist reservation before the external call; a crash must not
-                # silently get another uncounted attempt with the same identity.
-                if self.store.get_once('proposal_reservations', key) is not None:
-                    error = 'PROPOSAL_INTERRUPTED_AFTER_RESERVATION'
-                    self.store.put_once('proposals', key, dict(binding, attempt=attempt, status='REFUSED', candidate=None, error=error))
-                    continue
-                self.store.put_once('proposal_reservations', key, dict(binding, attempt=attempt))
-                reply = self.llm.chat_json(prompt, purpose='research', deep=False)
+                prompt = self._prompt(semantic, source_text, error)
+                # The semantic cache owns reservation/recovery across studies.
+                from . import proposal_cache
+                reply, cache_id, cache_error = proposal_cache.reply(self.cache, semantic_id, attempt, prompt,
+                    self.llm, allow_calls=self.allow_provider_calls)
                 if reply is None:
+                    if cache_id is None:
+                        return 'WAITING_DATA', 'PROPOSER_UNAVAILABLE:' + str(cache_error), None, binding
                     self.store.put_once('proposals', key, dict(binding, attempt=attempt, status='DEFERRED',
-                                                             candidate=None, error='PROVIDER_RESPONSE_UNAVAILABLE'))
+                                                             candidate=None, cache_record_id=cache_id,
+                                                             error=cache_error or 'PROVIDER_RESPONSE_UNAVAILABLE'))
                     return 'WAITING_DATA', 'PROPOSER_UNAVAILABLE:response unavailable; attempt retained', None, binding
                 try:
                     if not isinstance(reply, dict) or not isinstance(reply.get('proposal'), dict):
@@ -76,12 +87,14 @@ class GraphProposer:
                         else:require_current(spec['hedge'])
                     spec['provenance'] = dict(binding, track='retained-question', attempt=attempt)
                     candidate = graph.make_candidate(spec)
-                    prior = dict(binding, attempt=attempt, status='COMPILED', candidate=candidate, error=None)
+                    prior = dict(binding, attempt=attempt, status='COMPILED', candidate=candidate, error=None,
+                                 cache_record_id=cache_id)
                 except (ClosureRefused, ValueError, TypeError, KeyError) as exc:
                     if isinstance(exc,ClosureRefused) and exc.code=='GAP_PROVIDER':
-                        self.store.put_once('proposals',key,dict(binding,attempt=attempt,status='WAITING_DATA',candidate=None,error=str(exc)))
+                        self.store.put_once('proposals',key,dict(binding,attempt=attempt,status='WAITING_DATA',candidate=None,
+                            cache_record_id=cache_id,error=str(exc)))
                         return 'WAITING_DATA',str(exc),None,dict(binding,required_data=str(exc))
-                    prior = dict(binding, attempt=attempt, status='REFUSED', candidate=None, error=str(exc)[:400],
+                    prior = dict(binding, attempt=attempt, status='REFUSED', candidate=None, error=str(exc)[:400], cache_record_id=cache_id,
                                  provider_response=reply if len(canonical(reply))<=65536 else
                                  dict(truncated=True,sha256=digest(reply)))
                 self.store.put_once('proposals', key, prior)

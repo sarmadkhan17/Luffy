@@ -48,6 +48,12 @@ def build(tmp, *, name='snap', edge=0.0, common=0.0, seed=3, seal='SYNTHETIC', k
         m, snap, policy=policy, discovery_symbols=names[:6], heldout_symbols=names[6:], fit_start_ms=st,
         dev_end_ms=st + DEV_BARS * S.TF_MS, embargo_bars=10, protected_start_ms=st + (DEV_BARS + 100) * S.TF_MS,
         protected_end_ms=st + (n_bars - 1) * S.TF_MS, risk=RISK, development_mode=mode)
+    # Unit-test authority fixture only: make the search identity explicit.
+    # This is not a measured/calibrated operational search contract.
+    env_body = {k:v for k,v in env.items() if k != 'envelope_id'}
+    env_body['search_contract_id'] = 'FIXTURE_SEARCH_CONTRACT_NOT_MEASURED'
+    from trader.research.closure import digest
+    env = dict(env_body, envelope_id=digest(env_body))
     return SimpleNamespace(store=store, snap=snap, names=names, manifest=m, env=env)
 
 
@@ -87,7 +93,9 @@ def approval(tmp, env, **over):
     """FIXTURE: a retained 'CALIBRATED' report. No harness run produced it; it only
     exercises the gate that CONSULTS an approval (negative variants cover refusal)."""
     from trader.research.closure import digest
-    rep = dict(schema='closure-calibration-report.v2', calibration_status='CALIBRATED', kind='FINAL',
+    rep = dict(schema='closure-calibration-report.v3', search_scope='COMPOSITIONAL_SEARCH',
+               search_contract_id=env['search_contract_id'],cost_id=env['cost_id'],
+               calibration_status='CALIBRATED', kind='FINAL',
                numerics='EXACT_CONFIGURED', authority_granted=False, numeric_id=env['numeric_id'],
                evaluator_id=env['evaluator_id'])
     rep.update(over)
@@ -119,7 +127,6 @@ def source_journal(tmp, name='src.db', prior=None):
 
 def incumbent_book():
     """FIXTURE: a declared incumbent book (one comparable spec)."""
-    from trader.research.combo import Combination
     cand = families.make_candidate('trend_breakout.v1', dict(channel=20, trend='st:above_ema50', geo='trail'))
     return [families.realize(cand, {}, 'incumbent').to_spec().to_dict()]
 
