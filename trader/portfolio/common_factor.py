@@ -47,6 +47,8 @@ def snapshot(source, now_ms):
     raw = _checked(source)
     if verify_snapshot(raw) is None or raw['completeness'] != 'COMPLETE':
         raise ValueError('VENUE_PORTFOLIO_TRUTH_UNAVAILABLE')
+    if raw.get('venue')!='binance_usdm':
+        raise ValueError('VENUE_CONTRACT_VALUATION_UNAVAILABLE')
     obs = raw['observation']
     # Replay the established producer's structural identity rules. A rehashed
     # malformed observation cannot establish a complete one-way venue book.

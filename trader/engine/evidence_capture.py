@@ -180,13 +180,31 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
     obs = _observation_dict(observation)
     if _sha(canonical(_observation_payload(obs))) != obs["observation_id"]:
         raise ValueError("observation identity does not verify")
+    coin=obs['venue']=='binancecoinm'
+    if coin:
+        from ..observability.portfolio_observation import observe_positions
+        from ..core.types import MarketType
+        rebuilt=observe_positions(rows,exchange_id='binancecoinm',market_type=MarketType.FUTURES,
+            environment=obs['environment'],source_ref=obs['source_ref'],
+            request_start_ms=obs['request_start_ms'],response_received_ms=obs['response_received_ms'])
+        if rebuilt.observation_id!=obs['observation_id']:
+            raise ValueError('native position rows differ from observation')
+        snapshot_storage_key(dict(venue='binancecoinm',account_scope=account_scope))
     entry = {}
     marks = {}
+    contracts={}
     for row in rows if isinstance(rows, list) else ():
         info = row.get("info") if isinstance(row, dict) else None
         if isinstance(info, dict) and isinstance(info.get("symbol"), str):
-            entry[f"{VENUE}:futures:{info['symbol']}"] = _venue_decimal(info.get("entryPrice"))
-            marks[f"{VENUE}:futures:{info['symbol']}"] = _venue_decimal(info.get("markPrice"))
+            iid=f"{obs['venue']}:futures:{info['symbol']}"
+            entry[iid] = _venue_decimal(info.get("entryPrice"))
+            marks[iid] = _venue_decimal(info.get("markPrice"))
+            if coin:
+                from ..observability.portfolio_observation import coin_position_identity
+                _,base=coin_position_identity(row)
+                contracts[iid]=dict(quantity_unit='contracts',contract_kind='inverse',
+                    contract_size_text=_venue_decimal(row['contractSize']),settlement_asset=base,
+                    contract_size_basis='ccxt resolved market contractSize')
     positions = [{"instrument_id": iid, "symbol": iid.split(":")[-1], "side": side,
                   "quantity": qty, "entry_price_text": entry.get(iid),
                   "entry_price_basis": "venue positionRisk entryPrice (via ccxt info)"
@@ -205,6 +223,7 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
             "positions": positions, "observation": obs}
     for position in positions:
         position['mark_price_text'] = marks.get(position['instrument_id'])
+        if coin:position.update(contracts[position['instrument_id']])
     if account_scope is not None:
         body["account_scope"] = account_scope
     return {**body, "snapshot_id": _sha(canonical(body))}
@@ -227,7 +246,22 @@ def verify_snapshot(snap) -> dict | None:
 
 def _book_key(snap: dict) -> str:
     """What makes two snapshots the same venue book (times excluded)."""
-    return canonical([snap["environment"], snap["completeness"], snap["positions"]])
+    key=[snap["environment"], snap["completeness"], snap["positions"]]
+    if snap['venue']=='binancecoinm':key.extend([snap['venue'],snap['account_scope']])
+    return canonical(key)
+
+
+def snapshot_storage_key(snap):
+    """Native collateral accounts cannot replace the established USD-M view."""
+    if snap['venue']==VENUE:return SNAPSHOT_KV
+    if snap['venue']=='binancecoinm':
+        scope=snap.get('account_scope')
+        prefix='execution-account.v1:'
+        if (not isinstance(scope,str) or not scope.startswith(prefix) or len(scope)!=len(prefix)+64
+                or any(c not in '0123456789abcdef' for c in scope[len(prefix):])):
+            raise ValueError('native position account scope required')
+        return SNAPSHOT_KV+':binancecoinm:'+scope
+    raise ValueError('unsupported position snapshot venue')
 
 
 SNAPSHOT_DDL = f"""
@@ -258,13 +292,16 @@ def record_snapshot(journal, snap: dict, *, at_ms: int) -> str:
     book differs from the last stored row. Returns 'inserted' / 'unchanged'."""
     if verify_snapshot(snap) is None:
         raise ValueError("snapshot identity does not verify")
+    key=snapshot_storage_key(snap)
     text = canonical(snap)
     book = _sha(_book_key(snap))
     out = "unchanged"
     with journal._tx() as c:
         c.executescript(SNAPSHOT_DDL)
-        last = c.execute(f"SELECT book_sha256 FROM {SNAPSHOT_TABLE} ORDER BY "
-                         "observed_at_ms DESC, rowid DESC LIMIT 1").fetchone()
+        last = c.execute(f"SELECT book_sha256 FROM {SNAPSHOT_TABLE} WHERE venue=? AND environment=? "
+                         "AND coalesce(json_extract(canonical_json,'$.account_scope'),'')=? ORDER BY "
+                         "observed_at_ms DESC, rowid DESC LIMIT 1",
+                         (snap['venue'],snap['environment'],snap.get('account_scope',''))).fetchone()
         if last is None or last[0] != book:
             c.execute(f"INSERT OR IGNORE INTO {SNAPSHOT_TABLE} VALUES (?,?,?,?,?,?,?,?)",
                       (snap["snapshot_id"], snap["venue"], snap["market_type"],
@@ -272,7 +309,7 @@ def record_snapshot(journal, snap: dict, *, at_ms: int) -> str:
                        int(at_ms)))
             out = "inserted"
         c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)",
-                  (SNAPSHOT_KV, text))
+                  (key, text))
     return out
 
 
