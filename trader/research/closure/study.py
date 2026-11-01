@@ -26,6 +26,7 @@ from .store import Store
 from ...core.types import TF_MS
 
 MAX_UNIT_ATTEMPTS = 3
+TERMINAL_UNIT_STATUSES = frozenset(('DONE','FAILED','POSTPONED'))
 SPEC_KEYS = ('snapshot_path', 'tf', 'discovery_symbols', 'heldout_symbols', 'fit_start_ms', 'dev_end_ms', 'embargo_bars',
              'protected_start_ms', 'protected_end_ms', 'policy', 'risk', 'development_mode', 'seed_families',
              'bank_path', 'max_candidates', 'max_revisions', 'workdir', 'journal_path', 'budget_journal_path',
@@ -367,7 +368,7 @@ def _plan(store, study_id, study, env, now_ms):
                 _ensure_unit(store, study_id, f'revise:{r["result_id"]}', 'revise', [u['unit_id']])
     units = store.units(study_id)
     work = [u for u in units if u['kind'] in ('develop', 'revise')]
-    if work and all(u['status'] in ('DONE', 'FAILED') for u in work) and intake_done:
+    if work and all(u['status'] in TERMINAL_UNIT_STATUSES for u in work) and intake_done:
         _ensure_unit(store, study_id, 'freeze', 'freeze', [u['unit_id'] for u in work])
     freeze = next((u for u in units if u['unit_id'] == 'freeze' and u['status'] == 'DONE'), None)
     if freeze is not None and json.loads(freeze['result']).get('freeze_id'):
@@ -455,7 +456,8 @@ def _run_unit(store, study_id, study, env, unit, now_ms, run, *, timeout_s, chil
 
         def bounded(fn, payload, **_):
             from ...core.child import ChildResult
-            r = run(fn, payload) if run is not None else _call(fn, payload, timeout_s, child, should_stop=should_stop)
+            r = run(fn, payload) if run is not None else _call(fn, payload, timeout_s, child,
+                limits=_limits(study),should_stop=should_stop)
             if not getattr(r, 'terminated', True):
                 fence_child(store, r, study_id=study_id, unit_id=uid)
                 _set_unit(store, study_id, uid, 'RUNNING', now_ms, note='CHILD_NOT_REAPED')
@@ -516,7 +518,7 @@ def _step(store, study_id, budget_s, now_ms, clock, cycle_seconds, skip_if_cycle
         _record(store, study_id, 'DEFERRED', 'busy_market_cycle', now_ms, progress=False)
         return dict(study_status(store, study_id), step='DEFERRED')
     deadline = clock() + float(budget_s)
-    ran, stop = 0, 'COMPLETE'
+    ran, postponed, stop = 0, 0, 'COMPLETE'
     while True:
         if should_stop():
             stop = 'STOP_REQUESTED'
@@ -524,11 +526,11 @@ def _step(store, study_id, budget_s, now_ms, clock, cycle_seconds, skip_if_cycle
         _resume_waiting(store, study_id, study, env, now_ms)
         _plan(store, study_id, study, env, now_ms)
         units = store.units(study_id)
-        done = {u['unit_id'] for u in units if u['status'] in ('DONE', 'FAILED')}
+        done = {u['unit_id'] for u in units if u['status'] in TERMINAL_UNIT_STATUSES}
         todo = [u for u in units if u['status'] in ('PENDING', 'RUNNING') and all(d in done for d in json.loads(u['deps']))]
         if not todo:
             stop = ('WAITING_FOR_DATA' if any(u['status'] == 'WAITING_DATA' for u in units) else
-                    'COMPLETE' if all(u['status'] in ('DONE', 'FAILED') for u in units) else 'BLOCKED_ON_DEPENDENCY')
+                    'COMPLETE' if all(u['status'] in TERMINAL_UNIT_STATUSES for u in units) else 'BLOCKED_ON_DEPENDENCY')
             break
         remaining = deadline - clock()
         if remaining <= 1.0:
@@ -551,12 +553,28 @@ def _step(store, study_id, budget_s, now_ms, clock, cycle_seconds, skip_if_cycle
             cand = store.get_once('candidates', u['unit_id'].split(':', 1)[1])
             if cand is not None:
                 fits, reads = csearch._fits(cand), csearch.reads_of(cand, budget['symbols'])
-        stop_why = csearch.dispatch_gate(store, study_id, budget, fits=fits, reads=reads)
+        # Search ceilings bound experiment work, not the bounded recording /
+        # independent assessment of results already obtained. A later cheap
+        # candidate can still fit when the next fitted candidate cannot.
+        finalizing = u['kind'] in ('freeze','qualify','handoff')
+        stop_why = None if finalizing else csearch.dispatch_gate(store, study_id, budget, fits=fits, reads=reads)
         if stop_why:
+            if u['kind'] in ('develop','revise'):
+                _set_unit(store,study_id,u['unit_id'],'POSTPONED',now_ms,
+                    result=dict(postponed=True,evidence='NOT_EVALUATED',reason=stop_why),note=stop_why)
+                postponed += 1
+                continue
             stop = stop_why                     # cumulative registered totals spent: stop here, never widen, never skip silently
             break
-        remaining = min(remaining, csearch.cpu_left(store, study_id, budget))
+        if not finalizing:
+            remaining = min(remaining, csearch.cpu_left(store, study_id, budget))
         if remaining <= 1.0:
+            if u['kind'] in ('develop','revise'):
+                _set_unit(store,study_id,u['unit_id'],'POSTPONED',now_ms,
+                    result=dict(postponed=True,evidence='NOT_EVALUATED',reason='BUDGET_EXHAUSTED:cpu_seconds'),
+                    note='BUDGET_EXHAUSTED:cpu_seconds')
+                postponed += 1
+                continue
             stop = 'BUDGET_EXHAUSTED:cpu_seconds'
             break
         if u['status'] == 'RUNNING':                 # a previous process died mid-unit: charge that attempt, then retry
@@ -588,8 +606,8 @@ def _step(store, study_id, budget_s, now_ms, clock, cycle_seconds, skip_if_cycle
                   if res.get('waiting_data') else None)
         ran += 1
     nxt = next((u['unit_id'] for u in store.units(study_id) if u['status'] in ('PENDING', 'RUNNING')), None)
-    _record(store, study_id, 'COMPLETED' if stop == 'COMPLETE' else 'IN_PROGRESS', stop, now_ms, progress=ran > 0, nxt=nxt)
-    return dict(study_status(store, study_id), step=stop, units_run=ran)
+    _record(store, study_id, 'COMPLETED' if stop == 'COMPLETE' else 'IN_PROGRESS', stop, now_ms, progress=ran > 0 or postponed > 0, nxt=nxt)
+    return dict(study_status(store, study_id), step=stop, units_run=ran, units_postponed=postponed)
 
 
 def _resume_waiting(store, study_id, study, env, now_ms):
@@ -637,12 +655,16 @@ def study_status(store: Store, study_id: str) -> dict:
     blocked = development_outcomes.get('BLOCKED_DATA', 0)
     failed = [dict(unit_id=u['unit_id'], reason=str(u.get('note') or 'worker failure')[:160])
               for u in units if u['kind']=='develop' and u['status']=='FAILED']
+    postponed = [dict(unit_id=u['unit_id'],reason=u['note'],evidence='NOT_EVALUATED')
+                 for u in units if u['kind']=='develop' and u['status']=='POSTPONED']
     if outcome == 'NO_FINALIST' and blocked:
         reason = (f'NO_FINALIST: required data unavailable for {blocked}/{len(development)} evaluated candidates; '
                   'these candidates have no economic verdict')
     if outcome == 'NO_FINALIST' and failed:
         reason = (f'NO_FINALIST: {len(failed)} development units failed to run; '
                   f'{blocked} evaluated candidates lacked required data')
+    if outcome == 'NO_FINALIST' and postponed:
+        reason = (reason or 'NO_FINALIST') + f'; {len(postponed)} experiments not evaluated within the fixed budget'
     return dict(study_id=study_id, process_status=row['status'], stop_reason=row['stop_reason'],
                 last_progress_ms=row['last_progress_ms'], next_work=row['next_work'], steps=row['steps'],
                 units=counts, research_outcome=outcome,
@@ -650,6 +672,7 @@ def study_status(store: Store, study_id: str) -> dict:
                                   for u in units if u['status'] == 'WAITING_DATA'],
                 research_reason=reason, development_outcomes=development_outcomes,
                 failed_development_units=failed[:16], failed_development_units_omitted=max(0,len(failed)-16),
+                postponed_development_units=postponed[:16],postponed_development_units_omitted=max(0,len(postponed)-16),
                 blocked_requirements=sorted(requirements)[:32],
                 blocked_requirements_omitted=max(0,len(requirements)-32),
                 note='process_status says whether the job ran; research_outcome is the only evidence statement')

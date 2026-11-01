@@ -303,7 +303,8 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
                     trials=len(runs), development_outcomes={o: sum(1 for r in runs if r['outcome'] == o)
                                                             for o in sorted({r['outcome'] for r in runs})},
                     process_status=status['process_status'], stop_reason=status['stop_reason'],
-                    failed_units=status['units'].get('FAILED', 0), intake=intake_observation)
+                    failed_units=status['units'].get('FAILED', 0),
+                    postponed_units=status['units'].get('POSTPONED',0),intake=intake_observation)
     finally:
         store.close()
 
@@ -439,7 +440,8 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 cost_id=digest(protocol['risk']),
                 evaluator_id=manifest.evaluator_id(), replicates_per_case=n, min_replicates_for_null_resolution=need,
                 seeds=dict(base=base, scheme='base + case_index*10000 + replicate'), cases=judged,
-                replicates=[{k: r[k] for k in ('case', 'index', 'seed', 'outcome', 'trials')} for r in reps],
+                replicates=[dict({k:r[k] for k in ('case','index','seed','outcome','trials')},
+                                 postponed_units=r.get('postponed_units',0)) for r in reps],
                 note=('Run in a TEST_ONLY authority context; the report grants nothing. CALIBRATED needs FINAL seeds, enough '
                       'replicates, every case OK and the EXACT configured numbers; approval is a separate explicit '
                       'configuration act. INCONCLUSIVE is neither a pass nor evidence of no edge.'))

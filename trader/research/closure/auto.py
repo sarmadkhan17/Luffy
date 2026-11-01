@@ -415,8 +415,9 @@ def waiting_eligible(store, study_id, unit) -> bool:
 def runnable(store, study_id) -> str | None:
     """'DATA' when a waiting candidate's data has arrived, 'WORK' when a bounded unit may run now, else None.
     Waiting-only studies are NOT runnable (they stay in Needs You) so the next due question/domain can start."""
+    from .study import TERMINAL_UNIT_STATUSES
     units = store.units(study_id)
-    done = {u['unit_id'] for u in units if u['status'] in ('DONE', 'FAILED')}
+    done = {u['unit_id'] for u in units if u['status'] in TERMINAL_UNIT_STATUSES}
     for u in units:
         if u['status'] == 'WAITING_DATA' and waiting_eligible(store, study_id, u):
             return 'DATA'
