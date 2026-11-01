@@ -49,6 +49,8 @@ MIN_SYMBOL_TRADES = 8
 MIN_PROJECTED_TRADES = 8
 MIN_PROJECTED_MARKETS = 4
 
+ECONOMIC_SCREEN_POLICY = 'directional-economics-first.v1'
+
 _TF_SECONDS = {"5m": 300, "15m": 900, "1h": 3600, "4h": 14400}
 
 
@@ -377,7 +379,8 @@ def _clock(df) -> np.ndarray:
 
 
 def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
-             min_symbol_trades: int = MIN_SYMBOL_TRADES, *, raw_runs=None, traces=False) -> dict:
+             min_symbol_trades: int = MIN_SYMBOL_TRADES, *, raw_runs=None, traces=False,
+             economic_screen=False) -> dict:
     """Score `c` over the bundle's discovery slice."""
     spec = c.to_spec()
     out = {"hash": c.hash, "tf": c.tf, "geo": c.geo, "k": c.k,
@@ -396,6 +399,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         import json
         evidence = dict(b.evidence, draws=int(draws), seed=int(seed),
                         min_symbol_trades=int(min_symbol_trades), combination=c.as_dict())
+        if economic_screen:
+            evidence['development_order'] = ECONOMIC_SCREEN_POLICY
         evidence["evaluation_identity"] = hashlib.sha256(json.dumps(
             evidence, sort_keys=True, default=str).encode()).hexdigest()
         evidence["cost_assumptions"] = {
@@ -451,6 +456,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         t0 = first if t0 is None else min(t0, first)
 
     fills, pcts, pfs, rates = [], [], [], []
+    pending_null = []
     for sym, df in b.frames.items():
         rec: dict = {"trades": 0, "pf": 0.0, "null_pctile": None}
         out["symbols"][sym] = rec
@@ -502,23 +508,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
 
         if r.trades < min_symbol_trades:
             continue
-        try:
-            a = null_baseline.assess(
-                compiled, sf, b.risk, r.profit_factor, btc=b.btc,
-                derivs=b.derivs.get(sym), universe=b.universe, world=b.world,
-                market=b.market, symbol=sym, draws=int(draws), seed=seed,
-                split=None, funding=fund,entry_eligibility=b.entry_eligibility.get(sym),
-                raw_entries=raw_entries, exit_details=(ex, ex_available))
-        except Exception as e:                          # noqa: BLE001
-            log.debug(f"research null {c.hash} {sym}: {e}")
-            rec["null_error"] = str(e)[:200]
-            continue
-        p = a.get("percentile")
-        if p is None:
-            continue
-        rec["null_pctile"] = round(float(p), 4)
-        pcts.append(float(p))
-        pfs.append(float(r.profit_factor))
+        pending_null.append((sym, sf, r.profit_factor, raw_entries, (ex, ex_available), fund))
 
     if fills:
         curve = portfolio_curve(fills, b.equity, b.risk_pct, b.max_open)
@@ -527,8 +517,6 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
             "max_dd_pct": round(curve["max_dd_pct"], 3),
             "taken": curve["taken"], "order": curve["order"],
             "accounting": {**curve["accounting"], "clock": RESEARCH_CLOCK}}
-    out["scored_symbols"] = len(pcts)
-    out["median_pf"] = round(st.median(pfs), 3) if pfs else 0.0
     out["median_rate"] = st.median(rates) if rates else 0.0
 
     # testability: would this rule fire often enough to be JUDGED later?
@@ -544,6 +532,44 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
     out["projection"] = proj
     out["testable"] = bool(proj["markets_a"] >= MIN_PROJECTED_MARKETS
                            and proj["markets_b"] >= MIN_PROJECTED_MARKETS)
+
+    # This optional screen is only used for directional development's return
+    # objective. A monetary loss is an observation, not a timing-null verdict.
+    # Leave missing data and small samples on their existing diagnostic path.
+    if (economic_screen and len(pending_null) >= MIN_PROJECTED_MARKETS
+            and out['trades'] >= MIN_SYMBOL_TRADES * MIN_PROJECTED_MARKETS
+            and not any('error' in rec for rec in out['symbols'].values())
+            and np.isfinite(out['portfolio']['total_pct']) and out['portfolio']['total_pct'] <= 0):
+        out.update(verdict='economic_screened',
+                   median_pf=round(st.median(x[2] for x in pending_null), 3),
+                   economic_screen=dict(policy=ECONOMIC_SCREEN_POLICY,
+                       observed_trade_symbols=len(pending_null),
+                       timing_assessment='NOT_COMPUTED_ECONOMIC_SCREEN',
+                       return_basis='CLOSED_TRADES_WITH_EXISTING_CENSORING',
+                       authority='NO_ADMISSION'))
+        return out
+
+    for sym, sf, actual_pf, raw_entries, exit_details, fund in pending_null:
+        rec = out['symbols'][sym]
+        try:
+            a = null_baseline.assess(
+                compiled, sf, b.risk, actual_pf, btc=b.btc,
+                derivs=b.derivs.get(sym), universe=b.universe, world=b.world,
+                market=b.market, symbol=sym, draws=int(draws), seed=seed,
+                split=None, funding=fund,entry_eligibility=b.entry_eligibility.get(sym),
+                raw_entries=raw_entries, exit_details=exit_details)
+        except Exception as e:                          # noqa: BLE001
+            log.debug(f"research null {c.hash} {sym}: {e}")
+            rec['null_error'] = str(e)[:200]
+            continue
+        p = a.get('percentile')
+        if p is None:
+            continue
+        rec['null_pctile'] = round(float(p), 4)
+        pcts.append(float(p))
+        pfs.append(float(actual_pf))
+    out['scored_symbols'] = len(pcts)
+    out['median_pf'] = round(st.median(pfs), 3) if pfs else 0.0
 
     if out["trades"] == 0:
         out["verdict"] = "empty"

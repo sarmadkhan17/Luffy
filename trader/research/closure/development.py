@@ -156,6 +156,16 @@ def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P, 
         return 'CODE_FAILURE', 'evaluation raised: ' + str(res.get('error'))[:160]
     if v == 'untested':
         return 'BLOCKED_DATA', 'required data absent: ' + canonical(res.get('context_gaps'))[:160]
+    if v == 'economic_screened':
+        screen = res.get('economic_screen') or {}
+        pct = (res.get('portfolio') or {}).get('total_pct')
+        if (screen.get('policy') != ev.ECONOMIC_SCREEN_POLICY
+                or screen.get('observed_trade_symbols', 0) < ev.MIN_PROJECTED_MARKETS
+                or res.get('trades', 0) < ev.MIN_SYMBOL_TRADES * ev.MIN_PROJECTED_MARKETS
+                or pct is None or not np.isfinite(pct) or pct > 0
+                or res.get('consistency_p') is not None):
+            return 'CODE_FAILURE', 'invalid directional economic screen'
+        return 'NEGATIVE_ECONOMICS', f'closed-trade net return {pct}%; timing and component tests deferred, not evidence of no edge'
     development_scored = (v == 'scored' and res.get('scored_symbols', 0) >= ev.MIN_PROJECTED_MARKETS
                           and res.get('trades', 0) >= ev.MIN_SYMBOL_TRADES * ev.MIN_PROJECTED_MARKETS
                           and res.get('consistency_p') is not None)
@@ -362,8 +372,10 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
     try:
         sims = {}
         res = ev.evaluate(c, bundle, draws=n_draws, seed=seed, min_symbol_trades=floor,
-                          raw_runs=sims, traces=graph_fit is not None)
-        variants = [s for _, s in _graph_baselines(resolved, env)] if graph_fit is not None else families.baselines(c)
+                          raw_runs=sims, traces=True, economic_screen=True)
+        screened = res.get('verdict') == 'economic_screened'
+        variants = ([] if screened else [s for _, s in _graph_baselines(resolved, env)]
+                    if graph_fit is not None else families.baselines(c))
         sub, baseline_runs = {}, {}
         for s in variants:
             label=s.keys[0] if s.k==1 else ','.join(s.keys)
@@ -387,10 +399,28 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
                                 verdict=b.get('verdict'), trades=b.get('trades'),
                                 candidate_earns_place=growth.earns_place(res, b)[0]) for k, b in sub.items()}
     extra = dict(validation_readiness=dict(
-        status='READY' if env['protected_status'] == 'ELIGIBLE' and res.get('testable') else 'UNAVAILABLE',
+        status='READY' if not screened and env['protected_status'] == 'ELIGIBLE' and res.get('testable') else 'UNAVAILABLE',
         protected_status=env['protected_status'], projection=res.get('projection'),
         projected_testable=bool(res.get('testable')), reasons=list(env.get('protected_reasons') or []),
         authority='NO_ADMISSION: development economics do not establish qualification'))
+    if screened:
+        extra.update(economic_screen=res['economic_screen'],
+                     baseline_assessment='NOT_COMPUTED_ECONOMIC_SCREEN')
+        extra['diagnostics'] = _diagnostics(c, bundle, env, floor, sims=sims, controls={}, robustness=False)
+        costs = {}
+        for symbol, run in sims.items():
+            closed = [t for t in run['trace'] if not t.get('open_at_end')]
+            fees = sum(t['fees_per_unit'] * t['amount'] for t in closed)
+            funding = sum(t['carry_per_unit'] * t['amount'] for t in closed)
+            net = float(run['result'].pnl_usdt)
+            costs[symbol] = dict(closed_trade_net_pnl=net, fees=fees, signed_funding_cost=funding,
+                                 pnl_before_fees_and_funding=net+fees+funding,
+                                 funding_basis=sorted({t['funding_basis'] for t in closed}),
+                                 censored_positions=int(run['result'].censored_position_count))
+        extra['diagnostics']['economic_screen'] = dict(per_symbol=costs,
+            scope='INDEPENDENT_PER_SYMBOL_SIMULATIONS_NOT_SHARED_PORTFOLIO_TOTAL',
+            cost_evidence='SIMULATED_DECLARED_COSTS_NOT_VENUE_FILLS',
+            slippage='retained in simulated fill prices')
     if graph_fit is not None and outcome == 'DEVELOPMENT_POSITIVE':
         extra['diagnostics'] = _diagnostics(c, bundle, env, floor, sims=sims,controls=baseline_runs)
     if graph_fit is not None:
@@ -424,7 +454,7 @@ def _structured_gaps(gaps) -> list:
     return list(out.values())
 
 
-def _diagnostics(c, bundle, env, floor, gated=False, sims=None,controls=None) -> dict:
+def _diagnostics(c, bundle, env, floor, gated=False, sims=None,controls=None,*,robustness=True) -> dict:
     """Regimes, marked exposure and already measured declared comparisons.
 
     No unrelated template portfolio is manufactured as an incumbent book and
@@ -446,8 +476,11 @@ def _diagnostics(c, bundle, env, floor, gated=False, sims=None,controls=None) ->
                       for name,runs in (controls or {}).items()},
             actual_incumbent_contribution='NOT_ESTABLISHED: no declared historical incumbent book bound',
             cash_comparator=dict(net_return_pct=0.0,source='DECLARED_NO_EXPOSURE_CONTROL'))
-        from .robustness import report
-        out['robustness']=report(c,None,bundle,delays=(0,1),cost_mults=(1.0,2.0),shifts=(1,2),base_runs=sims)
+        if robustness:
+            from .robustness import report
+            out['robustness']=report(c,None,bundle,delays=(0,1),cost_mults=(1.0,2.0),shifts=(1,2),base_runs=sims)
+        else:
+            out['robustness']=dict(status='NOT_COMPUTED_ECONOMIC_SCREEN')
         return out
     except Exception as exc:                                    # noqa: BLE001
         return dict(error=f'{type(exc).__name__}: {exc}'[:200])

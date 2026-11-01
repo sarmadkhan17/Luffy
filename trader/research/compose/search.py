@@ -520,12 +520,18 @@ def diagnosed_mutations(candidate, result):
     baseline = result.get('baselines') or {}
     redundancy = any(b.get('candidate_earns_place') is False for b in baseline.values())
     stress=(result.get('diagnostics') or {}).get('robustness') or {}
+    observed_costs=((result.get('diagnostics') or {}).get('economic_screen') or {}).get('per_symbol') or {}
+    cost_drag=any(v.get('pnl_before_fees_and_funding', 0)>0 and v.get('closed_trade_net_pnl', 1)<=0
+                  for v in observed_costs.values())
     if stress.get('edge_disappears_at'):
         priority=('holding_period','exit_geometry','remove_condition','substitute','regime_gate')
         diagnosis='edge_disappears_under_declared_execution_stress: compare holding/turnover; cause not established'
     elif redundancy:
         priority = ('remove_condition', 'substitute', 'exit_geometry', 'holding_period','regime_gate')
         diagnosis = 'component_did_not_earn_place: test removal or a comparable alternative'
+    elif cost_drag:
+        priority=('holding_period','exit_geometry','remove_condition','substitute','regime_gate')
+        diagnosis='some_markets_positive_before_fees_and_funding_but_nonpositive_after: compare turnover/holding; shared-portfolio cause not established'
     elif (result.get('metrics') or {}).get('total_pct', 0) <= 0:
         priority = ('exit_geometry', 'holding_period','remove_condition', 'substitute', 'regime_gate')
         diagnosis = 'nonpositive_net_economics: compare exit/holding behavior; cause not established'
