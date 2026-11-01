@@ -249,45 +249,48 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
                                          edge=case['edge'], common=case['common'],tf=protocol.get('tf','4h'))
         (d / 'snapshot.ok').write_text(run_id)
     store = Store(d / 'closure.db')
-    from ...core.types import TF_MS
-    tf=protocol.get('tf','4h')
-    st,step_ms=synthetic.EPOCH_MS,TF_MS[tf]
-    if case['sealed'] and not exposure.events(store):
-        exposure.seal(store, 'SYNTHETIC_DECLARED', st, st + protocol['n_bars'] * step_ms, 1)
-    fams = list(protocol.get('families') or [])
-    search = None if fams else protocol.get('search')
-    if search is None and not fams:
-        raise ValueError('calibration_search_not_frozen')
-    risk = dict(risk_per_trade_pct=.5, taker_fee_pct=.04, slippage_atr_frac=.015, funding_rate_8h=.0001,
-                real_funding=False, max_open_trades=8)
-    pol = _policy(protocol)
-    intake = {}
-    if protocol.get('intake_bank_path'):
-        from .auto import copy_database
-        bank = d / 'intake-bank.db'
-        if not bank.exists():
-            copy_database(protocol['intake_bank_path'], bank)
-        intake = dict(bank_path=str(bank), proposal_mode='compositional')
-    sid = S.create_study(store, dict(
-        snapshot_path=str(snap), tf=tf, discovery_symbols=names[:protocol['n_discovery']],
-        heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
-        embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
-        protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
-        search=search, max_revisions=protocol['max_revisions'], workdir=str(d), **intake,
-        max_candidates=(len(fams) + protocol['max_revisions']) if fams else protocol['max_candidates']),
-        now_ms=2)
-    for _ in range(50):
-        out = S.step(store, sid, budget_s=10 ** 6, child=False)
-        if out['step'] != 'DEADLINE':
-            break
-    status = S.study_status(store, sid)
-    runs = [r for r in store.all_once('runs') if r.get('stage') == 'DEVELOPMENT']
-    intake_observation = _intake_observation(store, sid) if intake else None
-    store.close()
-    return dict(run_id=run_id, case=case['name'], index=idx, seed=seed, outcome=status['research_outcome'], reason=status['research_reason'],
-                trials=len(runs), development_outcomes={o: sum(1 for r in runs if r['outcome'] == o)
-                                                        for o in sorted({r['outcome'] for r in runs})},
-                process_status=status['process_status'], intake=intake_observation)
+    try:
+        from ...core.types import TF_MS
+        tf=protocol.get('tf','4h')
+        st,step_ms=synthetic.EPOCH_MS,TF_MS[tf]
+        if case['sealed'] and not exposure.events(store):
+            exposure.seal(store, 'SYNTHETIC_DECLARED', st, st + protocol['n_bars'] * step_ms, 1)
+        fams = list(protocol.get('families') or [])
+        search = None if fams else protocol.get('search')
+        if search is None and not fams:
+            raise ValueError('calibration_search_not_frozen')
+        risk = dict(risk_per_trade_pct=.5, taker_fee_pct=.04, slippage_atr_frac=.015, funding_rate_8h=.0001,
+                    real_funding=False, max_open_trades=8)
+        pol = _policy(protocol)
+        intake = {}
+        if protocol.get('intake_bank_path'):
+            from .auto import copy_database
+            bank = d / 'intake-bank.db'
+            if not bank.exists():
+                copy_database(protocol['intake_bank_path'], bank)
+            intake = dict(bank_path=str(bank), proposal_mode='compositional')
+        sid = S.create_study(store, dict(
+            snapshot_path=str(snap), tf=tf, discovery_symbols=names[:protocol['n_discovery']],
+            heldout_symbols=names[protocol['n_discovery']:], fit_start_ms=st, dev_end_ms=st + protocol['dev_bars'] * step_ms,
+            embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
+            protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
+            search=search, max_revisions=protocol['max_revisions'], workdir=str(d), **intake,
+            max_candidates=(len(fams) + protocol['max_revisions']) if fams else protocol['max_candidates']),
+            now_ms=2)
+        for _ in range(50):
+            out = S.step(store, sid, budget_s=10 ** 6, child=False)
+            if out['step'] != 'DEADLINE':
+                break
+        status = S.study_status(store, sid)
+        runs = [r for r in store.all_once('runs') if r.get('stage') == 'DEVELOPMENT']
+        intake_observation = _intake_observation(store, sid) if intake else None
+        return dict(run_id=run_id, case=case['name'], index=idx, seed=seed, outcome=status['research_outcome'], reason=status['research_reason'],
+                    trials=len(runs), development_outcomes={o: sum(1 for r in runs if r['outcome'] == o)
+                                                            for o in sorted({r['outcome'] for r in runs})},
+                    process_status=status['process_status'], stop_reason=status['stop_reason'],
+                    failed_units=status['units'].get('FAILED', 0), intake=intake_observation)
+    finally:
+        store.close()
 
 
 def run_identity(protocol: dict, n: int) -> str:
@@ -324,6 +327,19 @@ def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
             and rep.get('numerics') == 'EXACT_CONFIGURED' and rep.get('authority_granted') is False
             and rep.get('numeric_id') == env.get('numeric_id')
             and rep.get('evaluator_id') == env['evaluator_id'])
+
+
+def _require_completed_replicate(result):
+    """A paused/failed job is not a completed calibration observation.
+
+    Its study database remains available for diagnosis and exact resume; it
+    must not occupy the completed replicate cache or enter the denominator.
+    """
+    if (result.get('process_status') != 'COMPLETED' or result.get('failed_units', 0)
+            or result.get('development_outcomes', {}).get('CODE_FAILURE', 0)):
+        raise ClosureRefused('calibration_replicate_incomplete',
+            f"{result.get('case')}:{result.get('index')} "
+            f"{result.get('process_status')}:{result.get('stop_reason')}")
 
 
 def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
@@ -369,9 +385,11 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 r = json.loads(f.read_text())
                 if r.get('run_id') != run_id:
                     raise ValueError('calibration_replicate_identity_mismatch')
+                _require_completed_replicate(r)
                 reps.append(r)
                 continue
             r = _replicate(protocol, case, i, base + ci * 10_000 + i, workdir, run_id)
+            _require_completed_replicate(r)
             f.write_text(canonical(r))
             reps.append(r)
     judged = []

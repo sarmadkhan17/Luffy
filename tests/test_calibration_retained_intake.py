@@ -69,6 +69,7 @@ def test_failed_intake_prevents_calibration_even_with_passing_case_counts(tmp_pa
     monkeypatch.setattr(C, 'feasibility', lambda p: [])
     monkeypatch.setattr(C, '_replicate', lambda p, case, i, seed, d, run_id='': dict(
         run_id=run_id, case=case['name'], index=i, seed=seed, outcome='NOT_REACHED', trials=0,
+        process_status='COMPLETED',
         intake=dict(complete=False)))
     report = C.run(proto, tmp_path, replicates=40)
     assert report['cases'][0]['verdict'] == 'OK'

@@ -121,7 +121,8 @@ def test_seed_ranges_identity_and_resume(tmp_path, monkeypatch):
         C.run(dict(SMOKE, kind='FINAL', final_seed_base=10_500), tmp_path / 'x', replicates=1)
     calls = []
     monkeypatch.setattr(C, '_replicate', lambda p, case, i, seed, d, run_id='': calls.append(1) or dict(
-        run_id=run_id, case=case['name'], index=i, seed=seed, outcome='NOT_REACHED', trials=0))
+        run_id=run_id, case=case['name'], index=i, seed=seed, outcome='NOT_REACHED', trials=0,
+        process_status='COMPLETED'))
     rep = C.run(SMOKE, tmp_path / 'y', replicates=4)
     assert rep['calibration_status'] == 'INCONCLUSIVE' and rep['kind'] == 'DEVELOPMENT_SMOKE' and rep['authority_granted'] is False
     n = len(calls)
