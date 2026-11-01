@@ -48,7 +48,7 @@ PROTOCOL = dict(
            dict(name='planted_weak', edge=0.002, common=0.0, sealed=True, truth='EDGE'),
            dict(name='planted_strong', edge=0.007, common=0.0, sealed=True, truth='EDGE'),
            dict(name='unsealed_exposure_unknown', edge=0.007, common=0.0, sealed=False, truth='UNAVAILABLE')],
-    replicates=60, kind='FINAL', final_seed_base=910_000, development_seed_base=10_000, embargo_bars=10,
+    replicates=60, kind='FINAL', stop_on_futility=True, final_seed_base=910_000, development_seed_base=10_000, embargo_bars=10,
     families=None, max_revisions=None, max_false_admission=0.10, min_power=0.50, confidence=0.95, **EXACT)
 
 
@@ -179,6 +179,30 @@ def judge(case: dict, k: int, n: int, protocol: dict) -> dict:
         metric = 'power'
     return dict(case=case['name'], truth=case['truth'], n=n, qualified=k, metric=metric,
                 rate=(k / n if n else None), interval=[round(lo, 4), round(hi, 4)], verdict=verdict)
+
+
+def fixed_horizon_futility(case: dict, qualified: int, completed: int,
+                           planned: int, protocol: dict) -> dict | None:
+    """Stop only when no completion of the ORIGINAL fixed-size case can pass.
+
+    This never approves a partial run or interprets an interim confidence
+    interval as final. Null cases get every remaining result unqualified;
+    power cases get every remaining result qualified. If even that best
+    completion is not OK at planned N, no possible completion can be OK.
+    """
+    if (any(type(v) is not int for v in (qualified, completed, planned))
+            or not 0 <= qualified <= completed <= planned or planned <= 0):
+        raise ValueError('calibration_futility_counts_invalid')
+    remaining = planned - completed
+    best = qualified if case['truth'] in ('NO_EDGE', 'UNAVAILABLE') else qualified + remaining
+    verdict = judge(case, best, planned, protocol)
+    if verdict['verdict'] == 'OK':
+        return None
+    return dict(case=case['name'], truth=case['truth'], completed=completed,
+                qualified=qualified, planned=planned, remaining=remaining,
+                best_possible_final_qualified=best, best_possible_final_verdict=verdict,
+                reason='No completion of the predeclared fixed-size case can meet its original acceptance rule',
+                inference='COMPUTATION_FUTILITY_ONLY; no interim population-rate or successful calibration claim')
 
 
 def _policy(protocol):
@@ -414,6 +438,8 @@ def report_authorizes(rep: dict, approval: dict, env: dict, *, proposal_batch_id
     report is produced in a TEST_ONLY context and grants nothing itself; the
     approval is an explicit, separate configuration act bound to the report id,
     the exact numeric policy and the current evaluator."""
+    if rep.get('completion_status', 'COMPLETED') != 'COMPLETED' or rep.get('futility_stop'):
+        return False
     body = {k: v for k, v in rep.items() if k != 'report_id'}
     if rep.get('intake_mode') == 'FROZEN_PROPOSAL_BATCH':
         if not proposal_batch_id or rep.get('proposal_batch_id') != proposal_batch_id:
@@ -510,6 +536,9 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     than reusing stale replicates, and an interrupted replicate resumes."""
     from copy import deepcopy
     protocol = deepcopy(protocol)
+    stop_on_futility = protocol.get('stop_on_futility', False)
+    if type(stop_on_futility) is not bool:
+        raise ValueError('calibration_stop_on_futility_must_be_boolean')
     retain = protocol.get('retain_generated_snapshots', True)
     if type(retain) is not bool:
         raise ValueError('calibration_snapshot_retention_must_be_boolean')
@@ -548,7 +577,14 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
         pf.write_text(canonical(dict(protocol=protocol, n=n, run_id=run_id)))
     base = fin_lo if kind == 'FINAL' else dev_lo
     reps = []
+    futility_stop = None
+    planned_total = n * len(protocol['cases'])
+    # Tiny smoke/diagnostic runs still exercise the entire declared workflow.
+    # Stopping affects only FINAL batches large enough for the null-rate target.
+    can_stop = (stop_on_futility and kind == 'FINAL'
+                and n >= min_replicates_for(protocol['max_false_admission'], protocol['confidence']))
     for ci, case in enumerate(protocol['cases']):
+        qualified = 0
         for i in range(n):
             f = workdir / f'rep-{case["name"]}-{i}.json'
             if f.exists():
@@ -556,24 +592,34 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 if r.get('run_id') != run_id:
                     raise ValueError('calibration_replicate_identity_mismatch')
                 _require_completed_replicate(r)
-                if not retain:
-                    _release_snapshot(workdir, case, i, r)
-                reps.append(r)
-                continue
-            r = _replicate(protocol, case, i, base + ci * 10_000 + i, workdir, run_id)
-            _require_completed_replicate(r)
-            _save_record(f, r)
+            else:
+                r = _replicate(protocol, case, i, base + ci * 10_000 + i, workdir, run_id)
+                _require_completed_replicate(r)
+                _save_record(f, r)
             if not retain:
                 _release_snapshot(workdir, case, i, r)
             reps.append(r)
+            qualified += int(r['outcome'] == 'QUALIFIED')
+            if can_stop and len(reps) < planned_total:
+                futility_stop = fixed_horizon_futility(case, qualified, i + 1, n, protocol)
+                if futility_stop is not None:
+                    break
+        if futility_stop is not None:
+            break
     judged = []
     for case in protocol['cases']:
         mine = [r for r in reps if r['case'] == case['name']]
-        judged.append(judge(case, sum(1 for r in mine if r['outcome'] == 'QUALIFIED'), len(mine), protocol))
+        judgement = judge(case, sum(1 for r in mine if r['outcome'] == 'QUALIFIED'), len(mine), protocol)
+        if not mine:
+            judgement['verdict'] = 'NOT_RUN'
+        elif len(mine) < n:
+            judgement['verdict'] = 'NOT_COMPLETED'
+            judgement['interval_status'] = 'INTERIM_DESCRIPTIVE_NOT_FINAL'
+        judged.append(judgement)
     need = min_replicates_for(protocol['max_false_admission'], protocol['confidence'])
     pol = _policy(protocol)
     intake_complete = not protocol.get('intake_bank_path') or all((r.get('intake') or {}).get('complete') for r in reps)
-    if not intake_complete:
+    if futility_stop is not None or not intake_complete:
         status = 'INCONCLUSIVE'
     elif any(j['verdict'] == 'FAIL' for j in judged):
         status = 'FAILED'
@@ -595,10 +641,16 @@ def _run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,
                 cost_id=digest(protocol['risk']),
                 evaluator_id=manifest.evaluator_id(), replicates_per_case=n, min_replicates_for_null_resolution=need,
+                completion_status='STOPPED_FUTILITY' if futility_stop else 'COMPLETED',
+                planned_replicates=planned_total, completed_replicates=len(reps),
+                skipped_replicates=planned_total-len(reps), futility_stop=futility_stop,
+                completed_replicates_per_case={case['name']:sum(r['case']==case['name'] for r in reps)
+                                               for case in protocol['cases']},
                 seeds=dict(base=base, scheme='base + case_index*10000 + replicate'), cases=judged,
                 replicates=[dict({k:r[k] for k in ('case','index','seed','outcome','trials')},
                                  postponed_units=r.get('postponed_units',0)) for r in reps],
                 note=('Run in a TEST_ONLY authority context; the report grants nothing. CALIBRATED needs FINAL seeds, enough '
                       'replicates, every case OK and the EXACT configured numbers; approval is a separate explicit '
-                      'configuration act. INCONCLUSIVE is neither a pass nor evidence of no edge.'))
+                      'configuration act. Futility stops cannot authorize: unrun observations stay missing. '
+                      'INCONCLUSIVE is neither a pass nor evidence of no edge.'))
     return dict(body, report_id=digest(body))
