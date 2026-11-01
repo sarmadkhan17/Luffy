@@ -76,7 +76,7 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
            bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None,
-           fill=None, exit_sig_available=None, detail_out=None):
+           fill=None, exit_sig_available=None, detail_out=None, _columns=None):
     """One trade signalled on bar `i`: (exit_i, stop distance, P&L per unit
     of size). `fill` is `fill_timing.fills`: the entry fills at the OPEN of
     bar fill[i], and a declared signal exit seen on bar j at the open of bar
@@ -92,7 +92,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     sign = 1.0 if side == "long" else -1.0
     f = i + 1 if fill is None else int(fill[i])
     e = f - 1                       # the notional entry bar: the trade starts as it ends
-    px = float(df["open"].iloc[f])
+    px = float(_columns["bars"][1][f]) if _columns and "bars" in _columns else float(df["open"].iloc[f])
     slip = atr[i] * slip_frac
     entry = px + sign * slip
     if detail_out is not None:      # observation only: the ACTUAL slipped fill, never read back by the engine
@@ -110,7 +110,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
             raise ValueError("exit_semantics_mismatch")
         step = TF_MS[exit_spec._exit_timeframe]
         bar_minutes = step / 60_000
-        clock = df["ts"].iloc[e]
+        clock = _columns["bars"][0][e] if _columns and "bars" in _columns else df["ts"].iloc[e]
         entry_ms = int(clock.timestamp()*1000) if hasattr(clock, "timestamp") else int(clock)
         policy, state = E.initialize(exit_spec, px, atr[i], side, entry_ms, step)
     sl = entry - sign * sl_dist
@@ -125,18 +125,26 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     if canonical:
         # Scalar column reads: `df.iloc[j]` builds (and deep-copies attrs for)
         # a whole row per bar, which dominated every research backtest.
-        ts_col, open_col = df['ts'].array, df['open'].to_numpy(float)
-        quality_name = 'observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'
-        quality_col = df[quality_name].to_numpy() if quality_name in df.columns else None
-        state_col = df['bar_state'].to_numpy() if 'bar_state' in df.columns else None
+        # The caller owns this cache for one evaluation only. Initialize lazily,
+        # after entry geometry validation; no-trade/refused entries retain their
+        # original validation order. Never share it across frames or evaluations.
+        if _columns is not None and 'bars' in _columns:
+            ts_col, open_col, quality_col, state_col = _columns['bars']
+        else:
+            ts_col, open_col = df['ts'].array, df['open'].to_numpy(float)
+            quality_name = 'observation_quality' if df.attrs.get('read_mode') == 'retrospective' else 'quality'
+            quality_col = df[quality_name].to_numpy() if quality_name in df.columns else None
+            state_col = df['bar_state'].to_numpy() if 'bar_state' in df.columns else None
+            if _columns is not None:
+                _columns['bars'] = ts_col, open_col, quality_col, state_col
     for j in range(f, n if canonical else end + 1):
         if j == due:
             if canonical:
-                clock = df['ts'].iloc[j]
+                clock = ts_col[j]
                 ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
-                executed = E.execute_open(policy, state, ms, float(df['open'].iloc[j]), intended_quantity)
+                executed = E.execute_open(policy, state, ms, float(open_col[j]), intended_quantity)
                 state = pending_signal if executed.reason == 'signal' else executed.state
-            exit_i, exit_px, at_open = j, float(df["open"].iloc[j]), 1
+            exit_i, exit_px, at_open = j, float(open_col[j] if canonical else df["open"].iloc[j]), 1
             break
         if canonical:
             clock = ts_col[j]
@@ -279,6 +287,7 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
     arm_at_r = float(trail.get("arm_at_r", 1.0))
     fill, _ = fill_timing.fills(df)
     out = {}
+    columns = {}
     for side in ("long", "short"):
         ex = np.full(n, -1, dtype=np.int64)
         r = np.zeros(n)
@@ -289,7 +298,7 @@ def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
             trade = _try_trade(
                 i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
                 fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-                funding_8h, bar_minutes, fill=fill, exit_sig_available=exit_sig_available)
+                funding_8h, bar_minutes, fill=fill, exit_sig_available=exit_sig_available, _columns=columns)
             if trade is None:               # refused entry: no trade can open here
                 continue
             e, sl_dist, unit = trade
@@ -411,6 +420,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         prefix = np.cumsum(rates) * step_minutes / 480.0
         return tuple(float(v) for v in prefix[:max(end - f, 0)])
 
+    columns = {}
     for raw_i in candidates:
         i = int(raw_i)
         if i < cursor or i >= n - 1 or fill[i] < 0:
@@ -423,7 +433,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         trade = _try_trade(
             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-            funding_8h, bar_minutes, trace, fill=fill, exit_sig_available=exit_sig_available, detail_out=detail)
+            funding_8h, bar_minutes, trace, fill=fill, exit_sig_available=exit_sig_available, detail_out=detail, _columns=columns)
         if trade is None:                   # refused before any fill, cost or exposure
             res.errors.append(f'entry_refused:{ENTRY_REFUSAL}:{side}:{i}')
             continue

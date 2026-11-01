@@ -37,6 +37,10 @@ print(f"symbols={syms}")
 print(f"bars={ {s: len(frames[s]) for s in syms} }\n")
 
 genomes = [g for _s, g in build_seed_population()]
+seed_specs = load_seed_specs()[:len(genomes)]
+if not genomes or len(seed_specs) != len(genomes):
+    print("incomplete seed specs — cannot compare equal numbers of backtest runs")
+    sys.exit(1)
 t0 = time.perf_counter()
 for g in genomes:
     for s in syms:
@@ -44,7 +48,7 @@ for g in genomes:
                         ctx=context_frames(frames[s], btc))
 t_old = time.perf_counter() - t0
 
-compiled = [compile_spec(s) for s in load_seed_specs()[:len(genomes)]]
+compiled = [compile_spec(s) for s in seed_specs]
 t0 = time.perf_counter()
 for c in compiled:
     for s in syms:
