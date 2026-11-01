@@ -95,3 +95,7 @@ Thumbs.db
 
 # Installation-local owner authentication keys and socket; copied securely.
 /private/
+
+# Local browser binaries and generated code graphs
+dependencies/
+graphify-out*/

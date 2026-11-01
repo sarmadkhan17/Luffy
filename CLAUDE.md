@@ -205,20 +205,13 @@ permission steps and makes no pricing claims.
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
 Rules:
-- Graphs live outside the repository (`~/.local/state/luffy-graphs/<commit>/`), one per exact
-  commit. For caller/relationship questions use `luffy-graphify explain "<symbol>()"`,
-  `luffy-graphify path --undirected "<A>" "<B>"` or `luffy-graphify query "<question>"`.
-  A `STALE GRAPH` banner means the graph was built for another commit: treat the result as a
-  lead, never as evidence. `luffy-graphify list` shows the available commits.
-- Graph edges are incomplete. A missing caller is not proof of dead code; confirm with
-  `luffy-callers` and `rg` (see the `luffy-review` skill).
-- Do not run `graphify update .` in a working repository and do not rely on or regenerate the
-  tracked `graphify-out/`; it is a historical snapshot and updating it dirties tracked files.
-  Refresh with `luffy-graphify refresh` only from a clean checkout of the commit to index.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Use the plain `graphify` CLI (`graphify query "<question>"`, `graphify explain "<symbol>"`,
+  `graphify path "<A>" "<B>"`) only if a graph for the current checkout is available. Generated
+  `graphify-out*/` directories are untracked; a graph that does not match the checked-out
+  commit is a lead, never evidence.
+- Graph edges are incomplete. A missing caller is not proof of dead code; confirm with `rg`.
+- Do not run `graphify update .` in a working repository.
 
 ## Luffy memory lookup
 

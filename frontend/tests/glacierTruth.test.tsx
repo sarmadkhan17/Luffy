@@ -58,6 +58,11 @@ describe("research truth", () => {
     expect(refereeWording(false, 2)).toContain("2 registered held-out look(s) exist");
     expect(refereeWording(undefined, null)).toContain("state unavailable");
     expect(verdictOf({})).toBe("UNAVAILABLE");
+    // Research ledger/API uses "prune", not the human-facing label "pruned".
+    expect(verdictOf({ status: "scored", verdict: "prune" })).toBe("Pruned");
+    expect(verdictOf({ status: "empty", verdict: "prune" })).toBe("No trades");
+    expect(verdictOf({ status: "untestable", verdict: "prune" })).toBe("Untestable");
+    expect(verdictOf({ status: "scored", verdict: "unknown" })).toBe("UNAVAILABLE");
   });
   it("renders a nonempty bank without none-yet wording", async () => {
     setup(<Research />, { "research/board": { combos: [], total: 10, verdicts: [], candidates_by_state: { queued: 3 }, stores: { registrations: 2 }, held_out_looks: { n: 2 }, referee_enabled: false } });
