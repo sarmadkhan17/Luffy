@@ -59,7 +59,8 @@ def test_calibration_freezes_actual_compositional_search_settings(tmp_path,monke
     monkeypatch.setattr(config,'load_config',lambda:dict(research=dict(closure=dict(auto=dict(
         max_candidates=7,search=dict(max_attempts=13,max_fits=20))))))
     monkeypatch.setattr(C,'_replicate',lambda p,c,i,seed,d,run_id='': seen.append(p) or dict(
-        run_id=run_id,case=c['name'],index=i,seed=seed,outcome='NOT_REACHED',trials=0))
+        run_id=run_id,case=c['name'],index=i,seed=seed,outcome='NOT_REACHED',trials=0,
+        process_status='COMPLETED'))
     report=C.run(dict(C.PROTOCOL,**C.SMOKE),tmp_path,replicates=1)
     assert report['search_scope']=='COMPOSITIONAL_SEARCH'
     assert seen[0]['search']['max_attempts']==13 and seen[0]['max_candidates']==7
@@ -72,9 +73,9 @@ def test_old_search_calibration_does_not_authorize_a_different_search():
     from trader.research.closure import calibration as C
     rep=dict(schema='closure-calibration-report.v3',search_scope='COMPOSITIONAL_SEARCH',
              search_contract_id='search-a',calibration_status='CALIBRATED',kind='FINAL',
-             numerics='EXACT_CONFIGURED',authority_granted=False,numeric_id='n',evaluator_id='e')
+             numerics='EXACT_CONFIGURED',authority_granted=False,numeric_id='n',evaluator_id='e',cost_id='cost')
     rep['report_id']=C.digest(rep)
-    env=dict(search_contract_id='search-a',numeric_id='n',evaluator_id='e')
+    env=dict(search_contract_id='search-a',numeric_id='n',evaluator_id='e',cost_id='cost')
     assert C.report_authorizes(rep,{'report_id':rep['report_id']},env)
     assert not C.report_authorizes(rep,{'report_id':rep['report_id']},dict(env,search_contract_id='search-b'))
     assert not C.report_authorizes(rep,{'report_id':rep['report_id']},{k:v for k,v in env.items() if k!='search_contract_id'})

@@ -107,9 +107,9 @@ def test_exact_production_numbers_are_calibratable_in_a_test_only_context(tmp_pa
 
 def test_report_grants_nothing_and_approval_is_a_separate_explicit_binding():
     rep = dict(schema='closure-calibration-report.v3',search_scope='COMPOSITIONAL_SEARCH',search_contract_id='contract',calibration_status='CALIBRATED', kind='FINAL', numerics='EXACT_CONFIGURED', authority_granted=False,
-               numeric_id='n', evaluator_id='e')
+               numeric_id='n', evaluator_id='e',cost_id='cost')
     rep['report_id'] = C.digest(rep)
-    env = dict(numeric_id='n', evaluator_id='e',search_contract_id='contract')
+    env = dict(numeric_id='n', evaluator_id='e',search_contract_id='contract',cost_id='cost')
     assert C.report_authorizes(rep, dict(report_id=rep['report_id']), env)
     assert not C.report_authorizes(rep, dict(report_id='other'), env)
     assert not C.report_authorizes(dict(rep, authority_granted=True), dict(report_id=rep['report_id']), env)

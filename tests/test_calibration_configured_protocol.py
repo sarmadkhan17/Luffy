@@ -7,7 +7,7 @@ import pytest
 
 from trader.core.config import load_config
 from trader.research.closure import ClosureRefused, digest
-from trader.research.closure import calibration as C, auto
+from trader.research.closure import calibration as C, auto, manifest
 from trader.research.closure import __main__ as cli
 
 
@@ -38,6 +38,29 @@ def test_intake_cannot_be_silently_dropped_or_added():
     with pytest.raises(ClosureRefused,match='calibration_intake_contract_mismatch'):
         C.configured_protocol(cfg,'4h',intake_bank_path='unexpected.db')
     assert 'intake_bank_path' not in C.configured_protocol(cfg,'4h')
+
+
+def test_configured_costs_and_unit_deadline_are_frozen_without_using_old_defaults():
+    cfg=load_config()
+    cfg['risk'].update(taker_fee_pct=.08,risk_per_trade_pct=.25,max_open_positions=3)
+    cfg['research']['closure']['auto']['unit_timeout_s']=45
+    p=C.configured_protocol(cfg,'1h',intake_bank_path='retained-bank.db')
+    assert p['risk']==manifest.research_risk(auto._slim(cfg)['risk'])
+    assert p['unit_timeout_s']==45
+
+
+def test_calibration_cannot_authorize_another_cost_model_or_an_unknown_one():
+    # Contract fixture only; not an actual calibration or admission.
+    report=dict(schema='closure-calibration-report.v3',search_scope='COMPOSITIONAL_SEARCH',
+        search_contract_id='search',calibration_status='CALIBRATED',kind='FINAL',
+        numerics='EXACT_CONFIGURED',authority_granted=False,numeric_id='numeric',
+        evaluator_id='code',cost_id='cost-a')
+    report['report_id']=digest(report)
+    approval=dict(report_id=report['report_id'])
+    env=dict(search_contract_id='search',numeric_id='numeric',evaluator_id='code',cost_id='cost-a')
+    assert C.report_authorizes(report,approval,env)
+    assert not C.report_authorizes(report,approval,dict(env,cost_id='cost-b'))
+    assert not C.report_authorizes(report,approval,{k:v for k,v in env.items() if k!='cost_id'})
 
 
 def test_unknown_and_ambiguous_horizon_cannot_select_a_different_search():

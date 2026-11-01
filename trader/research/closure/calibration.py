@@ -79,6 +79,8 @@ def configured_protocol(cfg: dict, tf: str, *, intake_bank_path=None) -> dict:
                     n_bars=max(PROTOCOL['n_bars'], selected['fit_bars'] + 101 + protected_bars),
                     search=deepcopy(selected['search']), max_candidates=int(selected['max_candidates']),
                     max_revisions=int(selected.get('max_revisions', 4)),
+                    risk=manifest.research_risk(auto._slim(cfg)['risk']),
+                    unit_timeout_s=int(selected['unit_timeout_s']),
                     embargo_bars=int(selected['embargo_bars']))
     if intake_bank_path:
         protocol['intake_bank_path'] = str(intake_bank_path)
@@ -181,6 +183,17 @@ def _policy(protocol):
     return manifest.test_policy(**protocol.get('policy', {}))
 
 
+def _risk(protocol):
+    if 'risk' in protocol:
+        return manifest.research_risk(protocol['risk'])
+    if protocol['numerics']=='EXACT_CONFIGURED':
+        from ...core.config import load_config
+        from .auto import _slim
+        return manifest.research_risk(_slim(load_config())['risk'])
+    return manifest.research_risk(dict(risk_per_trade_pct=.5,taker_fee_pct=.04,
+        slippage_atr_frac=.015,funding_rate_8h=.0001,real_funding=False,max_open_trades=8))
+
+
 def intake_provider_id(cfg=None):
     """Bind proposal code and public provider settings, never credentials."""
     from ...core.config import load_config
@@ -259,8 +272,7 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
         search = None if fams else protocol.get('search')
         if search is None and not fams:
             raise ValueError('calibration_search_not_frozen')
-        risk = dict(risk_per_trade_pct=.5, taker_fee_pct=.04, slippage_atr_frac=.015, funding_rate_8h=.0001,
-                    real_funding=False, max_open_trades=8)
+        risk = _risk(protocol)
         pol = _policy(protocol)
         intake = {}
         if protocol.get('intake_bank_path'):
@@ -275,10 +287,13 @@ def _replicate(protocol, case, idx, seed, workdir: Path, run_id: str = '') -> di
             embargo_bars=protocol['embargo_bars'], protected_start_ms=st + (protocol['dev_bars'] + 100) * step_ms,
             protected_end_ms=st + (protocol['n_bars'] - 1) * step_ms, policy=pol, risk=risk, seed_families=fams,
             search=search, max_revisions=protocol['max_revisions'], workdir=str(d), **intake,
+            unit_timeout_s=protocol.get('unit_timeout_s',900),
             max_candidates=(len(fams) + protocol['max_revisions']) if fams else protocol['max_candidates']),
             now_ms=2)
         for _ in range(50):
-            out = S.step(store, sid, budget_s=10 ** 6, child=False)
+            # Use the same bounded workers as scheduled research. Inline
+            # evaluation would bypass unit deadlines and OS resource limits.
+            out = S.step(store, sid, budget_s=10 ** 6, child=True)
             if out['step'] != 'DEADLINE':
                 break
         status = S.study_status(store, sid)
@@ -326,6 +341,7 @@ def report_authorizes(rep: dict, approval: dict, env: dict) -> bool:
             and rep.get('calibration_status') == 'CALIBRATED' and rep.get('kind') == 'FINAL'
             and rep.get('numerics') == 'EXACT_CONFIGURED' and rep.get('authority_granted') is False
             and rep.get('numeric_id') == env.get('numeric_id')
+            and env.get('cost_id') is not None and rep.get('cost_id') == env['cost_id']
             and rep.get('evaluator_id') == env['evaluator_id'])
 
 
@@ -348,6 +364,10 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
     than reusing stale replicates, and an interrupted replicate resumes."""
     from copy import deepcopy
     protocol = deepcopy(protocol)
+    # Freeze the actual cost/position block before the run identity. Resume
+    # cannot silently substitute today's configuration for a declared one.
+    protocol['risk'] = _risk(protocol)
+    protocol.setdefault('unit_timeout_s',900)
     if not protocol.get('families') and protocol.get('search') is None:
         from ...core.config import load_config
         auto = load_config().get('research', {}).get('closure', {}).get('auto', {})
@@ -416,6 +436,7 @@ def run(protocol: dict, workdir, *, replicates: int | None = None) -> dict:
                 calibration_status=status, kind=kind, run_id=run_id,
                 protocol_id=digest(protocol), policy_class=pol['klass'], numerics=protocol['numerics'],
                 numeric_id=manifest.numeric_id(pol), authority_granted=False,
+                cost_id=digest(protocol['risk']),
                 evaluator_id=manifest.evaluator_id(), replicates_per_case=n, min_replicates_for_null_resolution=need,
                 seeds=dict(base=base, scheme='base + case_index*10000 + replicate'), cases=judged,
                 replicates=[{k: r[k] for k in ('case', 'index', 'seed', 'outcome', 'trials')} for r in reps],
