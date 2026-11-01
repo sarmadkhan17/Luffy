@@ -8,7 +8,7 @@ reserve their instruments at the existing final Risk boundary.
 import json
 import time
 from . import entry_authority as A
-from . import coordinated_close as C
+from . import coordinated_close as C, position_mode as PM
 
 TABLE='coordinated_group_unwinds'
 
@@ -81,8 +81,11 @@ def _members(executor,group_id):
         exact=(row['strategy_id'],root.get('version_id'),root.get('spec_hash'),root.get('install_id'))
         if identity is not None and identity!=exact:raise ValueError('coordinated_unwind_versions_differ')
         identity=exact
-        members.append(dict(trade_id=row['id'],leg=group['leg'],instrument_id=binding['instrument_id'],
-            symbol=row['symbol'],entry_identity_sha256=A.digest(root)))
+        member = dict(trade_id=row['id'],leg=group['leg'],instrument_id=binding['instrument_id'],
+            symbol=row['symbol'],entry_identity_sha256=A.digest(root))
+        if PM.position_side(root) != 'BOTH':
+            member['position_side'] = PM.position_side(root)
+        members.append(member)
     if not any(m['leg']=='primary' for m in members):raise ValueError('coordinated_unwind_primary_missing')
     return sorted(members,key=lambda m:(m['leg']!='primary',m['trade_id']))
 
@@ -102,7 +105,13 @@ def _position_observation(executor):
 
 def _positions(executor):
     obs=_position_observation(executor)
-    return {r.instrument_id.value:r.absolute_quantity for r in obs.positions if r.position_present}
+    return {(r.instrument_id.value if r.position_side == 'BOTH' else (r.instrument_id.value, r.position_side)):r.absolute_quantity
+            for r in obs.positions if r.position_present}
+
+
+def _member_key(member):
+    native = member.get('position_side', 'BOTH')
+    return member['instrument_id'] if native == 'BOTH' else (member['instrument_id'], native)
 
 
 def _owned_replacement(executor,closed,members,positions):
@@ -111,14 +120,14 @@ def _owned_replacement(executor,closed,members,positions):
     old=executor.journal.query('SELECT * FROM trades WHERE id=?',(closed['trade_id'],))[0]
     replacements=[]
     for member in members:
-        if member['trade_id']==closed['trade_id'] or member['instrument_id']!=closed['instrument_id']:continue
+        if member['trade_id']==closed['trade_id'] or _member_key(member)!=_member_key(closed):continue
         row=executor.journal.query('SELECT * FROM trades WHERE id=?',(member['trade_id'],))[0]
         if row['status']=='open':replacements.append((member,row))
     if len(replacements)!=1:return False
     member,row=replacements[0]
     if member['leg']!=closed['leg'] or not old.get('closed_at') or not row.get('opened_at'):return False
     return (timestamp(old['closed_at'])<timestamp(row['opened_at'])
-            and A.positive(row['amount'])==A.positive(positions[closed['instrument_id']]))
+            and A.positive(row['amount'])==A.positive(positions[_member_key(closed)]))
 
 
 def _adopt_late_members(executor,plan,current):
@@ -193,7 +202,7 @@ def close_group_once(executor,group_id,logical_id,*,reason='combined_position_ex
         for member in plan['members']:
             row=executor.journal.query('SELECT * FROM trades WHERE id=?',(member['trade_id'],))[0]
             if row['status']=='closed':
-                if member['instrument_id'] in positions and not _owned_replacement(executor,member,plan['members'],positions):
+                if _member_key(member) in positions and not _owned_replacement(executor,member,plan['members'],positions):
                     return dict(group_id=group_id,status='CLOSED_LEG_VENUE_EXPOSURE_UNRESOLVED',leg=member['leg'])
                 continue
             C.ensure(executor.journal)

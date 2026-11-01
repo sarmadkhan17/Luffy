@@ -52,12 +52,18 @@ def snapshot(source, now_ms):
     obs = raw['observation']
     # Replay the established producer's structural identity rules. A rehashed
     # malformed observation cannot establish a complete one-way venue book.
-    from trader.observability.portfolio_observation import observe_positions
+    from trader.observability.portfolio_observation import observe_positions, payload_record, projected_positions
     from trader.core.types import MarketType
-    rebuilt = observe_positions([
-        dict(info={'symbol':iid.split(':')[-1]},
-             symbol=iid.split(':')[-1][:-4] + '/USDT:USDT', contracts=qty, side=side)
-        for iid,present,side,qty in obs['positions']],
+    rows = []
+    for iid, present, side, qty, native in map(payload_record, obs['positions']):
+        info = {'symbol': iid.split(':')[-1]}
+        row = dict(info=info, symbol=iid.split(':')[-1][:-4] + '/USDT:USDT',
+                   contracts=qty, side=side)
+        if native != 'BOTH':
+            info.update(positionSide=native, positionAmt=str(qty if native == 'LONG' else -qty))
+            row['hedged'] = True
+        rows.append(row)
+    rebuilt = observe_positions(rows,
         exchange_id='binanceusdm', market_type=MarketType.FUTURES,
         environment=obs['environment'], source_ref=obs['source_ref'],
         request_start_ms=obs['request_start_ms'], response_received_ms=obs['response_received_ms'])
@@ -69,9 +75,10 @@ def snapshot(source, now_ms):
         raise ValueError('VENUE_SNAPSHOT_PROJECTION_DIFFERS')
     if not raw['observed_at_ms'] <= now_ms <= raw['observed_at_ms'] + int(STALE_AFTER_S * 1000):
         raise ValueError('VENUE_PORTFOLIO_TRUTH_STALE')
-    expected = sorted((iid, side, str(qty)) for iid, present, side, qty in obs['positions'] if present)
-    actual = sorted((p['instrument_id'], p['side'], str(p['quantity'])) for p in raw['positions'])
-    if expected != actual or len({p[0] for p in actual}) != len(actual):
+    expected = sorted((iid, side, str(qty), native) for iid, side, qty, native in projected_positions(obs))
+    actual = sorted((p['instrument_id'], p['side'], str(p['quantity']), p.get('position_side', 'BOTH'))
+                    for p in raw['positions'])
+    if expected != actual or len({(p[0], p[3]) for p in actual}) != len(actual):
         raise ValueError('VENUE_SNAPSHOT_PROJECTION_DIFFERS')
     rows = []
     with localcontext() as ctx:
@@ -90,6 +97,8 @@ def snapshot(source, now_ms):
                 strategy_id=None, version_id=None, attribution='UNKNOWN',
                 observed_at_ms=raw['observed_at_ms'], provenance=source.source_id,
                 freshness='CURRENT', completeness='COMPLETE'))
+            if p.get('position_side'):
+                rows[-1]['position_side'] = p['position_side']
         complete_entry = all(p['entry_basis_notional'] is not None for p in rows)
         totals = {direction: str(sum((Decimal(p['entry_basis_notional']) for p in rows
                   if p['direction'] == direction), Decimal(0))) if complete_entry else None
@@ -232,7 +241,8 @@ def build(inputs, venue_source, policy_source, lineage_sources=(), relationship_
     cap = limits.get('max_open_positions')
     if cap is not None and (type(cap) is not int or cap < 1):
         raise ValueError('OWNER_POLICY_INVALID')
-    count = len(book['positions'])
+    measured_count = measurements_current.get('open_position_count', {})
+    count = measured_count['value'] if measured_count.get('status') == 'ESTABLISHED' else len(book['positions'])
     checks = [dict(metric='open_position_count', value=count, limit=cap,
                    policy_source_id=policy_source.source_id,
                    status='UNAVAILABLE' if cap is None else 'EXCEEDS_EXISTING_LIMIT' if count > cap else 'WITHIN_EXISTING_LIMITS')]
@@ -265,7 +275,7 @@ def build(inputs, venue_source, policy_source, lineage_sources=(), relationship_
     groups = evidence_groups(inputs.candidates, lineages)
     exposures = [dict(key='candidate:' + canonical(c.identity), instrument=c.instrument, direction=c.direction,
                      version_id=c.version_id, origin='CANDIDATE') for c in sorted(inputs.candidates, key=lambda c: c.identity)]
-    exposures += [dict(key='holding:' + p['instrument'], instrument=p['instrument'], direction=p['direction'],
+    exposures += [dict(key='holding:' + p['instrument'] + (':' + p['position_side'] if p.get('position_side') else ''), instrument=p['instrument'], direction=p['direction'],
                       version_id=None, origin='VENUE_POSITION') for p in book['positions']]
     pairs = []
     for a, b in combinations(exposures, 2):

@@ -86,6 +86,9 @@ def assess(evidence):
             raise ValueError('missing_order_or_quantity')
         binding = evidence.get('execution_binding')
         for f in fs:
+            if binding and binding.get('position_side', 'BOTH') != 'BOTH':
+                if f.get('position_side') != binding['position_side']:
+                    raise ValueError('native_fill_attribution_mismatch')
             if binding and f.get('venue_symbol') != binding['capability']['record']['instrument_id']['venue_symbol']:
                 raise ValueError('canonical_fill_attribution_mismatch')
             if not f.get('id') or str(f['id']) in seen:

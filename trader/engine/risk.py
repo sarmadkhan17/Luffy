@@ -705,7 +705,7 @@ class RiskManager:
                     atr: float, side_risk_frac: float,
                     open_positions: list[Position], equity: float,
                     closed_trades_count: int, market_type: str, *,
-                    as_of: datetime | None = None) -> SizingResult:
+                    as_of: datetime | None = None, economic_book=None) -> SizingResult:
         """side_risk_frac: stop distance as fraction of price (e.g. 0.02)."""
         if state == ControlState.FROZEN:
             return SizingResult(False, "state=FROZEN: entries blocked", 0, 0, 0, 0)
@@ -739,9 +739,17 @@ class RiskManager:
         if st["daily_pnl_pct"] <= -self.daily_loss_block * 100:
             return SizingResult(False,
                                 f"daily breaker {st['daily_pnl_pct']:.1f}%", 0, 0, 0, 0)
-        if len(open_positions) >= self.max_positions:
+        count, siblings, existing_group = len(open_positions), frozenset(), False
+        if economic_book is not None:
+            count, siblings, existing_group = economic_book
+            if (type(count) is not int or not 0 <= count <= len(open_positions)
+                    or not isinstance(siblings, frozenset)
+                    or not siblings <= {p.id for p in open_positions}
+                    or type(existing_group) is not bool):
+                return SizingResult(False, 'risk_economic_book_invalid', 0, 0, 0, 0)
+        if count > self.max_positions or (count == self.max_positions and not existing_group):
             return SizingResult(False, "max positions reached", 0, 0, 0, 0)
-        if any(p.symbol == symbol for p in open_positions):
+        if any(p.symbol == symbol and p.id not in siblings for p in open_positions):
             return SizingResult(False, "already exposed here", 0, 0, 0, 0)
 
         # heat accounting: open risk + this trade's intended risk
@@ -805,7 +813,9 @@ class RiskManager:
         if not math.isfinite(equity) or equity <= 0:
             raise ValueError('RISK_METRICS_EQUITY_UNAVAILABLE')
         by_symbol = {}
+        margin_by_symbol = {}
         for p in positions:
+            margin_by_symbol[p.symbol] = margin_by_symbol.get(p.symbol, 0.) + p.notional_usdt / self.leverage / equity * 100
             by_symbol[p.symbol] = by_symbol.get(p.symbol, 0.0) + self._position_risk(p, p.entry_price)
         risk = sum(self._position_risk(p, p.entry_price) for p in positions)
         margin = sum(p.notional_usdt for p in positions) / self.leverage
@@ -813,7 +823,7 @@ class RiskManager:
                     risk_heat_pct=risk / equity * 100,
                     per_symbol_risk_pct={s: v / equity * 100 for s, v in by_symbol.items()},
                     risk_margin_usdt=margin, total_margin_pct=margin / equity * 100,
-                    position_margin_pct={p.symbol: p.notional_usdt / self.leverage / equity * 100 for p in positions},
+                    position_margin_pct=margin_by_symbol,
                     basis='EXISTING_RISK_ENTRY_BASIS_CALCULATIONS')
 
     def _position_risk(self, p: Position, mark: float) -> float:

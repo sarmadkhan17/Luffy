@@ -10,7 +10,7 @@ from pathlib import Path
 
 _CONTEXT=ContextVar('coordinated_execution_scope',default=None)
 # The scan registers durable intents; the positions worker dispatches them.
-# Only the supported distinct linear/netting book can use that caller. This
+# Only supported linear USDT books can use that caller. This
 # code capability supplies no qualification, installation or live authority.
 RUNTIME_READY=True
 
@@ -89,3 +89,55 @@ def validate_identity(journal,strategy_id,identity,symbol,*,requested=None,refer
     if requested is not None:
         from .coordinated_budget import verify
         verify(journal,version,identity,requested,reference)
+
+
+def risk_book(journal, rows, identity, cap):
+    """Count verified economic groups once; retain every leg in Risk heat.
+
+    Only the current authenticated coordinated caller may add its owned
+    opposite native side. This never exempts unrelated same-symbol exposure.
+    """
+    import json
+    from . import entry_authority as A, position_mode as PM
+    from .coordinated_close import IDENTITY_FIELDS
+    current = None
+    if (identity or {}).get('version_id') and (identity or {}).get('coordinated'):
+        scope = _CONTEXT.get()
+        if (scope is None or scope.version_id != identity['version_id']
+                or scope.group_id != identity['coordinated']['group_id']):
+            raise ValueError('coordinated_risk_scope_missing')
+        current = (scope.group_id, scope.version_id, scope.install_id, cap['account_scope'])
+    groups, siblings, existing, grouped = set(), set(), False, False
+    for row in rows:
+        root = PM.identity_of(row); group = root.get('coordinated') or {}
+        binding = root.get('execution_binding') or {}
+        if not group or not root.get('version_id'):
+            groups.add(('trade', row['id'])); continue
+        grouped = True
+        request = journal.query('SELECT * FROM execution_requests WHERE logical_id=?', (binding.get('logical_id'),))
+        if len(request) != 1:raise ValueError('coordinated_risk_owner_receipt_missing')
+        saved = request[0]; intent = json.loads(saved['intent_json'])
+        result = json.loads(saved.get('result_json') or '{}')
+        if (root.get('status') != 'VERIFIED' or A.digest(intent) != saved['intent_hash']
+                or saved['state'] != 'TERMINAL' or result.get('position_id') != row['id']
+                or any(root.get(k) != (intent.get('strategy_identity') or {}).get(k) for k in IDENTITY_FIELDS)
+                or intent.get('symbol') != row['symbol'] or intent.get('strategy_id') != row['strategy_id']
+                or intent.get('instrument_id') != binding.get('instrument_id')
+                or intent.get('capability') != binding.get('capability')
+                or PM.position_side(root) != intent.get('position_side', 'BOTH')):
+            raise ValueError('coordinated_risk_owner_receipt_differs')
+        key = (group.get('group_id'), root.get('version_id'), root.get('install_id'),
+               (binding.get('capability') or {}).get('account_scope'))
+        if not all(key):raise ValueError('coordinated_risk_group_identity_missing')
+        if cap.get('account_scope') and key[3] != cap['account_scope']:
+            raise ValueError('coordinated_risk_group_account_differs')
+        groups.add(key)
+        if key != current:continue
+        existing = True
+        if (binding.get('instrument_id') == cap['instrument_id']
+                and PM.position_side(root) in ('LONG', 'SHORT')
+                and PM.position_side(identity) in ('LONG', 'SHORT')
+                and PM.position_side(root) != PM.position_side(identity)
+                and group.get('leg') != identity['coordinated'].get('leg')):
+            siblings.add(row['id'])
+    return (len(groups), frozenset(siblings), existing) if grouped or current is not None else None

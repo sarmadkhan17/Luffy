@@ -139,9 +139,9 @@ def test_entry_recovery_uses_canonical_protection_match(setup, monkeypatch):
     real_match = protective.protection_match
     seen = []
 
-    def match(*args):
+    def match(*args, **kwargs):
         seen.append(args)
-        return real_match(*args)
+        return real_match(*args, **kwargs)
 
     monkeypatch.setattr(protective, "protection_match", match)
     e.recover_entries()

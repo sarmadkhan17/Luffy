@@ -15,7 +15,7 @@ from uuid import uuid4
 from ccxt import InvalidOrder, InsufficientFunds
 
 from ..core.types import Position, Side, norm_symbol
-from . import protective
+from . import protective, position_mode as PM
 
 KEY = "execution_recovery"
 TERMINAL = {"closed", "canceled", "expired", "rejected"}
@@ -32,7 +32,7 @@ class OrderEvidenceMismatch(ValueError):
     pass
 
 
-def exact_order_match(order, *, client_order_id, symbol, side, order_id=None, reduce_only=None):
+def exact_order_match(order, *, client_order_id, symbol, side, order_id=None, reduce_only=None, position_side='BOTH'):
     """Single identity rule shared by entry and partial-exit recovery.
 
     The venue echo must positively carry our client order id and must not
@@ -43,7 +43,10 @@ def exact_order_match(order, *, client_order_id, symbol, side, order_id=None, re
             and (not order_id or str(order.get("id")) == str(order_id))
             and norm_symbol(str(order.get("symbol") or "")) == norm_symbol(symbol)
             and str(order.get("side") or "").lower() == side
-            and (reduce_only is None or order.get("reduceOnly") is reduce_only))
+            and PM.venue_side(order) == position_side
+            and (reduce_only is None or (order.get("reduceOnly") is reduce_only if position_side == 'BOTH'
+                 else side == (('sell' if position_side == 'LONG' else 'buy') if reduce_only
+                               else ('buy' if position_side == 'LONG' else 'sell')))))
 
 
 class EntryRecovery:
@@ -133,7 +136,8 @@ class EntryRecovery:
         side = intent["position"]["side"]
         want_side = ("buy" if side == "long" else "sell") if not close else ("sell" if side == "long" else "buy")
         if not exact_order_match(order, client_order_id=intent[("close_" if close else "")+"client_order_id"],
-                                 symbol=intent["symbol"], side=want_side, order_id=oid):
+                                 symbol=intent["symbol"], side=want_side, order_id=oid,
+                                 position_side=PM.position_side(intent["position"].get("entry_identity") or {})):
             raise OrderEvidenceMismatch("order evidence does not match submitted action")
 
     def submit_close(self, intent, amount):
@@ -144,8 +148,8 @@ class EntryRecovery:
         side = "sell" if intent["position"]["side"] == "long" else "buy"
         try:
             order = self.ex.create_order(intent["symbol"], "market", side, amount,
-                                        params={"reduceOnly": True,
-                                                "newClientOrderId": intent["close_client_order_id"]})
+                                        params=PM.order_params(intent['position'].get('entry_identity') or {}, reduce_only=True,
+                                                               client_id=intent['close_client_order_id']))
         except (InvalidOrder, InsufficientFunds):
             intent.update(phase="entry", force_close=True)
             self.save(intent, "emergency_close_rejected_retry_pending")
@@ -222,6 +226,8 @@ class EntryRecovery:
                     continue
             elif norm_symbol(p["symbol"]) != intent["symbol"]:
                 continue
+            if PM.venue_side(p) != PM.position_side(intent['position'].get('entry_identity') or {}):
+                continue
             amount = float(p["contracts"])
             if not math.isfinite(amount) or amount < 0:
                 raise ValueError("invalid venue quantity")
@@ -230,7 +236,9 @@ class EntryRecovery:
         if not matches:
             # Terminal orders plus a fresh position read, never a momentary flat
             # snapshot while an accepted entry could still fill later.
-            if protective.open_stops(self.ex, intent["symbol"], strict=True):
+            native_side = PM.position_side(intent['position'].get('entry_identity') or {})
+            if any(s.get('position_side', 'BOTH') == native_side
+                   for s in protective.open_stops(self.ex, intent["symbol"], strict=True)):
                 # An ambiguous stop may have been accepted before emergency
                 # flattening. Do not let it accidentally close the next entry.
                 self.save(intent, "flat_with_remaining_protection")
@@ -253,7 +261,9 @@ class EntryRecovery:
             return
         template = intent["position"]
         # Detect conflicting journal ownership before placing any new orders.
-        existing = [t for t in self.journal.open_trades() if t["symbol"] == intent["symbol"]]
+        native_side = PM.position_side(template.get('entry_identity') or {})
+        existing = [t for t in self.journal.open_trades() if t["symbol"] == intent["symbol"]
+                    and PM.position_side(t) == native_side]
         if any(t["id"] != template["id"] for t in existing):
             self.save(intent, "journal_ownership_conflict")
             return
@@ -261,8 +271,11 @@ class EntryRecovery:
         sl = float(template["stop_loss"])
         if not math.isfinite(sl) or sl <= 0:
             raise ValueError("invalid persisted stop")
+        native_side = PM.position_side(template.get('entry_identity') or {})
+        if native_side != 'BOTH':
+            stops = [s for s in stops if s.get('position_side', 'BOTH') == native_side]
         candidates = [s for s in stops if protective.protection_match(
-            self.ex, intent["symbol"], p["side"], amount, sl, s).matches]
+            self.ex, intent["symbol"], p["side"], amount, sl, s, native_side=native_side).matches]
         if not candidates:
             # Existing mismatched protection is preserved for inspection. Do not
             # stack replacement stops against an ambiguous placement attempt.
@@ -279,7 +292,7 @@ class EntryRecovery:
             self.save(intent, "recovery_stop_intent_persisted")
             try:
                 close_side = "sell" if p["side"] == "long" else "buy"
-                protective.place_stop(self.ex, intent["symbol"], close_side, amount, sl)
+                protective.place_stop(self.ex, intent["symbol"], close_side, amount, sl, native_side=native_side)
             except (InvalidOrder, InsufficientFunds):
                 self.submit_close(intent, amount)
                 return

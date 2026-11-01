@@ -80,7 +80,9 @@ def new_plan(trade,root,reason,evidence):
 
 def _positions(executor,trade,plan):
     observation=U._position_observation(executor)
-    actual=next((p for p in observation.positions if p.instrument_id.value==plan['instrument_id'] and p.position_present),None)
+    from .position_mode import position_side
+    actual=next((p for p in observation.positions if p.instrument_id.value==plan['instrument_id']
+                 and p.position_side==position_side(trade) and p.position_present),None)
     if trade['status']=='closed':
         if actual is not None:raise ValueError('versioned_closed_trade_has_venue_exposure')
     elif (actual is None or actual.side!=trade['side']

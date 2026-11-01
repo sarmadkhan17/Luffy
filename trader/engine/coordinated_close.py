@@ -9,14 +9,14 @@ import json
 import math
 import time
 from ccxt import InvalidOrder,InsufficientFunds
-from . import entry_authority as A
+from . import entry_authority as A, position_mode as PM
 from .recovery import exact_order_match,TERMINAL
 
 TABLE='coordinated_reductions'
 VERSIONED_TABLE='versioned_exit_reductions'
 # Both historical and current hash spellings remain bound to the root entry.
 IDENTITY_FIELDS=('status','strategy_id','version_id','spec_hash','spec_sha256','install_id',
-                 'exit_semantics_id','exit_state','hedge_exit_state','coordinated')
+                 'exit_semantics_id','exit_state','hedge_exit_state','coordinated','native_position_side')
 
 
 def ensure(journal):
@@ -48,6 +48,7 @@ def _entry_receipt(executor,trade,identity,binding):
     if (A.digest(intent)!=row['intent_hash']
             or any(identity.get(k)!=original.get(k) for k in IDENTITY_FIELDS)
             or intent.get('symbol')!=trade['symbol'] or intent.get('strategy_id')!=trade['strategy_id']
+            or PM.position_side(identity)!=intent.get('position_side','BOTH')
             or result.get('position_id')!=trade['id'] or row['state']!='TERMINAL'
             or execution_account_scope(executor.ex)!=(binding.get('capability') or {}).get('account_scope')
             or getattr(executor.ex,'id',None)!='binanceusdm'):
@@ -80,7 +81,10 @@ def ensure_versioned(journal):
 
 def _receipt(order):
     """Only order facts needed for exact recovery; never raw private payloads."""
-    return {key:order.get(key) for key in ('id','clientOrderId','symbol','side','type','status','reduceOnly','filled','average','price')}
+    result = {key:order.get(key) for key in ('id','clientOrderId','symbol','side','type','status','reduceOnly','filled','average','price')}
+    if PM.venue_side(order) != 'BOTH':
+        result['positionSide'] = PM.venue_side(order)
+    return result
 
 
 class _Transport:
@@ -107,7 +111,8 @@ class _Transport:
     def _exact(self,order):
         r=self.request
         if not exact_order_match(order,client_order_id=r['client_order_id'],symbol=r['symbol'],side=r['side'],
-                                  order_id=(self.order or {}).get('id'),reduce_only=True):
+                                  order_id=(self.order or {}).get('id'),reduce_only=True,
+                                  position_side=r.get('position_side','BOTH')):
             raise ValueError('coordinated_reduce_order_identity_unknown')
         filled=order.get('filled')
         if (isinstance(filled,bool) or not isinstance(filled,(int,float)) or not math.isfinite(filled)
@@ -125,10 +130,11 @@ class _Transport:
             raise ValueError('coordinated_close_account_changed')
         request_start_ms=int(time.time()*1000)
         observation=None
-        if self.table==VERSIONED_TABLE:
+        if self.table==VERSIONED_TABLE or self.request.get('position_side', 'BOTH') != 'BOTH':
             from .coordinated_unwind import _position_observation
             observation=_position_observation(self.executor)
-            if any(p.instrument_id.value==raw['instrument_id'] and p.position_present for p in observation.positions):
+            if any(p.instrument_id.value==raw['instrument_id'] and p.position_present
+                   and p.position_side==PM.position_side(trade) for p in observation.positions):
                 raise ValueError('versioned_close_flat_position_not_proven')
             positions=[]
             request_start_ms=observation.request_start_ms;observed_ms=observation.response_received_ms
@@ -138,6 +144,7 @@ class _Transport:
         if not isinstance(positions,list):raise ValueError('coordinated_flat_position_unknown')
         for position in positions:
             if norm_symbol(position.get('symbol',''))!=norm_symbol(trade['symbol']):continue
+            if PM.venue_side(position)!=PM.position_side(trade):continue
             market=self.ex.market(position['symbol'])
             if market.get('id')!=raw['record']['instrument_id']['venue_symbol']:
                 raise ValueError('coordinated_close_instrument_changed')
@@ -149,6 +156,8 @@ class _Transport:
             account_scope=raw['account_scope'],instrument_id=raw['instrument_id'],
             request_start_ms=request_start_ms,observed_ms=observed_ms,flat=True,quantity=0.,
             source='fresh complete venue position read')
+        if PM.position_side(trade) != 'BOTH':
+            self.flat_evidence['position_side'] = PM.position_side(trade)
         if observation is not None:self.flat_evidence['observation_id']=observation.observation_id
         # Retain the actual flat observation before booking. A crash after the
         # booking must not erase it or substitute a later reused instrument.
@@ -161,9 +170,20 @@ class _Transport:
     def create_order(self,symbol,type_,side,amount,params=None):
         r=self.request
         if (symbol!=r['symbol'] or side!=r['side'] or type_!='market' or amount!=r['quantity']
-                or (params or {}).get('reduceOnly') is not True):
+                or (params or {}) != PM.order_params(dict(native_position_side=r.get('position_side','BOTH')), reduce_only=True)):
             raise ValueError('coordinated_reduce_request_differs')
         if self.state=='RESERVED':
+            if r.get('position_side', 'BOTH') != 'BOTH':
+                # Unlike netting reduceOnly, native hedge orders must omit
+                # that field. Verify the held side and bound the requested
+                # reduction by its current quantity before a first send.
+                from .coordinated_unwind import _position_observation
+                obs = _position_observation(self.executor)
+                matches = [p for p in obs.positions if p.instrument_id.value == r['instrument_id']
+                           and p.position_side == r['position_side'] and p.position_present]
+                if (len(matches) != 1 or matches[0].side != r['position_side'].lower()
+                        or r['quantity'] > matches[0].absolute_quantity):
+                    raise ValueError('coordinated_native_reduction_exceeds_owned_side')
             # CAS before the call. Another process can inspect or recover,
             # but it cannot submit this logical reduction a second time.
             with self.journal._tx() as db:
@@ -174,7 +194,8 @@ class _Transport:
                 self.state='ATTEMPTED'
                 try:
                     order=self.ex.create_order(symbol,type_,side,amount,
-                        params={'reduceOnly':True,'newClientOrderId':r['client_order_id']})
+                        params=PM.order_params(dict(native_position_side=r.get('position_side','BOTH')), reduce_only=True,
+                                               client_id=r['client_order_id']))
                 except (InvalidOrder,InsufficientFunds) as exc:
                     self._save('REFUSED',result=dict(reason=type(exc).__name__,submission='DEFINITIVELY_REFUSED'))
                     raise
@@ -243,7 +264,9 @@ def _close_owned(executor,trade_id,group_id,logical_id,*,price_hint=0.,reason='c
                     symbol=trade['symbol'],side='sell' if trade['side']=='long' else 'buy',quantity=quantity,
                     before_quantity=float(trade['amount']),client_order_id=('lc_' if table==TABLE else 'lv_')+A.digest(logical_id)[:28],
                     created_ms=int(time.time()*1000),reason=reason)
-                if table==VERSIONED_TABLE:
+                if PM.position_side(trade) != 'BOTH':
+                    request['position_side'] = PM.position_side(trade)
+                if table==VERSIONED_TABLE or PM.position_side(trade) != 'BOTH':
                     request['instrument_id']=json.loads(trade['entry_identity_json'])['execution_binding']['instrument_id']
                 if exit_decision is not None:request['strategy_exit_decision']=exit_decision
                 db.execute('INSERT INTO '+table+' VALUES(?,?,?,?,?,?,?)',
@@ -319,6 +342,7 @@ def retained_terminal_flat(journal,trade_id,group_id,order_id):
         if str(order.get('id'))!=str(order_id):continue
         if not proof or proof.get('schema')!='coordinated-terminal-flat.v1':return None
         if (request['logical_id']!=row['logical_id'] or request['trade_id']!=trade_id or request['group_id']!=group_id
+                or proof.get('position_side','BOTH')!=request.get('position_side','BOTH')
                 or proof.get('logical_id')!=row['logical_id'] or proof.get('trade_id')!=trade_id
                 or str(proof.get('order_id'))!=str(order_id) or proof.get('symbol')!=request['symbol']):
             raise ValueError('coordinated_terminal_flat_receipt_differs')

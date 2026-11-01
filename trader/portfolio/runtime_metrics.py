@@ -25,7 +25,9 @@ def positions(raw, book):
     result = []
     for v in book['positions']:
         symbol = v['instrument_id'].split(':')[-1]
-        matches = [p for p in raw if norm_symbol(p['symbol']).replace('/', '') == symbol]
+        from trader.engine.position_mode import position_side
+        matches = [p for p in raw if norm_symbol(p['symbol']).replace('/', '') == symbol
+                   and position_side(p) == v.get('position_side', 'BOTH')]
         if len(matches) != 1:
             raise ValueError('RISK_BOOK_NOT_RECONCILED')
         p = matches[0]
@@ -46,7 +48,7 @@ def positions(raw, book):
 
 
 def capture(*, snapshot, account_margin, journal_positions, risk_kv, config, as_of_ms, closed_count,
-            risk_assessment=None, entry_contexts=(), account_observation=None):
+            risk_assessment=None, entry_contexts=(), account_observation=None, economic_group_requests=None):
     """Caller freezes these in one journal read transaction, not from chat/artifacts."""
     from trader.engine.evidence_capture import verify_snapshot
     if verify_snapshot(snapshot) is None:
@@ -59,6 +61,9 @@ def capture(*, snapshot, account_margin, journal_positions, risk_kv, config, as_
         risk_assessment=risk_assessment, entry_contexts=list(entry_contexts),
         source_hashes={k: digest(v) for k,v in dict(venue=snapshot, account_margin=account_margin,
             journal_positions=journal_positions, risk_state=risk_kv, risk_assessment=risk_assessment, account_observation=account_observation).items()})
+    if economic_group_requests is not None:
+        raw['economic_group_requests'] = list(economic_group_requests)
+        raw['source_hashes']['economic_group_requests'] = digest(raw['economic_group_requests'])
     return Source.freeze(SOURCE_ID, raw)
 
 
@@ -86,6 +91,8 @@ def _project(source, venue_source, policy_source, as_of_ms):
     expected = {k: digest(v) for k,v in dict(venue=venue, account_margin=raw['account_margin'],
         journal_positions=raw['journal_positions'], risk_state=raw['risk_kv'],
         risk_assessment=raw['risk_assessment'], account_observation=raw.get('account_observation')).items()}
+    if 'economic_group_requests' in raw:
+        expected['economic_group_requests'] = digest(raw['economic_group_requests'])
     if raw['source_hashes'] != expected:
         raise ValueError('METRIC_SOURCE_HASH_DIFFERS')
     metrics = {}
@@ -99,11 +106,29 @@ def _project(source, venue_source, policy_source, as_of_ms):
                 'VENUE_MARK_PRICE_TIMES_QUANTITY','CURRENT_MARKED_USDT') else observed),
             freshness='CURRENT' if value is not None else 'UNAVAILABLE',
             completeness='COMPLETE' if value is not None else 'UNAVAILABLE')
-    add('open_position_count', len(venue['positions']), 'COMPLETE_VENUE_BOOK')
+    count = len(venue['positions'])
+    basis = 'COMPLETE_VENUE_BOOK'
+    if 'economic_group_requests' in raw:
+        from types import SimpleNamespace
+        from trader.engine.coordinated_authority import risk_book
+        positions(raw['journal_positions'], venue)
+        requests = raw['economic_group_requests']
+        reader = SimpleNamespace(query=lambda sql, params:[r for r in requests if r['logical_id'] == params[0]])
+        if not venue.get('account_scope'):
+            raise ValueError('ECONOMIC_BOOK_ACCOUNT_SCOPE_UNAVAILABLE')
+        measured = risk_book(reader, raw['journal_positions'], None, {'account_scope':venue['account_scope']})
+        if measured is not None:
+            count = measured[0]; basis = 'VERIFIED_ECONOMIC_GROUPS_IN_COMPLETE_VENUE_BOOK'
+    add('open_leg_count', len(venue['positions']), 'COMPLETE_VENUE_BOOK')
+    add('open_position_count', count, basis, observed=venue['observed_at_ms'])
     exposure = {}
     for p in venue['positions']:
         price = number(p.get('mark_price_text'))
-        exposure[p['instrument_id']] = str(Decimal(str(p['quantity'])) * price) if price is not None and price > 0 else None
+        iid = p['instrument_id']
+        if price is None or price <= 0 or iid in exposure and exposure[iid] is None:
+            exposure[iid] = None
+        else:
+            exposure[iid] = str(Decimal(exposure.get(iid, '0')) + Decimal(str(p['quantity'])) * price)
     add('per_instrument_exposure', exposure, 'VENUE_MARK_PRICE_TIMES_QUANTITY',
         'CURRENT_MARK_UNAVAILABLE' if any(v is None for v in exposure.values()) else None)
     metrics['per_instrument_exposure']['components'] = {

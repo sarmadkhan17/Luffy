@@ -39,10 +39,12 @@ def test_integrated_runtime_still_requires_the_exact_coordinated_caller():
     assert F.multi_leg_block(version())=='multi_leg_requires_coordinated_execution'
 
 
-def test_integrated_caller_checks_real_validation_before_install_or_entry(tmp_path,monkeypatch):
+@pytest.mark.parametrize('mode', ['netting', 'hedge'])
+def test_integrated_caller_checks_real_validation_before_install_or_entry(tmp_path,monkeypatch,mode):
     from trader.core.journal import Journal
     j=Journal(tmp_path/'unqualified.db');F.ensure(j)
     v=version()
+    v['lineage']['research']['multi_leg']['hedge_spec']['account_mode']=mode
     monkeypatch.setattr(F,'load_version',lambda *a:v)
     # Keep the real receipt verifier: a supported contract is not admission.
     with pytest.raises(F.HandoffRefused,match='validation_receipt_missing'):
@@ -110,7 +112,7 @@ def test_development_only_and_unsupported_modes_never_gain_scope(tmp_path,monkey
     v['source']['kind']=F.HEDGE_HQ_KIND
     for key in ('account_mode','inverse','same_symbol','missing_stop'):
         bad=deepcopy(v);h=bad['lineage']['research']['multi_leg']['hedge_spec']
-        if key=='account_mode':h['account_mode']='hedge'
+        if key=='account_mode':h['account_mode']='unsupported'
         elif key=='inverse':h['hedge']['contract']='inverse'
         elif key=='same_symbol':h['hedge']['symbol']=h['primary']['symbol']
         else:h['management'].pop('hedge_stop')

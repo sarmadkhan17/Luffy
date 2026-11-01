@@ -298,9 +298,20 @@ def test_all_live_order_callers_have_classified_boundaries():
             found.add(path.as_posix())
             if path.as_posix().startswith('trader/engine/') and path.name!='entry_authority.py':
                 params=next((k.value for k in node.keywords if k.arg=='params'),None)
-                assert isinstance(params,ast.Dict),str(path)
-                values={getattr(k,'value',None):getattr(v,'value',None) for k,v in zip(params.keys,params.values)}
-                assert values.get('reduceOnly') is True,str(path)
+                if isinstance(params, ast.Call):
+                    # Audited side-aware reductions omit Binance's prohibited
+                    # reduceOnly field in hedge mode and name the held side.
+                    helper = (isinstance(params.func, ast.Name) and params.func.id == 'order_params'
+                              or isinstance(params.func, ast.Attribute)
+                              and isinstance(params.func.value, ast.Name)
+                              and params.func.value.id == 'PM' and params.func.attr == 'order_params')
+                    assert helper, str(path)
+                    reduced = next((k.value for k in params.keywords if k.arg == 'reduce_only'), None)
+                    assert isinstance(reduced, ast.Constant) and reduced.value is True, str(path)
+                else:
+                    assert isinstance(params,ast.Dict),str(path)
+                    values={getattr(k,'value',None):getattr(v,'value',None) for k,v in zip(params.keys,params.values)}
+                    assert values.get('reduceOnly') is True,str(path)
     assert found==expected
 
 

@@ -35,6 +35,7 @@ from decimal import Decimal, InvalidOperation
 MARGIN_SCHEMA = "account-margin-observation.v1"
 MARGIN_KV = "account_margin_observation"
 SNAPSHOT_SCHEMA = "venue-position-snapshot.v1"
+HEDGE_SNAPSHOT_SCHEMA = "venue-position-snapshot.hedge.v1"
 SNAPSHOT_KV = "venue_position_snapshot"
 SNAPSHOT_TABLE = "venue_position_snapshots"
 
@@ -155,14 +156,14 @@ def verify_margin(rec) -> dict | None:
 # ── venue position snapshot, from the reconciliation read ───────────────
 def _observation_dict(obs) -> dict:
     """`portfolio.observation.v1` as plain values, id unchanged."""
+    from ..observability.portfolio_observation import record_payload
     return {"schema": obs.schema, "venue": obs.venue, "source": obs.source,
             "environment": obs.environment, "source_ref": obs.source_ref,
             "market_type": getattr(obs.market_type, "value", obs.market_type),
             "request_start_ms": obs.request_start_ms,
             "response_received_ms": obs.response_received_ms,
             "as_of_ms": obs.as_of_ms, "complete": obs.complete,
-            "positions": [[p.instrument_id.value, p.position_present, p.side,
-                           p.absolute_quantity] for p in obs.positions],
+            "positions": [record_payload(p) for p in obs.positions],
             "observation_id": obs.observation_id}
 
 
@@ -181,15 +182,17 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
     if _sha(canonical(_observation_payload(obs))) != obs["observation_id"]:
         raise ValueError("observation identity does not verify")
     coin=obs['venue']=='binancecoinm'
-    if coin:
+    hedge = obs['schema'] == 'portfolio.observation.hedge.v1'
+    if coin or hedge:
         from ..observability.portfolio_observation import observe_positions
         from ..core.types import MarketType
-        rebuilt=observe_positions(rows,exchange_id='binancecoinm',market_type=MarketType.FUTURES,
+        rebuilt=observe_positions(rows,exchange_id='binancecoinm' if coin else 'binanceusdm',market_type=MarketType.FUTURES,
             environment=obs['environment'],source_ref=obs['source_ref'],
             request_start_ms=obs['request_start_ms'],response_received_ms=obs['response_received_ms'])
         if rebuilt.observation_id!=obs['observation_id']:
             raise ValueError('native position rows differ from observation')
-        snapshot_storage_key(dict(venue='binancecoinm',account_scope=account_scope))
+        if coin:
+            snapshot_storage_key(dict(venue='binancecoinm',account_scope=account_scope))
     entry = {}
     marks = {}
     contracts={}
@@ -197,20 +200,30 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
         info = row.get("info") if isinstance(row, dict) else None
         if isinstance(info, dict) and isinstance(info.get("symbol"), str):
             iid=f"{obs['venue']}:futures:{info['symbol']}"
-            entry[iid] = _venue_decimal(info.get("entryPrice"))
-            marks[iid] = _venue_decimal(info.get("markPrice"))
+            key = (iid, info.get('positionSide', 'BOTH'))
+            entry[key] = _venue_decimal(info.get("entryPrice"))
+            marks[key] = _venue_decimal(info.get("markPrice"))
             if coin:
                 from ..observability.portfolio_observation import coin_position_identity
                 _,base=coin_position_identity(row)
                 contracts[iid]=dict(quantity_unit='contracts',contract_kind='inverse',
                     contract_size_text=_venue_decimal(row['contractSize']),settlement_asset=base,
                     contract_size_basis='ccxt resolved market contractSize')
-    positions = [{"instrument_id": iid, "symbol": iid.split(":")[-1], "side": side,
-                  "quantity": qty, "entry_price_text": entry.get(iid),
-                  "entry_price_basis": "venue positionRisk entryPrice (via ccxt info)"
-                  if entry.get(iid) is not None else "not present in the response row"}
-                 for iid, present, side, qty in obs["positions"] if present]
-    body = {"schema": SNAPSHOT_SCHEMA, "venue": obs["venue"],
+    positions = []
+    for record in obs['positions']:
+        iid, present, side, qty = record[:4]
+        if not present:
+            continue
+        position_side = record[4] if len(record) == 5 else 'BOTH'
+        key = (iid, position_side)
+        position = dict(instrument_id=iid, symbol=iid.split(':')[-1], side=side,
+                        quantity=qty, entry_price_text=entry.get(key),
+                        entry_price_basis='venue positionRisk entryPrice (via ccxt info)'
+                        if entry.get(key) is not None else 'not present in the response row')
+        if position_side != 'BOTH':
+            position['position_side'] = position_side
+        positions.append(position)
+    body = {"schema": HEDGE_SNAPSHOT_SCHEMA if hedge else SNAPSHOT_SCHEMA, "venue": obs["venue"],
             "market_type": obs["market_type"], "environment": obs["environment"],
             "observed_at_ms": obs["as_of_ms"],
             "received_at_ms": obs["response_received_ms"],
@@ -222,7 +235,7 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
             "basis": "venue position response; not the journal",
             "positions": positions, "observation": obs}
     for position in positions:
-        position['mark_price_text'] = marks.get(position['instrument_id'])
+        position['mark_price_text'] = marks.get((position['instrument_id'], position.get('position_side', 'BOTH')))
         if coin:position.update(contracts[position['instrument_id']])
     if account_scope is not None:
         body["account_scope"] = account_scope
@@ -231,7 +244,7 @@ def position_snapshot(observation, rows, *, account_scope=None) -> dict:
 
 def verify_snapshot(snap) -> dict | None:
     """The snapshot if its id and its embedded observation id both verify."""
-    if not isinstance(snap, dict) or snap.get("schema") != SNAPSHOT_SCHEMA:
+    if not isinstance(snap, dict) or snap.get("schema") not in (SNAPSHOT_SCHEMA, HEDGE_SNAPSHOT_SCHEMA):
         return None
     try:
         body = {k: v for k, v in snap.items() if k != "snapshot_id"}

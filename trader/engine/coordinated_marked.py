@@ -38,6 +38,11 @@ def assess(source, *, now_ms):
         raise ValueError('coordinated_marked_maintenance_missing')
     first_confirmed=root['capture']['bookings']['receipts'][0]['observed_ms']
     exact=None;intervals=[];net=0.;gross=0.;marks=[]
+    native = any(p['capture'].get('schema_version') == T.HEDGE_LEG_VERSION for p in parts)
+    native_result = None
+    if native:
+        from .coordinated_cashflows import native_group
+        native_result = native_group(parts, members, source['group_id'])
     for member in members:
         part=by_id[member['trade_id']];capture=part['capture'];identity=part['identity']
         current=entry_binding(part,member,source['group_id'])
@@ -48,10 +53,12 @@ def assess(source, *, now_ms):
         if any(actual.get(k)!=group.get(k) for k in ('allocated_equity_usdt','management_policy','maintenance_fraction')):
             raise ValueError('coordinated_marked_policy_differs')
         result=T.replay(capture)
-        closed=(capture['bookings']['trade']['status']=='closed' and capture['schema_version']==T.INTERVAL_VERSION
-                and result['status']=='complete_as_of_venue_history')
-        claim_interval(intervals,member,capture,'coordinated_marked_shared_instrument_unsupported')
-        if not closed and result['status']!='marked_as_of_venue_history':
+        closed=(capture['bookings']['trade']['status']=='closed' and
+                (result.get('leg_verified') is True if native else capture['schema_version']==T.INTERVAL_VERSION
+                 and result['status']=='complete_as_of_venue_history'))
+        if not native:
+            claim_interval(intervals,member,capture,'coordinated_marked_shared_instrument_unsupported')
+        if not closed and not (result.get('leg_verified') is True if native else result['status']=='marked_as_of_venue_history'):
             raise ValueError('coordinated_marked_component_incomplete')
         observed=capture['captured_ms'] if closed else result['mark_observed_ms']
         if (type(now_ms) is not int or not capture['captured_ms']<=now_ms
@@ -61,9 +68,12 @@ def assess(source, *, now_ms):
             raise ValueError('coordinated_marked_primary_not_first')
         if member['leg']=='hedge' and capture['bookings']['trade']['side']==root['capture']['bookings']['trade']['side']:
             raise ValueError('coordinated_marked_protection_direction_differs')
-        net+=result['net_trade_pnl_usdt'] if closed else result['marked_net_pnl_usdt']
+        if not native:
+            net+=result['net_trade_pnl_usdt'] if closed else result['marked_net_pnl_usdt']
         gross+=0. if closed else result['marked_notional_usdt']
         if not closed:marks.append(observed)
+    if native:
+        net = native_result['net_pnl_usdt']
     equity=capital+net
     decision=M.assess(policy,entry_equity=capital,equity=equity,gross=gross,maintenance_fraction=maintenance)
     if root['capture']['bookings']['trade']['status']=='closed' and any(

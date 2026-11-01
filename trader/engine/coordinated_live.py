@@ -203,12 +203,13 @@ class LiveBooks:
                                            "AND state NOT IN ('BOOKED','REFUSED') LIMIT 1",(gid,))):
                 raise ValueError('coordinated_live_hedge_closure_reduction_unresolved')
             obs=U._position_observation(self.executor)
-            positions={p.instrument_id.value:p for p in obs.positions if p.position_present}
+            positions={U._member_key(dict(instrument_id=p.instrument_id.value, position_side=p.position_side)):p
+                       for p in obs.positions if p.position_present}
             hm=[m for m in members if m['leg']=='hedge']
-            if any(m['instrument_id'] in positions for m in hm):
+            if any(U._member_key(m) in positions for m in hm):
                 raise ValueError('coordinated_live_closed_hedge_has_venue_residual')
             pm=next(m for m in members if m['trade_id']==primary[0]['id'])
-            actual=positions.get(pm['instrument_id']);qty=float(primary[0]['amount'])
+            actual=positions.get(U._member_key(pm));qty=float(primary[0]['amount'])
             if (actual is None or actual.side!=primary[0]['side']
                     or not math.isclose(actual.absolute_quantity,qty,rel_tol=1e-9,abs_tol=1e-12)
                     or (before['book']['pos']['primary']>0)!=(actual.side=='long')

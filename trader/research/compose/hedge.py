@@ -34,10 +34,10 @@ BOOK_EXIT_CONTRACT=dict(version='coordinated-book-exits.v5',primary_rule=PRIMARY
 BOOK_EXIT_SEMANTICS_ID=BOOK_EXIT_CONTRACT['version']+':'+digest(BOOK_EXIT_CONTRACT)
 PURPOSES = ('protective_beta', 'protective_directional', 'stress_loss', 'relative_value')
 RUNTIME_SUPPORT = dict(
-    account_modes_in_executor=['netting(positionSide=BOTH)'], contracts_in_executor=['linear USDT-M'],
-    multi_leg_orders=True, coin_m=False, hedge_mode=False, same_instrument=False,
+    account_modes_in_executor=['netting(positionSide=BOTH)', 'hedge(positionSide=LONG/SHORT)'], contracts_in_executor=['linear USDT-M'],
+    multi_leg_orders=True, coin_m=False, hedge_mode=True, same_instrument=True,
     owned_delta_reductions=True, owned_delta_increases=True, whole_group_unwind=True,
-    note='coordinated primary/conditional hedge entry, owned deltas, combined venue valuation and group close exist for distinct linear USDT instruments in netting mode; qualification and current owner/Risk authority remain separate')
+    note='linear USDT netting and native-side hedge books support conditional hedge entry, owned deltas, separate stops, combined actual cashflows and whole-position close; current account mode, qualification, installation and owner/Risk authority remain required')
 
 
 def execution_support_block(spec: dict) -> str | None:
@@ -45,11 +45,16 @@ def execution_support_block(spec: dict) -> str | None:
 
     This predicate checks no venue or owner state and grants no authority.
     """
-    if (spec.get('account_mode') != 'netting'
-            or spec['primary']['symbol'] == spec['hedge']['symbol']
+    mode = spec.get('account_mode')
+    same = spec['primary']['symbol'] == spec['hedge']['symbol']
+    if (mode not in ('netting', 'hedge')
+            or mode == 'hedge' and RUNTIME_SUPPORT.get('hedge_mode') is not True
+            or same and (mode != 'hedge' or RUNTIME_SUPPORT.get('same_instrument') is not True)
             or any(spec[leg].get('contract', 'linear') != 'linear' for leg in ('primary', 'hedge'))):
         return 'coordinated_account_or_contract_unsupported'
     from . import managed_hedge as M
+    if same and M.is_pair(spec.get('management')):
+        return 'coordinated_same_instrument_pair_unsupported'
     try:
         M.execution_policy(spec)
     except (ValueError, TypeError, KeyError):
@@ -71,6 +76,10 @@ def deployment_contract(spec: dict, verified: dict | None = None) -> dict:
     mode = 'netting(positionSide=BOTH)' if spec['account_mode'] == 'netting' else 'hedge(positionSide=LONG/SHORT)'
     if mode not in v['account_modes_in_executor']:
         reasons.append(f'account_mode_unverified: {mode}')
+    if spec['account_mode'] == 'hedge' and not v.get('hedge_mode'):
+        reasons.append('hedge_mode_not_available_in_runtime_record')
+    if spec['primary']['symbol'] == spec['hedge']['symbol'] and not v.get('same_instrument'):
+        reasons.append('same_instrument_not_available_in_runtime_record')
     for leg in ('primary', 'hedge'):
         kind = 'linear USDT-M' if spec[leg].get('contract', 'linear') == 'linear' else 'inverse COIN-M'
         if kind not in v['contracts_in_executor']:

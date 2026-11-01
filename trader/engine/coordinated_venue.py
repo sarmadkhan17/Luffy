@@ -2,7 +2,7 @@
 
 The caller must durably retain the book and its pending instruction until an
 actual terminal receipt is adopted. This module never fabricates a fill or
-advances the model. Runtime admission stays disabled until that caller is wired.
+advances the model. Current mode, qualification and Risk are checked separately.
 """
 from dataclasses import asdict,is_dataclass
 import json
@@ -10,7 +10,7 @@ import math
 import time
 
 from . import entry_authority as A,coordinated_authority as CA
-from . import coordinated_close as C,coordinated_unwind as U
+from . import coordinated_close as C,coordinated_unwind as U,position_mode as PM
 from ..core.types import Action,Decision,now_utc
 from ..research.compose import hedge as H
 from ..strategy import factory_handoff as F,exit_policy as E
@@ -78,6 +78,7 @@ def _reduction(executor,book,ins,action_id,gid,vid):
     from .executor import quantize
     if (saved['group_id']!=gid or request['logical_id']!=action_id or request['trade_id']!=trade['id']
             or request['group_id']!=gid or request['symbol']!=trade['symbol']
+            or request.get('position_side','BOTH')!=ins.position_side
             or request['side']!=('buy' if ins.side>0 else 'sell') or request['reason']!=ins.reason
             or request['quantity']!=quantize(executor.ex,trade['symbol'],ins.qty)
             or request['before_quantity']!=abs(book.pos[ins.leg]) or owner['leg']!=ins.leg
@@ -120,6 +121,10 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
     with executor._entry_lock:
         version=F.load_version(executor.journal,vid)
         hs=version['lineage']['research']['multi_leg']['hedge_spec']
+        held_sign = book.direction * (1 if ins.leg == 'primary' else -1)
+        native_side = 'BOTH' if hs['account_mode'] == 'netting' else ('LONG' if held_sign > 0 else 'SHORT')
+        if ins.position_side != native_side:
+            raise ValueError('coordinated_instruction_native_side_differs')
         if book.spec!=hs or book.primary_exit_definition!=version['spec']['exit']:
             raise ValueError('coordinated_book_version_differs')
         if (group.get('management_policy')!=hs.get('management')
@@ -167,7 +172,12 @@ def dispatch(executor,book,instruction,*,identity,reference,atr):
         if U.active(executor.journal,gid):raise ValueError('coordinated_group_unwind_started')
         if executor.recovery_pending():return dict(action_id=action_id,status='ENTRY_RECOVERY_PENDING',filled_quantity=None)
         with CA.execution_scope(executor.journal,executor.cfg,vid,group_id=gid,leg=ins.leg,action_id=action_id):
-            if ins.position_side!='BOTH':raise ValueError('coordinated_position_side_unsupported')
+            if native_side != 'BOTH':
+                mode = PM.observe(executor.ex)
+                if mode['hedged'] is not True:
+                    raise ValueError('coordinated_hedge_account_mode_required')
+                PM.verify(mode, mode['account_scope'], hedged=True)
+                identity.update(native_position_side=native_side, position_mode=mode)
             if ins.leg=='primary' and not row and rows:
                 raise ValueError('coordinated_primary_group_cannot_reopen')
             if ins.leg=='primary' and not row and (ins.kind!='ENTER' or ins.reason!='signal' or ins.side!=book.direction):

@@ -210,10 +210,15 @@ def _plain_position(p: dict) -> dict:
     update = info.get("updateTime", p.get("timestamp"))
     # passed through as the venue sent it (str/int only); the evaluator decides
     # validity — nothing here turns a malformed value into evidence
-    return {"symbol": p.get("symbol"), "side": p.get("side"),
-            "contracts": p.get("contracts"), "entryPrice": p.get("entryPrice"),
-            "updateTime": update if isinstance(update, (str, int))
-            and not isinstance(update, bool) else None}
+    result = {"symbol": p.get("symbol"), "side": p.get("side"),
+              "contracts": p.get("contracts"), "entryPrice": p.get("entryPrice"),
+              "updateTime": update if isinstance(update, (str, int))
+              and not isinstance(update, bool) else None}
+    if 'positionSide' in info and info['positionSide'] != 'BOTH':
+        result['positionSide'] = info['positionSide']
+    if p.get('hedged') is not False and 'hedged' in p:
+        result['hedged'] = p['hedged']
+    return result
 
 
 def _plain_order(o: dict) -> dict:

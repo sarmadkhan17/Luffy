@@ -256,7 +256,8 @@ def authoritative_inputs(journal, cap):
             recorded = json.loads(row.get('entry_identity_json') or '{}')
             binding = recorded.get('execution_binding') or {}
             if (binding.get('instrument_id') == v['instrument_id']
-                    and binding.get('capability', {}).get('account_scope') == cap['account_scope']):
+                    and binding.get('capability', {}).get('account_scope') == cap['account_scope']
+                    and binding.get('position_side', 'BOTH') == v.get('position_side', 'BOTH')):
                 matches.append(row)
         if (len(matches) != 1 or matches[0]['side'] != v['side']
                 or positive(matches[0]['amount']) != positive(v['quantity'])):
@@ -310,11 +311,16 @@ def intent(decision, requested, atr, stop, target, strategy_id, identity, refere
                     or (identity or {}).get('version_id') != lineage['version_id']
                     or (identity or {}).get('spec_hash') != lineage['spec_hash']):
         raise ValueError('trade_intent_lineage_mismatch')
-    return dict(schema='execution-intent.v1', logical_id=trade_intent.intent_id if trade_intent else decision.id, decision_id=decision.id,
+    from .position_mode import intent_side
+    native_side = intent_side(identity, direction, cap['account_scope'])
+    raw = dict(schema='execution-intent.v1', logical_id=trade_intent.intent_id if trade_intent else decision.id, decision_id=decision.id,
                 cycle_id=decision.cycle_id, strategy_id=strategy_id, strategy_identity=identity,
                 symbol=decision.symbol, instrument_id=cap['instrument_id'], capability=cap,
                 direction=direction, requested=exact_number(qty), atr=exact_number(atr), stop=exact_number(stop),
                 target=exact_number(target, zero=True), reference=reference, trade_intent=lineage)
+    if native_side != 'BOTH':
+        raw['position_side'] = native_side
+    return raw
 
 
 def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, identity=None, reference=None, trade_intent=None, increase_trade_id=None):
@@ -354,11 +360,15 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
             if positive(target,zero=True) != positive(adjustment['before']['take_profit'],zero=True):
                 raise ValueError('increase_target_must_preserve_existing_geometry')
         validate_identity(manager.journal,strategy_id,identity,decision.symbol,requested=requested,reference=reference)
+        from .coordinated_authority import risk_book
+        risk_rows = [r for r in positions if not adjustment or r['id'] != adjustment['trade_id']]
+        economic_book = risk_book(manager.journal, risk_rows, identity, cap)
+        sibling_ids = economic_book[1] if economic_book is not None else frozenset()
         for row in positions:
             if adjustment and row['id'] == adjustment['trade_id']:
                 continue
             binding = json.loads(row.get('entry_identity_json') or '{}').get('execution_binding', {})
-            if binding.get('instrument_id') == cap['instrument_id']:
+            if binding.get('instrument_id') == cap['instrument_id'] and row['id'] not in sibling_ids:
                 raise ValueError('risk_entry_refused:already_exposed_canonical_instrument')
         from ..core.types import Position, Side
         held = []
@@ -385,7 +395,8 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
             sizing_distance = max(sizing_distance, abs(old_entry-float(positive(stop))))
         result = manager.check_entry(state, decision.symbol, sizing_price, float(positive(atr)),
                     sizing_distance/sizing_price, held, view['equity'],
-                    int(manager.journal.query("SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]['n']), 'futures')
+                    int(manager.journal.query("SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]['n']), 'futures',
+                    **({'economic_book':economic_book} if economic_book is not None else {}))
         if not result.ok:
             raise ValueError('risk_entry_refused:' + result.reason)
         # The approved per-version allocation is a share of the size Risk
@@ -569,6 +580,8 @@ def submit(executor, permission, decision, amount, atr, stop, target,
                 raise ValueError('increase_requires_existing_position_id')
             binding = {k:raw[k] for k in ('logical_id','instrument_id','capability',
                        'risk_policy_id','account_id','book_id','strategy_identity','trade_intent')}
+            if 'position_side' in raw:
+                binding['position_side'] = raw['position_side']
             position = replace(position, entry_identity=dict(identity or {}, execution_binding=binding))
             client_id = 'lr_' + hashlib.sha256(logical_id.encode()).hexdigest()[:28]
             conn.execute('INSERT INTO execution_requests(logical_id,decision_id,intent_hash,intent_json,client_order_id,state) VALUES (?,?,?,?,?,?)',
@@ -593,9 +606,10 @@ def submit(executor, permission, decision, amount, atr, stop, target,
                 if factory_handoff.live_entry_block(executor.journal, strategy_id, cfg=getattr(executor, "cfg", None)):
                     raise ValueError('version_not_live_authorized')
                 try:
+                    from .position_mode import order_params
                     order = executor.ex.create_order(decision.symbol, 'market',
                         'buy' if decision.action == Action.BUY else 'sell', amount,
-                        params={'reduceOnly':False, 'newClientOrderId':client_id})
+                        params=order_params(position.entry_identity, reduce_only=False, client_id=client_id))
                 except Exception as exc:
                     error = exc
                     if isinstance(exc, (InvalidOrder, InsufficientFunds)):

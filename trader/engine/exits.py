@@ -297,8 +297,10 @@ class ExitEngine:
         # This way the worst case is two reduceOnly stops of the same size,
         # and the loser is cancelled immediately below.
         try:
+            from .position_mode import position_side
+            native = position_side(trade)
             new_oid = protective.place_stop(self.ex, sym, close_side,
-                                            amount, new_sl)
+                                            amount, new_sl, **({'native_side':native} if native != 'BOTH' else {}))
         except Exception as e:
             log.error(f"stop move failed {sym}: {e} — keeping the existing "
                       f"stop at {trade.get('stop_loss')}")

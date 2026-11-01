@@ -491,6 +491,7 @@ def semantic(role, value, reg):
             raise ValueError('funding_evidence_not_verified')
     elif role == 'portfolio':
         from trader.engine.evidence_capture import verify_snapshot
+        from trader.observability.portfolio_observation import projected_positions
         if verify_snapshot(value) is None or value['completeness'] != 'COMPLETE':
             raise ValueError('exact_venue_portfolio_unavailable_journal_not_truth')
         obs = value['observation']
@@ -498,7 +499,7 @@ def semantic(role, value, reg):
             raise ValueError('venue_portfolio_projection_differs')
         if value['observed_at_ms'] > reg['decision_ms'] or value['received_at_ms'] > reg['decision_ms']:
             raise ValueError('future_portfolio')
-        if [(p['instrument_id'], p['side'], p['quantity']) for p in value['positions']] != [(iid, side, qty) for iid, present, side, qty in obs['positions'] if present]:
+        if [(p['instrument_id'], p['side'], p['quantity'], p.get('position_side', 'BOTH')) for p in value['positions']] != projected_positions(obs):
             raise ValueError('venue_portfolio_projection_differs')
     elif role == 'control':
         if value.get('state') not in ('ACTIVE','FROZEN','HALTED') or value.get('version') != L.digest(value['record']) or value.get('state') != value['record'].get('state'):

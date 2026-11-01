@@ -81,7 +81,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..core.types import norm_symbol
-from . import protective
+from . import protective, position_mode as PM
 from . import recovery as entry_recovery
 from .reconcile import REARM_KEY
 
@@ -163,7 +163,7 @@ class JournalReads:
             conn.execute("BEGIN")
             trades = [dict(r) for r in conn.execute(
                 "SELECT id, symbol, side, amount, stop_loss, sl_order_id, market_type, "
-                "opened_at FROM trades WHERE status='open' ORDER BY id")]
+                "opened_at, entry_identity_json FROM trades WHERE status='open' ORDER BY id")]
             marks = ",".join("?" * len(JOURNAL_KEYS))
             kv = {r["key"]: r["value"] for r in conn.execute(
                 f"SELECT key, value FROM state_kv WHERE key IN ({marks})", JOURNAL_KEYS)}
@@ -300,12 +300,21 @@ def _positions(rows) -> tuple[dict, bool, list]:
     out: dict[str, dict] = {}
     ident: list = []
     contradictory = False
+    modes = {}
     for p in rows:
+        native = PM.venue_side(p)
+        symbol = norm_symbol(p['symbol'])
+        if symbol in modes and modes[symbol] != (native != 'BOTH'):
+            contradictory = True
+        modes[symbol] = native != 'BOTH'
         amount = float(p["contracts"])
         if not math.isfinite(amount) or amount < 0:
             raise ValueError("invalid venue position size")
         if amount > 0:
-            key = norm_symbol(p["symbol"])
+            native = PM.venue_side(p)
+            if native != "BOTH" and (p.get("hedged") is not True or native.lower() != p.get("side")):
+                contradictory = True
+            key = (norm_symbol(p["symbol"]), native)
             if key in out or p.get("side") not in ("long", "short"):
                 contradictory = True
             out[key] = p
@@ -342,7 +351,7 @@ def _stop_identity(rows) -> list:
                                    str(o.get("side") or "").lower(), _num(o.get("quantity")),
                                    _num(o.get("triggerPrice")),
                                    str(o.get("orderType") or o.get("type") or ""),
-                                   str(o.get("reduceOnly")), o.get("updateTime"))))
+                                   str(o.get("reduceOnly")), o.get("positionSide", "BOTH"), o.get("updateTime"))))
                   for o in rows)
 
 
@@ -523,9 +532,14 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
         agreement.append("contradictory_venue_ownership")
     trades: dict[str, dict] = {}
     for t in (jb or {}).get("trades") or []:
-        if t["symbol"] in trades:
+        try:
+            key = (norm_symbol(t['symbol']), PM.position_side(t))
+        except (ValueError, TypeError):
+            agreement.append('contradictory_journal_ownership')
+            continue
+        if key in trades:
             agreement.append("contradictory_journal_ownership")
-        trades[t["symbol"]] = t
+        trades[key] = t
     kv = (jb or {}).get("kv") or {}
     rearms = _rearms(kv.get(REARM_KEY))
     if rearms is None:
@@ -541,14 +555,15 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
     # per venue position
     by_key: dict[str, list[dict]] = {}
     for s in stops:
-        by_key.setdefault(protective.venue_key(s.get("symbol", "")), []).append(s)
-    live_keys = {protective.venue_key(sym) for sym in pos1}
+        by_key.setdefault((protective.venue_key(s.get("symbol", "")), s.get("position_side", "BOTH")), []).append(s)
+    live_keys = {(protective.venue_key(sym), native) for sym, native in pos1}
     protected_all = precision_all = True
-    for sym, p in sorted(pos1.items()):
+    for (sym, native), p in sorted(pos1.items()):
         side = p.get("side")
         qty = _num(p.get("contracts"))
-        t = trades.get(sym)
-        own = by_key.get(protective.venue_key(sym), [])
+        t = trades.get((sym, native))
+        marker = PM.rearm_key(sym, native)
+        own = by_key.get((protective.venue_key(sym), native), [])
         journal_qty = _num((t or {}).get("amount"))
         expected = _num((t or {}).get("stop_loss"))
         journal_stop_id = str((t or {}).get("sl_order_id") or "") or None
@@ -565,6 +580,8 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
                "tick_size": tick, "precision_status": "UNKNOWN", "precision_valid": None,
                "stop_id_matches_journal": None, "match_reason": None,
                "rearm_evidence": None, "verified": False, "reasons": []}
+        if native != "BOTH":
+            rec["position_side"] = native
         mine: list[str] = []
         if t is None:
             mine.append("untracked_venue_position:" + sym)       # reconcile would adopt
@@ -580,9 +597,9 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
         if rearms is None:
             rec["rearm_evidence"] = "UNREADABLE"
             mine.append("protection_rearm_evidence_unreadable")
-        elif sym in rearms:
+        elif marker in rearms:
             rec["rearm_evidence"] = "PENDING"
-            if t is None or rearms[sym].get("trade_id") != t.get("id"):
+            if t is None or rearms[marker].get("trade_id") != t.get("id"):
                 mine.append("protection_rearm_evidence_mismatch:" + sym)
             mine.append("protection_rearm_pending:" + sym)       # awaiting verification
         else:
@@ -590,7 +607,7 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
         if isinstance(intent, dict) and norm_symbol(str(intent.get("symbol") or "")) == sym:
             mine.append("entry_owned_exposure_pending:" + sym)
         matches = [(s, protective.protection_match(precision, sym, side, qty or 0.0,
-                                                   expected or 0.0, s)) for s in own]
+                                                   expected or 0.0, s, native_side=native)) for s in own]
         adequate = [(s, m) for s, m in matches if m.matches]
         chosen = (adequate[0] if adequate else
                   next(((s, m) for s, m in matches if s.get("order_type") in STOP_TYPES),
@@ -619,7 +636,7 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
             if not on_tick:
                 mine.append("stop_trigger_precision_invalid:" + sym)
         # cleanliness: what a reconcile sweep / policy would act on
-        keep = {journal_stop_id} | {str(((rearms or {}).get(sym) or {}).get("order_id") or "")}
+        keep = {journal_stop_id} | {str(((rearms or {}).get(marker) or {}).get("order_id") or "")}
         if journal_stop_id is not None and own:
             rec["stop_id_matches_journal"] = journal_stop_id in rec["stop_ids"]
         for s in own:
@@ -641,11 +658,12 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
         snap["symbols"].append(rec)
         reasons.extend(rec["reasons"])
 
-    for sym, t in trades.items():
-        if sym not in pos1 and (t.get("market_type") or "futures") == "futures":
+    for (sym, native), t in trades.items():
+        if (sym, native) not in pos1 and (t.get("market_type") or "futures") == "futures":
             agreement.append("journal_position_absent_on_venue:" + sym)  # reconcile would ghost
-    for sym in sorted(rearms or {}):
-        if protective.venue_key(sym) not in live_keys:
+    for marker in sorted(rearms or {}):
+        sym, native = marker.rsplit('|', 1) if '|' in marker else (marker, 'BOTH')
+        if (protective.venue_key(sym), native) not in live_keys:
             items.append({"class": "stale_rearm_evidence", "severity": "attention",
                           "symbol": sym, "sweep_may_cancel": False})
     for key, rows in sorted(by_key.items()):
@@ -655,8 +673,8 @@ def evaluate(obs: dict, precision, *, boot: int, seq: int) -> dict:
                               "sweep_may_cancel": True, **_stop_row(s)})
     for vsym, rows in sorted((obs.get("ordinary") or {}).items()):
         key = norm_symbol(vsym)
-        side = (pos1.get(key) or {}).get("side")
         for o in rows or []:
+            side = (pos1.get((key, PM.venue_side(o))) or {}).get("side")
             items.append(_ordinary_item(o, key, side))
     snap["cleanliness"]["unread_symbols"] = list(obs.get("ordinary_unread") or [])
 

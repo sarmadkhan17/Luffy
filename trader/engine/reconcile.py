@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 from ..core.types import ClosedTrade, Position, Side, new_id, norm_symbol
 from ..core.journal import Journal
-from . import protective
+from . import protective, position_mode as PM
 
 log = logging.getLogger(__name__)
 REARM_KEY = "reconcile_rearm_submitted"
@@ -273,6 +273,11 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
         rows = exchange.fetch_positions()
         if not isinstance(rows, list):
             raise ValueError("invalid position snapshot")
+        from . import position_mode as PM
+        if (any(PM.venue_side(p) != 'BOTH' for p in rows)
+                or any(PM.position_side(t) != 'BOTH' for t in journal.open_trades())):
+            from .reconcile_native import run
+            return run(exchange, journal, rows, exclude_symbols)
         if verify:
             seen = set()
             for p in rows:
@@ -725,7 +730,9 @@ def _venue_amounts(exchange) -> dict | None:
             if not math.isfinite(amount) or amount < 0:
                 return None
             if amount > 0:
-                out[norm_symbol(p["symbol"])] = amount
+                key = PM.position_key(p['symbol'], PM.venue_side(p))
+                if key in out:return None
+                out[key] = amount
         return out
     except Exception:
         return None
@@ -752,7 +759,7 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> FlattenResult:
     remaining: list = []
     for t in open_trades:
         sym = t["symbol"]
-        key = norm_symbol(sym)
+        key = PM.position_key(sym, PM.position_side(t))
         side_close = "sell" if t["side"] == "long" else "buy"
         order = None
         flat = False
@@ -761,6 +768,11 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> FlattenResult:
             for _ in range(FLATTEN_ATTEMPTS):
                 venue = _venue_amounts(exchange)
                 size = float(t["amount"])
+                if PM.position_side(t) != 'BOTH':
+                    if venue is None:
+                        break
+                    if venue.get(key, 0.) <= 0:
+                        flat = True; break
                 if venue is not None and venue.get(key, 0.0) > 0:
                     size = venue[key]          # venue truth, not the journal
                 elif venue is not None and order is not None:
@@ -771,7 +783,7 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> FlattenResult:
                 try:
                     order = exchange.create_order(
                         sym, "market", side_close, size,
-                        params={"reduceOnly": True})
+                        params=PM.order_params(t, reduce_only=True))
                 except Exception as e:          # rejected / timeout / ambiguous
                     last_error = e
                     venue = _venue_amounts(exchange)
@@ -829,9 +841,9 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> FlattenResult:
         except Exception as e:
             remaining.append(sym)
             log.error(f"PANIC close FAILED {sym}: {type(e).__name__}: {e}")
-    journal_keys = {norm_symbol(t["symbol"]) for t in open_trades}
+    journal_keys = {PM.position_key(t['symbol'], PM.position_side(t)) for t in open_trades}
     after = _venue_amounts(exchange)
-    unjournaled = sorted(k for k in (after or {}) if k not in journal_keys)
+    unjournaled = sorted((k for k in (after or {}) if k not in journal_keys), key=str)
     result = FlattenResult(closed, remaining, unjournaled)
     if not result.complete:
         try:

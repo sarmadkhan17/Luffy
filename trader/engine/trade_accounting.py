@@ -3,7 +3,8 @@
 Demo USDT linear and native-coin inverse perpetual one-way captures are
 supported. Native coin results do not enter USDT learning without conversion.
 Currency subtotals stay separate; no invented FX, funding or journal P&L.
-Capture is manual/off-path. Every retry creates a new self-contained artifact.
+Native USD-M side captures retain funding unattributed until combined group
+verification. Capture is off-path; retries retain self-contained artifacts.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from ..core.types import norm_symbol
 from ..core.contract_values import Contract
 
 VERSION = 'whole-trade-accounting.v1'
+HEDGE_LEG_VERSION = 'whole-trade-accounting.hedge-leg.v1'
 INTERVAL_VERSION = 'whole-trade-accounting.closed-interval.v2'
 NATIVE_VERSION = 'whole-trade-accounting.native-coin.v1'
 NATIVE_INTERVAL_VERSION = 'whole-trade-accounting.native-coin.closed-interval.v1'
@@ -189,6 +191,10 @@ def assess(a, *, marked=False):
         if (timestamp(t['opened_at']) > a['bookings']['receipts'][0]['observed_ms']
                 or (t['status']=='closed' and timestamp(t['closed_at']) > a['bookings']['receipts'][-1]['observed_ms'])):
             raise ValueError('journal_booking_clock_conflict')
+        hedged = a.get('schema_version') == HEDGE_LEG_VERSION
+        position_side = a.get('position_side', 'BOTH') if hedged else 'BOTH'
+        if hedged and position_side not in ('LONG', 'SHORT'):
+            raise ValueError('native_position_side_unverified')
         native = a.get('schema_version') in (NATIVE_VERSION,NATIVE_INTERVAL_VERSION)
         contract, currency, settlement_precision = Contract('linear'), 'USDT', None
         if native:
@@ -226,7 +232,7 @@ def assess(a, *, marked=False):
         if (type(observed) is not int or type(a['captured_ms']) is not int
                 or a['captured_ms'] < observed or a['bookings']['observed_ms'] > observed):
             raise ValueError('capture_clock_conflict')
-        interval=a.get('schema_version') in (INTERVAL_VERSION,NATIVE_INTERVAL_VERSION)
+        interval=a.get('schema_version') in (INTERVAL_VERSION,NATIVE_INTERVAL_VERSION) or (hedged and a.get('terminal_flat') is not None)
         if start<0 or end>observed or end<start or (not interval and end!=observed):
             raise ValueError('capture_clock_conflict')
         if interval and t['status']!='closed':
@@ -253,12 +259,25 @@ def assess(a, *, marked=False):
                     or end!=number(last['updateTime'])
                     or a.get('position_source')!='RETAINED_TERMINAL_FLAT_OBSERVATION'):
                 raise ValueError('closed_interval_flat_evidence_unbound')
+            if hedged and proof.get('position_side') != position_side:
+                raise ValueError('native_closed_interval_side_differs')
             if native and (proof['account_scope']!=a['account_scope']
                            or proof['instrument_id']!=a['contract_binding']['instrument_id']):
                 raise ValueError('native_closed_interval_scope_differs')
         if start != number(orders[ls[0]['order_id']]['time']):
             raise ValueError('entry_history_start_conflict')
         fills = history_rows(a['fill_history'], 'fills', symbol, start, end, observed)
+        standalone_native = False
+        if hedged:
+            entry_binding = a['bookings']['receipts'][0]['evidence'].get('execution_binding') or {}
+            strategy_identity = entry_binding.get('strategy_identity') or {}
+            standalone_native = (entry_binding.get('position_side') == position_side
+                and strategy_identity.get('native_position_side') == position_side
+                and not strategy_identity.get('coordinated'))
+            if standalone_native and (a['overlapping_trade_ids']
+                    or any(f.get('positionSide') != position_side for f in fills)):
+                raise ValueError('native_standalone_ownership_overlap_retry')
+            fills = [f for f in fills if f.get('positionSide') == position_side]
         funding = history_rows(a['funding_history'], 'income', symbol, start, end, observed)
         events = history_rows(a['funding_events'], 'funding_events', symbol, max(0, start-6*DAY), observed if interval else end, observed)
         result['history_complete'] = True
@@ -268,7 +287,7 @@ def assess(a, *, marked=False):
         if (not event_times or min(event_times) > min(number(f['time']) for f in fills)
                 or (not marked and max(event_times) <= max(number(f['time']) for f in fills))):
             raise ValueError('funding_publication_frontier_pending_retry')
-        if a['overlapping_trade_ids']:
+        if a['overlapping_trade_ids'] and not hedged:
             raise ValueError('journal_ownership_overlap_retry')
         # Current zero position plus a complete, balanced one-way fill stream
         # proves zero initial position within the captured interval. The position
@@ -276,7 +295,9 @@ def assess(a, *, marked=False):
         position = a['position']
         direction = 1 if t['side']=='long' else -1
         expected_quantity = number(t['amount']) if marked and t['status']=='open' else 0.
-        if (position['symbol'] != symbol or position['positionSide'] != 'BOTH'
+        if hedged and position_side != ('LONG' if direction > 0 else 'SHORT'):
+            raise ValueError('native_leg_side_or_fee_currency_differs')
+        if (position['symbol'] != symbol or position['positionSide'] != position_side
                 or not close(number(position['positionAmt']),direction*expected_quantity)):
             raise ValueError('venue_flat_ownership_unproven_retry')
         if set(str(f['orderId']) for f in fills) != set(orders):
@@ -287,7 +308,7 @@ def assess(a, *, marked=False):
         for l in ls:
             o = orders[l['order_id']]
             side = entry_side if l['entry'] else ('SELL' if entry_side == 'BUY' else 'BUY')
-            if (o['symbol'] != symbol or o['side'] != side or o['positionSide'] != 'BOTH'
+            if (o['symbol'] != symbol or o['side'] != side or o['positionSide'] != position_side
                     or o['status'] not in ('FILLED','CANCELED','EXPIRED','EXPIRED_IN_MATCH')
                     or not close(o['executedQty'], l['quantity'])
                     or not start <= number(o['time']) <= number(o['updateTime']) <= l['receipt_ms'] <= observed):
@@ -299,7 +320,7 @@ def assess(a, *, marked=False):
                 qty, price = number(f['qty']), number(f['price'])
                 pnl, fee = number(f['realizedPnl']), number(f['commission'])
                 fee_currency = f['commissionAsset']
-                if (qty <= 0 or price <= 0 or f['side'] != side or f['positionSide'] != 'BOTH'
+                if (qty <= 0 or price <= 0 or f['side'] != side or f['positionSide'] != position_side
                         or not number(o['time']) <= number(f['time']) <= number(o['updateTime'])
                         or not isinstance(fee_currency, str) or not fee_currency):
                     raise ValueError('fill_fields_or_currency_missing_retry')
@@ -341,6 +362,22 @@ def assess(a, *, marked=False):
             result['pnl_reconciliation_tolerance_native']=max(1,pnl_count)*10.**(-settlement_precision)
         result.update(fees_by_currency=fees)
         result['gross_realized_native' if native else 'gross_realized_usdt'] = gross
+        if hedged and not standalone_native:
+            if (position_side != ('LONG' if direction > 0 else 'SHORT')
+                    or set(fees) - {'USDT'}):
+                raise ValueError('native_leg_side_or_fee_currency_differs')
+            if not all(math.isfinite(v) for v in (gross, unrealized, sum(fees.values()))):
+                raise ValueError('nonfinite_accounting_aggregate')
+            # Income history has no native-side identifier. Preserve every
+            # raw cashflow for the group verifier; never invent a leg's share.
+            result.update(status='native_side_verified_funding_unattributed',
+                leg_verified=True, fills=normalized, unrealized_usdt=unrealized,
+                net_excluding_funding_usdt=gross+unrealized-fees.get('USDT', 0.),
+                marked_notional_usdt=expected_quantity*mark if marked else 0.,
+                mark_observed_ms=(observed if interval else a.get('position_observed_ms')),
+                final_realized_outcome=False, retry_required=False,
+                reasons=['combined_position_funding_required'])
+            return result
         currencies = {}
         for r in funding:
             if r['incomeType'] != 'FUNDING_FEE' or not isinstance(r['asset'], str) or not r['asset']:
@@ -408,7 +445,7 @@ def assess(a, *, marked=False):
     return result
 
 
-def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal_flat=None):
+def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal_flat=None,position_side='BOTH'):
     """Bounded demo reads; no journal writes, trade submission or automatic retry."""
     a = dict(schema_version=INTERVAL_VERSION if terminal_flat is not None else VERSION, bookings=source, venue='binanceusdm', environment='demo',
              observed_ms=int(time.time()*1000), orders=[], position=None, errors=[],
@@ -416,6 +453,10 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
     try:
         ls = legs(source, closed=not marked)
         coin = getattr(exchange, 'id', None) == 'binancecoinm'
+        if position_side != 'BOTH':
+            if coin or position_side not in ('LONG', 'SHORT'):
+                raise ValueError('native_position_side_unverified')
+            a.update(schema_version=HEDGE_LEG_VERSION, position_side=position_side)
         if coin:
             from ..observability.portfolio_observation import trading_source
             from ..data.feed import execution_account_scope
@@ -454,7 +495,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
             params = dict(pair=market['base']+market['quote']) if coin else dict(symbol=symbol)
             positions = getattr(exchange,'dapiPrivateGetPositionRisk' if coin else 'fapiPrivateV2GetPositionRisk')(params)
             if marked:a['position_observed_ms']=int(time.time()*1000)
-            ps = [p for p in positions if p.get('symbol') == symbol]
+            ps = [p for p in positions if p.get('symbol') == symbol and p.get('positionSide') == position_side]
             if len(ps) != 1:
                 raise ValueError('one_way_position_snapshot_missing')
             fields = ('symbol','positionSide','positionAmt')
@@ -464,7 +505,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
             if source['trade']['status']!='closed':
                 raise ValueError('closed_interval_requires_terminal_trade')
             a.update(terminal_flat=terminal_flat,position_source='RETAINED_TERMINAL_FLAT_OBSERVATION',
-                position=dict(symbol=symbol,positionSide='BOTH',positionAmt=terminal_flat['quantity'],
+                position=dict(symbol=symbol,positionSide=position_side,positionAmt=terminal_flat['quantity'],
                               entryPrice=0.,markPrice=0.,unRealizedProfit=0.))
         a['observed_ms'] = int(time.time()*1000)
         a['end_ms'] = int(number(a['orders'][-1]['updateTime'])) if terminal_flat is not None else a['observed_ms']
@@ -482,7 +523,7 @@ def capture(source, exchange, overlapping_trade_ids=(), *, marked=False,terminal
 
 
 def replay(a):
-    if a.get('schema_version') not in (VERSION,INTERVAL_VERSION,NATIVE_VERSION,NATIVE_INTERVAL_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
+    if a.get('schema_version') not in (VERSION,INTERVAL_VERSION,NATIVE_VERSION,NATIVE_INTERVAL_VERSION,HEDGE_LEG_VERSION) or digest({k:v for k,v in a.items() if k != 'sha256'}) != a.get('sha256'):
         raise ValueError('whole_trade_integrity')
     expected = assess(a,marked=a.get('capture_kind') in ('OPEN_POSITION_MARKED_ONLY','CLOSED_INTERVAL_MARKED_ONLY'))
     if expected != a['assessment']:

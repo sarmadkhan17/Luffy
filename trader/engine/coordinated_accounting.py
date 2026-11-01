@@ -1,8 +1,8 @@
 """One economic outcome from existing verified whole-trade receipts.
 
-No new venue reads, prices or funding estimates. Current scope is distinct
-linear USD-M instruments; shared-instrument cashflows need separate ownership
-support and must never be counted twice. The durable closed unwind manifest
+No new venue reads, prices or funding estimates. Linear USD-M native sides
+retain separate fill ownership; shared-symbol actual funding is counted once
+across the owned economic position. The durable closed unwind manifest
 fixes membership, including a primary whose hedge was never activated.
 """
 from copy import deepcopy
@@ -61,6 +61,10 @@ def claim_interval(seen,member,capture,code):
     seen.append((iid,key,role,lo,hi))
 
 
+def trade_closed(capture):
+    return capture['bookings']['trade']['status'] == 'closed'
+
+
 def accounting(source):
     if source.get('schema_version') != VERSION:
         raise ValueError('coordinated_accounting_schema_differs')
@@ -82,27 +86,37 @@ def accounting(source):
     root = by_id[primary_id]['capture']
     primary_confirmed = root['bookings']['receipts'][0]['observed_ms']
     intervals, exact, fills, funding = [], None, [], 0.
+    native = any(p['capture'].get('schema_version') == T.HEDGE_LEG_VERSION for p in parts)
+    native_result = None
+    if native:
+        from .coordinated_cashflows import native_group
+        native_result = native_group(parts, members, plan['group_id'])
     for member in members:
         part = by_id[member['trade_id']]
         capture, identity, request = part['capture'], part['identity'], part['entry_request']
         result = T.replay(capture)
-        if not result['learning_eligible']:
+        if not (result.get('leg_verified') is True and trade_closed(capture) if native else result['learning_eligible']):
             raise ValueError('coordinated_accounting_component_pending')
         trade = capture['bookings']['trade']
         version = entry_binding(part, member, plan['group_id'])
         if not all(version) or identity.get('status') != 'VERIFIED' or (exact and exact != version):
             raise ValueError('coordinated_accounting_version_or_account_differs')
         exact = version
-        claim_interval(intervals,member,capture,'coordinated_accounting_shared_instrument_unsupported')
+        if not native:
+            claim_interval(intervals,member,capture,'coordinated_accounting_shared_instrument_unsupported')
         if member['leg'] == 'hedge' and capture['start_ms'] < primary_confirmed:
             raise ValueError('coordinated_accounting_primary_not_first')
-        for fill in result['accounting']['fills']:
+        for fill in ([] if native else result['accounting']['fills']):
             copied = deepcopy(fill)
             # IDs are venue-instrument scoped. Retain the original full source,
             # namespace the combined view, and attribute it to the economic root.
             copied.update(id=digest([member['instrument_id'], fill['id']]), trade_id=primary_id)
             fills.append(copied)
-        funding += result['funding_usdt']
+        if not native:
+            funding += result['funding_usdt']
+    if native:
+        fills = [dict(f, trade_id=primary_id) for f in native_result['fills']]
+        funding = native_result['funding_usdt']
     cut = max(p['capture']['captured_ms'] for p in parts)
     available=source['observed_ms']
     if type(available) is not int or available<cut:

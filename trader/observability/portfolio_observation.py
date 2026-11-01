@@ -17,6 +17,7 @@ from ..core.instrument_registry import InstrumentId
 from ..core.types import MarketType
 
 SCHEMA = "portfolio.observation.v1"
+HEDGE_SCHEMA = "portfolio.observation.hedge.v1"
 VENUE = "binance_usdm"
 SOURCE = "ccxt.binanceusdm.fetch_positions"
 _TRADING_SOURCES = {
@@ -56,6 +57,27 @@ def coin_position_identity(row):
     return symbol,base
 
 
+
+def payload_record(record):
+    """Decode the persisted native identity without dropping the held side."""
+    if not isinstance(record, (list, tuple)) or len(record) not in (4, 5):
+        raise ValueError('invalid position observation record')
+    iid, present, side, quantity = record[:4]
+    native = record[4] if len(record) == 5 else 'BOTH'
+    if native not in ('BOTH', 'LONG', 'SHORT'):
+        raise ValueError('invalid native position side')
+    if native != 'BOTH' and present and side != native.lower():
+        raise ValueError('contradictory native position side')
+    return iid, present, side, quantity, native
+
+
+def projected_positions(observation):
+    """Exact present-position projection, including native side identity."""
+    return [(iid, side, quantity, native)
+            for iid, present, side, quantity, native in
+            map(payload_record, observation['positions']) if present]
+
+
 def trading_source(exchange: object) -> tuple[str, str]:
     """Identify the already-resolved REST venue; this grants no capability."""
     urls = getattr(exchange, "urls", None)
@@ -80,6 +102,7 @@ class PositionRecord:
     position_present: bool
     side: str | None
     absolute_quantity: float
+    position_side: str = "BOTH"
 
 
 @dataclass(frozen=True)
@@ -97,9 +120,22 @@ class PortfolioObservation:
     positions: tuple[PositionRecord, ...]
     observation_id: str
 
-    def get(self, instrument_id: InstrumentId) -> PositionRecord | None:
-        """None means absent from this complete response, not a venue row."""
-        return next((p for p in self.positions if p.instrument_id == instrument_id), None)
+    def get(self, instrument_id: InstrumentId, position_side: str | None = None) -> PositionRecord | None:
+        """An instrument with two native sides requires an explicit side."""
+        matches = [p for p in self.positions if p.instrument_id == instrument_id
+                   and (position_side is None or p.position_side == position_side)]
+        if len(matches) > 1:
+            raise ValueError('position side required for hedge-mode instrument')
+        return matches[0] if matches else None
+
+
+def record_payload(position: PositionRecord) -> list:
+    """Preserve historical netting receipt identities; retain native hedge side."""
+    values = [position.instrument_id.value, position.position_present,
+              position.side, position.absolute_quantity]
+    if position.position_side != 'BOTH':
+        values.append(position.position_side)
+    return values
 
 
 def observe_positions(
@@ -129,7 +165,8 @@ def observe_positions(
     records: list[PositionRecord] = []
     venue='binancecoinm' if coin else VENUE
     source='ccxt.binancecoinm.fetch_positions' if coin else SOURCE
-    seen: set[InstrumentId] = set()
+    seen = set()
+    modes = {}
     for row in rows:
         if not isinstance(row, dict) or not isinstance(row.get("info"), dict):
             raise ValueError("invalid position row")
@@ -143,9 +180,23 @@ def observe_positions(
             if row.get("symbol") != f"{base}/USDT:USDT":
                 raise ValueError("ambiguous position symbol identity")
         instrument_id = InstrumentId(venue, MarketType.FUTURES, venue_symbol)
-        if instrument_id in seen:
+        position_side = row['info'].get('positionSide', 'BOTH')
+        if position_side not in ('BOTH', 'LONG', 'SHORT'):
+            raise ValueError('invalid native position side')
+        if coin and position_side != 'BOTH':
+            raise ValueError('COIN-M position mode unsupported')
+        if position_side != 'BOTH' and row.get('hedged') is not True:
+            raise ValueError('hedge position mode unverified')
+        if position_side == 'BOTH' and row.get('hedged') is True:
+            raise ValueError('contradictory position mode')
+        mode = position_side != 'BOTH'
+        if instrument_id in modes and modes[instrument_id] != mode:
+            raise ValueError('mixed position modes for instrument')
+        modes[instrument_id] = mode
+        key = (instrument_id, position_side)
+        if key in seen:
             raise ValueError("duplicate position instrument")
-        seen.add(instrument_id)
+        seen.add(key)
 
         raw_quantity = row.get("contracts")
         if isinstance(raw_quantity, bool) or not isinstance(raw_quantity, (int, float, Decimal)):
@@ -162,6 +213,18 @@ def observe_positions(
                 raise ValueError("ambiguous position side")
         elif side not in (None, "long", "short"):
             raise ValueError("ambiguous zero-position side")
+        if position_side != 'BOTH':
+            try:
+                raw = row['info']['positionAmt']
+                if isinstance(raw, bool):
+                    raise ValueError
+                signed = Decimal(str(raw))
+                if (not signed.is_finite() or abs(signed) != Decimal(str(raw_quantity))
+                        or (signed and ('LONG' if signed > 0 else 'SHORT') != position_side)
+                        or (quantity and side.upper() != position_side)):
+                    raise ValueError
+            except (KeyError, InvalidOperation, ValueError):
+                raise ValueError('hedge raw position quantity or side differs') from None
         if coin:
             try:
                 raw=row['info']['positionAmt']
@@ -174,25 +237,23 @@ def observe_positions(
             except (KeyError,InvalidOperation,ValueError):
                 raise ValueError('COIN-M raw position quantity differs') from None
         records.append(PositionRecord(instrument_id, quantity > 0,
-                                      side if quantity > 0 else None, quantity))
+                                      side if quantity > 0 else None, quantity, position_side))
 
-    positions = tuple(sorted(records, key=lambda record: record.instrument_id.value))
+    positions = tuple(sorted(records, key=lambda record: (record.instrument_id.value, record.position_side)))
+    schema = HEDGE_SCHEMA if any(p.position_side != 'BOTH' for p in positions) else SCHEMA
     payload = {
-        "schema": SCHEMA, "venue": venue, "source": source,
+        "schema": schema, "venue": venue, "source": source,
         "environment": environment, "source_ref": source_ref,
         "market_type": MarketType.FUTURES.value,
         "request_start_ms": request_start_ms,
         "response_received_ms": response_received_ms,
         "as_of_ms": response_received_ms, "complete": True,
-        "positions": [
-            [p.instrument_id.value, p.position_present, p.side, p.absolute_quantity]
-            for p in positions
-        ],
+        "positions": [record_payload(p) for p in positions],
     }
     observation_id = hashlib.sha256(json.dumps(
         payload, sort_keys=True, separators=(",", ":"), allow_nan=False,
     ).encode()).hexdigest()
-    return PortfolioObservation(SCHEMA, venue, source, environment, source_ref,
+    return PortfolioObservation(schema, venue, source, environment, source_ref,
                                 MarketType.FUTURES,
                                 request_start_ms, response_received_ms,
                                 response_received_ms, True, positions,

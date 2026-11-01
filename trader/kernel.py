@@ -1857,6 +1857,9 @@ class Kernel:
                 return False
             identity.update(versioned_binding)
         try:
+            if self.market_type == MarketType.FUTURES:
+                from .engine.position_mode import bind_new_entry
+                identity = bind_new_entry(self.executor.ex, identity, 'LONG' if d.action == Action.BUY else 'SHORT')
             permission = self.risk.authorize_entry(d, sizing.amount, a, sl, tp, top_strategy or "orchestrator",
                                                   identity=identity, reference=reference)
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
@@ -2543,6 +2546,7 @@ class Kernel:
             request_start_ms = time.time_ns() // 1_000_000
             position_rows = self.exchange.fetch_positions()
             response_received_ms = time.time_ns() // 1_000_000
+            observation = None
             try:
                 environment, source_ref = trading_source(self.exchange)
                 observation = observe_positions(
@@ -2558,7 +2562,8 @@ class Kernel:
                 self.position_observation = observation
                 self._position_rows = position_rows   # the rows it was built from
                 self._position_account_scope = position_scope
-            ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
+            from .engine import position_mode as PM
+            ex_amt = {(norm_symbol(p["symbol"]), PM.venue_side(p)): float(p.get("contracts") or 0)
                       for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
         except Exception:
@@ -2569,10 +2574,22 @@ class Kernel:
         for t in self.journal.open_trades():
             if t["symbol"] != symbol or t["market_type"] != "futures":
                 continue
-            held = ex_amt.get(t["symbol"], 0.0)
+            held = ex_amt.get((t["symbol"], PM.position_side(t)), 0.0)
             amount = float(t["amount"])
             if held >= amount - max(held * 0.01, 1e-9):
                 continue                      # the venue still has it all
+            if PM.position_side(t) != 'BOTH':
+                # A side-specific stop can close while the opposite side is
+                # still open. Never turn that absence into a marked estimate.
+                if observation is None or held > 0:
+                    log.warning('native exit quantity/provenance pending: %s', t['id'])
+                    continue
+                try:
+                    from .engine.reconcile_native import close_from_protection
+                    n += int(close_from_protection(self.exchange, self.journal, t))
+                except Exception as exc:
+                    log.warning('native exit evidence unavailable: %s (%s)', t['id'], type(exc).__name__)
+                continue
             px = self.feed.price(symbol) or float(t["entry_price"])
             entry = float(t["entry_price"])
             sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)

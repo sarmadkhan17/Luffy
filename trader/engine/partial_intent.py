@@ -10,6 +10,7 @@ import json
 import math
 import time
 from ..core.types import norm_symbol
+from . import position_mode as PM
 
 TERMINAL = {'closed', 'canceled', 'expired', 'rejected'}
 
@@ -43,6 +44,8 @@ def reserve(executor, trade, requested):
             entry_price=float(current['entry_price']), created_ms=int(time.time()*1000),
             venue=getattr(executor.ex,'id',None), account_scope=execution_account_scope(executor.ex),
             binding=binding, client_order_id='lp_'+hashlib.sha256(('tp1:'+trade['id']).encode()).hexdigest()[:28])
+        if PM.position_side(dict(current)) != 'BOTH':
+            intent['position_side'] = PM.position_side(dict(current))
         validate(executor, intent)
         db.execute('INSERT INTO partial_exit_intents VALUES(?,?,?,?)',
             (trade['id'],'SUBMISSION_ATTEMPTED',intent['client_order_id'],json.dumps(intent,allow_nan=False)))
@@ -102,7 +105,7 @@ def resolve(executor, intent):
     if (not isinstance(order,dict) or not order.get('id')
             or not exact_order_match(order, client_order_id=intent['client_order_id'],
                 symbol=intent['symbol'], side='sell' if intent['side']=='long' else 'buy',
-                order_id=oid, reduce_only=True)
+                order_id=oid, reduce_only=True, position_side=intent.get('position_side','BOTH'))
             or str(order.get('status','')).lower() not in TERMINAL):
         raise ValueError('partial_exact_terminal_order_unconfirmed')
     filled = float(order.get('filled') or 0)
@@ -112,6 +115,7 @@ def resolve(executor, intent):
     if not isinstance(positions,list):
         raise ValueError('partial_venue_positions_unconfirmed')
     matches = [p for p in positions if norm_symbol(p.get('symbol',''))==norm_symbol(intent['symbol'])
+               and PM.venue_side(p)==intent.get('position_side','BOTH')
                and float(p.get('contracts') or 0)>0]
     remaining = intent['before_quantity']-filled
     if (len(matches)!=1 or matches[0].get('side')!=intent['side']

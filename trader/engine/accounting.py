@@ -40,6 +40,8 @@ def safe_fill(fill):
             'commission': info.get('commission'),
             'commission_asset': info.get('commissionAsset'),
             'venue_symbol': info.get('symbol'), 'instrument_id': fill.get('instrument_id')}
+    if info.get('positionSide', 'BOTH') != 'BOTH':
+        result['position_side'] = info.get('positionSide')
     # Invalid numeric responses must remain serializable missing evidence.
     return {k: (None if isinstance(v, float) and not math.isfinite(v)
                 else v if isinstance(v, (str, int, float, bool, type(None))) else None)

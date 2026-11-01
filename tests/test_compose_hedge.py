@@ -125,7 +125,7 @@ def test_hedged_beats_unhedged_and_reduced_on_declared_objective_with_costs_and_
     assert out['stress']['correlation_break']['max_drawdown_pct'] > c['hedged']['max_drawdown_pct']
     assert out['stress']['one_leg_fill']['max_drawdown_pct'] >= c['hedged']['max_drawdown_pct'] - 1e-9
     assert out['stress']['margin_pressure']['liquidated'] is True                      # low net exposure != no liquidation risk
-    assert out['runtime_support']['coin_m'] is False and out['runtime_support']['hedge_mode'] is False
+    assert out['runtime_support']['coin_m'] is False and out['runtime_support']['hedge_mode'] is True
 
 
 def test_useless_hedge_is_reported_as_unsupported_not_forced():

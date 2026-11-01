@@ -18,7 +18,7 @@ def bind(journal, exchange, cfg, symbol='BTC/USDT'):
     iid = InstrumentId('binance_usdm', MarketType.FUTURES, venue_symbol)
     exchange.id = 'binanceusdm'
     exchange.apiKey = 'TEST-ONLY-key'
-    exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3'}}
+    exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3', 'fapiPrivate':'https://demo-fapi.binance.com/fapi/v1'}}
     from trader.data.feed import execution_account_scope
     scope = execution_account_scope(exchange)
     record = InstrumentRecord(iid, AssetClass.UNKNOWN, 'PERPETUAL', base,quote,quote,'1',None,
@@ -42,8 +42,10 @@ def bind(journal, exchange, cfg, symbol='BTC/USDT'):
         authoritative=True,basis='venue_account',observed_at=ts,attempted_at=ts,recorded_at=ts,
         successful_read_at=ts,successful_value=10000.,consecutive_failures=0,
         account_scope=scope,source='TEST-ONLY-fixture')))
-    exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3'}}
+    exchange.urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3', 'fapiPrivate':'https://demo-fapi.binance.com/fapi/v1'}}
     exchange.id = 'binanceusdm'
+    if not callable(getattr(exchange, 'fapiPrivateGetPositionSideDual', None)):
+        exchange.fapiPrivateGetPositionSideDual = lambda:{'dualSidePosition':False}
     exchange.entry_account_scope = scope
     exchange.market = lambda s: dict(id=s.split(':')[0].replace('/',''),base=s.split('/')[0],quote='USDT',settle='USDT',
                                    linear=True,contract=True,contractSize=1)

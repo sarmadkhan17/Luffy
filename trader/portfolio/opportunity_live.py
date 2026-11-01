@@ -115,11 +115,12 @@ def produce(*, as_of_ms, symbol, instrument_id, cycle_id, candidate_id,
             times = [world.reconstruct().as_of_ms]
         elif role == 'portfolio':
             from trader.engine.evidence_capture import verify_snapshot
+            from trader.observability.portfolio_observation import projected_positions
             if verify_snapshot(data) is None or data['completeness'] != 'COMPLETE':
                 raise ValueError('VENUE_PORTFOLIO_UNVERIFIED_OR_INCOMPLETE')
             obs = data['observation']
-            if ([(p['instrument_id'], p['side'], p['quantity']) for p in data['positions']]
-                    != [(iid, side, qty) for iid, present, side, qty in obs['positions'] if present]
+            if ([(p['instrument_id'], p['side'], p['quantity'], p.get('position_side', 'BOTH')) for p in data['positions']]
+                    != projected_positions(obs)
                     or any(data[k] != obs[j] for k, j in
                            (('venue', 'venue'), ('market_type', 'market_type'), ('environment', 'environment'),
                             ('observed_at_ms', 'as_of_ms'), ('received_at_ms', 'response_received_ms'),

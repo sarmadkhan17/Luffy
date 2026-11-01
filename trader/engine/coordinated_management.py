@@ -31,12 +31,12 @@ def pending_exit(journal, group_id):
     return reason
 
 
-def component_capture(executor,exported,overlaps,flat):
+def component_capture(executor,exported,overlaps,flat,*,position_side='BOTH'):
     """Reuse only a complete immutable closed result; open legs stay fresh."""
     journal=executor.journal;closed=exported['trade']['status']=='closed'
     fingerprint=digest(dict(trade=exported['trade'],receipts=exported['receipts']))
     table='coordinated_closed_captures'
-    if closed and journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)):
+    if closed and position_side == 'BOTH' and journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)):
         rows=journal.query(f'SELECT * FROM {table} WHERE trade_id=?',(exported['trade']['id'],))
         if rows:
             row=rows[0];capture=json.loads(row['payload'])
@@ -44,7 +44,7 @@ def component_capture(executor,exported,overlaps,flat):
                     or not T.replay(capture)['learning_eligible']):
                 raise ValueError('coordinated_closed_capture_binding_differs')
             return capture
-    capture=T.capture(exported,executor.ex,overlaps,marked=True,terminal_flat=flat)
+    capture=T.capture(exported,executor.ex,overlaps,marked=True,terminal_flat=flat,position_side=position_side)
     if not closed or capture['schema_version']!=T.INTERVAL_VERSION:return capture
     final=T.assess(capture)
     if not final['learning_eligible']:return capture  # publication still pending
@@ -99,7 +99,8 @@ def source(executor, group_id):
                          result=json.loads(request['result_json'] or '{}'))
         flat=(C.retained_terminal_flat(executor.journal,member['trade_id'],group_id,
                 T.legs(exported)[-1]['order_id']) if exported['trade']['status']=='closed' else None)
-        parts.append(dict(capture=component_capture(executor,exported,overlaps,flat),
+        from .position_mode import position_side
+        parts.append(dict(capture=component_capture(executor,exported,overlaps,flat,position_side=position_side(identity)),
                           identity=identity, entry_request=entry))
     return dict(schema_version=M.VERSION, group_id=group_id, members=members, components=parts)
 

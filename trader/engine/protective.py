@@ -68,7 +68,7 @@ class ProtectionMatch:
 
 def protection_match(ex, symbol: str, position_side: str,
                      position_amount: float, expected_stop_price: float,
-                     stop: dict) -> ProtectionMatch:
+                     stop: dict, *, native_side: str = 'BOTH') -> ProtectionMatch:
     """Decide if one normalized venue stop protects the current venue position.
 
     Price comparison uses the venue's submission precision. Only floating
@@ -101,7 +101,11 @@ def protection_match(ex, symbol: str, position_side: str,
         reason = "invalid_position_side"
     elif str(stop.get("side") or "").lower() != ("sell" if position_side == "long" else "buy"):
         reason = "wrong_closing_side"
-    elif stop.get("reduce_only") is not True:
+    elif stop.get('position_side', 'BOTH') != native_side:
+        reason = 'native_position_side_mismatch'
+    elif native_side != 'BOTH' and native_side != position_side.upper():
+        reason = 'native_position_side_mismatch'
+    elif native_side == 'BOTH' and stop.get("reduce_only") is not True:
         reason = "not_reduce_only"
     elif stop.get("order_type") != "STOP_MARKET":
         reason = "wrong_order_type"
@@ -126,11 +130,14 @@ def protection_match(ex, symbol: str, position_side: str,
 
 
 def place_stop(ex, symbol: str, close_side: str, amount: float,
-               stop_price: float) -> str:
+               stop_price: float, *, native_side: str = 'BOTH') -> str:
     """Arm a reduceOnly stop. Returns the order/algo id, or "" on failure."""
+    from .position_mode import order_params
+    if native_side != 'BOTH' and close_side != ('sell' if native_side == 'LONG' else 'buy'):
+        raise ValueError('native_stop_closing_side_differs')
     o = ex.create_order(symbol, "market", close_side, amount,
-                        params={"stopLossPrice": round(stop_price, 6),
-                                "reduceOnly": True})
+                        params=order_params(dict(native_position_side=native_side), reduce_only=True,
+                                            stopLossPrice=round(stop_price, 6)))
     return str(o.get("id") or (o.get("info") or {}).get("algoId") or "")
 
 
@@ -208,7 +215,8 @@ def open_stops(ex, symbol: str | None = None, *, strict: bool = False,
                     "stop_price": float(o.get("triggerPrice") or 0),
                     "reduce_only": str(o.get("reduceOnly", "")).lower() == "true",
                     "order_type": str(o.get("orderType") or o.get("type") or "").upper(),
-                    "kind": "algo"})
+                    "kind": "algo",
+                    "position_side": o.get('positionSide', 'BOTH')})
         except Exception as e:
             if strict:
                 if symbol is not None or isinstance(e, ProtectiveSnapshotIncomplete):
@@ -238,7 +246,8 @@ def open_stops(ex, symbol: str | None = None, *, strict: bool = False,
                     "stop_price": float(sp),
                     "reduce_only": str(o.get("reduceOnly", info.get("reduceOnly", ""))).lower() == "true",
                     "order_type": str(info.get("origType") or info.get("type") or o.get("type") or "").upper(),
-                    "kind": "order"})
+                    "kind": "order",
+                    "position_side": info.get('positionSide', o.get('positionSide', 'BOTH'))})
         except Exception as e:
             if strict:
                 raise

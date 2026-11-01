@@ -37,7 +37,7 @@ import math
 import time
 
 from .accounting import digest, number, safe_fill
-from . import booking
+from . import booking, position_mode as PM
 from . import trade_accounting as WT
 from ..core.types import norm_symbol
 
@@ -122,6 +122,9 @@ def reference_snapshot(row):
     """
     fields = booking.TRADE_FIELDS + ('sl_order_id',)
     ref = {k: row[k] for k in fields if k in row.keys()}
+    if PM.position_side(dict(row)) != 'BOTH':
+        ref.update(native_position_side=PM.position_side(dict(row)),
+                   entry_identity_sha256=digest(PM.identity_of(dict(row))))
     validate_reference(ref)
     return ref
 
@@ -144,13 +147,16 @@ def assess(a):
             raise ValueError('missing_algo_order')
         symbol = norm_symbol(ref['symbol']).replace('/', '')
         close_side = 'SELL' if ref['side'] == 'long' else 'BUY'
+        native_side = PM.position_side(ref)
+        if native_side != 'BOTH' and native_side.lower() != ref['side']:
+            raise ValueError('native_exit_side_differs')
         if canonical_id(algo.get('algoId')) != canonical_id(ref['sl_order_id']):
             raise ValueError('algo_id_reference_mismatch')
         if algo.get('symbol') != symbol or algo.get('side') != close_side:
             raise ValueError('algo_symbol_or_side_mismatch')
-        if algo.get('positionSide') != 'BOTH':
+        if algo.get('positionSide') != native_side:
             raise ValueError('algo_not_one_way')
-        if algo.get('reduceOnly') is not True:
+        if native_side == 'BOTH' and algo.get('reduceOnly') is not True:
             raise ValueError('algo_not_reduce_only')
         if algo.get('algoType') != 'CONDITIONAL':
             raise ValueError('algo_not_conditional_type')
@@ -174,9 +180,9 @@ def assess(a):
             raise ValueError('actual_order_id_mismatch')
         if order.get('symbol') != symbol or order.get('side') != close_side:
             raise ValueError('actual_order_symbol_or_side_mismatch')
-        if order.get('positionSide') != 'BOTH':
+        if order.get('positionSide') != native_side:
             raise ValueError('actual_order_not_one_way')
-        if order.get('reduceOnly') is not True:
+        if native_side == 'BOTH' and order.get('reduceOnly') is not True:
             raise ValueError('actual_order_not_reduce_only')
         if order.get('status') not in TERMINAL_ORDER_STATUSES:
             raise ValueError('actual_order_not_terminal_executed')
@@ -204,6 +210,8 @@ def assess(a):
             raise ValueError('algo_actual_order_quantity_mismatch')
         seen, qty = set(), 0.0
         for f in fills:
+            if native_side != 'BOTH' and f.get('position_side') != native_side:
+                raise ValueError('native_exit_fill_side_differs')
             fid = f.get('id')
             if not fid or str(fid) in seen:
                 raise ValueError('missing_or_duplicate_fill_identity')

@@ -55,7 +55,9 @@ def finish(db, attempt, now):
         result = A.replay(artifact)
         if artifact['bookings']['trade']['id'] != tid:
             raise ValueError('identity')
-        status = 'complete' if result['learning_eligible'] else 'retry'
+        status = ('complete' if result['learning_eligible'] else 'leg_complete'
+                  if artifact.get('schema_version') == A.HEDGE_LEG_VERSION and result.get('leg_verified') is True
+                  else 'retry')
         reasons = result['reasons']
     except Exception as exc:
         prior = db.execute('SELECT reasons FROM attempts WHERE id=?', (aid,)).fetchone()
@@ -112,7 +114,7 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
         capacity_blocked = scanned < len(rows)
         attempted = 0
         storage_blocked = False
-        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status NOT IN ('complete','unsupported_scope','conflict') AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
+        for (tid,) in db.execute("SELECT trade_id FROM jobs WHERE status NOT IN ('complete','leg_complete','unsupported_scope','conflict') AND due_ms<=? ORDER BY due_ms,trade_id LIMIT ?",
                                  (now, max_trades)).fetchall():
             used = sum(p.stat().st_size for p in directory.glob('*.json'))
             if db.execute('SELECT count(*) FROM attempts').fetchone()[0] >= MAX_ATTEMPTS or used + MAX_ARTIFACT > MAX_BYTES:
@@ -121,9 +123,22 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
             with closing(connect(journal)) as src, src:
                 source = booking.export(src, tid)
                 trade = source['trade']
+                from trader.engine.position_mode import position_side
+                recorded = dict(src.execute('SELECT * FROM trades WHERE id=?', (tid,)).fetchone())
+                native = position_side(recorded)
+                flat = None
+                if native != 'BOTH':
+                    from types import SimpleNamespace
+                    from trader.engine.coordinated_close import retained_terminal_flat
+                    root = json.loads(recorded.get('entry_identity_json') or '{}')
+                    group_id = (root.get('coordinated') or {}).get('group_id')
+                    if group_id and trade['status'] == 'closed':
+                        reader = SimpleNamespace(query=lambda sql, params=():[dict(r) for r in src.execute(sql, params)])
+                        flat = retained_terminal_flat(reader, tid, group_id, A.legs(source)[-1]['order_id'])
                 overlaps = [r[0] for r in src.execute(
-                    'SELECT id FROM trades WHERE symbol=? AND id<>? AND (closed_at IS NULL OR closed_at>=?)',
-                    (trade['symbol'], tid, trade.get('opened_at') or ''))]
+                    'SELECT id FROM trades WHERE symbol=? AND id<>? AND (closed_at IS NULL OR closed_at>=?) '
+                    'AND (? IS NULL OR opened_at<=?)',
+                    (trade['symbol'], tid, trade.get('opened_at') or '', trade.get('closed_at'), trade.get('closed_at')))]
             if trade['status'] != 'closed':
                 with db:
                     db.execute("UPDATE jobs SET status='waiting_close',due_ms=?,reasons=? WHERE trade_id=?",
@@ -143,7 +158,8 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
                 db.execute("UPDATE jobs SET status='running',attempts=attempts+1 WHERE trade_id=?", (tid,))
             # Network initialization is lazy: an empty queue makes no venue calls.
             try:
-                artifact = A.capture(source, exchange_factory(), overlaps)
+                artifact = (A.capture(source, exchange_factory(), overlaps, position_side=native, terminal_flat=flat)
+                            if native != 'BOTH' else A.capture(source, exchange_factory(), overlaps))
                 A.replay(artifact)
                 encoded = json.dumps(artifact, sort_keys=True, allow_nan=False).encode()
                 if len(encoded) > MAX_ARTIFACT:
@@ -176,9 +192,10 @@ def deliver_completed(db, journal):
     report=dict(delivered=0,retry=0,unbound=0)
     now=int(time.time()*1000)
     groups={}
-    rows=db.execute("SELECT id,path FROM attempts WHERE status='complete' AND id NOT IN (SELECT attempt_id FROM learning_deliveries) "
+    rows=db.execute("SELECT id,path FROM attempts WHERE status IN ('complete','leg_complete') AND id NOT IN (SELECT attempt_id FROM learning_deliveries) "
         "AND id NOT IN (SELECT attempt_id FROM learning_delivery_waits WHERE due_ms>?) ORDER BY started_ms,id LIMIT 2",(now,)).fetchall()
     for aid,path in rows:
+        grouped, source = False, None
         try:
             artifact=json.loads(Path(path).read_text())
             grouped,source=group_source(db,journal,artifact)
@@ -213,6 +230,21 @@ def deliver_completed(db, journal):
             # starve prospective receipts. Never create a historical registration.
             # Only a short reason code is stored, never free-form text.
             code = str(exc)
+            if (grouped and source is not None and code in {
+                    'native_group_funding_publication_pending', 'native_group_funding_history_changed',
+                    'native_group_funding_events_changed'}):
+                # A verified leg is not a final funding observation. Retain
+                # its old artifact and schedule bounded fresh captures; never
+                # turn a publication delay into permanent UNBOUND learning.
+                with db:
+                    for member in source['closure']['plan']['members']:
+                        tid = member['trade_id']
+                        db.execute("UPDATE attempts SET status='retry' WHERE trade_id=? AND status='leg_complete'", (tid,))
+                        db.execute("UPDATE jobs SET status='retry',due_ms=?,reasons=? WHERE trade_id=?",
+                            (now+BASE_RETRY_MS, json.dumps([code]), tid))
+                    db.execute('INSERT OR REPLACE INTO learning_delivery_waits VALUES (?,?)', (aid, now+BASE_RETRY_MS))
+                report['retry'] += 1
+                continue
             if not (0 < len(code) <= 80 and all(c.islower() or c.isdigit() or c == '_' for c in code)):
                 code = 'value_error'
             with db:
@@ -239,7 +271,7 @@ def group_source(queue,journal,artifact):
         if not row or row['state']!='CLOSED':return True,None
         plan=json.loads(row['plan_json']);parts=[]
         for member in plan['members']:
-            complete=queue.execute("SELECT path FROM attempts WHERE trade_id=? AND status='complete' "
+            complete=queue.execute("SELECT path FROM attempts WHERE trade_id=? AND status IN ('complete','leg_complete') "
                 "ORDER BY finished_ms,id LIMIT 1",(member['trade_id'],)).fetchone()
             if not complete:return True,None
             capture=json.loads(Path(complete[0]).read_text())

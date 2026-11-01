@@ -192,12 +192,19 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
         opens = Reader().query("SELECT * FROM trades WHERE status='open' LIMIT 65")
         if len(opens)>64:
             raise ValueError('CURRENT_BOOK_READ_BOUND_EXCEEDED')
+        group_requests = []
+        for trade in opens:
+            root = json.loads(trade.get('entry_identity_json') or '{}')
+            if root.get('version_id') and root.get('coordinated'):
+                logical_id = (root.get('execution_binding') or {}).get('logical_id')
+                group_requests.extend(Reader().query('SELECT * FROM execution_requests WHERE logical_id=?', (logical_id,)))
         closed = db.execute("SELECT COUNT(*) FROM trades WHERE status='closed'").fetchone()[0]
         metric = metric_capture(snapshot=snap, account_margin=json.loads(kv.get('account_margin_observation','null')),
             journal_positions=opens,risk_kv={k:kv[k] for k in ('risk_state','risk_baseline_marker','risk_state_corrupt_latch') if k in kv},
             config=config,as_of_ms=detail['as_of_ms'],closed_count=closed,
             risk_assessment=json.loads(kv.get('risk_assessment','null')),entry_contexts=entry_contexts,
-            account_observation=json.loads(kv.get('account_observation','null')))
+            account_observation=json.loads(kv.get('account_observation','null')),
+            economic_group_requests=group_requests or None)
     venue = Source.freeze('venue_position_snapshot',snap)
     policy = Source.freeze('owner-risk-policy',{'risk':config['risk']})
     sources.extend((venue,policy,*contexts))

@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
-from . import protective
+from . import protective, position_mode as PM
 from ..core import reason_codes as rc
 from .control_fence import control_fence, entry_block, persisted_state
 from .booking import monetary_total, order_evidence
@@ -316,7 +316,7 @@ class Executor:
         sl_oid = ""
         if self.market_type == MarketType.FUTURES:
             sl_oid = self._place_native_stop(sym, pos_side, amount,
-                                              stop_loss)
+                                              stop_loss, native_side=PM.position_side(entry_identity or {}))
             if not sl_oid:
                 self._recover_unprotected_entry(sym, pos_side, amount, fill,
                                                 oid)
@@ -332,7 +332,8 @@ class Executor:
             decision_id=decision.id,
             market_type=self.market_type.value, exec_mode=exec_mode,
             confidence=decision.confidence, sl_order_id=sl_oid,
-            entry_identity=entry_identity)
+            entry_identity=entry_identity, **({'opened_at':intent['position']['opened_at']}
+                if intent and PM.position_side(entry_identity or {}) != 'BOTH' else {}))
         self.journal.add_trade(pos, accounting={
             "basis": "entry_order_confirmation", "order_id": oid,
             "confirmed_quantity": amount, "confirmed_price": fill,
@@ -407,17 +408,17 @@ class Executor:
         return None, float(order.get("filled") or 0)
 
     def _place_native_stop(self, symbol: str, side: Side, amount: float,
-                           stop_price: float) -> str:
+                           stop_price: float, *, native_side='BOTH') -> str:
         close_side = "sell" if side == Side.LONG else "buy"
         amount = quantize(self.ex, symbol, amount)
         try:
             return protective.place_stop(self.ex, symbol, close_side,
-                                         amount, stop_price)
+                                         amount, stop_price, native_side=native_side)
         except Exception as e:
             # The first submission may have reached the venue before it raised
             # (timeout after accept). Adopt a stop that already matches rather
             # than stacking a second one beside it.
-            existing = self._matching_venue_stop(symbol, side, amount, stop_price)
+            existing = self._matching_venue_stop(symbol, side, amount, stop_price, native_side=native_side)
             if existing:
                 log.warning(f"native stop {symbol}: placement raised ({e}) but "
                             f"stop {existing} is already on the venue — adopted")
@@ -426,8 +427,8 @@ class Executor:
             try:
                 o = self.ex.create_order(
                     symbol, "STOP_MARKET", close_side, amount,
-                    params={"stopPrice": round(stop_price, 6),
-                            "reduceOnly": True, "workingType": "MARK_PRICE"})
+                    params=PM.order_params(dict(native_position_side=native_side), reduce_only=True,
+                            stopPrice=round(stop_price, 6), workingType='MARK_PRICE'))
                 return str(o.get("id") or "")
             except Exception as e2:
                 log.error(f"NATIVE STOP FAILED {symbol}: {e2} — position "
@@ -435,7 +436,7 @@ class Executor:
                 return ""
 
     def _matching_venue_stop(self, symbol: str, side: Side, amount: float,
-                             stop_price: float) -> str:
+                             stop_price: float, *, native_side='BOTH') -> str:
         """Id of a venue stop that already protects this position, else "".
 
         An unreadable listing returns "" (the caller then falls back to
@@ -447,7 +448,7 @@ class Executor:
             pos_side = "long" if side == Side.LONG else "short"
             for stop in snapshot:
                 if protective.protection_match(self.ex, symbol, pos_side, amount,
-                                               stop_price, stop).matches:
+                                               stop_price, stop, native_side=native_side).matches:
                     return str(stop.get("id") or "")
         except Exception as e:
             log.debug(f"stop pre-check unavailable {symbol}: {e}")
@@ -535,7 +536,7 @@ class Executor:
         if context:
             context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
                 strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
-                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                reference=trade.get('_execution_reference') or {'price':price_hint,
                            'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         amount = quantize(self.ex, sym, amount)
@@ -558,7 +559,7 @@ class Executor:
             if submit:
                 try:
                     order = self.ex.create_order(sym, "market", side_close, requested,
-                        params={"reduceOnly": True,"newClientOrderId":intent['client_order_id']})
+                        params=PM.order_params(trade, reduce_only=True, client_id=intent['client_order_id']))
                 except (InvalidOrder, InsufficientFunds) as refused:
                     # definitive refusal: nothing was placed, so the intent
                     # must not block entries until owner recovery
@@ -626,7 +627,7 @@ class Executor:
         if context:
             context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
                 strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
-                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                reference=trade.get('_execution_reference') or {'price':exit_price_hint,
                            'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         quantity = float(trade['amount']) if requested_quantity is None else float(requested_quantity)
@@ -641,8 +642,9 @@ class Executor:
             requested_qty = amount
             submitted_ms = int(time.time() * 1000)
             sent_ms = submitted_ms - 60_000
+            from .position_mode import order_params
             order = self.ex.create_order(sym, "market", side_close, amount,
-                                         params={"reduceOnly": True})
+                                         params=order_params(trade, reduce_only=True))
             submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:

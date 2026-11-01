@@ -6,7 +6,7 @@ submission and recovery barrier as an ordinary entry, with a frozen before state
 import json
 import math
 from . import entry_authority as A
-from . import protective
+from . import protective, position_mode as PM
 from .coordinated_close import IDENTITY_FIELDS
 
 FIELDS=('id','symbol','side','amount','entry_price','notional_usdt','leverage','stop_loss','take_profit','sl_order_id',
@@ -48,6 +48,7 @@ def risk_binding(journal,cap,trade_id,identity,symbol,strategy_id,direction):
     if (A.digest(raw)!=req['intent_hash'] or req['state']!='TERMINAL' or result.get('position_id')!=trade_id
             or raw.get('symbol')!=row['symbol'] or raw.get('strategy_id')!=row['strategy_id']
             or raw.get('instrument_id')!=cap['instrument_id'] or raw.get('logical_id')!=bound.get('logical_id')
+            or raw.get('position_side','BOTH')!=PM.position_side(root)
             or raw.get('strategy_identity')!=bound.get('strategy_identity')
             or (raw.get('strategy_identity') or {}).get('coordinated')!=group):
         raise ValueError('increase_root_receipt_differs')
@@ -118,6 +119,7 @@ def recover(recovery,intent,order,positions):
         if (p.get('info') or {}).get('symbol',market.get('id'))!=market.get('id'):
             raise ValueError('increase_venue_position_identity_mismatch')
         if market.get('id')!=cap['record']['instrument_id']['venue_symbol']:continue
+        if PM.venue_side(p)!=PM.position_side(template['entry_identity']):continue
         q=float(p['contracts'])
         if not math.isfinite(q) or q<0:raise ValueError('increase_position_quantity_unknown')
         if q:matches.append(p)
@@ -132,7 +134,7 @@ def recover(recovery,intent,order,positions):
     if filled==0:
         recovery.finish(intent,'increase_terminal_without_fill');return
     stops=protective.open_stops(ex,intent['symbol'],strict=True)
-    candidates=[s for s in stops if protective.protection_match(ex,intent['symbol'],row['side'],amount,sl,s).matches]
+    candidates=[s for s in stops if protective.protection_match(ex,intent['symbol'],row['side'],amount,sl,s,native_side=PM.position_side(template['entry_identity'])).matches]
     if not candidates:
         # The old stop remains armed. An unknown placement is inspected, never
         # blindly repeated. Global recovery keeps every new entry blocked.
@@ -143,7 +145,8 @@ def recover(recovery,intent,order,positions):
             contain(recovery,intent,amount,entry,order);return
         intent['stop_attempted']=True
         recovery.save(intent,'increase_full_stop_intent_persisted')
-        try:protective.place_stop(ex,intent['symbol'],'sell' if row['side']=='long' else 'buy',amount,sl)
+        try:protective.place_stop(ex,intent['symbol'],'sell' if row['side']=='long' else 'buy',amount,sl,
+                                  native_side=PM.position_side(template['entry_identity']))
         except Exception:
             # Unknown placement is read on the next pass before any unwind.
             recovery.save(intent,'increase_full_stop_placement_unknown');return
@@ -157,7 +160,7 @@ def recover(recovery,intent,order,positions):
         if any(str(s['id'])==old for s in remaining):
             recovery.save(intent,'increase_old_stop_cleanup_pending');return
         if not any(str(s['id'])==str(chosen['id']) and protective.protection_match(
-                ex,intent['symbol'],row['side'],amount,sl,s).matches for s in remaining):
+                ex,intent['symbol'],row['side'],amount,sl,s,native_side=PM.position_side(template['entry_identity'])).matches for s in remaining):
             recovery.save(intent,'increase_full_stop_disappeared');return
     book(journal,intent,amount,entry,chosen,order)
     recovery.finish(intent,'increase_confirmed_protected_and_journalled')
@@ -202,12 +205,14 @@ def unwind(recovery,intent,positions):
         if (p.get('info') or {}).get('symbol',market.get('id'))!=market.get('id'):
             raise ValueError('increase_rollback_venue_identity_mismatch')
         if market['id']!=cap['record']['instrument_id']['venue_symbol']:continue
+        if PM.venue_side(p)!=PM.position_side(intent['position']['entry_identity']):continue
         q=float(A.positive(p['contracts'],zero=True))
         if q:matches.append(p)
     if row['status']=='closed':
         if matches:
             recovery.save(intent,'increase_rollback_flat_unproven');return
-        if protective.open_stops(recovery.ex,intent['symbol'],strict=True):
+        if any(s.get('position_side','BOTH')==PM.position_side(intent['position']['entry_identity'])
+               for s in protective.open_stops(recovery.ex,intent['symbol'],strict=True)):
             recovery.save(intent,'increase_rollback_remaining_protection');return
         recovery.finish(intent,'increase_existing_position_closed_and_flat');return
     if (len(matches)!=1 or matches[0]['side']!=row['side']
@@ -217,7 +222,7 @@ def unwind(recovery,intent,positions):
     if excess<=1e-12:
         stops=protective.open_stops(recovery.ex,intent['symbol'],strict=True)
         confirmed=[s for s in stops if protective.protection_match(recovery.ex,intent['symbol'],row['side'],
-            float(row['amount']),float(row['stop_loss']),s).matches]
+            float(row['amount']),float(row['stop_loss']),s,native_side=PM.position_side(intent['position']['entry_identity'])).matches]
         if not confirmed:
             recovery.save(intent,'increase_prior_position_protection_unconfirmed');return
         journal.record_stop_order(tid,confirmed[0]['id'],confirmed[0]['stop_price'])
