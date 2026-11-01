@@ -14,6 +14,9 @@ returns a typed outcome:
 
 Positions still open at the end of the development window are censored by the
 engine, so no development outcome can cross into the protected window.
+Compositional candidates advance on their own economics and uncertainty;
+component superiority is retained as comparison evidence, not a veto. Legacy
+family selection keeps its separate existing rule.
 """
 from __future__ import annotations
 
@@ -29,6 +32,7 @@ from ..compose import data as cdata, graph
 from . import ClosureRefused, canonical, digest, families, manifest
 
 RESULT_SCHEMA = 'closure-development.v1'
+COMBINED_SELECTION_POLICY = 'own-economics-component-comparison.v1'
 OUTCOMES = ('DEVELOPMENT_POSITIVE', 'HEDGE_SUPPORTED', 'NEGATIVE_ECONOMICS', 'INCONCLUSIVE_POWER', 'BLOCKED_DATA', 'CODE_FAILURE')
 
 
@@ -149,7 +153,8 @@ def run_symbols(c, bundle: ev.Bundle, *, delay_bars: int = 0, cost_mult: float =
     return out
 
 
-def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P, *, development_only=False) -> tuple:
+def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P, *, development_only=False,
+             component_comparison_only=False) -> tuple:
     """(outcome, reason). Power problems are never negative economics."""
     v = res.get('verdict')
     if v == 'error':
@@ -174,13 +179,17 @@ def classify(res: dict, baselines: dict, grow_max_p: float = growth.GROW_MAX_P, 
     for key, b in baselines.items():
         if b.get('verdict') == 'error':
             return 'CODE_FAILURE', f'baseline {key} raised: ' + str(b.get('error'))[:120]
-        if b.get('verdict') not in ('scored', 'empty'):
+        if component_comparison_only and b.get('verdict') not in ('scored', 'empty', 'untestable', 'untested'):
+            return 'CODE_FAILURE', f'baseline {key} returned an invalid comparison verdict'
+        if not component_comparison_only and b.get('verdict') not in ('scored', 'empty'):
             return 'INCONCLUSIVE_POWER', f'baseline {key} could not be judged ({b.get("verdict")})'
     p, pct = res.get('consistency_p'), (res.get('portfolio') or {}).get('total_pct', 0.0)
     if p is None or not np.isfinite(p) or not np.isfinite(pct):
         return 'INCONCLUSIVE_POWER', 'nonfinite development economics'
     if p > grow_max_p or pct <= 0:
         return 'NEGATIVE_ECONOMICS', f'p={p} total_pct={pct} (needs p<={grow_max_p} and positive return)'
+    if component_comparison_only:
+        return 'DEVELOPMENT_POSITIVE', f'p={p} total_pct={pct}; component comparisons retained, not an advancement veto'
     weak = [k for k, b in baselines.items() if not growth.earns_place(res, b)[0]]
     if weak:
         return 'NEGATIVE_ECONOMICS', f'does not beat its own baseline(s): {sorted(weak)}'
@@ -388,7 +397,8 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
     except Exception as exc:                                  # noqa: BLE001
         return _evaluation_failure(done, exc, env['tf'], combo=c.as_dict(), combo_hash=c.hash,
                                    threshold_fit=fit)
-    outcome, reason = classify(res, sub, float(env['policy']['grow_max_p']), development_only=True)
+    outcome, reason = classify(res, sub, float(env['policy']['grow_max_p']), development_only=True,
+                              component_comparison_only=graph.is_graph(candidate))
     blocked_gaps = _structured_gaps(res.get('context_gaps')) if outcome == 'BLOCKED_DATA' else None
     pf = res.get('portfolio') or {}
     metrics = dict(consistency_p=res.get('consistency_p'), median_pf=res.get('median_pf'),
@@ -403,6 +413,8 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
         protected_status=env['protected_status'], projection=res.get('projection'),
         projected_testable=bool(res.get('testable')), reasons=list(env.get('protected_reasons') or []),
         authority='NO_ADMISSION: development economics do not establish qualification'))
+    if graph.is_graph(candidate):
+        extra['selection_policy'] = COMBINED_SELECTION_POLICY
     if screened:
         extra.update(economic_screen=res['economic_screen'],
                      baseline_assessment='NOT_COMPUTED_ECONOMIC_SCREEN')

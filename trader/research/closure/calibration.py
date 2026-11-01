@@ -395,9 +395,11 @@ def run_identity(protocol: dict, n: int) -> str:
 
 
 def search_contract(*, search, max_candidates, max_revisions, tf='4h', intake=False,development_bars=None):
+    from .development import COMBINED_SELECTION_POLICY
     body=dict(search=search,max_candidates=int(max_candidates),max_revisions=int(max_revisions),
               tf=tf,retained_question_intake=bool(intake),
-              development_order='directional-economics-first.v1')
+              development_order='directional-economics-first.v1',
+              directional_selection=COMBINED_SELECTION_POLICY)
     if intake:
         body['intake_provider_id'] = intake_provider_id()
         body['intake_policy'] = 'semantic-frozen-batch.v1'
