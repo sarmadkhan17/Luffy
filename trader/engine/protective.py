@@ -26,9 +26,17 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 from dataclasses import dataclass
 
 log = logging.getLogger(__name__)
+
+
+def _algo_endpoint(ex, operation):
+    """CCXT exposes both API families even on a COIN-M client."""
+    prefix='dapiPrivate' if getattr(ex,'id',None)=='binancecoinm' else 'fapiPrivate'
+    method=getattr(ex,prefix+operation,None)
+    return method if callable(method) else None
 
 
 class ProtectiveSnapshotIncomplete(RuntimeError):
@@ -126,7 +134,7 @@ def place_stop(ex, symbol: str, close_side: str, amount: float,
     return str(o.get("id") or (o.get("info") or {}).get("algoId") or "")
 
 
-def cancel_stop(ex, order_id: str, symbol: str) -> bool:
+def cancel_stop(ex, order_id: str, symbol: str, *, kind: str | None = None) -> bool:
     """Cancel a protective stop however the venue books it.
 
     Algo first: that is where Binance USDM actually puts it, and the plain
@@ -135,15 +143,28 @@ def cancel_stop(ex, order_id: str, symbol: str) -> bool:
     """
     if not order_id:
         return True
-    if hasattr(ex, "fapiPrivateDeleteAlgoOrder"):
+    if kind not in (None,'algo','order'):
+        raise ValueError('protective_order_kind_unknown')
+    coin=getattr(ex,'id',None)=='binancecoinm'
+    cancel_algo=_algo_endpoint(ex,'DeleteAlgoOrder')
+    if cancel_algo is not None and kind!='order':
         try:
-            ex.fapiPrivateDeleteAlgoOrder({"algoId": int(order_id)})
+            cancel_algo({"algoId": int(order_id)})
             return True
         except Exception as e:
             msg = str(e)
+            if coin:
+                # The ordinary and conditional order-ID spaces are distinct.
+                # A failure cannot justify cancelling the same numeric ID in
+                # the other space, which could belong to another position.
+                if '-2011' in msg or 'not exist' in msg.lower():return True
+                log.warning('COIN-M algo stop %s not cancelled (%s)',order_id,type(e).__name__)
+                return False
             # already gone / never an algo order — fall through, don't shout
             if "-2011" not in msg and "not exist" not in msg.lower():
                 log.debug(f"algo cancel {order_id} {symbol}: {msg[:120]}")
+    if coin and kind!='order':
+        return False  # no native conditional endpoint; no cross-API fallback
     try:
         ex.cancel_order(order_id, symbol)
         return True
@@ -162,14 +183,16 @@ def open_stops(ex, symbol: str | None = None, *, strict: bool = False,
     normalised form rather than trusting either spelling.
     """
     out: list[dict] = []
-    global_algo = callable(getattr(ex, "fapiPrivateGetOpenAlgoOrders", None))
-    complete = global_algo or symbol is not None
+    list_algo=_algo_endpoint(ex,'GetOpenAlgoOrders')
+    global_algo=list_algo is not None
+    coin=getattr(ex,'id',None)=='binancecoinm'
+    complete = global_algo or (symbol is not None and not coin)
     reason = None if complete else "global_stop_listing_unsupported"
-    if not global_algo and symbol is None and strict:
+    if not complete and strict:
         raise ProtectiveSnapshotIncomplete(reason)
     if global_algo:
         try:
-            r = ex.fapiPrivateGetOpenAlgoOrders()
+            r = list_algo()
             if not (isinstance(r, list) or
                     isinstance(r, dict) and isinstance(r.get("orders"), list)):
                 if symbol is None:
@@ -230,7 +253,12 @@ def open_stops(ex, symbol: str | None = None, *, strict: bool = False,
 
 
 def venue_key(symbol: str) -> str:
-    """BTC/USDT, BTC/USDT:USDT and BTCUSDT are one market."""
+    """Join exact instrument aliases without merging delivery and perpetual."""
+    value=symbol.upper()
+    native=re.fullmatch(r'([A-Z0-9]+)/USD:\1(?:-([0-9]{6}))?',value)
+    if native:
+        base,expiry=native.groups()
+        return base+'USD_'+(expiry or 'PERP')
     return symbol.split(":")[0].replace("/", "").upper()
 
 
@@ -267,7 +295,7 @@ def sweep_orphans(ex, keep_ids: set[str], live_symbols: set[str],
             log.warning(f"stop {o['id']} on {o['symbol']} is unrecognised but "
                         f"the position is live and has no known stop — kept")
             continue
-        if cancel_stop(ex, o["id"], o["symbol"]):
+        if cancel_stop(ex, o["id"], o["symbol"],kind=o['kind']):
             cancelled += 1
             log.info(f"orphan stop cancelled: {o['symbol']} {o['side']} "
                      f"{o['amount']} @ {o['stop_price']} (id {o['id']})")
