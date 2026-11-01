@@ -21,6 +21,7 @@ def load_config(path: str | None = None) -> dict:
         ('LUFFY_DASHBOARD_HOST', 'dashboard', 'host'),
         ('LUFFY_OWNER_IPC_DIR', 'owner_interface', 'ipc_dir'),
         ('LUFFY_RECOVERY_ROOT', 'deployment', 'recovery_root'),
+        ('LUFFY_BRAIN_USAGE_PATH', 'brain', 'usage_ledger_path'),
     ):
         if variable in os.environ:
             value = os.environ[variable].strip()

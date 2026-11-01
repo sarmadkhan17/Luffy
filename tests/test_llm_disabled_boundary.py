@@ -90,9 +90,9 @@ def test_background_spec_writer_and_pine_template_fallback(offline, monkeypatch,
     spec, trace = SpecWriter(llm).write()
     assert spec is None
     if permissive_availability:
-        assert trace["attempts"] and all(a["error"] == "non-JSON reply" for a in trace["attempts"])
+        assert trace == {"attempts": [], "reason": "provider reply unavailable", "deferred": True}
     else:
-        assert trace == {"reason": "no LLM available"}
+        assert trace == {"reason": "no LLM available", "deferred": True}
     genome = SimpleNamespace(hypothesis="offline", params={})
     assert refine_with_llm(genome, "retained template", llm) == ("retained template", False)
 
@@ -113,8 +113,11 @@ def test_kernel_background_generation_records_refusal_without_send(offline, tmp_
     monkeypatch.setattr(kernel, "_strategist_knowledge", lambda: {})
     report = kernel._mechanism_once()
     assert report["added"] == [] and report["book"] == 0
-    event = kernel.journal.query("SELECT detail FROM brain_events WHERE kind='spec_write_failed'")[0]
-    assert json.loads(event["detail"])["reason"] == "no LLM available"
+    events = kernel.journal.query("SELECT detail FROM brain_events WHERE kind='spec_write_deferred'")
+    assert len(events) == 1
+    assert json.loads(events[0]["detail"])["reason"] == "no LLM available"
+    assert json.loads(events[0]["detail"])["deferred"] is True
+    assert not kernel.journal.query("SELECT 1 FROM brain_events WHERE kind='spec_write_failed'")
 
 
 def test_off_switch_applies_to_an_existing_client_and_reconstructed_fallback(offline, caplog):

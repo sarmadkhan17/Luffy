@@ -6,6 +6,7 @@ import fcntl
 import os
 import tempfile
 import uuid
+from pathlib import Path
 from contextlib import contextmanager
 import logging
 from datetime import datetime, timezone
@@ -30,7 +31,14 @@ class BrainLLM:
         #: after every reservation, so no consumer can eat another's slice.
         self.purpose_budgets: dict[str, int] = {
             k: int(v) for k, v in (b.get("purpose_budgets") or {}).items()}
-        self._usage_path = ROOT / "data" / "brain_usage.json"
+        ledger = b.get("usage_ledger_path")
+        if ledger is not None and (not isinstance(ledger, str) or not ledger.strip()
+                                   or not Path(ledger).is_absolute()):
+            raise ValueError("brain_usage_ledger_path_must_be_absolute")
+        # Isolated research must share the installed provider's budget, while
+        # keeping its experiment stores separate. Resolve aliases before
+        # deriving the lock path or atomically replacing the ledger.
+        self._usage_path = Path(ledger).resolve() if ledger is not None else ROOT / "data" / "brain_usage.json"
         self._base_url = b.get("base_url", "https://api.deepseek.com")
         self._key = Env.deepseek_key()
         self._client = None
