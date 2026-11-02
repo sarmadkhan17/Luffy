@@ -179,3 +179,41 @@ So the required result holds: **zero budget is spent at startup**, in every conf
 **What this means for your option 1.** The flag and split you asked for are committed in `config.yaml`, but they are defence in depth, not what protects startup. Two things you should weigh:
 1. `predictive_split` is also read by the legacy **discovery** loader (`evaluate.load_bundle`, line 144): once the accounting fence is lifted, new legacy discovery batches would see data before `cut_ms` only. That is a research-behaviour change you did not ask for. The flag alone (without the split) already makes every candidate defer (`selection_overlap`), with no discovery effect. If you prefer that, delete the `predictive_split` block; the dry run shows zero spend either way.
 2. The accounting fence is what actually keeps the stranded survivors untouched. Lifting it (re-evaluating the legacy rows under current accounting, or any change to `require_current_accounting`) is the moment these settings start to matter.
+
+**Update, final state (owner decision, 2026-11-02): the `predictive_split` block was removed from `config.yaml`.** Only `research.referee_forward_only: true` and `research.referee_first_batch: 10` remain (`referee` and `handoff` stay `true`). The dry run was repeated on a fresh `/tmp` copy of the snapshot with exactly that configuration:
+
+| scenario (flag only, no split) | steps | looks spent | LORD++ alpha spent |
+|---|---|---|---|
+| startup as committed | 40 | **0** | **0** (40/40 blocked by the accounting fence) |
+| fence lifted in memory, store readable (3 queued) | 6 | **0** | **0** (3/3 deferred, `selection_overlap`) |
+| fence lifted in memory, store unreadable (10 queued) | 40 | **0** | **0** (10/10 deferred, `selection_overlap`) |
+
+The same behaviour is now a regression test, `tests/test_research_startup_zero_spend.py`, on a temporary synthetic store: the accounting fence stops startup; with the fence lifted the flag defers every queued candidate; an unreadable store defers as `capacity_unavailable`; the first batch is capped; and the controls without the flag spend a look. Removing the flag's protection, the fail-closed check or the cap makes it fail (checked by mutation), and removing the accounting check at its source makes the fence test fail. One more fact from that work: there are **two** independent accounting fences (`step()` for the whole horizon, and `_examine()` for the candidate's own row), so removing only the first changes nothing.
+
+---
+
+## 4. Note for later (not implemented): what giving the 2,735 legacy rows current accounting would involve
+
+Route L (legacy referee plus the forward-only refusal) cannot run until the legacy ledger passes the accounting fence. This is what that would take. **Nothing here has been done.**
+
+**What the fence requires (VERIFIED).** `ResearchRunner.step` calls `require_current_accounting` on every row of the horizon (`runner.py:229-233`), and `_examine` calls it again on the candidate's own row before touching the budget. `is_current_accounting` accepts a row only if `portfolio.accounting` equals a freshly computed `accounting_provenance(initial_equity, risk_pct, max_open, clock)`: version `portfolio-exit-realized.v1`, plus a digest of the accounting implementation (`portfolio_evidence.py:34-35, 48-56, 65-74`). The 2,735 legacy rows carry none of this (queried on the snapshot copy). One legacy row left in the horizon is enough to keep the whole thread stopped.
+
+**Why it is not a metadata stamp (VERIFIED, plus a judgement).**
+* The stored numbers were produced under the legacy accounting (`portfolio-entry-booked.legacy`: entry-booked, not exit-realized). Writing the new provenance onto them would assert accounting they were not computed under, and the code's own rule is that legacy and corrected numbers are never compared or mixed (`AccountingMismatch`: "Historical numbers cannot be compared under different accounting").
+* `record_result` refuses to overwrite an existing row with differently-accounted numbers (`require_compatible_accounting`, `ledger.py:313-315`), so a plain re-score of an existing hash fails.
+
+**The sanctioned shape.** `Ledger.archive_horizon(tf, vintage)` (`ledger.py:452`) moves every `research_combos` and `research_controls` row of a horizon into `research_archive`, stamped with a vintage, "before its gauges are re-measured", precisely so a deliberate re-measure is honest. A backfill would be:
+1. Take a verified backup first (the live journal is the single record of the 2,735 rows).
+2. `archive_horizon('4h', '<vintage>')`: all 2,735 combos and the 4h controls move aside, intact and queryable. `research_tests`, `research_budget` and the 0 looks spent are untouched.
+3. Re-evaluate under current accounting, writing fresh rows. Identities carry over because they are content hashes of the combination: all 2,735 rebuild to their stored hash with the current code (proved separately). Either re-run the planner, or add a small targeted job that re-scores a named list of hashes; there is no such job today.
+4. The fence then passes, because no legacy row remains in the horizon.
+
+**Consequences to decide before doing it.**
+* **Verdicts can change.** `total_pct`, `max_dd_pct` and the survivor/grow decision depend on the accounting, so some of the 124 survivors and 65 grow candidates may no longer qualify, and some pruned rows may now qualify. Honest re-evaluation, but the first-batch ranking would be recomputed.
+* **The whole horizon, not just the survivors.** The fence checks every row, so all 2,546 pruned rows must also be archived (and later re-searched or left out). That discards the ledger's memory of what was already evaluated for this horizon.
+* **Selection date.** A re-score writes new rows through `INSERT OR REPLACE`/`INSERT`, so `created_at` becomes the re-score date, and with it the date Route L's forward-only rule measures from. With a 621-bar (about 103.5 day) held-out minimum, a re-score in late 2026 would push the earliest honest look to roughly spring 2027. Preserving the archived `created_at` is only defensible if the re-score uses the same discovery window (same 2025-03-08 cut), so no later bar influenced selection. That is a decision for you.
+* **Data availability (the 4 Oct failure).** The legacy discovery loader reads replay-eligible bars only (`replay_ohlcv` hides unqualified pre-upgrade rows, which is why the 4 Oct control batch loaded 0 of 16 symbols, INFERRED). A legacy-path re-score may therefore not load the old windows at all. The retrospective route (`research.retrospective` with an authenticated preserved discovery-cut source, `evaluate.authenticated_discovery_contract`) exists for this, and needs that source file to be created and verified first.
+* **Cost (INFERRED from a config comment, not measured).** The config records about 12.3 s per evaluation at 60 null draws at 4h over 19 symbols; the current setting is 30 draws, so roughly 7 to 12 s each. All 2,735 rows would take about 5 to 9 CPU-hours at nice 19; only the 189 survivor/grow rows about 22 to 38 minutes.
+* **LORD++ budget.** Archiving and re-scoring read discovery data only and spend no look.
+
+**Decisions this would need from you:** all rows or a named list; which discovery window (preserved cut or a fresh one); whether to preserve `created_at`; and whether the retrospective source is acceptable.
