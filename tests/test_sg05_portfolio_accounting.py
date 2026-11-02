@@ -257,6 +257,11 @@ def test_stale_worker_null_receipt_uses_existing_failed_look_budget_rule(tmp_pat
 # Owner-approved Review 07 contract changes, each pinned exactly. Everything else
 # stays byte/value-identical to the SG-05 baseline.
 _BASE = 'fc6c0b2'
+# Re-blessed 2026-11-02 (owner-authorized, evidence-gated): combo.py gained an optional `exit_spec` and fitted-artifact
+# provenance in 0347d42e. Proven purely additive: all 2,735 stored research_combos identities recompute identically
+# with the current combo.py AND with the fc6c0b2 version. The combination definition and alpha-investing are
+# therefore frozen against the reviewed release instead; every other pin below still compares against `_BASE`.
+_COMBO_BASE = 'a479b995'
 # Keys removed because their only readers were deleted in the same approved
 # commits (ef53aa3 Brain remediation; c9cfe7a D1 charge-once). section -> keys.
 _REMOVED_KEYS = {
@@ -286,7 +291,7 @@ def test_statistical_policy_and_frozen_evidence_unchanged():
     # alpha-investing and the combination definition stay byte-identical;
     # thresholds.py differs only by the approved denominator change below.
     paths = ['trader/research/combo.py', 'trader/research/fdr.py']
-    subprocess.run(['git', 'diff', '--exit-code', _BASE, '--', *paths],
+    subprocess.run(['git', 'diff', '--exit-code', _COMBO_BASE, '--', *paths],
                    check=True, capture_output=True)
     # New bundle reports are additive evidence. Every historical tracked file
     # must still retain its exact bytes and path; additions cannot mask edits.
