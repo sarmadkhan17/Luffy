@@ -139,3 +139,22 @@ Zero looks are spent today, so the next look is `t = 1`. Level held to at each l
 2. Keep the "forward after selection date" rule, or accept the legacy unseen window after the 2025-03-08 cut?
 3. Approve capping the first batch at 10 with the ranking criterion above?
 4. For Options A to F in §1: which to take forward, and in what order?
+
+---
+
+## 3. Task 3.1 implementation status (2026-11-02) and a restart risk
+
+**Assumption I made, please confirm:** your instruction said to proceed with Task 3.1 "as approved before" without naming a route. I implemented **Route L** (legacy referee plus the added refusal), as an **opt-in that is OFF by default**. I did not enable it and changed no config value. If you meant Route S, nothing here is wasted, but say so.
+
+**What exists (all default-off, `research.referee_forward_only`, default `false`):**
+* `referee.selection_ms` / `referee.selection_overlap`: pure helpers. B must start at least 10 bars after the candidate's selection time (its ledger `created_at`); an unreadable selection time is treated as an overlap.
+* `ResearchRunner._examine`: when the flag is on, an overlapping candidate is set `deferred` with the reason **before any held-out price is read**; no look is spent and no alpha is consumed.
+* `ResearchRunner._referee_step`: when the flag is on, survivors enter the referee in the fixed order (unrounded `consistency_p` ascending, `median_pf` descending, `hash`), capped at `research.referee_first_batch` (default 10) candidates in total. Held-out data cannot influence the order.
+* Tests: `tests/test_referee_forward_only.py` (11, all passing). With the flag absent the existing order (`total_pct` descending) and behaviour are unchanged; the existing referee, runner, ledger and quantitative suites are re-run against this change (results in the report).
+
+**What the flag does not do on its own:** it refuses candidates whose held-out B overlaps selection, but B itself is still the legacy cut. To make forward bars available you must also set the existing `research.predictive_split` (`start_ms`, `cut_ms`, `end_ms`) with a cut at or after the latest selection time plus the embargo. Until about 2026-12-25 to 12-30 there are fewer than the 621 bars the rotation floor needs after the 13 to 18 September selections, so every candidate would be deferred by the existing rotation-floor check anyway.
+
+### Restart risk (VERIFIED by reading the code paths; not executed)
+`research.enabled` and `research.referee` are both `true`. The kernel starts a legacy research thread (`kernel.py:417`, `_research_loop`, first step after about 5 minutes, then every 60 s), and `ResearchRunner.step` runs `_referee_step` **first** (`runner.py:225-229`). With a `research_slices` row for 4h already present, that step selects fresh testable survivors in `total_pct` order, queues up to 20, and examines them one by one, **spending LORD++ looks on the legacy held-out window with no forward-only protection, no fixed ranking and no cap of 10**. In other words, **a restart as configured can begin spending the held-out budget on the stranded survivors by itself.**
+
+Options (your decision; I changed none): (1) enable `research.referee_forward_only` plus a forward `predictive_split` before any restart; (2) set `research.referee: false` until you have chosen the route; (3) accept the legacy behaviour for those survivors. I recommend (1) or (2); (3) contradicts the cap and the forward-only requirement in your own amendment.

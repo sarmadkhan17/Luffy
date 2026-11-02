@@ -213,6 +213,9 @@ def test_entry_callers_are_closed_set():
                     and 'executor' in ast.unparse(node.func.value).lower()):
                 open_callers.setdefault(path.as_posix(), []).append(node)
     assert submit_callers == {'trader/engine/executor.py'}
-    assert set(open_callers) == {'trader/kernel.py'}
-    for call in open_callers['trader/kernel.py']:
-        assert any(k.arg == 'risk_permission' for k in call.keywords)
+    # The Kernel, and the coordinated-hedge dispatcher it drives (engine/coordinated_venue.py, which obtains the SAME
+    # Risk permission via risk_manager.authorize_entry and enters the same submit() fence). See docs/guard-review-20261102.md.
+    assert set(open_callers) == {'trader/kernel.py', 'trader/engine/coordinated_venue.py'}
+    for caller in open_callers.values():
+        for call in caller:
+            assert any(k.arg == 'risk_permission' for k in call.keywords)

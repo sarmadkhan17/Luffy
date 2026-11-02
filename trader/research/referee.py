@@ -515,6 +515,33 @@ def rotation_deferral(capacity: dict | None, draws: int) -> str | None:
     return None
 
 
+#: Held-out B must begin this many bars after a candidate's selection time (the closure qualifier's embargo).
+FORWARD_EMBARGO_BARS = 10
+
+
+def selection_ms(created_at):
+    """Selection time of a legacy candidate: its ledger `created_at` (ISO 8601) in ms, or None when unreadable."""
+    from datetime import datetime
+    try:
+        return int(datetime.fromisoformat(str(created_at).replace('Z', '+00:00')).timestamp() * 1000)
+    except (TypeError, ValueError):
+        return None
+
+
+def selection_overlap(cut_ms, selection_time_ms, tf: str) -> str | None:
+    """None when held-out B starts at least FORWARD_EMBARGO_BARS after selection; otherwise the reason B overlaps the
+    period the candidate was selected in. An unreadable selection time counts as an overlap (fail closed).
+    Pure and run BEFORE any held-out price is read, so a refusal spends nothing."""
+    from ..core.types import TF_MS
+    if selection_time_ms is None:
+        return 'selection_time_unknown: cannot prove held-out B starts after selection'
+    earliest = int(selection_time_ms) + FORWARD_EMBARGO_BARS * TF_MS[tf]
+    if int(cut_ms) >= earliest:
+        return None
+    return (f'selection_overlap: held-out B would start at {int(cut_ms)} but the candidate was selected at '
+            f'{int(selection_time_ms)}; B must start at or after {earliest} (selection + {FORWARD_EMBARGO_BARS} bars)')
+
+
 def current_cut(tf: str, discovery_symbols, paths: dict | None,
                 recorded: int) -> int:
     """The LATEST cut any discovery evaluation can have used.

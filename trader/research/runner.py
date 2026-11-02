@@ -53,7 +53,23 @@ DEFAULTS = {
     "lord_w0": 0.05,
     "referee_max_draws": 19999,
     "referee_select_batch": 20,
+    # Opt-in, default OFF (changes nothing until the owner enables it): held-out B must start after each candidate's
+    # selection time, and the first referee batch is a fixed-rank, capped set. See docs/protocol-changes-20261102.md.
+    "referee_forward_only": False,
+    "referee_first_batch": 10,
 }
+
+
+def forward_rank_key(row: dict):
+    """Ranking fixed in advance, from recorded DISCOVERY evidence only: unrounded consistency_p ascending, then
+    median_pf descending, then hash. No held-out value can influence it."""
+    p = row.get("consistency_p")
+    return (float("inf") if p is None else float(p), -(row.get("median_pf") or 0.0), row["hash"])
+
+
+def forward_first_batch(rows: list, already_selected: int, cap: int) -> list:
+    """The survivors still allowed into the referee under the first-batch cap, best first by the fixed ranking."""
+    return sorted(rows, key=forward_rank_key)[:max(0, int(cap) - int(already_selected))]
 
 
 class ResearchRunner:
@@ -581,8 +597,14 @@ class ResearchRunner:
                                                      verdict="survivor")
                          if r.get("testable")
                          and self.ledger.candidate(r["hash"]) is None]
+                forward = bool((self.cfg.get("research") or {}).get("referee_forward_only", False))
+                if fresh and forward:
+                    fresh = forward_first_batch(fresh, len(self.ledger.candidates(tf, geo)),
+                                                int((self.cfg.get("research") or {}).get(
+                                                    "referee_first_batch", DEFAULTS["referee_first_batch"])))
                 if fresh:
-                    fresh.sort(key=lambda r: -(r.get("total_pct") or 0.0))
+                    if not forward:
+                        fresh.sort(key=lambda r: -(r.get("total_pct") or 0.0))
                     return self._select(tf, geo, fresh[
                         :int(self._r("referee_select_batch"))])
                 queued = self.ledger.candidates(tf, geo, state="queued")
@@ -738,6 +760,12 @@ class ResearchRunner:
         split = (self.cfg.get("research") or {}).get("predictive_split")
         cut_ms = (int(split["cut_ms"]) if split else self.ledger.spent_cut(tf)
                   or referee.current_cut(tf, disc, self._paths(), int(cut_ms)))
+        if bool(((getattr(self, "cfg", None) or {}).get("research") or {}).get("referee_forward_only", False)):
+            overlap = referee.selection_overlap(cut_ms, referee.selection_ms(row[0].get("created_at")), tf)
+            if overlap:
+                # Before any held-out price is read: DEFERRED, nothing spent.
+                self.ledger.set_candidate(h, tf, geo, "deferred", reason=overlap)
+                return {**out, "ok": True, "state": "deferred"}
         capacity = referee.rotation_capacity(tf, cut_ms, held, disc + held,
                                               self.cfg, self._paths())
         if capacity is not None and capacity["b"]:

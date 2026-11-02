@@ -122,7 +122,7 @@ _SIG = [{"strategy_id": "donchian", "action": "BUY", "confidence": 0.6}]
 
 def test_the_stop_handed_to_the_executor_comes_off_the_4h_frame():
     k = _kernel({"donchian": _DONCHIAN})
-    snap = _Snap({"15m": _bars(60, 0.4), "4h": _bars(60, 8.0)})
+    snap = _Snap({"15m": _bars(61, 0.4), "4h": _bars(61, 8.0)})
     assert k._try_enter(_D(Action.BUY, _SIG), snap, 5000.0, 0) is True
     # 2.0 x 8.0 = 16.0 below 100, not 2.5 x 0.4 = 1.0
     assert k.executor.opened["sl"] == pytest.approx(84.0)
@@ -131,21 +131,21 @@ def test_the_stop_handed_to_the_executor_comes_off_the_4h_frame():
 
 def test_a_no_target_spec_reaches_the_executor_with_no_target():
     k = _kernel({"donchian": _DONCHIAN})
-    snap = _Snap({"15m": _bars(60, 0.4), "4h": _bars(60, 8.0)})
+    snap = _Snap({"15m": _bars(61, 0.4), "4h": _bars(61, 8.0)})
     k._try_enter(_D(Action.BUY, _SIG), snap, 5000.0, 0)
     assert k.executor.opened["tp"] == 0.0
 
 
 def test_the_trade_is_filed_under_the_strategy_that_proposed_it():
     k = _kernel({"donchian": _DONCHIAN})
-    snap = _Snap({"15m": _bars(60, 0.4), "4h": _bars(60, 8.0)})
+    snap = _Snap({"15m": _bars(61, 0.4), "4h": _bars(61, 8.0)})
     k._try_enter(_D(Action.BUY, _SIG), snap, 5000.0, 0)
     assert k.executor.opened["strategy_id"] == "donchian"
 
 
 def test_a_trade_no_spec_owns_still_uses_the_execution_frame():
     k = _kernel({})                       # legacy genome, no spec
-    snap = _Snap({"15m": _bars(60, 0.4), "4h": _bars(60, 8.0)})
+    snap = _Snap({"15m": _bars(61, 0.4), "4h": _bars(61, 8.0)})
     k._try_enter(_D(Action.BUY, _SIG), snap, 5000.0, 0)
     assert k.executor.opened["sl"] == pytest.approx(99.0)   # 2.5 x 15m ATR
 
@@ -154,7 +154,7 @@ def test_a_missing_spec_frame_refuses_the_entry_rather_than_guessing():
     """Sizing a 4h stop off 15m bars is how this broke. Do not fall back."""
     k = _kernel({"donchian": _DONCHIAN})
     d = _D(Action.BUY, _SIG)
-    assert k._try_enter(d, _Snap({"15m": _bars(60, 0.4)}), 5000.0, 0) is False
+    assert k._try_enter(d, _Snap({"15m": _bars(61, 0.4)}), 5000.0, 0) is False
     assert "4h" in d.skip_reason
     assert k.executor.opened is None
 
@@ -162,6 +162,6 @@ def test_a_missing_spec_frame_refuses_the_entry_rather_than_guessing():
 def test_a_short_gets_its_stop_above_the_price_on_the_spec_frame():
     k = _kernel({"donchian": _DONCHIAN})
     sig = [{"strategy_id": "donchian", "action": "SELL", "confidence": 0.6}]
-    snap = _Snap({"15m": _bars(60, 0.4), "4h": _bars(60, 8.0)})
+    snap = _Snap({"15m": _bars(61, 0.4), "4h": _bars(61, 8.0)})
     assert k._try_enter(_D(Action.SELL, sig), snap, 5000.0, 0) is True
     assert k.executor.opened["sl"] == pytest.approx(116.0)

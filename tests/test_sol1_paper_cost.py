@@ -149,7 +149,7 @@ class Run:
         self.ids = []
 
     def frame(self):
-        return bars(60, self.start, self.tail)
+        return bars(61, self.start, self.tail)
 
     def ref(self):
         return float(self.frame()["close"].iloc[-1])

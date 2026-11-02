@@ -68,8 +68,10 @@ def test_every_nonfactory_state_writer_is_legacy_only_and_guarded():
     pat = re.compile(r"UPDATE strategies SET state")
     found = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                    if pat.search(p.read_text()))
+    # strategy/owner_demo.py: the owner-only, FROZEN-only Binance Demo grant for a legacy (unversioned) strategy; the
+    # database trigger refuses the same write for a versioned id (docs/guard-review-20261102.md).
     assert found == ["core/journal.py",
-                     "kernel.py", "strategy/factory_handoff.py"]
+                     "kernel.py", "strategy/factory_handoff.py", "strategy/owner_demo.py"]
 
 
 def test_database_refuses_every_ungoverned_write_to_a_versioned_strategy(world):

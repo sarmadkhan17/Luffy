@@ -1,6 +1,19 @@
 # Guard review: two failing safety guard tests (2026-11-02)
 
-**Status: findings and a proposed fix, for approval. No guard, allowlist or closed set has been edited.**
+**Status (updated 2026-11-02, after the owner decision below): the two stale guard tests were updated as test maintenance; the findings that follow are unchanged.**
+
+## Owner decision, 2026-11-02
+
+> **Owner-approved 2026-11-02 via the owner_demo path; not Factory-validated by owner choice.**
+
+This applies to the three active strategies: EMA Stack Pullback, Donchian Breakout Trail and Funding Filtered Trend Pullback. The owner directed that **no new gate, check or restriction apply to them**, and that they are **not routed through the referee or Factory**. The same sentence is recorded in `CLAUDE.md` (strategy section).
+
+What was done under that decision, and what was not:
+* **Done (test maintenance only):** `tests/test_risk01_entry_binding.py` now lists `trader/engine/coordinated_venue.py` as the one other `executor.open` caller, with the same `risk_permission=` requirement as the kernel's calls; `tests/test_str04_governor_lifecycle.py` now lists `strategy/owner_demo.py` among the known `UPDATE strategies SET state` writers. Both tests pass.
+* **Done (general order path only):** `tests/test_entry_fence_every_path.py` checks that a blocked persisted control state (`FROZEN`, `HALTED`, `RECOVERY`) refuses `open` and `increase` and sends nothing, with controls showing the same entries are accepted while `ACTIVE`. It says nothing about any particular strategy.
+* **Not done, deliberately:** the proposal to test that `owner_demo.authorize` refuses a versioned id (it concerns the owner-demo path itself, not the general order path); tracking `executor.increase` callers in the guard; and the optional `entry_block` call at the top of `Executor.increase`. They remain available if wanted.
+* **Nothing in the code under review changed.** No restriction was added to the owner-demo path or to any strategy.
+
 Evidence tags: **VERIFIED** = read in code or measured (file:line given); **INFERRED** = reasoned from verified facts.
 Scope: read-only investigation on branch `work/unblock-20261102` (base `14484f65`). Both tests fail identically on `a479b995`, `14484f65` and this branch.
 

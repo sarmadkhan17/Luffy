@@ -92,6 +92,13 @@ Paths below are relative to `trader/` unless otherwise stated.
   do not describe the old blended-score behavior as unconditional.
 - Specs register evaluators as `spec:{id}` and must pass per-strategy symbol
   eligibility. A nonempty declared include list defines the universe.
+- Owner-approved strategies: EMA Stack Pullback, Donchian Breakout Trail and
+  Funding Filtered Trend Pullback are the active strategies.
+  **Owner-approved 2026-11-02 via the owner_demo path; not Factory-validated by owner choice.**
+  Do not add gates, checks or restrictions that apply to them, and do not route
+  them through the referee or Factory unless the owner asks. General order-path
+  controls (risk limits, control-state refusal, entry authority) apply to every
+  strategy equally and are unchanged.
 - Kernel and dashboard share SQLite WAL. Dashboard controls use `state_kv`,
   not `kv`. `Journal.query()` does **not** commit writes; use `_tx()`.
 - Idea consumption is per stream (`strategy`, `research`); preserve
