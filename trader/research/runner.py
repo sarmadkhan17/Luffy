@@ -760,7 +760,8 @@ class ResearchRunner:
         split = (self.cfg.get("research") or {}).get("predictive_split")
         cut_ms = (int(split["cut_ms"]) if split else self.ledger.spent_cut(tf)
                   or referee.current_cut(tf, disc, self._paths(), int(cut_ms)))
-        if bool(((getattr(self, "cfg", None) or {}).get("research") or {}).get("referee_forward_only", False)):
+        forward_only = bool(((getattr(self, "cfg", None) or {}).get("research") or {}).get("referee_forward_only", False))
+        if forward_only:
             overlap = referee.selection_overlap(cut_ms, referee.selection_ms(row[0].get("created_at")), tf)
             if overlap:
                 # Before any held-out price is read: DEFERRED, nothing spent.
@@ -768,6 +769,12 @@ class ResearchRunner:
                 return {**out, "ok": True, "state": "deferred"}
         capacity = referee.rotation_capacity(tf, cut_ms, held, disc + held,
                                               self.cfg, self._paths())
+        if forward_only and capacity is None:
+            # `rotation_capacity` returns None when the store cannot be counted, and the ordinary path then proceeds on
+            # its in-function guards. Forward-only mode fails closed: never take a look without proven bar counts.
+            self.ledger.set_candidate(h, tf, geo, "deferred", reason=(
+                "capacity_unavailable: held-out bar counts cannot be read; refusing to look without them"))
+            return {**out, "ok": True, "state": "deferred"}
         if capacity is not None and capacity["b"]:
             room = pn.rotation_offsets(min(capacity["b"].values()))
             draws = pn.draws_for(alpha, min(int(self._r("referee_max_draws")), room))

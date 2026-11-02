@@ -101,7 +101,7 @@ def _candidate_runner(tmp_path, monkeypatch, *, flag, cut_ms):
         c.execute("INSERT INTO research_combos (hash, tf, geo, k, result, created_at) VALUES ('late','4h','fixed',1,?,?)",
                   (json.dumps({"portfolio": {"accounting": accounting_provenance(2000, .5, 8, RESEARCH_CLOCK)}}), SELECTED_AT))
     monkeypatch.setattr(referee, "current_cut", lambda tf, disc, paths, recorded: cut_ms)
-    monkeypatch.setattr(referee, "rotation_capacity", lambda *a, **k: None)
+    monkeypatch.setattr(referee, "rotation_capacity", lambda *a, **k: {"a": {"X": 5000}, "b": {"X": 5000}})
     monkeypatch.setattr(referee, "rotation_deferral", lambda capacity, draws: "reached_rotation_check")
     fake = SimpleNamespace(ledger=led, journal=led.journal, cfg={"research": {"referee_forward_only": True}} if flag else {},
                            _r=lambda k: {"fdr_target": 0.10, "lord_w0": 0.05, "referee_max_draws": 19999}[k],
@@ -124,6 +124,23 @@ def test_a_candidate_with_enough_forward_distance_passes_the_new_check(tmp_path,
     out = ResearchRunner._examine(fake, "4h", "fixed", {"hash": "late"}, 1)
     assert led.candidate("late")["reason"] == "reached_rotation_check", "it went on to the existing checks"
     assert out["state"] == "deferred" and led.tests() == []
+
+
+def test_forward_only_fails_closed_when_held_out_bar_counts_cannot_be_read(tmp_path, monkeypatch):
+    led, fake = _candidate_runner(tmp_path, monkeypatch, flag=True, cut_ms=SELECTED_MS + 11 * STEP)
+    monkeypatch.setattr(referee, "rotation_capacity", lambda *a, **k: None)         # store unreadable
+    monkeypatch.setattr(referee, "rotation_deferral", lambda capacity, draws: None)  # the ordinary path would go on
+    out = ResearchRunner._examine(fake, "4h", "fixed", {"hash": "late"}, 1)
+    assert out["state"] == "deferred" and led.candidate("late")["reason"].startswith("capacity_unavailable")
+    assert led.tests() == [] and led.spent("late") is None
+
+
+def test_with_the_flag_off_an_unreadable_store_keeps_the_existing_behaviour(tmp_path, monkeypatch):
+    led, fake = _candidate_runner(tmp_path, monkeypatch, flag=False, cut_ms=1)
+    monkeypatch.setattr(referee, "rotation_capacity", lambda *a, **k: None)
+    monkeypatch.setattr(referee, "rotation_deferral", lambda capacity, draws: "ordinary_path_reached")
+    ResearchRunner._examine(fake, "4h", "fixed", {"hash": "late"}, 1)
+    assert led.candidate("late")["reason"] == "ordinary_path_reached"
 
 
 def test_with_the_flag_off_the_new_check_never_runs(tmp_path, monkeypatch):

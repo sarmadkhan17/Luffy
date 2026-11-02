@@ -154,7 +154,28 @@ Zero looks are spent today, so the next look is `t = 1`. Level held to at each l
 
 **What the flag does not do on its own:** it refuses candidates whose held-out B overlaps selection, but B itself is still the legacy cut. To make forward bars available you must also set the existing `research.predictive_split` (`start_ms`, `cut_ms`, `end_ms`) with a cut at or after the latest selection time plus the embargo. Until about 2026-12-25 to 12-30 there are fewer than the 621 bars the rotation floor needs after the 13 to 18 September selections, so every candidate would be deferred by the existing rotation-floor check anyway.
 
-### Restart risk (VERIFIED by reading the code paths; not executed)
-`research.enabled` and `research.referee` are both `true`. The kernel starts a legacy research thread (`kernel.py:417`, `_research_loop`, first step after about 5 minutes, then every 60 s), and `ResearchRunner.step` runs `_referee_step` **first** (`runner.py:225-229`). With a `research_slices` row for 4h already present, that step selects fresh testable survivors in `total_pct` order, queues up to 20, and examines them one by one, **spending LORD++ looks on the legacy held-out window with no forward-only protection, no fixed ranking and no cap of 10**. In other words, **a restart as configured can begin spending the held-out budget on the stranded survivors by itself.**
+### Restart risk: CORRECTED (2026-11-02, after a dry run) — the earlier version of this section was wrong
 
-Options (your decision; I changed none): (1) enable `research.referee_forward_only` plus a forward `predictive_split` before any restart; (2) set `research.referee: false` until you have chosen the route; (3) accept the legacy behaviour for those survivors. I recommend (1) or (2); (3) contradicts the cap and the forward-only requirement in your own amendment.
+An earlier version of this section said that a restart as configured could start spending held-out looks on the stranded survivors by itself. **That was wrong.** I had read `_referee_step` and `_research_loop` but not the first lines of `ResearchRunner.step`, which stop the thread first:
+
+* `step()` calls `require_current_accounting` on every row of the ledger and, on a mismatch, returns `portfolio_accounting_incompatible` **before the referee is reached** (`runner.py:226-233`; the code comment says "A legacy study needs an explicit owner disposition; resuming it cannot mix accounting eras").
+* VERIFIED on a `/tmp` copy of the 2026-11-02 snapshot: **all 2,735 `research_combos` rows have no current accounting metadata** (`portfolio.accounting` is absent on every row). So at a restart the legacy research thread does nothing at all, with or without the forward-only settings.
+
+**Dry run** (simulating the kernel's legacy research thread, `ResearchRunner.step`, against a scenario ledger built from tables in the `/tmp` copy of the snapshot; the snapshot itself was only read; child referee jobs are counted and never executed; the candle store is synthetic with production-like bar counts relative to the cut):
+
+| scenario | steps | referee looks dispatched | looks spent | LORD++ alpha spent | what happened |
+|---|---|---|---|---|---|
+| N1 committed config at startup | 40 | 0 | **0** | **0** | 40/40 steps returned `portfolio_accounting_incompatible` |
+| N2 flag + forward split at startup | 40 | 0 | **0** | **0** | same |
+| N3 no protection at startup | 40 | 0 | **0** | **0** | same: the fence alone protects startup today |
+| F1 CONTROL: fence lifted in memory, no flags, first 10 ranked survivors queued | 14 | 1 | **1** | **2.502e-03** | one look reserved (alpha_1), 9 deferred afterwards |
+| F2 fence lifted, flag only, store readable (3 queued) | 6 | 0 | **0** | **0** | 3/3 deferred: `selection_overlap` |
+| F2b fence lifted, flag only, store unreadable (10 queued) | 40 | 0 | **0** | **0** | 10/10 deferred: `selection_overlap` |
+| F3 fence lifted, flag + forward split, store readable (3 queued) | 6 | 0 | **0** | **0** | 3/3 deferred: alpha cannot be resolved on the short B window |
+| F4 fence lifted, flag + split, store unreadable (10 queued) | 40 | 0 | **0** | **0** | 10/10 deferred: `capacity_unavailable` (fail closed) |
+
+So the required result holds: **zero budget is spent at startup**, in every configuration, and the control shows what the new settings guard against if the accounting fence is ever lifted (1 look, 2.502e-03 of the budget). F4 also exposed a hole in the existing code (an unreadable candle store makes `rotation_capacity` return `None`, and the ordinary path then proceeds); under `referee_forward_only` that is now closed (defer, `capacity_unavailable`).
+
+**What this means for your option 1.** The flag and split you asked for are committed in `config.yaml`, but they are defence in depth, not what protects startup. Two things you should weigh:
+1. `predictive_split` is also read by the legacy **discovery** loader (`evaluate.load_bundle`, line 144): once the accounting fence is lifted, new legacy discovery batches would see data before `cut_ms` only. That is a research-behaviour change you did not ask for. The flag alone (without the split) already makes every candidate defer (`selection_overlap`), with no discovery effect. If you prefer that, delete the `predictive_split` block; the dry run shows zero spend either way.
+2. The accounting fence is what actually keeps the stranded survivors untouched. Lifting it (re-evaluating the legacy rows under current accounting, or any change to `require_current_accounting`) is the moment these settings start to matter.
