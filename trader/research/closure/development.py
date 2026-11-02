@@ -29,7 +29,7 @@ from ...strategy.compile import compile_spec
 from ...strategy.vector_backtest import funding_for, simulate
 from .. import evaluate as ev, growth, job, thresholds
 from ..compose import data as cdata, graph
-from . import ClosureRefused, canonical, digest, families, manifest
+from . import ClosureRefused, canonical, cohort, digest, families, manifest
 
 RESULT_SCHEMA = 'closure-development.v1'
 COMBINED_SELECTION_POLICY = 'own-economics-component-comparison.v1'
@@ -312,8 +312,11 @@ def _external(candidate, snapshot_path, derivs_path, frames, env, world_path=Non
                                               first_ms=int(manifest._ms(df['ts']).min()),
                                               last_ms=int(manifest._ms(df['ts']).max()))
             result['data_id'] = digest([result['data_id'], reference_id])
+    # Cohort rule (data availability only, before any trade is simulated): drop symbols that lack a required input.
+    cohort.apply(frames, result, required, env, spec_evidence._SERIES_FOR, stage='external')
     if env['risk'].get('real_funding', False) and not result['gaps']:
         bind_funding(frames, result, env, 'retrospective_observation' if retro is not None else 'retained_point_in_time')
+        cohort.apply(frames, result, required, env, spec_evidence._SERIES_FOR, stage='funding')
     return result
 
 
@@ -338,6 +341,8 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
                 envelope_id=env['envelope_id'], data_id=data_id, evaluator_id=env['evaluator_id'],
                 cost_id=env['cost_id'], data_mode=env['development_mode'], policy_class=env['policy_class'],
                 authority='RESEARCH_ONLY')
+    if (external or {}).get('cohort'):
+        base['cohort'] = external['cohort']        # which symbols were excluded for missing inputs, and why
     base['trading_parity']=(external or {}).get('trading_parity') or dict(
         status='UNAVAILABLE',reason='no detached historical scanner-selection evidence supplied; unfiltered retrospective experiment')
     if external is not None and external.get('provenance'):

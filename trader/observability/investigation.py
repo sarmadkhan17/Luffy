@@ -37,6 +37,9 @@ from . import intelligence_trace as trace_store
 
 MAX_ACTIVE, MAX_UPDATES, MAX_CASES = 32, 32, 256
 MAX_BYTES, RETENTION_MS, FRESH_MS = 32 * 1024**2, 30 * 86_400_000, 300_000
+#: Capacity is judged on ACTIVE pages ((page_count - freelist_count) * page_size), never on raw file size: SQLite keeps
+#: deleted pages in the file and reuses them, so a file at its peak size is not a full database.
+SOFT_BYTES, HARD_BYTES = 28 * 1024**2, MAX_BYTES - 1024**2
 
 MAX_CASE_UPDATES = 64
 
@@ -327,6 +330,70 @@ def ledger(path):
     trace_store.schema(db)
     trace_store.IR.schema(db)
     return db
+
+
+def capacity(db) -> dict:
+    """Space in use, measured on active pages. `headroom_bytes` is what the hard cap still allows."""
+    page_size = db.execute("PRAGMA page_size").fetchone()[0]
+    pages = db.execute("PRAGMA page_count").fetchone()[0]
+    free = db.execute("PRAGMA freelist_count").fetchone()[0]
+    active = (pages - free) * page_size
+    return {"page_size": page_size, "file_bytes": pages * page_size, "free_bytes": free * page_size,
+            "active_bytes": active, "soft_bytes": SOFT_BYTES, "hard_bytes": HARD_BYTES,
+            "cap_bytes": MAX_BYTES, "headroom_bytes": MAX_BYTES - active}
+
+
+def _cascade_case_rows(db):
+    """Drop every row that only exists for a case that is gone (same statements, same order, as before)."""
+    db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
+    db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
+    db.execute("DELETE FROM resource_receipts WHERE case_id NOT IN (SELECT id FROM cases)")
+    db.execute("DELETE FROM opportunity_contexts WHERE investigation_id NOT IN (SELECT id FROM cases)")
+    db.execute("DELETE FROM intelligence_traces WHERE investigation_id NOT IN (SELECT id FROM cases)")
+    db.execute("DELETE FROM context_evidence WHERE sha256 NOT IN (SELECT scan_sha256 FROM opportunity_contexts "
+               "UNION SELECT allocation_sha256 FROM opportunity_contexts)")
+    db.execute("DELETE FROM inputs WHERE id NOT IN (SELECT input_id FROM case_inputs)")
+
+
+def prune_candidates(db, now, limit=16) -> list:
+    """Oldest-first cases that may be pruned for space. A case is NEVER a candidate if it is:
+    open (no terminal time); younger than the 30-day terminal retention; or still referenced by an outcome record
+    (a typed outcome inside its own retention, or an unresolved counterfactual registration) or by a learning
+    population event that names it."""
+    # population_events exists only once population tracking has been configured for this ledger.
+    learned = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='population_events'").fetchone()
+    return [r[0] for r in db.execute(
+        "SELECT c.id FROM cases c WHERE c.terminal_ms IS NOT NULL AND c.terminal_ms<? "
+        "AND NOT EXISTS (SELECT 1 FROM typed_outcomes t WHERE t.imported_ms>=? AND instr(t.payload,c.id)>0) "
+        "AND NOT EXISTS (SELECT 1 FROM counterfactual_registrations r WHERE r.terminal_ms IS NULL AND instr(r.payload,c.id)>0) "
+        + ("AND NOT EXISTS (SELECT 1 FROM population_events p WHERE instr(COALESCE(p.payload,''),c.id)>0) " if learned else "")
+        + "ORDER BY c.terminal_ms,c.id LIMIT ?", (now - RETENTION_MS, now - RETENTION_MS, int(limit)))]
+
+
+def prune_for_cap(db, now, *, batch=16, max_batches=8) -> dict:
+    """Bounded space relief before any write. Below the soft cap nothing happens. Above it, only `prune_candidates`
+    are deleted (with the rows that exist only for them). If space is still at or above the hard cap afterwards,
+    `blocked` is set and the caller refuses new registrations with an explicit reason instead of failing mid-write."""
+    start = capacity(db)
+    report = {"soft_bytes": SOFT_BYTES, "hard_bytes": HARD_BYTES, "start_active_bytes": start["active_bytes"],
+              "deleted_cases": 0, "eligible_remaining": 0}
+    batches = 0
+    while capacity(db)["active_bytes"] > SOFT_BYTES and batches < max_batches:
+        ids = prune_candidates(db, now, batch)
+        if not ids:
+            break
+        db.execute("DELETE FROM cases WHERE id IN (%s)" % ",".join("?" * len(ids)), ids)
+        _cascade_case_rows(db)
+        memory_store.retain(db)
+        outcome_store.retain(db, now)
+        report["deleted_cases"] += len(ids)
+        batches += 1
+    end = capacity(db)
+    if end["active_bytes"] > SOFT_BYTES:
+        report["eligible_remaining"] = len(prune_candidates(db, now, 1))
+    report.update({k: end[k] for k in ("active_bytes", "free_bytes", "file_bytes", "headroom_bytes")})
+    report["blocked"] = end["active_bytes"] >= HARD_BYTES
+    return report
 
 
 class LedgerRefused(ValueError):
@@ -739,18 +806,13 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
         correlation_activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?",
                                            (I.CORRELATION_CATALOG_ID,)).fetchone()[0]
         db.execute("DELETE FROM cases WHERE terminal_ms IS NOT NULL AND terminal_ms<?", (now-RETENTION_MS,))
-        db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
-        db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
-        db.execute("DELETE FROM resource_receipts WHERE case_id NOT IN (SELECT id FROM cases)")
-        db.execute("DELETE FROM opportunity_contexts WHERE investigation_id NOT IN (SELECT id FROM cases)")
-        db.execute("DELETE FROM intelligence_traces WHERE investigation_id NOT IN (SELECT id FROM cases)")
-        db.execute("DELETE FROM context_evidence WHERE sha256 NOT IN (SELECT scan_sha256 FROM opportunity_contexts "
-                   "UNION SELECT allocation_sha256 FROM opportunity_contexts)")
-        db.execute("DELETE FROM inputs WHERE id NOT IN (SELECT input_id FROM case_inputs)")
+        _cascade_case_rows(db)
         db.execute("DELETE FROM allocation_decisions WHERE decided_ms<?", (now-RETENTION_MS,))
         memory_store.retain(db)
         detail["memory"] = memory_store.ingest(db, now)
         outcome_store.retain(db, now)
+        detail["capacity"] = prune_for_cap(db, now)
+        capacity_blocked = detail["capacity"]["blocked"]
         snapshot = None
         try:
             source, detail['collector_evidence'] = H.bound_snapshot(source_path,now_ms=now_ms,fresh_ms=FRESH_MS)
@@ -852,6 +914,8 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
                     skip("existing_episode"); continue
                 if detail["updated"] + detail["registered"] >= MAX_UPDATES:
                     skip("update_budget_exhausted"); continue
+                if capacity_blocked:
+                    skip("db_capacity"); continue
                 if db.execute("SELECT COUNT(*) FROM cases WHERE terminal_ms IS NULL").fetchone()[0] >= MAX_ACTIVE:
                     skip("active_capacity"); continue
                 if db.execute("SELECT COUNT(*) FROM cases").fetchone()[0] >= MAX_CASES:
@@ -897,7 +961,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
                 or detail["typed_outcomes"]["refused"]
                 or detail["typed_outcomes"]["retry"]):
             detail.update(status="degraded", reason="memory_source_refused")
-        if any(k in detail["skipped"] for k in ("update_budget_exhausted", "active_capacity", "retention_capacity", "case_update_capacity")):
+        if any(k in detail["skipped"] for k in ("update_budget_exhausted", "active_capacity", "retention_capacity", "case_update_capacity", "db_capacity")):
             detail.update(status="degraded", reason="capacity_exhausted")
         # Abort whole transaction before publication if the guard can no longer hold.
         if (time.monotonic()-started) * 1000 >= I.MAX_RUNTIME_MS:
@@ -980,12 +1044,13 @@ def publish_health(path, result):
     result["failed_invocations"] = prior.get("failed_invocations", 0) + int(failed)
     result["deferred_updates"] = prior.get("deferred_updates", 0) + sum(
         value for key, value in result.get("skipped", {}).items()
-        if key in ("update_budget_exhausted", "active_capacity", "retention_capacity", "case_update_capacity"))
+        if key in ("update_budget_exhausted", "active_capacity", "retention_capacity", "case_update_capacity", "db_capacity"))
     success = result.get("status") == "ok"
     result["last_successful_scan_id"] = result.get("source_scan_id") if success else prior.get("last_successful_scan_id")
     result["last_successful_ms"] = result.get("updated_ms") if success else prior.get("last_successful_ms")
     result["limits"] = {"active": MAX_ACTIVE, "cases": MAX_CASES, "updates_per_invocation": MAX_UPDATES,
                         "updates_per_case": MAX_CASE_UPDATES, "db_bytes": MAX_BYTES,
+                        "db_soft_bytes": SOFT_BYTES, "db_hard_bytes": HARD_BYTES,
                         "terminal_retention_ms": RETENTION_MS, "runtime_ms": I.MAX_RUNTIME_MS,
                         "diagnostic_rows": 512, "alternatives": 3, "next_actions": 1}
     tmp = path.with_suffix(".tmp")
