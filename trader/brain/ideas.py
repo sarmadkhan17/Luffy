@@ -36,6 +36,26 @@ RESEARCH = "research"
 STREAMS = (STRATEGY, RESEARCH)
 DEFAULT_STREAM = STRATEGY      # rows written before streams existed
 
+
+def live_streams(cfg: dict) -> set:
+    """Streams that currently have a consumer able to act on a queued idea.
+
+    Queueing for any other stream only accrues rows nothing can convert. Mirrors the
+    provider rule in `brain/llm.py` (a missing `brain.enabled` means enabled).
+      strategy  needs the LLM spec writer, so it needs `brain.enabled`;
+      research  is read by the research proposal provider, which has its own switch
+                (`research.closure.proposal_provider_enabled`) besides `brain.enabled`.
+    """
+    cfg = cfg or {}
+    brain_on = (cfg.get("brain") or {}).get("enabled", True) is True
+    closure = (cfg.get("research") or {}).get("closure") or {}
+    live = set()
+    if brain_on:
+        live.add(STRATEGY)
+    if brain_on or closure.get("proposal_provider_enabled"):
+        live.add(RESEARCH)
+    return live
+
 MAX_TEXT = 4000          # a spec prompt reads ~900; keep room for the vault
 MIN_TEXT = 80            # below this there is no mechanism to express
 MAX_AGE_DAYS = 45        # a stale idea describes a market that has moved on

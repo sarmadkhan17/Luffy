@@ -8,7 +8,12 @@ universe:
   majors: [BTC/USDT, ETH/USDT, SOL/USDT]
   auto_scan:
     enabled: true
-    top_n: 12              # alts filling remaining slots
+    # top_n is NOT the scan size. It sizes (a) the legacy universe members the data feed tracks
+    # (data/feed.py) and (b) the cross-sectional PEER set strategies rank against (data/broad_crypto.py,
+    # replayed by research/compose/universe_replay.py). How many symbols are deeply evaluated each
+    # cycle is attention.admission.max_deep_slots (30), chosen by volume from the whole broad universe.
+    # Changing top_n redefines every cross-sectional feature, so it is a research-protocol change.
+    top_n: 12              # alts filling remaining slots (peer set; see above)
     min_volume_usdt: 100000000
     min_price: 0.5
     min_age_days: 90       # skip fresh listings — insufficient history

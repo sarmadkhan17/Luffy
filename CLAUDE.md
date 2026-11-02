@@ -28,10 +28,14 @@ dependency rather than a fixed priority order. Neither the legacy research
 process nor Gate 2 is the goal — Gate 2 is a subordinate research task, and
 design may change in service of the goal. What does not change: deterministic
 risk control, honest evidence, frozen research artifacts, and the recorded
-operational stop. A well-formed thesis is untested, not admitted. Keep
-`research.referee=false` and `research.handoff=false`; the recorded
-dependence-corrected gate stop must not be bypassed or weakened to obtain
-trades.
+operational stop. A well-formed thesis is untested, not admitted. The owner
+enabled `research.referee=true` (final validation) and `research.handoff=true`
+(research-to-strategy transfer) on 2026-10-25, as `config.yaml` records; do not
+change either without the owner. Enabling them did not relax any gate: the
+recorded dependence-corrected gate stop, the cumulative error budget and the
+calibration and evidence requirements must not be bypassed or weakened to
+obtain trades. Only qualified evidence creates a VALIDATED version, and that
+version carries authority NONE.
 
 Keep the owner able to see what Luffy is doing and why, and prefer structured,
 end-to-end diagnostics — correlation IDs and reason codes that trace event →

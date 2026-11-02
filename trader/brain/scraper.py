@@ -327,6 +327,13 @@ class Scraper:
         stats = {"scraped": 0, "new": 0, "screened": 0, "skipped": 0}
         for stream in ideas.STREAMS:
             stats[f"queued_{stream}"] = 0
+        live = ideas.live_streams(self.cfg)
+        if not live:
+            # No consumer can act on a queued idea (provider blocked): do not fetch or queue anything.
+            stats["skipped_reason"] = "no_live_idea_consumer"
+            self._log_cycle(stats, {})
+            log.info(f"harvest skipped: {stats['skipped_reason']}")
+            return stats
         per_source: dict[str, dict] = {}
         # NOT `ideas` — that is the queue module imported at the top of this
         # file, and shadowing it made `ideas.record()` below call .record on a
@@ -347,7 +354,7 @@ class Scraper:
                  if not self._already_processed(i["idea_id"])]
         stats["new"] = len(fresh)
         # cheap screen BEFORE any tokens are spent
-        candidates = [i for i in fresh if streams_for(i)]
+        candidates = [i for i in fresh if streams_for(i) & live]
         dropped = len(fresh) - len(candidates)
         stats["screened_out"] = dropped
 
@@ -378,7 +385,7 @@ class Scraper:
             # Record the idea WHOLE, once, with every stream it qualifies
             # for: the text is the part that holds the mechanism, and the
             # Strategist/Researcher both read it out of this one row.
-            item_streams = sorted(streams_for(idea))
+            item_streams = sorted(streams_for(idea) & live)
             if ideas.record(self.journal, idea, streams=item_streams):
                 for stream in item_streams:
                     stats[f"queued_{stream}"] += 1

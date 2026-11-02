@@ -223,6 +223,12 @@ class DeepCrawler:
     # ── the cycle ────────────────────────────────────────────────────────
     def crawl_once(self) -> dict:
         stats = {"pages": 0, "docs": 0, "passages": 0}
+        if ideas.STRATEGY not in ideas.live_streams(self.cfg):
+            # Everything this crawler queues goes to the strategy stream, which needs the provider.
+            stats["skipped_reason"] = "strategy_stream_has_no_live_consumer"
+            self.journal.log_brain_event("crawl_cycle", "crawler", stats)
+            log.info(f"crawl skipped: {stats['skipped_reason']}")
+            return stats
 
         frontier: deque[tuple[str, int]] = deque()
         enqueued: set[str] = set()
