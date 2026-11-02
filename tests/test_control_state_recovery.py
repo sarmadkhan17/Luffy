@@ -3,6 +3,7 @@ reconciliation continue; entered only after containment, never from ACTIVE."""
 from types import SimpleNamespace as NS
 from unittest.mock import Mock
 
+import contextlib
 import pytest
 
 from trader.core.types import Action, ControlState, Decision, MarketType
@@ -137,8 +138,15 @@ class _KV:
 
     def kv_get(self, k, d=None): return self.kv.get(k, d)
     def kv_set(self, k, v): self.kv[k] = v
-    def query(self, *a): return [{"n": 0}]
+    def query(self, sql="", *a):
+        # Counting queries answer n=0; every other query (trades, versions, ...) finds no rows. Returning a bare
+        # {"n": 0} for a SELECT of trades handed code that reads symbol/entry_identity_json a row without them.
+        return [{"n": 0}] if "COUNT" in str(sql).upper() else []
     def open_trades(self): return [{"symbol": "S0/USDT"}]
+
+    @contextlib.contextmanager
+    def _tx(self):
+        yield Mock()                                       # the kernel cycle now writes capture rows through _tx()
 
 
 @pytest.mark.parametrize("macro_active", [False, True])

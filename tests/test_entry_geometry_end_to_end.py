@@ -66,6 +66,7 @@ class _Risk:
 
 class _Exec:
     tp_atr_mult = 4.5
+    ex = None            # the venue client the kernel now hands to position-mode binding (stubbed below)
 
     def __init__(self):
         self.opened = None
@@ -89,7 +90,10 @@ _JOURNAL = {}
 
 
 @pytest.fixture(autouse=True)
-def _journal(tmp_path):
+def _journal(tmp_path, monkeypatch):
+    # Position-mode binding reads the account's hedge/one-way mode from the venue; it has its own tests
+    # (like final Risk authority above) and this test only follows the geometry handed to the executor.
+    monkeypatch.setattr("trader.engine.position_mode.bind_new_entry", lambda ex, identity, direction: identity)
     from tests.authority_legacy_fixtures import seed
     from trader.core.journal import Journal
     j = Journal(tmp_path / "j.db")

@@ -68,12 +68,17 @@ def test_delivery_never_stores_artifact_or_exception_text(tmp_path, monkeypatch)
     out = db.execute("SELECT outcome_id FROM learning_deliveries").fetchone()[0]
     assert out == "UNBOUND:artifact_unreadable:JSONDecodeError" and "SECRET" not in out
     # producer ValueError: only a lowercase code is stored
+    # deliver_completed now resolves coordinated-group membership first, from a real journal and an artifact shaped
+    # like production's (bookings.trade.id); no such trade row exists, so the attempt is ungrouped and reaches the
+    # producer, which is what this half of the test exercises.
+    from trader.core.journal import Journal
+    journal_path = Journal(tmp_path / "j.db").db_path
     good = tmp_path / "g.json"
-    good.write_text("{}")
+    good.write_text(json.dumps({"bookings": {"trade": {"id": "t2"}}}))
     db.execute("INSERT INTO attempts(id,trade_id,path,status,started_ms) VALUES ('b','t2',?,'complete',1)", (str(good),))
     db.commit()
     monkeypatch.setattr(producers, "deliver_accounting",
                         lambda j, a: (_ for _ in ()).throw(ValueError("https://x?key=SECRET")))
-    W.deliver_completed(db, journal=None)
+    W.deliver_completed(db, journal=journal_path)
     out = db.execute("SELECT outcome_id FROM learning_deliveries WHERE attempt_id='b'").fetchone()[0]
     assert out == "UNBOUND:value_error"

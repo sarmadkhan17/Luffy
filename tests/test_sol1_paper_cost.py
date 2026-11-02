@@ -30,7 +30,11 @@ H4 = 4 * 3_600_000
 
 
 def cost_cfg():
-    return load_config()
+    """The repository config with the research referee held OFF, as these paper-cost tests were written to assume
+    (they exercise the cost path only). The repository itself has had the referee ON since the owner's 2026-10-25 decision."""
+    cfg = load_config()
+    cfg["research"] = {**cfg["research"], "referee": False}
+    return cfg
 
 
 def qualification(spec, cfg, risk=None):
