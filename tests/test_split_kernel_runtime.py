@@ -435,3 +435,34 @@ def test_history_work_yields_to_scan_and_position_cycles_at_boundaries(tmp_path,
     r.scan_in_flight=True
     r._history_yield()
     assert len(sleeps)==3 and r.history_yields==1              # current demand went first, then history resumed
+
+
+def _timed_runtime(tmp_path, monkeypatch):
+    from trader.scheduling import kernel_runtime as KR
+    clock = [1000.0]
+    monkeypatch.setattr(KR, 'time', NS(monotonic=lambda: clock[0], time=time.time, sleep=time.sleep))
+    k, r = minimal(tmp_path)
+    k._last_cycle_s = 7.0
+    return k, r, clock
+
+
+def test_a_completed_cycle_records_how_long_it_took(tmp_path, monkeypatch):
+    k, r, clock = _timed_runtime(tmp_path, monkeypatch)
+
+    def cycle():
+        clock[0] += 33.0
+        return {'decisions': 0, 'interrupted': True}          # interrupted: no entry intake follows
+
+    r.pending_scan = NS(_model_generation=r.model[0], _prepared_at=clock[0], cycle=cycle)
+    r.decisions()
+    assert k._last_cycle_s == pytest.approx(33.0)
+
+
+def test_a_discarded_scan_is_not_a_cycle_and_leaves_the_recorded_duration(tmp_path, monkeypatch):
+    k, r, clock = _timed_runtime(tmp_path, monkeypatch)
+    r.jobs['market'] = NS(trigger=lambda: True)
+    stale = NS(_model_generation=r.model[0], _prepared_at=clock[0] - 61.0,
+               cycle=lambda: pytest.fail('a stale scan must not be evaluated'))
+    r.pending_scan = stale
+    r.decisions()
+    assert k._last_cycle_s == 7.0 and r.scans_discarded == 1

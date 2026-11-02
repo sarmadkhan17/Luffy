@@ -311,6 +311,7 @@ class KernelRuntime:
         if view is None:
             return
         start = time.monotonic()
+        evaluating = False
         try:
             with self.decision_lock:
                 if view._model_generation != self.model[0] or time.monotonic() - view._prepared_at > 60:
@@ -319,6 +320,7 @@ class KernelRuntime:
                     self.jobs['market'].trigger()
                     return
                 from ..data import market_provenance as mp
+                evaluating = True
                 with mp.cache_only():
                     stats = view.cycle()
                 if not stats.get('interrupted') and getattr(self.kernel,'executor',None) is not None:
@@ -343,8 +345,12 @@ class KernelRuntime:
                 begun = getattr(view, '_cycle_started', start)
                 self.last_full_cycle = dict(preparation_s=view._prepared_at - begun,
                     queue_s=start - view._prepared_at, evaluation_s=end - start, total_s=end - begun)
-            self.kernel._last_cycle_s = end - start
         finally:
+            if evaluating:
+                # Recorded whether the evaluation finished or raised: the research thread stands down while the kernel
+                # is busy, and a kernel that is slow AND failing must not keep its previous, fast value. A discarded
+                # batch never started an evaluation, so it leaves the value alone.
+                self.kernel._last_cycle_s = time.monotonic() - start
             with self.lock:
                 self.scan_in_flight = False
 

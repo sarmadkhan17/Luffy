@@ -192,27 +192,36 @@ def test_a_control_batch_runs_on_the_incumbent_universe(tmp_path):
     assert set(payload["symbols"]) == set(INCUMBENT_UNIVERSE)
 
 
-def test_the_kernel_records_how_long_its_cycle_took():
-    import inspect
+def test_a_slow_failing_cycle_still_updates_last_cycle_s_and_reads_as_busy(tmp_path, monkeypatch):
+    """The research thread reads `_last_cycle_s` to stand down while the kernel is busy. A cycle that raises must
+    still record how long it took: otherwise a kernel that is slow AND failing would keep its previous (fast)
+    value and never register as busy. Behavioural: runs the real scan worker with a cycle that takes 120 s and
+    raises, then hands the recorded value to the real research step. (Replaces two tests that inspected the source
+    of Kernel.run, which no longer holds this bookkeeping.)"""
+    import time
+    from types import SimpleNamespace as NS
 
-    from trader import kernel as K
-    src = inspect.getsource(K.Kernel.run)
-    assert "_last_cycle_s" in src
+    from tests.test_split_kernel_runtime import minimal
+    from trader.scheduling import kernel_runtime as KR
 
+    clock = [1000.0]
+    monkeypatch.setattr(KR, "time", NS(monotonic=lambda: clock[0], time=time.time, sleep=time.sleep))
+    k, r = minimal(tmp_path)
+    k._last_cycle_s = 0.0                                   # the previous cycle was fast
 
-def test_the_kernel_updates_last_cycle_s_even_when_the_cycle_raises():
-    """A cycle that raises must not leave the previous (possibly fast)
-    value in `_last_cycle_s` in place — the research thread reads it to
-    stand down while the kernel is busy, and a kernel that is slow AND
-    failing would otherwise never register as busy."""
-    import inspect
+    def cycle():
+        clock[0] += 120.0                                   # a slow cycle ...
+        raise RuntimeError("boom")                          # ... that then fails
 
-    from trader import kernel as K
-    src = inspect.getsource(K.Kernel.run)
-    finally_idx = src.index("finally:")
-    assign_idx = src.index("self._last_cycle_s =")
-    funding_idx = src.index("self._funding_cache = None")
-    assert finally_idx < assign_idx < funding_idx
+    r.pending_scan = NS(_model_generation=r.model[0], _prepared_at=clock[0], cycle=cycle)
+    with pytest.raises(RuntimeError, match="boom"):
+        r.decisions()
+    assert k._last_cycle_s == pytest.approx(120.0)
+    assert r.scan_in_flight is False
+
+    fake = NS(cfg={"research": {"enabled": True}}, _r=lambda key: {"skip_if_cycle_s": 45.0}[key])
+    out = ResearchRunner.step(fake, cycle_seconds=k._last_cycle_s)
+    assert out["skipped"] == "busy" and out["cycle_seconds"] == pytest.approx(120.0)
 
 
 def test_the_research_loop_builds_its_runner_inside_the_retry_loop():
