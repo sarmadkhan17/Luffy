@@ -108,7 +108,9 @@ def _world(data_present=False, first_ms=(), cut=CUT):
 
 def _runner(tmp_path, reply):
     j = Journal(tmp_path / "j.db")
-    return ResearchRunner(j, CFG, run=lambda fn, payload, **kw:
+    cfg = {**CFG, 'research': {**CFG['research'], 'paths': {
+        key: str(tmp_path/(key+'.db')) for key in ('candles','derivs','refs')}}}
+    return ResearchRunner(j, cfg, run=lambda fn, payload, **kw:
                           reply(fn, payload))
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
-from contextlib import closing
+from contextlib import closing, contextmanager
 from dataclasses import asdict, dataclass, field
 import hashlib
 import json
@@ -310,10 +310,14 @@ def ledger(path):
       CREATE INDEX IF NOT EXISTS update_case ON updates(case_id, observed_ms);
       CREATE TABLE IF NOT EXISTS inputs(id TEXT PRIMARY KEY, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS case_inputs(case_id TEXT, input_id TEXT, PRIMARY KEY(case_id,input_id));
+      CREATE INDEX IF NOT EXISTS case_inputs_input_v1 ON case_inputs(input_id,case_id);
+      CREATE INDEX IF NOT EXISTS cases_terminal_time_v1 ON cases(terminal_ms,id)
+        WHERE terminal_ms IS NOT NULL;
       CREATE TABLE IF NOT EXISTS diagnostics(ts_ms INTEGER, detail TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS allocation_decisions(id TEXT PRIMARY KEY, scan_id TEXT NOT NULL,
         policy_version TEXT NOT NULL, decided_ms INTEGER NOT NULL, payload TEXT NOT NULL,
         UNIQUE(scan_id, policy_version));
+      CREATE INDEX IF NOT EXISTS allocation_decisions_time_v1 ON allocation_decisions(decided_ms,id);
       CREATE TABLE IF NOT EXISTS allocation_bindings(declaration_version TEXT PRIMARY KEY,
         policy TEXT NOT NULL, bound_ms INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS resource_receipts(id TEXT PRIMARY KEY, case_id TEXT NOT NULL,
@@ -394,6 +398,28 @@ def prune_for_cap(db, now, *, batch=16, max_batches=8) -> dict:
     report.update({k: end[k] for k in ("active_bytes", "free_bytes", "file_bytes", "headroom_bytes")})
     report["blocked"] = end["active_bytes"] >= HARD_BYTES
     return report
+
+
+@contextmanager
+def _maintained_ledger(path, now, detail):
+    """Free retained pages durably before ingestion reserves new pages.
+
+    Maintenance survives a later failed ingestion. Case updates and publication
+    still share their original atomic transaction.
+    """
+    with closing(ledger(path)) as db:
+        with db:
+            ids = prune_candidates(db, now, MAX_CASES)
+            if ids:
+                db.execute('DELETE FROM cases WHERE id IN (%s)' % ','.join('?' * len(ids)), ids)
+            _cascade_case_rows(db)
+            db.execute('DELETE FROM allocation_decisions WHERE decided_ms<?', (now-RETENTION_MS,))
+            memory_store.retain(db)
+            outcome_store.retain(db, now)
+            detail['compacted_contexts'] = memory_store.compact_contexts(db)
+            detail['capacity'] = prune_for_cap(db, now)
+        with db:
+            yield db
 
 
 class LedgerRefused(ValueError):
@@ -785,7 +811,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
         if current is not None:
             current['registration_reason'] = reason
         detail["skipped"][reason] = detail["skipped"].get(reason, 0) + 1
-    with closing(ledger(dest_path)) as db, db:
+    with _maintained_ledger(dest_path, now, detail) as db:
         if population_config:
             population.flush(db, population_config, 'investigation')
         pop = population.Producer(db, population_config, 'investigation', now) if population_config else None
@@ -805,13 +831,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
                    (I.CORRELATION_CATALOG_ID, now, I.encode(I.CORRELATION_CATALOG)))
         correlation_activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?",
                                            (I.CORRELATION_CATALOG_ID,)).fetchone()[0]
-        db.execute("DELETE FROM cases WHERE terminal_ms IS NOT NULL AND terminal_ms<?", (now-RETENTION_MS,))
-        _cascade_case_rows(db)
-        db.execute("DELETE FROM allocation_decisions WHERE decided_ms<?", (now-RETENTION_MS,))
-        memory_store.retain(db)
         detail["memory"] = memory_store.ingest(db, now)
-        outcome_store.retain(db, now)
-        detail["capacity"] = prune_for_cap(db, now)
         capacity_blocked = detail["capacity"]["blocked"]
         snapshot = None
         try:

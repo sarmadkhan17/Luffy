@@ -18,10 +18,18 @@ max_dd_pct only. The equivalence criterion compares trades/wins/pnl.
 from __future__ import annotations
 
 import json
+import math
+from collections import deque
 from dataclasses import replace
 
 import numpy as np
 import pandas as pd
+
+try:
+    from numba import njit
+except ImportError:  # The same numerical helpers remain usable without the accelerator.
+    def njit(**kwargs):
+        return lambda function: function
 
 from ..agents.indicators import atr_series
 from . import fill_timing
@@ -31,6 +39,141 @@ from .spec import ExitSpec
 
 WARMUP = 210
 
+
+@njit(fastmath=False, boundscheck=True, cache=True)
+def _walk_arrays(indices, long, lex, lr, lpos, sex, sr, spos, risk_frac, equity):
+    # Numba stores these settled records natively and boxes the public list
+    # once on return. Capacity follows executed trades, not all candidate bars.
+    out = []
+    cursor = WARMUP
+    for i in indices:
+        if i < cursor or i >= len(lex) - 1:
+            continue
+        ex = lex[i] if long[i] else sex[i]
+        r = lr[i] if long[i] else sr[i]
+        pos = lpos[i] if long[i] else spos[i]
+        if ex == -1:
+            continue
+        staked = equity * risk_frac
+        if staked * pos < 10:
+            continue
+        if ex == -2:
+            break
+        out.append((int(i), int(ex), float(r)))
+        equity += r * staked
+        cursor = ex + 1
+    return out
+
+
+@njit(fastmath=False, boundscheck=True, cache=True)
+def _legacy_bar_walk(f, end, sign, entry, sl, tp, has_target, sl_dist,
+                     highs, lows, closes, opens, atr, trail_mult, arm_at_r, signals, fills):
+    best, due = entry, -1
+    for j in range(f, end + 1):
+        if j == due:
+            return j, opens[j], 1
+        if trail_mult:
+            best = max(best, highs[j]) if sign == 1 else min(best, lows[j])
+            if abs(best - entry) >= arm_at_r * sl_dist:
+                trailed = best - sign * trail_mult * atr[j]
+                sl = max(sl, trailed) if sign == 1 else min(sl, trailed)
+        stop = lows[j] <= sl if sign == 1 else highs[j] >= sl
+        target = has_target and (highs[j] >= tp if sign == 1 else lows[j] <= tp)
+        if stop:
+            return j, sl, 0
+        if target:
+            return j, tp, 0
+        if signals[j] and due < 0 and fills[j] > j:
+            due = fills[j]
+    return end, closes[end], 0
+
+
+@njit(fastmath=False, boundscheck=True, cache=True)
+def _canonical_bar_walk(f, last, step, stop, target, reference, initial_r, max_bars,
+                        trail_mult, arm_at_r, signal_policy, quantity, sign,
+                        stamps, opens, highs, lows, closes, atr, completed,
+                        signals, available, fills):
+    """Shared policy's numeric walk; state/evidence objects are built on return."""
+    best, held, due, armed = reference, 0, -1, False
+    reason, ref_exit, ambiguous, gap = 0, 0.0, False, False
+    exit_i, exit_px, at_open, error, j = -2, 0.0, 0, 0, 0
+    pending = (last, held, armed, stop, best)
+    for j in range(f, len(closes)):
+        ms, o = stamps[j], opens[j]
+        if j == due:
+            if ms != last + step:
+                error = 6
+                break
+            if not math.isfinite(o) or o <= 0 or not math.isfinite(quantity) or quantity <= 0:
+                error = 7
+                break
+            hit_stop = o <= stop if sign == 1 else o >= stop
+            hit_target = target != 0 and (o >= target if sign == 1 else o <= target)
+            reason = 1 if hit_stop else 2 if hit_target else 4
+            if reason == 4:
+                # The canonical adapter preserves the original signal intent's
+                # state when the open executes it; protection uses surviving state.
+                last, held, armed, stop, best = pending
+                ref_exit, ambiguous, gap = 0.0, False, False
+            else:
+                ref_exit, ambiguous, gap = o, False, True
+            exit_i, exit_px, at_open = j, o, 1
+            break
+        if not math.isfinite(quantity) or quantity < 0:
+            error = 1
+            break
+        if ms <= last:
+            continue
+        if not completed[j] or ms != last + step:
+            error = 2
+            break
+        h, l, c = highs[j], lows[j], closes[j]
+        if (not math.isfinite(o) or not math.isfinite(h) or not math.isfinite(l)
+                or not math.isfinite(c) or min(o, h, l, c) <= 0
+                or not l <= min(o, c) <= max(o, c) <= h):
+            error = 3
+            break
+        stop_gap = o <= stop if sign == 1 else o >= stop
+        target_gap = target != 0 and (o >= target if sign == 1 else o <= target)
+        hit_stop = l <= stop if sign == 1 else h >= stop
+        hit_target = target != 0 and (h >= target if sign == 1 else l <= target)
+        gap = stop_gap or target_gap
+        ambiguous = bool(hit_stop and hit_target and not gap)
+        if gap:
+            reason, ref_exit = (1 if stop_gap else 2), o
+        elif hit_stop or hit_target:
+            reason = 1 if hit_stop else 2
+            ref_exit = stop if hit_stop else target
+        else:
+            if signal_policy and due < 0:
+                if not available[j]:
+                    error = 4
+                    break
+                if signals[j] and j < fills[j] < len(closes):
+                    due = fills[j]
+                    pending = (ms, held + 1, armed, stop, best)
+            if held + 1 >= max_bars:
+                reason, ref_exit = 3, c
+        if not reason and trail_mult:
+            a = atr[j]
+            if not math.isfinite(a) or a <= 0:
+                error = 5
+                break
+            best = max(best, h) if sign == 1 else min(best, l)
+            if armed or (best-reference)*sign >= arm_at_r*initial_r:
+                armed = True
+                candidate = best - sign*trail_mult*a
+                stop = max(stop, candidate) if sign == 1 else min(stop, candidate)
+        held += 1
+        last = ms
+        if reason == 3 and due == j + 1:
+            reason, ref_exit = 0, 0.0
+            continue
+        if reason:
+            exit_i, exit_px = j, ref_exit
+            break
+    return (exit_i, exit_px, at_open, error, j, last, held, armed,
+            reason, ref_exit, ambiguous, gap, stop, best)
 
 def warm_window(a: int, b: int) -> tuple[slice, int]:
     """The slice to hand `simulate` for window [a, b) of a longer history,
@@ -44,8 +187,24 @@ def warm_window(a: int, b: int) -> tuple[slice, int]:
     return slice(lo, b), a - lo
 
 
+def _swing_extrema(values, lookback, minimum):
+    """Inclusive [i-lookback, i], skipping NaN but retaining infinities."""
+    result = np.full(len(values), np.nan)
+    window = deque()
+    for i, value in enumerate(values):
+        while window and window[0] < i - lookback:
+            window.popleft()
+        if lookback >= 0 and not np.isnan(value):
+            while window and (values[window[-1]] >= value if minimum else values[window[-1]] <= value):
+                window.pop()
+            window.append(i)
+        if window:
+            result[i] = values[window[0]]
+    return result
+
+
 def _stop_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
-                   df: pd.DataFrame, i: int, side: str) -> float:
+                   df: pd.DataFrame, i: int, side: str, _columns=None) -> float:
     kind = exit_spec.stop.get("kind", "atr")
     if kind == "atr":
         d = atr * float(exit_spec.stop.get("mult", 2.0))
@@ -53,9 +212,17 @@ def _stop_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
         d = ref_px * float(exit_spec.stop.get("v", 0.01))
     else:                                   # swing
         n = int(exit_spec.stop.get("lookback", 20))
-        w = df.iloc[max(0, i - n):i + 1]
-        d = (ref_px - float(w["low"].min())) if side == "long" \
-            else (float(w["high"].max()) - ref_px)
+        key = ('swing', n, side)
+        if _columns is not None:
+            if key not in _columns:
+                _columns[key] = _swing_extrema(
+                    df['low' if side == 'long' else 'high'].to_numpy(float), n, side == 'long')
+            extreme = float(_columns[key][i])
+        else:
+            values = df['low' if side == 'long' else 'high'].to_numpy(float)[max(0, i-n):i+1]
+            known = values[~np.isnan(values)]
+            extreme = float((known.min() if side == 'long' else known.max()) if len(known) else np.nan)
+        d = ref_px - extreme if side == 'long' else extreme - ref_px
     # same floor as the old engine, computed from the same reference price
     return max(d, ref_px * 0.004)
 
@@ -92,7 +259,10 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     sign = 1.0 if side == "long" else -1.0
     f = i + 1 if fill is None else int(fill[i])
     e = f - 1                       # the notional entry bar: the trade starts as it ends
-    px = float(_columns["bars"][1][f]) if _columns and "bars" in _columns else float(df["open"].iloc[f])
+    columns = _columns if _columns is not None else {}
+    if 'opens' not in columns:
+        columns['opens'] = df['open'].to_numpy(float)
+    px = float(columns['opens'][f])
     slip = atr[i] * slip_frac
     entry = px + sign * slip
     if detail_out is not None:      # observation only: the ACTUAL slipped fill, never read back by the engine
@@ -100,7 +270,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     n = len(closes)
     # stop distance is measured from the CLOSE (as the old engine does),
     # then applied from the slipped entry
-    sl_dist = _stop_distance(exit_spec, px, atr[i], df, i, side)
+    sl_dist = _stop_distance(exit_spec, px, atr[i], df, i, side, _columns)
     tp_dist = _target_distance(exit_spec, px, atr[i], sl_dist)
     canonical = getattr(exit_spec, "_exit_semantics_id", None) is not None
     if canonical:
@@ -137,7 +307,52 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
             state_col = df['bar_state'].to_numpy() if 'bar_state' in df.columns else None
             if _columns is not None:
                 _columns['bars'] = ts_col, open_col, quality_col, state_col
-    for j in range(f, n if canonical else end + 1):
+    numeric = transitions_out is None
+    numeric_censored = False
+    walk = range(f, n if canonical else end + 1)
+    if numeric:
+        if 'walk_inputs' not in columns:
+            signals = np.zeros(n, dtype=np.bool_) if exit_sig is None else np.asarray(exit_sig, dtype=np.bool_)
+            fills = np.arange(1, n + 1, dtype=np.int64) if fill is None else np.asarray(fill, dtype=np.int64)
+            columns['walk_inputs'] = signals, fills
+        signals, fills = columns['walk_inputs']
+        if canonical:
+            if 'canonical_inputs' not in columns:
+                stamps = np.fromiter((int(t.timestamp()*1000) if hasattr(t, 'timestamp') else int(t)
+                                      for t in ts_col), dtype=np.int64, count=n)
+                completed = np.ones(n, dtype=np.bool_)
+                if quality_col is not None:
+                    completed &= quality_col == 'VALID'
+                if state_col is not None:
+                    completed &= state_col == 'FINAL'
+                available = (np.zeros(n, dtype=np.bool_) if exit_sig is None or exit_sig_available is None
+                             else np.asarray(exit_sig_available, dtype=np.bool_))
+                columns['canonical_inputs'] = stamps, completed, available
+            stamps, completed, available = columns['canonical_inputs']
+            (exit_i, exit_px, at_open, error, j, last, held, armed, reason, ref_exit,
+             ambiguous, gap, active_stop, best) = _canonical_bar_walk(
+                f, state.last_bar_ms, step, policy.stop, policy.target, policy.reference,
+                policy.initial_r, policy.max_bars, policy.trail_mult, policy.arm_at_r,
+                policy.signal_exit, intended_quantity, sign, stamps, open_col, highs, lows,
+                closes, atr, completed, signals, available, fills)
+            if error == 2:
+                raise E.ExitObservationUnavailable(last + step, int(stamps[j]), bool(completed[j]))
+            if error:
+                raise ValueError({1: 'exit_quantity_invalid', 3: 'exit_observation_invalid_ohlc',
+                    4: 'exit_signal_evidence_unavailable', 5: 'exit_trail_atr_unavailable',
+                    6: 'signal_fill_missing_causal_history', 7: 'signal_fill_invalid_price_or_quantity'}[error])
+            numeric_censored = exit_i == -2
+            state = E.State(int(last), int(held),
+                'armed' if armed else 'dormant' if policy.trail_mult else 'none',
+                {0: None, 1: 'stop', 2: 'target', 3: 'time', 4: 'signal'}[reason],
+                None if reason in (0, 4) else float(ref_exit), bool(ambiguous), bool(gap),
+                float(active_stop), float(best))
+        else:
+            exit_i, exit_px, at_open = _legacy_bar_walk(
+                f, end, sign, entry, sl, 0.0 if tp is None else tp, tp is not None,
+                sl_dist, highs, lows, closes, columns['opens'], atr, trail_mult, arm_at_r, signals, fills)
+        walk = ()
+    for j in walk:
         if j == due:
             if canonical:
                 clock = ts_col[j]
@@ -208,7 +423,7 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
                 'censored': not bool(state.reason), 'authority': 'STRATEGY',
                 'fill_i': exit_i if state.reason else None,
                 'fill_price': float(exit_px) if state.reason else None, 'at_open': bool(at_open)})
-        if not state.reason:
+        if (numeric_censored if numeric else not state.reason):
             return -2, sl_dist, float('nan')
     exit_px = exit_px - sign * slip                   # exits pay the spread too
     gross = (exit_px - entry) * sign
@@ -315,24 +530,68 @@ def walk_table(table: dict, long: np.ndarray, short: np.ndarray,
     risk_frac = float(risk_cfg["risk_per_trade_pct"]) / 100.0
     lex, lr, lpos = table["long"]
     sex, sr, spos = table["short"]
-    n = len(lex)
-    eq, cursor, out = float(equity), WARMUP, []
-    for i in np.flatnonzero(long | short):
-        i = int(i)
-        if i < cursor or i >= n - 1:
+    return _walk_arrays(np.flatnonzero(long | short), long,
+        lex, lr, lpos, sex, sr, spos, risk_frac, float(equity))
+
+
+@njit(fastmath=False, boundscheck=True, cache=True)
+def _profit_factor_arrays(rates, frac, equity):
+    win, loss = 0.0, 0.0
+    for r in rates:
+        pnl = r * equity * frac
+        if pnl > 0:
+            win += pnl
+        else:
+            loss += -pnl
+        equity += pnl
+    return (math.inf if win > 0 else 0.0) if loss == 0 else win / loss
+
+
+@njit(fastmath=False, boundscheck=True, cache=True)
+def _rotation_pf_arrays(long, short, lex, lr, lpos, sex, sr, spos,
+                        frac, equity, offset, first_bar):
+    """Walk modular signal views and accumulate PF without masks or trade lists."""
+    n = len(long)
+    cursor = max(WARMUP, first_bar)
+    walk_equity, pf_equity, win, loss, count = equity, equity, 0.0, 0.0, 0
+    for i in range(cursor, len(lex) - 1):
+        if i < cursor:
             continue
-        ex, r, pos = (lex, lr, lpos) if long[i] else (sex, sr, spos)
-        if ex[i] == -1:
+        source = (i - offset) % n
+        is_long = long[source]
+        if not is_long and not short[source]:
             continue
-        staked = eq * risk_frac
-        if staked * pos[i] < 10:                      # dust guard
+        ex = lex[i] if is_long else sex[i]
+        r = lr[i] if is_long else sr[i]
+        pos = lpos[i] if is_long else spos[i]
+        if ex == -1:
             continue
-        if ex[i] == -2:  # censored position occupies the rest of this slice
+        staked = walk_equity * frac
+        if staked * pos < 10:
+            continue
+        if ex == -2:
             break
-        out.append((i, int(ex[i]), float(r[i])))
-        eq += r[i] * staked
-        cursor = int(ex[i]) + 1
-    return out
+        # Preserve BOTH rounding paths: the entry walker multiplies stake
+        # first, while the historical PF statistic multiplies r*equity first.
+        walk_equity += r * staked
+        pnl = r * pf_equity * frac
+        if pnl > 0:
+            win += pnl
+        else:
+            loss += -pnl
+        pf_equity += pnl
+        count += 1
+        cursor = ex + 1
+    return ((math.inf if win > 0 else 0.0) if loss == 0 else win / loss), count
+
+
+def rotation_pf(table, long, short, risk_cfg, equity=2000.0, *, offset=0, first_bar=0):
+    """PF/count of roll-then-mask entries, with no O(bars) allocation per draw."""
+    long, short = np.asarray(long, dtype=np.bool_), np.asarray(short, dtype=np.bool_)
+    if len(long) != len(short) or len(long) != len(table['long'][0]):
+        raise ValueError('rotation signal/table length mismatch')
+    return _rotation_pf_arrays(long, short, *table['long'], *table['short'],
+        float(risk_cfg['risk_per_trade_pct']) / 100.0, float(equity), int(offset), max(0,int(first_bar)))
 
 
 def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,

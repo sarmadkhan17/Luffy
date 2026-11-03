@@ -1,0 +1,531 @@
+[
+  {
+    "name": "executed",
+    "coin": {
+      "executed": true,
+      "action": "BUY",
+      "score": 0.5
+    },
+    "category": "order_sent",
+    "label": "Order sent",
+    "show_metrics": true
+  },
+  {
+    "name": "executed precedes unevaluated",
+    "coin": {
+      "executed": true,
+      "evaluated": false
+    },
+    "category": "order_sent",
+    "label": "Order sent",
+    "show_metrics": false
+  },
+  {
+    "name": "BUY",
+    "coin": {
+      "action": "BUY"
+    },
+    "category": "signal",
+    "label": "BUY",
+    "show_metrics": true
+  },
+  {
+    "name": "SELL",
+    "coin": {
+      "action": "SELL"
+    },
+    "category": "signal",
+    "label": "SELL",
+    "show_metrics": true
+  },
+  {
+    "name": "nonzero HOLD",
+    "coin": {
+      "score": 0.2
+    },
+    "category": "decision",
+    "label": "HOLD",
+    "show_metrics": true
+  },
+  {
+    "name": "missing receipts",
+    "coin": {},
+    "category": "checks_unavailable",
+    "label": "Checks unavailable",
+    "show_metrics": false
+  },
+  {
+    "name": "explicit null score is not a decision",
+    "coin": {
+      "score": null
+    },
+    "category": "checks_unavailable",
+    "label": "Checks unavailable",
+    "show_metrics": false
+  },
+  {
+    "name": "ineligible_regime",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_regime"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "ineligible_state",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_state"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "ineligible_market",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_market"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "ineligible_symbol",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_symbol"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "all ineligible",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_regime",
+            "ineligible_symbol"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "no output",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "returned_none"
+          ]
+        }
+      ]
+    },
+    "category": "no_signal",
+    "label": "No signal",
+    "show_metrics": false
+  },
+  {
+    "name": "eligible no output plus ineligible",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "returned_none",
+            "ineligible_state"
+          ]
+        }
+      ]
+    },
+    "category": "no_signal",
+    "label": "No signal",
+    "show_metrics": false
+  },
+  {
+    "name": "emitted",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "emitted_signal"
+          ]
+        }
+      ]
+    },
+    "category": "signal",
+    "label": "Signal emitted",
+    "show_metrics": false
+  },
+  {
+    "name": "emitted plus no output",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "returned_none",
+            "emitted_signal"
+          ]
+        }
+      ]
+    },
+    "category": "signal",
+    "label": "Signal emitted",
+    "show_metrics": false
+  },
+  {
+    "name": "evaluation_failed",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "evaluation_failed"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "required_input_missing:funding",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "required_input_missing:funding"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "missing:tf:4h",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "missing:tf:4h"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "no_snapshot:stale",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "no_snapshot:stale"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "not_invoked",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "not_invoked"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "future_unknown_reason",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "future_unknown_reason"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "partial failed checks",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "emitted_signal",
+            "evaluation_failed"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "input unavailable",
+    "coin": {
+      "evaluated": false,
+      "skip_reason": "INPUT_UNAVAILABLE"
+    },
+    "category": "inputs_unavailable",
+    "label": "Inputs unavailable",
+    "show_metrics": false
+  },
+  {
+    "name": "not evaluated action",
+    "coin": {
+      "action": "NOT_EVALUATED"
+    },
+    "category": "inputs_unavailable",
+    "label": "Inputs unavailable",
+    "show_metrics": false
+  },
+  {
+    "name": "no eligible strategy",
+    "coin": {
+      "evaluated": false,
+      "skip_reason": "NO_ELIGIBLE_STRATEGY"
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  },
+  {
+    "name": "skip blocked",
+    "coin": {
+      "skip_reason": "blocked"
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "skip blocked:risk",
+    "coin": {
+      "skip_reason": "blocked:risk"
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "skip state=FROZEN",
+    "coin": {
+      "skip_reason": "state=FROZEN"
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "skip execution_recovery_pending",
+    "coin": {
+      "skip_reason": "execution_recovery_pending"
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "skip entries not allowed",
+    "coin": {
+      "skip_reason": "entries not allowed"
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "skip pre_filtered",
+    "coin": {
+      "skip_reason": "pre_filtered"
+    },
+    "category": "prefiltered",
+    "label": "Pre-filtered",
+    "show_metrics": false
+  },
+  {
+    "name": "skip prefiltered:universe",
+    "coin": {
+      "skip_reason": "prefiltered:universe"
+    },
+    "category": "prefiltered",
+    "label": "Pre-filtered",
+    "show_metrics": false
+  },
+  {
+    "name": "skip pre-filtered",
+    "coin": {
+      "skip_reason": "pre-filtered"
+    },
+    "category": "prefiltered",
+    "label": "Pre-filtered",
+    "show_metrics": false
+  },
+  {
+    "name": "blocked checks",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "blocked:risk"
+          ]
+        }
+      ]
+    },
+    "category": "blocked",
+    "label": "Blocked",
+    "show_metrics": false
+  },
+  {
+    "name": "filtered checks",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "prefiltered"
+          ]
+        }
+      ]
+    },
+    "category": "prefiltered",
+    "label": "Pre-filtered",
+    "show_metrics": false
+  },
+  {
+    "name": "mixed blocked",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "returned_none",
+            "blocked:risk"
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "malformed checks",
+    "coin": {
+      "strategy_checks": "invalid"
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "empty check",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": []
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "null reason",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            null
+          ]
+        }
+      ]
+    },
+    "category": "checks_incomplete",
+    "label": "Checks incomplete",
+    "show_metrics": false
+  },
+  {
+    "name": "future ineligible dimension retained from Quant Pipeline",
+    "coin": {
+      "strategy_checks": [
+        {
+          "strategy": "fixture",
+          "reasons": [
+            "ineligible_liquidity"
+          ]
+        }
+      ]
+    },
+    "category": "not_applicable",
+    "label": "Not applicable",
+    "show_metrics": false
+  }
+]

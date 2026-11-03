@@ -19,7 +19,10 @@ def development(tmp_path_factory):
         case = population.__wrapped__(paths.__wrapped__(tmp, mp), tmp, mp)
         source, bank, candles, created, later, _ = case
         cfg = yaml.safe_load((Path(__file__).parents[1]/'config.yaml').read_text())
-        assert cfg['research']['referee'] is False and cfg['research']['handoff'] is False
+        # This discovery-receipt fixture deliberately schedules no held-out or
+        # transfer job. Keep its policy local; the owner-enabled runtime flags
+        # are covered by SG-05 and must not control this synthetic harness.
+        cfg['research'].update(referee=False, handoff=False)
         fixture = NumericalFixture()
 
         def run(fn, payload, **kw):

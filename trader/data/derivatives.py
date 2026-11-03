@@ -62,6 +62,22 @@ _CLOCK_FIELDS = frozenset(("event_time_ms", "observed_at_ms", "available_at_ms",
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/120 Safari/537.36"}
 
+SQLITE_BUSY_MS = 1000
+SQLITE_CACHE_KIB = 8192
+
+
+def _configure_connection(conn, *, read_only=False):
+    """Connection-local bounds apply on every open, including versioned stores."""
+    conn.execute('PRAGMA foreign_keys=ON')
+    conn.execute(f'PRAGMA busy_timeout={SQLITE_BUSY_MS}')
+    conn.execute('PRAGMA synchronous=FULL')
+    conn.execute('PRAGMA temp_store=MEMORY')
+    conn.execute(f'PRAGMA cache_size=-{SQLITE_CACHE_KIB}')
+    if read_only:
+        conn.execute('PRAGMA query_only=ON')
+    elif conn.execute('PRAGMA journal_mode=WAL').fetchone()[0].lower() != 'wal':
+        raise RuntimeError('derivative_wal_unavailable')
+
 
 def to_binance(symbol: str) -> str:
     """'BTC/USDT' or 'BTC/USDT:USDT' -> 'BTCUSDT'."""
@@ -98,7 +114,7 @@ class DerivFeed:
                     from ..core.config import ROOT
                     self._db_path = str(ROOT / "data" / "derivs.db")
                 conn = sqlite3.connect(Path(self._db_path).resolve().as_uri() + '?mode=ro', uri=True)
-                conn.execute('PRAGMA query_only=ON')
+                _configure_connection(conn, read_only=True)
                 self._local.conn = conn
                 return conn
             import sqlite3
@@ -106,13 +122,17 @@ class DerivFeed:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "derivs.db")
             conn = sqlite3.connect(self._db_path)
+            try:
+                _configure_connection(conn)
+            except Exception:
+                conn.close()
+                raise
             if mp.initialised(conn, 'derivs', 'deriv_acquisition_cursor'):
-                self._local.conn = conn      # versioned: no setup statements, no writes
+                self._local.conn = conn      # versioned: no schema or receipt writes
                 return conn
             # Measured recorder transactions outlive bounded current readers.
             # WAL retains atomic revisions while readers see committed source
             # snapshots without waiting for an unrelated writer to commit.
-            conn.execute('PRAGMA journal_mode=WAL')
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS derivs ("
                 "symbol TEXT NOT NULL, series TEXT NOT NULL, "

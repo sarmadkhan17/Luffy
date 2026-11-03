@@ -194,8 +194,12 @@ def test_shadow_and_plain_calls_keep_the_original_full_scan(world, monkeypatch):
 
 # The earlier branch-specific thread tests are replaced by maintenance worker tests.
 
-def test_worker_owns_watermark_and_drains_bounded_batches(monkeypatch):
-    from trader.scheduling.maintenance import Maintenance
+def test_worker_owns_watermark_and_runs_one_bounded_batch_per_minute(monkeypatch):
+    from trader.scheduling import maintenance
+    from types import SimpleNamespace
+    Maintenance = maintenance.Maintenance
+    clock = [100.]
+    monkeypatch.setattr(maintenance, 'time', SimpleNamespace(monotonic=lambda:clock[0], time=lambda:clock[0]))
     m = Maintenance(object(), {}, object())
     monkeypatch.setattr(D, "production_registry", lambda: {"r": object()})
     monkeypatch.setattr(D, "dispatchable", lambda r: True)
@@ -207,8 +211,16 @@ def test_worker_owns_watermark_and_drains_bounded_batches(monkeypatch):
     w = m.jobs['learning']
     w.trigger()
     assert w.run_once()
-    assert w.snapshot()['pending']
+    assert not w.snapshot()['pending']
+    # A full batch cannot turn backlog recovery into an immediate busy loop.
+    clock[0] += 10
+    w.trigger()
     assert w.run_once()
+    assert len(calls) == 1
+    clock[0] += 50
+    w.trigger()
+    assert w.run_once()
+    assert len(calls) == 2
     assert not w.snapshot()['pending']
     assert all(c['watermark'] is m.watermark and c['max_work'] == 8 for c in calls)
 

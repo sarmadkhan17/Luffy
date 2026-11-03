@@ -29,7 +29,7 @@ import numpy as np
 
 from ..strategy import null_baseline, spec_evidence
 from ..strategy.portfolio_evidence import portfolio_curve, RESEARCH_CLOCK
-from ..strategy.vector_backtest import WARMUP, walk_table
+from ..strategy.vector_backtest import WARMUP, walk_table, rotation_pf, _profit_factor_arrays
 from . import portfolio_null as pn
 from . import slices
 from .evaluate import Bundle
@@ -147,17 +147,8 @@ def _pf(walk, risk: dict, equity: float = 2000.0) -> float:
     """Profit factor of a `walk_table` result, in USDT against the leg's own
     running balance — the arithmetic `simulate` does, so the same number."""
     frac = float(risk["risk_per_trade_pct"]) / 100.0
-    eq, win, loss = float(equity), 0.0, 0.0
-    for _i, _e, r in walk:
-        pnl = r * eq * frac
-        if pnl > 0:
-            win += pnl
-        else:
-            loss += -pnl
-        eq += pnl
-    if loss == 0:
-        return float("inf") if win > 0 else 0.0
-    return win / loss
+    rates = np.fromiter((float(r) for _i, _e, r in walk), dtype=np.float64, count=len(walk))
+    return float(_profit_factor_arrays(rates, frac, float(equity)))
 
 
 def null_dependence(legs, risk: dict, draws: int = DEPENDENCE_DRAWS,
@@ -190,12 +181,10 @@ def null_dependence(legs, risk: dict, draws: int = DEPENDENCE_DRAWS,
     mat = np.full((len(offs), len(legs)), np.nan)
     for j, l in enumerate(legs):
         for k, off in enumerate(offs):
-            nw = walk_table(l.table,
-                            pn._mask(np.roll(l._long, off), l.first_bar),
-                            pn._mask(np.roll(l._short, off), l.first_bar),
-                            risk)
-            if nw:
-                mat[k, j] = min(_pf(nw, risk), 1e6)
+            pf, count = rotation_pf(l.table, l._long, l._short, risk,
+                                    offset=int(off), first_bar=l.first_bar)
+            if count:
+                mat[k, j] = min(pf, 1e6)
     import pandas as pd
     corr = pd.DataFrame(mat).corr(method="spearman",
                                   min_periods=null_baseline.MIN_DRAWS)
@@ -232,14 +221,11 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
     pn._prepare(legs, exit_spec, risk, tf)
     pcts, trades, per, scored = [], 0, {}, []
     for l in legs:
-        lo, sh = pn._mask(l._long, l.first_bar), pn._mask(l._short,
-                                                          l.first_bar)
-        w = walk_table(l.table, lo, sh, risk)
-        pf = _pf(w, risk)
-        trades += len(w)
-        per[l.symbol] = {"trades": len(w),
+        pf, count = rotation_pf(l.table, l._long, l._short, risk, first_bar=l.first_bar)
+        trades += count
+        per[l.symbol] = {"trades": count,
                          "pf": round(pf, 3) if np.isfinite(pf) else None}
-        if len(w) < min_symbol_trades:
+        if count < min_symbol_trades:
             continue
         n = len(l.df) - l.first_bar
         lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
@@ -248,12 +234,10 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
         rng = np.random.default_rng(seed)
         null = []
         for off in rng.integers(lo_off, hi_off, size=int(draws)):
-            nw = walk_table(l.table,
-                            pn._mask(np.roll(l._long, off), l.first_bar),
-                            pn._mask(np.roll(l._short, off), l.first_bar),
-                            risk)
-            if nw:
-                null.append(_pf(nw, risk))
+            null_pf, null_count = rotation_pf(l.table, l._long, l._short, risk,
+                                             offset=int(off), first_bar=l.first_bar)
+            if null_count:
+                null.append(null_pf)
         pct = null_baseline.edge_percentile(pf, null) \
             if len(null) >= null_baseline.MIN_DRAWS else None
         if pct is not None:

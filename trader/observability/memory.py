@@ -5,6 +5,8 @@ Execution accounting, owner preferences and doctrine remain distinct types.
 """
 import json
 import sqlite3
+import hashlib
+import zlib
 from dataclasses import asdict
 
 from trader.cognition import investigation as I
@@ -16,6 +18,11 @@ def schema(db):
     db.executescript('''
       CREATE TABLE IF NOT EXISTS memory_cases(source_id TEXT PRIMARY KEY, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_contexts(case_id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS memory_source_archives(sha256 TEXT PRIMARY KEY, payload BLOB NOT NULL);
+      CREATE TABLE IF NOT EXISTS memory_context_archive_refs(case_id TEXT NOT NULL, sha256 TEXT NOT NULL,
+        PRIMARY KEY(case_id, sha256));
+      CREATE INDEX IF NOT EXISTS memory_archive_ref_sha_v1 ON memory_context_archive_refs(sha256);
+      CREATE TABLE IF NOT EXISTS memory_context_storage_v1(case_id TEXT PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS memory_reasoning(event_id TEXT PRIMARY KEY, case_id TEXT, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_unassessable(source_id TEXT PRIMARY KEY, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_assessed(source_id TEXT PRIMARY KEY, family TEXT NOT NULL,
@@ -35,6 +42,79 @@ def retain(db):
                        ('memory_assessed_refused','source_id'), ('memory_measured_refused','source_id'),
                        ('memory_unassessable_refused','source_id')):
         db.execute(f'DELETE FROM {table} WHERE {key} NOT IN (SELECT id FROM cases)')
+    for table in ('memory_context_archive_refs', 'memory_context_storage_v1'):
+        db.execute(f'DELETE FROM {table} WHERE case_id NOT IN (SELECT case_id FROM memory_contexts)')
+    db.execute('DELETE FROM memory_source_archives WHERE sha256 NOT IN '
+               '(SELECT sha256 FROM memory_context_archive_refs)')
+
+
+_SOURCE_REF = 'memory-source-ref.v1'
+
+
+def _archive_groups(context):
+    yield context
+    for name in ('unassessable_closures', 'assessed_descriptions'):
+        if isinstance(context.get(name), dict):
+            yield context[name]
+
+
+def _resolve_archive(db, ref):
+    if set(ref) != {'schema_version', 'sha256'} or ref['schema_version'] != _SOURCE_REF:
+        raise ValueError('memory_archive_reference_invalid')
+    row = db.execute('SELECT payload FROM memory_source_archives WHERE sha256=?', (ref['sha256'],)).fetchone()
+    if not row:
+        raise ValueError('memory_archive_reference_missing')
+    try:
+        raw = zlib.decompress(row[0])
+    except (zlib.error, TypeError) as exc:
+        raise ValueError('memory_archive_reference_integrity') from exc
+    if hashlib.sha256(raw).hexdigest() != ref['sha256']:
+        raise ValueError('memory_archive_reference_integrity')
+    return json.loads(raw)
+
+
+def expand_context(db, context):
+    """Restore the exact public context; legacy inline archives stay readable."""
+    context = json.loads(I.encode(context))
+    for group in _archive_groups(context):
+        if 'source_archives' in group:
+            group['source_archives'] = [_resolve_archive(db, item)
+                if isinstance(item, dict) and item.get('schema_version') == _SOURCE_REF else item
+                for item in group['source_archives']]
+    return context
+
+
+def _compact_context(db, iid, context):
+    stored = json.loads(I.encode(context))
+    for group in _archive_groups(stored):
+        refs = []
+        for archive in group.get('source_archives', []):
+            raw = I.encode(archive).encode()
+            sha = hashlib.sha256(raw).hexdigest()
+            ref = dict(schema_version=_SOURCE_REF, sha256=sha)
+            db.execute('INSERT OR IGNORE INTO memory_source_archives VALUES (?,?)', (sha,zlib.compress(raw)))
+            if _resolve_archive(db, ref) != archive:
+                raise ValueError('memory_archive_reference_integrity')
+            db.execute('INSERT OR IGNORE INTO memory_context_archive_refs VALUES (?,?)', (iid,sha))
+            refs.append(ref)
+        if 'source_archives' in group:
+            group['source_archives'] = refs
+    # Round-trip verification precedes replacing the retained context.
+    if I.encode(expand_context(db, stored)) != I.encode(context):
+        raise ValueError('memory_context_compaction_mismatch')
+    db.execute('INSERT OR IGNORE INTO memory_context_storage_v1 VALUES (?)', (iid,))
+    return stored
+
+
+def compact_contexts(db, limit=16):
+    """Bounded legacy conversion, committed by the maintenance transaction."""
+    rows = db.execute('SELECT case_id,payload FROM memory_contexts WHERE case_id NOT IN '
+                      '(SELECT case_id FROM memory_context_storage_v1) ORDER BY case_id LIMIT ?',
+                      (int(limit),)).fetchall()
+    for iid, raw in rows:
+        stored = _compact_context(db, iid, json.loads(raw))
+        db.execute('UPDATE memory_contexts SET payload=? WHERE case_id=?', (I.encode(stored),iid))
+    return len(rows)
 
 
 def ingest(db, now):
@@ -280,14 +360,15 @@ def register(db, inv):
         prior['source_archives'] = [source_archive(db, r['source_id']) for r in prior['records']]
         context['assessed_descriptions'] = prior
     context['context_id'] = M.stable_id('memory_context', {k:v for k,v in context.items() if k != 'context_id'})
-    db.execute('INSERT INTO memory_contexts VALUES (?,?)',(inv.investigation_id,I.encode(context)))
+    stored = _compact_context(db, inv.investigation_id, context)
+    db.execute('INSERT INTO memory_contexts VALUES (?,?)',(inv.investigation_id,I.encode(stored)))
     return context
 
 
 def append_reasoning(db, update):
     row = db.execute('SELECT payload FROM memory_contexts WHERE case_id=?',(update.investigation_id,)).fetchone()
     if row:
-        payload = M.reasoning(update, json.loads(row[0]))
+        payload = M.reasoning(update, expand_context(db, json.loads(row[0])))
         db.execute('INSERT INTO memory_reasoning VALUES (?,?,?)',(update.event_id,update.investigation_id,I.encode(payload)))
 
 
@@ -297,7 +378,7 @@ def owner_context(db, iid):
         return {'status': 'pre_memory_registration', 'context': None, 'reasoning': []}
     row = db.execute('SELECT payload FROM memory_contexts WHERE case_id=?',(iid,)).fetchone()
     return {'status': 'frozen_at_registration' if row else 'pre_memory_registration',
-            'context': json.loads(row[0]) if row else None,
+            'context': expand_context(db, json.loads(row[0])) if row else None,
             'reasoning': [json.loads(p) for (p,) in db.execute('SELECT payload FROM memory_reasoning WHERE case_id=? ORDER BY rowid',(iid,))]}
 
 

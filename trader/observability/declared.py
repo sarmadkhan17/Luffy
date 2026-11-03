@@ -49,7 +49,8 @@ def declaration(config):
 
 def fetch(symbol):
     # A disposable process imposes a TOTAL request/read deadline, including DNS.
-    p = subprocess.run([sys.executable, '-m', 'trader.observability.declared', '--fetch', symbol],
+    helper = Path(__file__).resolve().parents[2] / 'scripts' / 'declared_fetch.py'
+    p = subprocess.run([sys.executable, '-B', str(helper), symbol],
                        capture_output=True, text=True, timeout=6)
     if p.returncode or len(p.stdout) > 65536:
         raise ValueError('public_fetch_failed')

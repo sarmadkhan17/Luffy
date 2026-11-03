@@ -16,9 +16,11 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def registered_coverage(monkeypatch):
+def registered_coverage(monkeypatch, tmp_path):
     """Runner protocol fixtures must not depend on a production candle store."""
     from trader.research import universe
+    monkeypatch.setitem(CFG['research'], 'paths', {
+        key: str(tmp_path/(key+'.db')) for key in ('candles','derivs','refs')})
     monkeypatch.setattr('trader.research.referee.rotation_capacity',lambda *a,**k:
                         {'a': {'fixture': 11000}, 'b': {'fixture': 11000}})
     monkeypatch.setattr(universe, 'coverage', lambda tfs=None, feed=None: {
@@ -42,7 +44,9 @@ def _runner(tmp_path, reply):
                       "timeout_s": timeout_s, "nice": nice})
         return reply(fn, payload)
 
-    r = ResearchRunner(j, CFG, run=fake_run)
+    cfg = {**CFG, 'research': {**CFG['research'], 'paths': {
+        key: str(tmp_path/(key+'.db')) for key in ('candles','derivs','refs')}}}
+    r = ResearchRunner(j, cfg, run=fake_run)
     return r, calls
 
 

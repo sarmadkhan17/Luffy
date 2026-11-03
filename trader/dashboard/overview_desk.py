@@ -6,6 +6,7 @@ a trade whose P&L is UNKNOWN is counted and left out of the curve, never zeroed.
 from __future__ import annotations
 
 from .economics import booking_receipts, journal_pnl
+from .scan_result import classify_scan_result
 
 RECENT_CLOSES = 10
 SCAN_LIMIT = 60
@@ -70,7 +71,8 @@ def current_scan(root, now):
             if value is not None and (type(value) not in (int, float) or not math.isfinite(value)):
                 raise ValueError('current_scan_value_invalid')
     age = max(0., now - at)
-    return dict(scan, observed_at=datetime.fromtimestamp(at, timezone.utc).isoformat(),
+    return dict(scan, coins=[dict(row, classification=classify_scan_result(row)) for row in coins],
+        observed_at=datetime.fromtimestamp(at, timezone.utc).isoformat(),
         age_s=age, freshness='fresh' if age <= 180 else 'stale',
         traded=sum(row.get('executed') is True for row in coins),
         source='Current kernel completed-scan summary; scalar telemetry only, not persisted trade evidence')
@@ -91,6 +93,8 @@ def latest_scan(journal, root=None, now=None) -> dict | None:
     coins = [{"decision_id": str(r["id"]), "symbol": r["symbol"], "action": r["action"],
               "score": r["score"], "threshold": r["threshold"], "confidence": r["confidence"],
               "executed": bool(r["executed"]), "skip_reason": r["skip_reason"] or None} for r in rows]
+    for coin in coins:
+        coin['classification'] = classify_scan_result(coin)
     return {"scan_id": scan_id, "observed_at": max(r["ts"] for r in rows) if rows else head[0]["ts"],
             "coins": coins, "traded": sum(c["executed"] for c in coins),
             "source": "journal decisions of the newest scan (score vs the recorded threshold)"}

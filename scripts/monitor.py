@@ -190,33 +190,130 @@ def gate(j: Journal) -> list[str]:
     return []
 
 
-def safety_check(root, cfg, *, clock=None, sink=None, heartbeat_only=False, integrity_only=False):
+def _paused_store(path, role, health, now, *, journal=False):
+    """Bounded SQL reads only; never resolve an existing write failure."""
+    from contextlib import closing
+    import sqlite3
+    import time
+    started = time.monotonic()
+    result = dict(component=role, verification='bounded_read_only', committed=False)
+    try:
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('store_missing_or_symlink')
+        with closing(sqlite3.connect(path.absolute().as_uri() + '?mode=ro', uri=True, timeout=.2)) as db:
+            db.execute('PRAGMA query_only=ON')
+            db.set_progress_handler(lambda: int(time.monotonic() - started > 1), 1000)
+            db.execute('BEGIN')
+            db.execute('SELECT name FROM sqlite_master LIMIT 1').fetchone()
+            if journal:
+                # No credentialed venue client is instantiated here. A stale or
+                # absent retained receipt is uncertainty, never current safety.
+                from trader.observability.preflight import _protection
+                db.row_factory = sqlite3.Row
+                try:
+                    receipt = _protection(db, now)
+                    result['venue_protection'] = dict(status='VERIFIED', receipt=receipt,
+                                                       source='retained_venue_evidence')
+                except Exception as exc:
+                    result['venue_protection'] = dict(status='UNAVAILABLE', error_type=type(exc).__name__,
+                                                       source='retained_venue_evidence')
+            db.rollback()
+        result['status'] = 'AVAILABLE'
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        result.update(status='UNAVAILABLE', error_type=type(exc).__name__)
+    health.observe(role + '_readonly', None if result['status'] == 'AVAILABLE' else 'READ_UNAVAILABLE', context=result)
+    if journal:
+        venue = result.get('venue_protection', dict(status='UNAVAILABLE', source='retained_venue_evidence'))
+        health.observe('paused_venue_protection', None if venue['status'] == 'VERIFIED' else 'VENUE_STATE_UNCONFIRMED', context=venue)
+    return result
+
+
+def _paused_disk(root, cfg, health):
+    import os
+    from trader.observability.preflight import MIN_FREE_BYTES
+    result = dict(component='disk', verification='filesystem_metadata')
+    try:
+        minimum = (cfg.get('safety_monitor') or {}).get('min_free_bytes', MIN_FREE_BYTES)
+        if type(minimum) is not int or minimum <= 0:
+            raise ValueError('invalid_disk_threshold')
+        fs = os.statvfs(root)
+        result.update(free_bytes=fs.f_bavail * fs.f_frsize, min_free_bytes=minimum,
+                      read_only=bool(fs.f_flag & os.ST_RDONLY))
+        result['status'] = 'AVAILABLE' if not result['read_only'] and result['free_bytes'] >= minimum else 'CAPACITY_OR_READONLY'
+    except (OSError, ValueError) as exc:
+        result.update(status='UNAVAILABLE', error_type=type(exc).__name__)
+    health.observe('paused_disk', None if result['status'] == 'AVAILABLE' else result['status'], context=result)
+    return result
+
+
+def safety_check(root, cfg, *, clock=None, sink=None, heartbeat_only=False, integrity_only=False,
+                 identity_probe=None):
     """Independent local safety pass; no Journal initialization or venue calls."""
     import time
     from trader.observability.safety import SafetyHealth, SafetyObserver, HeartbeatPolicy
+    from trader.observability.pause_state import status
     root = Path(root)
+    pauses = status(root)
+    # Never follow a substituted data directory or safety-health lock just to
+    # report that its ownership could not be trusted.
+    if not pauses['directory_valid'] or not pauses['locks']['safety_health.lock']['valid']:
+        return dict(schema='luffy-safety-observation.v1', pause_state=pauses,
+                    components=[dict(component='control_paths', status='UNAVAILABLE')],
+                    health=dict(recovery_required=True))
     health = SafetyHealth(root / 'data/safety_health.json', clock=clock or time.time, sink=sink)
+    if pauses['safety_monitor_paused']:
+        return dict(schema='luffy-safety-observation.v1', pause_state=pauses,
+                    components=[dict(component='safety_monitor', status='DISABLED', reason='safety_monitor.off')],
+                    health=health.read())
+    health.observe('control_paths', None if pauses['valid'] else 'UNSAFE_CONTROL_PATH', context=pauses)
     observer = SafetyObserver(health, clock=clock or time.time)
     # Heartbeat-only has its own host-side schedule: database maintenance can
     # never hold its observation behind a scan or a contended write.
-    results = [observer.heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', HeartbeatPolicy.configured(cfg))]
+    intentionally_stopped = False
+    if pauses['watchdog_paused']:
+        if identity_probe is None:
+            from trader.runtime_identity import status_only
+            identity_probe = status_only
+        try:
+            identity = identity_probe(root)
+        except Exception:
+            identity = dict(state='UNKNOWN')
+        intentionally_stopped = identity.get('state') in ('NONE', 'STALE_RECORD')
+        health.observe('paused_kernel_identity', None if intentionally_stopped or (
+                           identity.get('state') == 'RUNNING' and identity.get('verified') is True)
+                       else 'IDENTITY_UNCONFIRMED', context=dict(state=identity.get('state')))
+    results = ([dict(component='luffy', status='INTENTIONALLY_STOPPED', reason='watchdog.off')]
+               if intentionally_stopped else
+               [observer.heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', HeartbeatPolicy.configured(cfg))])
     if not heartbeat_only:
-        method = observer.integrity if integrity_only else observer.store
-        results.append(method(root / 'data/luffy.db', 'journal', **({} if integrity_only else {'journal':True})))
-        for store in (cfg.get('safety_monitor') or {}).get('critical_stores', []):
-            results.append(method(root / store['path'], store['role']))
-    return dict(schema='luffy-safety-observation.v1', components=results, health=health.read())
+        stores = [(root / 'data/luffy.db', 'journal')]
+        stores += [(root / s['path'], s['role']) for s in (cfg.get('safety_monitor') or {}).get('critical_stores', [])]
+        if pauses['watchdog_paused']:
+            results.append(_paused_disk(root, cfg, health))
+        for path, role in stores:
+            if pauses['watchdog_paused'] and not integrity_only:
+                results.append(_paused_store(path, role, health, (clock or time.time)(), journal=role == 'journal'))
+            else:
+                method = observer.integrity if integrity_only else observer.store
+                results.append(method(path, role, **({'journal':True} if role == 'journal' and not integrity_only else {})))
+    return dict(schema='luffy-safety-observation.v1', components=results, pause_state=pauses, health=health.read())
 
 
 def main() -> int:
-    cfg = load_config()
-    if any(flag in sys.argv for flag in ('--safety-only','--heartbeat-only','--integrity-only')):
+    if any(flag in sys.argv for flag in ('--status','--safety-only','--heartbeat-only','--integrity-only')):
         import json
         from trader.core.config import ROOT
+        from trader.observability.pause_state import status
+        pauses = status(ROOT)
+        if '--status' in sys.argv:
+            print(json.dumps(pauses, sort_keys=True))
+            return 0 if pauses['valid'] else 2
+        cfg = {} if pauses['safety_monitor_paused'] else load_config()
         result = safety_check(ROOT, cfg, sink=lambda event: print(json.dumps(event), file=sys.stderr),
                               heartbeat_only='--heartbeat-only' in sys.argv, integrity_only='--integrity-only' in sys.argv)
         print(json.dumps(result, sort_keys=True))
         return int(bool(result['health']['recovery_required']))
+    cfg = load_config()
     from trader.core.journal import Journal
     from trader.data.feed import DataFeed, make_exchange
 

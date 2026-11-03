@@ -118,7 +118,7 @@ def read_sources(path, known, limit, now_ms, known_investigations=frozenset()):
                     from trader.observability import memory as M
                     M.replay_export(M.export_case(db, iid))
                     fields = asdict(source)
-                    fields['prior_research_json'] = P.canonical(json.loads(prior[0]))
+                    fields['prior_research_json'] = P.canonical(M.expand_context(db, json.loads(prior[0])))
                     fields.pop('provenance_hash')
                     source = P.ResearchSource(**fields, provenance_hash=P.digest(fields))
                 if source.available_ms > now_ms:

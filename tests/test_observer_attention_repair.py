@@ -45,7 +45,8 @@ sys.addaudithook(audit)
 sys.path.insert(0, str(production))
 '''
     result = subprocess.run([sys.executable, '-B', '-c', guard + textwrap.dedent(body)],
-        cwd=tmp_path, env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'},
+        cwd=tmp_path, env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1',
+                           'NUMBA_CACHE_DIR': str(tmp_path / 'numba-cache')},
         capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
     return result

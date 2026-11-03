@@ -24,6 +24,25 @@ log = logging.getLogger(__name__)
 
 SCHEMA = 'learning-dispatch-receipt.v1'
 TABLE = 'learning_dispatch_receipts'
+CHAIN_META_TABLE = 'learning_chain_dispatch_meta_v1'
+
+
+def ensure_chain_dispatch_meta(conn):
+    """Create eligibility storage without reading or expanding retained chains.
+
+    The caller owns the transaction. Readers reconcile missing legacy and
+    newly committed chains before trusting this derived projection.
+    """
+    conn.execute(f"""CREATE TABLE IF NOT EXISTS {CHAIN_META_TABLE} (
+        outcome_id TEXT PRIMARY KEY,
+        chain_rowid INTEGER NOT NULL UNIQUE,
+        replay_gate TEXT NOT NULL,
+        evidence_outcome_id TEXT,
+        payload_sha256 TEXT NOT NULL
+    )""")
+    conn.execute(f"""CREATE INDEX IF NOT EXISTS learning_chain_ready_order_v1
+        ON {CHAIN_META_TABLE}(outcome_id, chain_rowid)
+        WHERE replay_gate = 'REPLAY_COMPLETE'""")
 
 
 class Result(str, Enum):
@@ -93,11 +112,14 @@ def ensure(journal):
           dispatch_id TEXT PRIMARY KEY, outcome_id TEXT NOT NULL, registry_digest TEXT NOT NULL,
           payload TEXT NOT NULL, sha256 TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS learning_dispatch_outcome ON {TABLE}(outcome_id);
+        CREATE INDEX IF NOT EXISTS learning_dispatch_outcome_registry_v1
+          ON {TABLE}(outcome_id,registry_digest);
         CREATE TRIGGER IF NOT EXISTS learning_dispatch_no_update BEFORE UPDATE ON {TABLE}
           BEGIN SELECT RAISE(ABORT,'dispatch receipt immutable'); END;
         CREATE TRIGGER IF NOT EXISTS learning_dispatch_no_delete BEFORE DELETE ON {TABLE}
           BEGIN SELECT RAISE(ABORT,'dispatch receipt immutable'); END;
         """)
+        ensure_chain_dispatch_meta(c)
 
 
 def _no(rule_id, rule, reason):
@@ -207,15 +229,79 @@ def dispatch_evidence(journal, cfg, ev, *, at_ms, registry=None, shadow=False):
     return dict(body, duplicate=False, written=True)
 
 
-def pending(journal, digest, limit, after_rowid=None):
+def _projected_pending(journal, digest, limit, after_rowid):
+    from trader.core import journal_evidence as E
+
+    # Reconcile and select in one writer snapshot. Producers using direct SQL
+    # need no new trigger or callback: their committed chains are discovered
+    # here before any watermark can advance. Source chains remain immutable.
+    with journal._tx() as conn:
+        conn.execute('BEGIN IMMEDIATE')
+        ensure_chain_dispatch_meta(conn)
+        # Rowids can change after an offline VACUUM. Retain hashes/eligibility
+        # by immutable outcome identity and repair the physical locator below.
+        conn.execute(f'DELETE FROM {CHAIN_META_TABLE} WHERE outcome_id NOT IN '
+                     '(SELECT outcome_id FROM learning_produced_chains)')
+        mismatched = conn.execute(f'SELECT 1 FROM {CHAIN_META_TABLE} m '
+            'JOIN learning_produced_chains p ON p.outcome_id=m.outcome_id '
+            'WHERE m.chain_rowid!=p.rowid LIMIT 1').fetchone()
+        if mismatched:
+            # A two-phase repair avoids unique-key collisions during swaps.
+            conn.execute(f'UPDATE {CHAIN_META_TABLE} SET chain_rowid=-chain_rowid')
+            conn.execute(f'UPDATE {CHAIN_META_TABLE} SET chain_rowid='
+                         '(SELECT rowid FROM learning_produced_chains p '
+                         f'WHERE p.outcome_id={CHAIN_META_TABLE}.outcome_id)')
+        cursor = 0
+        while True:
+            rows = conn.execute(f'SELECT p.rowid,p.outcome_id '
+                'FROM learning_produced_chains p '
+                f'LEFT JOIN {CHAIN_META_TABLE} m ON m.outcome_id=p.outcome_id '
+                'WHERE p.rowid>? AND m.outcome_id IS NULL ORDER BY p.rowid LIMIT 64',
+                (cursor,)).fetchall()
+            if not rows:
+                break
+            for row in rows:
+                payload = conn.execute('SELECT payload FROM learning_produced_chains '
+                                       'WHERE outcome_id=?', (row[1],)).fetchone()[0]
+                metadata, _ = E.chain_dispatch_metadata(conn, *row, payload)
+                conn.execute(f'INSERT INTO {CHAIN_META_TABLE} VALUES (?,?,?,?,?)', metadata)
+            cursor = rows[-1][0]
+        exists = conn.execute("SELECT 1 FROM sqlite_master WHERE name=?", (TABLE,)).fetchone()
+        clause = (f' AND NOT EXISTS(SELECT 1 FROM {TABLE} d '
+                  'WHERE d.outcome_id=m.evidence_outcome_id AND d.registry_digest=?)' if exists else '')
+        args = (() if after_rowid is None else (after_rowid,))
+        if exists:
+            args += (digest,)
+        candidates = conn.execute(f'SELECT m.* FROM {CHAIN_META_TABLE} m '
+            "WHERE m.replay_gate='REPLAY_COMPLETE'" +
+            ('' if after_rowid is None else ' AND m.chain_rowid>?') + clause +
+            ' ORDER BY m.outcome_id LIMIT ?', args + (limit,)).fetchall()
+        result = []
+        for meta in candidates:
+            raw = conn.execute('SELECT rowid,outcome_id,payload FROM learning_produced_chains '
+                               'WHERE outcome_id=?', (meta[0],)).fetchone()
+            actual, logical = E.chain_dispatch_metadata(conn, *raw)
+            if actual != tuple(meta):
+                raise E.EvidenceError('learning_dispatch_metadata_mismatch')
+            row = dict(outcome_id=meta[0], payload=logical)
+            if after_rowid is not None:
+                row['rowid'] = meta[1]
+            result.append(row)
+        return result
+
+
+def pending(journal, digest, limit, after_rowid=None, *, use_projection=True):
     """Replay-complete chains with no receipt for ``digest``, lowest outcome first.
 
-    ``after_rowid=None`` is the original full anti-join. A number restricts the
-    scan to ``rowid > after_rowid``; rows then also carry their ``rowid``. That
-    is only valid under the ``Watermark`` invariant below.
+    Missing projection entries are verified once before selection; only the
+    selected payloads are expanded on subsequent calls. ``use_projection=False``
+    retains the read-only logical query for shadow dispatch. A numeric
+    ``after_rowid`` restricts selection and includes rowids in returned rows.
     """
     if not journal.query("SELECT 1 FROM sqlite_master WHERE name='learning_produced_chains'"):
         return []
+    if use_projection:
+        return _projected_pending(journal, digest, limit, after_rowid)
     exists = bool(journal.query("SELECT 1 FROM sqlite_master WHERE name=?", (TABLE,)))
     clause = (f" AND NOT EXISTS(SELECT 1 FROM {TABLE} d WHERE d.outcome_id=json_extract(p.payload,'$.evidence.outcome_id')"
               " AND d.registry_digest=?)"
@@ -306,7 +392,7 @@ def dispatch_pending(journal, cfg, *, at_ms, max_work=8, shadow=False, test_regi
         return dispatch_evidence(journal, cfg, ev, at_ms=at_ms, registry=rules, shadow=shadow)
     if watermark is not None and not shadow:
         return watermark.step(journal, digest, max_work, one)
-    return [one(row) for row in pending(journal, digest, max_work)]
+    return [one(row) for row in pending(journal, digest, max_work, use_projection=not shadow)]
 
 
 def checkpoint_isolated(journal, cfg, registry, *, at_ms, max_work=8, shadow=False):

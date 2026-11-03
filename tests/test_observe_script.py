@@ -47,7 +47,9 @@ def test_every_timeout_has_a_kill_after():
     assert len(timeouts) == 4
     for line in timeouts:
         assert re.search(r'timeout --kill-after=\d+s \d+s', line), line
-    assert all(int(n) >= 15 for n in re.findall(r'--kill-after=(\d+)s', text))
+    for module in ('learning', 'investigation'):
+        line = next(line for line in timeouts if f'trader.observability.{module} ' in line)
+        assert '--kill-after=5s' in line
     # worst case must still fit one 5-minute cron period
     total = sum(int(k) + int(t) for k, t in re.findall(r'--kill-after=(\d+)s (\d+)s', text))
     assert total < 300, total
