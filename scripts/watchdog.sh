@@ -30,6 +30,10 @@ STALE_S="${STALE_S:-600}"
 LOG="$DIR/logs/watchdog.log"
 mkdir -p "$DIR/logs"
 say() { echo "$(date '+%F %T') $*" >> "$LOG"; }
+# restart.sh requires the full 40-char revision. Honour an explicit pin;
+# otherwise bind to the checked-out HEAD (restart.sh still refuses dirty runtime code).
+EXPECTED_REV="${LUFFY_EXPECT_REVISION:-$(git -C "$DIR" rev-parse HEAD 2>/dev/null)}"
+export LUFFY_EXPECT_REVISION="$EXPECTED_REV"
 act() { if [ -n "${DRY_RUN:-}" ]; then say "DRY_RUN would run: $*"; else "$@" >> "$LOG" 2>&1; fi; }
 
 flag_present() {
