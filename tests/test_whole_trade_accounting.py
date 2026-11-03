@@ -288,3 +288,12 @@ def test_rebalance_increase_conflicts_remain_unavailable(monkeypatch, change):
     assert not A.replay(a)['learning_eligible']
     with pytest.raises(ValueError, match='incomplete_accounting_retry'):
         A.verified_outcome(a, 6000)
+
+
+def test_funding_time_tolerance_pairs_one_ms_offsets_but_not_gaps_or_duplicates():
+    from trader.engine.trade_accounting import funding_times_match as match
+    assert match([1000, 5000], {1001, 5001})
+    assert match([1000, 5000], {1000, 5000})
+    assert not match([1000, 5000], {1001, 9000})
+    assert not match([1000], {1001, 2000})
+    assert not match([1000, 1000], {1001, 1002})

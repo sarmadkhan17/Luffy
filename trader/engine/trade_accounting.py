@@ -32,6 +32,22 @@ def scalar(value):
     return value if isinstance(value, (str, int, float, bool, type(None))) else None
 
 
+#: Binance stamps a funding event 1 ms after the settlement time its income row
+#: carries for some intervals. Pair each cashflow with exactly one event within
+#: this window; the counts must still match exactly, so a missing or duplicate
+#: cashflow is still refused.
+FUNDING_TIME_TOLERANCE_MS = 2000
+
+
+def funding_times_match(actual, expected, tolerance_ms=FUNDING_TIME_TOLERANCE_MS):
+    if len(set(actual)) != len(actual):
+        return False
+    actual, expected = sorted(actual), sorted(expected)
+    if len(actual) != len(expected):
+        return False
+    return all(abs(a - e) <= tolerance_ms for a, e in zip(actual, expected))
+
+
 def close(a, b):
     return math.isclose(number(a), number(b), rel_tol=1e-8, abs_tol=1e-8)
 
@@ -402,7 +418,7 @@ def assess(a, *, marked=False):
             if exposure > 1e-8:
                 expected_times.add(ts)
         actual_times = [number(r['time']) for r in funding]
-        if set(actual_times) != expected_times or len(actual_times) != len(expected_times):
+        if not funding_times_match(actual_times, expected_times):
             raise ValueError('funding_event_cashflow_missing_or_ambiguous_retry')
         if set(fees)-{currency} or set(currencies)-{currency}:
             raise ValueError('currency_conversion_missing_retry')
