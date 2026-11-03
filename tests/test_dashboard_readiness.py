@@ -481,3 +481,25 @@ def test_absent_identity_refuses_without_creating_runtime_files(tmp_path, monkey
     monkeypatch.setattr(ri, 'inspect', lambda *a: pytest.fail('identity inspection before record exists'))
     assert not gate.check(tmp_path, CFG)['allow']
     assert not (tmp_path / 'data').exists()
+
+
+def test_started_frozen_accepts_only_exact_owner_demo_permission(ready, monkeypatch):
+    from trader.core.journal import Journal
+    from trader.strategy import owner_demo
+    from tests.test_universal_strategy_authority import proposal
+    import time
+    monkeypatch.setenv('BINANCE_DEMO', 'true')
+    journal = Journal(ready.root / 'data/luffy.db')
+    journal.upsert_spec(proposal('demo_test', 'Demo test'))
+    cfg = dict(CFG, mode={'market': 'futures', 'execution': 'live'})
+    owner_demo.authorize(journal, cfg, 'demo_test', actor='operator',
+                         reason='TEST-ONLY explicit owner Demo startup', at_ms=int(time.time()*1000))
+    ready.beat.beat(dict(startup_state='STARTED_FROZEN', last_successful_cycle_at=None,
+                         state='FROZEN', boot_complete=True, stopping=False))
+    SafetyObserver(ready.health, clock=lambda: ready.now).heartbeat(
+        ready.beat.path, 'luffy', HeartbeatPolicy.configured(CFG))
+    result = gate.check(ready.root, cfg, clock=lambda: ready.now, require_cycle=False)
+    assert result['allow'], result['reasons']
+    monkeypatch.setenv('BINANCE_DEMO', 'false')
+    result = gate.check(ready.root, cfg, clock=lambda: ready.now, require_cycle=False)
+    assert not result['allow'] and 'startup_execution_not_paper' in result['reasons']

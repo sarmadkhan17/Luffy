@@ -2120,7 +2120,12 @@ def live_entry_block(journal, strategy_id: str, *, cfg: dict | None = None
     try:
         if not versioned(journal, strategy_id):
             from .legacy_authority import grandfathered
-            return None if grandfathered(journal, strategy_id) else "VERSIONED_AUTHORITY_REQUIRED"
+            if grandfathered(journal, strategy_id):
+                return None
+            from . import owner_demo
+            if owner_demo.rows(journal, strategy_id):
+                return owner_demo.block(journal, strategy_id, cfg)
+            return "VERSIONED_AUTHORITY_REQUIRED"
         try:
             inst = resolve_current_install(journal, strategy_id)
         except HandoffRefused as e:

@@ -27,7 +27,7 @@ export function verdictOf(c: Combo): string {
   if (!c.status) return "UNAVAILABLE";
   if (c.status === "untestable") return "Untestable";
   if (c.status === "empty") return "No trades";
-  return c.verdict === "survivor" ? "Survivor" : c.verdict === "grow" ? "Growing" : c.verdict === "pruned" ? "Pruned" : "UNAVAILABLE";
+  return c.verdict === "survivor" ? "Survivor" : c.verdict === "grow" ? "Growing" : c.verdict === "prune" ? "Pruned" : "UNAVAILABLE";
 }
 export function refereeWording(enabled: unknown, registrations: number | null): string {
   const flag = enabled === false ? "Referee disabled" : enabled === true ? "Referee enabled" : "Referee state unavailable";

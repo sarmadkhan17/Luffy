@@ -843,7 +843,7 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     @app.get(PREFIX + "/desk")
     def owner_desk():
         from .overview_desk import desk
-        return _json(desk(journal, cfg, _iso(_now())))
+        return _json(desk(journal, cfg, _iso(_now()), root=root))
 
     @app.get(PREFIX + "/research/board")
     def owner_research_board():

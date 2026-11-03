@@ -156,6 +156,12 @@ def run(view):
                  requirement_errors=view._scan_requirement_errors,
                  input_policy='strategy_required.trade_evidence_only.v1')
     receipt, _, peers, _, _ = view._prepared_scan
+    # Scalar owner telemetry for this batch only; no snapshots or journal rows.
+    coins = {symbol: dict(decision_id='scan:'+symbol, symbol=symbol, action='NOT_EVALUATED',
+        score=None, threshold=None, confidence=None, executed=False, evaluated=False, persisted=False,
+        skip_reason='INPUT_UNAVAILABLE' if symbol in view._scan_plan else 'NO_ELIGIBLE_STRATEGY')
+        for symbol in view._symbol_roles.deep}
+    stats['scan_coins'] = list(coins.values())
     stats['shortlisted'] = len(view._symbol_roles.deep)
     stats['admission'] = dict(receipt_id=receipt.get('receipt_id') if receipt else None,
         status=receipt.get('degraded_state') if receipt else 'REFUSED',
@@ -258,6 +264,15 @@ def run(view):
         stats['decisions'] += 1
         # Runtime retains bounded exit-score/owner visibility, not full snapshots.
         runtime.decision_completed(symbol, None, decision)
+        row = coins[symbol]
+        from math import isfinite
+        def finite(value):
+            return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value) else None
+        row.update(decision_id=decision.id, action=decision.action.value, evaluated=True,
+            score=finite(decision.score), threshold=finite(decision.threshold),
+            confidence=finite(decision.confidence), skip_reason=decision.skip_reason or None,
+            regime=str(snap.regime), price=finite(snap.price),
+            strategy_checks=[dict(strategy=sid, reasons=reasons[-3:]) for sid, reasons in list(events.items())[:32]])
         if decision.action == Action.HOLD or decision.skip_reason or not allowed:
             stats['skips'] += int(decision.action != Action.HOLD)
             continue
@@ -279,6 +294,8 @@ def run(view):
                                                decision.size_usdt, decision.skip_reason)
             if getattr(decision, '_paper_entry_id', None) or ok:
                 view._portfolio_market[decision.id] = snap
+        row['executed'] = bool(decision.executed)
+        row['persisted'] = bool(getattr(decision, '_trade_evidence_saved', False))
         stats['paper_entries'] += int(bool(getattr(decision, '_paper_entry_id', None)))
         decision.learning_inputs = None
         decision.__dict__.pop("_lean_risk_inputs", None)

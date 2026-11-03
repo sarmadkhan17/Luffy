@@ -21,10 +21,11 @@ const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct
 const day = (iso?: string | null) => { const d = iso ? new Date(iso) : null; return d && !Number.isNaN(+d) ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : "—"; };
 
 const STATE: Record<string, [string, string, string]> = {
+  active: ["Active", OK, "#3ddc9722"],
   live: ["Live", OK, "#3ddc9722"], paper: ["Paper", "rgb(var(--a2))", "rgb(var(--a) / .16)"],
   demoted: ["Demoted", WARN, "#f2b44a1f"], retired: ["Retired", GREY, "#ffffff12"],
 };
-const stateLabel = (s: S) => `Legacy registry: ${(STATE[s.state] ?? [String(s.state ?? "UNKNOWN"), GREY, "#ffffff12"])[0]}`;
+const stateLabel = (s: S) => `Registry: ${(STATE[s.state] ?? [String(s.state ?? "UNKNOWN"), GREY, "#ffffff12"])[0]}`;
 /** Derived from journal counts only — a label, not an evaluation. */
 export function healthOf(s: S): string {
   if (s.open_trades > 0) return `${s.open_trades} position${s.open_trades === 1 ? "" : "s"} open`;
@@ -68,7 +69,7 @@ export default function Strategies() {
   const cols: Col<S>[] = useMemo(() => [
     { key: "name", label: "Strategy", primary: true, filter: "text", value: (s) => String(s.name), cell: (s) => <span style={{ display: "flex", flexDirection: "column", textAlign: "left" }}><span style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</span><span style={{ fontSize: 11, color: GREY, whiteSpace: "normal", overflowWrap: "anywhere" }}>{s.kind}{s.timeframe ? ` · ${s.timeframe}` : ""} · {s.origin ?? "origin unrecorded"}</span></span> },
     { key: "desc", label: "What it does", filter: "text", value: (s) => String(s.description), cell: (s) => <span style={{ fontSize: 13, color: "#b9c5d1", display: "block", maxWidth: 300, whiteSpace: "normal" }}>{s.description}</span> },
-    { key: "state", label: "State", filter: "select", value: (s) => stateLabel(s), sortValue: (s) => ({ live: 4, paper: 3, demoted: 2, retired: 1 })[String(s.state)] ?? 0, cell: (s) => { const [l, c, bg] = STATE[s.state] ?? [s.state, GREY, "#ffffff12"]; return <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999, color: c, background: bg }}>{`Registry: ${l}`}</span>; } },
+    { key: "state", label: "State", filter: "select", value: (s) => stateLabel(s), sortValue: (s) => ({ active: 5, live: 4, paper: 3, demoted: 2, retired: 1 })[String(s.state)] ?? 0, cell: (s) => { const [l, c, bg] = STATE[s.state] ?? [s.state, GREY, "#ffffff12"]; return <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999, color: c, background: bg }}>{`Registry: ${l}`}</span>; } },
     { key: "health", label: "Health", filter: "select", value: (s) => healthOf(s), cell: (s) => { const h = healthOf(s); return <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: healthColor(h), whiteSpace: "normal" }}><i style={{ width: 7, height: 7, flex: "0 0 7px", borderRadius: "50%", background: healthColor(h) }} />{h}</span>; } },
     { key: "pnl", label: "P&L 30d", align: "r", value: (s) => num(s.pnl_30d), cell: (s) => <span style={{ color: s.pnl_30d === null ? GREY : s.pnl_30d >= 0 ? OK : BAD }}>{s.closed_trades ? money(num(s.pnl_30d)) : "—"}</span> },
     { key: "win", label: "Win", align: "r", value: (s) => (s.closed_trades ? s.wins / s.closed_trades : null), cell: (s) => (s.closed_trades ? `${Math.round((s.wins / s.closed_trades) * 100)}%` : "—") },
@@ -86,20 +87,20 @@ export default function Strategies() {
         <StrategyDetail key={strategyId} id={strategyId} />
       </LinkedPanel></div>}
       {q.isError && <div className="gl-err" role="alert">{(q.error as Error).message} Nothing was substituted.</div>}
-      <StrategyAuthority versions={q.isError ? null : q.data?.versions} errors={q.data?.authority_errors} />
-      <Card className="pad" label="Journal performance and legacy registry">
+      <Card className="pad" label="Strategies and journal performance">
         {family && <p className="gl-note">Registry family: {family} · <a href="#strategies">Show all families</a></p>}
-        <CardHead icon={<Layers size={16} />} title="PERFORMANCE · registry records" sub={shownN !== null ? `${shownN} strategies · journal-booked trades per strategy id · P&L over the last 30 days` : undefined}><span style={{ fontSize: 12, color: GREY }}>Click a strategy for its details</span></CardHead>
+        <CardHead icon={<Layers size={16} />} title="Strategies · active first" sub={shownN !== null ? `${shownN} strategies · journal-booked trades per strategy id · P&L over the last 30 days` : undefined}><span style={{ fontSize: 12, color: GREY }}>Click a strategy for its details</span></CardHead>
         {q.isPending && adapter.mode === "LIVE" && <p className="gl-empty">Loading the registry…</p>}
         {adapter.mode !== "LIVE" && <p className="gl-empty">The strategy registry is unavailable in fixture mode.</p>}
         {q.data && (
           <>
-            <DataTable<S> label="Strategy registry" rows={list.map(s => ({ ...s, description: `${versionedIds.has(s.id) ? "Performance grouped by strategy id; inspect exact versions above." : "LEGACY / NO VERSIONED AUTHORITY."} ${s.description}` }))} cols={cols} rowId={(s) => String(s.id)} onOpen={setOpen} defaultSort={{ key: "state", dir: -1 }}
+            <DataTable<S> label="Strategy registry" rows={list.map(s => ({ ...s, description: `${versionedIds.has(s.id) ? "Performance grouped by strategy id; inspect exact versions above." : s.state === "active" ? "Active registry entry; Factory validation is reported separately." : "Registry entry; no Factory version recorded."} ${s.description}` }))} cols={cols} rowId={(s) => String(s.id)} onOpen={setOpen} defaultSort={{ key: "state", dir: -1 }}
               onShown={(r) => setShownN(r.length)} empty="The registry holds no strategies." />
-            <p className="gl-note">Journal-booked performance is grouped by strategy id, not attributed to an exact version. LEGACY / NO VERSIONED AUTHORITY records carry no Governor authority. Registry state is not admission or order permission.</p>
+            <p className="gl-note">Journal-booked performance is grouped by strategy id, not attributed to an exact version. Factory versions are shown separately below. Registry state alone does not establish validation or order permission.</p>
           </>
         )}
       </Card>
+      <StrategyAuthority versions={q.isError ? null : q.data?.versions} errors={q.data?.authority_errors} />
       <Story s={open} onClose={() => setOpen(null)} />
     </>
   );

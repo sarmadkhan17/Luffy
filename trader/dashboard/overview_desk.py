@@ -36,7 +36,51 @@ def realized_curve(journal) -> dict:
             "source": "journal closed trades, journal-booked realized P&L (not venue net accounting)"}
 
 
-def latest_scan(journal) -> dict | None:
+def current_scan(root, now):
+    """Bounded completed-batch telemetry, bound to the current verified kernel."""
+    import json, math
+    from pathlib import Path
+    from datetime import datetime, timezone
+    from trader.runtime_identity import status_only
+    root = Path(root)
+    identity = status_only(root)
+    if not identity.get('verified') or identity.get('state') != 'RUNNING':
+        raise ValueError('current_scan_kernel_unavailable')
+    path = root / 'data/cycle_runtime.json'
+    if path.stat().st_size > 2 * 1024 * 1024:
+        raise ValueError('current_scan_payload_oversized')
+    data = json.loads(path.read_text())
+    scan = data.get('latest_scan')
+    if data.get('pid') != identity['record']['pid']:
+        raise ValueError('current_scan_instance_mismatch')
+    if scan is None:
+        return None  # First batch has not finished. Never substitute an old journal scan.
+    at = scan.get('observed_at')
+    if (scan.get('schema') != 'current-scan-summary.v1' or type(at) not in (int, float)
+            or not math.isfinite(at) or at < identity['record']['started_at'] or at > now + 5):
+        raise ValueError('current_scan_timestamp_or_schema_invalid')
+    coins = scan.get('coins')
+    if not isinstance(coins, list) or len(coins) > SCAN_LIMIT:
+        raise ValueError('current_scan_coins_invalid')
+    for row in coins:
+        if not isinstance(row, dict) or not isinstance(row.get('symbol'), str):
+            raise ValueError('current_scan_coin_invalid')
+        for field in ('score', 'threshold', 'confidence'):
+            value = row.get(field)
+            if value is not None and (type(value) not in (int, float) or not math.isfinite(value)):
+                raise ValueError('current_scan_value_invalid')
+    age = max(0., now - at)
+    return dict(scan, observed_at=datetime.fromtimestamp(at, timezone.utc).isoformat(),
+        age_s=age, freshness='fresh' if age <= 180 else 'stale',
+        traded=sum(row.get('executed') is True for row in coins),
+        source='Current kernel completed-scan summary; scalar telemetry only, not persisted trade evidence')
+
+
+def latest_scan(journal, root=None, now=None) -> dict | None:
+    if root is not None:
+        import time
+        return current_scan(root, time.time() if now is None else now)
+
     head = journal.query("SELECT scan_id, ts FROM decisions WHERE scan_id IS NOT NULL AND scan_id<>'' "
                          "ORDER BY ts DESC LIMIT 1")
     if not head:
@@ -71,11 +115,11 @@ def research_counts(journal, cfg: dict | None) -> dict:
             "source": "journal research ledger tables and config.research flags"}
 
 
-def desk(journal, cfg: dict | None, now_iso: str) -> dict:
+def desk(journal, cfg: dict | None, now_iso: str, root=None) -> dict:
     errors: dict[str, str] = {}
     out = {"generated_at": now_iso, "errors": errors}
     for name, fn in (("realized", lambda: realized_curve(journal)),
-                     ("scan", lambda: latest_scan(journal)),
+                     ("scan", lambda: latest_scan(journal, root=root)),
                      ("research", lambda: research_counts(journal, cfg))):
         try:
             out[name] = fn()

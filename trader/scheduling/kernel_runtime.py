@@ -64,6 +64,7 @@ class KernelRuntime:
         self.scans_discarded = 0
         self.last_full_cycle = None
         self.last_decision_stats = None
+        self.last_scan_completed_at = None
         self.execution_metrics = dict(status="idle", runs=0, submitted=0, failures=0,
             last_duration_s=None, max_duration_s=None, last_error_type=None)
         self.maintenance = Maintenance(kernel.journal, kernel.cfg, kernel.feed)
@@ -267,6 +268,7 @@ class KernelRuntime:
             end = time.monotonic()
             with self.lock:
                 self.last_decision_stats = stats
+                self.last_scan_completed_at = None if stats.get('interrupted') else time.time()
                 # Only a finished evaluation is a completed scan; skipped busy
                 # ticks and discarded batches are counted separately.
                 self.scans_completed += 1
@@ -638,7 +640,14 @@ class KernelRuntime:
                                       function=frame.f_code.co_name))
                 frame = frame.f_back
             slow[name] = locations
-        return dict(slow_worker_stacks=slow, schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
+        with self.lock:
+            latest_scan = None if self.last_scan_completed_at is None else dict(
+                schema='current-scan-summary.v1', scan_id=f'{os.getpid()}:{self.scans_completed}',
+                observed_at=self.last_scan_completed_at, shortlisted=self.last_decision_stats.get('shortlisted', 0),
+                evaluated=self.last_decision_stats.get('decisions', 0),
+                coins=deepcopy(self.last_decision_stats.get('scan_coins', [])),
+                timings=deepcopy(self.last_full_cycle))
+        return dict(latest_scan=latest_scan, slow_worker_stacks=slow, schema='kernel-cycles.v1', pid=os.getpid(), observed_at=time.time(),
             jobs={name: worker.snapshot() for name, worker in self.jobs.items()},
             stages=self.stage_timings.snapshot(),
             decision_summary=({key: self.last_decision_stats.get(key) for key in
