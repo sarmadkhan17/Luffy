@@ -148,7 +148,7 @@ def test_environment_failures(local, monkeypatch, variant):
     cfg = dict(brain=dict(enabled=False), research=dict(referee=False, handoff=False))
     if variant == 'live': monkeypatch.setattr(config.Env, 'get', lambda *a: 'false')
     if variant == 'provider': cfg['brain']['enabled'] = True
-    if variant in ('referee', 'handoff'): cfg['research'][variant] = True
+    if variant in ('referee', 'handoff'): cfg['research'][variant] = 'true'
     if variant == 'missing_config': cfg.pop('brain')
     monkeypatch.setattr(config, 'load_config', lambda *a: cfg)
     if variant == 'filesystem': monkeypatch.setattr(P, '_filesystem', lambda *a: (_ for _ in ()).throw(OSError()))
@@ -383,3 +383,19 @@ def test_terminal_obs01_remains_readable_without_selecting_next_item(tmp_path):
     result = read_tracker(tmp_path)
     assert result['status'] == 'AVAILABLE'
     assert result['selected']['id'] == 'OBS-01' and result['selected']['status'] == 'CLOSED'
+
+
+@pytest.mark.parametrize('referee,handoff', [(True, False), (False, True), (True, True)])
+def test_owner_enabled_research_gates_keep_frozen_scope(local, monkeypatch, referee, handoff):
+    from trader.core import config
+    monkeypatch.setattr(config, 'load_config', lambda *a: dict(
+        brain=dict(enabled=False), research=dict(referee=referee, handoff=handoff)))
+    assert P.evaluate(collect(local))['allow']
+    # Research flags never authorize an ACTIVE kernel or an operator-hold release.
+    with sqlite3.connect(local[0] / 'data/luffy.db') as db:
+        db.execute("UPDATE state_kv SET value='ACTIVE' WHERE key='control_state'")
+    assert not P.evaluate(collect(local))['allow']
+    with sqlite3.connect(local[0] / 'data/luffy.db') as db:
+        db.execute("UPDATE state_kv SET value='FROZEN' WHERE key='control_state'")
+        db.execute("UPDATE state_kv SET value='0' WHERE key='macro_guard_operator_hold'")
+    assert not P.evaluate(collect(local))['allow']
