@@ -33,7 +33,7 @@ def _result(syms, missing, extra_gaps=()):
 
 def _apply(syms, missing, env=ENV, extra_gaps=()):
     frames, result = _frames(syms), _result(syms, set(missing), extra_gaps)
-    cohort.apply(frames, result, {'funding'}, env, SERIES, stage='external')
+    cohort.apply_exclusion(frames, result, {'funding'}, env, SERIES, stage='external')
     return frames, result
 
 
@@ -103,9 +103,9 @@ def test_decision_is_deterministic_and_takes_no_outcome():
 def test_funding_stage_accumulates_on_top_of_the_external_stage():
     syms = _syms(22)
     frames, result = _frames(syms), _result(syms, {syms[0]})
-    cohort.apply(frames, result, {'funding'}, ENV, SERIES, stage='external')
+    cohort.apply_exclusion(frames, result, {'funding'}, ENV, SERIES, stage='external')
     result['gaps'].append(dict(requirement='funding', reason='no retained funding for the symbol', symbols=[syms[5]]))
-    cohort.apply(frames, result, {'funding'}, ENV, SERIES, stage='funding')
+    cohort.apply_exclusion(frames, result, {'funding'}, ENV, SERIES, stage='funding')
     rec = result['cohort']
     assert rec['stage'] == 'funding' and rec['considered'] == 22 and rec['kept'] == 20
     assert [e['symbol'] for e in rec['excluded']] == [syms[0], syms[5]]

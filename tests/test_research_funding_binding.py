@@ -46,7 +46,8 @@ def test_missing_measured_funding_stays_blocked_instead_of_using_flat_or_zero(mo
     frame = pd.DataFrame(dict(ts=pd.date_range('2024-01-01', periods=3, freq='4h', tz='UTC'), close=[1., 1., 1.]))
     env = dict(manifest_id='a' * 64, dev_end_ms=int(ms(frame.ts)[-1] + 14_400_000),
                fit_window=[int(ms(frame.ts)[0]), int(ms(frame.ts)[-1] + 14_400_000)],
-               development_mode='RETROSPECTIVE', risk=dict(real_funding=True), tf='4h')
+               development_mode='RETROSPECTIVE', risk=dict(real_funding=True), tf='4h',
+               policy=dict(min_discovery_symbols=1))
     monkeypatch.setattr(D.cdata, 'load_external', lambda *a, **k: dict(derivs={'A': {}}, gaps=[], data_id='missing', provenance={}))
     result = D._external({}, 'snapshot.db', 'derivatives.db', {'A': frame}, env)
     assert result['gaps'][0]['requirement'] == 'funding'

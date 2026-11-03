@@ -95,7 +95,7 @@ def decide(frames, derivs, gaps, required, series_for, floor: dict) -> dict:
                 remaining_gaps=[] if status == 'EXCLUDE' else list(gaps))
 
 
-def apply(frames: dict, result: dict, required, env, series_for, *, stage: str) -> None:
+def apply_exclusion(frames: dict, result: dict, required, env, series_for, *, stage: str) -> None:
     """Apply the rule to `frames` and the loaded `result` in place; record the cohort evidence on `result`."""
     gaps = result.get('gaps') or []
     if not gaps:

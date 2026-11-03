@@ -313,10 +313,10 @@ def _external(candidate, snapshot_path, derivs_path, frames, env, world_path=Non
                                               last_ms=int(manifest._ms(df['ts']).max()))
             result['data_id'] = digest([result['data_id'], reference_id])
     # Cohort rule (data availability only, before any trade is simulated): drop symbols that lack a required input.
-    cohort.apply(frames, result, required, env, spec_evidence._SERIES_FOR, stage='external')
+    cohort.apply_exclusion(frames, result, required, env, spec_evidence._SERIES_FOR, stage='external')
     if env['risk'].get('real_funding', False) and not result['gaps']:
         bind_funding(frames, result, env, 'retrospective_observation' if retro is not None else 'retained_point_in_time')
-        cohort.apply(frames, result, required, env, spec_evidence._SERIES_FOR, stage='funding')
+        cohort.apply_exclusion(frames, result, required, env, spec_evidence._SERIES_FOR, stage='funding')
     return result
 
 

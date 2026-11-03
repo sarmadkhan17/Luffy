@@ -375,7 +375,12 @@ def test_scan_reservation_released_on_failure_or_discard(tmp_path, monkeypatch, 
             candidate._prepared_at = time.monotonic() - 61
             r.decisions()
     assert not r.scan_in_flight and r.pending_scan is None
-    assert k._last_cycle_s == 123
+    if failure == 'evaluation':
+        # an evaluation that raised still records its duration (a slow, failing kernel must not keep a stale fast value)
+        assert k._last_cycle_s != 123
+    else:
+        # nothing was evaluated, so the previous value stands
+        assert k._last_cycle_s == 123
 
 
 def test_completed_scans_busy_ticks_and_full_cycle_latency_are_reported_separately(tmp_path, monkeypatch):
