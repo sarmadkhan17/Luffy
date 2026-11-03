@@ -273,7 +273,50 @@ _REMOVED_KEYS = {
                    'auto_demote_drawdown_pct', 'max_active'},
 }
 # Owner-authorized lifecycle value change (ten-trade probation).
-_CHANGED_VALUES = {('strategies', 'paper_probation_trades'): (15, 10)}
+_CHANGED_VALUES = {
+    ('strategies', 'paper_probation_trades'): (15, 10),
+    # Re-blessed 2026-11-02 by owner decision, each against the SG-05 baseline `fc6c0b2` (2026-10-11):
+    ('mode', 'execution'): ('paper', 'live'),                         # e8e6f8dc, 2026-10-25 (demo venue; see CLAUDE.md)
+    ('research', 'referee'): (False, True),                           # a1bba9c3, 2026-10-25
+    ('research', 'handoff'): (False, True),                           # a1bba9c3, 2026-10-25
+    ('dashboard', 'startup_mode'): ('READ_ONLY_GUI', 'LIVE'),         # 7d834e55, 2026-10-21
+    ('attention', 'admission'): ({'max_deep_slots': 12, 'event_reserve': 2, 'exploration_reserve': 2,
+                                  'minimum_slots': 0},
+                                 {'max_deep_slots': 30, 'event_reserve': 0, 'exploration_reserve': 0,
+                                  'minimum_slots': 0}),               # 1f07d50b, 2026-10-23
+}
+# Keys ADDED since the baseline, each pinned to its exact current value (absent in `fc6c0b2`). Re-blessed 2026-11-02.
+_ADDED_KEYS = {
+    'attention': {'selection': 'volume'},                             # 1f07d50b, 2026-10-23
+    # referee_*: work/unblock-20261102 opt-in forward-only referee, owner-approved 2026-11-02
+    # closure: 0347d42e (10-24), 40ed54b9 / 8c51774e (10-26)
+    'research': {'referee_forward_only': True, 'referee_first_batch': 10,
+                 'closure': {'enabled': True, 'store_path': '/mnt/luffy-data/research/compositional/research.db',
+                             'slot_budget_s': 3600, 'budget_s': 3600, 'world_live_enabled': True,
+                             'proposal_provider_enabled': True, 'paper_intake': True,
+                             'max_coordinated_paper_books': 2,
+                             'auto': {'enabled': True, 'interval_hours': 12, 'tf': '4h',
+                                      'market_db': '/mnt/luffy-data/LUFFY/data/candles.db',
+                                      'derivs_db': '/mnt/luffy-data/LUFFY/data/derivs.db',
+                                      'development_derivatives_only': True,
+                                      'snapshot_dir': '/mnt/luffy-data/research/compositional/inputs',
+                                      'bank_path': '/mnt/luffy-data/research/compositional/questions.db',
+                                      'source_journal_path': '/mnt/luffy-data/LUFFY/data/luffy.db',
+                                      'references_path': '/mnt/luffy-data/research/compositional/published-context.db',
+                                      'development_mode': 'RETROSPECTIVE', 'recent_retrospective_development': True,
+                                      'fit_bars': 6570,
+                                      'horizons': [{'tf': '4h', 'fit_bars': 6570}, {'tf': '1h', 'fit_bars': 2000},
+                                                   {'tf': '15m', 'fit_bars': 1600}],
+                                      'prep_timeout_s': 1800, 'unit_timeout_s': 900, 'prep_memory_mb': 3072,
+                                      'step_memory_mb': 3072, 'max_candidates': 8,
+                                      'max_snapshot_payload_bytes': 2147483648, 'world_shortlist': 30,
+                                      'search': {'max_attempts': 24, 'max_fits': 40, 'cpu_seconds': 3600,
+                                                 'dataset_reads': 2000, 'memory_mb': 3072,
+                                                 'interaction_share': 0.25}}}},
+}
+# scouts.news_guard (coin-news RSS dampener: threshold +0.08, score x0.75, never a freeze) was retired by OWNER CHOICE
+# on 2026-10-22 (d00fe3ae). Coin news is a trading input, not an entry restriction. scouts.macro_guard stays pinned.
+_RETIRED_BLOCKS = {'scouts': {'news_guard'}}
 
 
 def _root():
@@ -307,8 +350,12 @@ def test_statistical_policy_and_frozen_evidence_unchanged():
     now = yaml.safe_load(_root().joinpath('config.yaml').read_text())
     assert set(now) == set(then)
     for section, was in then.items():
-        expected = {k: v for k, v in was.items() if k not in _REMOVED_KEYS.get(section, ())} \
+        expected = {k: v for k, v in was.items()
+                    if k not in _REMOVED_KEYS.get(section, ()) and k not in _RETIRED_BLOCKS.get(section, ())} \
             if isinstance(was, dict) else was
+        for key, value in _ADDED_KEYS.get(section, {}).items():
+            assert key not in was, key
+            expected[key] = value
         for (sec, key), (old, new) in _CHANGED_VALUES.items():
             if sec == section:
                 assert was[key] == old
@@ -321,6 +368,9 @@ def test_statistical_policy_and_frozen_evidence_unchanged():
     for keys in _REMOVED_KEYS.values():
         for key in keys:
             assert not re.search(r'[\'"]' + key + r'[\'"]', text), key
+    # the retired block must have no config reader (dashboard stubs that merely name it do not read config)
+    assert not re.search(r'get\(["\']news_guard["\']|\[["\']news_guard["\']\]', text), 'news_guard'
+    assert now['scouts']['macro_guard']['enabled'] is True
     before = _base('trader/strategy/vector_backtest.py')
     after = _root().joinpath('trader/strategy/vector_backtest.py').read_text()
     decision_gate = ('ok_test, f_test = test.passes(min_trades=max(3, int(train.trades * 0.2)),\n'

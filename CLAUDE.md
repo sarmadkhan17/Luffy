@@ -37,6 +37,10 @@ calibration and evidence requirements must not be bypassed or weakened to
 obtain trades. Only qualified evidence creates a VALIDATED version, and that
 version carries authority NONE.
 
+NewsGuard (coin-news RSS dampener) retired by owner choice on 2026-10-22; coin news is a trading input,
+not an entry restriction. MacroGuard (economic calendar, US high-impact events, 30 min before / 120 min
+after, fails open) remains enabled and is the only news-related entry freeze.
+
 Keep the owner able to see what Luffy is doing and why, and prefer structured,
 end-to-end diagnostics — correlation IDs and reason codes that trace event →
 evidence → hypothesis → decision → order/fill → outcome — over ad-hoc prints.
