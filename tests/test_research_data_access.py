@@ -188,10 +188,13 @@ def test_unchanged_data_stays_pending_then_supplied_data_reevaluates_and_resolve
     store.db.close()
     assert list(res.values())[0]['status'] == 'IMPORTED', res
     out = step(b, 40)
-    u = unit_by_question(b)['does ctx_total lead']
+    [r] = b.store.data_requests()
+    # The unit that waited, by candidate id. Matching on question text is ambiguous: once the awaited
+    # series arrives, revision children of the same question are developed in the same step, and a
+    # question-keyed map returns the last of them, not the candidate this request belongs to.
+    u = next(x for x in b.store.units(b.sid) if x['unit_id'] == 'develop:' + r['candidate_id'])
     assert u['status'] == 'DONE' and json.loads(u['result'])['outcome'] not in ('BLOCKED_DATA', 'CODE_FAILURE')
     assert out['stop_reason'] != 'WAITING_FOR_DATA'
-    [r] = b.store.data_requests()
     assert r['status'] == 'RESOLVED' and r['resolution']['result_id'] == json.loads(u['result'])['result_id']
     runs = [x for x in b.store.all_once('runs') if x['candidate_id'] == r['candidate_id']]
     assert sorted(x['outcome'] == 'BLOCKED_DATA' for x in runs) == [False, True] and not [x for x in runs if x['outcome'] == 'CODE_FAILURE']    # old blocked run kept, new run has its own cache key
