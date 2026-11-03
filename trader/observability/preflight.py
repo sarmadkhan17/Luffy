@@ -71,6 +71,17 @@ def _health(path):
     return value
 
 
+def _cold_deferrable(name, condition):
+    """Conditions a contained cold start defers to contained readiness (single source for every check below).
+
+    A stopped kernel cannot produce a heartbeat, a cycle observation or the 120 s protection receipt, so
+    these are expected on every cold start. Contained readiness still demands fresh post-launch protection
+    from a newer boot generation. Any other condition, or any other reason, keeps refusing.
+    """
+    return name in ('heartbeat:luffy', 'observed_cycle:luffy') or (
+        name == 'paused_venue_protection' and condition.get('reason') == 'VENUE_STATE_UNCONFIRMED')
+
+
 def _health_admission_state(value, *, contained_cold):
     if not contained_cold:
         return value
@@ -81,7 +92,7 @@ def _health_admission_state(value, *, contained_cold):
     return {**{key: item for key, item in value.items()
                if key not in ('revision', 'observed_at', 'conditions')},
             'conditions': {name: condition for name, condition in value['conditions'].items()
-                           if name not in ('heartbeat:luffy', 'observed_cycle:luffy')}}
+                           if not _cold_deferrable(name, condition)}}
 
 
 def _filesystem(root, recovery_root):
@@ -250,8 +261,7 @@ def collect_facts(root, *, recovery_root=None, clock=time.time, contained_cold=F
     try:
         health = _health(root / 'data/safety_health.json')
         deferred = [name for name, c in health['conditions'].items()
-                    if contained_cold and name in ('heartbeat:luffy', 'observed_cycle:luffy')
-                    and c['status'] == 'ACTIVE']
+                    if contained_cold and c['status'] == 'ACTIVE' and _cold_deferrable(name, c)]
         reasons = ['active_condition:' + name for name, c in health['conditions'].items()
                    if c['status'] == 'ACTIVE' and name not in deferred]
         if health['recovery_required'] is not True:
@@ -350,8 +360,7 @@ def collect_facts(root, *, recovery_root=None, clock=time.time, contained_cold=F
         elif contained_cold and facts['safety']['status'] == 'PASS':
             facts['safety']['deferred_to_contained_readiness'] = [
                 name for name, condition in health_after['conditions'].items()
-                if name in ('heartbeat:luffy', 'observed_cycle:luffy')
-                and condition['status'] == 'ACTIVE']
+                if condition['status'] == 'ACTIVE' and _cold_deferrable(name, condition)]
     except Exception as exc:
         facts.setdefault('control', _fact(['control_unreadable']))
         if first_boot_path:

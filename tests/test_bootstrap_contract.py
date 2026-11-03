@@ -559,6 +559,22 @@ def test_absent_live_heartbeat_alone_is_deferred_not_waived(local,monkeypatch,co
     assert result['facts']['safety']['deferred_to_contained_readiness']==[condition]
 
 
+def test_stale_venue_receipt_while_paused_is_deferred_only_for_exact_reason(local,monkeypatch):
+    name='paused_venue_protection'
+    local[1]['conditions'][name]=dict(status='ACTIVE',reason='VENUE_STATE_UNCONFIRMED')
+    update_health(local)
+    monkeypatch.setattr(P,'_probe',lambda path,role,journal:dict(component=role,status='AVAILABLE',committed=True))
+    assert not P.evaluate(P.collect_facts(local[0],clock=lambda:NOW))['allow']
+    cold=P.evaluate(P.collect_facts(local[0],clock=lambda:NOW,contained_cold=True))
+    assert cold['facts']['safety']['deferred_to_contained_readiness']==[name]
+    assert 'active_condition:'+name not in cold['reasons']
+    assert SafetyHealth(local[0]/'data/safety_health.json').read()['recovery_required'] is True
+    local[1]['conditions'][name]=dict(status='ACTIVE',reason='SOMETHING_ELSE')
+    update_health(local)
+    refused=P.evaluate(P.collect_facts(local[0],clock=lambda:NOW,contained_cold=True))
+    assert not refused['allow'] and 'active_condition:'+name in refused['reasons']
+
+
 def test_native_containment_signals_only_sigterm_and_retains_on_unconfirmed_exit(tmp_path,monkeypatch):
     host=B.Host(tmp_path,REV); signals=[]
     host.process=SimpleNamespace(pid=77,send_signal=signals.append)
