@@ -411,13 +411,16 @@ def main(argv=None):
     host = Host(args.root, args.expect_revision)
     # Serialize controllers too; a failed attempt never loops back to start.
     path = args.root / 'data/bootstrap-controller.lock'
-    with path.open('a') as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            print(json.dumps(dict(allow=False, reason='bootstrap_controller_already_running')))
-            return 3
-        result = execute(host)
+    from .pause_state import file_lock, UnsafeControlPath
+    try:
+        with file_lock(path):
+            result = execute(host)
+    except BlockingIOError:
+        print(json.dumps(dict(allow=False, reason='bootstrap_controller_already_running')))
+        return 3
+    except (OSError, UnsafeControlPath):
+        print(json.dumps(dict(allow=False, reason='bootstrap_controller_lock_unsafe')))
+        return 2
     print(json.dumps(result, sort_keys=True))
     return 0 if result['allow'] else 1
 

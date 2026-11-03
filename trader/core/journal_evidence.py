@@ -337,6 +337,19 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
         raise EvidenceError('evidence_detail_invalid') from exc
 
 
+def chain_dispatch_metadata(conn, rowid, outcome_id, payload):
+    """Derive eligibility from verified logical bytes, never physical markers."""
+    logical = resolve(conn, payload)
+    body = json.loads(logical)
+    gate = body.get('replay_gate')
+    evidence = body.get('evidence')
+    evidence_id = evidence.get('outcome_id') if isinstance(evidence, dict) else None
+    if not isinstance(gate, str) or (evidence_id is not None and not isinstance(evidence_id, str)):
+        raise EvidenceError('learning_dispatch_metadata_invalid')
+    return (outcome_id, rowid, gate, evidence_id,
+            hashlib.sha256(logical.encode('utf-8')).hexdigest()), logical
+
+
 def install(conn, *, schema='main'):
     """Install the verifying SQL function on any supported direct-SQL reader."""
     name = 'journal_detail_v1' if schema == 'main' else 'journal_src_detail_v1'

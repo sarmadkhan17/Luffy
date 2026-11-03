@@ -193,7 +193,7 @@ def test_gap_transition_deduplicates_and_retains_restart(tmp_path):
     _,e=H.bound_snapshot(c.path,now_ms=n[0])
     events=[]
     pop=SimpleNamespace(version='window',emit=lambda *args:events.append(args))
-    with sqlite3.connect(':memory:') as db:
+    with sqlite3.connect(tmp_path/'gap-events.db') as db:
         H.record(db,pop,e,n[0]);H.record(db,pop,e,n[0]+1)
         assert len(events)==1 and events[0][2]['reason']=='collector_outage'
         e=dict(e,instance_id='2'*32,certificate=None)

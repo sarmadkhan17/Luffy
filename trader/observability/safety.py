@@ -72,8 +72,8 @@ class SafetyHealth:
             if key in depths:
                 yield  # reentrant Journal failure reporting during final guard
                 return
-            with self.path.with_suffix('.lock').open('a') as lock:
-                fcntl.flock(lock, fcntl.LOCK_EX)
+            from .pause_state import file_lock
+            with file_lock(self.path.with_suffix('.lock'), blocking=True):
                 depths.add(key)
                 try:
                     yield

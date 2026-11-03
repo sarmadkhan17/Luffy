@@ -67,6 +67,11 @@ class Store:
         self.db.executescript("""
           CREATE TABLE IF NOT EXISTS scans (
             scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0);
+          CREATE INDEX IF NOT EXISTS scans_time_v1
+            ON scans(as_of_ms DESC, scan_id DESC);
+          CREATE INDEX IF NOT EXISTS scans_complete_time_v1
+            ON scans(as_of_ms DESC, scan_id DESC)
+            WHERE causes_complete=1 AND payload IS NOT NULL;
           CREATE TABLE IF NOT EXISTS versions (
             id TEXT PRIMARY KEY, symbol TEXT, tf TEXT, open_ms INTEGER,
             first_seen_ms INTEGER, value_hash TEXT, previous_value_hash TEXT,
@@ -110,6 +115,18 @@ class Store:
         ident = _identity(event)
         if len(encode(event)) > self.cfg["max_bytes"] // 2:
             raise ValueError("snapshot exceeds storage budget")
+        if (event['kind'] == 'scan' and 'positioning' not in event['input']
+                and 'positioning_capture' not in event
+                and not self.db.execute('SELECT 1 FROM scans WHERE scan_id=? AND payload IS NOT NULL',
+                                        (scan_id,)).fetchone()):
+            # Both the disposable worker and declared-population publisher use
+            # Store. Acquire before any writer transaction; never on Collector.begin
+            # or replay, and never replace already-frozen positioning inputs.
+            from .positioning import attach
+            directory = self.path.parent
+            if directory.name == 'declared-population':
+                directory = directory.parent
+            attach(event, directory / 'derivs.db')
         # New snapshots need allocation headroom. Completion instead prunes
         # atomically with its marker, so readers retain the previous completed
         # source until the replacement is completed and committed.

@@ -151,12 +151,16 @@ def test_reader_rejects_oversized_source_and_does_not_create_missing_file(paths)
 
 def test_watchdog_isolated_opt_in(tmp_path):
     import subprocess
+    import sys
     from pathlib import Path
     script=Path('scripts/watchdog.sh').read_text()
     root=tmp_path/'isolated';(root/'scripts').mkdir(parents=True);(root/'data').mkdir()
     (root/'scripts/watchdog.sh').write_text(script)
+    (root/'venv/bin').mkdir(parents=True)
+    (root/'venv/bin/python').symlink_to(sys.executable)
     (root/'data/investigation.enabled').touch()
-    r=subprocess.run(['bash',str(root/'scripts/watchdog.sh')],env={'PATH':'/usr/bin:/bin','DRY_RUN':'1'},capture_output=True,text=True,timeout=10)
+    r=subprocess.run(['bash',str(root/'scripts/watchdog.sh')],env={'PATH':'/usr/bin:/bin','DRY_RUN':'1',
+        'PYTHONPATH':str(Path.cwd()),'PYTHONDONTWRITEBYTECODE':'1'},capture_output=True,text=True,timeout=10)
     assert r.returncode==0,r.stderr
     log=(root/'logs/watchdog.log').read_text()
     assert 'timeout 25s ./venv/bin/python -m trader.observability.investigation --once --enable' in log

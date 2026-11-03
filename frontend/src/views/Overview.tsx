@@ -14,6 +14,8 @@ import { RuntimeLabels } from "../components/RuntimeTruth";
 import { ChangeValue } from "../components/motion";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
+import { scanResult, scanClassification, type ScanClassification } from "../scanResult";
+export { scanResult } from "../scanResult";
 import type { Marks, Position, ProtectionStatus } from "../adapters/contracts";
 
 /** Only a fresh VERIFIED reads as healthy; everything else is a warning. */
@@ -54,7 +56,7 @@ const age = (s: unknown) =>
   typeof s !== "number" ? "age unknown" : s < 120 ? `${Math.round(s)} s` : s < 7200 ? `${Math.round(s / 60)} min` : s < 172800 ? `${Math.round(s / 3600)} h` : `${Math.round(s / 86400)} d`;
 
 interface DeskPoint { trade_id: string; closed_at: string; symbol: string; pnl: number; cumulative: number; status: string; close_reason: string | null; strategy_name: string | null }
-interface DeskCoin { decision_id: string; symbol: string; action: string; score: number | null; threshold: number | null; confidence: number | null; executed: boolean; skip_reason: string | null; evaluated?: boolean; persisted?: boolean; regime?: string; price?: number | null; strategy_checks?: { strategy: string; reasons: string[] }[] }
+interface DeskCoin { decision_id: string; symbol: string; action: string; score: number | null; threshold: number | null; confidence: number | null; executed: boolean; skip_reason: string | null; evaluated?: boolean; persisted?: boolean; regime?: string; price?: number | null; strategy_checks?: { strategy: string; reasons: string[] }[]; classification?: ScanClassification }
 interface Desk {
   realized: { points: DeskPoint[]; last_closes: DeskPoint[]; closed_trades: number; unknown_pnl_trades: number; estimated_pnl_trades: number; total: number | null; source: string } | null;
   scan: { scan_id: string; observed_at: string; freshness?: string; shortlisted?: number; evaluated?: number; coins: DeskCoin[]; traded: number; source: string } | null;
@@ -406,17 +408,6 @@ function RealizedChart({ desk, loading, error }: { desk?: Desk; loading: boolean
   );
 }
 
-export function scanResult(c: DeskCoin): string {
-  if (c.executed) return "Order sent";
-  if (c.evaluated === false) return c.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable";
-  if (c.action !== "HOLD" || c.score !== 0) return c.action;
-  const reasons = (c.strategy_checks ?? []).flatMap(check => check.reasons);
-  if (!reasons.length) return "Checks unavailable";
-  if (reasons.every(reason => reason === "ineligible_regime")) return "Not applicable";
-  if (reasons.some(reason => reason !== "returned_none" && reason !== "ineligible_regime")) return "Checks incomplete";
-  return "No signal";
-}
-
 export function SignalsCard({ desk, loading, now = Date.now() }: { desk?: Desk; loading: boolean; now?: number }) {
   const scan = desk?.scan;
   const coins = scan?.coins ?? [];
@@ -436,15 +427,14 @@ export function SignalsCard({ desk, loading, now = Date.now() }: { desk?: Desk; 
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }} aria-label="Current shortlisted coins">
               <thead><tr>{["Coin", "Result", "Score", "Threshold", "Confidence"].map(title => <th key={title} style={{ padding: "10px 8px", color: GREY, fontWeight: 500 }}>{title}</th>)}</tr></thead>
               <tbody>{coins.map(c => {
-                const skipped = c.evaluated === false;
-                const noSignal = !skipped && c.action === "HOLD" && c.score === 0;
+                const showMetrics = scanClassification(c).show_metrics;
                 const result = scanResult(c);
                 return <tr key={c.decision_id} style={{ borderTop: "1px solid #ffffff10" }}>
                   <td style={{ padding: "8px" }}><button type="button" onClick={() => setOpen(c)} aria-label={`${base(c.symbol)} decision detail`} style={{ background: "none", border: 0, color: "#c9d4df", cursor: "pointer", padding: 0 }}>{base(c.symbol)}</button></td>
                   <td style={{ padding: "8px", color: c.executed ? OK : GREY }}>{result}</td>
-                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.score === null ? "—" : c.score.toFixed(3)}</td>
-                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.threshold === null ? "—" : `±${c.threshold.toFixed(3)}`}</td>
-                  <td className="m" style={{ padding: "8px" }}>{skipped || noSignal || c.confidence === null ? "—" : `${Math.round(c.confidence * 100)}%`}</td>
+                  <td className="m" style={{ padding: "8px" }}>{!showMetrics || c.score === null ? "—" : c.score.toFixed(3)}</td>
+                  <td className="m" style={{ padding: "8px" }}>{!showMetrics || c.threshold === null ? "—" : `±${c.threshold.toFixed(3)}`}</td>
+                  <td className="m" style={{ padding: "8px" }}>{!showMetrics || c.confidence === null ? "—" : `${Math.round(c.confidence * 100)}%`}</td>
                 </tr>;
               })}</tbody>
             </table>
@@ -462,17 +452,18 @@ function DecisionPanel({ coin, scanAt, onClose }: { coin: DeskCoin | null; scanA
   const votes = asRows(value?.votes);
   const cycle = rec(value?.cycle);
   return (
-    <DetailPanel open={!!coin} onClose={onClose} title={coin ? `${base(coin.symbol)}-USDT · ${coin.evaluated === false ? (coin.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable") : coin.action}` : ""} description={coin ? `Decision ${coin.decision_id} · scan ${hhmm(scanAt)}` : undefined}>
-      {coin && (coin.evaluated === false ? <p>{coin.skip_reason === "NO_ELIGIBLE_STRATEGY" ? "Not applicable" : "Inputs unavailable"}</p> :
+    <DetailPanel open={!!coin} onClose={onClose} title={coin ? `${base(coin.symbol)}-USDT · ${scanResult(coin)}` : ""} description={coin ? `Decision ${coin.decision_id} · scan ${hhmm(scanAt)}` : undefined}>
+      {coin && (coin.evaluated === false ? <p>{scanResult(coin)}</p> :
         <>
           <KV items={[
             ["Score", coin.score === null ? null : coin.score.toFixed(4)],
             ["Needed to trade", coin.threshold === null ? null : `±${coin.threshold.toFixed(4)}`],
             ["Confidence", coin.confidence === null ? null : `${Math.round(coin.confidence * 100)}%`],
-            ["Outcome", coin.executed ? "Order sent" : coin.skip_reason ?? "No trade"],
+            ["Outcome", scanResult(coin)],
             ["Regime", coin.regime ?? (cycle?.regime ? String(cycle.regime) : null)],
             ["Price at cycle", typeof coin.price === "number" ? px(coin.price) : typeof cycle?.price === "number" ? px(cycle.price) : null],
           ]} />
+          {coin.skip_reason && <p className="gl-note">Recorded reason: {coin.skip_reason}</p>}
           {coin.persisted === false ? <>
             <h3>Strategy checks</h3>
             {(coin.strategy_checks ?? []).map(check => <p key={check.strategy} className="gl-note">{check.strategy}: {check.reasons.map(reason => reason.replaceAll("_", " ")).join(", ")}</p>)}

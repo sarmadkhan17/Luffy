@@ -273,12 +273,12 @@ def test_watchdog_uses_status_only_not_the_bare_command_regex():
     assert "pgrep -f -x '.*/python[0-9.]* -m trader\\.kernel'" not in text
 
 
-def test_watchdog_off_still_exits_before_any_probe_or_action():
+def test_watchdog_off_retains_safety_before_exiting_without_launcher_probe():
     lines = WATCHDOG.read_text().splitlines()
-    off = next(i for i, l in enumerate(lines) if "watchdog.off" in l and "exit 0" in l)
+    off = next(i for i, l in enumerate(lines) if 'if flag_present watchdog.off' in l)
     first_probe = next(i for i, l in enumerate(lines) if "status-only" in l and not l.lstrip().startswith("#"))
-    first_act = next(i for i, l in enumerate(lines) if l.startswith("act "))
-    assert off < first_act and off < first_probe
+    safety = next(i for i, l in enumerate(lines) if l.strip().startswith('act ') and '--safety-only' in l)
+    assert safety < off < first_probe
 
 
 def test_watchdog_acts_only_on_verified_absence_or_stale_heartbeat():

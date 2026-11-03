@@ -37,7 +37,7 @@ def _value(v):
 
 
 def read(path, symbols, as_of_ms, *, deadline_seconds=DEADLINE_SECONDS,
-         connect=sqlite3.connect):
+         connect=None):
     """Return (records, provenance). Any fault returns (None, provenance)
     with status `positioning_unavailable`; it never raises."""
     started = _wall_ms()
@@ -51,12 +51,14 @@ def read(path, symbols, as_of_ms, *, deadline_seconds=DEADLINE_SECONDS,
     db = None
     try:
         p = Path(path)
-        if not p.is_file():
+        if p.is_symlink() or not p.is_file():
             raise FileNotFoundError(p.name)
-        db = connect(p.resolve().as_uri() + "?mode=ro", uri=True,
-                     timeout=deadline_seconds)
+        db = (connect or sqlite3.connect)(p.resolve().as_uri() + "?mode=ro", uri=True,
+                                         timeout=deadline_seconds)
         stop = time.monotonic() + deadline_seconds
         db.set_progress_handler(lambda: time.monotonic() > stop, 1000)
+        db.execute('PRAGMA query_only=ON')
+        db.execute('BEGIN')  # one coherent retained revision snapshot for this scan
         records = []
         for sym in symbols:
             for series in POSITIONING_SERIES:

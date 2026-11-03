@@ -276,7 +276,11 @@ def collect_facts(root, *, recovery_root=None, clock=time.time, contained_cold=F
         # controls; malformed configuration still refuses launch.
         if any(type(cfg['research'][key]) is not bool for key in ('referee', 'handoff')):
             reasons.append('research_gates_invalid')
-        if not (root / 'data/watchdog.off').is_file():
+        from .pause_state import status as pause_status
+        pauses = pause_status(root)
+        if not pauses['valid']:
+            reasons.append('pause_control_path_invalid')
+        if not pauses['watchdog_paused']:
             reasons.append('watchdog_hold_missing')
         _filesystem(root, recovery)
         facts['environment'] = _fact(reasons)
