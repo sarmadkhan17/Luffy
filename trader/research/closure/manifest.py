@@ -407,6 +407,27 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
     elig = eligible_ts(path, tf, disc + held, manifest['as_of_ms'])
     counts = dict(a={s: sum(1 for t in elig[s] if protected_start_ms <= t < cut) for s in held},
                   b={s: sum(1 for t in elig[s] if cut <= t <= protected_end_ms) for s in disc + held})
+    # Development's firing-rate projection is a metadata inventory, not a
+    # qualification look. Backfilled candles can supply that inventory even
+    # when their original-time receipts are absent. Keep the replay counts
+    # above and every protected-evidence requirement unchanged.
+    development_counts = counts
+    projection_basis = 'retained_point_in_time'
+    if development_mode == 'RETROSPECTIVE':
+        from ...data.feed import DataFeed
+        from ..universe import NoExchange
+        feed = DataFeed(exchange=NoExchange(), db_path=str(path), retrospective=dict(
+            dataset_id=manifest['manifest_id'], cut_ms=dev_end_ms))
+        try:
+            def count(sym, lo, hi):
+                return feed.retrospective_coverage(sym, tf, start_ms=lo, end_ms=hi,
+                    closed_before_ms=hi, metadata_only=True)['bars']
+            development_counts = dict(a={s: count(s, protected_start_ms, cut) for s in held},
+                                      b={s: count(s, cut, protected_end_ms + step) for s in disc + held})
+        finally:
+            if getattr(feed._local, 'conn', None) is not None:
+                feed.db.close()
+        projection_basis = 'retrospective_coverage_metadata'
     dev_ids = sorted((s, inv[s]['eligible_sha256'] if development_mode == 'REPLAY' else inv[s]['stored_gap_count'])
                      for s in disc)
     risk_id = research_risk(risk)
@@ -417,7 +438,9 @@ def make_envelope(manifest, snapshot_path, *, policy, discovery_symbols, heldout
                 development_status='BLOCKED' if dev_reasons else 'ELIGIBLE', development_reasons=sorted(set(dev_reasons)),
                 protected_status='UNAVAILABLE' if prot_reasons else 'ELIGIBLE',
                 protected_reasons=sorted(set(prot_reasons)), exposure_proofs=proofs, protected_first_available=firsts,
-                projection_counts=counts, development_inventory_id=digest(dev_ids), split=split, split_id=digest(split),
+                projection_counts=counts, development_projection_counts=development_counts,
+                development_projection_basis=projection_basis,
+                development_inventory_id=digest(dev_ids), split=split, split_id=digest(split),
                 evaluator_id=evaluator_id(), cost_id=digest(risk_id), risk=risk_id, protected_fingerprint=None,
                 development_data_id=None, snapshot=manifest['snapshot'], exposure_events=manifest['exposure_events'],
                 authority='RESEARCH_ONLY')

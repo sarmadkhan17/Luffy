@@ -424,7 +424,30 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         if gaps:
             out.update(verdict="untested", untested=True, context_gaps=gaps)
             return out
-    if b.evidence or "world" in compiled.data_requires:
+    retrospective = any(df.attrs.get('read_mode') == 'retrospective' for df in b.frames.values())
+    if retrospective:
+        # Closure has already loaded and authenticated its explicit dataset
+        # dependencies. Validate those same objects with the compiler instead
+        # of reopening legacy/global stores from a candle-only descriptor.
+        # The identical validator is used again for actual entries.
+        from ..strategy import dsl
+        gaps = {}
+        for sym, sf in b.sym_frames.items():
+            try:
+                ctx = compiled._ctx(sf, b.btc, b.derivs.get(sym), b.universe, b.market, sym, b.world)
+                problems = []
+                for kind, horizon in compiled.deps['world']:
+                    values = ctx.get('world_observation', (kind, horizon)).to_numpy(dtype=float)
+                    if not len(values) or np.isfinite(values).mean() < spec_evidence.MIN_COVERAGE:
+                        problems.append(f'world:{kind}:{horizon}: insufficient historical coverage')
+                if problems:
+                    gaps[sym] = problems
+            except (dsl.SpecError, ValueError) as exc:
+                gaps[sym] = [str(exc)]
+        if gaps:
+            out.update(verdict='untested', untested=True, context_gaps=gaps)
+            return out
+    elif b.evidence or "world" in compiled.data_requires:
         # Retrospective missing_data already binds only required dependencies;
         # do not require an unused derivatives path for an OHLCV-only study.
         context_frame = next(iter(b.frames.values()), None) if not b.evidence else None

@@ -9,7 +9,7 @@ from __future__ import annotations
 from types import MappingProxyType
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from typing import Any, Iterable, Mapping
 
@@ -181,6 +181,17 @@ class WorldModelRecord:
     model_id: str
     relationship_evidence: tuple[str, ...]
     record_id: str
+    _verified_model: WorldModel | None = field(default=None, init=False, repr=False, compare=False)
+    _verified_fields: tuple | None = field(default=None, init=False, repr=False, compare=False)
+
+    def _fields(self):
+        return (self.schema_version, self.model_json, self.model_id,
+                self.relationship_evidence, self.record_id)
+
+    def _cached_model(self):
+        # Also reject a changed field on an instance altered through Python's
+        # low-level frozen-object bypass. Only exact verified content reuses it.
+        return self._verified_model if self._verified_fields == self._fields() else None
 
     @classmethod
     def from_model(cls, model: WorldModel) -> WorldModelRecord:
@@ -220,6 +231,8 @@ class WorldModelRecord:
         canonical = cls.from_model(model)
         if canonical.to_json() != historical_json:
             raise ValueError("archived relationship evidence does not match exact model evidence")
+        object.__setattr__(canonical, '_verified_model', model)
+        object.__setattr__(canonical, '_verified_fields', canonical._fields())
         return canonical
 
     def to_json(self) -> str:
@@ -229,7 +242,13 @@ class WorldModelRecord:
                            "record_id": self.record_id})
 
     def reconstruct(self) -> WorldModel:
-        return self.from_json(self.to_json())._reconstruct_verified()
+        model = self._cached_model()
+        if model is None:
+            verified = self.from_json(self.to_json())
+            model = verified._cached_model()
+            object.__setattr__(self, '_verified_model', model)
+            object.__setattr__(self, '_verified_fields', self._fields())
+        return model
 
     def _reconstruct_verified(self) -> WorldModel:
         return reconstruct_world_model(self.model_json, model_id=self.model_id,
@@ -243,6 +262,7 @@ class WorldHistory:
 
     _records: tuple[WorldModelRecord, ...]
     _models: Mapping[int, WorldModel]
+    _history_id: str
 
     def __init__(self, models: Iterable[WorldModel | WorldModelRecord]):
         by_cut: dict[int, WorldModelRecord] = {}
@@ -251,7 +271,7 @@ class WorldHistory:
             if isinstance(item, WorldModel):
                 record = WorldModelRecord.from_model(item)
             elif isinstance(item, WorldModelRecord):
-                record = WorldModelRecord.from_json(item.to_json())
+                record = item                 # reconstruct verifies any unverified or changed content
             else:
                 raise TypeError("history items must be WorldModel or WorldModelRecord")
             model = record.reconstruct()
@@ -263,6 +283,10 @@ class WorldHistory:
             verified[cut] = model
         object.__setattr__(self, "_records", tuple(by_cut[cut] for cut in sorted(by_cut)))
         object.__setattr__(self, "_models", MappingProxyType(verified))
+        # Records own immutable canonical strings. Their identity cannot
+        # change after construction; feature memo keys must not serialize an
+        # entire historical World store again for every feature lookup.
+        object.__setattr__(self, "_history_id", sha256(self.to_json().encode("utf-8")).hexdigest())
 
     @classmethod
     def from_json(cls, historical_json: str) -> WorldHistory:
@@ -292,4 +316,4 @@ class WorldHistory:
 
     @property
     def history_id(self) -> str:
-        return sha256(self.to_json().encode("utf-8")).hexdigest()
+        return self._history_id

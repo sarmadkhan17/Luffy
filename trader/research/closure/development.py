@@ -17,6 +17,7 @@ engine, so no development outcome can cross into the protected window.
 """
 from __future__ import annotations
 
+import math
 import numpy as np
 
 from ...core.types import TF_MS
@@ -53,9 +54,29 @@ def require_current(env: dict) -> None:
 
 
 def heldout_counts(env: dict) -> dict:
-    """EXACT replay-eligible bar counts (metadata only) measured when the
-    envelope was built; a missing bar is a missing count, never an assumption."""
-    return {k: dict(v) for k, v in env['projection_counts'].items()}
+    """Measured inventory for DEVELOPMENT's future firing-rate projection.
+
+    Retrospective coverage is explicitly metadata only. It cannot replace
+    replay receipts, exposure proofs, or a protected qualification look.
+    Older envelopes without the separate inventory remain conservative.
+    """
+    counts = env['projection_counts']
+    if env.get('development_mode', 'REPLAY') == 'RETROSPECTIVE':
+        counts = env.get('development_projection_counts', counts)
+    return {k: dict(v) for k, v in counts.items()}
+
+
+def power_diagnostics(res: dict, env: dict) -> dict:
+    """Report exactly why the existing projected-trade floor can/cannot be met."""
+    from ..slices import WARMUP
+    rate = float(res.get('median_rate') or 0)
+    need = WARMUP + math.ceil(ev.MIN_PROJECTED_TRADES / rate) if rate > 0 else None
+    return dict(basis=env.get('development_projection_basis', 'retained_point_in_time'),
+        scope='DEVELOPMENT_PROJECTION_ONLY', median_trade_rate=rate,
+        min_projected_trades=ev.MIN_PROJECTED_TRADES, min_markets_per_part=ev.MIN_PROJECTED_MARKETS,
+        minimum_bars_per_market=need, projected_markets=res.get('projection'),
+        available_bars=heldout_counts(env), replay_eligible_bars=env['projection_counts'],
+        protected_status=env['protected_status'])
 
 
 def build_bundle(frames: dict, env: dict, external: dict | None = None) -> ev.Bundle:
@@ -280,7 +301,7 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
         sub = {s.keys[0] if s.k == 1 else ','.join(s.keys): ev.evaluate(s, bundle, draws=n_draws, seed=seed,
                                                                          min_symbol_trades=floor)
                for s in variants}
-        if not sims:  # compile/dependency preflight returned before simulation
+        if not sims and not res.get('untested'):  # absent inputs must never fall through into simulation
             sims = run_symbols(c, bundle, traces=graph_fit is not None)
         censored = sum(r['result'].censored_position_count for r in sims.values())
     except Exception as exc:                                  # noqa: BLE001
@@ -292,7 +313,9 @@ def _develop(candidate, frames, data_id, env, draws, external=None):
     metrics = dict(consistency_p=res.get('consistency_p'), median_pf=res.get('median_pf'),
                    total_pct=pf.get('total_pct'), max_dd_pct=pf.get('max_dd_pct'), trades=res.get('trades'),
                    scored_symbols=res.get('scored_symbols'), testable=res.get('testable'), verdict=res.get('verdict'),
-                   censored_positions=int(censored))
+                   censored_positions=int(censored), projection=res.get('projection'),
+                   projection_basis=env.get('development_projection_basis', 'retained_point_in_time'),
+                   median_trade_rate=res.get('median_rate'), power=power_diagnostics(res, env))
     baseline_metrics = {k: dict(consistency_p=b.get('consistency_p'), total_pct=(b.get('portfolio') or {}).get('total_pct'),
                                 verdict=b.get('verdict'), trades=b.get('trades'),
                                 candidate_earns_place=growth.earns_place(res, b)[0]) for k, b in sub.items()}

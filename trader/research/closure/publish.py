@@ -78,8 +78,10 @@ def _tick(deadline):
 
 
 def _ddl(src, names) -> list:
+    # Copy data schema only. Source witness triggers refer to source-local
+    # metadata tables; mp.init builds the destination's own complete witnesses.
     return [r[0] for r in src.execute("SELECT sql FROM sqlite_master WHERE tbl_name IN (%s) AND sql IS NOT NULL "
-                                      "AND name NOT LIKE 'sqlite_%%' ORDER BY type DESC" % ','.join('?' * len(names)), names)]
+                                      "AND type IN ('table','index') AND name NOT LIKE 'sqlite_%%' ORDER BY type DESC" % ','.join('?' * len(names)), names)]
 
 
 def _has(src, name) -> bool:
