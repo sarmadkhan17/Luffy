@@ -15,7 +15,7 @@ import numpy as np
 import time
 
 from ..core.types import TF_MS as _TF_MS_SHARED, closed_bars, norm_symbol
-from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
+from .sqlite_tx import BUSY_TIMEOUT_S, apply_wal_pragmas, close_quietly, write_tx
 from . import market_provenance as mp
 from ..core.instrument_registry import canonical_venue
 from typing import Optional
@@ -413,6 +413,11 @@ class DataFeed:
                 self._local.conn = conn
                 return conn
             conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+            try:
+                apply_wal_pragmas(conn, self.BUSY_TIMEOUT_S)
+            except BaseException:
+                close_quietly(conn, "pragmas")
+                raise
             if mp.initialised(conn, 'candles', 'candle_floor'):
                 self._local.conn = conn      # versioned: no setup statements, no writes
                 return conn
@@ -596,10 +601,13 @@ class DataFeed:
                         else [None] * len(df))]
             # a failed commit must not leave this thread's connection holding
             # the lock (and the batch) open — see sqlite_tx
+            # Ancestry reads happen before the writer lock; append() re-plans
+            # under the lock only if the series witness moved meanwhile.
+            plan = mp.plan_append(self.db, self._series_key(symbol, tf), prepared)
             with write_tx(self._local, self.db, "write") as conn:
                 if not conn.in_transaction:
                     conn.execute('BEGIN IMMEDIATE')
-                mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
+                mp.append(conn, self._series_key(symbol, tf), prepared=prepared, plan=plan)
                 from .sqlite_tx import save_projection
                 save_projection(conn, 'candles', ('symbol','tf','ts','open','high','low','close','volume','taker_buy'), ('symbol','tf','ts'), rows)
             self._observed_at[(symbol, tf)] = now_ms

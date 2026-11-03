@@ -277,7 +277,8 @@ class Host:
         # unit's actual main process cannot be verified; never an unmanaged Popen.
         self.process = managed.launch(
             self.manager, self.unit, command, cwd=self.root, proc_root=self.proc_root,
-            env={'TMPDIR': str(self.root / 'tmp')},
+            # The unit gets only this env: bound glibc arenas for ~40 threads.
+            env={'TMPDIR': str(self.root / 'tmp'), 'MALLOC_ARENA_MAX': '2'},
             properties=('StandardOutput=append:' + str(self.root / 'logs/kernel-unit.log'),
                         'StandardError=inherit'),
             monotonic=self.monotonic, sleep=self.sleep)

@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import threading
 import time
+import ctypes
 
 from .runtime import Calendar, Worker
 from .timing import StageTimings, timed_worker
@@ -16,6 +17,32 @@ from .coordination import analysis_context, model_snapshot, input_fingerprint
 from .maintenance import Maintenance
 
 log = logging.getLogger('luffy.cycles')
+
+
+try:
+    _libc = ctypes.CDLL('libc.so.6')
+    _libc.malloc_trim.argtypes = [ctypes.c_size_t]
+    _libc.malloc_trim.restype = ctypes.c_int
+
+    def trim_memory():
+        """Return freed glibc heap pages to the OS (best effort)."""
+        _libc.malloc_trim(0)
+except Exception:          # non-glibc platform: trimming is an optimisation only
+    def trim_memory():
+        pass
+
+
+def _trim_after(fn):
+    @wraps(fn)
+    def run(self, *args, **kwargs):
+        try:
+            return fn(self, *args, **kwargs)
+        finally:
+            try:
+                trim_memory()
+            except Exception:
+                pass
+    return run
 
 
 def _read_batch(fn):
@@ -304,6 +331,7 @@ class KernelRuntime:
             raise
 
     @timed_worker('decisions')
+    @_trim_after
     @_read_batch
     def decisions(self):
         with self.lock:

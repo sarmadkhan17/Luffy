@@ -62,7 +62,7 @@ _CLOCK_FIELDS = frozenset(("event_time_ms", "observed_at_ms", "available_at_ms",
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/120 Safari/537.36"}
 
-SQLITE_BUSY_MS = 1000
+SQLITE_BUSY_MS = 5000          # matches sqlite_tx.BUSY_TIMEOUT_S
 SQLITE_CACHE_KIB = 8192
 
 
@@ -70,13 +70,16 @@ def _configure_connection(conn, *, read_only=False):
     """Connection-local bounds apply on every open, including versioned stores."""
     conn.execute('PRAGMA foreign_keys=ON')
     conn.execute(f'PRAGMA busy_timeout={SQLITE_BUSY_MS}')
-    conn.execute('PRAGMA synchronous=FULL')
     conn.execute('PRAGMA temp_store=MEMORY')
     conn.execute(f'PRAGMA cache_size=-{SQLITE_CACHE_KIB}')
     if read_only:
         conn.execute('PRAGMA query_only=ON')
     elif conn.execute('PRAGMA journal_mode=WAL').fetchone()[0].lower() != 'wal':
         raise RuntimeError('derivative_wal_unavailable')
+    # After the WAL check: NORMAL is only corruption-safe in WAL. A read-only
+    # connection never fsyncs, so it keeps the default.
+    if not read_only:
+        conn.execute('PRAGMA synchronous=NORMAL')
 
 
 def to_binance(symbol: str) -> str:
@@ -175,19 +178,18 @@ class DerivFeed:
                       for t, v in zip(mp.ms(df['ts']), df['value'])]
         from .sqlite_tx import write_tx, save_projection
         claim = self._coverage_claim(symbol, series, df, acquisition)
-        with write_tx(self._local, self.db, 'derivative receipt') as conn:
-            # Reserve the writer before ancestry/cursor reads. A deferred WAL
-            # read snapshot cannot upgrade after another producer commits.
-            if not conn.in_transaction:
-                conn.execute('BEGIN IMMEDIATE')
+        key = 'derivative:'+symbol+':'+series
+
+        def read_phase(conn):
+            """Every history read this save needs. Pure reads: on the first call
+            no writer lock is held, so cold-page I/O never blocks other producers."""
+            rows, proj = prepared, projection
             if acquisition is not None and acquisition['mode'] == 'required_window':
                 # Keep proved unchanged history; append only gaps, corrections
-                # and two freshly observed tip events. Selection and writes
-                # share this writer transaction, so a concurrent correction
-                # cannot be lost between the comparison and the append.
+                # and two freshly observed tip events.
                 expected = self.current_source(series)
                 instrument = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(symbol)).value
-                old = mp.load_current_candles(conn, 'derivative:'+symbol+':'+series,
+                old = mp.load_current_candles(conn, key,
                     as_of_ms=self._clock_ms(), limit=len(df), instrument_id=instrument,
                     source=expected, min_event_ms=int(df['event_time_ms'].min()))
                 prior = {} if old is None else {int(r.event_time_ms): r
@@ -197,15 +199,37 @@ class DerivFeed:
                     if int(r.event_time_ms) in tip or r.quality != 'VALID'
                     or int(r.event_time_ms) not in prior
                     or prior[int(r.event_time_ms)].value != r.value]
-                prepared = [prepared[i] for i in keep]
-                projection = [projection[i] for i in keep]
-            mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
-            save_projection(conn, 'derivs', ('symbol','series','ts','value'), ('symbol','series','ts'), projection)
+                rows = [prepared[i] for i in keep]
+                proj = [projection[i] for i in keep]
+            plan = mp.plan_append(conn, key, rows)
+            return rows, proj, plan
+
+        # Optimistic read phase BEFORE the writer lock. Any commit that touches
+        # this series (or the shared raw-source table) changes its witness, and
+        # the transaction below then repeats the read phase under the lock, so a
+        # concurrent correction can still never be lost between comparison and
+        # append.
+        read_conn = self.db
+        planned = read_phase(read_conn)
+        witness_read = planned[2]['wit']
+        with write_tx(self._local, self.db, 'derivative receipt') as conn:
+            # Reserve the writer before the validating reads. A deferred WAL
+            # read snapshot cannot upgrade after another producer commits.
+            if not conn.in_transaction:
+                conn.execute('BEGIN IMMEDIATE')
+            if witness_read is None or mp.planning_witness(conn, key) != witness_read:
+                planned = read_phase(conn)
+            prepared_w, projection_w, plan = planned
+            mp.append(conn, key, prepared=prepared_w, plan=plan)
+            save_projection(conn, 'derivs', ('symbol','series','ts','value'), ('symbol','series','ts'), projection_w)
             if claim is not None:
                 # Same transaction as the receipts: a failed save never moves it.
                 if not conn.in_transaction:
                     conn.execute('BEGIN IMMEDIATE')   # exact retry wrote nothing; still serialize the read
-                state = tail.advance(tail.read(conn, claim['key']), claim['spec'], claim['mode'],
+                # One primary-key lookup on a tiny table; it must be read under
+                # the lock because the cursor is read-modify-write state.
+                current = tail.read(conn, claim['key'])
+                state = tail.advance(current, claim['spec'], claim['mode'],
                                      claim['events'], claim['now_ms'], claim['identity'],
                                      claim['start_ms'])
                 if state is not None:

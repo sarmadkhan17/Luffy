@@ -150,8 +150,10 @@ def test_failed_refresh_keeps_only_previous_committed_receipt(tmp_path):
         assert result.observed_at_ms.tolist() == old.observed_at_ms.tolist()
         assert not f.db.in_transaction
         # Initial retained read only; failed persistence never triggers a reread.
-        rollback = statements.index('ROLLBACK')
-        assert not any(s.startswith('SELECT') for s in statements[rollback+1:])
+        # The save's ancestry reads now precede the writer lock; nothing may be
+        # read after the failed BEGIN IMMEDIATE.
+        lock = len(statements) - 1 - statements[::-1].index('BEGIN IMMEDIATE')
+        assert not any(s.startswith('SELECT') for s in statements[lock+1:])
     finally:
         holder.rollback(); holder.close()
     assert f.db.execute('SELECT count(*) FROM market_revisions').fetchone()[0] == 1

@@ -176,7 +176,7 @@ def test_failed_later_page_does_not_suppress_current_retry(tmp_path, monkeypatch
     assert len(n) == 4
 
 
-def test_current_save_reserves_writer_before_ancestry_reads(tmp_path, monkeypatch):
+def test_current_save_reads_ancestry_before_reserving_writer(tmp_path, monkeypatch):
     D.DerivFeed._fetched_at.clear()
     now = int(time.time() * 1000)
     install(monkeypatch, now)
@@ -186,7 +186,11 @@ def test_current_save_reserves_writer_before_ancestry_reads(tmp_path, monkeypatc
     db.set_trace_callback(statements.append)
     frame, acquisition = f._acquire_current('ETH/USDT', 'funding', 'funding')
     f.save('ETH/USDT', 'funding', frame, acquisition=acquisition)
-    assert next(q for q in statements if q.startswith(('SELECT','BEGIN'))) == 'BEGIN IMMEDIATE'
+    # Ancestry selection (the ROW_NUMBER parent query) runs before the writer
+    # lock and is not repeated under it while the series witness is unchanged.
+    lock = statements.index('BEGIN IMMEDIATE')
+    assert any('ROW_NUMBER' in q for q in statements[:lock])
+    assert not any('ROW_NUMBER' in q for q in statements[lock:])
     assert not db.in_transaction
 
 

@@ -349,24 +349,45 @@ def _current_parents(conn, key, events, instrument, source):
     return result
 
 
-def append(conn, key, df=None, *, prepared=None):
-    """Append/link exact retrievals atomically; ancestry stays inside the write."""
-    iterator = iter(prepare(df) if prepared is None else prepared)
-    wrote = False
+def planning_witness(conn, key):
+    """Like ``witness`` but a series with no rows yet is generation 0, not unproven.
+
+    The first insert bumps the generation to 1, so a plan made for an empty
+    series is invalidated by any concurrent first write. None still means the
+    witness tables are absent, i.e. nothing can validate a plan.
+    """
+    try:
+        row = conn.execute('SELECT gen FROM market_series_meta WHERE series_key=?', (key,)).fetchone()
+        raw = conn.execute("SELECT gen FROM market_meta_global WHERE name='raw'").fetchone()
+        epoch = conn.execute("SELECT gen FROM market_meta_global WHERE name='epoch'").fetchone()
+    except Exception:
+        return None
+    if raw is None or epoch is None:
+        return None
+    return (0 if row is None else row[0], raw[0], epoch[0])
+
+
+def plan_append(conn, key, prepared):
+    """Read phase of ``append``: everything that needs history, no writer lock.
+
+    Returns the exact inputs the write phase needs (rows not already stored,
+    their current ancestry winners, shared-text lookups) together with the
+    series witness they were read at. Run it OUTSIDE any transaction; the write
+    phase re-checks the witness under the writer lock and re-plans if any
+    committed change touched the series (or the shared raw-source table).
+    """
+    wit = planning_witness(conn, key)
+    iterator = iter(prepared)
+    seen, batches = set(), []
     while batch := list(islice(iterator, 128)):
-        # All parent selection remains inside the existing transaction. Bound
-        # both temporary state and SQLite crossings, rather than releasing
-        # the GIL once for every historical row while owning a writer lock.
         ids = tuple(dict.fromkeys(r['revision_id'] for r in batch))
         existing = set(json.loads(conn.execute('SELECT json_group_array(revision_id) FROM market_revisions '
                     'WHERE revision_id IN (' + ','.join('?' for _ in ids) + ')', ids).fetchone()[0]))
-        # Exact retries already have sealed identities. Avoid parent reads
-        # and record serialization; a new acquisition has a new revision ID
-        # even when the observed numeric values are unchanged.
-        batch = [r for r in batch if r['revision_id'] not in existing]
+        # Exact retries already have sealed identities: no parent reads.
+        batch = [r for r in batch if r['revision_id'] not in existing and r['revision_id'] not in seen]
         if not batch:
             continue
-        wrote = True
+        seen.update(r['revision_id'] for r in batch)
         groups = {}
         for r in batch:
             groups.setdefault((r['instrument_id'], r['source']), set()).add(r['event_time_ms'])
@@ -374,27 +395,58 @@ def append(conn, key, df=None, *, prepared=None):
         for (instrument, source), events in groups.items():
             for event, prior in _current_parents(conn, key, events, instrument, source).items():
                 parents[(instrument, source, event)] = prior
-        # Fetch shared content once per bounded batch, preserving append's
-        # bounded SQLite crossings under acquisition-thread contention.
         source_cache = {text_reference(r[f])[len(TEXT_REF):]: None for r in batch
-                        for f in ('source','raw_json')
-                        if isinstance(r.get(f),str) and len(r[f].encode()) >= TEXT_MIN}
+                        for f in ('source', 'raw_json')
+                        if isinstance(r.get(f), str) and len(r[f].encode()) >= TEXT_MIN}
         if source_cache:
             keys = tuple(source_cache)
             source_cache.update(conn.execute('SELECT content_hash,raw_json FROM market_raw_sources WHERE content_hash IN ('
                 + ','.join('?' for _ in keys) + ')', keys).fetchall())
+        batches.append((batch, parents, source_cache))
+    return dict(key=key, wit=wit, batches=batches)
+
+
+def append(conn, key, df=None, *, prepared=None, plan=None):
+    """Append/link exact retrievals atomically.
+
+    ``plan`` (from ``plan_append``, read before the writer lock) is used only
+    while the series witness is unchanged; otherwise ancestry is re-read here,
+    inside the transaction, exactly as before.
+    """
+    if prepared is None:
+        prepared = prepare(df)
+    if (plan is None or plan['key'] != key or plan['wit'] is None
+            or planning_witness(conn, key) != plan['wit']):
+        plan = plan_append(conn, key, prepared)
+    wrote = False
+    src, carried = {}, {}
+    for batch, base_parents, base_src in plan['batches']:
+        wrote = True
+        # Shared text is content-addressed and immutable, but another writer may
+        # have added a body since it was read: re-ask only for the missing hashes.
+        for k, v in base_src.items():
+            if src.get(k) is None:
+                src[k] = v
+        missing = tuple(k for k in base_src if src[k] is None)
+        if missing:
+            src.update(conn.execute('SELECT content_hash,raw_json FROM market_raw_sources WHERE content_hash IN ('
+                + ','.join('?' for _ in missing) + ')', missing).fetchall())
+        existing = set()
         writes = []
         for original in batch:
             record = dict(original)
             identity = (record['instrument_id'], record['source'], record['event_time_ms'])
-            prior = parents.get(identity)
+            prior = base_parents.get(identity)
+            won = carried.get(identity)
+            if won is not None and (prior is None or won[1] >= prior[1]):
+                prior = won
             rid, observed = record['revision_id'], record['observed_at_ms']
             record['supersedes'] = prior[0] if prior and prior[0] != rid else None
-            writes.append((rid, key, record['event_time_ms'], record['available_at_ms'], observed, store_record(conn, record, text_cache=source_cache)))
+            writes.append((rid, key, record['event_time_ms'], record['available_at_ms'], observed, store_record(conn, record, text_cache=src)))
             # New equal-clock rows win by rowid, exactly as the sequential
             # INSERT does. Ignored retries and older observations cannot win.
             if rid not in existing and (prior is None or observed >= prior[1]):
-                parents[identity] = (rid, observed)
+                carried[identity] = (rid, observed)
             existing.add(rid)
         conn.execute('INSERT OR IGNORE INTO market_revisions VALUES '
                      + ','.join('(?,?,?,?,?,?)' for _ in writes),

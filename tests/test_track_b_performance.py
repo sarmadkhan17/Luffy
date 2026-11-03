@@ -24,7 +24,7 @@ def test_initialized_rollback_store_reestablishes_wal_and_connection_bounds(tmp_
     reopened = DerivFeed(path)
     try:
         db = reopened.db
-        for pragma, expected in [('journal_mode','wal'),('foreign_keys',1),('synchronous',2),
+        for pragma, expected in [('journal_mode','wal'),('foreign_keys',1),('synchronous',1),
                                  ('temp_store',2),('cache_size',-SQLITE_CACHE_KIB),('busy_timeout',SQLITE_BUSY_MS)]:
             assert db.execute('PRAGMA '+pragma).fetchone()[0] == expected
         assert db.total_changes == 0

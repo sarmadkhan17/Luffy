@@ -81,6 +81,8 @@ cd "$DIR"
 mkdir -p "$(dirname "$LOG")"
 mkdir -p "$DIR/tmp"
 export TMPDIR="$DIR/tmp"
+# Bound glibc per-thread malloc arenas (the kernel runs ~40 threads).
+export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 if [ "$TARGET" = kernel ]; then
   # Controller rechecks Phase A after graceful stop; it launches exactly one
   # fenced child and retains independent observers on every readiness failure.

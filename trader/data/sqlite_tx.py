@@ -38,6 +38,19 @@ log = logging.getLogger(__name__)
 BUSY_TIMEOUT_S = 5.0
 
 
+def apply_wal_pragmas(conn: sqlite3.Connection, timeout_s: float = BUSY_TIMEOUT_S) -> None:
+    """Connection-local busy bound plus WAL-only relaxed fsync.
+
+    ``synchronous=NORMAL`` is corruption-safe only in WAL mode (a power loss may
+    drop the most recent commits, never damage the file). It is therefore
+    applied only when the database is verifiably in WAL; any other journal mode
+    keeps SQLite's default. Never changes the journal mode itself.
+    """
+    conn.execute(f'PRAGMA busy_timeout={int(timeout_s * 1000)}')
+    if str(conn.execute('PRAGMA journal_mode').fetchone()[0]).lower() == 'wal':
+        conn.execute('PRAGMA synchronous=NORMAL')
+
+
 def insert_rows(conn, prefix, rows, width, *, suffix=""):
     """Bounded VALUES statements inside the caller's atomic transaction.
 
