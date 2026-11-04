@@ -246,6 +246,61 @@ def _paused_disk(root, cfg, health):
     return result
 
 
+def _pending_managed_kernel(root, identity, health, *, manager=None, proc_root=Path('/proc')):
+    """Recognize only the owned, fenced pre-lock child; never call it RUNNING.
+
+    Its normal child admission still checks revision, storage, protection and
+    FROZEN controls before taking the instance lock. Heartbeat alarms continue.
+    """
+    import os
+    import re
+    import stat
+    import time
+    from trader import runtime_identity as ri
+    from trader.observability import managed
+    try:
+        if (identity.get('state') != 'UNLOCKED_PROCESS' or identity.get('reasons')
+                or identity.get('holder_pids') or len(identity.get('processes', [])) != 1):
+            return False
+        value = health.read()
+        fence = value.get('bootstrap', {})
+        token, revision = fence.get('token'), fence.get('intended_revision')
+        if (value.get('recovery_required') is not True or fence.get('status') != 'PENDING'
+                or not isinstance(token, str) or not re.fullmatch('[0-9a-f]{32}', token)
+                or not isinstance(revision, str) or not re.fullmatch('[0-9a-f]{40}', revision)):
+            return False
+        root = Path(root).resolve()
+        path = root / 'data/bootstrap' / token / 'observers.json'
+        st = path.lstat()
+        if (not stat.S_ISREG(st.st_mode) or st.st_uid != os.geteuid()
+                or st.st_mode & 0o022 or st.st_nlink != 1
+                or not 0 <= time.time() - st.st_mtime <= 240):
+            return False
+        import json
+        manifest = json.loads(path.read_text())
+        units = ['luffy-bootstrap-' + token + '-' + mode for mode in ('heartbeat-only', 'safety-only')]
+        if (manifest.get('status') != 'COVERED' or manifest.get('cleanup') != 'OWNER_ONLY'
+                or manifest.get('root') != str(root) or manifest.get('revision') != revision
+                or manifest.get('token') != token or manifest.get('units') != units):
+            return False
+        process = identity['processes'][0]
+        pid, ticks = process['pid'], process['start_ticks']
+        if (type(pid) is not int or pid <= 0 or type(ticks) is not int or ticks <= 0
+                or process.get('revision') != revision or process.get('token') != token):
+            return False
+        record = identity.get('record')
+        if record and ri.proc_start_ticks(record['pid'], proc_root) == record['start_ticks']:
+            return False
+        if (proc_root / str(pid) / 'cwd').resolve() != root:
+            return False
+        command = [str(root / 'venv/bin/python'), '-B', '-m', 'trader.kernel',
+                   '--expect-revision', revision, '--bootstrap-token', token]
+        return not managed.check_identity(manager or managed.UserManager(),
+            'luffy-kernel-' + token, pid, ticks, proc_root, command)
+    except (OSError, ValueError, TypeError, KeyError, managed.ManagedUnavailable):
+        return False
+
+
 def safety_check(root, cfg, *, clock=None, sink=None, heartbeat_only=False, integrity_only=False,
                  identity_probe=None):
     """Independent local safety pass; no Journal initialization or venue calls."""
@@ -279,7 +334,8 @@ def safety_check(root, cfg, *, clock=None, sink=None, heartbeat_only=False, inte
         except Exception:
             identity = dict(state='UNKNOWN')
         intentionally_stopped = identity.get('state') in ('NONE', 'STALE_RECORD')
-        health.observe('paused_kernel_identity', None if intentionally_stopped or (
+        pending_owned = _pending_managed_kernel(root, identity, health)
+        health.observe('paused_kernel_identity', None if intentionally_stopped or pending_owned or (
                            identity.get('state') == 'RUNNING' and identity.get('verified') is True)
                        else 'IDENTITY_UNCONFIRMED', context=dict(state=identity.get('state')))
     results = ([dict(component='luffy', status='INTENTIONALLY_STOPPED', reason='watchdog.off')]
