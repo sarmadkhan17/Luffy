@@ -832,18 +832,32 @@ class DerivFeed:
         method = dict(self._SERIES_FETCHERS)[series]
         chunks = []
         cursor = start
+        covered_end = start - 1
         for _ in range(8):
             self._check_cancelled()
             size = 1000 if series == 'funding' else 500
-            kwargs = dict(start_ms=cursor, end_ms=now, limit=size)
+            # The history endpoint can return the NEWEST `limit` samples of
+            # a wide interval. Bound each interval to one page so forwarding
+            # from its newest sample cannot silently discard the prefix.
+            request_end = min(now, cursor + size * period - 1)
+            kwargs = dict(start_ms=cursor, end_ms=request_end, limit=size)
             if series == 'basis':
                 kwargs.pop('end_ms')
             if series != 'funding':
                 kwargs['period'] = '1h' if series == 'basis' else '15m'
             frame = getattr(self, method)(symbol, **kwargs)
+            covered_end = request_end
             if frame is None or frame.empty:
-                break
+                if series == 'basis' or request_end >= now:
+                    break
+                cursor = request_end + 1
+                continue
             chunks.append(frame)
+            if series != 'basis':
+                if request_end >= now:
+                    break
+                cursor = request_end + 1
+                continue
             newest = int(mp.ms(frame['ts']).max())
             if newest < cursor or len(frame) < size or newest >= now:
                 break
@@ -852,7 +866,7 @@ class DerivFeed:
         complete = False
         if len(frame):
             latest = frame.loc[frame['event_time_ms'].idxmax()]
-            complete = (latest['quality'] == 'VALID' and
+            complete = ((series == 'basis' or covered_end >= now) and latest['quality'] == 'VALID' and
                         now - int(latest['event_time_ms']) <= int(latest['max_age_ms']))
         return frame, dict(mode='required_window', now_ms=now, start_ms=start, complete=complete)
 

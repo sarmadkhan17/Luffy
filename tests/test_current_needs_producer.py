@@ -263,3 +263,23 @@ def test_unchanged_refresh_replaces_selected_unknown_not_older_matching_value(tm
     assert M.load_window_typed(f.db,key,as_of_ms=before,window_start_ms=events[0],instrument_id=iid)[1]=='identity_ambiguous'
     for rid,raw in unknown:
         assert f.db.execute('SELECT record_json FROM market_revisions WHERE revision_id=?',(rid,)).fetchone()[0]==raw
+
+
+def test_required_window_handles_provider_returning_newest_page(tmp_path,monkeypatch):
+    import pandas as pd
+    step=900_000;now=20000*step+1234
+    f=D.DerivFeed(tmp_path/'d.db',clock_ms=lambda:now)
+    span=617*step;calls=[]
+    def newest(symbol,period,limit,start_ms,end_ms):
+        calls.append((start_ms,end_ms))
+        events=list(range((start_ms+step-1)//step*step,end_ms+1,step))[-limit:]
+        return M.annotate(pd.DataFrame({'ts':pd.to_datetime(events,unit='ms',utc=True),'value':[1.]*len(events)}),
+            instrument_id='binance_usdm:futures:ETHUSDT',source=f.current_source('oi'),
+            kind='derivative',received_ms=now,max_age_ms=2_700_000)
+    monkeypatch.setattr(f,'open_interest',newest)
+    frame,claim=f._required_window('ETH/USDT','oi',span)
+    start=now-span-step
+    expected=list(range((start+step-1)//step*step,now+1,step))
+    assert M.ms(frame.ts).tolist()==expected
+    assert len(calls)==2 and all(end-start<500*step for start,end in calls)
+    assert claim['complete']
