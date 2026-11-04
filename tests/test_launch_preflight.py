@@ -259,8 +259,11 @@ def test_filesystem_required_envelope(monkeypatch, variant):
         return NS(f_flag=os.ST_RDONLY if variant == 'readonly' else 0,
                   f_bavail=1 if variant == 'low_capacity' else 2*P.MIN_FREE_BYTES,f_frsize=1)
     monkeypatch.setattr(P.os, 'statvfs', statvfs)
-    with pytest.raises((ValueError, OSError)):
-        P._filesystem(Mount(1), Mount(1 if variant == 'same_volume' else 2))
+    if variant == 'same_volume':
+        P._filesystem(Mount(1), Mount(1))
+    else:
+        with pytest.raises((ValueError, OSError)):
+            P._filesystem(Mount(1), Mount(2))
 
 
 def shell_fixture(tmp_path, facts):

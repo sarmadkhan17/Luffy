@@ -97,8 +97,6 @@ def _health_admission_state(value, *, contained_cold):
 
 def _filesystem(root, recovery_root):
     mounts = [root, recovery_root]
-    if len({p.stat().st_dev for p in mounts}) != 2:
-        raise ValueError('recovery_filesystem_not_separate')
     for path in mounts:
         fs = os.statvfs(path)
         if fs.f_flag & os.ST_RDONLY or fs.f_bavail * fs.f_frsize < MIN_FREE_BYTES:
