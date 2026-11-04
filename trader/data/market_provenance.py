@@ -1533,12 +1533,15 @@ def _incremental(conn, key, stale, wit, cut_ms, limit, instrument_id, source, in
 
 
 def load_current_candles(conn, key, *, as_of_ms, limit, instrument_id, source,
-                         include_partial=False, min_event_ms=None):
+                         include_partial=False, min_event_ms=None, latest_only=False):
     """Rank covering-index metadata first; decode only current candle candidates.
 
     A candidate from another identity/source or a forming candle falls back to
     the exact original predicate for THAT event. Older matching revisions remain
     selectable, without authenticating every historical version in the window.
+    Producers comparing unchanged values use latest_only: an excluded newest
+    receipt must not be hidden by an older matching value and suppress a new
+    verified observation. Consumer selection keeps its existing semantics.
     """
     cut(as_of_ms)
     if min_event_ms is not None:
@@ -1581,6 +1584,8 @@ def load_current_candles(conn, key, *, as_of_ms, limit, instrument_id, source,
                             (include_partial or (physical.get('bar_state') is not None and physical['bar_state'] != 'PARTIAL')))
                 if matching:
                     selected.append(row)
+                    continue
+                if latest_only:
                     continue
                 # Filtering precedes ranking in the original reader. If the
                 # newest row is excluded, retain its newest MATCHING predecessor.

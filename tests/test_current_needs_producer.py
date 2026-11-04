@@ -237,3 +237,29 @@ def test_unknown_inventory_is_never_reused_as_current_history(tmp_path):
                          kind='derivative',received_ms=now,max_age_ms=2_700_000)
     f.save('ETH/USDT','oi',qualified,acquisition=dict(mode='required_window',now_ms=now))
     assert f.db.execute('SELECT count(*) FROM market_revisions').fetchone()[0]==20
+
+
+def test_unchanged_refresh_replaces_selected_unknown_not_older_matching_value(tmp_path):
+    import pandas as pd
+    now=1_790_000_000_000
+    f=D.DerivFeed(tmp_path/'d.db',clock_ms=lambda:now)
+    events=[now-(10-i)*900_000 for i in range(10)]
+    plain=pd.DataFrame({'ts':pd.to_datetime(events,unit='ms',utc=True),'value':[1.]*10})
+    iid='binance_usdm:futures:ETHUSDT'; key='derivative:ETH/USDT:oi'
+    def verified():
+        return M.annotate(plain,instrument_id=iid,source=f.current_source('oi'),
+                          kind='derivative',received_ms=now,max_age_ms=2_700_000)
+    f.save('ETH/USDT','oi',verified())
+    now+=1000
+    f.save('ETH/USDT','oi',plain)
+    unknown=f.db.execute("SELECT revision_id,record_json FROM market_revisions WHERE json_extract(record_json,'$.quality')='UNKNOWN'").fetchall()
+    assert len(unknown)==10
+    assert M.load_window_typed(f.db,key,as_of_ms=now,window_start_ms=events[0],instrument_id=iid)[1]=='identity_ambiguous'
+    before=now;now+=1000
+    f.save('ETH/USDT','oi',verified(),acquisition=dict(mode='required_window',now_ms=now))
+    frame,reason=M.load_window_typed(f.db,key,as_of_ms=now,window_start_ms=events[0],instrument_id=iid)
+    assert reason=='valid' and frame.quality.eq('VALID').all()
+    assert frame.observed_at_ms.eq(now).all()
+    assert M.load_window_typed(f.db,key,as_of_ms=before,window_start_ms=events[0],instrument_id=iid)[1]=='identity_ambiguous'
+    for rid,raw in unknown:
+        assert f.db.execute('SELECT record_json FROM market_revisions WHERE revision_id=?',(rid,)).fetchone()[0]==raw

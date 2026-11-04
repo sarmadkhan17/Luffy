@@ -191,7 +191,7 @@ class DerivFeed:
                 instrument = InstrumentId('binanceusdm', MarketType.FUTURES, to_binance(symbol)).value
                 old = mp.load_current_candles(conn, key,
                     as_of_ms=self._clock_ms(), limit=len(df), instrument_id=instrument,
-                    source=expected, min_event_ms=int(df['event_time_ms'].min()))
+                    source=expected, min_event_ms=int(df['event_time_ms'].min()), latest_only=True)
                 prior = {} if old is None else {int(r.event_time_ms): r
                     for r in old.itertuples() if r.quality == 'VALID'}
                 tip = sorted(set(int(t) for t in df['event_time_ms']))[-2:]
