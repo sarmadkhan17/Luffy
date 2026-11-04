@@ -106,6 +106,19 @@ class Queue:
 def intake(source_path, bank, append, *, now_ms, limit):
     """Atomic accepted/refused receipts; deferred inputs remain eligible on retry."""
     path = str(Path(source_path).resolve())
+    # A deployment may move the same journal behind its original compatibility
+    # link. Keep its immutable logical source name when both names prove the
+    # same current file; a different or missing old file remains a conflict.
+    old = bank.execute("SELECT payload FROM bridge_runtime_bindings WHERE id='brain-source'").fetchone()
+    if old:
+        from trader.core import journal_evidence as codec
+        bound = json.loads(codec.resolve(bank, old[0])).get('path')
+        if isinstance(bound, str) and bound != path:
+            try:
+                if Path(bound).samefile(path):
+                    path = bound
+            except OSError:
+                pass
     counts = dict(accepted=0, refused=0, deferred=0)
     with bank:
         append(bank, 'bridge_runtime_bindings', 'brain-source', dict(path=path))

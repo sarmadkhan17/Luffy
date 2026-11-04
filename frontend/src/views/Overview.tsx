@@ -60,7 +60,7 @@ interface DeskCoin { decision_id: string; symbol: string; action: string; score:
 interface Desk {
   realized: { points: DeskPoint[]; last_closes: DeskPoint[]; closed_trades: number; unknown_pnl_trades: number; estimated_pnl_trades: number; total: number | null; source: string } | null;
   scan: { scan_id: string; observed_at: string; freshness?: string; shortlisted?: number; evaluated?: number; coins: DeskCoin[]; traded: number; source: string } | null;
-  research: { counts: Record<string, number | null>; referee_enabled: boolean | null; handoff_enabled: boolean | null } | null;
+  research: { counts: Record<string, number | null>; engine?: string; referee_enabled: boolean | null; handoff_enabled: boolean | null } | null;
   errors: Record<string, string>;
 }
 
@@ -579,7 +579,9 @@ function ResearchCard({ desk, sys, loading }: { desk?: Desk; sys?: Record<string
           </span>
         </span>
       </div>
-      {r && [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests)].map((x) => (
+      {r && (r.engine === "compositional"
+        ? [line("Studies", r.counts.studies), line("Proposed candidates", r.counts.candidates), line("Development runs", r.counts.runs), line("Held-out looks", r.counts.tests)]
+        : [line("Rules looked at", r.counts.combos), line("Candidates", r.counts.candidates), line("Held-out looks", r.counts.tests)]).map((x) => (
         <div className="gl-list" key={x.n}><span><i style={{ background: x.c }} />{x.n}</span><span style={{ color: x.c }}>{x.v}</span></div>
       ))}
       <a className="gl-link" href="#research">Open Research →</a>

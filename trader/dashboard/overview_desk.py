@@ -101,6 +101,17 @@ def latest_scan(journal, root=None, now=None) -> dict | None:
 
 
 def research_counts(journal, cfg: dict | None) -> dict:
+    from .research_source import closure_summary
+    closure = closure_summary(cfg)
+    if closure is not None:
+        research = (cfg or {}).get('research') or {}
+        counts = closure['counts']
+        return dict(closure, counts={
+            'studies': counts['studies'] if counts else None,
+            'candidates': counts['candidates'] if counts else None,
+            'runs': counts['runs'] if counts else None,
+            'tests': counts['looks'] if counts else None},
+            referee_enabled=research.get('referee'), handoff_enabled=research.get('handoff'))
     counts = {}
     for table in RESEARCH_TABLES:
         try:
@@ -136,6 +147,16 @@ def desk(journal, cfg: dict | None, now_iso: str, root=None) -> dict:
 def research_board(journal, cfg: dict | None) -> dict:
     """Everything the Research tab shows, from the research ledger. Discovery
     evidence only: nothing here is an admission or a held-out result."""
+    from .research_source import closure_summary
+    closure = closure_summary(cfg)
+    if closure is not None:
+        research = (cfg or {}).get('research') or {}
+        # Legacy funnel fields stay unavailable; candidate proposals and
+        # development runs are not legacy scored combinations or admissions.
+        return dict(closure, combos=None, total=None, verdicts=None,
+            candidates_by_state=None, referee_enabled=research.get('referee'),
+            handoff_enabled=research.get('handoff'),
+            held_out_looks={'n': closure['counts']['looks']} if closure['counts'] else None)
     def q(sql, args=()):
         try:
             return [dict(r) for r in journal.query(sql, args)]

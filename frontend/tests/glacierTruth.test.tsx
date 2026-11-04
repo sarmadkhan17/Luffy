@@ -22,6 +22,23 @@ function setup(ui: React.ReactNode, data: Record<string, any> = {}, mode = sessi
   return adapter;
 }
 describe("runtime truth", () => {
+  it("shows the configured compositional ledger without an empty legacy funnel", async () => {
+    setup(<Research />, { "research/board": { engine: "compositional", available: true,
+      combos: null, total: null, verdicts: null, candidates_by_state: null,
+      counts: { studies: 2, candidates: 48, runs: 8, experiment_plans: 24, looks: 0, qualifications: 0 },
+      studies: [{ status: "COMPLETED", stop_reason: "COMPLETE", failed_units: 1 }], referee_enabled: true },
+      "query/research?identity=closure-studies": { records: [{kind:"closure_research",value:{studies:[]}}],unavailable:[] } });
+    expect(await screen.findByText(/48 proposed candidates/)).toBeVisible();
+    expect(screen.getByText(/Recorded stage failure/)).toBeVisible();
+    expect(screen.queryByText("No result is recorded.")).toBeNull();
+    expect(screen.getByText(/0 qualifications/)).toBeVisible();
+  });
+  it("keeps an unreadable configured ledger unavailable instead of inventing zero results", async () => {
+    setup(<Research />, { "research/board": { engine:"compositional",available:false,counts:null,
+      combos:null,total:null,verdicts:null,candidates_by_state:null,reason:"research_store_unreadable:OperationalError" } });
+    expect(await screen.findByText("research_store_unreadable:OperationalError")).toBeVisible();
+    expect(screen.queryByText(/0 proposed candidates/)).toBeNull();
+  });
   it("never derives trading/account mode from adapter LIVE", () => {
     expect(dashboardLabel("READ_ONLY_GUI")).toContain("READ-ONLY");
     expect(dashboardLabel("LIVE")).toBe("LIVE GUI");

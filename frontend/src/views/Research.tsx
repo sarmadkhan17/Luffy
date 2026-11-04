@@ -102,6 +102,26 @@ export default function Research() {
   const bot = top.map(([x, y]) => [x, 260 - y]).reverse();
   const funnelPath = top.length ? `M${top.map(([x, y]) => `${x.toFixed(0)} ${y.toFixed(1)}`).join(" L")} L${bot.map(([x, y]) => `${x.toFixed(0)} ${y.toFixed(1)}`).join(" L")} Z` : "";
 
+  if (b?.engine === "compositional") {
+    const counts = b.counts ?? {};
+    const latest = asRows(b.studies)[0];
+    const stopped = typeof latest?.failed_units === "number" && latest.failed_units > 0;
+    return <>
+      <PageHeader title="Research"><span className="gl-state">{b.available !== true ? "UNAVAILABLE" : stopped ? "Recorded stage failure" : "Research ledger"}</span></PageHeader>
+      <Card className="pad" label="Configured research engine">
+        <CardHead icon={<FlaskConical size={16} />} title="Compositional research" tone="teal" />
+        {b.available !== true ? <p role="status">{String(b.reason ?? "Research store unavailable")}</p> : <>
+          <p>{counts.studies} studies · {counts.candidates} proposed candidates · {counts.runs} development runs · {counts.experiment_plans} experiment plans</p>
+          <p>{counts.looks} held-out looks · {counts.qualifications} qualifications. Research evidence does not grant trading authority.</p>
+          {latest && <p>Latest stored study: {String(latest.status)} · {String(latest.stop_reason)} · {String(latest.failed_units)} failed stages. Scheduling completion does not establish a successful research result.</p>}
+        </>}
+        <p className="quiet">The study records below show the configured engine’s results and reasons. Legacy search rankings use a separate journal ledger.</p>
+      </Card>
+      <ResearchStudies />
+      <p className="gl-note" data-testid="referee-status">{refereeWording(b.referee_enabled, typeof counts.looks === "number" ? counts.looks : null)}</p>
+    </>;
+  }
+
   return (
     <>
       <PageHeader title="Research">

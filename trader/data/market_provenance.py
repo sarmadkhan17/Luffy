@@ -209,7 +209,20 @@ def venue_source(exchange):
 def venue_identity(exchange, symbol):
     """Resolve a loaded venue record, never guess canonical identity from a label."""
     try:
-        market=exchange.market(symbol)
+        try:
+            market=exchange.market(symbol)
+        except ExchangeError:
+            # Current CCXT USD-M catalogues expose settled contract symbols.
+            # Resolve that exact loaded record; never invent a venue id from
+            # the display alias or fall back to a spot/inverse instrument.
+            if (getattr(exchange, 'id', None) != 'binanceusdm' or
+                    not isinstance(symbol, str) or '/' not in symbol or ':' in symbol):
+                raise
+            quote = symbol.rsplit('/', 1)[1]
+            market = exchange.market(symbol + ':' + quote)
+            if not (market.get('contract') is True and market.get('linear') is True
+                    and market.get('swap') is True and market.get('settle') == quote):
+                return None, None
         if market.get('contract') is True:
             typ=MarketType.FUTURES
         elif market.get('spot') is True or market.get('contract') is False:
