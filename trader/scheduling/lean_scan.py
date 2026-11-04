@@ -150,6 +150,13 @@ def evidence(view, snap, decision, stats):
         stats['persisted_attempts'] += 1
 
 
+def observe_skip(view, snap, decision, state, reason):
+    """Non-trade observation sink: separate tables, never `decisions` (cooldown source)."""
+    from ..learning import scan_observations
+    scan_observations.record(view.journal, snap, decision, cfg=view.cfg, control_state=state,
+        control_reason=reason, spec_exits=getattr(view, '_spec_exits', None))
+
+
 def run(view):
     stats = dict(deep_processed=0, decisions=0, entries=0, skips=0,
                  persisted_attempts=0, paper_entries=0, snapshot_refusals={}, no_strategy=0,
@@ -275,6 +282,7 @@ def run(view):
             strategy_checks=[dict(strategy=sid, reasons=reasons[-3:]) for sid, reasons in list(events.items())[:32]])
         if decision.action == Action.HOLD or decision.skip_reason or not allowed:
             stats['skips'] += int(decision.action != Action.HOLD)
+            observe_skip(view, snap, decision, state, blocked)
             continue
         decision.scan_id = None
         decision._persist_trade_evidence = lambda: evidence(view, snap, decision, stats)
@@ -289,6 +297,8 @@ def run(view):
         finally:
             # Never leave a closure holding the last coin's complete snapshot.
             decision.__dict__.pop('_persist_trade_evidence', None)
+        if not getattr(decision, '_trade_evidence_saved', False):
+            observe_skip(view, snap, decision, view.state_machine.state, decision.skip_reason or blocked)
         if getattr(decision, '_trade_evidence_saved', False):
             view.journal.update_decision_outcome(decision.id, decision.executed,
                                                decision.size_usdt, decision.skip_reason)

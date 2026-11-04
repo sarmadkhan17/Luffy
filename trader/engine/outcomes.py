@@ -127,6 +127,9 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None, *,
         resolved += 1
     if resolved:
         log.info(f"outcomes updated: {resolved}")
+    if not executed_only:
+        from ..learning import scan_observations
+        scan_observations.resolve_pending(journal, feed, now_ms)   # never raises
     return resolved
 
 
