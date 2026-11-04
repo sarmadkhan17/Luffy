@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => ({
     include: ["tests/**/*.test.tsx", "tests/**/*.test.ts"],
   },
   build: {
+    // Dashboard CSP permits fonts from self; data-URL font subsets are blocked.
+    assetsInlineLimit: 0,
     sourcemap: mode !== "production",
     ...(mode === "test-fixtures"
       ? { rollupOptions: { input: "tests/harness/index.html" } }
