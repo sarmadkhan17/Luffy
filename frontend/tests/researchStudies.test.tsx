@@ -18,6 +18,8 @@ describe("compositional research visibility", () => {
       development_mode: "RETROSPECTIVE", units: [{ unit: "develop:a", kind: "develop", status: "WAITING_DATA", elapsed_s: 18.5, reason: "TradingView history missing" }],
       candidates: [{ result_id: "r1", question: "Does funding and liquidity improve the hedge?", outcome: "BLOCKED_DATA", reason: "No historical basis", structure: "hedged" }] }] } }]);
     expect(await screen.findByText("Does funding and liquidity improve the hedge?")).toBeVisible();
+    const activity = screen.getByText(/Study activity · stage timings/).closest("details")!;
+    activity.open = true; fireEvent(activity, new Event("toggle"));
     expect(screen.getByText("18.5")).toBeVisible();
     expect(screen.getByText(/TradingView history missing/)).toBeVisible();
     expect(screen.getByText(/No historical basis/)).toBeVisible();
@@ -60,6 +62,8 @@ describe("compositional research visibility", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next part" }));
     await waitFor(() => expect(screen.getByText(/part 2 of 2/)).toBeVisible());
     expect(ownerRead).toHaveBeenCalledWith(`query/research?identity=closure-run%3A${"b".repeat(64)}%3Aevaluated%3A1`, expect.anything());
+    expect(await screen.findByText("close > 1")).toBeVisible();
+    expect(document.querySelector("pre")).toBeNull();
     fireEvent.change(screen.getByRole("combobox", { name: "Research result" }), { target: { value: "c".repeat(64) } });
     await waitFor(() => expect(ownerRead).toHaveBeenCalledWith(`query/research?identity=closure-run%3A${"c".repeat(64)}%3Aevaluated%3A0`, expect.anything()));
     expect(screen.queryByRole("button", { name: /approve|activate|resume|qualify/i })).toBeNull();
